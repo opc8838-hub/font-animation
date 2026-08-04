@@ -1,0 +1,428 @@
+<html lang="zh-CN">
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>STG _v.Boost</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.1/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/opentype.js/1.3.4/opentype.min.js"></script>
+  <!-- <script src="https://unpkg.com/p5.js-svg@1.5.1"></script> -->
+  <script src="https://unpkg.com/h264-mp4-encoder/embuild/dist/h264-mp4-encoder.web.js"></script>
+  
+  <link rel="stylesheet" href="style_boost.css">
+  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script src="sketch_boost.js" type="text/javascript"></script>
+  <script src="boost_script/update.js" type="text/javascript"></script>
+  <script src="boost_script/animators.js" type="text/javascript"></script>
+  <script src="boost_script/recording.js" type="text/javascript"></script>
+
+  <script src="boost_script/class_base.js" type="text/javascript"></script>
+  <script src="boost_script/class_let.js" type="text/javascript"></script>
+  <script src="boost_script/class_letArabic.js" type="text/javascript"></script>
+
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300&display=swap" rel="stylesheet">
+
+  <style> body {padding: 0; margin: 0;} canvas {vertical-align: top;} </style>
+  <link rel="stylesheet" href="stg-cn.css">
+</head>
+
+<body>
+  <div id="widget">
+
+    <div class="dropdown">
+      <button class="dropbtn">Select...</button>
+      <div class="dropdown-content">
+        <a href='index.html'>CYLINDER</a>
+        <a href='field.html'>FIELD</a>
+        <a href='stripes.html'>STRIPES</a>
+        <a href='coil.html'>COIL</a>
+        <a href='flag.html'>FLAG</a>
+        <a href='morisawa.html'>MORISAWA</a>
+        <a href='cascade.html'>CASCADE</a>
+        <a href='ribbon.html'>RIBBON</a>
+        <a href='layers.html'>LAYERS</a>
+        <a href='danger.html'>DANGER</a>
+        <a href='string.html'>STRING</a>
+        <a href='badge.html'>BADGE</a>
+        <a href='clutter.html'>CLUTTER</a>
+        <a href='construct.html'>CONSTRUCT</a>
+        <a href='snap.html'>SNAP</a>
+        <a href='flash.html'>FLASH</a>
+        <a href='pow.html'>POW</a>
+        <a href='crash.html'>CRASH</a>
+        <a href='crashclock.html'>CRASH CLOCK</a>
+        <a href='vessel.html'>VESSEL</a>
+        <a href='shine.html'>SHINE</a>
+        <a href='boost.html'>BOOST</a>
+        <a href='boxsquad.html'>BoxSquad</a>
+
+      </div>
+    </div>
+
+    <div id="generatorInput">
+      <div class="titleh2">
+        <h2>STG v.Boost</h2>
+        <p>a kinetic generator from <a href="https://www.instagram.com/kiel.d.m/" target="_blank">kielm</a></p>
+        <div class="popup" onclick="myFunction()">Readme and Support!
+          <span class="popuptext" id="myPopup">
+            Boost 1.1.0
+            <br>
+            <br>Consider supporting STG by <br> <a href="https://www.buymeacoffee.com/kieldm" target="_blank">Buying Me A Coffee</a>
+            <br>
+            <br>Use for personal projects!
+            <br>Give me a <a href="https://www.instagram.com/kiel.d.m/" target="_blank">tag</a> if possible.
+            <br>
+            <br>商业用途请联系 <a href="mailto:kiel.d.m@gmail.com">kiel.d.m@gmail.com</a>
+            <br>
+            <br>Featuring fonts from <br><a href="https://www.zetafonts.com/" target="_blank">Zetafonts</a> (Milligram),<br>
+            <a href="https://pangrampangram.com/" target="_blank">Pangram Pangram</a>(Formula Condensed, NeueWorld),<br>
+            and <a href="https://boharat.com/" target="_blank">Boharat</a>(Ko Banzeen, Zafran)
+          </span>
+        </div>
+      </div>
+
+      <button type="button" class="collapsible"><h1>Text</h1></button>
+      <div class="content">
+        <div class="module">         
+          <textarea id="textArea" rows=4 oninput="setText()">中文渲染测试</textarea>
+
+          <select name="fontChange" id="fontChange" onchange="setFont(this.value)">
+            <option value="0" selected="selected">Milligram - Medium</option>
+            <option value="1">Milligram Condensed - Medium</option>
+            <!-- <option value="2">GT America Extended - Black</option> -->
+            <!-- <option value="3">GT Alpina Condensed - Light</option> -->
+            <option value="4">Neue World Condensed - Regular</option>
+            <option value="5">Formula Condensed - Black</option>
+            <option value="6">Instrumental - Italic</option>
+            <!-- <option value="7">Noto Sans Arabic - Black</option> -->
+            <!-- <option value="7">Zaatar - Bold</option> -->
+            <option value="7">Ko Banzeen - SlantedL</option>
+            <option value="8">Zafran Arabic - Black</option>
+          </select>
+          
+
+          <div class="coupling1">
+            <div class="coupling_label"><h3>Align</h3></div>
+            <select name="alignMode" id="alignMode" onchange="setAlignMode(this.value)">
+              <option value="0">Left</option>
+              <option value="1" selected="selected">Center</option>
+              <option value="2">Right</option>
+            </select>
+          </div>
+
+
+          <div class="coupling1">
+            <div class="coupling_label"><h3>Size</h3></div>
+            <input type="range" class="ranger" min="0" max="100" value="50" id="scaler" oninput="setScaler(this.value)">
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="collapsible"><h1>Style</h1></button>
+      <div class="content">
+        <div class="module">
+          
+          <div class="accelModule">
+            <div class="coupling1">
+              <div class="coupling_label"><h3>Bkgd</h3></div>
+              <input type="color" id="bkgdColor" name="bkgdColor" value="#000000" oninput="setBkgdColor(this.value)">
+            </div>
+          </div>
+
+          <div class="accelModule">
+            <h4>Caps</h4>
+            <div class="coupling1">
+              <label class="coupling_label" for="capsOn">Fill</label>
+              <input type="checkbox" id="capsOn" name="capsOn" checked onclick="setCapsOn()">
+            </div>
+
+            <div id="capsOptions">
+              <div class="coupling1">
+                <div class="coupling_label"><h3>Color</h3></div>
+                <input type="color" id="textColor" name="textColor" value="#ffffff" oninput="setTextColor(this.value)">
+              </div>
+            </div>
+          </div>
+
+          <div class="accelModule">
+            <h4>Stroke</h4>
+            <div class="coupling1">
+              <label class="coupling_label" for="strokeOn">Visible</label>
+              <input type="checkbox" id="strokeOn" name="strokeOn" onclick="setStrokeOn()">
+            </div>
+
+            <div id="strokeOptions">
+              <div class="coupling1">
+                <div class="coupling_label"><h3>Weight</h3></div>
+                <input type="range" class="ranger" min="0" max="100" value="10" id="strokeWeight" oninput="setStrokeWeight(this.value)">
+              </div>
+
+              <div class="coupling1">
+                <div class="coupling_label"><h3>Color</h3></div>
+                <input type="color" id="strokeColor" name="strokeColor" value="#000000" oninput="setStrokeColor(this.value)">
+              </div>
+            </div>
+          </div>
+
+          <div class="accelModule">
+            <h4>Sides</h4>
+            <select name="sidesType" id="sidesType" onchange="setSidesType(this.value)">
+              <option value="0">Transparent</option>
+              <option value="1">Solid</option>
+              <option value="2" selected="selected">Assorted</option>
+              <!-- <option value="3">Texture</option> -->
+            </select>
+
+            <div id="sidesOptionsTrans">
+            </div>
+
+            <div id="sidesOptionsSolid">
+              <div class="coupling1">
+                <!-- <div class="coupling_label"><h3>Color</h3></div> -->
+                <input type="color" class="fullLengthColor" id="sideSolidColor" name="sideSolidColor" value="#f26666" oninput="setSideSolidColor(this.value)">
+              </div>
+            </div>
+
+            <div id="sidesOptionsRandom">
+                <div id="quintColor">
+                  <div class="coupling1">
+                    <!-- <div class="coupling_label"><h3>Into</h3></div> -->
+                    <input type="color" id="quint0color" name="quint0color" value="#ffffff" oninput="setColorSet(0, this.value)">
+                    <input type="color" id="quint1color" name="quint1color" value="#4e7cd9" oninput="setColorSet(1, this.value)">
+                    <input type="color" id="quint2color" name="quint2color" value="#02733e" oninput="setColorSet(2, this.value)">
+                    <input type="color" id="quint3color" name="quint3color" value="#f23030" oninput="setColorSet(3, this.value)">
+                    <input type="color" id="quint4color" name="quint4color" value="#f26666" oninput="setColorSet(4, this.value)">
+                  </div>
+    
+                  <div class="coupling1">
+                    <button type="button" class="randomPalette" onclick="generateRandomPalette()">RANDOM PALETTE</button>
+                  </div>
+                </div>
+
+            </div>
+
+            <div id="sidesOptionsTexture">
+              <div class="coupling1">
+                <div class="coupling_label"><h3>Color</h3></div>
+                <input type="color" id="textColor" name="textColor" value="#ffffff" oninput="setTextColor(this.value)">
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <button type="button" class="collapsible"><h1>Animation</h1></button>
+      <div class="content">
+        <div class="coupling1">
+          <label class="coupling2_label" for="orbitOn">Orbit Control</label>
+          <input type="checkbox" id="orbitOn" name="orbit" onclick="setOrbitOn()">
+        </div>
+
+        <div class="coupling1">
+          <label class="coupling2_label" for="mouseCenter">Mouse Center</label>
+          <input type="checkbox" id="mouseCenter" name="mouseCenter" onclick="setMouseCenterOn()">
+        </div>
+
+        <div class="module">         
+          <select name="extrudeType" id="extrudeType" onchange="setExtrudeType(this.value)">
+            <option value="0">Tumble</option>
+            <option value="1" selected="selected">Zoom</option>
+            <option value="2">Punch</option>
+          </select>
+
+          <div id="tumbleSet">
+            <div class="coupling1">
+              <div class="coupling_label"><h3>Extrude</h3></div>
+              <input type="range" class="ranger" min="0" max="100" value="50" id="tumbleDepthLength" oninput="setTumbleDepthLength(this.value)">
+            </div>
+            
+            <div class="coupling1">
+              <div class="coupling_label"><h3>Amount</h3></div>
+              <input type="range" class="ranger" min="0" max="100" value="50" id="tumbleAmount" oninput="setTumbleAmount(this.value)">
+            </div>
+          </div>
+
+          <div id="zoomSet">
+            <div class="coupling1">
+              <div class="coupling_label"><h3>Extrude</h3></div>
+              <input type="range" class="ranger" min="0" max="100" value="50" id="zoomDepthLength" oninput="setZoomDepthLength(this.value)">
+            </div> 
+          </div>
+
+          <div id="punchSet">
+            <div class="coupling1">
+              <div class="coupling_label"><h3>Extrude</h3></div>
+              <input type="range" class="ranger" min="0" max="100" value="25" id="punchDepthLength" oninput="setPunchDepthLength(this.value)">
+            </div>
+
+            <div class="coupling1">
+              <div class="coupling_label"><h3>Distance</h3></div>
+              <input type="range" class="ranger" min="0" max="100" value="50" id="punchDistance" oninput="setPunchDistance(this.value)">
+            </div>
+
+            <!-- <div class="coupling1">
+              <label class="coupling_label" for="strokeOn">Invert</label>
+              <input type="checkbox" id="punchInvert" name="punchInvert" onclick="setPunchInvert()">
+            </div> -->
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="collapsible"><h1>Acceleration</h1></button>
+      <div class="content">
+        <div class="module">
+          <div class="accelModule">
+            <h4>Delay</h4>
+            <div class="coupling1">
+              <div class="coupling_label"><h3>Length</h3></div>
+              <input type="range" class="ranger" min="0" max="100" value="20" id="maxDelay" oninput="setMaxDelay(this.value)">
+            </div>
+          </div>
+
+          <div class="accelModule">
+            <h4>INTRO STAGE</h4>
+            <div class="selectPair">
+              <select name="stageAstrength" id="stageAstrength" class="stageSelect" onchange="setStageAstrength(this.value)">
+                <option value="0">Sine</option>
+                <option value="1">Cubic</option>
+                <option value="2">Circ</option>
+                <option value="3" selected="selected">Expo</option>
+                <option value="4">Back</option>
+                <option value="5">Bounce</option>
+                <option value="6">Elastic</option>
+              </select>
+  
+              <select name="stageAdirect" id="stageAdirect" class="stageSelect" onchange="setStageAdirect(this.value)">
+                <option value="0">In</option>
+                <option value="1">Out</option>
+                <option value="2" selected="selected">In & Out</option>
+              </select>
+            </div>    
+  
+            <div class="coupling1">
+              <div class="coupling_label"><h3>Length</h3></div>
+              <input type="range" class="ranger" min="0" max="100" value="40" id="stagAlength" oninput="setStageAlength(this.value)">
+            </div>      
+          </div> 
+
+          <div class="accelModule">
+            <h4>PAUSE</h4>
+            <div class="coupling1">
+              <div class="coupling_label"><h3>Length</h3></div>
+              <input type="range" class="ranger" min="0" max="100" value="0" id="pauseLength" oninput="setPauseLength(this.value)">
+            </div>
+          </div>
+
+          <div class="accelModule">
+            <h4>OUTRO STAGE</h4>
+            <div class="selectPair">
+              <select name="stageBstrength" class="stageSelect" onchange="setStageBstrength(this.value)">
+                <option value="0">Sine</option>
+                <option value="1">Cubic</option>
+                <option value="2">Circ</option>
+                <option value="3" selected="selected">Expo</option>
+                <option value="4">Back</option>
+                <option value="5">Bounce</option>
+                <option value="6">Elastic</option>
+              </select>
+  
+              <select name="stageBdirect" class="stageSelect" onchange="setStageBdirect(this.value)">
+                <option value="0">In</option>
+                <option value="1">Out</option>
+                <option value="2" selected="selected">In & Out</option>
+              </select>
+            </div>    
+  
+            <div class="coupling1">
+              <div class="coupling_label"><h3>Length</h3></div>
+              <input type="range" class="ranger" min="0" max="100" value="40" id="stageBlength" oninput="setStageBlength(this.value)">
+            </div>
+          </div>  
+
+        </div>
+      </div>
+
+
+      <button type="button" class="collapsible"><h1>Export</h1></button>
+      <div class="content">
+        <div class="module">
+          <div class="coupling2">
+            <div class="couplingEntry">
+              <input type="radio" id="window" name="saveSize" value=0 onclick="sizeSaveChange(this.value)" checked>
+              <label for="window">Window Size</label>
+            </div>
+            <div class="couplingEntry">
+              <input type="radio" id="vert" name="saveSize" value=1 onclick="sizeSaveChange(this.value)">
+              <label for="vert">Vertical, 9:16</label>
+            </div>
+            <div class="couplingEntry">
+              <input type="radio" id="squa" name="saveSize" value=2 onclick="sizeSaveChange(this.value)">
+              <label for="squa">Square, 1:1</label>
+            </div>
+          </div>
+
+          <div class="coupling1">
+            <button type="button" class="saveJPGbutton" onclick="runJPGsave()">SAVE JPG</button>
+          </div>
+          <div class="coupling1">
+            <button type="button" class="saveMP4button" onclick="runSave()">RECORD MP4</button>
+          </div>
+          <div class="coupling1">
+            <div id="recStatus">
+              <p>RECORDING IN PROCESS <br><span id="recTicker"></span>/<span id="numFrame"></span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div>
+    <label class="switch">
+      <input type="checkbox" checked oninput="hideWidget()">
+      <span class="slider round"></span>
+    </label>
+  </div>
+
+  <script>
+    // When the user clicks on <div>, open the popup
+    function myFunction() {
+      var popup = document.getElementById("myPopup");
+      popup.classList.toggle("show");
+    }
+
+    document.getElementById('generatorInput').addEventListener('mouseenter', function() {
+      pausePop = true; 
+    });
+
+    document.getElementById('generatorInput').addEventListener('mouseleave', function() {
+      pausePop = false;
+    });
+  </script>
+
+  <script>
+    var coll = document.getElementsByClassName("collapsible");
+    var i;
+  
+    for (i = 0; i < coll.length; i++) {
+      coll[i].addEventListener("click", function() {
+        this.classList.toggle("active");
+        var content = this.nextElementSibling;
+        if (content.style.display === "block") {
+          content.style.display = "none";
+        } else {
+          content.style.display = "block";
+        }
+      });
+    }
+  </script>
+  <script src="stg-cn.js"></script>
+</body>
+
+</html>

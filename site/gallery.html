@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="23 个可编辑的中文动态字体效果，支持实时输入与参数调整。">
+  <title>STG 中文版 | 字体动效实验室</title>
+  <link rel="stylesheet" href="gallery.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="gallery.html" aria-label="STG 字体动效实验室首页">
+      <span class="brand-mark">STG</span>
+      <span class="brand-copy">字体动效实验室</span>
+    </a>
+    <div class="header-meta"><strong id="visibleCount">23</strong><span>个实时效果</span></div>
+  </header>
+
+  <main>
+    <section class="browser" aria-labelledby="browserTitle">
+      <div class="browser-heading">
+        <div>
+          <p class="eyebrow">SPACE TYPE GENERATOR / 中文改造版</p>
+          <h1 id="browserTitle">选择一个效果开始创作</h1>
+        </div>
+        <label class="search-field">
+          <span>搜索</span>
+          <input id="searchInput" type="search" placeholder="名称或类型" autocomplete="off">
+        </label>
+      </div>
+
+      <div class="filters" role="group" aria-label="效果分类">
+        <button class="filter is-active" type="button" data-filter="all" aria-pressed="true">全部</button>
+        <button class="filter" type="button" data-filter="space" aria-pressed="false">立体空间</button>
+        <button class="filter" type="button" data-filter="flow" aria-pressed="false">波形流动</button>
+        <button class="filter" type="button" data-filter="type" aria-pressed="false">排版实验</button>
+        <button class="filter" type="button" data-filter="physics" aria-pressed="false">物理粒子</button>
+        <button class="filter" type="button" data-filter="graphic" aria-pressed="false">图形系统</button>
+      </div>
+
+      <div id="effectGrid" class="effect-grid" aria-live="polite"></div>
+      <p id="emptyState" class="empty-state" hidden>没有匹配的效果</p>
+    </section>
+  </main>
+
+  <footer>
+    <span>STG 中文版</span>
+    <span>基于 Kiel M 的开源 Space Type Generator</span>
+  </footer>
+
+  <script src="gallery.js"></script>
+</body>
+</html>
