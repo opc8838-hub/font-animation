@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>图标爆发 Icon Burst | ME Motion Studio</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="stg-cn.css">
+  <link rel="stylesheet" href="iconburst.css?v=20260809-43">
+  <link rel="stylesheet" href="iconburst-overrides.css?v=20260809-43">
+</head>
+<body>
+  <main class="ib-app">
+    <aside class="ib-editor" aria-label="图标爆发编辑器">
+      <header class="ib-editor-header">
+        <a href="gallery.html" aria-label="返回效果库">‹</a>
+        <div><small>NEW STYLE 24</small><h1>图标爆发 · Icon Burst</h1></div>
+      </header>
+
+      <section class="ib-section">
+        <p class="ib-kicker">文字</p>
+        <label>主标题<textarea id="ibText" rows="2">GOOD JOB</textarea></label>
+        <div class="ib-two">
+          <label>字体<select id="ibFont">
+            <option value="archivoBlack" selected>Archivo Black · 原片粗黑近似</option><option value="robotoCondensed">Roboto Condensed Bold</option><option value="scRegular">Noto Sans SC Regular</option><option value="scBlack">Noto Sans SC Black</option><option value="space">Space Grotesk</option><option value="serif">Lora Serif</option><option value="mono">Martian Mono</option><option value="fenix">Fenix</option><option value="work">Work Sans</option><option value="spaceMonoBold">Space Mono Bold</option><option value="vollkornBoldItalic">Vollkorn Bold Italic</option><option value="cairoBold">Cairo Bold</option><option value="aguafina">Aguafina Script</option>
+            <option value="manrope">Manrope</option><option value="spartan">League Spartan</option><option value="cinzel">Cinzel</option><option value="instrument">Instrument Serif</option><option value="bebas">Bebas Neue</option><option value="poppins">Poppins</option><option value="rajdhani">Rajdhani</option><option value="teko">Teko</option><option value="khand">Khand</option><option value="fraunces">Fraunces</option>
+            <option value="scThin">思源黑体 Thin（中文）</option><option value="jpThin">Noto Sans JP Thin（中日）</option><option value="jpBlack">Noto Sans JP Black（中日）</option><option value="krBlack">Noto Sans KR Black（韩文）</option>
+          </select></label>
+          <label>字重<select id="ibWeight"><option value="800">Heavy</option><option value="650">Semibold</option><option value="500">Medium</option></select></label>
+        </div>
+        <p class="ib-help">共 27 款真实本地字体：已完整同步 SNAP 的 26 款，并新增 Archivo Black 粗黑近似字体。</p>
+        <div class="ib-two"><label>文字大小 <output id="ibFontSizeValue">100%</output><input id="ibFontSize" type="range" min="45" max="180" value="100"></label><label>文字间距 <output id="ibTrackingValue">-4 px</output><input id="ibTracking" type="range" min="-14" max="36" value="-4"></label></div>
+      </section>
+
+      <section class="ib-section">
+        <p class="ib-kicker">连续换色</p>
+        <label>颜色动效<select id="ibColorMode"><option value="sweep">柔光扫过 · Color Sweep</option><option value="flash">全体同时亮 · Full Flash</option><option value="chase">逐字轮流亮 · Color Chase</option><option value="unfold" selected>中心向两侧亮 · Center Out</option><option value="relay">逐字接力 · Letter Relay</option><option value="aurora">流体渐变 · Aurora Flow</option><option value="pulse">色彩呼吸 · Color Pulse</option><option value="cut">节奏硬切 · Beat Cut</option></select></label>
+        <div class="ib-colors">
+          <label>初始色<input id="ibBaseColor" type="color" value="#ffffff"></label>
+          <label>颜色 A<input id="ibColorA" type="color" value="#7747ff"></label>
+          <label>颜色 B<input id="ibColorB" type="color" value="#ff4fa3"></label>
+          <label>颜色 C<input id="ibColorC" type="color" value="#32c5ff"></label>
+          <label>颜色 D<input id="ibColorD" type="color" value="#ffd60a"></label>
+          <label>背景<input id="ibBackground" type="color" value="#050506"></label>
+        </div>
+        <div class="ib-two"><label>换色速度 <output id="ibColorSpeedValue">5.0×</output><input id="ibColorSpeed" type="range" min="0.5" max="6" value="5" step="0.1"></label><label>颜色停留 <output id="ibSoftnessValue">28%</output><input id="ibSoftness" type="range" min="8" max="70" value="28"></label></div>
+        <p class="ib-help">颜色直接替换字面颜色，不使用外发光。默认速度会在几帧内完成整句换色。</p>
+      </section>
+
+      <section class="ib-section">
+        <p class="ib-kicker">图片与图标</p>
+        <label>内容模式<select id="ibContentMode">
+          <option value="text">保留文字 · 环绕收拢后只换色</option>
+          <option value="replace-one">一个字切换成图标 / 图片</option>
+          <option value="replace-multi" selected>多个字切换成图标 / 图片</option>
+        </select></label>
+        <p id="ibContentModeHint" class="ib-mode-hint">颜色动效结束后，多个文字位置可由不同字体图标或图片分别接管。</p>
+        <div id="ibResourceTools" class="ib-resource-tools">
+          <div id="ibAssets" class="ib-layer-panels" aria-live="polite">
+            <section id="ibOrbitPanel" class="ib-layer-panel">
+              <div class="ib-layer-sequence"><span>阶段 1 · 开场</span></div>
+              <div class="ib-layer-title"><strong>环绕图标</strong><span><b id="ibOrbitCount">0</b> 项 · 不限数量，可逐项删除</span></div>
+              <label class="ib-upload">＋ 添加环绕图片（可多选）<input id="ibOrbitFiles" type="file" multiple accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif"></label>
+              <details class="ib-image-library">
+                <summary>＋ 添加内置透明动物图片 <span>31 张</span></summary>
+                <div id="ibOrbitImageLibrary" class="ib-image-library-grid" aria-label="环绕透明图片素材库"></div>
+              </details>
+              <div class="ib-shape-add"><select id="ibOrbitShape"><option value="square">方形</option><option value="circle">圆形</option><option value="ring">圆环</option><option value="triangle">三角形</option><option value="star">星形</option></select><input id="ibOrbitShapeColor" type="color" value="#ffcc00" aria-label="环绕图形颜色"><button id="ibAddOrbitShape" type="button">＋ 环绕图形</button></div>
+              <div id="ibOrbitItems" class="ib-layer-items"></div>
+              <div id="ibOrbitEditorSlot" class="ib-editor-slot"></div>
+            </section>
+            <section id="ibGlyphPanel" class="ib-layer-panel ib-glyph-panel">
+              <div class="ib-layer-sequence"><span>阶段 3 · 颜色结束后</span></div>
+              <div class="ib-layer-title"><strong>字体替换图标 / 图片</strong><span><b id="ibGlyphCount">0</b> 项 · 不限数量，可逐项删除</span></div>
+              <div class="ib-glyph-guide"><strong>直接这样编辑</strong><span>① 添加图标或图片</span><span>② 每一项分别设置字位、顺序、速度和停留时间</span><span>③ “同时替换数量”决定依次播放还是并行播放</span></div>
+              <p id="ibGlyphModeMessage" class="ib-mode-hint" hidden>当前动画只换色，但这里仍可预先编辑字体图标；切换为单字或多字模式后开始播放。</p>
+              <div id="ibGlyphTools" class="ib-layer-tools">
+                <label class="ib-upload">＋ 添加字体图片（可多选）<input id="ibGlyphFiles" type="file" multiple accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif"></label>
+                <details class="ib-image-library">
+                  <summary>＋ 添加内置透明动物图片 <span>31 张</span></summary>
+                  <div id="ibGlyphImageLibrary" class="ib-image-library-grid" aria-label="字体替换透明图片素材库"></div>
+                </details>
+                <div class="ib-shape-add"><select id="ibGlyphShape"><option value="square">方形</option><option value="circle">圆形</option><option value="ring">圆环</option><option value="triangle">三角形</option><option value="star">星形</option></select><input id="ibGlyphShapeColor" type="color" value="#7b61ff" aria-label="字体图形颜色"><button id="ibAddGlyphShape" type="button">＋ 字体图形</button></div>
+                <div id="ibGlyphItems" class="ib-layer-items"></div>
+              </div>
+              <div id="ibGlyphEditorSlot" class="ib-editor-slot"></div>
+            </section>
+          </div>
+          <div id="ibAssetEditor" class="ib-asset-editor" hidden>
+            <div class="ib-active-asset"><span>正在单独编辑</span><strong id="ibActiveAsset">—</strong></div>
+            <label>这一个资源的内容<select id="ibAssetSource"><option value="shape">内置图形</option><option value="image">图片</option></select></label>
+            <label id="ibAssetTargetField">这个图片 / 图标替换哪个字（仅当前资源）<select id="ibAssetTarget"><option value="-1">自动轮换</option></select></label>
+            <label id="ibAssetHoldField">这一个字体图标停留多久 <output id="ibAssetHoldValue">160 ms</output><input id="ibAssetHold" type="range" min="40" max="1200" value="160" step="20"></label>
+            <div id="ibAssetShapeFields" class="ib-two"><label>图形<select id="ibAssetShape"><option value="square">方形</option><option value="circle">圆形</option><option value="ring">圆环</option><option value="triangle">三角形</option><option value="star">星形</option></select></label><label>图形颜色<input id="ibAssetColor" type="color" value="#ffcc00"></label></div>
+            <div id="ibAssetImageFields" class="ib-image-fields" hidden>
+              <label class="ib-upload ib-replace-upload">替换这一个资源的图片<input id="ibAssetFile" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif"></label>
+              <label class="ib-check"><input id="ibRemoveBackground" type="checkbox" checked> 自动去除四角连通背景（保护主体内部白色）</label>
+              <div class="ib-two"><label>背景颜色<input id="ibBackgroundColor" type="color" value="#ffffff"></label><label>自动识别四角<label class="ib-check ib-check-compact"><input id="ibAutoBackground" type="checkbox" checked> 开启</label></label></div>
+              <div class="ib-two"><label>背景容差 <output id="ibToleranceValue">32</output><input id="ibTolerance" type="range" min="4" max="90" value="32"></label><label>边缘过渡 <output id="ibFeatherValue">4</output><input id="ibFeather" type="range" min="0" max="24" value="4"></label></div>
+              <p id="ibProcessStatus" class="ib-process-status">上传后会保留高清主体，并裁掉透明空白。</p>
+            </div>
+            <div class="ib-two"><label>这一个资源的独立大小 <output id="ibAssetSizeValue">100%</output><input id="ibAssetSize" type="range" min="10" max="500" value="100"></label><label>独立透明度 <output id="ibAssetOpacityValue">100%</output><input id="ibAssetOpacity" type="range" min="0" max="100" value="100"></label></div>
+            <div class="ib-size-presets" aria-label="当前资源大小快捷设置"><button type="button" data-asset-size="50">50%</button><button type="button" data-asset-size="100">100%</button><button type="button" data-asset-size="200">200%</button><button type="button" data-asset-size="300">300%</button></div>
+            <div class="ib-two"><label>水平偏移 <output id="ibAssetXValue">0%</output><input id="ibAssetX" type="range" min="-100" max="100" value="0"></label><label>垂直偏移 <output id="ibAssetYValue">0%</output><input id="ibAssetY" type="range" min="-100" max="100" value="0"></label></div>
+            <div class="ib-two"><label>独立旋转 <output id="ibAssetRotationValue">0°</output><input id="ibAssetRotation" type="range" min="-180" max="180" value="0"></label><label>附加运动<select id="ibAssetMotion"><option value="replace">文字替换</option><option value="burst">爆发</option><option value="float">漂浮</option><option value="orbit">环绕</option></select></label></div>
+          </div>
+          <div class="ib-two">
+            <label>爆发范围 <output id="ibRangeValue">72%</output><input id="ibRange" type="range" min="25" max="110" value="72"></label>
+            <label>图标大小 <output id="ibSizeValue">100%</output><input id="ibSize" type="range" min="40" max="180" value="100"></label>
+          </div>
+        </div>
+      </section>
+
+      <section class="ib-section">
+        <p class="ib-kicker">节奏</p>
+        <div id="ibReplacementTiming" class="ib-two"><label id="ibReplaceCountField">同时替换数量<select id="ibReplaceCount"><option value="1" selected>1 个 · 依次播放</option><option value="2">2 个 · 两两播放</option><option value="3">3 个</option><option value="4">4 个</option><option value="all">全部同时</option></select></label><label>每组最短时长 <output id="ibBeatValue">0.08 秒</output><input id="ibBeat" type="range" min="60" max="1200" value="80" step="20"></label><label>全局切换速度 <output id="ibReplaceSpeedValue">4.0×</output><input id="ibReplaceSpeed" type="range" min="0.5" max="8" value="4" step="0.1"></label></div>
+        <p id="ibSequenceHelp" class="ib-help">每个字体图标可单独设置字位、顺序、速度和停留时间；停留变长时，循环会自动延长，不会截断图标。</p>
+        <div id="ibMotionTiming" class="ib-two">
+          <label>中间图标槽宽 <output id="ibCollapseValue">62%</output><input id="ibCollapse" type="range" min="20" max="100" value="62"></label>
+          <label>滞空时长 <output id="ibHangValue">0.80 秒</output><input id="ibHang" type="range" min="20" max="140" value="80" step="5"></label>
+          <label>慢动作速度 <output id="ibDriftValue">28%</output><input id="ibDrift" type="range" min="15" max="60" value="28"></label>
+          <label>终点前转幅度 <output id="ibOvershootValue">58%</output><input id="ibOvershoot" type="range" min="0" max="100" value="58"></label>
+          <label>球体旋转速度 <output id="ibOrbitSpeedValue">1.00×</output><input id="ibOrbitSpeed" type="range" min="50" max="200" value="100" step="5"></label>
+          <label>字体回归时长 <output id="ibWordReturnValue">0.36 秒</output><input id="ibWordReturn" type="range" min="80" max="1200" value="360" step="20"></label>
+          <label>图标聚拢密度 <output id="ibDensityValue">40%</output><input id="ibDensity" type="range" min="0" max="100" value="40"></label>
+          <label>收拢轨迹弧度 <output id="ibCurveValue">72%</output><input id="ibCurve" type="range" min="20" max="100" value="72"></label>
+          <label>替字收尾放大 <output id="ibFinalScaleValue">+5.5%</output><input id="ibFinalScale" type="range" min="0" max="10" value="5.5" step="0.5"></label>
+          <label>收尾放大时长 <output id="ibFinalScaleDurationValue">0.52 秒</output><input id="ibFinalScaleDuration" type="range" min="200" max="1200" value="520" step="20"></label>
+        </div>
+        <p class="ib-help">慢动作速度直接表示原速度的百分比；终点前转幅度控制图标到达终点后还向前走多少；球体旋转速度独立控制绕球轨道快慢；字体回归时长可在 0.08–1.20 秒间调整，时间线会自动延长，后面的滞空、换色和替字不会抢跑。图标先完整前转，最后才缩小消失。</p>
+        <label>循环速度 <output id="ibSpeedValue">1.0×</output><input id="ibSpeed" type="range" min="0.5" max="2" value="1" step="0.1"></label>
+        <button id="ibRestart" class="ib-primary" type="button">从头播放</button>
+      </section>
+    </aside>
+
+    <section id="ibStage" class="ib-stage" aria-label="动画效果画布">
+      <div class="ib-safe-area" aria-hidden="true"></div>
+      <div id="ibComposition" class="ib-composition">
+        <div id="ibOrbitLayer" class="ib-icon-layer ib-orbit-layer" aria-hidden="true"></div>
+        <div id="ibGlyphLayer" class="ib-icon-layer ib-glyph-layer" aria-hidden="true"></div>
+        <div id="ibIntroWord" class="ib-switch-word ib-intro-word" aria-hidden="true">GOOD JOB</div>
+        <div id="ibIncomingWord" class="ib-switch-word ib-incoming-word" aria-hidden="true"><span id="ibIncomingLeft">GOOD</span><span id="ibIncomingRight">JOB</span></div>
+        <div id="ibWord" class="ib-word">GOOD JOB</div>
+        <div id="ibColorWord" class="ib-word ib-final-overlay ib-color-word" aria-hidden="true">GOOD JOB</div>
+        <div id="ibWhiteWord" class="ib-word ib-final-overlay ib-white-word" aria-hidden="true">GOOD JOB</div>
+      </div>
+      <div class="ib-stage-meta"><span>TEXT × ICON × COLOR CUT</span><strong id="ibPhase">01 · 字内预告</strong></div>
+      <div class="ib-controls">
+        <button id="ibPlay" type="button" aria-pressed="false"><span id="ibPlayIcon">Ⅱ</span><span id="ibPlayLabel">暂停</span></button>
+        <button id="ibReplay" type="button">↻ 重播</button>
+      </div>
+    </section>
+  </main>
+  <script src="iconburst.js?v=20260809-43"></script>
+  <script src="stg-cn.js"></script>
+</body>
+</html>

@@ -14,6 +14,7 @@ class Snap {
 
     this.pgTextSize = 2;
     this.findTextSize();
+    this.pgTextSize *= flashTextScale;
     
     this.xKern = [];
     this.xWidths = [];
@@ -71,7 +72,7 @@ class Snap {
       this.xScale[n] = map(tk1, 0, 1, a0, b0);
       this.xShear[n] = map(tk1, 0, 1, a1, b1);
 
-      this.xWidths[n] = textWidth(this.inp.charAt(n)) * this.xScale[n];
+      this.xWidths[n] = flashInlineGlyphWidth(this.inp.charAt(n), this.pgTextSize) * this.xScale[n];
     }
 
     var fullSize = 0;
@@ -104,7 +105,7 @@ class Snap {
           noStroke();
           shearX(this.xShear[n]);
           scale(this.xScale[n], 1);
-          text(this.inp.charAt(n), 0, 0);
+          flashDrawInlineGlyph(this.inp.charAt(n), 0, 0, this.pgTextSize, true);
         pop();
         translate(this.xKern[n], 0);
       }
@@ -116,7 +117,7 @@ class Snap {
     textSize(this.pgTextSize);
 
     for(var n = 0; n < this.inp.length; n++){
-      this.xWidths[n] = textWidth(this.inp.charAt(n));
+      this.xWidths[n] = flashInlineGlyphWidth(this.inp.charAt(n), this.pgTextSize);
     }
     var fullSize = 0;
     for(var n = 0; n < this.inp.length-1; n++){
@@ -133,7 +134,7 @@ class Snap {
     while(measured < width){
       textSize(this.pgTextSize)
       textFont(currentFont);
-      measured = textWidth(this.inp);
+      measured = flashInlineTextWidth(this.inp, this.pgTextSize);
 
       this.pgTextSize += 2;
     }

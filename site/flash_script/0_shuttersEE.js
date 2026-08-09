@@ -14,6 +14,7 @@ class ShuttersEE {
 
     this.pgTextSize = 2;
     this.findTextSize();
+    this.pgTextSize *= flashTextScale;
     
     this.xSpots = [];
     this.findXpos();
@@ -106,12 +107,12 @@ class ShuttersEE {
   findXpos(){
     textFont(currentFont);
     textSize(this.pgTextSize);
-    var fullSize = textWidth(this.inp);
+    var fullSize = flashInlineTextWidth(this.inp, this.pgTextSize);
     var xStart = width/2 - fullSize/2;
 
     for(var n = 0; n < this.inp.length; n++){
-      var thisLetterWidth = textWidth(this.inp.charAt(n));
-      var upUntilWidth = textWidth(this.inp.slice(0,n+1));
+      var thisLetterWidth = flashInlineGlyphWidth(this.inp.charAt(n), this.pgTextSize);
+      var upUntilWidth = flashInlineTextWidth(this.inp.slice(0,n+1), this.pgTextSize);
       var difference = upUntilWidth - thisLetterWidth;
       this.xSpots[n] = xStart + difference;
     }
@@ -122,7 +123,7 @@ class ShuttersEE {
     while(measured < width){
       textSize(this.pgTextSize)
       textFont(currentFont);
-      measured = textWidth(this.inp);
+      measured = flashInlineTextWidth(this.inp, this.pgTextSize);
 
       this.pgTextSize += 2;
     }
@@ -138,7 +139,7 @@ class ShuttersEE {
 
     for(var n = 0; n < this.inp.length; n++){
 
-      var repeatSize = round(textWidth(this.inp.charAt(n)));
+      var repeatSize = max(2, round(flashInlineGlyphWidth(this.inp.charAt(n), this.pgTextSize)));
     
       this.pg[n] = createGraphics(repeatSize, this.pgTextSize * (thisFontAdjust + 0.05));
       this.pg[n].background(bkgdColor);
@@ -149,7 +150,7 @@ class ShuttersEE {
       this.pg[n].textAlign(CENTER);
       this.pg[n].textFont(currentFont);
       var thisAdjust = this.pg[n].height/2 + this.pgTextSize * thisFontAdjust/2 + this.pgTextSize * thisFontAdjustUp;
-      this.pg[n].text(this.inp.charAt(n), this.pg[n].width/2, thisAdjust);
+      flashDrawInlineText(this.pg[n], this.inp.charAt(n), this.pg[n].width/2, thisAdjust, this.pgTextSize);
     }
   }
 

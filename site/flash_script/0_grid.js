@@ -95,7 +95,7 @@ class Grid {
     while(measured < width){
       textSize(this.pgTextSize)
       textFont(currentFont);
-      measured = textWidth(this.inp);
+      measured = flashInlineTextWidth(this.inp, this.pgTextSize);
 
       this.pgTextSize += 2;
     }
@@ -133,7 +133,7 @@ class Grid {
   drawTextures(){
     textSize(this.pgTextSize);
     textFont(currentFont);
-    var repeatSize = round(textWidth(this.inp));
+    var repeatSize = max(2, round(flashInlineTextWidth(this.inp, this.pgTextSize)));
   
     this.pgA = createGraphics(repeatSize, this.pgTextSize * 0.8);
     this.pgA.background(bkgdColor);
@@ -143,7 +143,7 @@ class Grid {
     this.pgA.textSize(this.pgTextSize);
     this.pgA.textAlign(CENTER);
     this.pgA.textFont(currentFont);
-    this.pgA.text(this.inp, this.pgA.width/2, this.pgA.height/2 + this.pgTextSize * thisFontAdjust/2);
+    flashDrawInlineText(this.pgA, this.inp, this.pgA.width/2, this.pgA.height/2 + this.pgTextSize * thisFontAdjust/2, this.pgTextSize);
   }
 
   removeGraphics(){

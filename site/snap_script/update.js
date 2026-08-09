@@ -3,6 +3,9 @@ function setText(){
   textFont(currentFont);
 
   var enteredText = document.getElementById("textArea").value;
+  if(stgMedia.enabled && (stgMedia.layer === "inline" || stgMedia.assets.some(function(asset){ return asset.layer === "inline"; }))){
+    enteredText = stgMediaEncodeTokens(enteredText);
+  }
   keyText = enteredText;
   keyArray = enteredText.match(/[^\r\n]+/g);
 
@@ -13,8 +16,16 @@ function setText(){
   resetAnim();
 }
 
+function stgMediaChanged(){
+  if(currentFont){
+    setText();
+  }
+}
+
 function setFont(val){
-  currentFont = tFont[val];
+  currentFontIndex = int(val);
+  currentFont = tFont[currentFontIndex] || tFont[0];
+  setText();
 }
 
 function runSave(){
@@ -142,10 +153,12 @@ function toggleRecMessage(){
 
 function hideWidget(){
   widgetOn = !widgetOn;
+  stgSetEditorCollapsed(!widgetOn);
 
   if(widgetOn){
     document.getElementById('widget').style.display = "block";
   } else {
     document.getElementById('widget').style.display = "none";
   }
+  setTimeout(windowResized, 240);
 }

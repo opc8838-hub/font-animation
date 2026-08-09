@@ -381,7 +381,66 @@ body.stg-modern-editor .coupling3,
 body.stg-modern-editor .coupling4,
 body.stg-modern-editor .toggleSelect { gap: 8px !important; }
 
+/* Desktop workbench: a real editor column beside an isolated canvas stage. */
+body:has(.stg-canvas-stage) {
+  --stg-workbench-panel: 360px;
+  overflow: hidden;
+  background: #0b0b0a;
+}
+
+.stg-canvas-stage {
+  position: fixed;
+  inset: 0 0 0 var(--stg-workbench-panel, 360px);
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-left: 1px solid #11110f;
+  background: #0b0b0a;
+  transition: left 220ms ease;
+}
+
+.stg-canvas-stage canvas {
+  position: static !important;
+  display: block !important;
+  max-width: 100%;
+  max-height: 100%;
+  margin: 0 !important;
+}
+
+@media (min-width: 641px) {
+  body.stg-modern-editor:has(.stg-canvas-stage) #generatorInput,
+  body.stg-modern-editor:has(.stg-canvas-stage) #widget:not(:has(#generatorInput)),
+  body.stg-modern-editor:has(.stg-canvas-stage) #panel {
+    inset: 0 auto 0 0 !important;
+    width: var(--stg-workbench-panel) !important;
+    height: 100dvh !important;
+    max-height: none !important;
+    border: 0 !important;
+    border-right: 1px solid #11110f !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  body.stg-editor-collapsed .stg-canvas-stage { left: 0; }
+
+  body:has(.stg-canvas-stage) .switch {
+    left: calc(var(--stg-workbench-panel) + (100vw - var(--stg-workbench-panel)) / 2) !important;
+    z-index: 2147482100;
+    transition: left 220ms ease;
+  }
+
+  body.stg-editor-collapsed:has(.stg-canvas-stage) .switch { left: 50vw !important; }
+}
+
 @media (max-width: 640px) {
+  body:has(.stg-canvas-stage) {
+    --stg-workbench-panel: 0px;
+    overflow: hidden;
+  }
+
+  .stg-canvas-stage { inset: 0; border-left: 0; }
+
   body.stg-legacy-editor::before {
     content: "";
     position: fixed;
@@ -447,4 +506,128 @@ body.stg-modern-editor .toggleSelect { gap: 8px !important; }
 
 @media (prefers-reduced-motion: reduce) {
   .stg-cn-toolbar *, .stg-cn-drawer * { scroll-behavior: auto !important; }
+}
+
+/* ME Motion Studio — shared visual language for every effect page. */
+.stg-cn-toolbar,
+.stg-cn-drawer,
+.stg-editor-panel {
+  --stg-ink: #1d1d1f;
+  --stg-paper: #f5f5f7;
+  --stg-blue: #0071e3;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+}
+.stg-cn-toolbar {
+  top: 14px;
+  right: 14px;
+  height: 44px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, .08);
+  border-radius: 14px;
+  background: rgba(250, 250, 252, .84);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, .12);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
+}
+.stg-cn-toolbar a,
+.stg-cn-toolbar button {
+  height: 42px;
+  border-color: rgba(0, 0, 0, .08);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+}
+.stg-cn-toolbar a:hover,
+.stg-cn-toolbar button:hover { background: rgba(0,0,0,.06); color: var(--stg-blue); }
+.stg-cn-toolbar .stg-cn-home { background: var(--stg-ink); color: #fff; }
+.stg-cn-toolbar .stg-cn-home:hover { background: #000; color: #fff; }
+.stg-cn-toolbar .stg-cn-title { border-color: rgba(0,0,0,.08); }
+.stg-cn-title small { color: #86868b; font-family: inherit; letter-spacing: .03em; }
+.stg-cn-drawer {
+  top: 66px;
+  right: 14px;
+  overflow: hidden auto;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 18px;
+  background: rgba(250, 250, 252, .94);
+  box-shadow: 0 22px 70px rgba(0,0,0,.16);
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  backdrop-filter: blur(26px) saturate(180%);
+}
+.stg-cn-drawer-header { border-color: rgba(0,0,0,.08); background: transparent; }
+.stg-cn-drawer-grid a { border-color: rgba(0,0,0,.07); border-right-color: rgba(0,0,0,.07); }
+.stg-cn-drawer-grid a:hover { background: #fff; color: var(--stg-blue); }
+.stg-cn-drawer-grid a[aria-current="page"] { background: var(--stg-ink); color: #fff; }
+.stg-cn-drawer-grid small { font-family: inherit; }
+
+.stg-editor-panel {
+  inset: 12px auto 12px 12px;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 20px;
+  background: rgba(245,245,247,.96);
+  box-shadow: 0 24px 70px rgba(0,0,0,.16);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+}
+.stg-editor-header {
+  min-height: 66px;
+  padding: 11px 15px;
+  border-color: rgba(0,0,0,.08);
+  background: rgba(255,255,255,.82);
+}
+.stg-editor-header small { color: #86868b; font-weight: 550; }
+.stg-editor-header strong { font-size: 18px; letter-spacing: -.025em; }
+.stg-editor-header a { padding: 8px 10px; border-radius: 999px; background: #ededf0; color: var(--stg-blue); text-decoration: none; }
+.stg-editor-tabs { gap: 4px; padding: 7px; border-color: rgba(0,0,0,.08); background: #ededf0; }
+.stg-editor-tabs button { min-height: 34px; border: 0; border-radius: 8px; background: transparent; font-family: inherit; font-weight: 580; }
+.stg-editor-tabs button[aria-selected="true"] { background: #fff; color: var(--stg-ink); box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.stg-editor-group { padding: 16px; }
+.stg-editor-label { font-weight: 580; }
+.stg-editor-value { color: #86868b; font-family: inherit; }
+.stg-editor-control input[type="color"],
+.stg-editor-control textarea,
+.stg-editor-control input[type="text"],
+.stg-editor-control select {
+  border: 1px solid #d2d2d7;
+  border-radius: 11px;
+  font-family: inherit;
+}
+.stg-editor-command { border: 0; border-radius: 11px; background: #fff; color: var(--stg-blue); font-family: inherit; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+.stg-editor-command:hover { background: var(--stg-blue); color: #fff; }
+
+body.stg-modern-editor:not(.stg-pro-workspace) #generatorInput,
+body.stg-modern-editor:not(.stg-pro-workspace) #widget:not(:has(#generatorInput)),
+body.stg-modern-editor:not(.stg-pro-workspace) #panel {
+  inset: 12px auto 12px 12px !important;
+  overflow: hidden auto !important;
+  border: 1px solid rgba(0,0,0,.08) !important;
+  border-radius: 20px !important;
+  background: rgba(245,245,247,.96) !important;
+  box-shadow: 0 24px 70px rgba(0,0,0,.16) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+}
+body.stg-modern-editor:not(.stg-pro-workspace) #generatorInput .titleh2,
+body.stg-modern-editor:not(.stg-pro-workspace) #generatorInput > h3,
+body.stg-modern-editor:not(.stg-pro-workspace) #widget:not(:has(#generatorInput)) > h3,
+body.stg-modern-editor:not(.stg-pro-workspace) #panel-header {
+  border-color: rgba(0,0,0,.08) !important;
+  background: rgba(255,255,255,.86) !important;
+}
+body.stg-modern-editor:not(.stg-pro-workspace) #generatorInput .collapsible {
+  min-height: 48px !important;
+  border-color: rgba(0,0,0,.07) !important;
+  background: #fff !important;
+}
+body.stg-modern-editor:not(.stg-pro-workspace) #generatorInput .collapsible.active { background: #1d1d1f !important; color: #fff !important; }
+body.stg-modern-editor:not(.stg-pro-workspace) #generatorInput .content,
+body.stg-modern-editor:not(.stg-pro-workspace) #widget:not(:has(#generatorInput)) .sec,
+body.stg-modern-editor:not(.stg-pro-workspace) #panel-body { background: #f5f5f7 !important; }
+body.stg-modern-editor:not(.stg-pro-workspace) #generatorInput :is(textarea,input[type="text"],select),
+body.stg-modern-editor:not(.stg-pro-workspace) #widget:not(:has(#generatorInput)) :is(textarea,input[type="text"],select) {
+  border-color: #d2d2d7 !important;
+  border-radius: 11px !important;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif !important;
 }

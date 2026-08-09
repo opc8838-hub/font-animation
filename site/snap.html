@@ -4,13 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>STG _v.Snap</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.1.9/p5.js"></script>
   <script src="https://unpkg.com/h264-mp4-encoder/embuild/dist/h264-mp4-encoder.web.js"></script>
 
   <link rel="stylesheet" href="style_snap.css">
+  <link rel="stylesheet" href="media-layer.css?v=20260808-3">
   <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script src="media-layer.js?v=20260808-3" type="text/javascript"></script>
   <script src="snap_script/sketch_snap.js" type="text/javascript"></script>
   <script src="snap_script/update.js" type="text/javascript"></script>
   <script src="snap_script/animators.js" type="text/javascript"></script>
@@ -24,9 +27,11 @@
 
   <style> body {padding: 0; margin: 0;} canvas {vertical-align: top;} </style>
   <link rel="stylesheet" href="stg-cn.css">
+  <link rel="stylesheet" href="workspace-editor.css">
 </head>
 
 <body>
+  <main id="stgCanvasStage" class="stg-canvas-stage" aria-label="Snap 动画效果画布"></main>
   <div id="widget">
     <div class="dropdown">
       <button class="dropbtn">Select...</button>
@@ -71,23 +76,85 @@
           <textarea id="textArea" rows=4 oninput="setText()">中文渲染测试</textarea>
           <div class="textureEdit">
             <select name="fontChange" id="fontChange" onchange="setFont(this.value)">
-              <option value="0" selected="selected">Inter - Medium</option>
-              <option value="1">Inter - Black</option>
-              <option value="2">Apoc_LC - Regluar</option>
-              <option value="3">IBM_Plex_Mono - Bold Italic</option>
-              <option value="4">Space Mono - Regular</option>
-              <option value="5">Space Grotesk - Bold</option>
+              <option value="0" selected="selected">思源黑体 · Regular（中英）</option>
+              <option value="1">思源黑体 · Black（中英）</option>
+              <option value="2">Space Grotesk · Variable</option>
+              <option value="3">Lora · Variable Serif</option>
+              <option value="4">Martian Mono · Variable</option>
+              <option value="5">Fenix · Regular Serif</option>
+              <option value="6">Work Sans · Regular</option>
+              <option value="7">Space Mono · Bold</option>
+              <option value="8">Vollkorn · Bold Italic</option>
+              <option value="9">Roboto Condensed · Bold</option>
+              <option value="10">Cairo · Bold</option>
+              <option value="11">Aguafina Script · Regular</option>
+              <option value="12">Manrope · Variable Sans</option>
+              <option value="13">League Spartan · Variable Display</option>
+              <option value="14">Cinzel · Variable Serif</option>
+              <option value="15">Instrument Serif · Regular</option>
+              <option value="16">Bebas Neue · Display</option>
+              <option value="17">Poppins · Regular</option>
+              <option value="18">Rajdhani · Bold</option>
+              <option value="19">Teko · Variable Display</option>
+              <option value="20">Khand · Regular</option>
+              <option value="21">Fraunces · Variable Serif</option>
+              <option value="22">思源黑体 · Thin（中文）</option>
+              <option value="23">Noto Sans JP · Thin（中日）</option>
+              <option value="24">Noto Sans JP · Black（中日）</option>
+              <option value="25">Noto Sans KR · Black（韩文）</option>
             </select>
+            <p class="stg-font-note">共 26 款本地字体。标注“中文 / 中日”的 5 款可直接改变中文字形；英文与韩文字体也会真实加载，不支持的字符会回退到思源黑体。</p>
             <div class="coupling1">
-              <div class="coupling_label"><h3>Size</h3></div>
+              <div class="coupling_label"><h3>字体尺寸</h3></div>
               <input type="range" min="20" max="200" value="70" id="fontSize" oninput="setFontSize(this.value)">
             </div>
-            <div class="coupling1">
-              <input type="color" id="bColor" name="bColor" value="#000000" oninput="setBkgdColor(this.value)">
-              <input type="color" id="fColor" name="fColor" value="#ffffff" oninput="setForeColor(this.value)">
+            <div class="coupling1 stg-color-pair">
+              <label class="stg-color-field" for="bColor"><span>背景颜色</span><input type="color" id="bColor" name="bColor" value="#000000" oninput="setBkgdColor(this.value)"></label>
+              <label class="stg-color-field" for="fColor"><span>字体颜色</span><input type="color" id="fColor" name="fColor" value="#ffffff" oninput="setForeColor(this.value)"></label>
             </div>
           </div>
 
+        </div>
+      </div>
+
+      <button type="button" class="collapsible"><h1>IMAGE / SHAPE</h1></button>
+      <div class="content">
+        <div class="module stg-media-grid">
+          <label class="stg-media-switch" for="mediaEnabled"><span>显示图片 / 图形</span><input type="checkbox" id="mediaEnabled" oninput="stgMediaSetEnabled(this.checked)"></label>
+          <p id="mediaStatus" class="stg-media-status">媒体层未显示</p>
+
+          <div class="stg-media-row"><label for="mediaSource">内容类型</label><select id="mediaSource" oninput="stgMediaSetSource(this.value)"><option value="shape" selected>内置图形</option><option value="image">上传图片</option></select></div>
+          <div class="stg-media-row" id="mediaUploadRow" hidden><label for="mediaFile">PNG / JPG / SVG / GIF · 可多选</label><input id="mediaFile" type="file" multiple accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" onchange="stgMediaLoadFile(this)"></div>
+          <div class="stg-media-pair" id="mediaShapeRow">
+            <div class="stg-media-row"><label for="mediaShape">图形</label><select id="mediaShape" oninput="stgMediaSetShape(this.value)"><option value="circle">圆形</option><option value="square">方形</option><option value="triangle">三角形</option><option value="star">星形</option><option value="pill">药丸形</option><option value="ring">圆环</option></select></div>
+            <div class="stg-media-row"><label for="mediaColor">图形颜色</label><input id="mediaColor" type="color" value="#ff5a45" oninput="stgMediaSetColor(this.value)"></div>
+          </div>
+
+          <div class="stg-media-pair">
+            <div class="stg-media-row"><label for="mediaLayer">结合方式</label><select id="mediaLayer" oninput="stgMediaSetLayer(this.value)"><option value="inline" selected>插入文字位置（默认）</option><option value="front">文字前方</option><option value="behind">文字后方</option></select></div>
+            <div class="stg-media-row"><label for="mediaMotion">图片附加动效</label><select id="mediaMotion" oninput="stgMediaSetMotion(this.value)"><option value="none">静止</option><option value="pop" selected>弹入 / Pop</option><option value="slide-left">左侧滑入</option><option value="slide-up">底部滑入</option><option value="spin">旋转</option><option value="breathe">呼吸</option><option value="float">漂浮</option><option value="orbit">环绕</option></select></div>
+          </div>
+          <button class="stg-media-action" type="button" onclick="stgMediaInsertToken()">把当前图片插入光标位置</button>
+          <p class="stg-media-note">每张图片有自己的定位符，例如 <strong>{图1}</strong>、<strong>{图2}</strong>。先选择图片，再把光标放进上方文字并点击插入；每张图可独立调整大小和位置。</p>
+          <div class="stg-media-pair stg-media-scale-controls">
+            <div class="stg-media-row"><label for="mediaInlineScale">精细缩放 <span><output data-media-value="inlineScale">100</output>%</span></label><input id="mediaInlineScale" type="range" min="0.25" max="3" value="1" step="0.05" oninput="stgMediaSetValue('inlineScale', this.value)"></div>
+            <div class="stg-media-row"><label for="mediaInlineOffsetY">基线位置 <output data-media-value="inlineOffsetY">0</output></label><input id="mediaInlineOffsetY" type="range" min="-100" max="100" value="0" oninput="stgMediaSetValue('inlineOffsetY', this.value)"></div>
+          </div>
+          <div class="stg-media-row stg-media-spacing-control"><label for="mediaInlinePadding">图片与文字间距 <span><output data-media-value="inlinePadding">8</output>%</span></label><input id="mediaInlinePadding" type="range" min="0" max="60" value="8" oninput="stgMediaSetValue('inlinePadding', this.value)"></div>
+
+          <div class="stg-media-pair">
+            <div class="stg-media-row"><label for="mediaX">水平位置 <output data-media-value="x">50</output></label><input id="mediaX" type="range" min="0" max="100" value="50" oninput="stgMediaSetValue('x', this.value)"></div>
+            <div class="stg-media-row"><label for="mediaY">垂直位置 <output data-media-value="y">50</output></label><input id="mediaY" type="range" min="0" max="100" value="50" oninput="stgMediaSetValue('y', this.value)"></div>
+          </div>
+          <div class="stg-media-pair">
+            <div class="stg-media-row"><label for="mediaSize">大小 <output data-media-value="size">22</output></label><input id="mediaSize" type="range" min="3" max="80" value="22" oninput="stgMediaSetValue('size', this.value)"></div>
+            <div class="stg-media-row"><label for="mediaAspect">宽高比 <output data-media-value="aspect">1</output></label><input id="mediaAspect" type="range" min="0.3" max="3" value="1" step="0.05" oninput="stgMediaSetValue('aspect', this.value)"></div>
+          </div>
+          <div class="stg-media-pair">
+            <div class="stg-media-row"><label for="mediaRotation">旋转 <output data-media-value="rotation">0</output>°</label><input id="mediaRotation" type="range" min="-180" max="180" value="0" oninput="stgMediaSetValue('rotation', this.value)"></div>
+            <div class="stg-media-row"><label for="mediaOpacity">透明度 <output data-media-value="opacity">100</output>%</label><input id="mediaOpacity" type="range" min="0" max="100" value="100" oninput="stgMediaSetValue('opacity', this.value)"></div>
+          </div>
+          <div class="stg-media-row"><label for="mediaSpeed">动效速度 <output data-media-value="speed">1</output>×</label><input id="mediaSpeed" type="range" min="0.25" max="3" value="1" step="0.25" oninput="stgMediaSetValue('speed', this.value)"></div>
         </div>
       </div>
 

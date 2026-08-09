@@ -14,6 +14,7 @@ class Box {
 
     this.pgTextSize = 2;
     this.findTextSize();
+    this.pgTextSize *= flashTextScale;
 
     this.pgA, this.pgB;
     this.drawTextures();
@@ -126,7 +127,7 @@ class Box {
     while(measured < width){
       textSize(this.pgTextSize)
       textFont(currentFont);
-      measured = textWidth(this.inp);
+      measured = flashInlineTextWidth(this.inp, this.pgTextSize);
 
       this.pgTextSize += 2;
     }
@@ -139,7 +140,7 @@ class Box {
   drawTextures(){
     textSize(this.pgTextSize);
     textFont(currentFont);
-    var repeatSize = round(textWidth(this.inp));
+    var repeatSize = max(2, round(flashInlineTextWidth(this.inp, this.pgTextSize)));
   
     this.pgA = createGraphics(repeatSize, this.pgTextSize * (thisFontAdjust + 0.1));
     this.pgA.background(bkgdColor);
@@ -149,7 +150,7 @@ class Box {
     this.pgA.textAlign(CENTER);
     this.pgA.textFont(currentFont);
     var thisAdjust = this.pgA.height/2 + this.pgTextSize * thisFontAdjust/2 + this.pgTextSize * thisFontAdjustUp;
-    this.pgA.text(this.inp, this.pgA.width/2, thisAdjust);
+    flashDrawInlineText(this.pgA, this.inp, this.pgA.width/2, thisAdjust, this.pgTextSize);
 
     this.pgB = createGraphics(repeatSize, this.pgTextSize * 0.8);
     this.pgB.background(foreColor);
@@ -159,7 +160,7 @@ class Box {
     this.pgB.textAlign(CENTER);
     this.pgB.textFont(currentFont);
     var thisAdjust = this.pgA.height/2 + this.pgTextSize * thisFontAdjust/2 + this.pgTextSize * thisFontAdjustUp;
-    this.pgB.text(this.inp, this.pgA.width/2, thisAdjust);
+    flashDrawInlineText(this.pgB, this.inp, this.pgA.width/2, thisAdjust, this.pgTextSize);
   }
 
   removeGraphics(){

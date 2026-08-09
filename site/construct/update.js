@@ -11,8 +11,17 @@ function setText(){
   fullHeight = 0;
 
   var enteredText = document.getElementById("textArea").value;
+  var hasInlineMedia = stgMedia.layer === "inline" || stgMedia.assets.some(function(asset){ return asset.layer === "inline"; });
+  explicitMediaPlacement = stgMedia.enabled && hasInlineMedia && /\{图\d*\}|\[图\d*\]/.test(enteredText);
+  if(stgMedia.enabled && hasInlineMedia){
+    enteredText = enteredText.replace(/\{图(\d*)\}|\[图(\d*)\]/g, function(match, curlySlot, squareSlot){
+      var slot = Number(curlySlot || squareSlot || 0);
+      var asset = slot ? stgMediaAssetForSlot(slot) : stgMediaActiveAsset() || stgMedia.assets[0];
+      return asset ? " XMEDIA_" + asset.slot + " " : " X0 ";
+    });
+  }
   keyText = enteredText;
-  keyArray = enteredText.split(" ");
+  keyArray = enteredText.trim().split(/\s+/);
 
   if(keyArray == null){
     keyArray = "";
@@ -56,8 +65,11 @@ function setText(){
 
     var ver = 0;
 
-    if(keyArray[k] == "X0"){  // IMAGE
-      pgImage(k, sH);
+    if(keyArray[k] == "X0" || keyArray[k].indexOf("XMEDIA_") === 0){  // IMAGE
+      var requestedAsset = keyArray[k].indexOf("XMEDIA_") === 0
+        ? stgMediaAssetForSlot(keyArray[k].slice(7))
+        : null;
+      pgImage(k, sH, requestedAsset);
       ver = 0;
     } else if(keyArray[k] == "X1"){  // SLASHES
       pSlash(k, sH);
@@ -111,6 +123,12 @@ function reRoll(){
   setText();
 }
 
+function stgMediaChanged(){
+  if(foreColor && bkgdColor){
+    setText();
+  }
+}
+
 function aSet(ticker, influ){          // takes a 0 - 1 and returns an eased 0 - 1
   var capTicker = ticker%1;
 
@@ -119,12 +137,18 @@ function aSet(ticker, influ){          // takes a 0 - 1 and returns an eased 0 -
 }
 
 function randomInsert(){
+  if(explicitMediaPlacement){
+    return;
+  }
+
   // insert for images
   // var r0 = 8;
-  var r0 = 1 + floor(keyArray.length/5);
-  for(var r = 0; r<r0; r++){
-    var insertPoint = round(random(keyArray.length));
-    keyArray.splice(insertPoint, 0, "X0");
+  if(keyArray.indexOf("X0") === -1){
+    var r0 = 1 + floor(keyArray.length/5);
+    for(var r = 0; r<r0; r++){
+      var insertPoint = round(random(keyArray.length));
+      keyArray.splice(insertPoint, 0, "X0");
+    }
   }
 
   // insert for slashes
@@ -194,11 +218,13 @@ function randomInsert(){
 
 function hideWidget(){
   widgetOn = !widgetOn;
+  stgSetEditorCollapsed(!widgetOn);
   if(widgetOn==true){
     document.getElementById('widget').style.display = "block";
   } else {
     document.getElementById('widget').style.display = "none";
   }
+  setTimeout(windowResized, 240);
 }
 
 function invert(){

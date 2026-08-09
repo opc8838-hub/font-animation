@@ -1,0 +1,94 @@
+.flash-browser-heading { align-items: start; }
+
+.flash-browser-heading h1 {
+  max-width: 840px;
+  margin: 0;
+  font-size: clamp(46px, 6vw, 82px);
+  font-weight: 680;
+  line-height: 1.02;
+  letter-spacing: -.06em;
+}
+
+.flash-intro {
+  max-width: 58ch;
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.flash-shuffle-link {
+  min-height: 52px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--blue);
+  color: #fff;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.flash-shuffle-link:hover { background: var(--blue-hover); color: #fff; }
+
+.flash-scene-grid { margin-top: 28px; }
+
+.flash-scene-preview {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: #111;
+  color: #fff;
+}
+
+.flash-scene-word {
+  position: relative;
+  z-index: 2;
+  max-width: 92%;
+  font: 800 clamp(20px, 3vw, 44px)/.9 Arial Black, "Microsoft YaHei", sans-serif;
+  letter-spacing: -.08em;
+  transform: scaleX(.72);
+}
+
+.flash-scene-shape {
+  position: absolute;
+  width: 56%;
+  aspect-ratio: 1;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  color: #2997ff;
+}
+
+.scene-2 .flash-scene-word { transform: skewX(-22deg) scaleX(.76); }
+.scene-3 .flash-scene-shape { border-radius: 0; transform: rotate(12deg); }
+.scene-4 .flash-scene-shape { width: 28%; box-shadow: 90px 0 0 -1px #111, 90px 0 0 0 #ff375f; color: #ff375f; }
+.scene-5 .flash-scene-shape { width: 76%; border-width: 18px; }
+.scene-6 .flash-scene-shape { width: 92%; border-style: dashed; }
+.scene-7 .flash-scene-preview { background: repeating-linear-gradient(90deg, #111 0 12%, #fff 12% 14%); }
+.scene-8 .flash-scene-preview { background: repeating-linear-gradient(0deg, #111 0 12%, #0071e3 12% 15%); }
+.scene-9 .flash-scene-word { writing-mode: vertical-rl; letter-spacing: -.2em; }
+.scene-10 .flash-scene-word { transform: scale(1.28) rotate(-5deg); }
+.scene-11 .flash-scene-word { word-spacing: 2em; }
+.scene-12 .flash-scene-shape { border-radius: 0; transform: rotate(45deg); color: #7fe7ff; }
+.scene-13 .flash-scene-word { transform: rotate(-12deg) skewY(14deg) scaleX(.74); }
+
+.flash-scene-card small {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+footer a { color: inherit; }
+
+@media (max-width: 720px) {
+  .flash-browser-heading { grid-template-columns: 1fr; }
+  .flash-shuffle-link { width: 100%; }
+}

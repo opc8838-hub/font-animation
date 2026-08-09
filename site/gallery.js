@@ -11,6 +11,7 @@ const effects = [
   ["danger", "警示", "Danger", "type", "排版实验"],
   ["field", "场域", "Field", "flow", "波形流动"],
   ["flag", "旗帜", "Flag", "flow", "波形流动"],
+  ["iconburst", "图标爆发", "Icon Burst", "graphic", "文字 × 图标 × 硬切换色"],
   ["flash", "闪光", "Flash", "type", "排版实验"],
   ["index", "圆柱", "Cylinder", "space", "立体空间"],
   ["layers", "层叠", "Layers", "type", "排版实验"],
@@ -41,23 +42,25 @@ function render() {
 
   grid.innerHTML = visible.map(([slug, zh, en, , categoryName]) => {
     const index = effects.findIndex((effect) => effect[0] === slug) + 1;
-    const imageName = slug === "crashclock" ? "final_crashclock.png" : `final_${slug}.png`;
+    const imageName = slug === "crashclock" ? "final_crashclock.png" : slug === "iconburst" ? "final_iconburst.svg" : `final_${slug}.png`;
+    const target = slug === "flash" ? "flash-scenes.html" : `${slug}.html`;
+    const detail = slug === "flash" ? "13 个独立子风格" : categoryName;
     return `
       <article class="effect-card">
-        <a class="effect-link" href="${slug}.html" aria-label="打开${zh}效果">
+        <a class="effect-link" href="${target}" aria-label="打开${zh}效果">
           <div class="effect-preview">
             <img src="${imageName}" alt="${zh}动态字体效果预览" ${index > 8 ? 'loading="lazy"' : ""}>
             <span class="effect-number">${String(index).padStart(2, "0")}</span>
           </div>
           <div class="effect-body">
-            <div><h2>${zh}</h2><p>${en} / ${categoryName}</p></div>
+            <div><h2>${zh}</h2><p>${en} / ${detail}</p></div>
             <span class="effect-arrow" aria-hidden="true">→</span>
           </div>
         </a>
       </article>`;
   }).join("");
 
-  count.textContent = String(visible.length);
+  if (count) count.textContent = String(visible.length);
   grid.hidden = visible.length === 0;
   emptyState.hidden = visible.length !== 0;
 }

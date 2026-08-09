@@ -15,6 +15,7 @@ class SlotMachine {
     this.repeats = 2;
     this.pgTextSize = 2;
     this.findTextSize();
+    this.pgTextSize *= flashTextScale;
     
     this.xSpots = [];
     this.findXpos();
@@ -84,7 +85,7 @@ class SlotMachine {
 
           translate(0, -this.repeats*(this.pgTextSize*0.8)/2);
           for(var p = 0; p < this.repeats; p++){
-            text(this.inp.charAt(n), 0, p * this.pgTextSize * 0.8);
+            flashDrawInlineGlyph(this.inp.charAt(n), 0, p * this.pgTextSize * 0.8, this.pgTextSize, false);
           }
         pop();
       }
@@ -94,12 +95,12 @@ class SlotMachine {
   findXpos(){
     textFont(currentFont);
     textSize(this.pgTextSize);
-    var fullSize = textWidth(this.inp);
+    var fullSize = flashInlineTextWidth(this.inp, this.pgTextSize);
     var xStart = width/2 - fullSize/2;
 
     for(var n = 0; n < this.inp.length; n++){
-      var thisLetterWidth = textWidth(this.inp.charAt(n));
-      var upUntilWidth = textWidth(this.inp.slice(0,n+1));
+      var thisLetterWidth = flashInlineGlyphWidth(this.inp.charAt(n), this.pgTextSize);
+      var upUntilWidth = flashInlineTextWidth(this.inp.slice(0,n+1), this.pgTextSize);
       var difference = upUntilWidth - thisLetterWidth;
       this.xSpots[n] = xStart + difference;
     }
@@ -116,7 +117,7 @@ class SlotMachine {
     while(measured < width){
       textSize(this.pgTextSize)
       textFont(currentFont);
-      measured = textWidth(this.inp);
+      measured = flashInlineTextWidth(this.inp, this.pgTextSize);
 
       this.pgTextSize += 2;
     }
