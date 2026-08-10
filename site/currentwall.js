@@ -12,7 +12,10 @@
     wave: $("#wave"), waveRate: $("#waveRate"), vertical: $("#vertical"),
     repeatGap: $("#repeatGap"), background: $("#backgroundColor"), foreground: $("#textColor"),
     motionMode: $("#motionMode"), introWord: $("#introWord"), cycleDuration: $("#cycleDuration"),
-    reversePull: $("#reversePull"), burst: $("#burst")
+    reversePull: $("#reversePull"), burst: $("#burst"), finalLine: $("#finalLine"),
+    introLeft: $("#introLeft"), introReturn: $("#introReturn"), popDuration: $("#popDuration"),
+    fullDuration: $("#fullDuration"), exitDuration: $("#exitDuration"), finalDuration: $("#finalDuration"),
+    iconRotation: $("#iconRotation")
   };
 
   const fontPresets = {
@@ -44,6 +47,7 @@
   let pausedAt = 0;
   let paused = false;
   let rafId = 0;
+  let activeTokenInput = inputs.rows;
 
   const svg = (body, background = "#ffffff") => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="${background}"/>${body}</svg>`
@@ -163,7 +167,7 @@
   }
 
   function insertToken(id) {
-    const textarea = inputs.rows;
+    const textarea = activeTokenInput || inputs.rows;
     const token = `{{${id}}}`;
     const start = Number.isFinite(textarea.selectionStart) ? textarea.selectionStart : textarea.value.length;
     const end = Number.isFinite(textarea.selectionEnd) ? textarea.selectionEnd : start;
@@ -172,13 +176,19 @@
     textarea.dispatchEvent(new Event("input", { bubbles: true }));
   }
 
+  [inputs.rows, inputs.introWord, inputs.finalLine].forEach((field) => {
+    field.addEventListener("focus", () => { activeTokenInput = field; });
+  });
+
   function removeAsset(id) {
     const asset = assets.get(id);
     if (!asset?.removable) return;
     assets.delete(id);
     assetRevision += 1;
     layoutCache.clear();
-    inputs.rows.value = inputs.rows.value.split(`{{${id}}}`).join("");
+    [inputs.rows, inputs.introWord, inputs.finalLine].forEach((field) => {
+      field.value = field.value.split(`{{${id}}}`).join("");
+    });
     syncRowSettings();
     renderAssetGrid();
   }
@@ -237,34 +247,61 @@
     return layout;
   }
 
-  function drawSequence(context, layout, x, y, color) {
+  function drawSequence(context, layout, x, y, color, assetRotation = 0) {
     let cursor = x;
     context.fillStyle = color;
     layout.items.forEach((item) => {
       if (item.type === "text") {
         context.fillText(item.value, cursor, y);
       } else if (item.asset?.ready) {
-        context.drawImage(item.asset.image, cursor, y - item.height * .52, item.width, item.height);
+        if (assetRotation) {
+          context.save();
+          context.translate(cursor + item.width / 2, y);
+          context.rotate(assetRotation);
+          context.drawImage(item.asset.image, -item.width / 2, -item.height / 2, item.width, item.height);
+          context.restore();
+        } else {
+          context.drawImage(item.asset.image, cursor, y - item.height / 2, item.width, item.height);
+        }
       } else {
         context.save();
         context.strokeStyle = color;
         context.lineWidth = Math.max(1, item.height * .045);
-        context.strokeRect(cursor + 1, y - item.height * .5, Math.max(2, item.width - 2), item.height);
+        context.strokeRect(cursor + 1, y - item.height / 2, Math.max(2, item.width - 2), item.height);
         context.restore();
       }
       cursor += item.width;
     });
   }
 
-  function drawRepeatedLine(context, layout, y, width, color, shift, alpha = 1) {
+  function drawRepeatedLine(context, layout, y, width, color, shift, alpha = 1, assetRotation = 0) {
     let x = -mod(shift, layout.width) - layout.width;
     context.save();
     context.globalAlpha *= clamp01(alpha);
     while (x < width + layout.width) {
-      drawSequence(context, layout, x, y, color);
+      drawSequence(context, layout, x, y, color, assetRotation);
       x += layout.width;
     }
     context.restore();
+  }
+
+  function choreographyTiming() {
+    const cycle = Number(inputs.cycleDuration.value) / 1000;
+    const raw = [inputs.introLeft, inputs.introReturn, inputs.popDuration, inputs.fullDuration, inputs.exitDuration, inputs.finalDuration]
+      .map((input) => Number(input.value) / 1000);
+    const rawTotal = raw.reduce((sum, value) => sum + value, 0);
+    const ratio = cycle / Math.max(.1, rawTotal);
+    const duration = raw.map((value) => value * ratio);
+    const end = [];
+    duration.reduce((sum, value, index) => {
+      end[index] = sum + value;
+      return end[index];
+    }, 0);
+    return {
+      cycle, duration,
+      leftEnd: end[0], returnEnd: end[1], popEnd: end[2],
+      fullEnd: end[3], exitEnd: end[4], finalEnd: end[5]
+    };
   }
 
   function renderFrame(target, time, width, height, pixelRatio = 1) {
@@ -290,9 +327,8 @@
     const laneCount = Math.ceil(h / lineHeight) + 6;
     const halfLanes = Math.ceil(laneCount / 2);
     const choreography = inputs.motionMode.value === "choreography";
-    const cycleDuration = Number(inputs.cycleDuration.value) / 1000;
-    const localTime = choreography ? mod(time, cycleDuration) : time;
-    const progress = choreography ? localTime / cycleDuration : 0;
+    const timing = choreographyTiming();
+    const localTime = choreography ? mod(time, timing.cycle) : time;
     const verticalOffset = Math.sin(localTime * .34) * verticalSpeed * 1.8;
 
     context.font = `${preset.style} ${preset.weight} ${fontPx}px "${preset.family}", "Continuation SC", sans-serif`;
@@ -300,40 +336,54 @@
     context.textBaseline = "middle";
     context.imageSmoothingEnabled = true;
 
-    if (choreography && progress < .215) {
+    if (choreography && localTime < timing.leftEnd) {
       const introFontPx = fontPx * 1.12;
       const introAssetHeight = assetHeight * 1.12;
       context.font = `${preset.style} ${preset.weight} ${introFontPx}px "${preset.family}", "Continuation SC", sans-serif`;
       const introLayout = layoutTokens(context, inputs.introWord.value.trim() || "for", introFontPx, introAssetHeight, 0);
-      const driftTurn = .56;
-      const introPhase = rangeProgress(progress, 0, .18);
-      const drift = introPhase < driftTurn
-        ? lerp(0, -fontPx * .72, smooth(introPhase / driftTurn))
-        : lerp(-fontPx * .72, fontPx * .42, easeOut((introPhase - driftTurn) / (1 - driftTurn)));
-      const introAlpha = 1 - smooth(rangeProgress(progress, .165, .215));
-      const introScale = lerp(1, .91, smooth(rangeProgress(progress, .12, .21)));
+      const introPhase = rangeProgress(localTime, 0, timing.leftEnd);
+      const drift = lerp(0, -fontPx * .72, smooth(introPhase));
       context.save();
-      context.globalAlpha = introAlpha;
       context.translate(w / 2 + drift, h / 2);
-      context.scale(introScale, introScale);
       drawSequence(context, introLayout, -introLayout.width / 2, 0, inputs.foreground.value);
       context.restore();
       context.font = `${preset.style} ${preset.weight} ${fontPx}px "${preset.family}", "Continuation SC", sans-serif`;
     }
 
     const burstStrength = Number(inputs.burst.value) / 100;
-    const burstProgress = smooth(rangeProgress(progress, .18, .36));
-    const collapseProgress = smooth(rangeProgress(progress, .60, .88));
+    const returnProgress = rangeProgress(localTime, timing.leftEnd, timing.returnEnd);
+    const popProgress = rangeProgress(localTime, timing.returnEnd, timing.popEnd);
+    const fullProgress = rangeProgress(localTime, timing.popEnd, timing.fullEnd);
+    const exitProgress = rangeProgress(localTime, timing.fullEnd, timing.exitEnd);
+    const finalProgress = rangeProgress(localTime, timing.exitEnd, timing.finalEnd);
     const initialScale = 1 + .34 * burstStrength;
     let wallScale = 1;
-    let visibleRadius = halfLanes + 1;
+    let visibleLimit = halfLanes + 1;
     let wallAlpha = 1;
+    let wallShiftX = 0;
+    let finalStage = false;
 
     if (choreography) {
-      wallScale = progress < .36 ? lerp(initialScale, 1, burstProgress) : lerp(1, 1.16, collapseProgress);
-      if (progress < .36) visibleRadius = lerp(1.08, halfLanes + 1, burstProgress);
-      else if (progress >= .60) visibleRadius = lerp(halfLanes + 1, .08, collapseProgress);
-      wallAlpha = smooth(rangeProgress(progress, .155, .205)) * (1 - smooth(rangeProgress(progress, .94, 1)));
+      if (localTime < timing.leftEnd) wallAlpha = 0;
+      else if (localTime < timing.returnEnd) {
+        wallScale = initialScale;
+        visibleLimit = 1;
+        wallShiftX = lerp(-fontPx * .72, fontPx * .42, easeOut(returnProgress));
+      } else if (localTime < timing.popEnd) {
+        wallScale = lerp(initialScale, 1, smooth(popProgress));
+        visibleLimit = Math.max(1, Math.ceil(lerp(1, halfLanes + 1, easeOut(popProgress))));
+        wallShiftX = lerp(fontPx * .42, -fontPx * .28, smooth(popProgress));
+      } else if (localTime < timing.fullEnd) {
+        visibleLimit = halfLanes + 1;
+      } else if (localTime < timing.exitEnd) {
+        wallScale = lerp(1, 1.1, easeOut(exitProgress));
+        visibleLimit = exitProgress < .72 ? halfLanes + 1 : 0;
+      } else {
+        finalStage = true;
+        wallScale = 1.1;
+        visibleLimit = 0;
+        wallAlpha = 1 - smooth(rangeProgress(finalProgress, .78, 1));
+      }
     }
 
     const localWidth = w / wallScale;
@@ -343,33 +393,43 @@
     context.translate(-localWidth / 2, 0);
 
     for (let laneIndex = -halfLanes; laneIndex <= halfLanes; laneIndex += 1) {
+      if (choreography && finalStage && laneIndex !== 0) continue;
       const sourceIndex = mod(laneIndex, rows.length);
       const setting = rowSettings[sourceIndex] || { direction: -1, speed: 100, phase: 0 };
-      const layout = layoutTokens(context, rows[sourceIndex], fontPx, assetHeight, repeatGap);
+      const finalLine = inputs.finalLine.value.replace(/\s*\r?\n\s*/g, " ").trim();
+      const line = finalStage ? (finalLine || rows[0]) : rows[sourceIndex];
+      const layout = layoutTokens(context, line, fontPx, assetHeight, repeatGap);
       const laneDistance = Math.abs(laneIndex);
-      let rowAlpha = 1 - smooth(rangeProgress(laneDistance, visibleRadius, visibleRadius + .9));
-      if (choreography && progress > .86 && laneIndex !== 0) rowAlpha *= 1 - smooth(rangeProgress(progress, .86, .90));
+      let rowAlpha = laneDistance <= visibleLimit ? 1 : 0;
+      if (choreography && localTime >= timing.fullEnd && localTime < timing.exitEnd && laneIndex !== 0) {
+        rowAlpha *= 1 - smooth(rangeProgress(exitProgress, .62, .72));
+      }
       if (rowAlpha <= .001 || wallAlpha <= .001) continue;
 
       const yWave = Math.sin(localTime * waveRate * 1.45 + laneIndex * .72) * waveAmp * .28;
       const xWave = Math.sin(localTime * waveRate * .92 + laneIndex * .91) * waveAmp;
-      const y = laneIndex * lineHeight + verticalOffset + yWave;
+      const y = laneIndex * lineHeight * (choreography && localTime >= timing.fullEnd ? lerp(1, .92, exitProgress) : 1) + verticalOffset + yWave;
       const velocity = fontPx * .9 * masterSpeed * (setting.speed / 100);
       const signedTravel = setting.direction === 0 ? 0 : (setting.direction < 0 ? localTime * velocity : -localTime * velocity);
-      const globalLeftPull = choreography ? localWidth * .23 * smooth(rangeProgress(progress, .18, .90)) : 0;
+      const globalLeftPull = choreography ? localWidth * .23 * smooth(rangeProgress(localTime, timing.returnEnd, timing.fullEnd)) : 0;
       let reverseTravel = 0;
-      if (choreography && progress > .47) {
+      if (choreography && localTime >= timing.popEnd) {
         const pull = Number(inputs.reversePull.value) / 100;
-        const enter = smooth(rangeProgress(progress, .47, .62));
-        const continueRight = Math.max(0, progress - .62);
+        const enter = smooth(rangeProgress(fullProgress, .56, .78));
+        const continueRight = Math.max(0, fullProgress - .78);
         const centerWeight = Math.exp(-(laneIndex * laneIndex) / 5.2);
-        reverseTravel = centerWeight * localWidth * pull * (.34 * enter + .72 * continueRight);
+        reverseTravel = centerWeight * localWidth * pull * (.3 * enter + .5 * continueRight);
       }
-      const exitDrag = choreography && progress > .60
-        ? localWidth * .14 * collapseProgress * (1 - rowAlpha) * (laneIndex < 0 ? .55 : 1)
-        : 0;
-      const shift = signedTravel + setting.phase / 100 * layout.width + xWave + globalLeftPull + exitDrag - reverseTravel;
-      drawRepeatedLine(context, layout, y, localWidth, inputs.foreground.value, shift, rowAlpha * wallAlpha);
+      let groupRight = 0;
+      if (choreography && localTime >= timing.fullEnd) {
+        const followDelay = Math.min(.07, laneDistance / Math.max(1, halfLanes) * .07);
+        const follow = easeOut(rangeProgress(exitProgress, followDelay, .88 + followDelay));
+        groupRight = localWidth * .5 * follow;
+      }
+      if (finalStage) groupRight = localWidth * .5;
+      const shift = signedTravel + setting.phase / 100 * layout.width + xWave + globalLeftPull - reverseTravel - groupRight - wallShiftX;
+      const rotation = finalStage ? localTime * Number(inputs.iconRotation.value) * Math.PI / 180 : 0;
+      drawRepeatedLine(context, layout, y, localWidth, inputs.foreground.value, shift, rowAlpha * wallAlpha, rotation);
     }
     context.restore();
   }
@@ -431,7 +491,14 @@
       repeatGapOut: inputs.repeatGap.value,
       cycleDurationOut: `${(Number(inputs.cycleDuration.value) / 1000).toFixed(1)}秒`,
       reversePullOut: `${inputs.reversePull.value}%`,
-      burstOut: `${inputs.burst.value}%`
+      burstOut: `${inputs.burst.value}%`,
+      introLeftOut: inputs.introLeft.value,
+      introReturnOut: inputs.introReturn.value,
+      popDurationOut: inputs.popDuration.value,
+      fullDurationOut: inputs.fullDuration.value,
+      exitDurationOut: inputs.exitDuration.value,
+      finalDurationOut: inputs.finalDuration.value,
+      iconRotationOut: `${inputs.iconRotation.value}°/秒`
     };
     Object.entries(values).forEach(([id, value]) => { $(`#${id}`).textContent = value; });
     document.documentElement.style.setProperty("--text-color", inputs.foreground.value);

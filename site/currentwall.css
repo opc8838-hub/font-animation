@@ -57,7 +57,8 @@
 }
 
 .scene-grid input,
-.scene-grid select {
+.scene-grid select,
+.scene-grid textarea {
   width: 100%;
   min-height: 34px;
   border: 1px solid #111;
@@ -68,7 +69,10 @@
   font: 11px/1.2 "Courier New", monospace;
 }
 
+.scene-grid textarea { min-height: 54px; resize: vertical; }
+
 .scene-grid .hint { grid-column: 1 / -1; margin: 0; }
+.scene-grid .final-line-field { grid-column: 1 / -1; }
 
 .upload-button {
   display: inline-grid;

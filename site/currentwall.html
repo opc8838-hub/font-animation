@@ -42,7 +42,10 @@ everything  every{{watch}}thing</textarea>
         <label>开场单词
           <input id="introWord" type="text" value="for" spellcheck="false">
         </label>
-        <p class="hint">开场单词也支持素材标记；参考编舞依次经过单词漂移、三行扩散、满屏左流、中部反向、收束单行和消失。</p>
+        <label class="final-line-field">收尾单行 · 支持图标
+          <textarea id="finalLine" rows="2" spellcheck="false">every{{music}}thing  {{play}}  every{{cloud}}thing</textarea>
+        </label>
+        <p class="hint">开场单词会在回摆时立即被三行文字替换，不会残影叠加。收尾单行可单独使用任意文字、上传图片或图标标记。</p>
       </section>
 
       <section class="asset-section">
@@ -126,6 +129,34 @@ everything  every{{watch}}thing</textarea>
         <label>扩散力度 <output id="burstOut">100%</output>
           <input id="burst" type="range" min="50" max="180" value="100">
         </label>
+      </section>
+
+      <section>
+        <p class="section-label">编舞速度 · 毫秒</p>
+        <div class="controls-grid timing-grid">
+          <label>向左预备 <output id="introLeftOut">700</output>
+            <input id="introLeft" type="range" min="200" max="1800" step="10" value="700">
+          </label>
+          <label>向右替换 <output id="introReturnOut">220</output>
+            <input id="introReturn" type="range" min="80" max="900" step="10" value="220">
+          </label>
+          <label>弹满全屏 <output id="popDurationOut">650</output>
+            <input id="popDuration" type="range" min="150" max="1800" step="10" value="650">
+          </label>
+          <label>满屏停留 <output id="fullDurationOut">4200</output>
+            <input id="fullDuration" type="range" min="800" max="7000" step="50" value="4200">
+          </label>
+          <label>整体收束 <output id="exitDurationOut">480</output>
+            <input id="exitDuration" type="range" min="150" max="1800" step="10" value="480">
+          </label>
+          <label>单行停留 <output id="finalDurationOut">800</output>
+            <input id="finalDuration" type="range" min="200" max="2400" step="10" value="800">
+          </label>
+          <label>图标旋转 <output id="iconRotationOut">240°/秒</output>
+            <input id="iconRotation" type="range" min="-720" max="720" step="10" value="240">
+          </label>
+        </div>
+        <p class="hint">整体循环时长不变；调整这些数值会重新分配每个阶段在一轮中的快慢。</p>
       </section>
 
       <section class="color-row">
