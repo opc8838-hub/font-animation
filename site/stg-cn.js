@@ -7,7 +7,7 @@
     ["clutter", "杂散", "Clutter"], ["construct", "构筑", "Construct"], ["snap", "吸附", "Snap"],
     ["flash", "闪光", "Flash"], ["pow", "砰", "Pow"], ["crash", "碰撞", "Crash"],
     ["crashclock", "碰撞时钟", "Crash Clock"], ["vessel", "器皿", "Vessel"], ["shine", "闪耀", "Shine"],
-    ["boost", "助推", "Boost"], ["boxsquad", "方块小队", "BoxSquad"],
+    ["boost", "助推", "Boost"], ["boxsquad", "方块小队", "BoxSquad"], ["prism", "棱镜", "Prism"],
   ];
 
   const dictionary = new Map(Object.entries({
