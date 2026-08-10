@@ -42,10 +42,16 @@ everything  every{{watch}}thing</textarea>
         <label>开场单词
           <input id="introWord" type="text" value="for" spellcheck="false">
         </label>
-        <label class="final-line-field">收尾单行 · 支持图标
+        <label>收尾内容切换
+          <select id="finalSwap">
+            <option value="on" selected>启用文字 → 图标</option>
+            <option value="off">保持原文字</option>
+          </select>
+        </label>
+        <label class="final-line-field">切换后单行 · 支持图标
           <textarea id="finalLine" rows="2" spellcheck="false">every{{music}}thing  {{play}}  every{{cloud}}thing</textarea>
         </label>
-        <p class="hint">开场单词会在回摆时立即被三行文字替换，不会残影叠加。收尾单行可单独使用任意文字、上传图片或图标标记。</p>
+        <p class="hint">开场单词会在回摆时立即被三行文字替换。收尾时整行继续移动，并在指定时机把原文字瞬间切换为这里的文字、上传图片或图标。</p>
       </section>
 
       <section class="asset-section">
@@ -152,8 +158,8 @@ everything  every{{watch}}thing</textarea>
           <label>单行停留 <output id="finalDurationOut">800</output>
             <input id="finalDuration" type="range" min="200" max="2400" step="10" value="800">
           </label>
-          <label>图标旋转 <output id="iconRotationOut">240°/秒</output>
-            <input id="iconRotation" type="range" min="-720" max="720" step="10" value="240">
+          <label>内容切换时机 <output id="swapMomentOut">22%</output>
+            <input id="swapMoment" type="range" min="0" max="90" step="1" value="22">
           </label>
         </div>
         <p class="hint">整体循环时长不变；调整这些数值会重新分配每个阶段在一轮中的快慢。</p>
