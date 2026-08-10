@@ -48,10 +48,14 @@ everything  every{{watch}}thing</textarea>
             <option value="off">保持原文字</option>
           </select>
         </label>
-        <label class="final-line-field">切换后单行 · 支持图标
-          <textarea id="finalLine" rows="2" spellcheck="false">every{{music}}thing  {{play}}  every{{cloud}}thing</textarea>
+        <label class="final-line-field">收尾切换序列 · 每行一个状态
+          <textarea id="finalLine" rows="5" spellcheck="false">everything
+ever{{music}}thing
+every{{cloud}}hing
+everyt{{play}}ing
+everything</textarea>
         </label>
-        <p class="hint">开场单词会在回摆时立即被三行文字替换。收尾时整行继续移动，并在指定时机把原文字瞬间切换为这里的文字、上传图片或图标。</p>
+        <p class="hint">收尾剩下一行后基本停止横移，并按行依次切换。删除某个字母、在同一位置插入 {{图标}}，即可让任意字位在文字、图片和图标之间跳转。</p>
       </section>
 
       <section class="asset-section">
@@ -141,7 +145,7 @@ everything  every{{watch}}thing</textarea>
           <input id="repeatGap" type="range" min="0" max="160" value="24">
         </label>
         <label>循环时长 <output id="cycleDurationOut">6.2秒</output>
-          <input id="cycleDuration" type="range" min="4000" max="14000" step="100" value="6200">
+          <input id="cycleDuration" type="range" min="4000" max="30000" step="100" value="6200">
         </label>
         <label>反向牵引 <output id="reversePullOut">100%</output>
           <input id="reversePull" type="range" min="0" max="180" value="100">
@@ -164,16 +168,19 @@ everything  every{{watch}}thing</textarea>
             <input id="popDuration" type="range" min="150" max="1800" step="10" value="650">
           </label>
           <label>满屏停留 <output id="fullDurationOut">4200</output>
-            <input id="fullDuration" type="range" min="800" max="7000" step="50" value="4200">
+            <input id="fullDuration" type="range" min="600" max="18000" step="100" value="4200">
           </label>
           <label>整体收束 <output id="exitDurationOut">480</output>
             <input id="exitDuration" type="range" min="150" max="1800" step="10" value="480">
           </label>
-          <label>单行停留 <output id="finalDurationOut">800</output>
-            <input id="finalDuration" type="range" min="200" max="2400" step="10" value="800">
+          <label>单行慢缩 <output id="finalDurationOut">1600</output>
+            <input id="finalDuration" type="range" min="600" max="6000" step="50" value="1600">
           </label>
-          <label>内容切换时机 <output id="swapMomentOut">22%</output>
-            <input id="swapMoment" type="range" min="0" max="90" step="1" value="22">
+          <label>开始切换 <output id="swapMomentOut">8%</output>
+            <input id="swapMoment" type="range" min="0" max="80" step="1" value="8">
+          </label>
+          <label>切换间隔 <output id="swapIntervalOut">200ms</output>
+            <input id="swapInterval" type="range" min="80" max="1000" step="20" value="200">
           </label>
         </div>
         <p class="hint">整体循环时长不变；调整这些数值会重新分配每个阶段在一轮中的快慢。</p>

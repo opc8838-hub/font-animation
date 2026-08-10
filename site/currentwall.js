@@ -15,7 +15,7 @@
     reversePull: $("#reversePull"), burst: $("#burst"), finalLine: $("#finalLine"), finalSwap: $("#finalSwap"),
     introLeft: $("#introLeft"), introReturn: $("#introReturn"), popDuration: $("#popDuration"),
     fullDuration: $("#fullDuration"), exitDuration: $("#exitDuration"), finalDuration: $("#finalDuration"),
-    swapMoment: $("#swapMoment"), assetItemScale: $("#assetItemScale"),
+    swapMoment: $("#swapMoment"), swapInterval: $("#swapInterval"), assetItemScale: $("#assetItemScale"),
     assetOffsetX: $("#assetOffsetX"), assetOffsetY: $("#assetOffsetY")
   };
 
@@ -56,9 +56,9 @@
   )}`;
 
   const builtIns = [
-    ["music", "音乐", svg('<g transform="translate(10 0)"><path d="M59 18v47c-3-2-7-3-11-2-9 1-15 7-14 14 1 7 8 11 17 10 9-1 16-7 16-15V28L38 35v34c-3-2-7-3-11-2-9 1-15 7-14 14 1 7 8 11 17 10 9-1 16-7 16-15V26z" fill="white"/></g>', "#fa264f")],
+    ["music", "音乐", svg('<g transform="translate(-7.5 -1)"><path d="M45 25v35.5c-2.8-1.3-6.4-1.5-9.6-.4-6.9 2.1-11.1 7.7-9.3 12.5 1.8 4.9 8.8 7.1 15.7 5 6.1-1.9 10.2-6.5 9.6-11V38l23-6v23.5c-2.8-1.3-6.4-1.5-9.6-.4-6.9 2.1-11.1 7.7-9.3 12.5 1.8 4.9 8.8 7.1 15.7 5 6.1-1.9 10.2-6.5 9.6-11V20z" fill="white"/></g>', "#fa264f")],
     ["play", "播放", svg('<circle cx="50" cy="50" r="35" fill="none" stroke="white" stroke-width="6"/><path d="M40 29 69 50 40 71z" fill="white"/>', "#111111")],
-    ["cloud", "云", svg('<g transform="translate(-9 -2)"><path d="M28 69h45a17 17 0 0 0 1-34 25 25 0 0 0-46 8 13 13 0 0 0 0 26z" fill="white"/></g>', "#1389ff")],
+    ["cloud", "云", svg('<g transform="translate(-4.5 -1.5)"><circle cx="37" cy="53" r="16" fill="white"/><circle cx="52" cy="44" r="22" fill="white"/><circle cx="72" cy="53" r="16" fill="white"/><rect x="21" y="52" width="67" height="22" rx="11" fill="white"/></g>', "#1389ff")],
     ["watch", "手表", svg('<rect x="27" y="20" width="46" height="60" rx="16" fill="#111"/><rect x="34" y="28" width="32" height="44" rx="10" fill="#d7ff2f"/><circle cx="50" cy="50" r="3" fill="#111"/>', "#d8d8d8")]
   ];
 
@@ -423,10 +423,10 @@
         revealLimit = halfLanes + 1;
       } else {
         finalStage = true;
-        const shrink = smooth(rangeProgress(finalProgress, .62, 1));
-        wallScale = lerp(1.06, .64, shrink);
+        const shrink = smooth(finalProgress);
+        wallScale = lerp(1.06, .9, shrink);
         revealLimit = 0;
-        wallAlpha = 1 - smooth(rangeProgress(finalProgress, .9, 1));
+        wallAlpha = 1;
       }
     }
 
@@ -440,9 +440,12 @@
       if (choreography && finalStage && laneIndex !== 0) continue;
       const sourceIndex = mod(laneIndex, rows.length);
       const setting = rowSettings[sourceIndex] || { direction: -1, speed: 100, phase: 0 };
-      const finalLine = inputs.finalLine.value.replace(/\s*\r?\n\s*/g, " ").trim();
-      const swapActive = finalStage && inputs.finalSwap.value === "on" && finalProgress >= Number(inputs.swapMoment.value) / 100;
-      const line = finalStage ? (swapActive ? (finalLine || rows[0]) : rows[0]) : rows[sourceIndex];
+      const finalStates = inputs.finalLine.value.split(/\r?\n/).map((state) => state.trim()).filter(Boolean);
+      const swapStart = Number(inputs.swapMoment.value) / 100;
+      const swapActive = finalStage && inputs.finalSwap.value === "on" && finalProgress >= swapStart && finalStates.length;
+      const swapElapsed = Math.max(0, localTime - timing.exitEnd - timing.duration[5] * swapStart) * 1000;
+      const swapIndex = swapActive ? Math.floor(swapElapsed / Math.max(80, Number(inputs.swapInterval.value))) % finalStates.length : 0;
+      const line = finalStage ? (swapActive ? finalStates[swapIndex] : rows[0]) : rows[sourceIndex];
       const layout = layoutTokens(context, line, fontPx, assetHeight, repeatGap);
       const laneDistance = Math.abs(laneIndex);
       let rowAlpha = laneDistance <= revealLimit ? 1 : 0;
@@ -459,27 +462,20 @@
       const velocity = fontPx * .9 * masterSpeed * (setting.speed / 100);
       const signedTravel = setting.direction === 0 ? 0 : (setting.direction < 0 ? localTime * velocity : -localTime * velocity);
       const globalLeftPull = choreography ? localWidth * .23 * smooth(rangeProgress(localTime, timing.returnEnd, timing.fullEnd)) : 0;
-      let reverseTravel = 0;
+      let leadLeftTravel = 0;
       if (choreography && localTime >= timing.popEnd) {
         const pull = Number(inputs.reversePull.value) / 100;
-        const enter = smooth(rangeProgress(fullProgress, .56, .78));
-        const continueRight = Math.max(0, fullProgress - .78);
-        const centerWeight = Math.exp(-(laneIndex * laneIndex) / 5.2);
-        reverseTravel = centerWeight * localWidth * pull * (.3 * enter + .5 * continueRight);
+        const distanceRatio = laneDistance / Math.max(1, halfLanes);
+        const centerWeight = Math.exp(-(laneIndex * laneIndex) / 4.2);
+        const centerLead = easeOut(rangeProgress(fullProgress, 0, .14));
+        const followDelay = .04 + distanceRatio * .2;
+        const wallFollow = smooth(rangeProgress(fullProgress, followDelay, followDelay + .24));
+        leadLeftTravel = localWidth * pull * (.1 * centerWeight * centerLead + .18 * wallFollow);
       }
 
       if (finalStage) {
-        const originalLayout = layoutTokens(context, rows[0], fontPx, assetHeight, repeatGap);
-        const finalVelocity = fontPx * .9 * masterSpeed * (setting.speed / 100);
-        const signedAtExit = setting.direction === 0 ? 0 : (setting.direction < 0 ? timing.exitEnd * finalVelocity : -timing.exitEnd * finalVelocity);
-        const xWaveAtExit = Math.sin(timing.exitEnd * waveRate * .92) * waveAmp;
-        const pull = Number(inputs.reversePull.value) / 100;
-        const reverseAtExit = localWidth * pull * (.3 + .5 * .22);
-        const shiftAtExit = signedAtExit + setting.phase / 100 * originalLayout.width + xWaveAtExit + localWidth * .23 - reverseAtExit - localWidth * .55;
-        const repeatedStart = -mod(shiftAtExit, originalLayout.width) - originalLayout.width;
-        const anchorAtExit = repeatedStart + Math.round((localWidth / 2 - repeatedStart) / originalLayout.width) * originalLayout.width;
-        const anchorX = anchorAtExit;
-        drawAnchoredLine(context, layout, y, localWidth, inputs.foreground.value, anchorX, rowAlpha * wallAlpha);
+        const anchorX = localWidth / 2 - layout.width / 2;
+        drawAnchoredLine(context, layout, 0, localWidth, inputs.foreground.value, anchorX, rowAlpha * wallAlpha);
         continue;
       }
 
@@ -495,7 +491,7 @@
         const follow = easeOut(rangeProgress(exitProgress, followDelay, Math.min(.96, followDelay + .58)));
         groupRight = localWidth * .58 * follow;
       }
-      const shift = signedTravel + setting.phase / 100 * layout.width + xWave + globalLeftPull + centerLeftPush - reverseTravel - groupRight - wallShiftX;
+      const shift = signedTravel + setting.phase / 100 * layout.width + xWave + globalLeftPull + leadLeftTravel + centerLeftPush - groupRight - wallShiftX;
       drawRepeatedLine(context, layout, y, localWidth, inputs.foreground.value, shift, rowAlpha * wallAlpha);
     }
     context.restore();
@@ -565,7 +561,8 @@
       fullDurationOut: inputs.fullDuration.value,
       exitDurationOut: inputs.exitDuration.value,
       finalDurationOut: inputs.finalDuration.value,
-      swapMomentOut: `${inputs.swapMoment.value}%`
+      swapMomentOut: `${inputs.swapMoment.value}%`,
+      swapIntervalOut: `${inputs.swapInterval.value}ms`
     };
     Object.entries(values).forEach(([id, value]) => { $(`#${id}`).textContent = value; });
     document.documentElement.style.setProperty("--text-color", inputs.foreground.value);
