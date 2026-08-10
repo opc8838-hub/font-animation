@@ -60,6 +60,20 @@ everything  every{{watch}}thing</textarea>
           <label class="upload-button">添加图片<input id="assetUpload" type="file" accept="image/*" multiple></label>
         </div>
         <div class="asset-grid" id="assetGrid"></div>
+        <div class="asset-tuner" id="assetTuner">
+          <div class="asset-tuner-head"><span>图标精调</span><b id="selectedAssetName">音乐</b></div>
+          <div class="asset-tuner-grid">
+            <label>大小 <output id="assetItemScaleOut">100%</output>
+              <input id="assetItemScale" type="range" min="40" max="200" value="100">
+            </label>
+            <label>左右 <output id="assetOffsetXOut">0%</output>
+              <input id="assetOffsetX" type="range" min="-60" max="60" value="0">
+            </label>
+            <label>上下 <output id="assetOffsetYOut">0%</output>
+              <input id="assetOffsetY" type="range" min="-60" max="60" value="0">
+            </label>
+          </div>
+        </div>
         <p class="hint">先在文字框中放好光标，再点素材即可插入；同一素材可以出现在一处或多处。支持 PNG、JPG、WEBP、SVG。</p>
       </section>
 
@@ -126,8 +140,8 @@ everything  every{{watch}}thing</textarea>
         <label>字间填充 <output id="repeatGapOut">24</output>
           <input id="repeatGap" type="range" min="0" max="160" value="24">
         </label>
-        <label>循环时长 <output id="cycleDurationOut">9.2秒</output>
-          <input id="cycleDuration" type="range" min="6000" max="14000" step="100" value="9200">
+        <label>循环时长 <output id="cycleDurationOut">6.2秒</output>
+          <input id="cycleDuration" type="range" min="4000" max="14000" step="100" value="6200">
         </label>
         <label>反向牵引 <output id="reversePullOut">100%</output>
           <input id="reversePull" type="range" min="0" max="180" value="100">

@@ -100,6 +100,11 @@
   min-width: 0;
 }
 
+.asset-card.is-selected .asset-insert {
+  outline: 3px solid #2864ff;
+  outline-offset: -3px;
+}
+
 .asset-insert {
   width: 100%;
   min-height: 56px;
@@ -131,6 +136,31 @@
   color: #fff;
   font: 12px/16px sans-serif;
 }
+
+.asset-tuner {
+  margin-top: 8px;
+  padding: 9px;
+  border: 1px solid #111;
+  background: #fff;
+}
+
+.asset-tuner-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font: 700 9px/1 "Courier New", monospace;
+}
+
+.asset-tuner-grid { display: grid; gap: 7px; }
+.asset-tuner-grid label {
+  display: grid;
+  grid-template-columns: 34px 1fr 34px;
+  align-items: center;
+  gap: 6px;
+  font-size: 8px;
+}
+.asset-tuner-grid input { width: 100%; }
+.asset-tuner-grid output { text-align: right; font: 8px/1 "Courier New", monospace; }
 
 .row-flow-list { display: grid; gap: 7px; }
 .row-flow-item {

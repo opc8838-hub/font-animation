@@ -15,7 +15,8 @@
     reversePull: $("#reversePull"), burst: $("#burst"), finalLine: $("#finalLine"), finalSwap: $("#finalSwap"),
     introLeft: $("#introLeft"), introReturn: $("#introReturn"), popDuration: $("#popDuration"),
     fullDuration: $("#fullDuration"), exitDuration: $("#exitDuration"), finalDuration: $("#finalDuration"),
-    swapMoment: $("#swapMoment")
+    swapMoment: $("#swapMoment"), assetItemScale: $("#assetItemScale"),
+    assetOffsetX: $("#assetOffsetX"), assetOffsetY: $("#assetOffsetY")
   };
 
   const fontPresets = {
@@ -48,21 +49,22 @@
   let paused = false;
   let rafId = 0;
   let activeTokenInput = inputs.rows;
+  let selectedAssetId = "music";
 
   const svg = (body, background = "#ffffff") => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="${background}"/>${body}</svg>`
   )}`;
 
   const builtIns = [
-    ["music", "音乐", svg('<g transform="translate(8 -18)"><path d="M59 18v47c-3-2-7-3-11-2-9 1-15 7-14 14 1 7 8 11 17 10 9-1 16-7 16-15V28L38 35v34c-3-2-7-3-11-2-9 1-15 7-14 14 1 7 8 11 17 10 9-1 16-7 16-15V26z" fill="white"/></g>', "#fa264f")],
+    ["music", "音乐", svg('<g transform="translate(10 0)"><path d="M59 18v47c-3-2-7-3-11-2-9 1-15 7-14 14 1 7 8 11 17 10 9-1 16-7 16-15V28L38 35v34c-3-2-7-3-11-2-9 1-15 7-14 14 1 7 8 11 17 10 9-1 16-7 16-15V26z" fill="white"/></g>', "#fa264f")],
     ["play", "播放", svg('<circle cx="50" cy="50" r="35" fill="none" stroke="white" stroke-width="6"/><path d="M40 29 69 50 40 71z" fill="white"/>', "#111111")],
-    ["cloud", "云", svg('<path d="M28 69h45a17 17 0 0 0 1-34 25 25 0 0 0-46 8 13 13 0 0 0 0 26z" fill="white"/>', "#1389ff")],
+    ["cloud", "云", svg('<g transform="translate(-9 -2)"><path d="M28 69h45a17 17 0 0 0 1-34 25 25 0 0 0-46 8 13 13 0 0 0 0 26z" fill="white"/></g>', "#1389ff")],
     ["watch", "手表", svg('<rect x="27" y="20" width="46" height="60" rx="16" fill="#111"/><rect x="34" y="28" width="32" height="44" rx="10" fill="#d7ff2f"/><circle cx="50" cy="50" r="3" fill="#111"/>', "#d8d8d8")]
   ];
 
   function addAsset(id, label, src, removable = false) {
     const image = new Image();
-    const asset = { id, label, src, image, ratio: 1, ready: false, removable };
+    const asset = { id, label, src, image, ratio: 1, ready: false, removable, scale: 1, offsetX: 0, offsetY: 0 };
     image.onload = () => {
       asset.ratio = Math.max(.2, Math.min(5, image.naturalWidth / Math.max(1, image.naturalHeight)));
       asset.ready = true;
@@ -141,6 +143,7 @@
     assets.forEach((asset) => {
       const card = document.createElement("div");
       card.className = "asset-card";
+      card.classList.toggle("is-selected", asset.id === selectedAssetId);
       const insert = document.createElement("button");
       insert.type = "button";
       insert.className = "asset-insert";
@@ -151,7 +154,12 @@
       const label = document.createElement("span");
       label.textContent = asset.label;
       insert.append(preview, label);
-      insert.addEventListener("click", () => insertToken(asset.id));
+      insert.addEventListener("click", () => {
+        selectedAssetId = asset.id;
+        syncAssetTuner();
+        renderAssetGrid();
+        insertToken(asset.id);
+      });
       card.append(insert);
       if (asset.removable) {
         const remove = document.createElement("button");
@@ -164,6 +172,30 @@
       }
       grid.append(card);
     });
+  }
+
+  function syncAssetTuner() {
+    const asset = assets.get(selectedAssetId) || assets.values().next().value;
+    if (!asset) return;
+    selectedAssetId = asset.id;
+    $("#selectedAssetName").textContent = asset.label;
+    inputs.assetItemScale.value = String(Math.round(asset.scale * 100));
+    inputs.assetOffsetX.value = String(Math.round(asset.offsetX));
+    inputs.assetOffsetY.value = String(Math.round(asset.offsetY));
+    $("#assetItemScaleOut").textContent = `${Math.round(asset.scale * 100)}%`;
+    $("#assetOffsetXOut").textContent = `${Math.round(asset.offsetX)}%`;
+    $("#assetOffsetYOut").textContent = `${Math.round(asset.offsetY)}%`;
+  }
+
+  function updateSelectedAsset() {
+    const asset = assets.get(selectedAssetId);
+    if (!asset) return;
+    asset.scale = Number(inputs.assetItemScale.value) / 100;
+    asset.offsetX = Number(inputs.assetOffsetX.value);
+    asset.offsetY = Number(inputs.assetOffsetY.value);
+    assetRevision += 1;
+    layoutCache.clear();
+    syncAssetTuner();
   }
 
   function insertToken(id) {
@@ -184,6 +216,7 @@
     const asset = assets.get(id);
     if (!asset?.removable) return;
     assets.delete(id);
+    if (selectedAssetId === id) selectedAssetId = "music";
     assetRevision += 1;
     layoutCache.clear();
     [inputs.rows, inputs.introWord, inputs.finalLine].forEach((field) => {
@@ -191,6 +224,7 @@
     });
     syncRowSettings();
     renderAssetGrid();
+    syncAssetTuner();
   }
 
   $("#assetUpload").addEventListener("change", (event) => {
@@ -239,7 +273,8 @@
     const items = tokensFor(line).map((token) => {
       if (token.type === "text") return { ...token, width: context.measureText(token.value).width };
       const asset = assets.get(token.id);
-      return { ...token, asset, width: assetHeight * (asset?.ratio || 1), height: assetHeight };
+      const tunedHeight = assetHeight * (asset?.scale || 1);
+      return { ...token, asset, width: tunedHeight * (asset?.ratio || 1), height: tunedHeight };
     });
     const layout = { items, width: Math.max(fontPx, items.reduce((sum, item) => sum + item.width, 0) + repeatGap) };
     if (layoutCache.size > 240) layoutCache.clear();
@@ -254,14 +289,16 @@
       if (item.type === "text") {
         context.fillText(item.value, cursor, y);
       } else if (item.asset?.ready) {
+        const drawX = cursor + item.height * item.asset.offsetX / 100;
+        const drawY = y + item.height * item.asset.offsetY / 100;
         if (assetRotation) {
           context.save();
-          context.translate(cursor + item.width / 2, y);
+          context.translate(drawX + item.width / 2, drawY);
           context.rotate(assetRotation);
           context.drawImage(item.asset.image, -item.width / 2, -item.height / 2, item.width, item.height);
           context.restore();
         } else {
-          context.drawImage(item.asset.image, cursor, y - item.height / 2, item.width, item.height);
+          context.drawImage(item.asset.image, drawX, drawY - item.height / 2, item.width, item.height);
         }
       } else {
         context.save();
@@ -359,38 +396,37 @@
     }
 
     const burstStrength = Number(inputs.burst.value) / 100;
-    const returnProgress = rangeProgress(localTime, timing.leftEnd, timing.returnEnd);
-    const popProgress = rangeProgress(localTime, timing.returnEnd, timing.popEnd);
     const fullProgress = rangeProgress(localTime, timing.popEnd, timing.fullEnd);
     const exitProgress = rangeProgress(localTime, timing.fullEnd, timing.exitEnd);
     const finalProgress = rangeProgress(localTime, timing.exitEnd, timing.finalEnd);
     const initialScale = 1 + .34 * burstStrength;
     let wallScale = 1;
-    let visibleLimit = halfLanes + 1;
+    let revealLimit = halfLanes + 1;
     let wallAlpha = 1;
     let wallShiftX = 0;
     let finalStage = false;
 
     if (choreography) {
       if (localTime < timing.leftEnd) wallAlpha = 0;
-      else if (localTime < timing.returnEnd) {
-        wallScale = initialScale;
-        visibleLimit = 1;
-        wallShiftX = lerp(-fontPx * .72, fontPx * .42, easeOut(returnProgress));
-      } else if (localTime < timing.popEnd) {
-        wallScale = lerp(initialScale, 1, smooth(popProgress));
-        visibleLimit = Math.max(1, Math.ceil(lerp(1, halfLanes + 1, easeOut(popProgress))));
-        wallShiftX = lerp(fontPx * .42, -fontPx * .28, smooth(popProgress));
+      else if (localTime < timing.popEnd) {
+        const formationProgress = rangeProgress(localTime, timing.leftEnd, timing.popEnd);
+        const returnCut = timing.duration[1] / Math.max(.001, timing.duration[1] + timing.duration[2]);
+        wallScale = lerp(initialScale, 1, smooth(formationProgress));
+        revealLimit = lerp(1.05, halfLanes + 1, easeOut(rangeProgress(formationProgress, .04, .96)));
+        wallShiftX = formationProgress < returnCut
+          ? lerp(-fontPx * .72, fontPx * .42, easeOut(formationProgress / returnCut))
+          : lerp(fontPx * .42, -fontPx * .28, smooth(rangeProgress(formationProgress, returnCut, 1)));
       } else if (localTime < timing.fullEnd) {
-        visibleLimit = halfLanes + 1;
+        revealLimit = halfLanes + 1;
       } else if (localTime < timing.exitEnd) {
-        wallScale = lerp(1, 1.1, easeOut(exitProgress));
-        visibleLimit = halfLanes + 1;
+        wallScale = lerp(1, 1.06, smooth(exitProgress));
+        revealLimit = halfLanes + 1;
       } else {
         finalStage = true;
-        wallScale = 1.1;
-        visibleLimit = 0;
-        wallAlpha = 1 - smooth(rangeProgress(finalProgress, .78, 1));
+        const shrink = smooth(rangeProgress(finalProgress, .62, 1));
+        wallScale = lerp(1.06, .64, shrink);
+        revealLimit = 0;
+        wallAlpha = 1 - smooth(rangeProgress(finalProgress, .9, 1));
       }
     }
 
@@ -409,11 +445,11 @@
       const line = finalStage ? (swapActive ? (finalLine || rows[0]) : rows[0]) : rows[sourceIndex];
       const layout = layoutTokens(context, line, fontPx, assetHeight, repeatGap);
       const laneDistance = Math.abs(laneIndex);
-      let rowAlpha = laneDistance <= visibleLimit ? 1 : 0;
+      let rowAlpha = laneDistance <= revealLimit ? 1 : 0;
       if (choreography && localTime >= timing.fullEnd && localTime < timing.exitEnd && laneIndex !== 0) {
         const inwardOrder = (halfLanes - laneDistance) / Math.max(1, halfLanes);
-        const disappearAt = .3 + inwardOrder * .52 + (laneIndex > 0 ? .018 : 0);
-        rowAlpha *= 1 - smooth(rangeProgress(exitProgress, disappearAt, disappearAt + .045));
+        const disappearAt = .44 + inwardOrder * .43 + (laneIndex > 0 ? .012 : 0);
+        rowAlpha *= 1 - smooth(rangeProgress(exitProgress, disappearAt, disappearAt + .055));
       }
       if (rowAlpha <= .001 || wallAlpha <= .001) continue;
 
@@ -442,7 +478,7 @@
         const shiftAtExit = signedAtExit + setting.phase / 100 * originalLayout.width + xWaveAtExit + localWidth * .23 - reverseAtExit - localWidth * .55;
         const repeatedStart = -mod(shiftAtExit, originalLayout.width) - originalLayout.width;
         const anchorAtExit = repeatedStart + Math.round((localWidth / 2 - repeatedStart) / originalLayout.width) * originalLayout.width;
-        const anchorX = anchorAtExit + localWidth * .32 * easeOut(finalProgress);
+        const anchorX = anchorAtExit;
         drawAnchoredLine(context, layout, y, localWidth, inputs.foreground.value, anchorX, rowAlpha * wallAlpha);
         continue;
       }
@@ -450,14 +486,14 @@
       let groupRight = 0;
       let centerLeftPush = 0;
       if (choreography && localTime >= timing.fullEnd) {
-        const centerWeight = Math.exp(-(laneIndex * laneIndex) / 3.2);
-        const leftImpulse = exitProgress < .14
-          ? smooth(exitProgress / .14)
-          : 1 - smooth(rangeProgress(exitProgress, .14, .28));
-        centerLeftPush = localWidth * .075 * centerWeight * leftImpulse;
-        const followDelay = .13 + laneDistance / Math.max(1, halfLanes) * .11;
-        const follow = easeOut(rangeProgress(exitProgress, followDelay, .94));
-        groupRight = localWidth * .55 * follow;
+        const centerWeight = Math.exp(-(laneIndex * laneIndex) / 2.7);
+        const leftImpulse = exitProgress < .16
+          ? smooth(exitProgress / .16)
+          : 1 - smooth(rangeProgress(exitProgress, .16, .34));
+        centerLeftPush = localWidth * .085 * centerWeight * leftImpulse;
+        const followDelay = .09 + laneDistance / Math.max(1, halfLanes) * .23;
+        const follow = easeOut(rangeProgress(exitProgress, followDelay, Math.min(.96, followDelay + .58)));
+        groupRight = localWidth * .58 * follow;
       }
       const shift = signedTravel + setting.phase / 100 * layout.width + xWave + globalLeftPull + centerLeftPush - reverseTravel - groupRight - wallShiftX;
       drawRepeatedLine(context, layout, y, localWidth, inputs.foreground.value, shift, rowAlpha * wallAlpha);
@@ -536,6 +572,9 @@
   }
 
   Object.values(inputs).forEach((input) => input.addEventListener("input", updateOutputs));
+  [inputs.assetItemScale, inputs.assetOffsetX, inputs.assetOffsetY].forEach((input) => {
+    input.addEventListener("input", updateSelectedAsset);
+  });
   inputs.rows.addEventListener("input", syncRowSettings);
   inputs.motionMode.addEventListener("change", () => setTime(0));
 
@@ -657,6 +696,7 @@
   window.addEventListener("beforeunload", () => cancelAnimationFrame(rafId));
   if (window.innerWidth <= 720) $("#controlPanel").removeAttribute("open");
   renderAssetGrid();
+  syncAssetTuner();
   syncRowSettings();
   updateOutputs();
   document.fonts.ready.finally(previewLoop);
