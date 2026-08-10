@@ -6,6 +6,7 @@ const effects = [
   ["clutter", "杂散", "Clutter", "space", "立体空间"],
   ["coil", "线圈", "Coil", "flow", "波形流动"],
   ["continuation", "续句", "Continuation", "type", "排版实验"],
+  ["currentwall", "流墙", "Current Wall", "flow", "波形流动"],
   ["construct", "构筑", "Construct", "graphic", "图形系统"],
   ["crash", "碰撞", "Crash", "physics", "物理粒子"],
   ["crashclock", "碰撞时钟", "Crash Clock", "physics", "物理粒子"],

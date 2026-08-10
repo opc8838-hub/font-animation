@@ -1,0 +1,131 @@
+.current-stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #f4f3ef;
+}
+
+#flowCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.canvas-mark {
+  position: fixed;
+  right: 16px;
+  bottom: 12px;
+  z-index: 3;
+  display: flex;
+  gap: 10px;
+  color: color-mix(in srgb, var(--text-color, #090909) 48%, transparent);
+  font: 8px/1 "Courier New", monospace;
+  letter-spacing: .16em;
+  pointer-events: none;
+}
+
+.current-panel {
+  --panel-width: 340px;
+  z-index: 20;
+}
+
+.current-panel .panel-scroll {
+  scrollbar-gutter: stable;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.section-heading .section-label { margin: 0; }
+
+.upload-button {
+  display: inline-grid;
+  place-items: center;
+  min-height: 29px;
+  padding: 0 10px;
+  border: 1px solid #111;
+  background: #fff;
+  color: #111;
+  font: 700 10px/1 sans-serif;
+  cursor: pointer;
+}
+
+.upload-button:hover { background: #c1ff1a; }
+.upload-button input { position: fixed; opacity: 0; pointer-events: none; }
+
+.asset-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.asset-card {
+  position: relative;
+  min-width: 0;
+}
+
+.asset-insert {
+  width: 100%;
+  min-height: 56px;
+  display: grid;
+  grid-template-rows: 32px auto;
+  place-items: center;
+  gap: 3px;
+  padding: 5px 3px;
+  border: 1px solid #111;
+  background: #fff;
+  color: #111;
+  font: 700 8px/1 sans-serif;
+  overflow: hidden;
+}
+
+.asset-insert:hover { background: #c1ff1a; }
+.asset-insert img { width: 30px; height: 30px; object-fit: contain; }
+.asset-insert span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.asset-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #111;
+  color: #fff;
+  font: 12px/16px sans-serif;
+}
+
+.row-flow-list { display: grid; gap: 7px; }
+.row-flow-item {
+  padding: 8px;
+  border: 1px solid #b7b7b7;
+  background: #fff;
+}
+.row-flow-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 7px;
+  font: 700 9px/1.2 "Courier New", monospace;
+}
+.row-flow-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-flow-tools { display: grid; grid-template-columns: 92px 1fr; gap: 8px; align-items: center; }
+.row-direction { display: grid; grid-template-columns: repeat(3, 1fr); }
+.row-direction button { min-height: 26px; padding: 0; border: 1px solid #111; background: #fff; font-weight: 800; }
+.row-direction button + button { border-left: 0; }
+.row-direction button[aria-pressed="true"] { background: #111; color: #fff; }
+.row-sliders { display: grid; gap: 5px; }
+.row-sliders label { display: grid; grid-template-columns: 33px 1fr 29px; gap: 4px; align-items: center; font-size: 8px; }
+.row-sliders input { width: 100%; }
+.row-sliders output { text-align: right; font: 8px/1 "Courier New", monospace; }
+
+@media (max-width: 720px) {
+  .current-panel { --panel-width: min(340px, calc(100vw - 20px)); }
+  .canvas-mark { right: 8px; bottom: 8px; }
+}

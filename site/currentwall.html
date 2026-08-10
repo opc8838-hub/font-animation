@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="流墙：可将图片与图标嵌入文字的多行水流跑马灯动效。">
+  <title>流墙 Current Wall | STG 中文版</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;f[]=general-sans@400,500,600&amp;f[]=clash-display@500,600&amp;f[]=cabinet-grotesk@500,700&amp;display=swap">
+  <link rel="stylesheet" href="continuation.css">
+  <link rel="stylesheet" href="currentwall.css">
+  <link rel="stylesheet" href="stg-cn.css">
+</head>
+<body>
+  <main class="current-stage" aria-label="流墙动效画布">
+    <canvas id="flowCanvas"></canvas>
+    <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+  </main>
+
+  <details class="control-panel current-panel" id="controlPanel" open>
+    <summary>
+      <span><b>流墙</b><small>CURRENT WALL / 25</small></span>
+      <i aria-hidden="true">参数</i>
+    </summary>
+    <div class="panel-scroll">
+      <section>
+        <label class="section-label" for="rowsInput">文字行 · 每行独立流动</label>
+        <textarea id="rowsInput" rows="7" spellcheck="false">every{{music}}thing  everything
+everything  {{play}} everything
+every{{cloud}}thing  everything
+everything  every{{watch}}thing</textarea>
+        <p class="hint">每个换行是一种独立行；内容会自动重复填满画板。把素材标记插在任意字位，例如 every{{music}}thing。</p>
+      </section>
+
+      <section class="asset-section">
+        <div class="section-heading">
+          <p class="section-label">图片 / 图标字位</p>
+          <label class="upload-button">添加图片<input id="assetUpload" type="file" accept="image/*" multiple></label>
+        </div>
+        <div class="asset-grid" id="assetGrid"></div>
+        <p class="hint">先在文字框中放好光标，再点素材即可插入；同一素材可以出现在一处或多处。支持 PNG、JPG、WEBP、SVG。</p>
+      </section>
+
+      <section>
+        <p class="section-label">每行流向与相位</p>
+        <div class="row-flow-list" id="rowFlowList"></div>
+      </section>
+
+      <section class="font-picker">
+        <label class="section-label" for="fontFamily">字体</label>
+        <select id="fontFamily">
+          <optgroup label="Snap 动效字体">
+            <option value="snap-inter-medium" selected>Inter Medium</option>
+            <option value="snap-inter-black">Inter Black</option>
+            <option value="snap-ibm-plex">IBM Plex Mono Bold Italic</option>
+            <option value="snap-space-mono">Space Mono Bold</option>
+            <option value="snap-space-grotesk">Space Grotesk Bold</option>
+          </optgroup>
+          <optgroup label="Free Faces · OFL">
+            <option value="ff-space-grotesk">Space Grotesk</option>
+            <option value="ff-martian-mono">Martian Mono</option>
+            <option value="ff-oi">Oi Display</option>
+            <option value="ff-barriecito">Barriecito</option>
+          </optgroup>
+          <optgroup label="UNCUT · OFL">
+            <option value="uncut-berlin">Berlin Grotesk</option>
+            <option value="uncut-berlin-bold">Berlin Grotesk Bold</option>
+          </optgroup>
+          <optgroup label="Fontshare · 官方 API">
+            <option value="fs-satoshi">Satoshi</option>
+            <option value="fs-general-sans">General Sans</option>
+            <option value="fs-clash-display">Clash Display</option>
+            <option value="fs-cabinet">Cabinet Grotesk</option>
+          </optgroup>
+          <optgroup label="中文字体">
+            <option value="cn-noto-regular">Noto Sans SC</option>
+            <option value="cn-noto-black">Noto Sans SC Black</option>
+          </optgroup>
+        </select>
+      </section>
+
+      <section class="controls-grid">
+        <label>字号 <output id="fontSizeOut">62</output>
+          <input id="fontSize" type="range" min="24" max="140" value="62">
+        </label>
+        <label>行距 <output id="lineGapOut">-5</output>
+          <input id="lineGap" type="range" min="-25" max="80" value="-5">
+        </label>
+        <label>整体速度 <output id="speedOut">1.00×</output>
+          <input id="speed" type="range" min="20" max="220" value="100">
+        </label>
+        <label>素材比例 <output id="assetScaleOut">100%</output>
+          <input id="assetScale" type="range" min="45" max="180" value="100">
+        </label>
+        <label>水波幅度 <output id="waveOut">18</output>
+          <input id="wave" type="range" min="0" max="100" value="18">
+        </label>
+        <label>水波频率 <output id="waveRateOut">0.70</output>
+          <input id="waveRate" type="range" min="10" max="200" value="70">
+        </label>
+        <label>纵向漂移 <output id="verticalOut">10</output>
+          <input id="vertical" type="range" min="-100" max="100" value="10">
+        </label>
+        <label>字间填充 <output id="repeatGapOut">24</output>
+          <input id="repeatGap" type="range" min="0" max="160" value="24">
+        </label>
+      </section>
+
+      <section class="color-row">
+        <label>背景<input id="backgroundColor" type="color" value="#f4f3ef"></label>
+        <label>文字<input id="textColor" type="color" value="#090909"></label>
+      </section>
+
+      <section class="transport" aria-label="时间轴控制">
+        <button id="restartButton" type="button">重播</button>
+        <button id="pauseButton" type="button">暂停</button>
+        <button id="backButton" type="button">−1 帧</button>
+        <button id="forwardButton" type="button">+1 帧</button>
+      </section>
+
+      <section class="export-panel">
+        <label class="section-label" for="exportPreset">导出尺寸</label>
+        <select id="exportPreset">
+          <option value="current">当前画板</option>
+          <option value="1080x1080">1:1 · 1080 × 1080</option>
+          <option value="1080x1350">4:5 · 1080 × 1350</option>
+          <option value="1080x1920">9:16 · 1080 × 1920</option>
+          <option value="1920x1080">16:9 · 1920 × 1080</option>
+          <option value="1200x628">横幅 · 1200 × 628</option>
+          <option value="custom">自定义尺寸</option>
+        </select>
+        <div class="custom-size" id="customSize" hidden>
+          <label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label>
+          <span>×</span>
+          <label>高<input id="exportHeight" type="number" min="240" max="3840" value="1080"></label>
+        </div>
+        <div class="export-actions">
+          <button id="exportPng" type="button">PNG 图片</button>
+          <button id="exportGif" type="button">GIF 动图</button>
+          <button id="exportVideo" type="button">视频</button>
+        </div>
+        <p class="export-status" id="exportStatus" aria-live="polite">PNG 导出当前帧；GIF / 视频导出 4 秒无缝流动。</p>
+      </section>
+      <p class="formula">复用 Layers 的取模回卷原理<br>行位置 = 相位 + 时间 × 行速度 + 正弦水波</p>
+    </div>
+  </details>
+
+  <script src="js/continuation-gif.js"></script>
+  <script src="currentwall.js"></script>
+  <script src="stg-cn.js"></script>
+</body>
+</html>
