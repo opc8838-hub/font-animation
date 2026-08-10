@@ -10,7 +10,9 @@
     rows: $("#rowsInput"), font: $("#fontFamily"), fontSize: $("#fontSize"),
     lineGap: $("#lineGap"), speed: $("#speed"), assetScale: $("#assetScale"),
     wave: $("#wave"), waveRate: $("#waveRate"), vertical: $("#vertical"),
-    repeatGap: $("#repeatGap"), background: $("#backgroundColor"), foreground: $("#textColor")
+    repeatGap: $("#repeatGap"), background: $("#backgroundColor"), foreground: $("#textColor"),
+    motionMode: $("#motionMode"), introWord: $("#introWord"), cycleDuration: $("#cycleDuration"),
+    reversePull: $("#reversePull"), burst: $("#burst")
   };
 
   const fontPresets = {
@@ -34,7 +36,9 @@
   };
 
   const assets = new Map();
+  const layoutCache = new Map();
   let uploadSerial = 0;
+  let assetRevision = 0;
   let rowSettings = [];
   let animationStart = performance.now();
   let pausedAt = 0;
@@ -58,9 +62,13 @@
     image.onload = () => {
       asset.ratio = Math.max(.2, Math.min(5, image.naturalWidth / Math.max(1, image.naturalHeight)));
       asset.ready = true;
+      assetRevision += 1;
+      layoutCache.clear();
     };
     image.src = src;
     assets.set(id, asset);
+    assetRevision += 1;
+    layoutCache.clear();
   }
 
   builtIns.forEach(([id, label, src]) => addAsset(id, label, src));
@@ -77,8 +85,8 @@
   function syncRowSettings() {
     const rows = parseRows();
     rowSettings = rows.map((_, index) => rowSettings[index] || {
-      direction: index % 2 === 0 ? -1 : 1,
-      speed: 75 + (index * 17) % 51,
+      direction: -1,
+      speed: 82 + (index * 13) % 37,
       phase: (index * 27) % 100
     });
     const list = $("#rowFlowList");
@@ -168,6 +176,8 @@
     const asset = assets.get(id);
     if (!asset?.removable) return;
     assets.delete(id);
+    assetRevision += 1;
+    layoutCache.clear();
     inputs.rows.value = inputs.rows.value.split(`{{${id}}}`).join("");
     syncRowSettings();
     renderAssetGrid();
@@ -203,14 +213,28 @@
   }
 
   const mod = (value, divisor) => ((value % divisor) + divisor) % divisor;
+  const clamp01 = (value) => Math.max(0, Math.min(1, value));
+  const lerp = (from, to, amount) => from + (to - from) * amount;
+  const smooth = (value) => {
+    const x = clamp01(value);
+    return x * x * (3 - 2 * x);
+  };
+  const easeOut = (value) => 1 - Math.pow(1 - clamp01(value), 3);
+  const rangeProgress = (value, from, to) => clamp01((value - from) / (to - from));
 
   function layoutTokens(context, line, fontPx, assetHeight, repeatGap) {
+    const cacheKey = [line, context.font, fontPx.toFixed(3), assetHeight.toFixed(3), repeatGap.toFixed(3), assetRevision].join("|");
+    const cached = layoutCache.get(cacheKey);
+    if (cached) return cached;
     const items = tokensFor(line).map((token) => {
       if (token.type === "text") return { ...token, width: context.measureText(token.value).width };
       const asset = assets.get(token.id);
       return { ...token, asset, width: assetHeight * (asset?.ratio || 1), height: assetHeight };
     });
-    return { items, width: Math.max(fontPx, items.reduce((sum, item) => sum + item.width, 0) + repeatGap) };
+    const layout = { items, width: Math.max(fontPx, items.reduce((sum, item) => sum + item.width, 0) + repeatGap) };
+    if (layoutCache.size > 240) layoutCache.clear();
+    layoutCache.set(cacheKey, layout);
+    return layout;
   }
 
   function drawSequence(context, layout, x, y, color) {
@@ -230,6 +254,17 @@
       }
       cursor += item.width;
     });
+  }
+
+  function drawRepeatedLine(context, layout, y, width, color, shift, alpha = 1) {
+    let x = -mod(shift, layout.width) - layout.width;
+    context.save();
+    context.globalAlpha *= clamp01(alpha);
+    while (x < width + layout.width) {
+      drawSequence(context, layout, x, y, color);
+      x += layout.width;
+    }
+    context.restore();
   }
 
   function renderFrame(target, time, width, height, pixelRatio = 1) {
@@ -252,30 +287,91 @@
     const waveAmp = Number(inputs.wave.value) * scale;
     const waveRate = Number(inputs.waveRate.value) / 100;
     const verticalSpeed = Number(inputs.vertical.value) * scale;
-    const visualCount = Math.ceil(h / lineHeight) + 4;
-    const verticalOffset = mod(time * verticalSpeed, lineHeight);
+    const laneCount = Math.ceil(h / lineHeight) + 6;
+    const halfLanes = Math.ceil(laneCount / 2);
+    const choreography = inputs.motionMode.value === "choreography";
+    const cycleDuration = Number(inputs.cycleDuration.value) / 1000;
+    const localTime = choreography ? mod(time, cycleDuration) : time;
+    const progress = choreography ? localTime / cycleDuration : 0;
+    const verticalOffset = Math.sin(localTime * .34) * verticalSpeed * 1.8;
 
     context.font = `${preset.style} ${preset.weight} ${fontPx}px "${preset.family}", "Continuation SC", sans-serif`;
     context.textAlign = "left";
     context.textBaseline = "middle";
     context.imageSmoothingEnabled = true;
 
-    for (let visualIndex = -2; visualIndex < visualCount; visualIndex += 1) {
-      const sourceIndex = mod(visualIndex, rows.length);
+    if (choreography && progress < .215) {
+      const introFontPx = fontPx * 1.12;
+      const introAssetHeight = assetHeight * 1.12;
+      context.font = `${preset.style} ${preset.weight} ${introFontPx}px "${preset.family}", "Continuation SC", sans-serif`;
+      const introLayout = layoutTokens(context, inputs.introWord.value.trim() || "for", introFontPx, introAssetHeight, 0);
+      const driftTurn = .56;
+      const introPhase = rangeProgress(progress, 0, .18);
+      const drift = introPhase < driftTurn
+        ? lerp(0, -fontPx * .72, smooth(introPhase / driftTurn))
+        : lerp(-fontPx * .72, fontPx * .42, easeOut((introPhase - driftTurn) / (1 - driftTurn)));
+      const introAlpha = 1 - smooth(rangeProgress(progress, .165, .215));
+      const introScale = lerp(1, .91, smooth(rangeProgress(progress, .12, .21)));
+      context.save();
+      context.globalAlpha = introAlpha;
+      context.translate(w / 2 + drift, h / 2);
+      context.scale(introScale, introScale);
+      drawSequence(context, introLayout, -introLayout.width / 2, 0, inputs.foreground.value);
+      context.restore();
+      context.font = `${preset.style} ${preset.weight} ${fontPx}px "${preset.family}", "Continuation SC", sans-serif`;
+    }
+
+    const burstStrength = Number(inputs.burst.value) / 100;
+    const burstProgress = smooth(rangeProgress(progress, .18, .36));
+    const collapseProgress = smooth(rangeProgress(progress, .60, .88));
+    const initialScale = 1 + .34 * burstStrength;
+    let wallScale = 1;
+    let visibleRadius = halfLanes + 1;
+    let wallAlpha = 1;
+
+    if (choreography) {
+      wallScale = progress < .36 ? lerp(initialScale, 1, burstProgress) : lerp(1, 1.16, collapseProgress);
+      if (progress < .36) visibleRadius = lerp(1.08, halfLanes + 1, burstProgress);
+      else if (progress >= .60) visibleRadius = lerp(halfLanes + 1, .08, collapseProgress);
+      wallAlpha = smooth(rangeProgress(progress, .155, .205)) * (1 - smooth(rangeProgress(progress, .94, 1)));
+    }
+
+    const localWidth = w / wallScale;
+    context.save();
+    context.translate(w / 2, h / 2);
+    context.scale(wallScale, wallScale);
+    context.translate(-localWidth / 2, 0);
+
+    for (let laneIndex = -halfLanes; laneIndex <= halfLanes; laneIndex += 1) {
+      const sourceIndex = mod(laneIndex, rows.length);
       const setting = rowSettings[sourceIndex] || { direction: -1, speed: 100, phase: 0 };
       const layout = layoutTokens(context, rows[sourceIndex], fontPx, assetHeight, repeatGap);
-      const yWave = Math.sin(time * waveRate * 1.7 + visualIndex * .72) * waveAmp * .34;
-      const xWave = Math.sin(time * waveRate + visualIndex * .91) * waveAmp;
-      const y = visualIndex * lineHeight + verticalOffset + yWave;
+      const laneDistance = Math.abs(laneIndex);
+      let rowAlpha = 1 - smooth(rangeProgress(laneDistance, visibleRadius, visibleRadius + .9));
+      if (choreography && progress > .86 && laneIndex !== 0) rowAlpha *= 1 - smooth(rangeProgress(progress, .86, .90));
+      if (rowAlpha <= .001 || wallAlpha <= .001) continue;
+
+      const yWave = Math.sin(localTime * waveRate * 1.45 + laneIndex * .72) * waveAmp * .28;
+      const xWave = Math.sin(localTime * waveRate * .92 + laneIndex * .91) * waveAmp;
+      const y = laneIndex * lineHeight + verticalOffset + yWave;
       const velocity = fontPx * .9 * masterSpeed * (setting.speed / 100);
-      const signedTravel = setting.direction < 0 ? time * velocity : -time * velocity;
-      const shift = mod(signedTravel + setting.phase / 100 * layout.width + xWave, layout.width);
-      let x = -shift - layout.width;
-      while (x < w + layout.width) {
-        drawSequence(context, layout, x, y, inputs.foreground.value);
-        x += layout.width;
+      const signedTravel = setting.direction === 0 ? 0 : (setting.direction < 0 ? localTime * velocity : -localTime * velocity);
+      const globalLeftPull = choreography ? localWidth * .23 * smooth(rangeProgress(progress, .18, .90)) : 0;
+      let reverseTravel = 0;
+      if (choreography && progress > .47) {
+        const pull = Number(inputs.reversePull.value) / 100;
+        const enter = smooth(rangeProgress(progress, .47, .62));
+        const continueRight = Math.max(0, progress - .62);
+        const centerWeight = Math.exp(-(laneIndex * laneIndex) / 5.2);
+        reverseTravel = centerWeight * localWidth * pull * (.34 * enter + .72 * continueRight);
       }
+      const exitDrag = choreography && progress > .60
+        ? localWidth * .14 * collapseProgress * (1 - rowAlpha) * (laneIndex < 0 ? .55 : 1)
+        : 0;
+      const shift = signedTravel + setting.phase / 100 * layout.width + xWave + globalLeftPull + exitDrag - reverseTravel;
+      drawRepeatedLine(context, layout, y, localWidth, inputs.foreground.value, shift, rowAlpha * wallAlpha);
     }
+    context.restore();
   }
 
   function resizeCanvas() {
@@ -298,7 +394,8 @@
     const ratio = Number(canvas.dataset.ratio || 1);
     const time = currentTime();
     renderFrame(canvas, time, canvas.width / ratio, canvas.height / ratio, ratio);
-    frameCounter.textContent = `F ${String(Math.round(time * fps)).padStart(4, "0")}`;
+    const displayTime = inputs.motionMode.value === "choreography" ? mod(time, Number(inputs.cycleDuration.value) / 1000) : time;
+    frameCounter.textContent = `F ${String(Math.round(displayTime * fps)).padStart(4, "0")}`;
     rafId = requestAnimationFrame(previewLoop);
   }
 
@@ -331,7 +428,10 @@
       waveOut: inputs.wave.value,
       waveRateOut: (Number(inputs.waveRate.value) / 100).toFixed(2),
       verticalOut: inputs.vertical.value,
-      repeatGapOut: inputs.repeatGap.value
+      repeatGapOut: inputs.repeatGap.value,
+      cycleDurationOut: `${(Number(inputs.cycleDuration.value) / 1000).toFixed(1)}秒`,
+      reversePullOut: `${inputs.reversePull.value}%`,
+      burstOut: `${inputs.burst.value}%`
     };
     Object.entries(values).forEach(([id, value]) => { $(`#${id}`).textContent = value; });
     document.documentElement.style.setProperty("--text-color", inputs.foreground.value);
@@ -339,6 +439,7 @@
 
   Object.values(inputs).forEach((input) => input.addEventListener("input", updateOutputs));
   inputs.rows.addEventListener("input", syncRowSettings);
+  inputs.motionMode.addEventListener("change", () => setTime(0));
 
   function exportDimensions() {
     const preset = $("#exportPreset").value;
@@ -391,7 +492,7 @@
     }
     const output = makeExportCanvas();
     const gifFps = 12;
-    const duration = 4;
+    const duration = inputs.motionMode.value === "choreography" ? Number(inputs.cycleDuration.value) / 1000 : 4;
     const frameTotal = gifFps * duration;
     setExportBusy(true, `正在准备 GIF · 0 / ${frameTotal} 帧`);
     try {
@@ -435,7 +536,7 @@
         resolve(extension.toUpperCase());
       };
     });
-    const duration = 4;
+    const duration = inputs.motionMode.value === "choreography" ? Number(inputs.cycleDuration.value) / 1000 : 4;
     setExportBusy(true, "正在录制视频 · 0%");
     recorder.start();
     const started = performance.now();

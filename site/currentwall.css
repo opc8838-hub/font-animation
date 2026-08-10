@@ -43,6 +43,33 @@
 
 .section-heading .section-label { margin: 0; }
 
+.scene-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.scene-grid label {
+  display: grid;
+  gap: 6px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.scene-grid input,
+.scene-grid select {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid #111;
+  border-radius: 0;
+  background: #fff;
+  padding: 6px 8px;
+  color: #111;
+  font: 11px/1.2 "Courier New", monospace;
+}
+
+.scene-grid .hint { grid-column: 1 / -1; margin: 0; }
+
 .upload-button {
   display: inline-grid;
   place-items: center;

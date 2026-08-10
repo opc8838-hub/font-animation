@@ -32,6 +32,19 @@ everything  every{{watch}}thing</textarea>
         <p class="hint">每个换行是一种独立行；内容会自动重复填满画板。把素材标记插在任意字位，例如 every{{music}}thing。</p>
       </section>
 
+      <section class="scene-grid">
+        <label>动效模式
+          <select id="motionMode">
+            <option value="choreography" selected>参考视频编舞</option>
+            <option value="continuous">持续满屏水流</option>
+          </select>
+        </label>
+        <label>开场单词
+          <input id="introWord" type="text" value="for" spellcheck="false">
+        </label>
+        <p class="hint">开场单词也支持素材标记；参考编舞依次经过单词漂移、三行扩散、满屏左流、中部反向、收束单行和消失。</p>
+      </section>
+
       <section class="asset-section">
         <div class="section-heading">
           <p class="section-label">图片 / 图标字位</p>
@@ -104,6 +117,15 @@ everything  every{{watch}}thing</textarea>
         <label>字间填充 <output id="repeatGapOut">24</output>
           <input id="repeatGap" type="range" min="0" max="160" value="24">
         </label>
+        <label>循环时长 <output id="cycleDurationOut">9.2秒</output>
+          <input id="cycleDuration" type="range" min="6000" max="14000" step="100" value="9200">
+        </label>
+        <label>反向牵引 <output id="reversePullOut">100%</output>
+          <input id="reversePull" type="range" min="0" max="180" value="100">
+        </label>
+        <label>扩散力度 <output id="burstOut">100%</output>
+          <input id="burst" type="range" min="50" max="180" value="100">
+        </label>
       </section>
 
       <section class="color-row">
@@ -139,7 +161,7 @@ everything  every{{watch}}thing</textarea>
           <button id="exportGif" type="button">GIF 动图</button>
           <button id="exportVideo" type="button">视频</button>
         </div>
-        <p class="export-status" id="exportStatus" aria-live="polite">PNG 导出当前帧；GIF / 视频导出 4 秒无缝流动。</p>
+        <p class="export-status" id="exportStatus" aria-live="polite">PNG 导出当前帧；GIF / 视频导出一遍完整编舞。</p>
       </section>
       <p class="formula">复用 Layers 的取模回卷原理<br>行位置 = 相位 + 时间 × 行速度 + 正弦水波</p>
     </div>
