@@ -7,7 +7,7 @@
     ["clutter", "杂散", "Clutter"], ["construct", "构筑", "Construct"], ["snap", "吸附", "Snap"],
     ["flash", "闪光", "Flash"], ["pow", "砰", "Pow"], ["crash", "碰撞", "Crash"],
     ["crashclock", "碰撞时钟", "Crash Clock"], ["vessel", "器皿", "Vessel"], ["shine", "闪耀", "Shine"],
-    ["boost", "助推", "Boost"], ["boxsquad", "方块小队", "BoxSquad"],
+    ["boost", "助推", "Boost"], ["boxsquad", "方块小队", "BoxSquad"], ["prism", "棱镜", "Prism"],
   ];
 
   const dictionary = new Map(Object.entries({
@@ -101,7 +101,7 @@
   drawer.className = "stg-cn-drawer";
   drawer.hidden = true;
   drawer.innerHTML = `
-    <div class="stg-cn-drawer-header"><span>全部 23 个效果</span><span>STG CN</span></div>
+    <div class="stg-cn-drawer-header"><span>全部 ${effects.length} 个效果</span><span>STG CN</span></div>
     <div class="stg-cn-drawer-grid">${effects.map(([itemSlug, zh, en], index) => `
       <a href="${itemSlug}.html" ${itemSlug === slug ? 'aria-current="page"' : ""}>
         <span>${String(index + 1).padStart(2, "0")} · ${zh}</span><small>${en}</small>

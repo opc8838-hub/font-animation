@@ -16,6 +16,7 @@ const effects = [
   ["layers", "层叠", "Layers", "type", "排版实验"],
   ["morisawa", "森泽", "Morisawa", "type", "排版实验"],
   ["pow", "砰", "Pow", "graphic", "图形系统"],
+  ["prism", "棱镜", "Prism", "space", "立体空间"],
   ["ribbon", "丝带", "Ribbon", "flow", "波形流动"],
   ["shine", "闪耀", "Shine", "graphic", "图形系统"],
   ["snap", "吸附", "Snap", "physics", "物理粒子"],
