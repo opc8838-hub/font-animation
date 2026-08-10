@@ -1,0 +1,402 @@
+@font-face {
+  font-family: "Continuation SC";
+  src: url("assets/NotoSansSC-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Continuation SC Black";
+  src: url("assets/NotoSansSC-Black.ttf") format("truetype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Continuation Inter Medium";
+  src: url("crash_resources/Inter-Medium.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: "Continuation Inter";
+  src: url("continuation_fonts/Inter-Variable.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 100 900;
+}
+
+@font-face {
+  font-family: "Continuation IBM Plex Mono";
+  src: url("continuation_fonts/IBMPlexMono-BoldItalic.ttf") format("truetype");
+  font-display: swap;
+  font-style: italic;
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: "Continuation Space Mono";
+  src: url("assets/SpaceMono-Bold.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: "Continuation Space Grotesk";
+  src: url("continuation_fonts/SpaceGrotesk-Variable.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 300 700;
+}
+
+@font-face {
+  font-family: "Continuation Martian Mono";
+  src: url("continuation_fonts/MartianMono-Variable.ttf") format("truetype");
+  font-display: swap;
+  font-stretch: 75% 112.5%;
+  font-weight: 100 800;
+}
+
+@font-face {
+  font-family: "Continuation Oi";
+  src: url("continuation_fonts/Oi-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Continuation Barriecito";
+  src: url("continuation_fonts/Barriecito-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Continuation Berlin";
+  src: url("continuation_fonts/BerlinGrotesk-Regular.otf") format("opentype");
+  font-display: swap;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Continuation Berlin";
+  src: url("continuation_fonts/BerlinGrotesk-Bold.otf") format("opentype");
+  font-display: swap;
+  font-weight: 700;
+}
+
+:root {
+  --ink: #11110f;
+  --paper: #f5f4ef;
+  --acid: #c8ff2e;
+  --blue: #2457ff;
+  --stage-background: #000;
+  --stage-foreground: #fff;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html, body { width: 100%; height: 100%; }
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #dad9d3;
+  color: var(--ink);
+  font-family: "Microsoft YaHei", "Continuation SC", sans-serif;
+}
+
+button, textarea, input, select { font: inherit; }
+button, summary, input[type="range"], input[type="color"] { cursor: pointer; }
+
+.stage-shell {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--stage-background);
+}
+
+.design-frame {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--stage-background);
+  color: var(--stage-foreground);
+}
+
+.frame-index,
+.frame-time {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  color: currentColor;
+  font: 600 9px/1.2 Consolas, monospace;
+  letter-spacing: .13em;
+  opacity: .42;
+}
+
+.frame-index { top: 22px; }
+.frame-time { bottom: 22px; }
+
+.phrase-stage {
+  position: absolute;
+  inset: 0;
+  color: var(--stage-foreground);
+}
+
+.phrase-slot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  visibility: hidden;
+  white-space: nowrap;
+}
+
+.phrase-anchor {
+  position: relative;
+  display: block;
+  width: max-content;
+  transform: translate(-50%, -50%);
+}
+
+.phrase-motion {
+  position: relative;
+  display: block;
+  width: max-content;
+  will-change: transform;
+  font-family: var(--phrase-font, "Continuation Inter Medium"), "Continuation SC", sans-serif;
+  font-size: var(--phrase-size, 48px);
+  font-style: var(--phrase-style, normal);
+  font-weight: var(--phrase-weight, 500);
+  line-height: 1;
+  letter-spacing: -.035em;
+  font-kerning: normal;
+  text-rendering: geometricPrecision;
+}
+
+.phrase-lead,
+.phrase-suffix { display: inline-block; }
+
+.phrase-suffix {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  visibility: hidden;
+  will-change: transform;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.control-panel {
+  position: fixed;
+  z-index: 2147482500;
+  top: 10px;
+  left: 10px;
+  width: 330px;
+  height: calc(100dvh - 20px);
+  overflow: hidden;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  background: var(--paper);
+  box-shadow: 6px 6px 0 rgba(17,17,15,.18);
+}
+
+.control-panel[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.control-panel:not([open]) { height: 64px; }
+
+.control-panel > summary {
+  flex: 0 0 64px;
+  min-height: 64px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  list-style: none;
+  border-bottom: 1px solid var(--ink);
+  background: var(--acid);
+  user-select: none;
+}
+
+.control-panel > summary::-webkit-details-marker { display: none; }
+.control-panel > summary span { display: flex; flex-direction: column; gap: 4px; }
+.control-panel > summary b { font-size: 18px; }
+.control-panel > summary small { font: 10px/1 Consolas, monospace; letter-spacing: .08em; }
+.control-panel > summary i { font-size: 12px; font-style: normal; }
+.control-panel[open] > summary i::after { content: " −"; }
+.control-panel:not([open]) > summary i::after { content: " +"; }
+
+.panel-scroll {
+  position: absolute;
+  inset: 64px 0 0;
+  min-height: 0;
+  height: auto;
+  padding: 14px;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.panel-scroll::-webkit-scrollbar { width: 10px; }
+.panel-scroll::-webkit-scrollbar-track { background: #deddd6; border-left: 1px solid var(--ink); }
+.panel-scroll::-webkit-scrollbar-thumb { background: var(--blue); border: 2px solid #deddd6; }
+
+.panel-scroll section { margin: 0 0 16px; }
+.section-label { display: block; margin-bottom: 7px; font-size: 12px; font-weight: 700; }
+
+textarea {
+  width: 100%;
+  min-height: 92px;
+  resize: vertical;
+  padding: 10px;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: white;
+  color: var(--ink);
+  font: 13px/1.55 Consolas, "Continuation SC", monospace;
+}
+
+.font-picker select,
+.export-panel select {
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 9px;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: white;
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.hint, .formula {
+  margin: 7px 0 0;
+  color: #66665f;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.row-position-list { display: grid; gap: 8px; }
+.row-position-item {
+  padding: 8px;
+  border: 1px solid var(--ink);
+  background: white;
+}
+.row-position-head {
+  margin-bottom: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.row-position-title {
+  min-width: 0;
+  overflow: hidden;
+  color: #4f4f49;
+  font: 10px/1.2 Consolas, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.row-position-output { flex: 0 0 auto; color: var(--blue); font: 700 10px/1 Consolas, monospace; }
+.row-position-tools { display: grid; grid-template-columns: 90px 1fr; align-items: center; gap: 8px; }
+.row-position-presets { display: grid; grid-template-columns: repeat(3, 1fr); }
+.row-position-presets button {
+  min-height: 26px;
+  padding: 0;
+  border: 1px solid var(--ink);
+  border-right: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 700;
+}
+.row-position-presets button:last-child { border-right: 1px solid var(--ink); }
+.row-position-presets button[aria-pressed="true"] { background: var(--blue); color: white; }
+.row-position-range { width: 100%; margin: 0; accent-color: var(--blue); }
+
+.controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+.controls-grid label { min-width: 0; font-size: 11px; font-weight: 700; }
+.controls-grid output { float: right; font: 10px/1 Consolas, monospace; color: #62625c; }
+.controls-grid input { width: 100%; margin: 7px 0 0; accent-color: var(--blue); }
+
+.color-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.color-row label {
+  min-height: 38px;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+}
+.color-row input { width: 30px; height: 24px; padding: 0; border: 0; background: none; }
+
+.transport { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.transport button, .export-actions button {
+  min-height: 36px;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: white;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+}
+.transport button:hover, .export-actions button:hover { background: var(--ink); color: white; }
+.transport button[aria-pressed="true"] { background: var(--blue); color: white; }
+
+.timing-grid {
+  padding-top: 2px;
+  border-top: 1px solid rgba(17,17,15,.18);
+}
+
+.custom-size {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  gap: 7px;
+}
+.custom-size[hidden] { display: none; }
+.custom-size label { font-size: 10px; font-weight: 700; }
+.custom-size input {
+  width: 100%;
+  margin-top: 4px;
+  padding: 7px;
+  border: 1px solid var(--ink);
+  background: white;
+}
+.custom-size span { padding-bottom: 7px; }
+.export-actions { margin-top: 8px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.export-actions button:first-child { background: var(--blue); color: white; }
+.export-actions button:disabled { cursor: wait; opacity: .48; }
+.export-status { min-height: 30px; margin: 7px 0 0; color: #66665f; font-size: 10px; line-height: 1.45; }
+
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+
+@media (max-width: 720px) {
+  .control-panel {
+    inset: auto 8px 8px;
+    width: auto;
+    height: min(72dvh, 620px);
+    max-height: min(72vh, 620px);
+  }
+  .control-panel:not([open]) { height: 64px; }
+  .panel-scroll { max-height: calc(min(72vh, 620px) - 64px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame-time { display: none; }
+}

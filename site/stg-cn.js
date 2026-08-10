@@ -1,7 +1,7 @@
 (function () {
   const effects = [
     ["index", "圆柱", "Cylinder"], ["field", "场域", "Field"], ["stripes", "条纹", "Stripes"],
-    ["coil", "线圈", "Coil"], ["flag", "旗帜", "Flag"], ["morisawa", "森泽", "Morisawa"],
+    ["coil", "线圈", "Coil"], ["continuation", "续句", "Continuation"], ["flag", "旗帜", "Flag"], ["morisawa", "森泽", "Morisawa"],
     ["cascade", "瀑布", "Cascade"], ["ribbon", "丝带", "Ribbon"], ["layers", "层叠", "Layers"],
     ["danger", "警示", "Danger"], ["string", "琴弦", "String"], ["badge", "徽章", "Badge"],
     ["clutter", "杂散", "Clutter"], ["construct", "构筑", "Construct"], ["snap", "吸附", "Snap"],
@@ -101,7 +101,7 @@
   drawer.className = "stg-cn-drawer";
   drawer.hidden = true;
   drawer.innerHTML = `
-    <div class="stg-cn-drawer-header"><span>全部 23 个效果</span><span>STG CN</span></div>
+    <div class="stg-cn-drawer-header"><span>全部 ${effects.length} 个效果</span><span>STG CN</span></div>
     <div class="stg-cn-drawer-grid">${effects.map(([itemSlug, zh, en], index) => `
       <a href="${itemSlug}.html" ${itemSlug === slug ? 'aria-current="page"' : ""}>
         <span>${String(index + 1).padStart(2, "0")} · ${zh}</span><small>${en}</small>
