@@ -15,7 +15,7 @@
     reversePull: $("#reversePull"), burst: $("#burst"), finalLine: $("#finalLine"), finalSwap: $("#finalSwap"),
     introLeft: $("#introLeft"), introReturn: $("#introReturn"), popDuration: $("#popDuration"),
     fullDuration: $("#fullDuration"), exitDuration: $("#exitDuration"), finalDuration: $("#finalDuration"),
-    swapMoment: $("#swapMoment"), swapInterval: $("#swapInterval"), assetItemScale: $("#assetItemScale"),
+    retreatDuration: $("#retreatDuration"), swapMoment: $("#swapMoment"), swapInterval: $("#swapInterval"), assetItemScale: $("#assetItemScale"),
     assetOffsetX: $("#assetOffsetX"), assetOffsetY: $("#assetOffsetY")
   };
 
@@ -396,7 +396,6 @@
     }
 
     const burstStrength = Number(inputs.burst.value) / 100;
-    const fullProgress = rangeProgress(localTime, timing.popEnd, timing.fullEnd);
     const exitProgress = rangeProgress(localTime, timing.fullEnd, timing.exitEnd);
     const finalProgress = rangeProgress(localTime, timing.exitEnd, timing.finalEnd);
     const initialScale = 1 + .34 * burstStrength;
@@ -464,13 +463,15 @@
       const globalLeftPull = choreography ? localWidth * .23 * smooth(rangeProgress(localTime, timing.returnEnd, timing.fullEnd)) : 0;
       let leadLeftTravel = 0;
       if (choreography && localTime >= timing.popEnd) {
-        const pull = Number(inputs.reversePull.value) / 100;
+        const retreatSpeed = Number(inputs.reversePull.value) / 100;
+        const retreatSeconds = Number(inputs.retreatDuration.value) / 1000 / Math.max(.05, retreatSpeed);
+        const retreatProgress = retreatSpeed > 0 ? clamp01((localTime - timing.popEnd) / retreatSeconds) : 0;
         const distanceRatio = laneDistance / Math.max(1, halfLanes);
         const centerWeight = Math.exp(-(laneIndex * laneIndex) / 4.2);
-        const centerLead = easeOut(rangeProgress(fullProgress, 0, .14));
-        const followDelay = .04 + distanceRatio * .2;
-        const wallFollow = smooth(rangeProgress(fullProgress, followDelay, followDelay + .24));
-        leadLeftTravel = localWidth * pull * (.1 * centerWeight * centerLead + .18 * wallFollow);
+        const centerLead = easeOut(rangeProgress(retreatProgress, 0, .2));
+        const followDelay = .08 + distanceRatio * .42;
+        const wallFollow = smooth(rangeProgress(retreatProgress, followDelay, followDelay + .35));
+        leadLeftTravel = localWidth * (.1 * centerWeight * centerLead + .18 * wallFollow);
       }
 
       if (finalStage) {
@@ -559,6 +560,7 @@
       introReturnOut: inputs.introReturn.value,
       popDurationOut: inputs.popDuration.value,
       fullDurationOut: inputs.fullDuration.value,
+      retreatDurationOut: inputs.retreatDuration.value,
       exitDurationOut: inputs.exitDuration.value,
       finalDurationOut: inputs.finalDuration.value,
       swapMomentOut: `${inputs.swapMoment.value}%`,
