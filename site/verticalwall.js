@@ -322,7 +322,8 @@
     const assetHeight = fontPx * Number(inputs.assetScale.value) / 100;
     const requestedRows = Math.max(3, Math.round(Number(inputs.rowCount.value)) | 1);
     const maxRowsForCanvas = Math.max(3, (Math.ceil(h / Math.max(1, lineHeight)) + 4) | 1);
-    const rowCount = Math.min(requestedRows, maxRowsForCanvas);
+    const uniqueRowCount = rows.length % 2 === 0 ? Math.max(1, rows.length - 1) : rows.length;
+    const rowCount = Math.min(requestedRows, maxRowsForCanvas, uniqueRowCount);
     const halfRows = Math.floor(rowCount / 2);
     const choreography = inputs.motionMode.value === "choreography";
     const timing = choreographyTiming();
