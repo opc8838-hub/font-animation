@@ -33,7 +33,7 @@ stg_cn/
 ├── _scratch/               # 临时验证截图，可删
 └── site/                   # ★ 网站本体（24 个效果）
     ├── gallery.html        # 效果画廊入口（24 张卡片，链接各效果）
-    ├── index.html ~ currentwall.html    # 25 个效果页
+    ├── index.html ~ verticalwall.html   # 26 个效果页
     ├── sketch_*.js          # 各效果的 p5.js 主程序
     ├── *_script/ *_res/     # 复杂效果的子模块与资源
     ├── assets/              # 字体等公共资源
