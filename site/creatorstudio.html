@@ -25,23 +25,23 @@
     </summary>
     <div class="panel-scroll">
       <section>
-        <label class="section-label" for="rowsInput">滚轮名称 · 颜色 | 图标与文字</label>
-        <textarea id="rowsInput" rows="11" spellcheck="false">#9b35ff|{{cut}}Final Cut Pro
-#e53ca8|{{motion}}Motion
-#fa315f|{{pixel}}Pixelmator Pro
-#ff6f3d|{{pages}}Pages
-#e8ef42|{{compressor}}Compressor
-#46d86e|{{numbers}}Numbers
-#53dcb0|{{mainstage}}MainStage
-#39cde0|{{freeform}}Freeform
-#4f9bff|{{keynote}}Keynote
-#819ed4|{{logic}}Logic Pro</textarea>
-        <p class="hint">每行格式为“颜色 | 内容”。光标放进内容后可插入或上传图标；支持中文及任意名称。</p>
+        <label class="section-label" for="rowsInput">滚轮名称 · 每行一个英文</label>
+        <textarea id="rowsInput" rows="11" spellcheck="false">Final Cut Pro
+Mo{{music}}tion
+Pixel{{play}}mator Pro
+Pages
+Com{{cloud}}pressor
+Numbers
+MainStage
+Free{{watch}}form
+Keynote
+Logic Pro</textarea>
+        <p class="hint">一行输入一个名称。先把光标放到英文的任意位置，再点击下面的图标即可插入。</p>
       </section>
 
       <section class="scene-grid creator-scene-grid">
         <label>最终标题
-          <input id="finalTitle" type="text" value="{{brand}}Creator Studio" spellcheck="false">
+          <input id="finalTitle" type="text" value="Creator {{play}}Studio" spellcheck="false">
         </label>
         <label>播放方式
           <select id="motionMode">
@@ -59,7 +59,7 @@
         </div>
         <div class="asset-grid" id="assetGrid"></div>
         <div class="asset-tuner" id="assetTuner">
-          <div class="asset-tuner-head"><span>图标精调</span><b id="selectedAssetName">剪辑</b></div>
+          <div class="asset-tuner-head"><span>图标精调</span><b id="selectedAssetName">音乐</b></div>
           <div class="asset-tuner-grid">
             <label>大小 <output id="assetItemScaleOut">100%</output>
               <input id="assetItemScale" type="range" min="40" max="200" value="100">
@@ -126,11 +126,14 @@
           <label>图标大小 <small class="stage-tag">画面</small><output id="assetScaleOut">82%</output>
             <input id="assetScale" type="range" min="35" max="180" value="82">
           </label>
+          <label>图文间距 <small class="stage-tag">图标</small><output id="assetGapOut">8</output>
+            <input id="assetGap" type="range" min="0" max="60" value="8">
+          </label>
           <label>首项停留 <small class="stage-tag">阶段 1</small><output id="introDurationOut">0.30秒</output>
             <input id="introDuration" type="range" min="0" max="1500" step="25" value="300">
           </label>
-          <label>滚轮时长 <small class="stage-tag">阶段 2</small><output id="scrollDurationOut">0.90秒</output>
-            <input id="scrollDuration" type="range" min="300" max="4000" step="25" value="900">
+          <label>滚轮速度 <small class="stage-tag">阶段 2</small><output id="scrollSpeedOut">1.00×</output>
+            <input id="scrollSpeed" type="range" min="0.25" max="3" step="0.05" value="1">
           </label>
           <label>标题接入 <small class="stage-tag">阶段 3</small><output id="settleDurationOut">0.33秒</output>
             <input id="settleDuration" type="range" min="100" max="1800" step="10" value="330">

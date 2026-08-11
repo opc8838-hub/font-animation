@@ -8,10 +8,10 @@
   const fps = 30;
   const inputs = {
     rows: $("#rowsInput"), font: $("#fontFamily"), fontSize: $("#fontSize"),
-    lineGap: $("#lineGap"), assetScale: $("#assetScale"),
+    lineGap: $("#lineGap"), assetScale: $("#assetScale"), assetGap: $("#assetGap"),
     background: $("#backgroundColor"), foreground: $("#textColor"),
     motionMode: $("#motionMode"), finalTitle: $("#finalTitle"), introDuration: $("#introDuration"),
-    scrollDuration: $("#scrollDuration"), settleDuration: $("#settleDuration"),
+    scrollSpeed: $("#scrollSpeed"), settleDuration: $("#settleDuration"),
     glitchDuration: $("#glitchDuration"), finalDuration: $("#finalDuration"),
     activeScale: $("#activeScale"), inactiveScale: $("#inactiveScale"),
     inactiveOpacity: $("#inactiveOpacity"), scrollEase: $("#scrollEase"),
@@ -49,28 +49,17 @@
   let paused = false;
   let rafId = 0;
   let activeTokenInput = inputs.rows;
-  let selectedAssetId = "cut";
+  let selectedAssetId = "music";
 
   const svg = (body, background = "#ffffff") => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="${background}"/>${body}</svg>`
   )}`;
 
-  const glyphIcon = (glyph, background, color = "white") => svg(
-    `<text x="50" y="65" text-anchor="middle" font-family="Arial,sans-serif" font-size="48" font-weight="700" fill="${color}">${glyph}</text>`,
-    background
-  );
   const builtIns = [
-    ["cut", "剪辑", glyphIcon("F", "#6f25bf")],
-    ["motion", "动态", glyphIcon("M", "#b6258c")],
-    ["pixel", "像素", glyphIcon("◆", "#bd174d")],
-    ["pages", "文稿", glyphIcon("╱", "#d65636")],
-    ["compressor", "压缩", glyphIcon("⋈", "#b8bd32")],
-    ["numbers", "表格", glyphIcon("▥", "#2ea75a")],
-    ["mainstage", "舞台", glyphIcon("≈", "#2b9b82")],
-    ["freeform", "白板", glyphIcon("∞", "#2086a5")],
-    ["keynote", "演示", glyphIcon("T", "#3472bd")],
-    ["logic", "音频", glyphIcon("◉", "#526785")],
-    ["brand", "品牌", svg('<circle cx="47" cy="55" r="23" fill="#111"/><ellipse cx="64" cy="28" rx="8" ry="13" transform="rotate(38 64 28)" fill="#111"/>', "#ffffff")]
+    ["music", "音乐", svg('<g transform="translate(-7.5 -1)"><path d="M45 25v35.5c-2.8-1.3-6.4-1.5-9.6-.4-6.9 2.1-11.1 7.7-9.3 12.5 1.8 4.9 8.8 7.1 15.7 5 6.1-1.9 10.2-6.5 9.6-11V38l23-6v23.5c-2.8-1.3-6.4-1.5-9.6-.4-6.9 2.1-11.1 7.7-9.3 12.5 1.8 4.9 8.8 7.1 15.7 5 6.1-1.9 10.2-6.5 9.6-11V20z" fill="white"/></g>', "#fa264f")],
+    ["play", "播放", svg('<circle cx="50" cy="50" r="35" fill="none" stroke="white" stroke-width="6"/><path d="M40 29 69 50 40 71z" fill="white"/>', "#111111")],
+    ["cloud", "云", svg('<g transform="translate(-4.5 -1.5)"><circle cx="37" cy="53" r="16" fill="white"/><circle cx="52" cy="44" r="22" fill="white"/><circle cx="72" cy="53" r="16" fill="white"/><rect x="21" y="52" width="67" height="22" rx="11" fill="white"/></g>', "#1389ff")],
+    ["watch", "手表", svg('<rect x="27" y="20" width="46" height="60" rx="16" fill="#111"/><rect x="34" y="28" width="32" height="44" rx="10" fill="#d7ff2f"/><circle cx="50" cy="50" r="3" fill="#111"/>', "#d8d8d8")]
   ];
 
   function addAsset(id, label, src, removable = false) {
@@ -91,14 +80,11 @@
   builtIns.forEach(([id, label, src]) => addAsset(id, label, src));
 
   function parseRows() {
-    const rows = inputs.rows.value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line, index) => {
-      const parts = line.split("|");
-      const candidate = parts[0]?.trim();
-      const color = /^#[0-9a-f]{6}$/i.test(candidate) ? candidate : ["#9b35ff", "#fa315f", "#e8ef42", "#53dcb0", "#4f9bff"][index % 5];
-      const content = (parts.length > 1 ? parts.slice(1).join("|") : line).trim();
-      return { color, content: content || `Item ${index + 1}` };
-    });
-    return rows.length ? rows.slice(0, 24) : [{ color: "#9b35ff", content: "{{cut}}Final Cut Pro" }];
+    const palette = ["#9b35ff", "#e53ca8", "#fa315f", "#ff6f3d", "#e8ef42", "#46d86e", "#53dcb0", "#39cde0", "#4f9bff", "#819ed4"];
+    const rows = inputs.rows.value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((content, index) => ({
+      color: palette[index % palette.length], content
+    }));
+    return rows.length ? rows.slice(0, 24) : [{ color: palette[0], content: "Final Cut Pro" }];
   }
 
   function renderAssetGrid() {
@@ -180,7 +166,7 @@
     const asset = assets.get(id);
     if (!asset?.removable) return;
     assets.delete(id);
-    if (selectedAssetId === id) selectedAssetId = "cut";
+    if (selectedAssetId === id) selectedAssetId = "music";
     assetRevision += 1;
     layoutCache.clear();
     [inputs.rows, inputs.finalTitle].forEach((field) => {
@@ -233,15 +219,16 @@
   const easeOut = (value) => 1 - Math.pow(1 - clamp01(value), 3);
   const rangeProgress = (value, from, to) => clamp01((value - from) / (to - from));
 
-  function layoutTokens(context, line, fontPx, assetHeight, repeatGap) {
-    const cacheKey = [line, context.font, fontPx.toFixed(3), assetHeight.toFixed(3), repeatGap.toFixed(3), assetRevision].join("|");
+  function layoutTokens(context, line, fontPx, assetHeight, repeatGap, assetGap = 0) {
+    const cacheKey = [line, context.font, fontPx.toFixed(3), assetHeight.toFixed(3), repeatGap.toFixed(3), assetGap.toFixed(3), assetRevision].join("|");
     const cached = layoutCache.get(cacheKey);
     if (cached) return cached;
     const items = tokensFor(line).map((token) => {
       if (token.type === "text") return { ...token, width: context.measureText(token.value).width };
       const asset = assets.get(token.id);
       const tunedHeight = assetHeight * (asset?.scale || 1);
-      return { ...token, asset, width: tunedHeight * (asset?.ratio || 1), height: tunedHeight };
+      const drawWidth = tunedHeight * (asset?.ratio || 1);
+      return { ...token, asset, gap: assetGap, drawWidth, width: drawWidth + assetGap * 2, height: tunedHeight };
     });
     const layout = { items, width: Math.max(fontPx, items.reduce((sum, item) => sum + item.width, 0) + repeatGap) };
     if (layoutCache.size > 240) layoutCache.clear();
@@ -256,22 +243,22 @@
       if (item.type === "text") {
         context.fillText(item.value, cursor, y);
       } else if (item.asset?.ready) {
-        const drawX = cursor + item.height * item.asset.offsetX / 100;
+        const drawX = cursor + item.gap + item.height * item.asset.offsetX / 100;
         const drawY = y + item.height * item.asset.offsetY / 100;
         if (assetRotation) {
           context.save();
-          context.translate(drawX + item.width / 2, drawY);
+          context.translate(drawX + item.drawWidth / 2, drawY);
           context.rotate(assetRotation);
-          context.drawImage(item.asset.image, -item.width / 2, -item.height / 2, item.width, item.height);
+          context.drawImage(item.asset.image, -item.drawWidth / 2, -item.height / 2, item.drawWidth, item.height);
           context.restore();
         } else {
-          context.drawImage(item.asset.image, drawX, drawY - item.height / 2, item.width, item.height);
+          context.drawImage(item.asset.image, drawX, drawY - item.height / 2, item.drawWidth, item.height);
         }
       } else {
         context.save();
         context.strokeStyle = color;
         context.lineWidth = Math.max(1, item.height * .045);
-        context.strokeRect(cursor + 1, y - item.height / 2, Math.max(2, item.width - 2), item.height);
+        context.strokeRect(cursor + item.gap + 1, y - item.height / 2, Math.max(2, item.drawWidth - 2), item.height);
         context.restore();
       }
       cursor += item.width;
@@ -298,11 +285,15 @@
   }
 
   function choreographyTiming() {
+    const speed = Math.max(.25, Number(inputs.scrollSpeed.value));
+    const scrollSeconds = Math.max(.1, (parseRows().length - 1) * .1 / speed);
     const duration = [
-      inputs.introDuration, inputs.scrollDuration, inputs.settleDuration,
-      inputs.glitchDuration, inputs.finalDuration
-    ]
-      .map((input) => Number(input.value) / 1000);
+      Number(inputs.introDuration.value) / 1000,
+      scrollSeconds,
+      Number(inputs.settleDuration.value) / 1000,
+      Number(inputs.glitchDuration.value) / 1000,
+      Number(inputs.finalDuration.value) / 1000
+    ];
     const cycle = duration.reduce((sum, value) => sum + value, 0);
     const end = [];
     duration.reduce((sum, value, index) => {
@@ -321,7 +312,7 @@
     return value - Math.floor(value);
   }
 
-  function titleSlots(context, line, fontPx, assetHeight) {
+  function titleSlots(context, line, fontPx, assetHeight, assetGap) {
     const slots = [];
     tokensFor(line).forEach((token) => {
       if (token.type === "text") {
@@ -330,7 +321,8 @@
       }
       const asset = assets.get(token.id);
       const height = assetHeight * (asset?.scale || 1);
-      slots.push({ ...token, asset, height, width: height * (asset?.ratio || 1) });
+      const drawWidth = height * (asset?.ratio || 1);
+      slots.push({ ...token, asset, gap: assetGap, drawWidth, height, width: drawWidth + assetGap * 2 });
     });
     return { slots, width: slots.reduce((sum, slot) => sum + slot.width, 0) };
   }
@@ -343,9 +335,9 @@
     title.slots.forEach((slot) => {
       if (slot.type === "text") context.fillText(slot.value, cursor, y);
       else if (slot.asset?.ready) {
-        const drawX = cursor + slot.height * slot.asset.offsetX / 100;
+        const drawX = cursor + slot.gap + slot.height * slot.asset.offsetX / 100;
         const drawY = y + slot.height * slot.asset.offsetY / 100;
-        context.drawImage(slot.asset.image, drawX, drawY - slot.height / 2, slot.width, slot.height);
+        context.drawImage(slot.asset.image, drawX, drawY - slot.height / 2, slot.drawWidth, slot.height);
       }
       cursor += slot.width;
     });
@@ -367,6 +359,7 @@
     const fontPx = Math.max(8, Number(inputs.fontSize.value) * scale);
     const lineHeight = Math.max(fontPx * .9, fontPx + Number(inputs.lineGap.value) * scale);
     const assetHeight = fontPx * Number(inputs.assetScale.value) / 100;
+    const assetGap = Number(inputs.assetGap.value) * scale;
     const choreography = inputs.motionMode.value === "choreography";
     const timing = choreographyTiming();
     const localTime = choreography ? mod(time, timing.cycle) : time;
@@ -381,14 +374,14 @@
     context.imageSmoothingEnabled = true;
 
     const finalLine = inputs.finalTitle.value.trim() || "Creator Studio";
-    const finalLayout = layoutTokens(context, finalLine, fontPx, assetHeight, 0);
-    const finalSlots = titleSlots(context, finalLine, fontPx, assetHeight);
+    const finalLayout = layoutTokens(context, finalLine, fontPx, assetHeight, 0, assetGap);
+    const finalSlots = titleSlots(context, finalLine, fontPx, assetHeight, assetGap);
     const sourceGlyphs = rows.map((row) => row.content.replace(/\{\{[^{}]+\}\}/g, "")).join("").replace(/\s/g, "");
     const sourceAssetIds = rows.flatMap((row) => [...row.content.matchAll(/\{\{([^{}]+)\}\}/g)].map((match) => match[1]));
     const virtualItems = [...rows, { color: inputs.foreground.value, content: finalLine }];
 
     const drawCentered = (line, y, color, alpha = 1, rowScale = 1) => {
-      const layout = layoutTokens(context, line, fontPx, assetHeight, 0);
+      const layout = layoutTokens(context, line, fontPx, assetHeight, 0, assetGap);
       context.save();
       context.globalAlpha *= clamp01(alpha);
       context.translate(w / 2, h / 2 + y);
@@ -408,22 +401,20 @@
         const focus = smoother(1 - Math.min(1, distance));
         const itemScale = lerp(inactiveScale, activeScale, focus);
         const alpha = lerp(inactiveOpacity, 1, focus) * (1 - smoother(rangeProgress(distance, 1.7, 2.7)));
-        context.save();
-        context.filter = distance > .32 ? `blur(${Math.min(2.4, distance * 1.1) * scale}px)` : "none";
         drawCentered(virtualItems[index].content, delta * lineHeight, virtualItems[index].color, alpha, itemScale);
-        context.restore();
       }
     };
 
     if (!choreography) {
-      const loopPosition = mod(localTime * rows.length / 3.2, rows.length);
+      const loopPosition = mod(localTime * 10 * Math.max(.25, Number(inputs.scrollSpeed.value)), rows.length);
       drawTicker(loopPosition, false);
       return;
     }
 
     if (localTime < timing.scrollEnd) {
       const raw = rangeProgress(localTime, timing.introEnd, timing.scrollEnd);
-      const progress = lerp(raw, smoother(raw), easeMix);
+      const fluid = .5 - Math.cos(Math.PI * raw) / 2;
+      const progress = lerp(raw, fluid, easeMix);
       drawTicker((rows.length - 1) * progress, false);
       return;
     }
@@ -540,9 +531,10 @@
       fontSizeOut: inputs.fontSize.value,
       lineGapOut: inputs.lineGap.value,
       assetScaleOut: `${inputs.assetScale.value}%`,
+      assetGapOut: inputs.assetGap.value,
       cycleDurationOut: formatSeconds(timing.cycle),
       introDurationOut: formatSeconds(timing.duration[0]),
-      scrollDurationOut: formatSeconds(timing.duration[1]),
+      scrollSpeedOut: `${Number(inputs.scrollSpeed.value).toFixed(2)}× · ${formatSeconds(timing.duration[1])}`,
       settleDurationOut: formatSeconds(timing.duration[2]),
       glitchDurationOut: formatSeconds(timing.duration[3]),
       finalDurationOut: formatSeconds(timing.duration[4]),
