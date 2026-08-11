@@ -128,7 +128,7 @@ everything</textarea>
           <small class="section-note">先调这 8 项</small>
         </div>
         <div class="motion-map" aria-label="动效阶段">
-          <span>中间→满屏</span><i>→</i><span>向左停留</span><i>→</i><span>柔和回流</span><i>→</i><span>逐行消失</span><i>→</i><span>单行收尾</span>
+          <span>中间→满屏</span><i>→</i><span>自然左流</span><i>→</i><span>中间向右</span><i>→</i><span>逐行消失</span><i>→</i><span>单行收尾</span>
         </div>
         <div class="controls-grid quick-grid">
         <label>字号 <small class="stage-tag">画面</small><output id="fontSizeOut">62</output>
@@ -143,11 +143,11 @@ everything</textarea>
         <label>中间→满屏 <small class="stage-tag">阶段 1</small><output id="popDurationOut">0.60秒</output>
           <input id="popDuration" type="range" min="150" max="1800" step="10" value="450">
         </label>
-        <label>满屏向左停留 <small class="stage-tag">阶段 2</small><output id="fullDurationOut">2.9秒</output>
-            <input id="fullDuration" type="range" min="600" max="18000" step="100" value="2900">
+        <label>满屏自然左流 <small class="stage-tag">阶段 2</small><output id="fullDurationOut">1.1秒</output>
+            <input id="fullDuration" type="range" min="200" max="8000" step="100" value="1100">
           </label>
-          <label>回流展开 <small class="stage-tag">阶段 3</small><output id="retreatDurationOut">2.8秒</output>
-            <input id="retreatDuration" type="range" min="400" max="6000" step="50" value="2800">
+          <label>向右带动 <small class="stage-tag">阶段 3</small><output id="retreatDurationOut">0.80秒</output>
+            <input id="retreatDuration" type="range" min="200" max="2500" step="50" value="800">
           </label>
           <label>逐行消失 <small class="stage-tag">阶段 4</small><output id="exitDurationOut">1.1秒</output>
             <input id="exitDuration" type="range" min="500" max="3500" step="50" value="1100">
@@ -156,7 +156,7 @@ everything</textarea>
             <input id="finalDuration" type="range" min="600" max="6000" step="50" value="1100">
           </label>
         </div>
-        <p class="hint">“中间→满屏”控制铺满速度；“满屏向左停留”控制铺满后继续向左流多久。界面显示的是动画中真正生效的时间。</p>
+        <p class="hint">“满屏自然左流”控制铺满后恒速向左多久；“向右带动”控制中间先转向、再带动上下行所用的时间。</p>
       </section>
 
       <details class="advanced-controls motion-advanced">
@@ -164,7 +164,7 @@ everything</textarea>
         <div class="advanced-body">
           <p class="hint advanced-hint">这些参数用于复刻特殊节奏；不确定时保留默认值。</p>
           <section class="controls-grid">
-            <label>字行流速 <output id="speedOut">1.00×</output>
+            <label>满屏左流速度 <output id="speedOut">1.00×</output>
               <input id="speed" type="range" min="20" max="220" value="100">
             </label>
             <label>水波频率 <output id="waveRateOut">0.70</output>
@@ -179,7 +179,7 @@ everything</textarea>
             <label>字间填充 <output id="repeatGapOut">24</output>
               <input id="repeatGap" type="range" min="0" max="160" value="24">
             </label>
-            <label>回流力度 <output id="reversePullOut">70%</output>
+            <label>向右推动力度 <output id="reversePullOut">70%</output>
               <input id="reversePull" type="range" min="0" max="180" value="70">
             </label>
             <label>弹屏力度 <output id="burstOut">100%</output>
@@ -203,7 +203,7 @@ everything</textarea>
           </label>
             </div>
           </section>
-          <p class="hint">每个阶段使用独立真实时间；调整其中一段不会压缩其它阶段。当前一轮约 <strong id="cycleDurationOut">6.2秒</strong>。</p>
+          <p class="hint">每个阶段使用独立真实时间；调整其中一段不会压缩其它阶段。当前一轮约 <strong id="cycleDurationOut">4.4秒</strong>。</p>
         </div>
       </details>
 
