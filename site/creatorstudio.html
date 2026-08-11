@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="汇聚：彩色名称纵向滚动并重组成最终标题的动态字体编辑器。">
+  <title>汇聚 Creator Merge | STG 中文版</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;f[]=general-sans@400,500,600&amp;f[]=clash-display@500,600&amp;f[]=cabinet-grotesk@500,700&amp;display=swap">
+  <link rel="stylesheet" href="continuation.css">
+  <link rel="stylesheet" href="currentwall.css">
+  <link rel="stylesheet" href="creatorstudio.css">
+  <link rel="stylesheet" href="stg-cn.css">
+</head>
+<body>
+  <main class="current-stage creator-stage" aria-label="彩色名称汇聚动效画布">
+    <canvas id="flowCanvas"></canvas>
+    <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+  </main>
+
+  <details class="control-panel current-panel creator-panel" id="controlPanel" open>
+    <summary>
+      <span><b>汇聚</b><small>CREATOR MERGE / 27</small></span>
+      <i aria-hidden="true">参数</i>
+    </summary>
+    <div class="panel-scroll">
+      <section>
+        <label class="section-label" for="rowsInput">滚轮名称 · 颜色 | 图标与文字</label>
+        <textarea id="rowsInput" rows="11" spellcheck="false">#9b35ff|{{cut}}Final Cut Pro
+#e53ca8|{{motion}}Motion
+#fa315f|{{pixel}}Pixelmator Pro
+#ff6f3d|{{pages}}Pages
+#e8ef42|{{compressor}}Compressor
+#46d86e|{{numbers}}Numbers
+#53dcb0|{{mainstage}}MainStage
+#39cde0|{{freeform}}Freeform
+#4f9bff|{{keynote}}Keynote
+#819ed4|{{logic}}Logic Pro</textarea>
+        <p class="hint">每行格式为“颜色 | 内容”。光标放进内容后可插入或上传图标；支持中文及任意名称。</p>
+      </section>
+
+      <section class="scene-grid creator-scene-grid">
+        <label>最终标题
+          <input id="finalTitle" type="text" value="{{brand}}Creator Studio" spellcheck="false">
+        </label>
+        <label>播放方式
+          <select id="motionMode">
+            <option value="choreography" selected>参考视频编排</option>
+            <option value="loop">滚轮持续循环</option>
+          </select>
+        </label>
+        <p class="hint">滚轮停在最后一项后切换最终标题；随后用前面名称和图标的彩色碎片重组每个字位。</p>
+      </section>
+
+      <section class="asset-section">
+        <div class="section-heading">
+          <p class="section-label">图片 / 图标字位</p>
+          <label class="upload-button">添加图片<input id="assetUpload" type="file" accept="image/*" multiple></label>
+        </div>
+        <div class="asset-grid" id="assetGrid"></div>
+        <div class="asset-tuner" id="assetTuner">
+          <div class="asset-tuner-head"><span>图标精调</span><b id="selectedAssetName">剪辑</b></div>
+          <div class="asset-tuner-grid">
+            <label>大小 <output id="assetItemScaleOut">100%</output>
+              <input id="assetItemScale" type="range" min="40" max="200" value="100">
+            </label>
+            <label>左右 <output id="assetOffsetXOut">0%</output>
+              <input id="assetOffsetX" type="range" min="-60" max="60" value="0">
+            </label>
+            <label>上下 <output id="assetOffsetYOut">0%</output>
+              <input id="assetOffsetY" type="range" min="-60" max="60" value="0">
+            </label>
+          </div>
+        </div>
+        <p class="hint">先把光标放进文字框，再点击素材插入。上传的 PNG、JPG、WEBP、SVG 可重复出现在任意行和任意字位。</p>
+      </section>
+
+      <section class="font-picker">
+        <label class="section-label" for="fontFamily">字体</label>
+        <select id="fontFamily">
+          <optgroup label="Snap 动效字体">
+            <option value="snap-inter-medium" selected>Inter Medium</option>
+            <option value="snap-inter-black">Inter Black</option>
+            <option value="snap-ibm-plex">IBM Plex Mono Bold Italic</option>
+            <option value="snap-space-mono">Space Mono Bold</option>
+            <option value="snap-space-grotesk">Space Grotesk Bold</option>
+          </optgroup>
+          <optgroup label="Free Faces · OFL">
+            <option value="ff-space-grotesk">Space Grotesk</option>
+            <option value="ff-martian-mono">Martian Mono</option>
+            <option value="ff-oi">Oi Display</option>
+            <option value="ff-barriecito">Barriecito</option>
+          </optgroup>
+          <optgroup label="UNCUT · OFL">
+            <option value="uncut-berlin">Berlin Grotesk</option>
+            <option value="uncut-berlin-bold">Berlin Grotesk Bold</option>
+          </optgroup>
+          <optgroup label="Fontshare · 官方 API">
+            <option value="fs-satoshi">Satoshi</option>
+            <option value="fs-general-sans">General Sans</option>
+            <option value="fs-clash-display">Clash Display</option>
+            <option value="fs-cabinet">Cabinet Grotesk</option>
+          </optgroup>
+          <optgroup label="中文字体">
+            <option value="cn-noto-regular">Noto Sans SC</option>
+            <option value="cn-noto-black">Noto Sans SC Black</option>
+          </optgroup>
+        </select>
+      </section>
+
+      <section class="motion-quick">
+        <div class="section-heading">
+          <p class="section-label">常用调节</p>
+          <small class="section-note">正常版 2.62 秒</small>
+        </div>
+        <div class="motion-map creator-motion-map" aria-label="动效阶段">
+          <span>首项</span><i>→</i><span>纵向滚轮</span><i>→</i><span>标题接入</span><i>→</i><span>彩色重组</span><i>→</i><span>白字定稿</span>
+        </div>
+        <div class="controls-grid quick-grid">
+          <label>字号 <small class="stage-tag">画面</small><output id="fontSizeOut">52</output>
+            <input id="fontSize" type="range" min="20" max="150" value="52">
+          </label>
+          <label>行距 <small class="stage-tag">滚轮</small><output id="lineGapOut">18</output>
+            <input id="lineGap" type="range" min="-20" max="120" value="18">
+          </label>
+          <label>图标大小 <small class="stage-tag">画面</small><output id="assetScaleOut">82%</output>
+            <input id="assetScale" type="range" min="35" max="180" value="82">
+          </label>
+          <label>首项停留 <small class="stage-tag">阶段 1</small><output id="introDurationOut">0.30秒</output>
+            <input id="introDuration" type="range" min="0" max="1500" step="25" value="300">
+          </label>
+          <label>滚轮时长 <small class="stage-tag">阶段 2</small><output id="scrollDurationOut">0.90秒</output>
+            <input id="scrollDuration" type="range" min="300" max="4000" step="25" value="900">
+          </label>
+          <label>标题接入 <small class="stage-tag">阶段 3</small><output id="settleDurationOut">0.33秒</output>
+            <input id="settleDuration" type="range" min="100" max="1800" step="10" value="330">
+          </label>
+          <label>彩色重组 <small class="stage-tag">阶段 4</small><output id="glitchDurationOut">0.40秒</output>
+            <input id="glitchDuration" type="range" min="120" max="2000" step="10" value="400">
+          </label>
+          <label>定稿停留 <small class="stage-tag">阶段 5</small><output id="finalDurationOut">0.70秒</output>
+            <input id="finalDuration" type="range" min="200" max="6000" step="25" value="700">
+          </label>
+        </div>
+        <p class="hint">两段参考视频使用同一套帧：慢动作版约为正常版 2.48 倍。这里默认采用正常版时间。</p>
+      </section>
+
+      <details class="advanced-controls motion-advanced">
+        <summary><span>高级动效参数</span><small>精调时打开</small></summary>
+        <div class="advanced-body">
+          <p class="hint advanced-hint">控制滚轮的空间层次和标题重组强度；不调整时即为参考视频的默认感觉。</p>
+          <section class="controls-grid">
+            <label>中心放大 <output id="activeScaleOut">100%</output>
+              <input id="activeScale" type="range" min="70" max="150" value="100">
+            </label>
+            <label>邻项缩放 <output id="inactiveScaleOut">72%</output>
+              <input id="inactiveScale" type="range" min="35" max="100" value="72">
+            </label>
+            <label>邻项透明度 <output id="inactiveOpacityOut">28%</output>
+              <input id="inactiveOpacity" type="range" min="0" max="80" value="28">
+            </label>
+            <label>滚轮柔和度 <output id="scrollEaseOut">72%</output>
+              <input id="scrollEase" type="range" min="0" max="100" value="72">
+            </label>
+            <label>碎片强度 <output id="fragmentStrengthOut">88%</output>
+              <input id="fragmentStrength" type="range" min="0" max="140" value="88">
+            </label>
+            <label>碎片抖动 <output id="fragmentJitterOut">7</output>
+              <input id="fragmentJitter" type="range" min="0" max="30" value="7">
+            </label>
+          </section>
+          <p class="hint">当前完整循环约 <strong id="cycleDurationOut">2.63秒</strong>。滚轮与重组均采用确定性随机，导出结果和预览完全一致。</p>
+        </div>
+      </details>
+
+      <section class="color-row">
+        <label>背景<input id="backgroundColor" type="color" value="#000000"></label>
+        <label>定稿文字<input id="textColor" type="color" value="#ffffff"></label>
+      </section>
+
+      <section class="transport" aria-label="时间轴控制">
+        <button id="restartButton" type="button">重播</button>
+        <button id="pauseButton" type="button">暂停</button>
+        <button id="backButton" type="button">−1 帧</button>
+        <button id="forwardButton" type="button">+1 帧</button>
+      </section>
+
+      <section class="export-panel">
+        <label class="section-label" for="exportPreset">导出尺寸</label>
+        <select id="exportPreset">
+          <option value="current">当前画板</option>
+          <option value="1080x1080">1:1 · 1080 × 1080</option>
+          <option value="1080x1350">4:5 · 1080 × 1350</option>
+          <option value="1080x1920">9:16 · 1080 × 1920</option>
+          <option value="1920x1080">16:9 · 1920 × 1080</option>
+          <option value="1200x628">横幅 · 1200 × 628</option>
+          <option value="custom">自定义尺寸</option>
+        </select>
+        <div class="custom-size" id="customSize" hidden>
+          <label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label>
+          <span>×</span>
+          <label>高<input id="exportHeight" type="number" min="240" max="3840" value="1920"></label>
+        </div>
+        <div class="export-actions">
+          <button id="exportPng" type="button">PNG 图片</button>
+          <button id="exportGif" type="button">GIF 动图</button>
+          <button id="exportVideo" type="button">视频</button>
+        </div>
+        <p class="export-status" id="exportStatus" aria-live="polite">PNG 导出当前帧；GIF / 视频导出一遍完整编排。</p>
+      </section>
+      <p class="formula">滚轮：当前索引 + 连续纵向插值<br>重组：固定字位 × 彩色来源碎片 × 逐字归位</p>
+    </div>
+  </details>
+
+  <script src="js/continuation-gif.js"></script>
+  <script src="creatorstudio.js"></script>
+  <script src="stg-cn.js"></script>
+</body>
+</html>

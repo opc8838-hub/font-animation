@@ -1,7 +1,7 @@
 # STG 中文版 —— Space Type Generator 中文改造
 
 原站 [spacetypegenerator.com](https://spacetypegenerator.com)（kielm 开源项目，p5.js 实现）的本地中文版。
-**24 个字体动效 + 中文渲染支持 + 中文编辑面板 + 响应式效果画廊。**
+**27 个字体动效 + 中文渲染支持 + 中文编辑面板 + 响应式效果画廊。**
 
 在线浏览：[GitHub Pages](https://opc8838-hub.github.io/font-animation/gallery.html)
 
@@ -31,9 +31,9 @@ stg_cn/
 ├── translate_js.py         # UI 中文翻译脚本（含英→中映射表）
 ├── NotoSansSC-vf.ttf       # 中文字体源（可变字体，供重新实例化）
 ├── _scratch/               # 临时验证截图，可删
-└── site/                   # ★ 网站本体（24 个效果）
-    ├── gallery.html        # 效果画廊入口（24 张卡片，链接各效果）
-    ├── index.html ~ verticalwall.html   # 26 个效果页
+└── site/                   # ★ 网站本体（27 个效果）
+    ├── gallery.html        # 效果画廊入口（27 张卡片，链接各效果）
+    ├── index.html ~ creatorstudio.html  # 27 个效果页
     ├── sketch_*.js          # 各效果的 p5.js 主程序
     ├── *_script/ *_res/     # 复杂效果的子模块与资源
     ├── assets/              # 字体等公共资源
