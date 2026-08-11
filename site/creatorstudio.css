@@ -170,6 +170,31 @@
 
 .speed-timeline > .hint { margin: 9px 0 0; }
 
+.export-config-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+
+.export-config-grid label { min-width: 0; }
+.export-config-grid .section-label { display: block; margin-bottom: 5px; }
+.export-config-grid select { width: 100%; min-width: 0; }
+
+.custom-duration {
+  display: flex;
+  align-items: end;
+  gap: 7px;
+  margin-top: 7px;
+  padding: 7px;
+  border: 1px solid #9d9c94;
+  background: #e7e6df;
+}
+
+.custom-duration[hidden] { display: none; }
+.custom-duration label { display: grid; gap: 4px; flex: 1; font-size: 10px; }
+.custom-duration input { width: 100%; box-sizing: border-box; }
+.custom-duration > span { padding-bottom: 7px; font-size: 10px; }
+
 .creator-panel .formula {
   color: #77776f;
   line-height: 1.55;

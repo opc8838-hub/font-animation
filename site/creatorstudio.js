@@ -424,14 +424,25 @@
     const sourceGlyphs = rows.map((row) => row.content.replace(/\{\{[^{}]+\}\}/g, "")).join("").replace(/\s/g, "");
     const sourceAssetIds = rows.flatMap((row) => [...row.content.matchAll(/\{\{([^{}]+)\}\}/g)].map((match) => match[1]));
     const virtualItems = [...rows, { color: inputs.foreground.value, content: finalLine }];
+    const safeContentWidth = w * .88;
+    const finalFit = Math.min(1, safeContentWidth / Math.max(1, finalSlots.width));
 
     const drawCentered = (line, y, color, alpha = 1, rowScale = 1) => {
       const layout = layoutTokens(context, line, fontPx, assetHeight, 0, assetGap);
+      const fittedScale = Math.min(rowScale, safeContentWidth / Math.max(1, layout.width));
       context.save();
       context.globalAlpha *= clamp01(alpha);
       context.translate(w / 2, h / 2 + y);
-      context.scale(rowScale, rowScale);
+      context.scale(fittedScale, fittedScale);
       drawSequence(context, layout, -layout.width / 2, 0, color);
+      context.restore();
+    };
+
+    const drawFinalTitle = (alpha = 1) => {
+      context.save();
+      context.translate(w / 2, h / 2);
+      context.scale(finalFit, finalFit);
+      drawTitleSlots(context, finalSlots, -finalSlots.width / 2, 0, inputs.foreground.value, alpha);
       context.restore();
     };
 
@@ -475,18 +486,21 @@
       const chaos = attack * (1 - resolve) * Number(inputs.fragmentStrength.value) / 100;
       const jitter = Number(inputs.fragmentJitter.value) * scale * chaos;
       const bucket = Math.floor(localTime * fps);
-      let cursor = w / 2 - finalSlots.width / 2;
+      let cursor = -finalSlots.width / 2;
 
       context.save();
+      context.translate(w / 2, h / 2);
+      context.scale(finalFit, finalFit);
+      context.save();
       context.globalAlpha = lerp(1, .18, chaos);
-      drawSequence(context, finalLayout, w / 2 - finalLayout.width / 2, h / 2, inputs.foreground.value);
+      drawSequence(context, finalLayout, -finalLayout.width / 2, 0, inputs.foreground.value);
       context.restore();
 
       finalSlots.slots.forEach((slot, index) => {
         const locked = seeded(index * 37 + bucket * 3.1) < resolve || chaos < .015;
         if (locked) {
           const single = { items: [slot], width: slot.width };
-          drawSequence(context, single, cursor, h / 2, inputs.foreground.value);
+          drawSequence(context, single, cursor, 0, inputs.foreground.value);
         } else if (slot.type === "asset" && sourceAssetIds.length) {
           const id = sourceAssetIds[Math.floor(seeded(index * 71 + bucket) * sourceAssetIds.length) % sourceAssetIds.length];
           const asset = assets.get(id);
@@ -494,7 +508,7 @@
             const size = assetHeight * lerp(.72, 1.08, seeded(index * 11 + bucket));
             context.save();
             context.globalAlpha = .75 + chaos * .25;
-            context.drawImage(asset.image, cursor + (slot.width - size * asset.ratio) / 2 + (seeded(index + bucket) - .5) * jitter, h / 2 - size / 2 + (seeded(index * 9 - bucket) - .5) * jitter, size * asset.ratio, size);
+            context.drawImage(asset.image, cursor + (slot.width - size * asset.ratio) / 2 + (seeded(index + bucket) - .5) * jitter, -size / 2 + (seeded(index * 9 - bucket) - .5) * jitter, size * asset.ratio, size);
             context.restore();
           }
         } else {
@@ -504,7 +518,7 @@
           context.globalCompositeOperation = "screen";
           context.globalAlpha = .72 + chaos * .28;
           context.fillStyle = color;
-          context.translate(cursor + slot.width / 2 + (seeded(index * 23 + bucket) - .5) * jitter, h / 2 + (seeded(index * 31 - bucket) - .5) * jitter);
+          context.translate(cursor + slot.width / 2 + (seeded(index * 23 + bucket) - .5) * jitter, (seeded(index * 31 - bucket) - .5) * jitter);
           context.scale(lerp(.78, 1.22, seeded(index * 41 + bucket)), 1);
           const glyphWidth = context.measureText(glyph).width;
           context.fillText(glyph, -glyphWidth / 2, 0);
@@ -516,10 +530,11 @@
         }
         cursor += slot.width;
       });
+      context.restore();
       return;
     }
 
-    drawTitleSlots(context, finalSlots, w / 2 - finalSlots.width / 2, h / 2, inputs.foreground.value, 1);
+    drawFinalTitle(1);
   }
 
   function resizeCanvas() {
@@ -660,6 +675,17 @@
     return result;
   }
 
+  function exportDurationSeconds() {
+    const selected = $("#exportDuration").value;
+    if (selected === "full") return inputs.motionMode.value === "choreography" ? choreographyTiming().cycle : 4;
+    if (selected === "custom") return Math.max(.5, Math.min(15, Number($("#exportDurationCustom").value) || 4));
+    return Math.max(.5, Number(selected) || 3);
+  }
+
+  function durationFileLabel(duration) {
+    return `${Number(duration.toFixed(1))}`.replace(".", "p") + "s";
+  }
+
   function downloadBlob(blob, filename) {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -677,6 +703,9 @@
 
   $("#exportPreset").addEventListener("change", (event) => {
     $("#customSize").hidden = event.currentTarget.value !== "custom";
+  });
+  $("#exportDuration").addEventListener("change", (event) => {
+    $("#customDuration").hidden = event.currentTarget.value !== "custom";
   });
 
   $("#exportPng").addEventListener("click", () => {
@@ -696,8 +725,8 @@
     }
     const output = makeExportCanvas();
     const gifFps = 12;
-    const duration = inputs.motionMode.value === "choreography" ? choreographyTiming().cycle : 4;
-    const frameTotal = gifFps * duration;
+    const duration = exportDurationSeconds();
+    const frameTotal = Math.max(1, Math.ceil(gifFps * duration));
     setExportBusy(true, `正在准备 GIF · 0 / ${frameTotal} 帧`);
     try {
       const gif = new GIF({
@@ -710,8 +739,8 @@
       }
       gif.on("progress", (progress) => { exportStatus.textContent = `正在编码 GIF · ${Math.round(progress * 100)}%`; });
       gif.on("finished", (blob) => {
-        downloadBlob(blob, `creator-merge-${output.width}x${output.height}.gif`);
-        setExportBusy(false, `GIF 已生成 · ${output.width} × ${output.height}`);
+        downloadBlob(blob, `creator-merge-${output.width}x${output.height}-${durationFileLabel(duration)}.gif`);
+        setExportBusy(false, `GIF 已生成 · ${output.width} × ${output.height} · ${duration.toFixed(1)}秒`);
       });
       gif.render();
     } catch (error) {
@@ -736,11 +765,11 @@
       recorder.onstop = () => {
         const type = recorder.mimeType || mimeType || "video/webm";
         const extension = type.includes("mp4") ? "mp4" : "webm";
-        downloadBlob(new Blob(chunks, { type }), `creator-merge-${output.width}x${output.height}.${extension}`);
+        downloadBlob(new Blob(chunks, { type }), `creator-merge-${output.width}x${output.height}-${durationFileLabel(duration)}.${extension}`);
         resolve(extension.toUpperCase());
       };
     });
-    const duration = inputs.motionMode.value === "choreography" ? choreographyTiming().cycle : 4;
+    const duration = exportDurationSeconds();
     setExportBusy(true, "正在录制视频 · 0%");
     recorder.start();
     const started = performance.now();
@@ -757,7 +786,7 @@
     recorder.stop();
     const extension = await finished;
     stream.getTracks().forEach((track) => track.stop());
-    setExportBusy(false, `${extension} 视频已生成 · ${output.width} × ${output.height}`);
+    setExportBusy(false, `${extension} 视频已生成 · ${output.width} × ${output.height} · ${duration.toFixed(1)}秒`);
   });
 
   window.addEventListener("beforeunload", () => cancelAnimationFrame(rafId));

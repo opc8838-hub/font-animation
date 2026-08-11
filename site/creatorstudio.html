@@ -226,27 +226,46 @@ Logic Pro</textarea>
       </section>
 
       <section class="export-panel">
-        <label class="section-label" for="exportPreset">导出尺寸</label>
-        <select id="exportPreset">
-          <option value="current">当前画板</option>
-          <option value="1080x1080">1:1 · 1080 × 1080</option>
-          <option value="1080x1350">4:5 · 1080 × 1350</option>
-          <option value="1080x1920">9:16 · 1080 × 1920</option>
-          <option value="1920x1080">16:9 · 1920 × 1080</option>
-          <option value="1200x628">横幅 · 1200 × 628</option>
-          <option value="custom">自定义尺寸</option>
-        </select>
+        <div class="export-config-grid">
+          <label><span class="section-label">导出尺寸</span>
+            <select id="exportPreset">
+              <option value="current">当前画板</option>
+              <option value="1080x1080">1:1 · 1080 × 1080</option>
+              <option value="1080x1350">4:5 · 1080 × 1350</option>
+              <option value="1080x1440">3:4 · 1080 × 1440</option>
+              <option value="1080x1620">2:3 · 1080 × 1620</option>
+              <option value="1080x1920">9:16 · 1080 × 1920</option>
+              <option value="1920x1080">16:9 · 1920 × 1080</option>
+              <option value="1200x628">1.91:1 · 1200 × 628</option>
+              <option value="custom">自定义尺寸</option>
+            </select>
+          </label>
+          <label><span class="section-label">GIF / 视频时长</span>
+            <select id="exportDuration">
+              <option value="full">完整循环</option>
+              <option value="1">1 秒</option>
+              <option value="2">2 秒</option>
+              <option value="3">3 秒</option>
+              <option value="5">5 秒</option>
+              <option value="10">10 秒</option>
+              <option value="custom">自定义秒数</option>
+            </select>
+          </label>
+        </div>
         <div class="custom-size" id="customSize" hidden>
           <label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label>
           <span>×</span>
           <label>高<input id="exportHeight" type="number" min="240" max="3840" value="1920"></label>
+        </div>
+        <div class="custom-duration" id="customDuration" hidden>
+          <label>自定义时长<input id="exportDurationCustom" type="number" min="0.5" max="15" step="0.1" value="4"></label><span>秒</span>
         </div>
         <div class="export-actions">
           <button id="exportPng" type="button">PNG 图片</button>
           <button id="exportGif" type="button">GIF 动图</button>
           <button id="exportVideo" type="button">视频</button>
         </div>
-        <p class="export-status" id="exportStatus" aria-live="polite">PNG 导出当前帧；GIF / 视频导出一遍完整编排。</p>
+        <p class="export-status" id="exportStatus" aria-live="polite">PNG 导出当前帧；GIF / 视频按所选秒数导出。所有尺寸保持画面居中。</p>
       </section>
       <p class="formula">滚轮：当前索引 + 连续纵向插值<br>重组：固定字位 × 彩色来源碎片 × 逐字归位</p>
     </div>
