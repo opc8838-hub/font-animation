@@ -14,11 +14,15 @@
     scrollSpeed: $("#scrollSpeed"), settleDuration: $("#settleDuration"),
     glitchDuration: $("#glitchDuration"), finalDuration: $("#finalDuration"),
     activeScale: $("#activeScale"), inactiveScale: $("#inactiveScale"),
-    inactiveOpacity: $("#inactiveOpacity"), scrollEase: $("#scrollEase"),
+    inactiveOpacity: $("#inactiveOpacity"),
     fragmentStrength: $("#fragmentStrength"), fragmentJitter: $("#fragmentJitter"),
     assetItemScale: $("#assetItemScale"),
     assetOffsetX: $("#assetOffsetX"), assetOffsetY: $("#assetOffsetY")
   };
+  const scrollSegments = [1, 2, 3, 4].map((index) => ({
+    duration: $(`#scrollSegment${index}Duration`),
+    speed: $(`#scrollSegment${index}Speed`)
+  }));
 
   const fontPresets = {
     "snap-inter-medium": { family: "Continuation Inter Medium", weight: 500, style: "normal" },
@@ -284,12 +288,49 @@
     context.restore();
   }
 
+  function readScrollCurve() {
+    const overall = Math.max(.25, Number(inputs.scrollSpeed.value));
+    const segments = scrollSegments.map((segment) => ({
+      duration: Math.max(.05, Number(segment.duration.value) / 1000),
+      speed: Math.max(.1, Number(segment.speed.value))
+    }));
+    const baseDuration = segments.reduce((sum, segment) => sum + segment.duration, 0);
+    const startSpeed = 0;
+    let previousSpeed = startSpeed;
+    let totalWeight = 0;
+    segments.forEach((segment) => {
+      totalWeight += segment.duration * (previousSpeed + segment.speed) / 2;
+      previousSpeed = segment.speed;
+    });
+    return {
+      overall, segments, baseDuration, startSpeed,
+      duration: baseDuration / overall,
+      totalWeight: Math.max(.0001, totalWeight)
+    };
+  }
+
+  function scrollCurveProgress(elapsed, curve) {
+    let remaining = clamp01(elapsed / curve.duration) * curve.baseDuration;
+    let travelled = 0;
+    let previousSpeed = curve.startSpeed;
+    for (const segment of curve.segments) {
+      const used = Math.min(segment.duration, Math.max(0, remaining));
+      const progress = used / segment.duration;
+      travelled += segment.duration * (
+        previousSpeed * progress + (segment.speed - previousSpeed) * progress * progress / 2
+      );
+      remaining -= used;
+      if (used < segment.duration) break;
+      previousSpeed = segment.speed;
+    }
+    return clamp01(travelled / curve.totalWeight);
+  }
+
   function choreographyTiming() {
-    const speed = Math.max(.25, Number(inputs.scrollSpeed.value));
-    const scrollSeconds = Math.max(.1, (parseRows().length - 1) * .1 / speed);
+    const scrollCurve = readScrollCurve();
     const duration = [
       Number(inputs.introDuration.value) / 1000,
-      scrollSeconds,
+      scrollCurve.duration,
       Number(inputs.settleDuration.value) / 1000,
       Number(inputs.glitchDuration.value) / 1000,
       Number(inputs.finalDuration.value) / 1000
@@ -301,7 +342,7 @@
       return end[index];
     }, 0);
     return {
-      cycle, duration,
+      cycle, duration, scrollCurve,
       introEnd: end[0], scrollEnd: end[1], settleEnd: end[2],
       glitchEnd: end[3], finalEnd: end[4]
     };
@@ -366,7 +407,6 @@
     const activeScale = Number(inputs.activeScale.value) / 100;
     const inactiveScale = Number(inputs.inactiveScale.value) / 100;
     const inactiveOpacity = Number(inputs.inactiveOpacity.value) / 100;
-    const easeMix = Number(inputs.scrollEase.value) / 100;
 
     context.font = `${preset.style} ${preset.weight} ${fontPx}px "${preset.family}", "Continuation SC", sans-serif`;
     context.textAlign = "left";
@@ -412,9 +452,7 @@
     }
 
     if (localTime < timing.scrollEnd) {
-      const raw = rangeProgress(localTime, timing.introEnd, timing.scrollEnd);
-      const fluid = .5 - Math.cos(Math.PI * raw) / 2;
-      const progress = lerp(raw, fluid, easeMix);
+      const progress = scrollCurveProgress(localTime - timing.introEnd, timing.scrollCurve);
       drawTicker((rows.length - 1) * progress, false);
       return;
     }
@@ -527,6 +565,19 @@
   function updateOutputs() {
     const timing = choreographyTiming();
     const formatSeconds = (seconds) => `${seconds < 1 ? seconds.toFixed(2) : seconds.toFixed(1)}秒`;
+    let curveElapsed = 0;
+    timing.scrollCurve.segments.forEach((segment, index) => {
+      const actualDuration = segment.duration / timing.scrollCurve.overall;
+      const rangeStart = curveElapsed;
+      curveElapsed += actualDuration;
+      $(`#scrollSegment${index + 1}RangeOut`).textContent = `${rangeStart.toFixed(2)}–${curveElapsed.toFixed(2)}秒`;
+      $(`#scrollSegment${index + 1}DurationOut`).textContent = `${Math.round(segment.duration * 1000)}ms`;
+      $(`#scrollSegment${index + 1}SpeedOut`).textContent = `${segment.speed.toFixed(2)}×`;
+      const bar = $(`#speedCurveBar${index + 1}`);
+      bar.style.flexGrow = String(segment.duration);
+      bar.style.setProperty("--curve-speed", String(Math.min(1, segment.speed / 3)));
+    });
+    $("#scrollCurveTotalOut").textContent = formatSeconds(timing.scrollCurve.duration);
     const values = {
       fontSizeOut: inputs.fontSize.value,
       lineGapOut: inputs.lineGap.value,
@@ -541,7 +592,6 @@
       activeScaleOut: `${inputs.activeScale.value}%`,
       inactiveScaleOut: `${inputs.inactiveScale.value}%`,
       inactiveOpacityOut: `${inputs.inactiveOpacity.value}%`,
-      scrollEaseOut: `${inputs.scrollEase.value}%`,
       fragmentStrengthOut: `${inputs.fragmentStrength.value}%`,
       fragmentJitterOut: inputs.fragmentJitter.value
     };
@@ -550,6 +600,10 @@
   }
 
   Object.values(inputs).forEach((input) => input.addEventListener("input", updateOutputs));
+  scrollSegments.forEach((segment) => {
+    segment.duration.addEventListener("input", updateOutputs);
+    segment.speed.addEventListener("input", updateOutputs);
+  });
   [inputs.assetItemScale, inputs.assetOffsetX, inputs.assetOffsetY].forEach((input) => {
     input.addEventListener("input", updateSelectedAsset);
   });

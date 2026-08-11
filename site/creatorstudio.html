@@ -41,7 +41,7 @@ Logic Pro</textarea>
 
       <section class="scene-grid creator-scene-grid">
         <label>最终标题
-          <input id="finalTitle" type="text" value="Creator {{play}}Studio" spellcheck="false">
+          <input id="finalTitle" type="text" value="Creator Studio" spellcheck="false">
         </label>
         <label>播放方式
           <select id="motionMode">
@@ -145,6 +145,38 @@ Logic Pro</textarea>
             <input id="finalDuration" type="range" min="200" max="6000" step="25" value="700">
           </label>
         </div>
+        <section class="speed-timeline" aria-labelledby="speedTimelineTitle">
+          <div class="speed-timeline-head">
+            <div><b id="speedTimelineTitle">滚轮速度时间线</b><small>每段分别控制时间与快慢</small></div>
+            <output id="scrollCurveTotalOut">0.90秒</output>
+          </div>
+          <div class="speed-curve" id="speedCurve" aria-hidden="true">
+            <span id="speedCurveBar1"></span><span id="speedCurveBar2"></span><span id="speedCurveBar3"></span><span id="speedCurveBar4"></span>
+          </div>
+          <div class="speed-segment-grid">
+            <article class="speed-segment">
+              <header><b>01 起步</b><output id="scrollSegment1RangeOut">0.00–0.15秒</output></header>
+              <label>持续 <output id="scrollSegment1DurationOut">150ms</output><input id="scrollSegment1Duration" type="range" min="50" max="1200" step="25" value="150"></label>
+              <label>段末速度 <output id="scrollSegment1SpeedOut">0.85×</output><input id="scrollSegment1Speed" type="range" min="0.1" max="3" step="0.05" value="0.85"></label>
+            </article>
+            <article class="speed-segment">
+              <header><b>02 加速</b><output id="scrollSegment2RangeOut">0.15–0.40秒</output></header>
+              <label>持续 <output id="scrollSegment2DurationOut">250ms</output><input id="scrollSegment2Duration" type="range" min="50" max="1200" step="25" value="250"></label>
+              <label>段末速度 <output id="scrollSegment2SpeedOut">1.45×</output><input id="scrollSegment2Speed" type="range" min="0.1" max="3" step="0.05" value="1.45"></label>
+            </article>
+            <article class="speed-segment">
+              <header><b>03 滑行</b><output id="scrollSegment3RangeOut">0.40–0.75秒</output></header>
+              <label>持续 <output id="scrollSegment3DurationOut">350ms</output><input id="scrollSegment3Duration" type="range" min="50" max="1200" step="25" value="350"></label>
+              <label>段末速度 <output id="scrollSegment3SpeedOut">1.15×</output><input id="scrollSegment3Speed" type="range" min="0.1" max="3" step="0.05" value="1.15"></label>
+            </article>
+            <article class="speed-segment">
+              <header><b>04 收尾</b><output id="scrollSegment4RangeOut">0.75–0.90秒</output></header>
+              <label>持续 <output id="scrollSegment4DurationOut">150ms</output><input id="scrollSegment4Duration" type="range" min="50" max="1200" step="25" value="150"></label>
+              <label>段末速度 <output id="scrollSegment4SpeedOut">0.10×</output><input id="scrollSegment4Speed" type="range" min="0.1" max="3" step="0.05" value="0.10"></label>
+            </article>
+          </div>
+          <p class="hint">例如把“02 加速”设得更快、“04 收尾”设得更慢，就能明确控制第几秒加速、第几秒减速。四段速度会连续衔接。</p>
+        </section>
         <p class="hint">两段参考视频使用同一套帧：慢动作版约为正常版 2.48 倍。这里默认采用正常版时间。</p>
       </section>
 
@@ -161,9 +193,6 @@ Logic Pro</textarea>
             </label>
             <label>邻项透明度 <output id="inactiveOpacityOut">28%</output>
               <input id="inactiveOpacity" type="range" min="0" max="80" value="28">
-            </label>
-            <label>滚轮柔和度 <output id="scrollEaseOut">72%</output>
-              <input id="scrollEase" type="range" min="0" max="100" value="72">
             </label>
             <label>碎片强度 <output id="fragmentStrengthOut">88%</output>
               <input id="fragmentStrength" type="range" min="0" max="140" value="88">

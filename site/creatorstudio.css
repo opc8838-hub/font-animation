@@ -29,6 +29,100 @@
 
 .creator-panel .quick-grid label { min-height: 58px; }
 
+.speed-timeline {
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid #111;
+  background: #e7e6df;
+}
+
+.speed-timeline-head,
+.speed-segment header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.speed-timeline-head div { display: grid; gap: 2px; }
+.speed-timeline-head b { font-size: 12px; }
+.speed-timeline-head small { color: #66665f; font-size: 9px; }
+.speed-timeline-head > output {
+  padding: 3px 6px;
+  color: #111;
+  border: 1px solid #111;
+  background: #c1ff1a;
+  font: 700 10px/1 "Continuation IBM Plex Mono", monospace;
+}
+
+.speed-curve {
+  display: flex;
+  align-items: end;
+  gap: 2px;
+  height: 42px;
+  margin: 9px 0;
+  padding: 4px;
+  border: 1px solid #111;
+  background: #111;
+}
+
+.speed-curve span {
+  min-width: 8px;
+  height: calc(7px + var(--curve-speed, .5) * 27px);
+  background: #c1ff1a;
+  transition: height 120ms linear, flex-grow 120ms linear;
+}
+
+.speed-curve span:nth-child(2) { background: #e8ef42; }
+.speed-curve span:nth-child(3) { background: #53dcb0; }
+.speed-curve span:nth-child(4) { background: #4f9bff; }
+
+.speed-segment-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.speed-segment {
+  min-width: 0;
+  padding: 7px;
+  border: 1px solid #9d9c94;
+  background: #f4f3ed;
+}
+
+.speed-segment header {
+  margin-bottom: 6px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #c6c5bd;
+}
+
+.speed-segment header b { font-size: 10px; }
+.speed-segment header output {
+  color: #5f5f58;
+  font: 9px/1 "Continuation IBM Plex Mono", monospace;
+}
+
+.speed-segment label {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px;
+  margin-top: 5px;
+  font-size: 9px;
+}
+
+.speed-segment label output {
+  color: #333;
+  font: 9px/1 "Continuation IBM Plex Mono", monospace;
+}
+
+.speed-segment input[type="range"] {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.speed-timeline > .hint { margin: 9px 0 0; }
+
 .creator-panel .formula {
   color: #77776f;
   line-height: 1.55;
