@@ -340,34 +340,17 @@
 
     const centerSource = Math.floor(rows.length / 2);
     const lineForLane = (lane) => rows[mod(centerSource + lane, rows.length)];
-    const wallLayouts = new Map(rows.map((line) => [line, layoutTokens(context, line, fontPx, assetHeight, 0)]));
-    const wallContentWidth = Math.max(fontPx, ...Array.from(wallLayouts.values(), (layout) => layout.width));
-    const wallCellWidth = wallContentWidth + fontPx * .28;
     const drawCentered = (line, y, xOffset = 0, alpha = 1, rowScale = 1, fillWidth = false) => {
-      const layout = fillWidth
-        ? (wallLayouts.get(line) || layoutTokens(context, line, fontPx, assetHeight, 0))
-        : layoutTokens(context, line, fontPx, assetHeight, 0);
+      const layout = layoutTokens(context, line, fontPx, assetHeight, 0);
       context.save();
       context.globalAlpha *= clamp01(alpha);
       context.translate(w / 2 + xOffset, h / 2 + y);
       context.scale(rowScale, rowScale);
       const localWidth = w / Math.max(.01, rowScale);
-      const tileRow = fillWidth && wallCellWidth < localWidth * .62;
       if (fillWidth) {
-        const stretchX = wallContentWidth / Math.max(1, layout.width);
-        const drawAlignedCell = (cellCenter) => {
-          context.save();
-          context.translate(cellCenter - wallContentWidth / 2, 0);
-          context.scale(stretchX, 1);
-          drawSequence(context, layout, 0, 0, inputs.foreground.value);
-          context.restore();
-        };
-        if (tileRow) {
-          const firstCell = Math.floor((-localWidth / 2 - wallContentWidth) / wallCellWidth);
-          const lastCell = Math.ceil((localWidth / 2 + wallContentWidth) / wallCellWidth);
-          for (let cell = firstCell; cell <= lastCell; cell += 1) drawAlignedCell(cell * wallCellWidth);
-        } else {
-          drawAlignedCell(0);
+        const leftEdge = -localWidth / 2;
+        for (let x = leftEdge; x < localWidth / 2 + layout.width; x += layout.width) {
+          drawSequence(context, layout, x, 0, inputs.foreground.value);
         }
       } else {
         drawSequence(context, layout, -layout.width / 2, 0, inputs.foreground.value);
