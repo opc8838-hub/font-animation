@@ -1,7 +1,7 @@
 (function () {
   const effects = [
     ["index", "圆柱", "Cylinder"], ["field", "场域", "Field"], ["stripes", "条纹", "Stripes"],
-    ["coil", "线圈", "Coil"], ["continuation", "续句", "Continuation"], ["currentwall", "流墙", "Current Wall"], ["verticalwall", "纵跃", "Vertical Rise"], ["creatorstudio", "汇聚", "Creator Merge"], ["flag", "旗帜", "Flag"], ["morisawa", "森泽", "Morisawa"],
+    ["coil", "线圈", "Coil"], ["continuation", "续句", "Continuation"], ["currentwall", "流墙", "Current Wall"], ["verticalwall", "纵跃", "Vertical Rise"], ["creatorstudio", "汇聚", "Creator Merge"], ["pathwriter", "轨书", "Path Writer"], ["flag", "旗帜", "Flag"], ["morisawa", "森泽", "Morisawa"],
     ["cascade", "瀑布", "Cascade"], ["ribbon", "丝带", "Ribbon"], ["layers", "层叠", "Layers"],
     ["danger", "警示", "Danger"], ["string", "琴弦", "String"], ["badge", "徽章", "Badge"],
     ["clutter", "杂散", "Clutter"], ["construct", "构筑", "Construct"], ["snap", "吸附", "Snap"],
