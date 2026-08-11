@@ -263,6 +263,10 @@
     const x = clamp01(value);
     return x * x * (3 - 2 * x);
   };
+  const smoother = (value) => {
+    const x = clamp01(value);
+    return x * x * x * (x * (x * 6 - 15) + 10);
+  };
   const easeOut = (value) => 1 - Math.pow(1 - clamp01(value), 3);
   const rangeProgress = (value, from, to) => clamp01((value - from) / (to - from));
 
@@ -450,8 +454,8 @@
       let rowAlpha = laneDistance <= revealLimit ? 1 : 0;
       if (choreography && localTime >= timing.fullEnd && localTime < timing.exitEnd && laneIndex !== 0) {
         const inwardOrder = (halfLanes - laneDistance) / Math.max(1, halfLanes);
-        const disappearAt = .44 + inwardOrder * .43 + (laneIndex > 0 ? .012 : 0);
-        rowAlpha *= 1 - smooth(rangeProgress(exitProgress, disappearAt, disappearAt + .055));
+        const disappearAt = .48 + inwardOrder * .32 + (laneIndex > 0 ? .014 : 0);
+        rowAlpha *= 1 - smoother(rangeProgress(exitProgress, disappearAt, Math.min(.99, disappearAt + .2)));
       }
       if (rowAlpha <= .001 || wallAlpha <= .001) continue;
 
@@ -463,15 +467,17 @@
       const globalLeftPull = choreography ? localWidth * .23 * smooth(rangeProgress(localTime, timing.returnEnd, timing.fullEnd)) : 0;
       let leadLeftTravel = 0;
       if (choreography && localTime >= timing.popEnd) {
-        const retreatSpeed = Number(inputs.reversePull.value) / 100;
-        const retreatSeconds = Number(inputs.retreatDuration.value) / 1000 / Math.max(.05, retreatSpeed);
-        const retreatProgress = retreatSpeed > 0 ? clamp01((localTime - timing.popEnd) / retreatSeconds) : 0;
+        const retreatForce = Number(inputs.reversePull.value) / 100;
+        const retreatSeconds = Number(inputs.retreatDuration.value) / 1000;
+        const retreatEnd = Math.min(timing.fullEnd, timing.popEnd + retreatSeconds);
+        const retreatClock = Math.min(localTime, timing.fullEnd);
+        const retreatProgress = retreatForce > 0 ? smoother(rangeProgress(retreatClock, timing.popEnd, retreatEnd)) : 0;
         const distanceRatio = laneDistance / Math.max(1, halfLanes);
         const centerWeight = Math.exp(-(laneIndex * laneIndex) / 4.2);
-        const centerLead = easeOut(rangeProgress(retreatProgress, 0, .2));
-        const followDelay = .08 + distanceRatio * .42;
-        const wallFollow = smooth(rangeProgress(retreatProgress, followDelay, followDelay + .35));
-        leadLeftTravel = localWidth * (.1 * centerWeight * centerLead + .18 * wallFollow);
+        const centerLead = smoother(rangeProgress(retreatProgress, 0, .24));
+        const followDelay = .08 + distanceRatio * .38;
+        const wallFollow = smoother(rangeProgress(retreatProgress, followDelay, followDelay + .42));
+        leadLeftTravel = localWidth * retreatForce * (.08 * centerWeight * centerLead + .16 * wallFollow);
       }
 
       if (finalStage) {
@@ -483,17 +489,33 @@
       let groupRight = 0;
       let centerLeftPush = 0;
       if (choreography && localTime >= timing.fullEnd) {
+        const distanceRatio = laneDistance / Math.max(1, halfLanes);
         const centerWeight = Math.exp(-(laneIndex * laneIndex) / 2.7);
-        const leftImpulse = exitProgress < .16
-          ? smooth(exitProgress / .16)
-          : 1 - smooth(rangeProgress(exitProgress, .16, .34));
-        centerLeftPush = localWidth * .085 * centerWeight * leftImpulse;
-        const followDelay = .09 + laneDistance / Math.max(1, halfLanes) * .23;
-        const follow = easeOut(rangeProgress(exitProgress, followDelay, Math.min(.96, followDelay + .58)));
-        groupRight = localWidth * .58 * follow;
+        const followDelay = distanceRatio * .16;
+        const flowProgress = rangeProgress(exitProgress, followDelay, Math.min(.99, followDelay + .82));
+        const gather = smoother(rangeProgress(flowProgress, 0, .28))
+          * (1 - smoother(rangeProgress(flowProgress, .28, .56)));
+        const release = smoother(rangeProgress(flowProgress, .22, 1));
+        centerLeftPush = localWidth * (.012 + .018 * centerWeight) * gather;
+        groupRight = localWidth * .34 * release;
       }
       const shift = signedTravel + setting.phase / 100 * layout.width + xWave + globalLeftPull + leadLeftTravel + centerLeftPush - groupRight - wallShiftX;
-      drawRepeatedLine(context, layout, y, localWidth, inputs.foreground.value, shift, rowAlpha * wallAlpha);
+      if (choreography && localTime >= timing.fullEnd && laneIndex === 0) {
+        const centeredAnchor = localWidth / 2 - layout.width / 2;
+        const entrySignedTravel = setting.direction === 0 ? 0 : (setting.direction < 0 ? timing.fullEnd * velocity : -timing.fullEnd * velocity);
+        const entryXWave = Math.sin(timing.fullEnd * waveRate * .92) * waveAmp;
+        const entryLeadLeftTravel = leadLeftTravel / Math.max(1, localWidth) * w;
+        const entryShift = entrySignedTravel + setting.phase / 100 * layout.width + entryXWave + w * .23 + entryLeadLeftTravel;
+        const entryCenteredAnchor = w / 2 - layout.width / 2;
+        const entryRepeatedAnchor = -mod(entryShift, layout.width) - layout.width;
+        const entryApproachAnchor = entryRepeatedAnchor + Math.floor((entryCenteredAnchor - entryRepeatedAnchor) / layout.width) * layout.width;
+        const entryOffset = (entryApproachAnchor - entryCenteredAnchor) * localWidth / w;
+        const settle = smoother(rangeProgress(exitProgress, .22, 1));
+        const anchorX = centeredAnchor + entryOffset * (1 - settle) - centerLeftPush;
+        drawAnchoredLine(context, layout, y, localWidth, inputs.foreground.value, anchorX, rowAlpha * wallAlpha);
+      } else {
+        drawRepeatedLine(context, layout, y, localWidth, inputs.foreground.value, shift, rowAlpha * wallAlpha);
+      }
     }
     context.restore();
   }
@@ -559,10 +581,10 @@
       introLeftOut: inputs.introLeft.value,
       introReturnOut: inputs.introReturn.value,
       popDurationOut: inputs.popDuration.value,
-      fullDurationOut: inputs.fullDuration.value,
-      retreatDurationOut: inputs.retreatDuration.value,
-      exitDurationOut: inputs.exitDuration.value,
-      finalDurationOut: inputs.finalDuration.value,
+      fullDurationOut: `${(Number(inputs.fullDuration.value) / 1000).toFixed(1)}秒`,
+      retreatDurationOut: `${(Number(inputs.retreatDuration.value) / 1000).toFixed(1)}秒`,
+      exitDurationOut: `${(Number(inputs.exitDuration.value) / 1000).toFixed(1)}秒`,
+      finalDurationOut: `${(Number(inputs.finalDuration.value) / 1000).toFixed(1)}秒`,
       swapMomentOut: `${inputs.swapMoment.value}%`,
       swapIntervalOut: `${inputs.swapInterval.value}ms`
     };

@@ -81,10 +81,13 @@ everything</textarea>
         <p class="hint">先在文字框中放好光标，再点素材即可插入；同一素材可以出现在一处或多处。支持 PNG、JPG、WEBP、SVG。</p>
       </section>
 
-      <section>
-        <p class="section-label">每行流向与相位</p>
-        <div class="row-flow-list" id="rowFlowList"></div>
-      </section>
+      <details class="advanced-controls row-advanced">
+        <summary><span>每行独立方向与速度</span><small>高级</small></summary>
+        <div class="advanced-body">
+          <p class="hint advanced-hint">只有需要单独改变某一行的方向、速度或起始位置时才调整这里。</p>
+          <div class="row-flow-list" id="rowFlowList"></div>
+        </div>
+      </details>
 
       <section class="font-picker">
         <label class="section-label" for="fontFamily">字体</label>
@@ -119,75 +122,93 @@ everything</textarea>
         </select>
       </section>
 
-      <section class="controls-grid">
-        <label>字号 <output id="fontSizeOut">62</output>
+      <section class="motion-quick">
+        <div class="section-heading">
+          <p class="section-label">常用调节</p>
+          <small class="section-note">先调这 8 项</small>
+        </div>
+        <div class="motion-map" aria-label="动效阶段">
+          <span>弹满</span><i>→</i><span>向左流</span><i>→</i><span>柔和回流</span><i>→</i><span>逐行消失</span><i>→</i><span>单行收尾</span>
+        </div>
+        <div class="controls-grid quick-grid">
+        <label>字号 <small class="stage-tag">画面</small><output id="fontSizeOut">62</output>
           <input id="fontSize" type="range" min="24" max="140" value="62">
         </label>
-        <label>行距 <output id="lineGapOut">-5</output>
+        <label>行距 <small class="stage-tag">画面</small><output id="lineGapOut">-5</output>
           <input id="lineGap" type="range" min="-25" max="80" value="-5">
         </label>
-        <label>整体速度 <output id="speedOut">1.00×</output>
-          <input id="speed" type="range" min="20" max="220" value="100">
-        </label>
-        <label>素材比例 <output id="assetScaleOut">100%</output>
+        <label>图标比例 <small class="stage-tag">画面</small><output id="assetScaleOut">100%</output>
           <input id="assetScale" type="range" min="45" max="180" value="100">
         </label>
-        <label>水波幅度 <output id="waveOut">18</output>
+        <label>水波幅度 <small class="stage-tag">全程</small><output id="waveOut">18</output>
           <input id="wave" type="range" min="0" max="100" value="18">
         </label>
-        <label>水波频率 <output id="waveRateOut">0.70</output>
-          <input id="waveRate" type="range" min="10" max="200" value="70">
-        </label>
-        <label>纵向漂移 <output id="verticalOut">10</output>
-          <input id="vertical" type="range" min="-100" max="100" value="10">
-        </label>
-        <label>字间填充 <output id="repeatGapOut">24</output>
-          <input id="repeatGap" type="range" min="0" max="160" value="24">
-        </label>
-        <label>循环时长 <output id="cycleDurationOut">6.2秒</output>
-          <input id="cycleDuration" type="range" min="4000" max="30000" step="100" value="6200">
-        </label>
-        <label>退回速度 <output id="reversePullOut">70%</output>
-          <input id="reversePull" type="range" min="0" max="180" value="70">
-        </label>
-        <label>扩散力度 <output id="burstOut">100%</output>
-          <input id="burst" type="range" min="50" max="180" value="100">
-        </label>
-      </section>
-
-      <section>
-        <p class="section-label">编舞速度 · 毫秒</p>
-        <div class="controls-grid timing-grid">
-          <label>向左预备 <output id="introLeftOut">700</output>
-            <input id="introLeft" type="range" min="200" max="1800" step="10" value="700">
-          </label>
-          <label>向右替换 <output id="introReturnOut">220</output>
-            <input id="introReturn" type="range" min="80" max="900" step="10" value="220">
-          </label>
-          <label>弹满全屏 <output id="popDurationOut">650</output>
-            <input id="popDuration" type="range" min="150" max="1800" step="10" value="650">
-          </label>
-          <label>满屏停留 <output id="fullDurationOut">4200</output>
+        <label>满屏左流 <small class="stage-tag">阶段 2</small><output id="fullDurationOut">4.2秒</output>
             <input id="fullDuration" type="range" min="600" max="18000" step="100" value="4200">
           </label>
-          <label>满屏后退回时长 <output id="retreatDurationOut">2800</output>
+          <label>回流展开 <small class="stage-tag">阶段 3</small><output id="retreatDurationOut">2.8秒</output>
             <input id="retreatDuration" type="range" min="400" max="6000" step="50" value="2800">
           </label>
-          <label>整体收束 <output id="exitDurationOut">480</output>
-            <input id="exitDuration" type="range" min="150" max="1800" step="10" value="480">
+          <label>逐行消失 <small class="stage-tag">阶段 4</small><output id="exitDurationOut">1.6秒</output>
+            <input id="exitDuration" type="range" min="500" max="3500" step="50" value="1600">
           </label>
-          <label>单行慢缩 <output id="finalDurationOut">1600</output>
+          <label>单行收尾 <small class="stage-tag">阶段 5</small><output id="finalDurationOut">1.6秒</output>
             <input id="finalDuration" type="range" min="600" max="6000" step="50" value="1600">
           </label>
+        </div>
+        <p class="hint">时间越长，动作越柔和。建议先调“回流展开”和“逐行消失”；其它细节保持默认即可。</p>
+      </section>
+
+      <details class="advanced-controls motion-advanced">
+        <summary><span>高级动效参数</span><small>精调时打开</small></summary>
+        <div class="advanced-body">
+          <p class="hint advanced-hint">这些参数用于复刻特殊节奏；不确定时保留默认值。</p>
+          <section class="controls-grid">
+            <label>字行流速 <output id="speedOut">1.00×</output>
+              <input id="speed" type="range" min="20" max="220" value="100">
+            </label>
+            <label>水波频率 <output id="waveRateOut">0.70</output>
+              <input id="waveRate" type="range" min="10" max="200" value="70">
+            </label>
+            <label>纵向漂移 <output id="verticalOut">10</output>
+              <input id="vertical" type="range" min="-100" max="100" value="10">
+            </label>
+            <label>字间填充 <output id="repeatGapOut">24</output>
+              <input id="repeatGap" type="range" min="0" max="160" value="24">
+            </label>
+            <label>循环总长 <output id="cycleDurationOut">6.2秒</output>
+              <input id="cycleDuration" type="range" min="4000" max="30000" step="100" value="6200">
+            </label>
+            <label>回流力度 <output id="reversePullOut">70%</output>
+              <input id="reversePull" type="range" min="0" max="180" value="70">
+            </label>
+            <label>弹屏力度 <output id="burstOut">100%</output>
+              <input id="burst" type="range" min="50" max="180" value="100">
+            </label>
+          </section>
+          <section>
+            <p class="section-label">阶段细节 · 毫秒</p>
+            <div class="controls-grid timing-grid">
+              <label>向左预备 <output id="introLeftOut">700</output>
+                <input id="introLeft" type="range" min="200" max="1800" step="10" value="700">
+              </label>
+              <label>向右替换 <output id="introReturnOut">220</output>
+                <input id="introReturn" type="range" min="80" max="900" step="10" value="220">
+              </label>
+              <label>弹满全屏 <output id="popDurationOut">650</output>
+                <input id="popDuration" type="range" min="150" max="1800" step="10" value="650">
+              </label>
           <label>开始切换 <output id="swapMomentOut">8%</output>
             <input id="swapMoment" type="range" min="0" max="80" step="1" value="8">
           </label>
           <label>切换间隔 <output id="swapIntervalOut">200ms</output>
             <input id="swapInterval" type="range" min="80" max="1000" step="20" value="200">
           </label>
+            </div>
+          </section>
+          <p class="hint">循环总长不变时，阶段数值用于重新分配一轮中的节奏。</p>
         </div>
-        <p class="hint">整体循环时长不变；调整这些数值会重新分配每个阶段在一轮中的快慢。满屏后退回时长控制中心向外传递的总时间，退回速度用于进一步加速或减速。</p>
-      </section>
+      </details>
 
       <section class="color-row">
         <label>背景<input id="backgroundColor" type="color" value="#f4f3ef"></label>
