@@ -128,7 +128,7 @@ everything</textarea>
           <small class="section-note">先调这 8 项</small>
         </div>
         <div class="motion-map" aria-label="动效阶段">
-          <span>弹满</span><i>→</i><span>向左流</span><i>→</i><span>柔和回流</span><i>→</i><span>逐行消失</span><i>→</i><span>单行收尾</span>
+          <span>中间→满屏</span><i>→</i><span>向左停留</span><i>→</i><span>柔和回流</span><i>→</i><span>逐行消失</span><i>→</i><span>单行收尾</span>
         </div>
         <div class="controls-grid quick-grid">
         <label>字号 <small class="stage-tag">画面</small><output id="fontSizeOut">62</output>
@@ -140,23 +140,23 @@ everything</textarea>
         <label>图标比例 <small class="stage-tag">画面</small><output id="assetScaleOut">100%</output>
           <input id="assetScale" type="range" min="45" max="180" value="100">
         </label>
-        <label>水波幅度 <small class="stage-tag">全程</small><output id="waveOut">18</output>
-          <input id="wave" type="range" min="0" max="100" value="18">
+        <label>中间→满屏 <small class="stage-tag">阶段 1</small><output id="popDurationOut">0.60秒</output>
+          <input id="popDuration" type="range" min="150" max="1800" step="10" value="450">
         </label>
-        <label>满屏左流 <small class="stage-tag">阶段 2</small><output id="fullDurationOut">4.2秒</output>
-            <input id="fullDuration" type="range" min="600" max="18000" step="100" value="4200">
+        <label>满屏向左停留 <small class="stage-tag">阶段 2</small><output id="fullDurationOut">2.9秒</output>
+            <input id="fullDuration" type="range" min="600" max="18000" step="100" value="2900">
           </label>
           <label>回流展开 <small class="stage-tag">阶段 3</small><output id="retreatDurationOut">2.8秒</output>
             <input id="retreatDuration" type="range" min="400" max="6000" step="50" value="2800">
           </label>
-          <label>逐行消失 <small class="stage-tag">阶段 4</small><output id="exitDurationOut">1.6秒</output>
-            <input id="exitDuration" type="range" min="500" max="3500" step="50" value="1600">
+          <label>逐行消失 <small class="stage-tag">阶段 4</small><output id="exitDurationOut">1.1秒</output>
+            <input id="exitDuration" type="range" min="500" max="3500" step="50" value="1100">
           </label>
-          <label>单行收尾 <small class="stage-tag">阶段 5</small><output id="finalDurationOut">1.6秒</output>
-            <input id="finalDuration" type="range" min="600" max="6000" step="50" value="1600">
+          <label>单行收尾 <small class="stage-tag">阶段 5</small><output id="finalDurationOut">1.1秒</output>
+            <input id="finalDuration" type="range" min="600" max="6000" step="50" value="1100">
           </label>
         </div>
-        <p class="hint">时间越长，动作越柔和。建议先调“回流展开”和“逐行消失”；其它细节保持默认即可。</p>
+        <p class="hint">“中间→满屏”控制铺满速度；“满屏向左停留”控制铺满后继续向左流多久。界面显示的是动画中真正生效的时间。</p>
       </section>
 
       <details class="advanced-controls motion-advanced">
@@ -170,14 +170,14 @@ everything</textarea>
             <label>水波频率 <output id="waveRateOut">0.70</output>
               <input id="waveRate" type="range" min="10" max="200" value="70">
             </label>
+            <label>水波幅度 <output id="waveOut">18</output>
+              <input id="wave" type="range" min="0" max="100" value="18">
+            </label>
             <label>纵向漂移 <output id="verticalOut">10</output>
               <input id="vertical" type="range" min="-100" max="100" value="10">
             </label>
             <label>字间填充 <output id="repeatGapOut">24</output>
               <input id="repeatGap" type="range" min="0" max="160" value="24">
-            </label>
-            <label>循环总长 <output id="cycleDurationOut">6.2秒</output>
-              <input id="cycleDuration" type="range" min="4000" max="30000" step="100" value="6200">
             </label>
             <label>回流力度 <output id="reversePullOut">70%</output>
               <input id="reversePull" type="range" min="0" max="180" value="70">
@@ -189,14 +189,11 @@ everything</textarea>
           <section>
             <p class="section-label">阶段细节 · 毫秒</p>
             <div class="controls-grid timing-grid">
-              <label>向左预备 <output id="introLeftOut">700</output>
-                <input id="introLeft" type="range" min="200" max="1800" step="10" value="700">
+              <label>向左预备 <output id="introLeftOut">480</output>
+                <input id="introLeft" type="range" min="200" max="1800" step="10" value="480">
               </label>
-              <label>向右替换 <output id="introReturnOut">220</output>
-                <input id="introReturn" type="range" min="80" max="900" step="10" value="220">
-              </label>
-              <label>弹满全屏 <output id="popDurationOut">650</output>
-                <input id="popDuration" type="range" min="150" max="1800" step="10" value="650">
+              <label>向右替换 <output id="introReturnOut">150</output>
+                <input id="introReturn" type="range" min="80" max="900" step="10" value="150">
               </label>
           <label>开始切换 <output id="swapMomentOut">8%</output>
             <input id="swapMoment" type="range" min="0" max="80" step="1" value="8">
@@ -206,7 +203,7 @@ everything</textarea>
           </label>
             </div>
           </section>
-          <p class="hint">循环总长不变时，阶段数值用于重新分配一轮中的节奏。</p>
+          <p class="hint">每个阶段使用独立真实时间；调整其中一段不会压缩其它阶段。当前一轮约 <strong id="cycleDurationOut">6.2秒</strong>。</p>
         </div>
       </details>
 

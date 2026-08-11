@@ -11,7 +11,7 @@
     lineGap: $("#lineGap"), speed: $("#speed"), assetScale: $("#assetScale"),
     wave: $("#wave"), waveRate: $("#waveRate"), vertical: $("#vertical"),
     repeatGap: $("#repeatGap"), background: $("#backgroundColor"), foreground: $("#textColor"),
-    motionMode: $("#motionMode"), introWord: $("#introWord"), cycleDuration: $("#cycleDuration"),
+    motionMode: $("#motionMode"), introWord: $("#introWord"),
     reversePull: $("#reversePull"), burst: $("#burst"), finalLine: $("#finalLine"), finalSwap: $("#finalSwap"),
     introLeft: $("#introLeft"), introReturn: $("#introReturn"), popDuration: $("#popDuration"),
     fullDuration: $("#fullDuration"), exitDuration: $("#exitDuration"), finalDuration: $("#finalDuration"),
@@ -335,12 +335,9 @@
   }
 
   function choreographyTiming() {
-    const cycle = Number(inputs.cycleDuration.value) / 1000;
-    const raw = [inputs.introLeft, inputs.introReturn, inputs.popDuration, inputs.fullDuration, inputs.exitDuration, inputs.finalDuration]
+    const duration = [inputs.introLeft, inputs.introReturn, inputs.popDuration, inputs.fullDuration, inputs.exitDuration, inputs.finalDuration]
       .map((input) => Number(input.value) / 1000);
-    const rawTotal = raw.reduce((sum, value) => sum + value, 0);
-    const ratio = cycle / Math.max(.1, rawTotal);
-    const duration = raw.map((value) => value * ratio);
+    const cycle = duration.reduce((sum, value) => sum + value, 0);
     const end = [];
     duration.reduce((sum, value, index) => {
       end[index] = sum + value;
@@ -540,7 +537,7 @@
     const ratio = Number(canvas.dataset.ratio || 1);
     const time = currentTime();
     renderFrame(canvas, time, canvas.width / ratio, canvas.height / ratio, ratio);
-    const displayTime = inputs.motionMode.value === "choreography" ? mod(time, Number(inputs.cycleDuration.value) / 1000) : time;
+    const displayTime = inputs.motionMode.value === "choreography" ? mod(time, choreographyTiming().cycle) : time;
     frameCounter.textContent = `F ${String(Math.round(displayTime * fps)).padStart(4, "0")}`;
     rafId = requestAnimationFrame(previewLoop);
   }
@@ -566,6 +563,8 @@
   $("#forwardButton").addEventListener("click", () => { paused = true; setTime(currentTime() + 1 / fps); $("#pauseButton").textContent = "继续"; });
 
   function updateOutputs() {
+    const timing = choreographyTiming();
+    const formatSeconds = (seconds) => `${seconds < 1 ? seconds.toFixed(2) : seconds.toFixed(1)}秒`;
     const values = {
       fontSizeOut: inputs.fontSize.value,
       lineGapOut: inputs.lineGap.value,
@@ -575,16 +574,16 @@
       waveRateOut: (Number(inputs.waveRate.value) / 100).toFixed(2),
       verticalOut: inputs.vertical.value,
       repeatGapOut: inputs.repeatGap.value,
-      cycleDurationOut: `${(Number(inputs.cycleDuration.value) / 1000).toFixed(1)}秒`,
+      cycleDurationOut: formatSeconds(timing.cycle),
       reversePullOut: `${inputs.reversePull.value}%`,
       burstOut: `${inputs.burst.value}%`,
-      introLeftOut: inputs.introLeft.value,
-      introReturnOut: inputs.introReturn.value,
-      popDurationOut: inputs.popDuration.value,
-      fullDurationOut: `${(Number(inputs.fullDuration.value) / 1000).toFixed(1)}秒`,
-      retreatDurationOut: `${(Number(inputs.retreatDuration.value) / 1000).toFixed(1)}秒`,
-      exitDurationOut: `${(Number(inputs.exitDuration.value) / 1000).toFixed(1)}秒`,
-      finalDurationOut: `${(Number(inputs.finalDuration.value) / 1000).toFixed(1)}秒`,
+      introLeftOut: Math.round(timing.duration[0] * 1000),
+      introReturnOut: Math.round(timing.duration[1] * 1000),
+      popDurationOut: formatSeconds(timing.duration[1] + timing.duration[2]),
+      fullDurationOut: formatSeconds(timing.duration[3]),
+      retreatDurationOut: formatSeconds(Math.min(Number(inputs.retreatDuration.value) / 1000, timing.duration[3])),
+      exitDurationOut: formatSeconds(timing.duration[4]),
+      finalDurationOut: formatSeconds(timing.duration[5]),
       swapMomentOut: `${inputs.swapMoment.value}%`,
       swapIntervalOut: `${inputs.swapInterval.value}ms`
     };
@@ -650,7 +649,7 @@
     }
     const output = makeExportCanvas();
     const gifFps = 12;
-    const duration = inputs.motionMode.value === "choreography" ? Number(inputs.cycleDuration.value) / 1000 : 4;
+    const duration = inputs.motionMode.value === "choreography" ? choreographyTiming().cycle : 4;
     const frameTotal = gifFps * duration;
     setExportBusy(true, `正在准备 GIF · 0 / ${frameTotal} 帧`);
     try {
@@ -694,7 +693,7 @@
         resolve(extension.toUpperCase());
       };
     });
-    const duration = inputs.motionMode.value === "choreography" ? Number(inputs.cycleDuration.value) / 1000 : 4;
+    const duration = inputs.motionMode.value === "choreography" ? choreographyTiming().cycle : 4;
     setExportBusy(true, "正在录制视频 · 0%");
     recorder.start();
     const started = performance.now();
