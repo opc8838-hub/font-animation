@@ -340,21 +340,34 @@
 
     const centerSource = Math.floor(rows.length / 2);
     const lineForLane = (lane) => rows[mod(centerSource + lane, rows.length)];
+    const wallLayouts = new Map(rows.map((line) => [line, layoutTokens(context, line, fontPx, assetHeight, 0)]));
+    const wallContentWidth = Math.max(fontPx, ...Array.from(wallLayouts.values(), (layout) => layout.width));
+    const wallCellWidth = wallContentWidth + fontPx * .28;
     const drawCentered = (line, y, xOffset = 0, alpha = 1, rowScale = 1, fillWidth = false) => {
-      const layout = layoutTokens(context, line, fontPx, assetHeight, fillWidth ? fontPx * .28 : 0);
+      const layout = fillWidth
+        ? (wallLayouts.get(line) || layoutTokens(context, line, fontPx, assetHeight, 0))
+        : layoutTokens(context, line, fontPx, assetHeight, 0);
       context.save();
       context.globalAlpha *= clamp01(alpha);
       context.translate(w / 2 + xOffset, h / 2 + y);
       context.scale(rowScale, rowScale);
       const localWidth = w / Math.max(.01, rowScale);
-      const tileRow = fillWidth && layout.width < localWidth * .62;
-      if (tileRow) {
-        const anchor = -layout.width / 2;
-        for (let x = anchor; x < localWidth / 2 + layout.width; x += layout.width) {
-          drawSequence(context, layout, x, 0, inputs.foreground.value);
-        }
-        for (let x = anchor - layout.width; x > -localWidth / 2 - layout.width * 2; x -= layout.width) {
-          drawSequence(context, layout, x, 0, inputs.foreground.value);
+      const tileRow = fillWidth && wallCellWidth < localWidth * .62;
+      if (fillWidth) {
+        const stretchX = wallContentWidth / Math.max(1, layout.width);
+        const drawAlignedCell = (cellCenter) => {
+          context.save();
+          context.translate(cellCenter - wallContentWidth / 2, 0);
+          context.scale(stretchX, 1);
+          drawSequence(context, layout, 0, 0, inputs.foreground.value);
+          context.restore();
+        };
+        if (tileRow) {
+          const firstCell = Math.floor((-localWidth / 2 - wallContentWidth) / wallCellWidth);
+          const lastCell = Math.ceil((localWidth / 2 + wallContentWidth) / wallCellWidth);
+          for (let cell = firstCell; cell <= lastCell; cell += 1) drawAlignedCell(cell * wallCellWidth);
+        } else {
+          drawAlignedCell(0);
         }
       } else {
         drawSequence(context, layout, -layout.width / 2, 0, inputs.foreground.value);
@@ -369,8 +382,7 @@
         let y = lane * lineHeight + drift;
         if (y < -(halfRows + 1) * lineHeight) y += loopHeight;
         if (y > (halfRows + 1) * lineHeight) y -= loopHeight;
-        const x = Math.sin(lane * 1.7) * horizontalPhase;
-        drawCentered(lineForLane(lane), y, x, 1, 1, true);
+        drawCentered(lineForLane(lane), y, horizontalPhase, 1, 1, true);
       }
       return;
     }
@@ -417,15 +429,14 @@
         if (alpha <= .002) continue;
         const compression = lerp(1, .9, smoother(collapseProgress));
         let y = lane * lineHeight * compression + driftY;
-        const x = Math.sin(lane * 1.72) * horizontalPhase;
         const rowScale = lerp(.82, 1, appear);
         if (lane === 0 && localTime >= timing.holdEnd) {
           const singleBlend = smoother(rangeProgress(collapseProgress, .55, .92));
           y = lerp(y, lineHeight * .85, singleBlend);
-          drawCentered(lineForLane(lane), y, x, alpha * (1 - singleBlend), rowScale, true);
+          drawCentered(lineForLane(lane), y, horizontalPhase, alpha * (1 - singleBlend), rowScale, true);
           drawCentered(lineForLane(lane), y, 0, alpha * singleBlend, rowScale, false);
         } else {
-          drawCentered(lineForLane(lane), y, x, alpha, rowScale, true);
+          drawCentered(lineForLane(lane), y, horizontalPhase, alpha, rowScale, true);
         }
       }
 
