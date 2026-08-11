@@ -411,11 +411,15 @@
       else if (localTime < timing.popEnd) {
         const formationProgress = rangeProgress(localTime, timing.leftEnd, timing.popEnd);
         const returnCut = timing.duration[1] / Math.max(.001, timing.duration[1] + timing.duration[2]);
-        wallScale = lerp(initialScale, 1, smooth(formationProgress));
-        revealLimit = lerp(1.05, halfLanes + 1, easeOut(rangeProgress(formationProgress, .04, .96)));
+        // Complete the pop/settle before every row is visible. The remaining
+        // formation frames then share the same constant leftward velocity as
+        // the full-wall stage, avoiding a visible speed drop at the boundary.
+        const settleEnd = Math.min(.72, returnCut + .28);
+        wallScale = lerp(initialScale, 1, easeOut(rangeProgress(formationProgress, 0, settleEnd)));
+        revealLimit = lerp(1.05, halfLanes + 1, easeOut(rangeProgress(formationProgress, .04, .78)));
         wallShiftX = formationProgress < returnCut
           ? lerp(-fontPx * .72, fontPx * .42, easeOut(formationProgress / returnCut))
-          : lerp(fontPx * .42, 0, smooth(rangeProgress(formationProgress, returnCut, 1)));
+          : lerp(fontPx * .42, 0, easeOut(rangeProgress(formationProgress, returnCut, settleEnd)));
       } else if (localTime < timing.fullEnd) {
         revealLimit = halfLanes + 1;
       } else if (localTime < timing.exitEnd) {
@@ -459,7 +463,7 @@
       const yWave = Math.sin(localTime * waveRate * 1.45 + laneIndex * .72) * waveAmp * .28;
       const xWave = Math.sin(localTime * waveRate * .92 + laneIndex * .91) * waveAmp;
       const y = laneIndex * lineHeight * (choreography && localTime >= timing.fullEnd ? lerp(1, .92, exitProgress) : 1) + verticalOffset + yWave;
-      const velocity = fontPx * .9 * masterSpeed * (setting.speed / 100);
+      const velocity = fontPx * 1.45 * masterSpeed * (setting.speed / 100);
       const signedShiftRate = setting.direction === 0 ? 0 : (setting.direction < 0 ? velocity : -velocity);
       const signedTravel = localTime * signedShiftRate;
 
