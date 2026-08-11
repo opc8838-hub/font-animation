@@ -55,7 +55,41 @@
   font: 700 10px/1 "Continuation IBM Plex Mono", monospace;
 }
 
+.curve-contrast {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 5px;
+  margin-top: 9px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.curve-contrast output { font: 10px/1 "Continuation IBM Plex Mono", monospace; }
+.curve-contrast input { grid-column: 1 / -1; width: 100%; }
+
+.curve-presets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-top: 7px;
+}
+
+.curve-presets button {
+  min-height: 28px;
+  padding: 4px;
+  border: 1px solid #111;
+  background: #f4f3ed;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.curve-presets button:hover,
+.curve-presets button:focus-visible { color: #111; background: #c1ff1a; }
+
 .speed-curve {
+  position: relative;
   display: flex;
   align-items: end;
   gap: 2px;
@@ -76,6 +110,19 @@
 .speed-curve span:nth-child(2) { background: #e8ef42; }
 .speed-curve span:nth-child(3) { background: #53dcb0; }
 .speed-curve span:nth-child(4) { background: #4f9bff; }
+
+#speedCurvePlayhead {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  left: var(--curve-playhead, 0%);
+  z-index: 2;
+  width: 2px;
+  background: #fff;
+  box-shadow: 0 0 0 1px #111, 0 0 8px rgba(255,255,255,.8);
+  opacity: var(--curve-playhead-visible, 0);
+  transform: translateX(-1px);
+}
 
 .speed-segment-grid {
   display: grid;

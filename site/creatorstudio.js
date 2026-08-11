@@ -11,7 +11,7 @@
     lineGap: $("#lineGap"), assetScale: $("#assetScale"), assetGap: $("#assetGap"),
     background: $("#backgroundColor"), foreground: $("#textColor"),
     motionMode: $("#motionMode"), finalTitle: $("#finalTitle"), introDuration: $("#introDuration"),
-    scrollSpeed: $("#scrollSpeed"), settleDuration: $("#settleDuration"),
+    scrollSpeed: $("#scrollSpeed"), curveContrast: $("#curveContrast"), settleDuration: $("#settleDuration"),
     glitchDuration: $("#glitchDuration"), finalDuration: $("#finalDuration"),
     activeScale: $("#activeScale"), inactiveScale: $("#inactiveScale"),
     inactiveOpacity: $("#inactiveOpacity"),
@@ -290,10 +290,15 @@
 
   function readScrollCurve() {
     const overall = Math.max(.25, Number(inputs.scrollSpeed.value));
-    const segments = scrollSegments.map((segment) => ({
-      duration: Math.max(.05, Number(segment.duration.value) / 1000),
-      speed: Math.max(.1, Number(segment.speed.value))
-    }));
+    const contrast = Math.max(1, Number(inputs.curveContrast.value));
+    const segments = scrollSegments.map((segment) => {
+      const rawSpeed = Math.max(.1, Number(segment.speed.value));
+      return {
+        duration: Math.max(.05, Number(segment.duration.value) / 1000),
+        rawSpeed,
+        speed: Math.pow(rawSpeed, contrast)
+      };
+    });
     const baseDuration = segments.reduce((sum, segment) => sum + segment.duration, 0);
     const startSpeed = 0;
     let previousSpeed = startSpeed;
@@ -303,7 +308,7 @@
       previousSpeed = segment.speed;
     });
     return {
-      overall, segments, baseDuration, startSpeed,
+      overall, contrast, segments, baseDuration, startSpeed,
       duration: baseDuration / overall,
       totalWeight: Math.max(.0001, totalWeight)
     };
@@ -532,12 +537,22 @@
     return paused ? pausedAt : (performance.now() - animationStart) / 1000;
   }
 
+  function updateCurvePlayhead(displayTime, timing) {
+    const curve = $("#speedCurve");
+    const active = inputs.motionMode.value === "choreography" && displayTime >= timing.introEnd && displayTime <= timing.scrollEnd;
+    const progress = active ? rangeProgress(displayTime, timing.introEnd, timing.scrollEnd) : 0;
+    curve.style.setProperty("--curve-playhead", `${progress * 100}%`);
+    curve.style.setProperty("--curve-playhead-visible", active ? "1" : "0");
+  }
+
   function previewLoop() {
     resizeCanvas();
     const ratio = Number(canvas.dataset.ratio || 1);
     const time = currentTime();
     renderFrame(canvas, time, canvas.width / ratio, canvas.height / ratio, ratio);
-    const displayTime = inputs.motionMode.value === "choreography" ? mod(time, choreographyTiming().cycle) : time;
+    const timing = choreographyTiming();
+    const displayTime = inputs.motionMode.value === "choreography" ? mod(time, timing.cycle) : time;
+    updateCurvePlayhead(displayTime, timing);
     frameCounter.textContent = `F ${String(Math.round(displayTime * fps)).padStart(4, "0")}`;
     rafId = requestAnimationFrame(previewLoop);
   }
@@ -565,6 +580,7 @@
   function updateOutputs() {
     const timing = choreographyTiming();
     const formatSeconds = (seconds) => `${seconds < 1 ? seconds.toFixed(2) : seconds.toFixed(1)}秒`;
+    const maxEffectiveSpeed = Math.max(...timing.scrollCurve.segments.map((segment) => segment.speed), .001);
     let curveElapsed = 0;
     timing.scrollCurve.segments.forEach((segment, index) => {
       const actualDuration = segment.duration / timing.scrollCurve.overall;
@@ -572,10 +588,10 @@
       curveElapsed += actualDuration;
       $(`#scrollSegment${index + 1}RangeOut`).textContent = `${rangeStart.toFixed(2)}–${curveElapsed.toFixed(2)}秒`;
       $(`#scrollSegment${index + 1}DurationOut`).textContent = `${Math.round(segment.duration * 1000)}ms`;
-      $(`#scrollSegment${index + 1}SpeedOut`).textContent = `${segment.speed.toFixed(2)}×`;
+      $(`#scrollSegment${index + 1}SpeedOut`).textContent = `${segment.rawSpeed.toFixed(2)}×`;
       const bar = $(`#speedCurveBar${index + 1}`);
       bar.style.flexGrow = String(segment.duration);
-      bar.style.setProperty("--curve-speed", String(Math.min(1, segment.speed / 3)));
+      bar.style.setProperty("--curve-speed", String(.05 + .95 * segment.speed / maxEffectiveSpeed));
     });
     $("#scrollCurveTotalOut").textContent = formatSeconds(timing.scrollCurve.duration);
     const values = {
@@ -586,6 +602,7 @@
       cycleDurationOut: formatSeconds(timing.cycle),
       introDurationOut: formatSeconds(timing.duration[0]),
       scrollSpeedOut: `${Number(inputs.scrollSpeed.value).toFixed(2)}× · ${formatSeconds(timing.duration[1])}`,
+      curveContrastOut: `${timing.scrollCurve.contrast.toFixed(2)}×`,
       settleDurationOut: formatSeconds(timing.duration[2]),
       glitchDurationOut: formatSeconds(timing.duration[3]),
       finalDurationOut: formatSeconds(timing.duration[4]),
@@ -608,6 +625,25 @@
     input.addEventListener("input", updateSelectedAsset);
   });
   inputs.motionMode.addEventListener("change", () => setTime(0));
+
+  const curvePresets = {
+    soft: { contrast: 1, durations: [200, 250, 300, 150], speeds: [.75, 1.25, 1, .4] },
+    contrast: { contrast: 1.8, durations: [150, 250, 350, 150], speeds: [.55, 2.6, .8, .1] },
+    burst: { contrast: 2.5, durations: [300, 150, 250, 200], speeds: [.2, 4, .6, .1] }
+  };
+  document.querySelectorAll("[data-curve-preset]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const preset = curvePresets[button.dataset.curvePreset];
+      if (!preset) return;
+      inputs.curveContrast.value = String(preset.contrast);
+      scrollSegments.forEach((segment, index) => {
+        segment.duration.value = String(preset.durations[index]);
+        segment.speed.value = String(preset.speeds[index]);
+      });
+      updateOutputs();
+      setTime(0);
+    });
+  });
 
   function exportDimensions() {
     const preset = $("#exportPreset").value;
