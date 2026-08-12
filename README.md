@@ -5,6 +5,8 @@
 
 在线浏览：[GitHub Pages](https://opc8838-hub.github.io/font-animation/gallery.html)
 
+开发新动效前请阅读：[参考视频拆解与动效开发工作流](docs/REFERENCE_VIDEO_WORKFLOW.md)。分析结果可从 [`docs/analyses/TEMPLATE.md`](docs/analyses/TEMPLATE.md) 创建；编码代理还会自动读取根目录 [`AGENTS.md`](AGENTS.md) 中的项目约束。
+
 ---
 
 ## 快速运行
