@@ -16,7 +16,11 @@ class KineticLetter {
 
     this.x0 = x_;
     this.y0 = 0;
-    this.w = textWidth(keyArray[this.m].charAt(this.n));
+    this.character = keyArray[this.m].charAt(this.n);
+    this.mediaAsset = stgMediaAssetForCharacter(this.character);
+    this.isMedia = Boolean(this.mediaAsset) && stgMedia.enabled && this.mediaAsset.layer === "inline";
+    if(!this.isMedia) textFont(snapFontForCharacter(this.character));
+    this.w = this.isMedia ? stgMediaInlineWidth(pgTextSize * 0.72, this.mediaAsset) : textWidth(this.character);
     this.h = pgTextSize * 0.7;
 
     this.yA = 0;
@@ -148,9 +152,14 @@ class KineticLetter {
         scale(this.xScale, 1);
         noStroke();
         fill(foreColor);
-        textFont(currentFont);
-        textSize(pgTextSize);
-        text(keyArray[this.m].charAt(this.n), 0, 0);
+        if(this.isMedia){
+          translate(this.w/2, -this.h * 0.42);
+          stgDrawInlineMedia(this.w, this.h, this.mediaAsset);
+        } else {
+          textFont(snapFontForCharacter(this.character));
+          textSize(pgTextSize);
+          text(this.character, 0, 0);
+        }
       pop();
     }
     translate(this.xBudgeScale, 0);

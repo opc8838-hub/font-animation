@@ -14,6 +14,7 @@ class Arcer {
 
     this.pgTextSize = 2;
     this.findTextSize();
+    this.pgTextSize *= flashTextScale;
     
     this.xSpots = [];
     this.findXpos();
@@ -78,7 +79,7 @@ class Arcer {
         push();
           translate(this.xSpots[n], height/2);
           translate(0, this.yAnim[n]);
-          text(this.inp.charAt(n), 0, 0);
+          flashDrawInlineGlyph(this.inp.charAt(n), 0, 0, this.pgTextSize, false);
         pop();
       }
     pop();
@@ -87,12 +88,12 @@ class Arcer {
   findXpos(){
     textFont(currentFont);
     textSize(this.pgTextSize);
-    var fullSize = textWidth(this.inp);
+    var fullSize = flashInlineTextWidth(this.inp, this.pgTextSize);
     var xStart = width/2 - fullSize/2;
 
     for(var n = 0; n < this.inp.length; n++){
-      var thisLetterWidth = textWidth(this.inp.charAt(n));
-      var upUntilWidth = textWidth(this.inp.slice(0,n+1));
+      var thisLetterWidth = flashInlineGlyphWidth(this.inp.charAt(n), this.pgTextSize);
+      var upUntilWidth = flashInlineTextWidth(this.inp.slice(0,n+1), this.pgTextSize);
       var difference = upUntilWidth - thisLetterWidth;
       this.xSpots[n] = xStart + difference;
     }
@@ -112,7 +113,7 @@ class Arcer {
     while(measured < width){
       textSize(this.pgTextSize)
       textFont(currentFont);
-      measured = textWidth(this.inp);
+      measured = flashInlineTextWidth(this.inp, this.pgTextSize);
 
       this.pgTextSize += 2;
     }

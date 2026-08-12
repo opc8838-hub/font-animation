@@ -38,6 +38,7 @@ let recordedFrames = 0;
 let recMessageOn = false;
 
 let currentFont;
+var currentFontIndex = 0;
 let saveSizeState = 0;
 let horzSpacer;
 var newWidth;
@@ -50,17 +51,38 @@ var widgetOn = true;
 
 function preload(){
   tFont[0] = loadFont('assets/NotoSansSC-Regular.ttf');
-  tFont[1] = loadFont('assets/NotoSansSC-Regular.ttf');
-  tFont[2] = loadFont('assets/NotoSansSC-Regular.ttf');
-  tFont[3] = loadFont('assets/NotoSansSC-Regular.ttf');
-  tFont[4] = loadFont('assets/NotoSansSC-Regular.ttf');
-  tFont[5] = loadFont('assets/NotoSansSC-Regular.ttf');
+  tFont[1] = loadFont('assets/NotoSansSC-Black.ttf');
+  tFont[2] = loadFont('assets/fonts/SpaceGrotesk-Variable.ttf');
+  tFont[3] = loadFont('assets/fonts/Lora-Variable.ttf');
+  tFont[4] = loadFont('assets/fonts/MartianMono-Variable.ttf');
+  tFont[5] = loadFont('assets/fonts/Fenix-Regular.ttf');
+  tFont[6] = loadFont('assets/WorkSans-Regular.ttf');
+  tFont[7] = loadFont('assets/SpaceMono-Bold.ttf');
+  tFont[8] = loadFont('assets/Vollkorn-BoldItalic.ttf');
+  tFont[9] = loadFont('assets/RobotoCondensed-Bold.ttf');
+  tFont[10] = loadFont('assets/Cairo-Bold.ttf');
+  tFont[11] = loadFont('assets/AguafinaScript-Regular.ttf');
+  tFont[12] = loadFont('assets/fonts/Manrope-Variable.ttf');
+  tFont[13] = loadFont('assets/fonts/LeagueSpartan-Variable.ttf');
+  tFont[14] = loadFont('assets/fonts/Cinzel-Variable.ttf');
+  tFont[15] = loadFont('assets/fonts/InstrumentSerif-Regular.ttf');
+  tFont[16] = loadFont('assets/fonts/BebasNeue-Regular.ttf');
+  tFont[17] = loadFont('assets/fonts/Poppins-Regular.ttf');
+  tFont[18] = loadFont('assets/fonts/Rajdhani-Bold.ttf');
+  tFont[19] = loadFont('assets/fonts/Teko-Variable.ttf');
+  tFont[20] = loadFont('assets/fonts/Khand-Regular.ttf');
+  tFont[21] = loadFont('assets/fonts/Fraunces-Variable.ttf');
+  tFont[22] = loadFont('resources/NotoSansSC-Thin.otf');
+  tFont[23] = loadFont('assets/NotoSansJP-Thin.otf');
+  tFont[24] = loadFont('resources/NotoSansJP-Black.otf');
+  tFont[25] = loadFont('resources/NotoSansKR-Black.otf');
 }
 
 function setup(){
-  createCanvas(windowWidth,windowHeight);
-  cwidth = int(windowWidth);
-  cheight = int(windowHeight);
+  stgConfigurePerformance();
+  stgMountCanvas(createCanvas(stgCanvasAreaWidth(), stgCanvasAreaHeight()));
+  cwidth = int(width);
+  cheight = int(height);
 
   thisDensity = pixelDensity();
 
@@ -90,7 +112,8 @@ function setup(){
   cYadjust = 0;
 
   frameRate(frate);
-  noSmooth();
+  // Uploaded cutouts are scaled every frame; bilinear filtering keeps their edges clean without pixel grain.
+  smooth();
   textureMode(NORMAL);
 
   setText();
@@ -98,15 +121,14 @@ function setup(){
 
 function draw(){
   background(bkgdColor);
-  if(recording){
-    scale(cScale);
-  }
 
   push();
-    translate(widthHold/2, heightHold/2);
     if(recording){
+      scale(cScale);
       translate(cXadjust, cYadjust);
     }
+    stgDrawMediaLayer({ layer: "behind", width: widthHold, height: heightHold, phase: (frameCount % numFrames) / numFrames });
+    translate(widthHold/2, heightHold/2);
     
     if(!recording){
       stroke(foreColor);
@@ -122,6 +144,14 @@ function draw(){
       kineticGroups[p].update();
       kineticGroups[p].run();
     }
+  pop();
+
+  push();
+    if(recording){
+      scale(cScale);
+      translate(cXadjust, cYadjust);
+    }
+    stgDrawMediaLayer({ layer: "front", width: widthHold, height: heightHold, phase: (frameCount % numFrames) / numFrames });
   pop();
 
   if (recording) {
@@ -162,7 +192,7 @@ function resetAnim(){
 }
 
 function windowResized(){
-  resizeCanvas(windowWidth, windowHeight);
+  resizeCanvas(stgCanvasAreaWidth(), stgCanvasAreaHeight());
   
   widthHold = width;
   heightHold = height;

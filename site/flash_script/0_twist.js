@@ -14,6 +14,7 @@ class Twist {
 
     this.pgTextSize = 2;
     this.findTextSize();
+    this.pgTextSize *= flashTextScale;
 
     this.pgA;
     this.drawTextures();
@@ -145,7 +146,7 @@ class Twist {
     while(measured < width){
       textSize(this.pgTextSize)
       textFont(currentFont);
-      measured = textWidth(this.inp);
+      measured = flashInlineTextWidth(this.inp, this.pgTextSize);
 
       this.pgTextSize += 2;
     }
@@ -158,7 +159,7 @@ class Twist {
   drawTextures(){
     textSize(this.pgTextSize);
     textFont(currentFont);
-    var repeatSize = round(textWidth(this.inp));
+    var repeatSize = max(2, round(flashInlineTextWidth(this.inp, this.pgTextSize)));
   
     this.pgA = createGraphics(repeatSize, this.pgTextSize * (thisFontAdjust + 0.05));
     this.pgA.background(bkgdColor);
@@ -169,7 +170,7 @@ class Twist {
     this.pgA.textAlign(CENTER);
     this.pgA.textFont(currentFont);
     var thisAdjust = this.pgA.height/2 + this.pgTextSize * thisFontAdjust/2 + this.pgTextSize * thisFontAdjustUp;
-    this.pgA.text(this.inp, this.pgA.width/2, thisAdjust);
+    flashDrawInlineText(this.pgA, this.inp, this.pgA.width/2, thisAdjust, this.pgTextSize);
   }
 
   removeGraphics(){

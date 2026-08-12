@@ -21,12 +21,16 @@ function pgTexture1(inp, typeP, p, sH){
   heightRatio[p] = pgT[p].width * sH/pgT[p].height;
 }
 
-function pgImage(p, sH){
-  var r = round(random(10));
-
-  pgT[p] = pImg[r];
-
-  heightRatio[p] = pgT[p].width * sH/pgT[p].height;
+function pgImage(p, sH, mediaAsset){
+  var customAsset = stgMediaInlineAsset(mediaAsset);
+  if(customAsset){
+    pgT[p] = customAsset;
+    heightRatio[p] = pgT[p].width * sH/pgT[p].height;
+  } else {
+    var r = round(random(10));
+    pgT[p] = pImg[r];
+    heightRatio[p] = pgT[p].width * sH/pgT[p].height;
+  }
 }
 
 function pSlash(p, sH){

@@ -4,12 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>STG _v.Construct</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.1/p5.min.js"></script>
 
   <link rel="stylesheet" href="construct/style.css">
+  <link rel="stylesheet" href="media-layer.css?v=20260808-3">
   <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script src="media-layer.js?v=20260808-3" type="text/javascript"></script>
   <script src="construct/sketch.js" type="text/javascript"></script>
   <script src="construct/update.js" type="text/javascript"></script>
   <script src="construct/textures.js" type="text/javascript"></script>
@@ -27,9 +30,11 @@
 
   <style> body {padding: 0; margin: 0;} canvas {vertical-align: top;} </style>
   <link rel="stylesheet" href="stg-cn.css">
+  <link rel="stylesheet" href="workspace-editor.css">
 </head>
 
 <body>
+  <main id="stgCanvasStage" class="stg-canvas-stage" aria-label="Construct 动画效果画布"></main>
   <div id="widget">
     <div class="dropdown">
       <button class="dropbtn">Select...</button>
@@ -68,6 +73,43 @@
     </p>
     <textarea id="textArea" rows=4 oninput="setText()">中文渲染测试</textarea>
     <p>Copy & Paste text here</p>
+      <div class="stg-media-grid construct-media-editor">
+        <label class="stg-media-switch" for="mediaEnabled"><span>显示图片 / 图形</span><input type="checkbox" id="mediaEnabled" oninput="stgMediaSetEnabled(this.checked)"></label>
+        <p id="mediaStatus" class="stg-media-status">媒体层未显示</p>
+
+        <div class="stg-media-row"><label for="mediaSource">内容类型</label><select id="mediaSource" oninput="stgMediaSetSource(this.value)"><option value="shape" selected>内置图形</option><option value="image">上传图片</option></select></div>
+        <div class="stg-media-row" id="mediaUploadRow" hidden><label for="mediaFile">PNG / JPG / SVG / GIF · 可多选</label><input id="mediaFile" type="file" multiple accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" onchange="stgMediaLoadFile(this)"></div>
+        <div class="stg-media-pair" id="mediaShapeRow">
+          <div class="stg-media-row"><label for="mediaShape">图形</label><select id="mediaShape" oninput="stgMediaSetShape(this.value)"><option value="circle">圆形</option><option value="square">方形</option><option value="triangle">三角形</option><option value="star">星形</option><option value="pill">药丸形</option><option value="ring">圆环</option></select></div>
+          <div class="stg-media-row"><label for="mediaColor">图形颜色</label><input id="mediaColor" type="color" value="#ff5a45" oninput="stgMediaSetColor(this.value)"></div>
+        </div>
+        <div class="stg-media-pair">
+          <div class="stg-media-row"><label for="mediaLayer">结合方式</label><select id="mediaLayer" oninput="stgMediaSetLayer(this.value)"><option value="inline" selected>插入文字位置（默认）</option><option value="front">文字前方</option><option value="behind">文字后方</option></select></div>
+          <div class="stg-media-row"><label for="mediaMotion">图片附加动效</label><select id="mediaMotion" oninput="stgMediaSetMotion(this.value)"><option value="none">静止</option><option value="pop" selected>弹入 / Pop</option><option value="slide-left">左侧滑入</option><option value="slide-up">底部滑入</option><option value="spin">旋转</option><option value="breathe">呼吸</option><option value="float">漂浮</option><option value="orbit">环绕</option></select></div>
+        </div>
+        <p class="stg-media-note">内联图片会替换 Construct 原有的随机 GIF 占位，并作为排版的一部分参与波形动画。</p>
+        <button class="stg-media-action" type="button" onclick="stgMediaInsertToken()">把当前图片插入光标位置</button>
+        <p class="stg-media-note">每张图片会生成独立的 <strong>{图1}</strong>、<strong>{图2}</strong> 定位符；选择图片后可插入任意文字位置，并分别调整大小。</p>
+        <div class="stg-media-pair stg-media-scale-controls">
+          <div class="stg-media-row"><label for="mediaInlineScale">精细缩放 <span><output data-media-value="inlineScale">100</output>%</span></label><input id="mediaInlineScale" type="range" min="0.25" max="3" value="1" step="0.05" oninput="stgMediaSetValue('inlineScale', this.value)"></div>
+          <div class="stg-media-row"><label for="mediaInlineOffsetY">基线位置 <output data-media-value="inlineOffsetY">0</output></label><input id="mediaInlineOffsetY" type="range" min="-100" max="100" value="0" oninput="stgMediaSetValue('inlineOffsetY', this.value)"></div>
+        </div>
+        <div class="stg-media-row stg-media-spacing-control"><label for="mediaInlinePadding">图片与文字间距 <span><output data-media-value="inlinePadding">8</output>%</span></label><input id="mediaInlinePadding" type="range" min="0" max="60" value="8" oninput="stgMediaSetValue('inlinePadding', this.value)"></div>
+
+        <div class="stg-media-pair">
+          <div class="stg-media-row"><label for="mediaX">水平位置 <output data-media-value="x">50</output></label><input id="mediaX" type="range" min="0" max="100" value="50" oninput="stgMediaSetValue('x', this.value)"></div>
+          <div class="stg-media-row"><label for="mediaY">垂直位置 <output data-media-value="y">50</output></label><input id="mediaY" type="range" min="0" max="100" value="50" oninput="stgMediaSetValue('y', this.value)"></div>
+        </div>
+        <div class="stg-media-pair">
+          <div class="stg-media-row"><label for="mediaSize">大小 <output data-media-value="size">22</output></label><input id="mediaSize" type="range" min="3" max="80" value="22" oninput="stgMediaSetValue('size', this.value)"></div>
+          <div class="stg-media-row"><label for="mediaAspect">宽高比 <output data-media-value="aspect">1</output></label><input id="mediaAspect" type="range" min="0.3" max="3" value="1" step="0.05" oninput="stgMediaSetValue('aspect', this.value)"></div>
+        </div>
+        <div class="stg-media-pair">
+          <div class="stg-media-row"><label for="mediaRotation">旋转 <output data-media-value="rotation">0</output>°</label><input id="mediaRotation" type="range" min="-180" max="180" value="0" oninput="stgMediaSetValue('rotation', this.value)"></div>
+          <div class="stg-media-row"><label for="mediaOpacity">透明度 <output data-media-value="opacity">100</output>%</label><input id="mediaOpacity" type="range" min="0" max="100" value="100" oninput="stgMediaSetValue('opacity', this.value)"></div>
+        </div>
+        <div class="stg-media-row"><label for="mediaSpeed">动效速度 <output data-media-value="speed">1</output>×</label><input id="mediaSpeed" type="range" min="0.25" max="3" value="1" step="0.25" oninput="stgMediaSetValue('speed', this.value)"></div>
+      </div>
       <div class="rangers">
         <div>
           <input type="range" min="20" max="140" value="60" id="stripH" onchange="setStripH(this.value)">

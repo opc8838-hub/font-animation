@@ -200,3 +200,34 @@ input:checked + .slider:before {
 .slider.round:before {
   border-radius: 50%;
 }
+
+body.stg-modern-editor #widget .sec > h3 {
+  margin: -12px -12px 10px !important;
+  padding: 14px !important;
+  border-bottom: 1px solid #11110f;
+  background: #c8ff2e !important;
+  color: #11110f !important;
+  font-weight: 700 !important;
+}
+
+body.stg-modern-editor #widget .sec {
+  position: static !important;
+  width: 100% !important;
+  transform: none !important;
+}
+
+body.stg-modern-editor #widget .sec > p {
+  margin: 0 0 10px !important;
+  background: transparent !important;
+  color: #5d5d57 !important;
+  line-height: 1.45 !important;
+}
+
+body.stg-modern-editor #widget .sec a {
+  color: #11110f !important;
+}
+
+body.stg-modern-editor #widget .sec .stg-media-note {
+  background: transparent !important;
+  color: #5d5d57 !important;
+}

@@ -1,11 +1,12 @@
 (function () {
   const effects = [
     ["index", "圆柱", "Cylinder"], ["field", "场域", "Field"], ["stripes", "条纹", "Stripes"],
-    ["coil", "线圈", "Coil"], ["flag", "旗帜", "Flag"], ["morisawa", "森泽", "Morisawa"],
+    ["coil", "线圈", "Coil"], ["continuation", "续句", "Continuation"], ["currentwall", "流墙", "Current Wall"], ["verticalwall", "纵跃", "Vertical Rise"], ["creatorstudio", "汇聚", "Creator Merge"], ["pathwriter", "轨书", "Path Writer"], ["flag", "旗帜", "Flag"], ["morisawa", "森泽", "Morisawa"],
     ["cascade", "瀑布", "Cascade"], ["ribbon", "丝带", "Ribbon"], ["layers", "层叠", "Layers"],
+    ["iconburst", "图标爆发", "Icon Burst"],
     ["danger", "警示", "Danger"], ["string", "琴弦", "String"], ["badge", "徽章", "Badge"],
     ["clutter", "杂散", "Clutter"], ["construct", "构筑", "Construct"], ["snap", "吸附", "Snap"],
-    ["flash", "闪光", "Flash"], ["pow", "砰", "Pow"], ["crash", "碰撞", "Crash"],
+    ["flash", "闪光", "Flash"], ["pow", "砰", "Pow"], ["prism", "棱镜", "Prism"], ["crash", "碰撞", "Crash"],
     ["crashclock", "碰撞时钟", "Crash Clock"], ["vessel", "器皿", "Vessel"], ["shine", "闪耀", "Shine"],
     ["boost", "助推", "Boost"], ["boxsquad", "方块小队", "BoxSquad"],
   ];
@@ -84,13 +85,13 @@
     }, { once: true });
   }
 
-  document.title = `${current[1]} ${current[2]} | STG 中文版`;
+  document.title = `${current[1]} ${current[2]} | ME Motion Studio`;
 
   const toolbar = document.createElement("nav");
   toolbar.className = "stg-cn-toolbar";
   toolbar.setAttribute("aria-label", "效果导航");
   toolbar.innerHTML = `
-    <a class="stg-cn-home" href="gallery.html" aria-label="返回效果库">STG</a>
+    <a class="stg-cn-home" href="gallery.html" aria-label="返回效果库">ME</a>
     <div class="stg-cn-title"><strong>${current[1]}</strong><small>${current[2]}</small></div>
     <a class="stg-cn-prev" href="${effects[(currentIndex - 1 + effects.length) % effects.length][0]}.html" aria-label="上一个效果">←</a>
     <a class="stg-cn-next" href="${effects[(currentIndex + 1) % effects.length][0]}.html" aria-label="下一个效果">→</a>
@@ -101,7 +102,7 @@
   drawer.className = "stg-cn-drawer";
   drawer.hidden = true;
   drawer.innerHTML = `
-    <div class="stg-cn-drawer-header"><span>全部 23 个效果</span><span>STG CN</span></div>
+    <div class="stg-cn-drawer-header"><span>全部 ${effects.length} 个效果</span><span>ME Motion</span></div>
     <div class="stg-cn-drawer-grid">${effects.map(([itemSlug, zh, en], index) => `
       <a href="${itemSlug}.html" ${itemSlug === slug ? 'aria-current="page"' : ""}>
         <span>${String(index + 1).padStart(2, "0")} · ${zh}</span><small>${en}</small>
@@ -322,7 +323,7 @@
     panel.setAttribute("aria-label", "效果编辑器");
     panel.innerHTML = `
       <header class="stg-editor-header">
-        <div><small>STG 中文编辑器</small><strong>${current[1]}</strong></div>
+        <div><small>ME 动效编辑器</small><strong>${current[1]}</strong></div>
         <a href="gallery.html">全部效果</a>
       </header>
       <div class="stg-editor-tabs" role="tablist"></div>
@@ -379,6 +380,160 @@
     window.setInterval(() => syncers.forEach((sync) => sync()), 250);
     return true;
   }
+
+  function installEditorScrollTrack(editor) {
+    const track = document.createElement("div");
+    track.className = "stg-editor-scroll-track";
+    track.setAttribute("aria-hidden", "true");
+    const thumb = document.createElement("div");
+    thumb.className = "stg-editor-scroll-thumb";
+    track.append(thumb);
+    document.body.append(track);
+
+    function metrics() {
+      const maxScroll = Math.max(0, editor.scrollHeight - editor.clientHeight);
+      const trackHeight = track.clientHeight;
+      const thumbHeight = Math.max(44, trackHeight * editor.clientHeight / Math.max(editor.scrollHeight, 1));
+      return { maxScroll, trackHeight, thumbHeight, travel: Math.max(0, trackHeight - thumbHeight) };
+    }
+    function update() {
+      const maxScroll = Math.max(0, editor.scrollHeight - editor.clientHeight);
+      if (maxScroll <= 1) {
+        track.hidden = true;
+        return;
+      }
+      track.hidden = false;
+      const value = metrics();
+      thumb.style.height = `${value.thumbHeight}px`;
+      thumb.style.transform = `translateY(${value.maxScroll ? editor.scrollTop / value.maxScroll * value.travel : 0}px)`;
+    }
+    function scrollToPointer(clientY) {
+      const rect = track.getBoundingClientRect();
+      const value = metrics();
+      const ratio = Math.max(0, Math.min(1, (clientY - rect.top - value.thumbHeight / 2) / Math.max(1, value.travel)));
+      editor.scrollTop = ratio * value.maxScroll;
+    }
+
+    track.addEventListener("pointerdown", (event) => {
+      if (event.target === thumb) return;
+      scrollToPointer(event.clientY);
+    });
+    thumb.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      thumb.setPointerCapture(event.pointerId);
+      const startY = event.clientY;
+      const startScroll = editor.scrollTop;
+      const startMetrics = metrics();
+      const onMove = (moveEvent) => {
+        const scrollDelta = (moveEvent.clientY - startY) / Math.max(1, startMetrics.travel) * startMetrics.maxScroll;
+        editor.scrollTop = startScroll + scrollDelta;
+      };
+      const onUp = () => {
+        thumb.removeEventListener("pointermove", onMove);
+        thumb.removeEventListener("pointerup", onUp);
+        thumb.removeEventListener("pointercancel", onUp);
+      };
+      thumb.addEventListener("pointermove", onMove);
+      thumb.addEventListener("pointerup", onUp);
+      thumb.addEventListener("pointercancel", onUp);
+    });
+    editor.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update, { passive: true });
+    if (window.ResizeObserver) new ResizeObserver(update).observe(editor);
+    new MutationObserver(() => requestAnimationFrame(update)).observe(editor, {
+      attributes: true,
+      childList: true,
+      subtree: true,
+      attributeFilter: ["class", "style", "hidden"]
+    });
+    window.setTimeout(update, 500);
+  }
+
+  function installStageControls() {
+    if (document.querySelector(".stg-stage-controls")) return;
+    window.stgMotionPaused = false;
+    const controls = document.createElement("div");
+    controls.className = "stg-stage-controls";
+    controls.setAttribute("aria-label", "预览控制");
+    controls.innerHTML = `
+      <button type="button" class="stg-editor-visibility" aria-pressed="false"><span class="stg-control-icon">▤</span><span>隐藏编辑器</span></button>
+      <span class="stg-stage-divider" aria-hidden="true"></span>
+      <button type="button" class="stg-playback-toggle" aria-pressed="false"><span class="stg-control-icon">Ⅱ</span><span>暂停</span></button>`;
+    document.body.append(controls);
+
+    const editorButton = controls.querySelector(".stg-editor-visibility");
+    const playbackButton = controls.querySelector(".stg-playback-toggle");
+    function updateEditorButton() {
+      const collapsed = document.body.classList.contains("stg-editor-collapsed");
+      editorButton.setAttribute("aria-pressed", String(collapsed));
+      editorButton.querySelector(".stg-control-icon").textContent = collapsed ? "▥" : "▤";
+      editorButton.querySelector("span:last-child").textContent = collapsed ? "显示编辑器" : "隐藏编辑器";
+    }
+    function setPaused(paused) {
+      window.stgMotionPaused = Boolean(paused);
+      playbackButton.setAttribute("aria-pressed", String(window.stgMotionPaused));
+      playbackButton.querySelector(".stg-control-icon").textContent = window.stgMotionPaused ? "▶" : "Ⅱ";
+      playbackButton.querySelector("span:last-child").textContent = window.stgMotionPaused ? "播放" : "暂停";
+      if (window.stgMotionPaused) {
+        if (typeof window.noLoop === "function") window.noLoop();
+      } else if (typeof window.loop === "function") {
+        window.loop();
+      }
+    }
+    window.stgTogglePlayback = () => setPaused(!window.stgMotionPaused);
+
+    editorButton.addEventListener("click", () => {
+      if (typeof window.hideWidget === "function") window.hideWidget();
+      else document.body.classList.toggle("stg-editor-collapsed");
+      window.setTimeout(updateEditorButton, 0);
+    });
+    playbackButton.addEventListener("click", window.stgTogglePlayback);
+    document.addEventListener("keydown", (event) => {
+      if (event.code !== "Space" || event.repeat || event.target.closest("input, textarea, select, button, [contenteditable]")) return;
+      event.preventDefault();
+      window.stgTogglePlayback();
+    });
+    document.addEventListener("input", () => {
+      if (window.stgMotionPaused && typeof window.redraw === "function") requestAnimationFrame(() => window.redraw());
+    });
+    updateEditorButton();
+  }
+
+  function installProWorkspace() {
+    const editor = document.querySelector("#generatorInput") || document.querySelector("#widget:not(:has(#generatorInput))");
+    if (!editor || document.querySelector(".stg-workspace-header")) return;
+    document.body.classList.add("stg-pro-workspace");
+
+    const header = document.createElement("header");
+    header.className = "stg-workspace-header";
+    header.innerHTML = `
+      <a class="stg-workspace-back" href="gallery.html" aria-label="返回效果库">‹</a>
+      <div class="stg-workspace-heading"><small>ME 动效工作室</small><strong>${current[1]} · ${current[2]}</strong></div>
+      <button class="stg-workspace-top" type="button" aria-label="返回编辑器顶部">↑</button>`;
+    const intro = document.createElement("p");
+    intro.className = "stg-workspace-intro";
+    intro.textContent = "左侧调整内容与节奏，右侧实时查看成片。所有图片只在当前浏览器中处理。";
+    editor.prepend(intro);
+    editor.prepend(header);
+    header.querySelector(".stg-workspace-top").addEventListener("click", () => editor.scrollTo({ top: 0, behavior: "smooth" }));
+
+    const sectionNames = new Map([
+      ["TEXT", "文字与字体"], ["TEXT INPUT", "文字与字体"], ["IMAGE / SHAPE", "图片与图形"],
+      ["SCENES", "动画场景"], ["SAVE", "导出与保存"]
+    ]);
+    editor.querySelectorAll(".collapsible").forEach((button) => {
+      const heading = button.querySelector("h1");
+      const source = heading?.textContent.trim().toUpperCase();
+      if (heading && sectionNames.has(source)) heading.textContent = sectionNames.get(source);
+      button.setAttribute("aria-expanded", String(button.classList.contains("active")));
+      button.addEventListener("click", () => button.setAttribute("aria-expanded", String(button.classList.contains("active"))));
+    });
+
+    installEditorScrollTrack(editor);
+    installStageControls();
+  }
+
+  if (["flash", "snap", "construct"].includes(slug)) installProWorkspace();
 
   if (legacyEffects.has(slug)) {
     let attempts = 0;

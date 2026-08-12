@@ -3,29 +3,53 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="23 个可编辑的中文动态字体效果，支持实时输入与参数调整。">
-  <title>STG 中文版 | 字体动效实验室</title>
+  <meta name="description" content="ME Motion Studio：30 个可编辑的动态字体效果，让文字、图片与图形在同一条时间线上运动。">
+  <title>ME Motion Studio | 让文字与图像一起动起来</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="gallery.css">
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="gallery.html" aria-label="STG 字体动效实验室首页">
-      <span class="brand-mark">STG</span>
-      <span class="brand-copy">字体动效实验室</span>
+    <a class="brand" href="gallery.html" aria-label="ME Motion Studio 首页">
+      <span class="brand-mark">ME</span>
+      <span class="brand-copy">Motion Studio</span>
     </a>
-    <div class="header-meta"><strong id="visibleCount">23</strong><span>个实时效果</span></div>
+    <nav class="site-nav" aria-label="首页导航">
+      <a href="#effects">动效库</a>
+      <a href="#about">关于</a>
+      <a class="nav-start" href="flash-scenes.html">开始创作</a>
+    </nav>
   </header>
 
   <main>
-    <section class="browser" aria-labelledby="browserTitle">
+    <section class="hero" aria-labelledby="heroTitle">
+      <div class="hero-copy">
+        <p class="eyebrow">ME MOTION STUDIO</p>
+        <h1 id="heroTitle"><span class="hero-line">让文字与图像，</span><span class="hero-line">一起动起来。</span></h1>
+        <p class="hero-lead">从一句文案、一张产品图开始，制作干净、有节奏、可精确控制的品牌动效。无需安装，所有编辑与图片处理都在浏览器本地完成。</p>
+        <div class="hero-actions">
+          <a class="primary-action" href="flash-scenes.html">打开 Flash 工作台 <span>→</span></a>
+          <a class="secondary-action" href="#effects">浏览全部效果</a>
+        </div>
+      </div>
+      <div class="hero-demo" aria-label="文字与图片组合动效示意">
+        <div class="demo-orbit" aria-hidden="true"></div>
+        <div class="demo-type" aria-hidden="true"><span>MO</span><span>TI</span><span>ON</span></div>
+        <div class="demo-media" aria-hidden="true"><span>ME</span></div>
+        <p>TEXT × IMAGE × MOTION</p>
+      </div>
+    </section>
+
+    <section id="effects" class="browser" aria-labelledby="browserTitle">
       <div class="browser-heading">
         <div>
-          <p class="eyebrow">SPACE TYPE GENERATOR / 中文改造版</p>
-          <h1 id="browserTitle">选择一个效果开始创作</h1>
+          <p class="eyebrow">EFFECT LIBRARY</p>
+          <h2 id="browserTitle">选择一种运动语言</h2>
+          <p class="section-intro">每个效果都可以实时改字、调色和控制节奏。新增 Icon Burst 瞬时换色与图标爆发动效；Flash、Snap、Construct 支持多张真实图片与文字混排。</p>
         </div>
         <label class="search-field">
-          <span>搜索</span>
-          <input id="searchInput" type="search" placeholder="名称或类型" autocomplete="off">
+          <span aria-hidden="true">⌕</span>
+          <input id="searchInput" type="search" placeholder="搜索名称或类型" aria-label="搜索效果" autocomplete="off">
         </label>
       </div>
 
@@ -43,9 +67,9 @@
     </section>
   </main>
 
-  <footer>
-    <span>STG 中文版</span>
-    <span>基于 Kiel M 的开源 Space Type Generator</span>
+  <footer id="about">
+    <div><strong>ME Motion Studio</strong><span>为文字、图像与品牌表达而生。</span></div>
+    <p>基于 Kiel M 的开源 Space Type Generator 持续改造。原作者署名与许可完整保留。</p>
   </footer>
 
   <script src="gallery.js"></script>

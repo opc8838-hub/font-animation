@@ -38,6 +38,7 @@ var widgetOn = true;
 
 var inverter = false;
 var typeToggle = 1;
+var explicitMediaPlacement = false;
 
 function preload(){
   // tFont[0] = loadFont('assets/NotoSansSC-Regular.ttf');
@@ -62,7 +63,8 @@ function preload(){
 }
 
 function setup(){
-  createCanvas(windowWidth,windowHeight);
+  stgConfigurePerformance();
+  stgMountCanvas(createCanvas(stgCanvasAreaWidth(), stgCanvasAreaHeight()));
   frameRate(30);
 
   wPad = 40;
@@ -87,16 +89,18 @@ function setup(){
 function draw(){
   background(bkgdColor);
 
-  // image(pImg[0], width/2, height/2);
+  stgDrawMediaLayer({ layer: "behind", width: width, height: height, phase: (frameCount % 90) / 90 });
 
   push();
     translate(width/2, height/2 - fullHeight/2);
     italicWave0();
   pop();
+
+  stgDrawMediaLayer({ layer: "front", width: width, height: height, phase: (frameCount % 90) / 90 });
 }
 
 function windowResized(){
-  resizeCanvas(windowWidth, windowHeight, WEBGL);
+  resizeCanvas(stgCanvasAreaWidth(), stgCanvasAreaHeight());
   wWindow = width - map(wPad, 0, 100, 0, width);
 
   setText();

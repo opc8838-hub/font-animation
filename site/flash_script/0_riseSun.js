@@ -14,6 +14,7 @@ class RiseSun {
 
     this.pgTextSize = 2;
     this.findTextSize();
+    this.pgTextSize *= flashTextScale;
 
     this.pgA, this.pgB;
     this.drawTextures();
@@ -103,7 +104,7 @@ class RiseSun {
     while(measured < width){
       textSize(this.pgTextSize)
       textFont(currentFont);
-      measured = textWidth(this.inp);
+      measured = flashInlineTextWidth(this.inp, this.pgTextSize);
 
       this.pgTextSize += 2;
     }
@@ -123,7 +124,7 @@ class RiseSun {
     this.pgA.textSize(this.pgTextSize);
     var thisAdjust = this.pgA.height/2 + this.pgTextSize * thisFontAdjust/2 + this.pgTextSize * thisFontAdjustUp;
     this.pgA.translate(width/2, thisAdjust);
-    this.pgA.text(this.inp, 0, 0);
+    flashDrawInlineText(this.pgA, this.inp, 0, 0, this.pgTextSize);
 
     this.pgB = createGraphics(width, height);
     this.pgB.background(bkgdColor);
@@ -134,7 +135,7 @@ class RiseSun {
     this.pgB.textSize(this.pgTextSize);
     var thisAdjust = this.pgA.height/2 + this.pgTextSize * thisFontAdjust/2 + this.pgTextSize * thisFontAdjustUp;
     this.pgB.translate(width/2, thisAdjust);
-    this.pgB.text(this.inp, 0, 0);
+    flashDrawInlineText(this.pgB, this.inp, 0, 0, this.pgTextSize);
   }
 
   removeGraphics(){

@@ -27,12 +27,32 @@ var starterText = "THE\nCOLLECTIVE\nPOWER\nOF\nTINY\nMOMENTS";
 var rampCounter = 0;
 
 var thisFont = 0;
+var currentFontIndex = 0;
 var thisFontAdjust = 0.7;
 var thisFontAdjustUp = -0.2;
+var flashTextScale = 1;
+var flashTracking = 0;
 
 var flashCount = 13;
 var sceneOn = [];
-var sceneCount = 15;
+var sceneCount = 13;
+var sceneMode = -1;
+
+var flashScenes = [
+  { slug: "arc", label: "Arc / 弧线", create: function(slot, textValue) { return new Arcer(slot, textValue); } },
+  { slug: "bend", label: "Bend / 弯折", create: function(slot, textValue) { return new Bend(slot, textValue); } },
+  { slug: "box", label: "Box / 方框", create: function(slot, textValue) { return new Box(slot, textValue); } },
+  { slug: "bug-eye", label: "Bug Eye / 虫眼", create: function(slot, textValue) { return accelMode == 0 ? new BugEyes(slot, textValue) : new BugEyesEE(slot, textValue); } },
+  { slug: "halo", label: "Halo / 光环", create: function(slot, textValue) { return new Halo(slot, textValue); } },
+  { slug: "sun", label: "Sun / 旭日", create: function(slot, textValue) { return new RiseSun(slot, textValue); } },
+  { slug: "shutter-1", label: "Shutter 1 / 百叶窗一", create: function(slot, textValue) { return accelMode == 0 ? new Shutters(slot, textValue) : new ShuttersEE(slot, textValue); } },
+  { slug: "shutter-2", label: "Shutter 2 / 百叶窗二", create: function(slot, textValue) { return new Shutters2(slot, textValue); } },
+  { slug: "slots", label: "Slots / 滚轮", create: function(slot, textValue) { return new SlotMachine(slot, textValue); } },
+  { slug: "snap", label: "Snap / 闪切", create: function(slot, textValue) { return new Snap(slot, textValue); } },
+  { slug: "split", label: "Split / 分裂", create: function(slot, textValue) { return new Split(slot, textValue); } },
+  { slug: "star", label: "Star / 星芒", create: function(slot, textValue) { return new Starburst(slot, textValue); } },
+  { slug: "twist", label: "Twist / 扭转", create: function(slot, textValue) { return new Twist(slot, textValue); } }
+];
 
 var widgetOn = true;
 
@@ -59,12 +79,31 @@ let sHold = 0;
 
 function preload(){
   tFont[0] = loadFont('assets/NotoSansSC-Regular.ttf');
-  tFont[1] = loadFont('assets/NotoSansSC-Regular.ttf');
-  tFont[2] = loadFont('assets/NotoSansSC-Regular.ttf');
-  tFont[3] = loadFont('assets/NotoSansSC-Regular.ttf');
-  tFont[4] = loadFont('assets/NotoSansSC-Regular.ttf');
-  tFont[5] = loadFont('assets/NotoSansSC-Regular.ttf');
-  tFont[6] = loadFont('assets/NotoSansSC-Regular.ttf');
+  tFont[1] = loadFont('assets/NotoSansSC-Black.ttf');
+  tFont[2] = loadFont('assets/fonts/SpaceGrotesk-Variable.ttf');
+  tFont[3] = loadFont('assets/fonts/Lora-Variable.ttf');
+  tFont[4] = loadFont('assets/fonts/MartianMono-Variable.ttf');
+  tFont[5] = loadFont('assets/fonts/Fenix-Regular.ttf');
+  tFont[6] = loadFont('assets/WorkSans-Regular.ttf');
+  tFont[7] = loadFont('assets/SpaceMono-Bold.ttf');
+  tFont[8] = loadFont('assets/Vollkorn-BoldItalic.ttf');
+  tFont[9] = loadFont('assets/RobotoCondensed-Bold.ttf');
+  tFont[10] = loadFont('assets/Cairo-Bold.ttf');
+  tFont[11] = loadFont('assets/AguafinaScript-Regular.ttf');
+  tFont[12] = loadFont('assets/fonts/Manrope-Variable.ttf');
+  tFont[13] = loadFont('assets/fonts/LeagueSpartan-Variable.ttf');
+  tFont[14] = loadFont('assets/fonts/Cinzel-Variable.ttf');
+  tFont[15] = loadFont('assets/fonts/InstrumentSerif-Regular.ttf');
+  tFont[16] = loadFont('assets/fonts/BebasNeue-Regular.ttf');
+  tFont[17] = loadFont('assets/fonts/Poppins-Regular.ttf');
+  tFont[18] = loadFont('assets/fonts/Rajdhani-Bold.ttf');
+  tFont[19] = loadFont('assets/fonts/Teko-Variable.ttf');
+  tFont[20] = loadFont('assets/fonts/Khand-Regular.ttf');
+  tFont[21] = loadFont('assets/fonts/Fraunces-Variable.ttf');
+  tFont[22] = loadFont('resources/NotoSansSC-Thin.otf');
+  tFont[23] = loadFont('assets/NotoSansJP-Thin.otf');
+  tFont[24] = loadFont('resources/NotoSansJP-Black.otf');
+  tFont[25] = loadFont('resources/NotoSansKR-Black.otf');
 
   currentFont = tFont[0];
   thisFontAdjust = 0.7;
@@ -72,7 +111,8 @@ function preload(){
 }
 
 function setup(){
-  createCanvas(windowWidth,windowHeight,WEBGL);
+  stgConfigurePerformance();
+  stgMountCanvas(createCanvas(stgCanvasAreaWidth(), stgCanvasAreaHeight(), WEBGL));
 
   for(var n = 0; n < flashCount; n++){
     sceneOn[n] = true;
@@ -113,6 +153,15 @@ function setup(){
   textureMode(NORMAL);
 
   document.getElementById("textArea").value = starterText;
+  var requestedScene = new URLSearchParams(window.location.search).get("scene");
+  if(requestedScene){
+    var requestedIndex = flashScenes.findIndex(function(scene) { return scene.slug === requestedScene; });
+    if(requestedIndex >= 0){
+      sceneMode = requestedIndex;
+      document.getElementById("flashSceneSelect").value = requestedScene;
+      updateFlashSceneUI();
+    }
+  }
   setText(starterText);
 }
 
@@ -122,9 +171,11 @@ function draw(){
   
   push();
     translate(-width/2, -height/2);
-
+    var mediaPhase = (coreCounter % sceneLength) / sceneLength;
+    stgDrawMediaLayer({ layer: "behind", width: width, height: height, phase: mediaPhase });
     mainFlash.update();
     mainFlash.display();
+    stgDrawMediaLayer({ layer: "front", width: width, height: height, phase: mediaPhase });
   pop();
 
   runRecording();
@@ -168,7 +219,9 @@ function pickScene(){
     currentText = h + barrier + m + barrier + s;
   }
 
-  if(sceneCount == 0){
+  if(sceneMode >= 0){
+    mainFlash = flashScenes[sceneMode].create(rampCounter%2, currentText);
+  } else if(sceneCount == 0){
     mainFlash = new Blank(rampCounter%2, currentText);
   } else {
     var sceneSelecting = true;
@@ -259,7 +312,7 @@ function windowResized(){
 
 function resizeForSave(){
   if(saveMode == 0){
-    resizeCanvas(windowWidth, windowHeight,WEBGL);
+    resizeCanvas(stgCanvasAreaWidth(), stgCanvasAreaHeight(), WEBGL);
   } else if(saveMode == 1){
     resizeCanvas(1080, 1920, WEBGL);
   } else if(saveMode == 2){
@@ -269,25 +322,27 @@ function resizeForSave(){
 
 function resizeForPreview(){
   var tempWidth, tempHeight;
+  var stageWidth = stgCanvasAreaWidth();
+  var stageHeight = stgCanvasAreaHeight();
 
   if(saveMode == 0){
-    resizeCanvas(windowWidth, windowHeight,WEBGL);
+    resizeCanvas(stageWidth, stageHeight, WEBGL);
   } else if(saveMode == 1){
-    if(windowWidth > windowHeight * 9/16){
-      tempHeight = windowHeight;
-      tempWidth = windowHeight * 9/16;
+    if(stageWidth > stageHeight * 9/16){
+      tempHeight = stageHeight;
+      tempWidth = stageHeight * 9/16;
     } else {
-      tempWidth = windowWidth;
-      tempHeight = windowWidth * 16/9;
+      tempWidth = stageWidth;
+      tempHeight = stageWidth * 16/9;
     }
     resizeCanvas(tempWidth, tempHeight, WEBGL);
   } else if(saveMode == 2){
-    if(windowWidth < windowHeight){
-      tempWidth = windowWidth;
-      tempHeight = windowWidth;
+    if(stageWidth < stageHeight){
+      tempWidth = stageWidth;
+      tempHeight = stageWidth;
     } else {
-      tempHeight = windowHeight;
-      tempWidth = windowHeight;
+      tempHeight = stageHeight;
+      tempWidth = stageHeight;
     }
     resizeCanvas(tempWidth, tempHeight, WEBGL);
   }
