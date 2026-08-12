@@ -8,7 +8,7 @@
   const fps = 30;
   const inputs = {
     rows: $("#rowsInput"), font: $("#fontFamily"), fontSize: $("#fontSize"),
-    lineGap: $("#lineGap"), speed: $("#speed"), assetScale: $("#assetScale"), wallRows: $("#wallRows"),
+    lineGap: $("#lineGap"), speed: $("#speed"), assetScale: $("#assetScale"), wallRowsMode: $("#wallRowsMode"), wallRows: $("#wallRows"),
     wave: $("#wave"), waveRate: $("#waveRate"), vertical: $("#vertical"),
     repeatGap: $("#repeatGap"), background: $("#backgroundColor"), foreground: $("#textColor"),
     motionMode: $("#motionMode"), introWord: $("#introWord"),
@@ -398,8 +398,22 @@
     const waveAmp = Number(inputs.wave.value) * scale;
     const waveRate = Number(inputs.waveRate.value) / 100;
     const verticalSpeed = Number(inputs.vertical.value) * scale;
-    const laneCount = Math.max(3, Number(inputs.wallRows.value) || 9);
-    const halfLanes = Math.floor(laneCount / 2);
+    // Auto mode preserves the original full-screen wall: row count follows
+    // the actual canvas height, font size and line height. A fixed row count
+    // is only used after the user explicitly switches to custom mode.
+    const autoLaneCount = Math.ceil(h / lineHeight) + 6;
+    const customLaneCount = Math.max(3, Number(inputs.wallRows.value) || 9);
+    const halfLanes = inputs.wallRowsMode.value === "auto"
+      ? Math.ceil(autoLaneCount / 2)
+      : Math.floor(customLaneCount / 2);
+    const renderedLaneCount = halfLanes * 2 + 1;
+    if (target === canvas) {
+      canvas.dataset.wallRowsMode = inputs.wallRowsMode.value;
+      canvas.dataset.wallRowsResolved = String(renderedLaneCount);
+      const rowOutput = $("#wallRowsOut");
+      const rowLabel = inputs.wallRowsMode.value === "auto" ? `自动 · ${renderedLaneCount}行` : `${renderedLaneCount}行`;
+      if (rowOutput.textContent !== rowLabel) rowOutput.textContent = rowLabel;
+    }
     const choreography = inputs.motionMode.value === "choreography";
     const timing = choreographyTiming();
     const localTime = choreography ? mod(time, timing.cycle) : time;
@@ -607,7 +621,7 @@
       lineGapOut: inputs.lineGap.value,
       speedOut: `${(Number(inputs.speed.value) / 100).toFixed(2)}×`,
       assetScaleOut: `${inputs.assetScale.value}%`,
-      wallRowsOut: `${inputs.wallRows.value}行`,
+      wallRowsOut: inputs.wallRowsMode.value === "auto" ? "自动铺满" : `${inputs.wallRows.value}行`,
       waveOut: inputs.wave.value,
       waveRateOut: (Number(inputs.waveRate.value) / 100).toFixed(2),
       verticalOut: inputs.vertical.value,
@@ -626,6 +640,7 @@
       swapIntervalOut: `${inputs.swapInterval.value}ms`
     };
     Object.entries(values).forEach(([id, value]) => { $(`#${id}`).textContent = value; });
+    inputs.wallRows.disabled = inputs.wallRowsMode.value === "auto";
     document.documentElement.style.setProperty("--text-color", inputs.foreground.value);
   }
 

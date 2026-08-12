@@ -128,7 +128,7 @@ everything</textarea>
       <section class="motion-quick">
         <div class="section-heading">
           <p class="section-label">常用调节</p>
-          <small class="section-note">先调这 9 项</small>
+          <small class="section-note">先调这 10 项</small>
         </div>
         <div class="motion-map" aria-label="动效阶段">
           <span>中间→满屏</span><i>→</i><span>满屏左流</span><i>→</i><span>中间向右</span><i>→</i><span>逐行消失</span><i>→</i><span>单行收尾</span>
@@ -143,8 +143,14 @@ everything</textarea>
         <label>图标大小 <small class="stage-tag">画面</small><output id="assetScaleOut">100%</output>
           <input id="assetScale" type="range" min="45" max="180" value="100">
         </label>
-        <label>满屏行数 <small class="stage-tag">画面</small><output id="wallRowsOut">9行</output>
-          <input id="wallRows" type="range" min="3" max="25" step="2" value="9">
+        <label>行数方式 <small class="stage-tag">画面</small>
+          <select id="wallRowsMode">
+            <option value="auto" selected>自动铺满画布</option>
+            <option value="custom">自定义行数</option>
+          </select>
+        </label>
+        <label>满屏行数 <small class="stage-tag">画面</small><output id="wallRowsOut">自动铺满</output>
+          <input id="wallRows" type="range" min="3" max="25" step="2" value="9" disabled>
         </label>
         <label>中间→满屏 <small class="stage-tag">阶段 1</small><output id="popDurationOut">0.60秒</output>
           <input id="popDuration" type="range" min="150" max="1800" step="10" value="450">
