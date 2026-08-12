@@ -10,12 +10,13 @@
     rows: $("#rowsInput"), font: $("#fontFamily"), fontSize: $("#fontSize"),
     lineGap: $("#lineGap"), assetScale: $("#assetScale"), rowCount: $("#rowCount"),
     background: $("#backgroundColor"), foreground: $("#textColor"),
-    motionMode: $("#motionMode"), introWord: $("#introWord"), nextWord: $("#nextWord"),
+    motionMode: $("#motionMode"), introWord: $("#introWord"), nextWord: $("#nextWord"), finalStates: $("#finalStates"),
     collapseDirection: $("#collapseDirection"), introDuration: $("#introDuration"),
     singleDuration: $("#singleDuration"), spreadDuration: $("#spreadDuration"),
     holdDuration: $("#holdDuration"), collapseDuration: $("#collapseDuration"), finalDuration: $("#finalDuration"),
     bounce: $("#bounce"), stagger: $("#stagger"), edgeFade: $("#edgeFade"),
     verticalDrift: $("#verticalDrift"), horizontalPhase: $("#horizontalPhase"), nextOpacity: $("#nextOpacity"),
+    finalShrink: $("#finalShrink"), finalSwapInterval: $("#finalSwapInterval"),
     assetItemScale: $("#assetItemScale"),
     assetOffsetX: $("#assetOffsetX"), assetOffsetY: $("#assetOffsetY")
   };
@@ -84,6 +85,10 @@
   function parseRows() {
     const rows = inputs.rows.value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
     return rows.length ? rows.slice(0, 24) : ["leveling up"];
+  }
+
+  function parseFinalStates() {
+    return inputs.finalStates.value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean).slice(0, 24);
   }
 
   function renderAssetGrid() {
@@ -167,7 +172,7 @@
     textarea.dispatchEvent(new Event("input", { bubbles: true }));
   }
 
-  [inputs.rows, inputs.introWord, inputs.nextWord].forEach((field) => {
+  [inputs.rows, inputs.introWord, inputs.nextWord, inputs.finalStates].forEach((field) => {
     field.addEventListener("focus", () => { activeTokenInput = field; });
   });
 
@@ -178,7 +183,7 @@
     if (selectedAssetId === id) selectedAssetId = "music";
     assetRevision += 1;
     layoutCache.clear();
-    [inputs.rows, inputs.introWord, inputs.nextWord].forEach((field) => {
+    [inputs.rows, inputs.introWord, inputs.nextWord, inputs.finalStates].forEach((field) => {
       field.value = field.value.split(`{{${id}}}`).join("");
     });
     renderAssetGrid();
@@ -360,6 +365,7 @@
     const lineForLane = (lane) => rows[mod(centerSource + lane, rows.length)];
     const wallLayouts = new Map(rows.map((line) => [line, layoutTokens(context, line, fontPx, assetHeight, 0)]));
     const wallContentWidth = Math.max(fontPx, ...Array.from(wallLayouts.values(), (layout) => layout.width));
+    const wallZoom = Math.max(1, Math.min(1.75, w * .96 / Math.max(1, wallContentWidth)));
     const drawCentered = (line, y, xOffset = 0, alpha = 1, rowScale = 1, fillWidth = false) => {
       const layout = fillWidth
         ? (wallLayouts.get(line) || layoutTokens(context, line, fontPx, assetHeight, 0))
@@ -367,7 +373,8 @@
       context.save();
       context.globalAlpha *= clamp01(alpha);
       context.translate(w / 2 + xOffset, h / 2 + y);
-      context.scale(rowScale, rowScale);
+      const compositionScale = rowScale * (fillWidth ? wallZoom : 1);
+      context.scale(compositionScale, compositionScale);
       if (fillWidth) {
         context.scale(wallContentWidth / Math.max(1, layout.width), 1);
         drawSequence(context, layout, -layout.width / 2, 0, inputs.foreground.value);
@@ -376,36 +383,51 @@
       }
       context.restore();
     };
+    const markPhase = (phase, extras = {}) => {
+      if (target !== canvas) return;
+      canvas.dataset.motionPhase = phase;
+      canvas.dataset.renderedRows = String(extras.rows ?? 1);
+      canvas.dataset.finalState = String(extras.finalState ?? -1);
+      canvas.dataset.finalScale = String((extras.finalScale ?? 1).toFixed(4));
+    };
 
     if (!choreography) {
-      const loopHeight = rowCount * lineHeight;
+      const loopHeight = rowCount * lineHeight * wallZoom;
       const drift = mod(localTime * verticalSpeed + loopHeight / 2, loopHeight) - loopHeight / 2;
       for (let lane = -halfRows - 1; lane <= halfRows + 1; lane += 1) {
-        let y = lane * lineHeight + drift;
-        if (y < -(halfRows + 1) * lineHeight) y += loopHeight;
-        if (y > (halfRows + 1) * lineHeight) y -= loopHeight;
+        let y = lane * lineHeight * wallZoom + drift;
+        if (y < -(halfRows + 1) * lineHeight * wallZoom) y += loopHeight;
+        if (y > (halfRows + 1) * lineHeight * wallZoom) y -= loopHeight;
         drawCentered(lineForLane(lane), y, horizontalPhase, 1, 1, true);
       }
+      markPhase("continuous", { rows: rowCount });
       return;
     }
 
     if (localTime < timing.introEnd) {
       const progress = rangeProgress(localTime, 0, timing.introEnd);
-      drawCentered(inputs.introWord.value.trim() || "motivation", 0, 0, 1, lerp(.96, 1, easeOut(progress)));
+      const breathingScale = lerp(.98, 1, easeOut(progress));
+      drawCentered(inputs.introWord.value.trim() || "motivation", 0, 0, 1, breathingScale);
+      markPhase("intro-single");
       return;
     }
 
     const primaryLine = lineForLane(0);
     if (localTime < timing.singleEnd) {
       const progress = rangeProgress(localTime, timing.introEnd, timing.singleEnd);
-      const settleScale = lerp(.84, 1, easeOut(rangeProgress(progress, 0, .34)));
-      drawCentered(primaryLine, 0, 0, 1, settleScale);
+      const outgoing = 1 - easeOut(rangeProgress(progress, 0, .28));
+      if (outgoing > .002) {
+        drawCentered(inputs.introWord.value.trim() || "motivation", 0, 0, outgoing, lerp(1, .76, easeOut(progress)));
+      }
+      const arrival = popEase(rangeProgress(progress, .08, .82), Math.min(.28, bounceStrength));
+      const arrivalAlpha = easeOut(rangeProgress(progress, .08, .28));
+      drawCentered(primaryLine, 0, 0, arrivalAlpha, lerp(.72, 1, arrival));
+      markPhase("line-pop");
       return;
     }
 
     const spreadProgress = rangeProgress(localTime, timing.singleEnd, timing.spreadEnd);
     const collapseProgress = rangeProgress(localTime, timing.holdEnd, timing.collapseEnd);
-    const finalProgress = rangeProgress(localTime, timing.collapseEnd, timing.finalEnd);
     const afterSpread = Math.max(0, localTime - timing.spreadEnd);
     let driftY = Math.min(afterSpread, timing.duration[3] + timing.duration[4]) * verticalSpeed;
     const direction = inputs.collapseDirection.value;
@@ -424,37 +446,51 @@
         const edgeAlpha = 1 - edgeFade * .7 * smoother(rangeProgress(distanceRatio, .66, 1));
         const collapseOrder = (halfRows - distance) / Math.max(1, halfRows);
         const disappearStart = collapseOrder * .58;
-        const disappear = distance === 0 || localTime < timing.holdEnd
+        const disappear = localTime < timing.holdEnd
           ? 0
-          : smoother(rangeProgress(collapseProgress, disappearStart, Math.min(1, disappearStart + .34)));
+          : smoother(rangeProgress(collapseProgress, disappearStart, Math.min(1, disappearStart + .30)));
         const alpha = appearAlpha * edgeAlpha * (1 - disappear);
         if (alpha <= .002) continue;
-        const compression = lerp(1, .9, smoother(collapseProgress));
-        let y = lane * lineHeight * compression + driftY;
-        const rowScale = lerp(.82, 1, appear);
-        if (lane === 0 && localTime >= timing.holdEnd) {
-          const singleBlend = smoother(rangeProgress(collapseProgress, .55, .92));
-          y = lerp(y, lineHeight * .85, singleBlend);
-          drawCentered(lineForLane(lane), y, horizontalPhase, alpha * (1 - singleBlend), rowScale, true);
-          drawCentered(lineForLane(lane), y, 0, alpha * singleBlend, rowScale, false);
-        } else {
-          drawCentered(lineForLane(lane), y, horizontalPhase, alpha, rowScale, true);
-        }
+        const spreadPosition = distance === 0 ? 1 : popEase(rangeProgress(spreadProgress, appearStart, appearEnd), bounceStrength);
+        const exitScale = lerp(1, 1.10, easeOut(collapseProgress));
+        const y = lane * lineHeight * wallZoom * spreadPosition + driftY;
+        const rowScale = lerp(.76, 1, appear) * exitScale;
+        drawCentered(lineForLane(lane), y, horizontalPhase, alpha, rowScale, true);
       }
 
       if (localTime >= timing.holdEnd) {
-        const nextReveal = smoother(rangeProgress(collapseProgress, .55, .92));
+        const nextReveal = smoother(rangeProgress(collapseProgress, .38, .92));
         const nextAlpha = Number(inputs.nextOpacity.value) / 100 * nextReveal;
-        const nextY = lerp(-h * .34, -lineHeight * 1.05, easeOut(nextReveal));
-        drawCentered(inputs.nextWord.value.trim() || "togetherness", nextY, 0, nextAlpha, lerp(.9, 1, easeOut(nextReveal)));
+        const nextY = lerp(lineHeight * .34, 0, easeOut(nextReveal));
+        drawCentered(inputs.nextWord.value.trim() || "togetherness", nextY, 0, nextAlpha, lerp(1.08, 1, easeOut(nextReveal)));
       }
+      markPhase(localTime < timing.spreadEnd ? "wall-spread" : localTime < timing.holdEnd ? "wall-full" : "wall-exit", { rows: rowCount });
       return;
     }
 
+    const finalElapsed = Math.max(0, localTime - timing.collapseEnd);
+    const finalProgress = rangeProgress(localTime, timing.collapseEnd, timing.finalEnd);
+    const finalStates = parseFinalStates();
+    const swapInterval = Math.max(.06, Number(inputs.finalSwapInterval.value) / 1000);
+    const rawStateIndex = Math.floor(finalElapsed / swapInterval);
+    const stateIndex = Math.min(finalStates.length, rawStateIndex);
+    const currentLine = stateIndex === 0 ? (inputs.nextWord.value.trim() || "togetherness") : finalStates[stateIndex - 1];
+    const previousLine = stateIndex <= 1
+      ? (inputs.nextWord.value.trim() || "togetherness")
+      : finalStates[stateIndex - 2];
+    const stateTime = mod(finalElapsed, swapInterval);
+    const transitionDuration = Math.min(.10, swapInterval * .34);
+    const swapProgress = stateIndex === 0 || rawStateIndex > finalStates.length
+      ? 1
+      : smoother(rangeProgress(stateTime, 0, transitionDuration));
+    const shrinkAmount = Number(inputs.finalShrink.value) / 100;
+    const closingScale = 1 - shrinkAmount * smooth(finalProgress);
     const nextAlpha = Number(inputs.nextOpacity.value) / 100;
-    const closingScale = lerp(1, .96, smooth(finalProgress));
-    drawCentered(inputs.nextWord.value.trim() || "togetherness", -lineHeight * 1.05, 0, nextAlpha, closingScale);
-    drawCentered(primaryLine, lineHeight * .85, 0, 1, closingScale);
+    if (stateIndex > 0 && swapProgress < .998) {
+      drawCentered(previousLine, 0, 0, nextAlpha * (1 - swapProgress), closingScale * lerp(1, .985, swapProgress));
+    }
+    drawCentered(currentLine, 0, 0, nextAlpha * swapProgress, closingScale * lerp(1.015, 1, swapProgress));
+    markPhase("final-shrink-swap", { finalState: stateIndex, finalScale: closingScale });
   }
 
   function resizeCanvas() {
@@ -517,6 +553,8 @@
       holdDurationOut: formatSeconds(timing.duration[3]),
       collapseDurationOut: formatSeconds(timing.duration[4]),
       finalDurationOut: formatSeconds(timing.duration[5]),
+      finalShrinkOut: `${inputs.finalShrink.value}%`,
+      finalSwapIntervalOut: `${inputs.finalSwapInterval.value}ms`,
       bounceOut: `${inputs.bounce.value}%`,
       staggerOut: `${inputs.stagger.value}%`,
       edgeFadeOut: `${inputs.edgeFade.value}%`,
@@ -529,6 +567,8 @@
   }
 
   Object.values(inputs).forEach((input) => input.addEventListener("input", updateOutputs));
+  inputs.finalSwapInterval.addEventListener("input", () => setTime(choreographyTiming().collapseEnd));
+  inputs.finalShrink.addEventListener("input", () => setTime(choreographyTiming().collapseEnd + choreographyTiming().duration[5] * .7));
   [inputs.assetItemScale, inputs.assetOffsetX, inputs.assetOffsetY].forEach((input) => {
     input.addEventListener("input", updateSelectedAsset);
   });
