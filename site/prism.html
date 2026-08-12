@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="棱镜 Prism：可编辑的中文 RGB 分色纵深字体动效。">
+  <title>棱镜 Prism | ME Motion Studio</title>
+  <link rel="stylesheet" href="prism.css">
+  <link rel="stylesheet" href="me-motion-editor.css">
+  <link rel="stylesheet" href="stg-cn.css">
+</head>
+<body class="me-motion-editor">
+  <canvas id="prism-canvas" aria-hidden="true"></canvas>
+
+  <aside class="prism-panel" aria-label="棱镜效果编辑器">
+    <header class="prism-panel__header">
+      <div>
+        <span class="prism-kicker">STG / EXP.024</span>
+        <h1>棱镜 <em>Prism</em></h1>
+      </div>
+      <span class="prism-signal" aria-hidden="true"></span>
+    </header>
+
+    <div class="prism-panel__body">
+      <label class="prism-field prism-field--text" for="prism-text">
+        <span>输入文字 <output id="text-count">4 / 18</output></span>
+        <input id="prism-text" type="text" maxlength="18" value="光的回声" autocomplete="off">
+      </label>
+
+      <div class="prism-section-label"><span>折射结构</span><b>01</b></div>
+
+      <label class="prism-field" for="prism-depth">
+        <span>纵深层数 <output data-output="prism-depth">10</output></span>
+        <input id="prism-depth" type="range" min="3" max="18" value="10" step="1">
+      </label>
+      <label class="prism-field" for="prism-spread">
+        <span>色散距离 <output data-output="prism-spread">18</output></span>
+        <input id="prism-spread" type="range" min="0" max="42" value="18" step="1">
+      </label>
+      <label class="prism-field" for="prism-refraction">
+        <span>折射强度 <output data-output="prism-refraction">34</output></span>
+        <input id="prism-refraction" type="range" min="0" max="90" value="34" step="1">
+      </label>
+      <label class="prism-field" for="prism-slices">
+        <span>切片数量 <output data-output="prism-slices">11</output></span>
+        <input id="prism-slices" type="range" min="4" max="24" value="11" step="1">
+      </label>
+
+      <div class="prism-section-label"><span>字形与节奏</span><b>02</b></div>
+
+      <label class="prism-field" for="prism-size">
+        <span>字号 <output data-output="prism-size">210</output></span>
+        <input id="prism-size" type="range" min="72" max="360" value="210" step="1">
+      </label>
+      <label class="prism-field" for="prism-speed">
+        <span>流速 <output data-output="prism-speed">0.70</output></span>
+        <input id="prism-speed" type="range" min="0" max="2.4" value="0.7" step="0.05">
+      </label>
+      <label class="prism-field" for="prism-rotation">
+        <span>倾角 <output data-output="prism-rotation">-4°</output></span>
+        <input id="prism-rotation" type="range" min="-18" max="18" value="-4" step="1">
+      </label>
+
+      <div class="prism-grid-fields">
+        <label class="prism-field" for="prism-palette">
+          <span>光谱</span>
+          <select id="prism-palette">
+            <option value="signal">信号 Signal</option>
+            <option value="print">印刷 CMY</option>
+            <option value="ice">冷焰 Ice</option>
+            <option value="ember">余烬 Ember</option>
+          </select>
+        </label>
+        <label class="prism-field" for="prism-surface">
+          <span>底色</span>
+          <select id="prism-surface">
+            <option value="dark">黑域</option>
+            <option value="paper">纸白</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="prism-toggle" for="prism-grid">
+        <span><b>显示光学网格</b><small>GRID OVERLAY</small></span>
+        <input id="prism-grid" type="checkbox" checked>
+      </label>
+
+      <div class="prism-actions">
+        <button id="prism-random" type="button">随机折射</button>
+        <button id="prism-pause" type="button" aria-pressed="false">暂停</button>
+        <button id="prism-save" type="button">导出 PNG</button>
+      </div>
+    </div>
+
+    <footer class="prism-panel__footer">
+      <span>移动鼠标改变观察角度</span>
+      <span>点击画面触发脉冲</span>
+    </footer>
+  </aside>
+
+  <div class="prism-status" aria-hidden="true">
+    <span>RGB / REFRACTION FIELD</span>
+    <span id="prism-readout">LIVE · 10 LAYERS</span>
+  </div>
+  <p id="prism-live" class="sr-only" aria-live="polite"></p>
+
+  <script src="prism.js"></script>
+  <script src="me-motion-editor.js"></script>
+  <script src="stg-cn.js"></script>
+</body>
+</html>

@@ -1,12 +1,12 @@
 (function () {
   const effects = [
     ["index", "圆柱", "Cylinder"], ["field", "场域", "Field"], ["stripes", "条纹", "Stripes"],
-    ["coil", "线圈", "Coil"], ["flag", "旗帜", "Flag"], ["morisawa", "森泽", "Morisawa"],
+    ["coil", "线圈", "Coil"], ["continuation", "续句", "Continuation"], ["currentwall", "流墙", "Current Wall"], ["verticalwall", "纵跃", "Vertical Rise"], ["creatorstudio", "汇聚", "Creator Merge"], ["pathwriter", "轨书", "Path Writer"], ["flag", "旗帜", "Flag"], ["morisawa", "森泽", "Morisawa"],
     ["cascade", "瀑布", "Cascade"], ["ribbon", "丝带", "Ribbon"], ["layers", "层叠", "Layers"],
     ["iconburst", "图标爆发", "Icon Burst"],
     ["danger", "警示", "Danger"], ["string", "琴弦", "String"], ["badge", "徽章", "Badge"],
     ["clutter", "杂散", "Clutter"], ["construct", "构筑", "Construct"], ["snap", "吸附", "Snap"],
-    ["flash", "闪光", "Flash"], ["pow", "砰", "Pow"], ["crash", "碰撞", "Crash"],
+    ["flash", "闪光", "Flash"], ["pow", "砰", "Pow"], ["prism", "棱镜", "Prism"], ["crash", "碰撞", "Crash"],
     ["crashclock", "碰撞时钟", "Crash Clock"], ["vessel", "器皿", "Vessel"], ["shine", "闪耀", "Shine"],
     ["boost", "助推", "Boost"], ["boxsquad", "方块小队", "BoxSquad"],
   ];
@@ -102,7 +102,7 @@
   drawer.className = "stg-cn-drawer";
   drawer.hidden = true;
   drawer.innerHTML = `
-    <div class="stg-cn-drawer-header"><span>全部 24 个效果</span><span>ME Motion</span></div>
+    <div class="stg-cn-drawer-header"><span>全部 ${effects.length} 个效果</span><span>ME Motion</span></div>
     <div class="stg-cn-drawer-grid">${effects.map(([itemSlug, zh, en], index) => `
       <a href="${itemSlug}.html" ${itemSlug === slug ? 'aria-current="page"' : ""}>
         <span>${String(index + 1).padStart(2, "0")} · ${zh}</span><small>${en}</small>

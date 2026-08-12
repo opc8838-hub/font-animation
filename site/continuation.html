@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="续句：基于双词块拼接、预备位移和匹配切换的动态字体效果。">
+  <title>续句 Continuation | ME Motion Studio</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;f[]=general-sans@400,500,600&amp;f[]=clash-display@500,600&amp;f[]=cabinet-grotesk@500,700&amp;display=swap">
+  <link rel="stylesheet" href="continuation.css">
+  <link rel="stylesheet" href="me-motion-editor.css">
+  <link rel="stylesheet" href="stg-cn.css">
+</head>
+<body class="me-motion-editor">
+  <main class="stage-shell" aria-label="动态字体预览">
+    <div class="design-frame" id="designFrame">
+      <div class="frame-index" aria-hidden="true"><span>24</span><span>CONTINUATION</span></div>
+      <div class="phrase-stage" id="phraseStage" aria-hidden="true"></div>
+      <p class="sr-only" id="livePhrase" aria-live="polite"></p>
+      <div class="frame-time" aria-hidden="true"><span id="frameCounter">F 000</span><span>30 FPS</span></div>
+    </div>
+  </main>
+
+  <details class="control-panel" id="controlPanel" open>
+    <summary>
+      <span><b>续句</b><small>CONTINUATION / 24</small></span>
+      <i aria-hidden="true">参数</i>
+    </summary>
+    <div class="panel-scroll">
+      <section>
+        <label class="section-label" for="pairsInput">词组 · 每行用 | 分隔</label>
+        <textarea id="pairsInput" rows="5" spellcheck="false">One|subscription.
+Endless|creativity.</textarea>
+        <p class="hint">主词先出现，后缀作为整块接入。支持中英文，例如「一个|订阅。」</p>
+      </section>
+
+      <section class="row-position-section">
+        <p class="section-label">每行动效位置</p>
+        <div class="row-position-list" id="rowPositionList"></div>
+        <p class="hint">每一行都是独立动效。左 / 中 / 右可快速定位，滑杆可继续精调。</p>
+      </section>
+
+      <section class="font-picker">
+        <label class="section-label" for="fontFamily">字体</label>
+        <select id="fontFamily">
+          <optgroup label="Snap 动效字体">
+            <option value="snap-inter-medium" selected>Inter Medium</option>
+            <option value="snap-inter-black">Inter Black</option>
+            <option value="snap-ibm-plex">IBM Plex Mono Bold Italic</option>
+            <option value="snap-space-mono">Space Mono Bold</option>
+            <option value="snap-space-grotesk">Space Grotesk Bold</option>
+          </optgroup>
+          <optgroup label="Free Faces · OFL">
+            <option value="ff-space-grotesk">Space Grotesk</option>
+            <option value="ff-martian-mono">Martian Mono</option>
+            <option value="ff-oi">Oi Display</option>
+            <option value="ff-barriecito">Barriecito</option>
+          </optgroup>
+          <optgroup label="UNCUT · OFL">
+            <option value="uncut-berlin">Berlin Grotesk</option>
+            <option value="uncut-berlin-bold">Berlin Grotesk Bold</option>
+          </optgroup>
+          <optgroup label="Fontshare · 官方 API">
+            <option value="fs-satoshi">Satoshi</option>
+            <option value="fs-general-sans">General Sans</option>
+            <option value="fs-clash-display">Clash Display</option>
+            <option value="fs-cabinet">Cabinet Grotesk</option>
+          </optgroup>
+          <optgroup label="中文字体">
+            <option value="cn-noto-regular">Noto Sans SC</option>
+            <option value="cn-noto-black">Noto Sans SC Black</option>
+          </optgroup>
+        </select>
+        <p class="hint">本地字体均为可再分发的 OFL；Fontshare 字体由其官方 API 提供。</p>
+      </section>
+
+      <section class="controls-grid">
+        <label>字号 <output id="fontSizeOut">48</output>
+          <input id="fontSize" type="range" min="24" max="96" value="48">
+        </label>
+        <label>预备比例 <output id="anticipationOut">25%</output>
+          <input id="anticipation" type="range" min="10" max="45" value="25">
+        </label>
+        <label>词间距 <output id="wordGapOut">8</output>
+          <input id="wordGap" type="range" min="0" max="32" value="8">
+        </label>
+        <label>收束起点 <output id="settleScaleOut">110%</output>
+          <input id="settleScale" type="range" min="100" max="125" value="110">
+        </label>
+        <label>入场距离 <output id="introDistanceOut">31</output>
+          <input id="introDistance" type="range" min="0" max="100" value="31">
+        </label>
+        <label>播放速度 <output id="speedOut">1.00×</output>
+          <input id="speed" type="range" min="50" max="160" value="100">
+        </label>
+      </section>
+
+      <section>
+        <p class="section-label">动效节奏 · 毫秒</p>
+        <div class="controls-grid timing-grid">
+          <label>主词入场 <output id="introDurationOut">267</output>
+            <input id="introDuration" type="range" min="50" max="1000" step="1" value="267">
+          </label>
+          <label>主词停顿 <output id="rootHoldOut">100</output>
+            <input id="rootHold" type="range" min="0" max="1500" step="10" value="100">
+          </label>
+          <label>预备左移 <output id="anticipationDurationOut">100</output>
+            <input id="anticipationDuration" type="range" min="30" max="800" step="10" value="100">
+          </label>
+          <label>后词显现 <output id="suffixRevealDurationOut">0</output>
+            <input id="suffixRevealDuration" type="range" min="0" max="600" step="10" value="0">
+          </label>
+          <label>组合收束 <output id="settleDurationOut">500</output>
+            <input id="settleDuration" type="range" min="100" max="1500" step="10" value="500">
+          </label>
+          <label>整组停留 <output id="phraseHoldOut">0</output>
+            <input id="phraseHold" type="range" min="0" max="2000" step="10" value="0">
+          </label>
+        </div>
+      </section>
+
+      <section class="color-row">
+        <label>背景<input id="backgroundColor" type="color" value="#000000"></label>
+        <label>文字<input id="textColor" type="color" value="#ffffff"></label>
+      </section>
+
+      <section class="transport" aria-label="时间轴控制">
+        <button id="restartButton" type="button">重播</button>
+        <button id="pauseButton" type="button">暂停</button>
+        <button id="backButton" type="button" aria-label="后退一帧">−1 帧</button>
+        <button id="forwardButton" type="button" aria-label="前进一帧">+1 帧</button>
+      </section>
+
+      <section class="export-panel">
+        <label class="section-label" for="exportPreset">导出尺寸</label>
+        <select id="exportPreset">
+          <option value="current">当前画板</option>
+          <option value="1080x1080">1:1 · 1080 × 1080</option>
+          <option value="1080x1350">4:5 · 1080 × 1350</option>
+          <option value="1080x1920">9:16 · 1080 × 1920</option>
+          <option value="1920x1080">16:9 · 1920 × 1080</option>
+          <option value="1200x628">横版 · 1200 × 628</option>
+          <option value="custom">自定义尺寸</option>
+        </select>
+        <div class="custom-size" id="customSize" hidden>
+          <label>宽 <input id="exportWidth" type="number" min="240" max="3840" value="1080"></label>
+          <span>×</span>
+          <label>高 <input id="exportHeight" type="number" min="240" max="3840" value="1080"></label>
+        </div>
+        <div class="export-actions">
+          <button id="exportPng" type="button">PNG 图片</button>
+          <button id="exportGif" type="button">GIF 动图</button>
+          <button id="exportVideo" type="button">视频</button>
+        </div>
+        <p class="export-status" id="exportStatus" aria-live="polite">PNG 导出当前帧；GIF / 视频导出完整循环。</p>
+      </section>
+      <p class="formula">位移 = 后词宽度 × 预备比例<br>每一项节奏均参与预览与导出的确定性逐帧计算</p>
+    </div>
+  </details>
+
+  <script src="js/gsap-3.13.0.min.js"></script>
+  <script src="js/continuation-gif.js"></script>
+  <script src="continuation.js"></script>
+  <script src="me-motion-editor.js"></script>
+  <script src="stg-cn.js"></script>
+</body>
+</html>
