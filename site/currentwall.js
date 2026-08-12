@@ -350,6 +350,17 @@
     };
   }
 
+  function choreographyPhase(timing, localTime) {
+    const phases = [
+      ["开场", 0, timing.leftEnd],
+      ["铺满画面", timing.leftEnd, timing.popEnd],
+      ["满屏向左流动", timing.popEnd, timing.fullEnd],
+      ["向右带动 / 逐行消失", timing.fullEnd, timing.exitEnd],
+      ["单行收尾", timing.exitEnd, timing.finalEnd]
+    ];
+    return phases.find(([, start, end]) => localTime >= start && localTime < end) || phases[phases.length - 1];
+  }
+
   function renderFrame(target, time, width, height, pixelRatio = 1) {
     const context = target.getContext("2d");
     const w = width ?? target.width / pixelRatio;
@@ -465,7 +476,12 @@
       const y = laneIndex * lineHeight * (choreography && localTime >= timing.fullEnd ? lerp(1, .92, exitProgress) : 1) + verticalOffset + yWave;
       const velocity = fontPx * 1.45 * masterSpeed * (setting.speed / 100);
       const signedShiftRate = setting.direction === 0 ? 0 : (setting.direction < 0 ? velocity : -velocity);
-      const signedTravel = localTime * signedShiftRate;
+      // The full-wall duration is a real motion boundary, not just a label.
+      // Stop accumulating leftward distance when stage 2 ends; stage 3 owns
+      // all movement after that point. Without this clamp, a 0.20 s setting
+      // could still look like several seconds of left flow.
+      const leftFlowClock = choreography ? Math.min(localTime, timing.fullEnd) : localTime;
+      const signedTravel = leftFlowClock * signedShiftRate;
 
       if (finalStage) {
         const anchorX = localWidth / 2 - layout.width / 2;
@@ -527,8 +543,22 @@
     const ratio = Number(canvas.dataset.ratio || 1);
     const time = currentTime();
     renderFrame(canvas, time, canvas.width / ratio, canvas.height / ratio, ratio);
-    const displayTime = inputs.motionMode.value === "choreography" ? mod(time, choreographyTiming().cycle) : time;
+    const timing = choreographyTiming();
+    const displayTime = inputs.motionMode.value === "choreography" ? mod(time, timing.cycle) : time;
     frameCounter.textContent = `F ${String(Math.round(displayTime * fps)).padStart(4, "0")}`;
+    if (inputs.motionMode.value === "choreography") {
+      const [phaseName, phaseStart, phaseEnd] = choreographyPhase(timing, displayTime);
+      const phaseDuration = Math.max(0, phaseEnd - phaseStart);
+      if (canvas.dataset.motionPhase !== phaseName) canvas.dataset.motionPhase = phaseName;
+      canvas.dataset.phaseDuration = phaseDuration.toFixed(3);
+      const status = `当前：${phaseName} · 本段 ${phaseDuration.toFixed(2)} 秒 · 一轮 ${timing.cycle.toFixed(2)} 秒`;
+      if ($("#timingReadout").textContent !== status) $("#timingReadout").textContent = status;
+    } else {
+      canvas.dataset.motionPhase = "持续满屏水流";
+      delete canvas.dataset.phaseDuration;
+      const status = "当前：持续满屏水流 · 不进入下一阶段";
+      if ($("#timingReadout").textContent !== status) $("#timingReadout").textContent = status;
+    }
     rafId = requestAnimationFrame(previewLoop);
   }
 
@@ -554,7 +584,7 @@
 
   function updateOutputs() {
     const timing = choreographyTiming();
-    const formatSeconds = (seconds) => `${seconds < 1 ? seconds.toFixed(2) : seconds.toFixed(1)}秒`;
+    const formatSeconds = (seconds) => `${seconds.toFixed(2)}秒`;
     const values = {
       fontSizeOut: inputs.fontSize.value,
       lineGapOut: inputs.lineGap.value,
@@ -582,6 +612,12 @@
   }
 
   Object.values(inputs).forEach((input) => input.addEventListener("input", updateOutputs));
+  inputs.fullDuration.addEventListener("input", () => {
+    if (inputs.motionMode.value !== "choreography") return;
+    // Direct manipulation: every slider movement previews this exact stage,
+    // so short values such as 0.20 s can be judged without waiting a full loop.
+    setTime(choreographyTiming().popEnd);
+  });
   [inputs.assetItemScale, inputs.assetOffsetX, inputs.assetOffsetY].forEach((input) => {
     input.addEventListener("input", updateSelectedAsset);
   });
