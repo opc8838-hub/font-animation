@@ -13,7 +13,7 @@
     background: $("#backgroundColor"), foreground: $("#textColor")
   };
   const fontPresets = {
-    "snap-inter-medium": { family: "Continuation Inter Medium", weight: 500, style: "normal" },
+    "snap-inter-medium": { family: "Continuation Inter", weight: 500, style: "normal" },
     "snap-inter-black": { family: "Continuation Inter", weight: 900, style: "normal" },
     "snap-space-grotesk": { family: "Continuation Space Grotesk", weight: 700, style: "normal" },
     "fs-satoshi": { family: "Satoshi", weight: 500, style: "normal" },

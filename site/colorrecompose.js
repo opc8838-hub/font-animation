@@ -17,7 +17,7 @@
   };
   const paletteInputs = [...document.querySelectorAll(".palette-color")];
   const fontPresets = {
-    "snap-inter-medium": { family: "Continuation Inter Medium", weight: 500, style: "normal" },
+    "snap-inter-medium": { family: "Continuation Inter", weight: 500, style: "normal" },
     "snap-inter-black": { family: "Continuation Inter", weight: 900, style: "normal" },
     "snap-ibm-plex": { family: "Continuation IBM Plex Mono", weight: 700, style: "italic" },
     "snap-space-mono": { family: "Continuation Space Mono", weight: 700, style: "normal" },
