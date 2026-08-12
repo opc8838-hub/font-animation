@@ -93,6 +93,9 @@ t{{music}}ge{{animal01}}hern{{animal08}}s{{cloud}}</textarea>
             <label>上下 <output id="assetOffsetYOut">0%</output>
               <input id="assetOffsetY" type="range" min="-60" max="60" value="0">
             </label>
+            <label>立体仰角 <output id="assetPitchOut">0°</output>
+              <input id="assetPitch" type="range" min="-50" max="50" value="0">
+            </label>
           </div>
         </div>
         <p class="hint">先把光标放进文字框，再点击素材插入。上传的 PNG、JPG、WEBP、SVG 可重复出现在任意行和任意字位。</p>
@@ -164,8 +167,8 @@ t{{music}}ge{{animal01}}hern{{animal08}}s{{cloud}}</textarea>
           <label>新行弹出 <small class="stage-tag">阶段 2</small><output id="singleDurationOut">0.12秒</output>
             <input id="singleDuration" type="range" min="80" max="1200" step="20" value="120">
           </label>
-          <label>纵向铺满 <small class="stage-tag">阶段 3</small><output id="spreadDurationOut">0.75秒</output>
-            <input id="spreadDuration" type="range" min="250" max="4000" step="50" value="750">
+          <label>弹满屏用时 <small class="stage-tag">阶段 3</small><output id="spreadDurationOut">0.36秒</output>
+            <input id="spreadDuration" type="range" min="80" max="2000" step="20" value="360">
           </label>
           <label>满屏停留 <small class="stage-tag">阶段 4</small><output id="holdDurationOut">0.15秒</output>
             <input id="holdDuration" type="range" min="0" max="8000" step="50" value="150">
@@ -183,7 +186,7 @@ t{{music}}ge{{animal01}}hern{{animal08}}s{{cloud}}</textarea>
             <input id="finalSwapInterval" type="range" min="60" max="1200" step="20" value="260">
           </label>
         </div>
-        <p class="hint">“纵向铺满”控制每一行从中心弹向上下的速度；收尾时整行持续缩小，图标按上方每一行状态依次切换。</p>
+        <p class="hint">“弹满屏用时”越短越快，可从 0.08 秒的瞬发调到 2 秒；收尾时目标字位先抖动、两侧让位，再弹出新图标。</p>
       </section>
 
       <details class="advanced-controls motion-advanced">

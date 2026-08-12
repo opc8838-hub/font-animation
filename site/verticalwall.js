@@ -18,7 +18,7 @@
     verticalDrift: $("#verticalDrift"), horizontalPhase: $("#horizontalPhase"), nextOpacity: $("#nextOpacity"),
     finalShrink: $("#finalShrink"), finalSwapInterval: $("#finalSwapInterval"),
     assetItemScale: $("#assetItemScale"),
-    assetOffsetX: $("#assetOffsetX"), assetOffsetY: $("#assetOffsetY")
+    assetOffsetX: $("#assetOffsetX"), assetOffsetY: $("#assetOffsetY"), assetPitch: $("#assetPitch")
   };
 
   const fontPresets = {
@@ -66,7 +66,7 @@
 
   function addAsset(id, label, src, removable = false) {
     const image = new Image();
-    const asset = { id, label, src, image, ratio: 1, ready: false, removable, scale: 1, offsetX: 0, offsetY: 0 };
+    const asset = { id, label, src, image, ratio: 1, ready: false, removable, scale: 1, offsetX: 0, offsetY: 0, pitch: 0 };
     image.onload = () => {
       asset.ratio = Math.max(.2, Math.min(5, image.naturalWidth / Math.max(1, image.naturalHeight)));
       asset.ready = true;
@@ -146,9 +146,11 @@
     inputs.assetItemScale.value = String(Math.round(asset.scale * 100));
     inputs.assetOffsetX.value = String(Math.round(asset.offsetX));
     inputs.assetOffsetY.value = String(Math.round(asset.offsetY));
+    inputs.assetPitch.value = String(Math.round(asset.pitch));
     $("#assetItemScaleOut").textContent = `${Math.round(asset.scale * 100)}%`;
     $("#assetOffsetXOut").textContent = `${Math.round(asset.offsetX)}%`;
     $("#assetOffsetYOut").textContent = `${Math.round(asset.offsetY)}%`;
+    $("#assetPitchOut").textContent = `${Math.round(asset.pitch)}°`;
   }
 
   function updateSelectedAsset() {
@@ -157,6 +159,7 @@
     asset.scale = Number(inputs.assetItemScale.value) / 100;
     asset.offsetX = Number(inputs.assetOffsetX.value);
     asset.offsetY = Number(inputs.assetOffsetY.value);
+    asset.pitch = Number(inputs.assetPitch.value);
     assetRevision += 1;
     layoutCache.clear();
     syncAssetTuner();
@@ -261,18 +264,27 @@
     const alpha = options.alpha ?? 1;
     const itemScale = options.scale ?? 1;
     const rotation = options.rotation ?? 0;
+    const pitch = item.type === "asset" ? (options.pitch ?? item.asset?.pitch ?? 0) : 0;
+    const pitchRadians = pitch * Math.PI / 180;
+    const pitchScale = Math.max(.58, Math.cos(pitchRadians));
+    const pitchLift = item.type === "asset" ? Math.sin(pitchRadians) * (item.height || 0) * .12 : 0;
     context.save();
     context.globalAlpha *= clamp01(alpha);
-    context.translate(x + item.width / 2 + (options.x || 0), y + (options.y || 0));
+    context.translate(x + item.width / 2 + (options.x || 0), y + (options.y || 0) - pitchLift);
     context.rotate(rotation);
-    context.scale(itemScale, itemScale);
+    context.scale(itemScale, itemScale * pitchScale);
     context.fillStyle = color;
     if (item.type === "text") {
       context.fillText(item.value, -item.width / 2, 0);
     } else if (item.asset?.ready) {
       const drawX = item.height * item.asset.offsetX / 100;
       const drawY = item.height * item.asset.offsetY / 100;
+      context.save();
+      context.shadowColor = "rgba(0, 0, 0, .20)";
+      context.shadowBlur = Math.max(2, item.height * .10);
+      context.shadowOffsetY = Math.sin(Math.abs(pitchRadians)) * item.height * .08 + item.height * .025;
       context.drawImage(item.asset.image, -item.width / 2 + drawX, -item.height / 2 + drawY, item.width, item.height);
+      context.restore();
     } else {
       context.strokeStyle = color;
       context.lineWidth = Math.max(1, item.height * .045);
@@ -399,6 +411,9 @@
       canvas.dataset.wallScale = inputs.wallScale.value;
       canvas.dataset.itemGap = inputs.itemGap.value;
       canvas.dataset.swapMotion = extras.swapMotion || "idle";
+      canvas.dataset.swapShake = String((extras.swapShake ?? 0).toFixed(3));
+      canvas.dataset.swapRoom = String((extras.swapRoom ?? 0).toFixed(3));
+      canvas.dataset.swapEnter = String((extras.swapEnter ?? 0).toFixed(3));
     };
 
     if (!choreography) {
@@ -489,10 +504,11 @@
       ? (inputs.nextWord.value.trim() || "togetherness")
       : finalStates[stateIndex - 2];
     const stateTime = mod(finalElapsed, swapInterval);
-    const transitionDuration = Math.min(.10, swapInterval * .34);
-    const swapProgress = stateIndex === 0 || rawStateIndex > finalStates.length
-      ? 1
-      : smoother(rangeProgress(stateTime, 0, transitionDuration));
+    const shakeDuration = Math.min(.09, swapInterval * .28);
+    const roomDuration = Math.min(.085, swapInterval * .25);
+    const popDuration = Math.min(.13, swapInterval * .38);
+    const roomStart = shakeDuration;
+    const popStart = shakeDuration + roomDuration * .62;
     const shrinkAmount = Number(inputs.finalShrink.value) / 100;
     const closingScale = 1 - shrinkAmount * smooth(finalProgress);
     const nextAlpha = Number(inputs.nextOpacity.value) / 100;
@@ -502,10 +518,12 @@
     const nextLayout = layoutTokens(context, nextLine, fontPx, assetHeight, itemGap);
     const hasSwap = stateIndex > 0 && rawStateIndex <= finalStates.length;
     const hasUpcomingSwap = stateIndex < finalStates.length;
-    const anticipationDuration = Math.min(.07, swapInterval * .24);
+    const anticipationDuration = Math.min(.09, swapInterval * .28);
     const anticipationStart = Math.max(0, swapInterval - anticipationDuration);
     const anticipation = hasUpcomingSwap ? smoother(rangeProgress(stateTime, anticipationStart, swapInterval)) : 0;
-    const enter = hasSwap ? smoother(rangeProgress(stateTime, 0, transitionDuration)) : 1;
+    const shake = hasSwap ? smoother(rangeProgress(stateTime, 0, shakeDuration)) : 1;
+    const room = hasSwap ? smoother(rangeProgress(stateTime, roomStart, roomStart + roomDuration)) : 1;
+    const enter = hasSwap ? smoother(rangeProgress(stateTime, popStart, popStart + popDuration)) : 1;
     const itemChanged = (before, after) => !before || !after || before.type !== after.type || before.value !== after.value || before.id !== after.id;
     const changedIndices = currentLayout.items.map((item, index) => index).filter((index) => itemChanged(previousLayout.items[index], currentLayout.items[index]));
     const upcomingChangedIndices = currentLayout.items.map((item, index) => index).filter((index) => itemChanged(currentLayout.items[index], nextLayout.items[index]));
@@ -530,30 +548,42 @@
       const previousX = previousPositions[index] ?? currentPositions[index];
       const currentX = currentPositions[index];
       const nextX = nextPositions[index] ?? currentX;
-      const transitionX = lerp(previousX, currentX, enter);
-      const makeRoomX = lerp(transitionX, nextX, anticipation * .32);
+      const transitionX = lerp(previousX, currentX, room);
+      const makeRoomX = lerp(transitionX, nextX, anticipation * .48);
       const preShake = upcomingChanged
-        ? Math.sin(anticipation * Math.PI * 4) * fontPx * .025 * (1 - anticipation * .45)
+        ? Math.sin(anticipation * Math.PI * 5) * fontPx * .06 * (1 - anticipation * .34)
         : 0;
-      const verticalKick = changed ? Math.sin(enter * Math.PI) * fontPx * (index % 2 ? .10 : -.10) : 0;
+      const activeShake = changed && hasSwap
+        ? Math.sin(shake * Math.PI * 6) * fontPx * .065 * (1 - shake * .28)
+        : 0;
+      const verticalKick = changed ? Math.sin(enter * Math.PI) * fontPx * (index % 2 ? .16 : -.16) : 0;
       if (changed && hasSwap && enter < .998 && previousLayout.items[index]) {
-        const exitKick = -Math.sin(enter * Math.PI) * fontPx * (index % 2 ? .055 : -.055);
+        const exitKick = -Math.sin(room * Math.PI) * fontPx * (index % 2 ? .08 : -.08);
         drawItem(context, previousLayout.items[index], transitionX, 0, inputs.foreground.value, {
-          alpha: 1 - enter, scale: lerp(1, .86, enter), y: exitKick
+          alpha: 1 - enter, scale: lerp(1, .78, enter), x: activeShake, y: exitKick,
+          pitch: previousLayout.items[index].type === "asset" ? (previousLayout.items[index].asset?.pitch || 0) - 20 * room : 0
         });
       }
       drawItem(context, item, makeRoomX, 0, inputs.foreground.value, {
         alpha: changed && hasSwap ? enter : 1,
-        scale: changed && hasSwap ? lerp(.84, 1, popEase(enter, .12)) : 1,
-        x: preShake,
-        y: verticalKick
+        scale: changed && hasSwap ? lerp(.55, 1, popEase(enter, .22)) : 1,
+        x: preShake + (changed && enter <= .001 ? activeShake : 0),
+        y: verticalKick,
+        pitch: changed && item.type === "asset"
+          ? lerp((item.asset?.pitch || 0) + (index % 2 ? 32 : -32), item.asset?.pitch || 0, easeOut(enter))
+          : 0
       });
     });
     context.restore();
     markPhase("final-shrink-swap", {
       finalState: stateIndex,
       finalScale: closingScale,
-      swapMotion: anticipation > .001 ? "anticipation-shake" : enter < .998 ? "replacement-kick" : "settled"
+      swapShake: shake,
+      swapRoom: room,
+      swapEnter: enter,
+      swapMotion: anticipation > .001
+        ? "anticipation-shake"
+        : shake < .998 ? "target-shake" : room < .998 ? "make-room" : enter < .998 ? "replacement-kick" : "settled"
     });
   }
 
@@ -638,7 +668,7 @@
   [inputs.wallScale, inputs.itemGap].forEach((input) => {
     input.addEventListener("input", () => setTime(choreographyTiming().singleEnd + choreographyTiming().duration[2] * .8));
   });
-  [inputs.assetItemScale, inputs.assetOffsetX, inputs.assetOffsetY].forEach((input) => {
+  [inputs.assetItemScale, inputs.assetOffsetX, inputs.assetOffsetY, inputs.assetPitch].forEach((input) => {
     input.addEventListener("input", updateSelectedAsset);
   });
   inputs.motionMode.addEventListener("change", () => setTime(0));
