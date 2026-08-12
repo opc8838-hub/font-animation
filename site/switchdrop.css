@@ -1,0 +1,49 @@
+.switchdrop-stage { background: #050505; }
+
+.switchdrop-panel { --panel-width: 350px; }
+
+.switchdrop-scene-grid label:nth-of-type(3),
+.switchdrop-scene-grid label:nth-of-type(4) { grid-column: auto; }
+
+.switchdrop-font-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, .8fr);
+  gap: 8px;
+}
+
+.switchdrop-font-grid label { min-width: 0; }
+.switchdrop-font-grid .section-label { display: block; margin-bottom: 7px; }
+
+.switchdrop-motion-map { grid-template-columns: auto 12px auto 12px auto 12px auto; }
+.switchdrop-motion-map span:nth-of-type(2) { background: #111 !important; color: #fff !important; }
+.switchdrop-motion-map span:nth-of-type(3) { background: #e8e8ed !important; color: #1d1d1f !important; }
+.switchdrop-motion-map span:nth-of-type(4) { background: #8075f4 !important; color: #fff !important; }
+
+.switchdrop-panel .stage-control-heading {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 5px;
+  padding: 8px 2px 3px;
+  border-top: 1px solid #d8d8d4;
+}
+
+.switchdrop-panel .stage-control-heading:first-child { margin-top: 0; border-top: 0; }
+.switchdrop-panel .stage-control-heading b { font: 750 11px/1.2 inherit; }
+.switchdrop-panel .stage-control-heading span { color: #77776f; font: 600 8px/1.2 "Courier New", monospace; }
+.switchdrop-panel .quick-grid label { min-height: 58px; }
+.switchdrop-panel .formula { color: #77776f; line-height: 1.55; }
+
+.switchdrop-asset-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.switchdrop-asset-grid .asset-insert { min-height: 64px; }
+.switchdrop-asset-grid .asset-insert img { width: 34px; height: 34px; object-fit: contain; }
+.switchdrop-asset-grid .asset-insert img.hely-source { border-radius: 50%; object-fit: cover; object-position: 13.2% 50%; }
+
+.switchdrop-colors { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.switchdrop-colors label:last-child { grid-column: 1 / -1; }
+
+@media (max-width: 720px) {
+  .switchdrop-panel { --panel-width: min(350px, calc(100vw - 20px)); }
+}

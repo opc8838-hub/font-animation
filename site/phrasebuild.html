@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="组句：词组逐个出现并自动重排居中的动态文字编辑器。">
+  <title>组句 Phrase Build | ME Motion Studio</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;f[]=general-sans@400,500,600&amp;display=swap">
+  <link rel="stylesheet" href="continuation.css">
+  <link rel="stylesheet" href="currentwall.css">
+  <link rel="stylesheet" href="phrasebuild.css?v=20260813-centered">
+  <link rel="stylesheet" href="me-motion-editor.css">
+  <link rel="stylesheet" href="stg-cn.css">
+</head>
+<body class="me-motion-editor">
+  <main class="current-stage phrase-build-stage" aria-label="组句动效画布">
+    <canvas id="flowCanvas"></canvas>
+    <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+  </main>
+
+  <details class="control-panel current-panel phrase-build-panel" id="controlPanel" open>
+    <summary><span><b>组句</b><small>PHRASE BUILD / 29</small></span><i aria-hidden="true">参数</i></summary>
+    <div class="panel-scroll">
+      <section>
+        <div class="section-heading"><p class="section-label">组词内容</p><small class="section-note">逐组累计出现</small></div>
+        <div class="phrase-list" id="phraseList"></div>
+        <button class="add-phrase" id="addPhrase" type="button">＋ 添加一组词</button>
+        <p class="hint">每组的“出现时间点”就像编曲落拍：第几秒到，它就第几秒出现。拖动会从这一拍前自动试听。</p>
+      </section>
+
+      <section class="font-picker">
+        <div class="color-font-grid">
+          <label><span class="section-label">字体</span><select id="fontFamily">
+            <option value="snap-inter-medium" selected>Inter Medium</option>
+            <option value="snap-inter-black">Inter Black</option>
+            <option value="snap-space-grotesk">Space Grotesk Bold</option>
+            <option value="fs-satoshi">Satoshi</option>
+            <option value="fs-general-sans">General Sans</option>
+            <option value="ib-manrope">Manrope</option>
+            <option value="ib-poppins">Poppins</option>
+            <option value="cn-noto-regular">Noto Sans SC</option>
+          </select></label>
+          <label><span class="section-label">字体粗细</span><select id="fontWeight">
+            <option value="300">Light · 300</option>
+            <option value="400">Regular · 400</option>
+            <option value="500" selected>Medium · 500</option>
+            <option value="600">Semibold · 600</option>
+            <option value="700">Bold · 700</option>
+            <option value="900">Black · 900</option>
+          </select></label>
+        </div>
+      </section>
+
+      <section class="motion-quick">
+        <div class="section-heading"><p class="section-label">排版与节奏</p><small class="section-note">固定起点 · 直接追加</small></div>
+        <div class="motion-map phrase-motion-map"><span>第一组</span><i>→</i><span>直接出现</span><i>→</i><span>继续追加</span></div>
+        <div class="controls-grid quick-grid">
+          <label class="beat-frequency-control">整体出现频率 <output id="beatIntervalOut">很快 · 每 0.26秒一组</output><input id="beatInterval" type="range" min="80" max="2000" step="20" value="260"></label>
+          <label>字号 <output id="fontSizeOut">48</output><input id="fontSize" type="range" min="18" max="180" value="48"></label>
+          <label>字距 <output id="trackingOut">-2px</output><input id="tracking" type="range" min="-12" max="36" value="-2"></label>
+          <label>组词间距 <output id="wordGapOut">12px</output><input id="wordGap" type="range" min="0" max="120" value="12"></label>
+          <label>水平中心 <output id="horizontalPositionOut">50%</output><input id="horizontalPosition" type="range" min="10" max="90" value="50"></label>
+          <label>垂直位置 <output id="verticalPositionOut">50%</output><input id="verticalPosition" type="range" min="10" max="90" value="50"></label>
+          <label>新增组默认显现 <output id="defaultRevealOut">0.07秒</output><input id="defaultReveal" type="range" min="0" max="1500" step="10" value="70"></label>
+          <label>循环前停留 <output id="loopHoldOut">1.2秒</output><input id="loopHold" type="range" min="100" max="8000" step="50" value="1200"></label>
+        </div>
+        <div class="beat-timeline-wrap">
+          <div class="beat-timeline-heading"><span>节拍轨道 · 直接拖动圆点</span><output id="beatTimelineDuration">0—8秒</output></div>
+          <div class="beat-timeline-scroll" id="beatTimelineScroll">
+            <div class="beat-timeline" id="beatTimeline" aria-label="拖动各组节拍点调整出现时间"></div>
+          </div>
+        </div>
+        <p class="hint">直接左右拖动 01 / 02 / 03 排节奏；松手会从头播放试听。靠近另一个点会吸附为同时出现，轨道可横向滚动到 8 秒。</p>
+      </section>
+
+      <section class="color-row">
+        <label>背景<input id="backgroundColor" type="color" value="#ffffff"></label>
+        <label>默认文字<input id="textColor" type="color" value="#050505"></label>
+      </section>
+
+      <section class="transport" aria-label="时间轴控制">
+        <button id="restartButton" type="button">重播</button><button id="pauseButton" type="button">暂停</button>
+        <button id="backButton" type="button">−1 帧</button><button id="forwardButton" type="button">+1 帧</button>
+      </section>
+
+      <section class="export-panel">
+        <label class="section-label" for="exportPreset">导出尺寸</label>
+        <select id="exportPreset">
+          <option value="current">当前画板</option><option value="1080x1080">1:1 · 1080 × 1080</option>
+          <option value="1080x1350">4:5 · 1080 × 1350</option><option value="1080x1920">9:16 · 1080 × 1920</option>
+          <option value="1920x1080">16:9 · 1920 × 1080</option><option value="custom">自定义尺寸</option>
+        </select>
+        <div class="custom-size" id="customSize" hidden><label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label><span>×</span><label>高<input id="exportHeight" type="number" min="240" max="3840" value="1920"></label></div>
+        <div class="export-actions">
+          <button id="exportPng" type="button">PNG 图片</button><button id="exportGif" type="button">GIF 动图</button><button id="exportVideo" type="button">视频</button>
+          <button class="export-hd-video" id="exportVerticalVideo" type="button">导出 9:16 高清视频 · 1080 × 1920</button>
+        </div>
+        <p class="export-status" id="exportStatus" aria-live="polite">完整导出所有组词的累计出现过程；Safari 会自动逐帧生成视频。</p>
+      </section>
+      <p class="formula">绝对出现时间点 + 独立显现速度<br>像编曲一样安排每一拍，预览与导出共享同一条时间线</p>
+    </div>
+  </details>
+
+  <script src="js/continuation-gif.js"></script>
+  <script src="CCapture.all.min.js"></script>
+  <script src="phrasebuild.js?v=20260813-centered"></script>
+  <script src="me-motion-editor.js"></script>
+  <script src="stg-cn.js"></script>
+</body>
+</html>

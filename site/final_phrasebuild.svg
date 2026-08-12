@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760">
+  <rect width="1200" height="760" fill="#fff"/>
+  <g fill="#111" font-family="Inter,Arial,sans-serif" font-weight="500" text-anchor="middle">
+    <text x="600" y="325" font-size="94">One</text>
+    <text x="600" y="430" font-size="94">One shared workspace</text>
+  </g>
+  <g fill="#0071e3"><circle cx="375" cy="405" r="9"/><circle cx="825" cy="405" r="9"/></g>
+</svg>

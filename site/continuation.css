@@ -164,9 +164,7 @@ button, summary, input[type="range"], input[type="color"] { cursor: pointer; }
   width: max-content;
   will-change: transform;
   font-family: var(--phrase-font, "Continuation Inter Medium"), "Continuation SC", sans-serif;
-  font-size: var(--phrase-size, 48px);
   font-style: var(--phrase-style, normal);
-  font-weight: var(--phrase-weight, 500);
   line-height: 1;
   letter-spacing: -.035em;
   font-kerning: normal;
@@ -174,14 +172,25 @@ button, summary, input[type="range"], input[type="color"] { cursor: pointer; }
 }
 
 .phrase-lead,
-.phrase-suffix { display: inline-block; }
+.phrase-suffix {
+  display: inline-block;
+  line-height: 1;
+}
+
+.phrase-lead {
+  font-size: var(--lead-size, 48px);
+  font-weight: var(--lead-weight, 500);
+}
 
 .phrase-suffix {
   position: absolute;
   left: 100%;
-  top: 0;
+  top: 50%;
+  translate: 0 -50%;
   visibility: hidden;
   will-change: transform;
+  font-size: var(--suffix-size, 48px);
+  font-weight: var(--suffix-weight, 500);
 }
 
 .sr-only {
@@ -257,6 +266,72 @@ button, summary, input[type="range"], input[type="color"] { cursor: pointer; }
 .panel-scroll section { margin: 0 0 16px; }
 .section-label { display: block; margin-bottom: 7px; font-size: 12px; font-weight: 700; }
 
+.section-heading {
+  margin-bottom: 9px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.section-heading .section-label { margin: 0 0 3px; }
+.section-kicker { margin: 0; color: #6b6b64; font: 9px/1.3 Consolas, monospace; }
+.section-kicker span { padding: 0 3px; color: var(--blue); }
+.add-pair-button {
+  min-height: 29px;
+  padding: 0 9px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+}
+.add-pair-button:disabled { cursor: not-allowed; opacity: .35; }
+
+.pair-editor-head,
+.pair-editor-row {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) 24px minmax(0, 1fr) 28px;
+  align-items: center;
+}
+.pair-editor-head {
+  margin-bottom: 4px;
+  color: #686861;
+  font: 9px/1 Consolas, monospace;
+}
+.pair-editor-head span:first-child { grid-column: 2; }
+.pair-editor-head i { grid-column: 3; text-align: center; font-style: normal; }
+.pair-editor-head span:last-child { grid-column: 4; }
+.pair-editor { display: grid; gap: 6px; }
+.pair-editor-row {
+  min-height: 39px;
+  border: 1px solid var(--ink);
+  background: white;
+}
+.pair-number { color: #74746d; text-align: center; font: 9px/1 Consolas, monospace; }
+.pair-editor-row label { min-width: 0; }
+.pair-editor-row input {
+  width: 100%;
+  min-width: 0;
+  height: 31px;
+  padding: 0 7px;
+  border: 0;
+  background: #f6f6f2;
+  color: var(--ink);
+  font: 11px/1 "Continuation Inter", "Continuation SC", sans-serif;
+}
+.pair-editor-row i { color: var(--blue); text-align: center; font-style: normal; font-weight: 800; }
+.remove-pair-button {
+  align-self: stretch;
+  border: 0;
+  border-left: 1px solid rgba(17,17,15,.18);
+  background: white;
+  color: #77776f;
+  font-size: 17px;
+  line-height: 1;
+}
+.remove-pair-button:hover:not(:disabled) { background: #ffebe6; color: #b62a13; }
+.remove-pair-button:disabled { cursor: not-allowed; opacity: .25; }
+
 textarea {
   width: 100%;
   min-height: 92px;
@@ -279,6 +354,35 @@ textarea {
   background: white;
   color: var(--ink);
   font-size: 12px;
+}
+
+.split-type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.type-side-card {
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid var(--ink);
+  background: white;
+}
+.type-side-card > b {
+  display: block;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(17,17,15,.15);
+  color: var(--blue);
+  font-size: 11px;
+}
+.type-side-card label { display: block; margin-top: 9px; font-size: 10px; font-weight: 700; }
+.type-side-card output { float: right; color: #62625c; font: 10px/1 Consolas, monospace; }
+.type-side-card input[type="range"] { width: 100%; margin: 7px 0 0; accent-color: var(--blue); }
+.type-side-card select {
+  width: 100%;
+  min-height: 31px;
+  margin-top: 6px;
+  padding: 5px;
+  border: 1px solid #b8b8b0;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 10px;
 }
 
 .hint, .formula {
@@ -344,6 +448,48 @@ textarea {
 }
 .color-row input { width: 30px; height: 24px; padding: 0; border: 0; background: none; }
 
+.continuation-colors label {
+  min-height: 48px;
+  padding: 8px 10px;
+}
+.continuation-colors input[type="color"] {
+  width: 32px !important;
+  height: 32px !important;
+  flex: 0 0 32px;
+  padding: 2px !important;
+  border: 1px solid #c7c7cc !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,.06);
+}
+.continuation-colors input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.continuation-colors input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 5px; }
+.color-presets {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.color-presets button {
+  min-width: 0;
+  min-height: 34px !important;
+  padding: 6px 8px !important;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 7px;
+  background: #f3f3f5 !important;
+  font-size: 10px !important;
+}
+.color-presets i {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  border: 1px solid #b8b8bd;
+  border-radius: 5px;
+  background: var(--swatch);
+}
+
 .transport { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
 .transport button, .export-actions button {
   min-height: 36px;
@@ -381,6 +527,14 @@ textarea {
 .custom-size span { padding-bottom: 7px; }
 .export-actions { margin-top: 8px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
 .export-actions button:first-child { background: var(--blue); color: white; }
+.export-actions .export-hd-video {
+  grid-column: 1 / -1;
+  min-height: 46px;
+  background: #111 !important;
+  color: #fff !important;
+  font-size: 12px !important;
+}
+.export-actions .export-hd-video:hover { background: var(--blue) !important; }
 .export-actions button:disabled { cursor: wait; opacity: .48; }
 .export-status { min-height: 30px; margin: 7px 0 0; color: #66665f; font-size: 10px; line-height: 1.45; }
 

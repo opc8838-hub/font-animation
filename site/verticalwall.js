@@ -8,7 +8,11 @@
   const fps = 30;
   const inputs = {
     rows: $("#rowsInput"), font: $("#fontFamily"), fontSize: $("#fontSize"),
-    lineGap: $("#lineGap"), assetScale: $("#assetScale"), rowCount: $("#rowCount"), wallScale: $("#wallScale"), itemGap: $("#itemGap"),
+    lineGap: $("#lineGap"), assetScale: $("#assetScale"), introAssetGap: $("#introAssetGap"),
+    rowCount: $("#rowCount"), wallScale: $("#wallScale"), itemGap: $("#itemGap"),
+    wallFontSize: $("#wallFontSize"), wallAssetScale: $("#wallAssetScale"),
+    wallTextGap: $("#wallTextGap"), wallAssetGap: $("#wallAssetGap"),
+    finalFontSize: $("#finalFontSize"), finalAssetScale: $("#finalAssetScale"), finalTextGap: $("#finalTextGap"),
     background: $("#backgroundColor"), foreground: $("#textColor"),
     motionMode: $("#motionMode"), introWord: $("#introWord"), nextWord: $("#nextWord"), finalStates: $("#finalStates"),
     collapseDirection: $("#collapseDirection"), introDuration: $("#introDuration"),
@@ -17,6 +21,9 @@
     bounce: $("#bounce"), stagger: $("#stagger"), edgeFade: $("#edgeFade"),
     verticalDrift: $("#verticalDrift"), horizontalPhase: $("#horizontalPhase"), nextOpacity: $("#nextOpacity"),
     finalShrink: $("#finalShrink"), finalSwapInterval: $("#finalSwapInterval"),
+    swapShakeStrength: $("#swapShakeStrength"), swapShakeDuration: $("#swapShakeDuration"),
+    swapTransitionDuration: $("#swapTransitionDuration"), swapBreathing: $("#swapBreathing"), swapAngle: $("#swapAngle"),
+    swapAppearanceMode: $("#swapAppearanceMode"), swapStagger: $("#swapStagger"),
     assetItemScale: $("#assetItemScale"),
     assetOffsetX: $("#assetOffsetX"), assetOffsetY: $("#assetOffsetY"), assetPitch: $("#assetPitch")
   };
@@ -244,8 +251,8 @@
     ? Array.from(new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(value), (part) => part.segment)
     : Array.from(value);
 
-  function layoutTokens(context, line, fontPx, assetHeight, itemGap) {
-    const cacheKey = [line, context.font, fontPx.toFixed(3), assetHeight.toFixed(3), itemGap.toFixed(3), assetRevision].join("|");
+  function layoutTokens(context, line, fontPx, assetHeight, textGap, assetGap = textGap) {
+    const cacheKey = [line, context.font, fontPx.toFixed(3), assetHeight.toFixed(3), textGap.toFixed(3), assetGap.toFixed(3), assetRevision].join("|");
     const cached = layoutCache.get(cacheKey);
     if (cached) return cached;
     const items = tokensFor(line).flatMap((token) => {
@@ -254,7 +261,13 @@
       const tunedHeight = assetHeight * (asset?.scale || 1);
       return [{ ...token, asset, width: tunedHeight * (asset?.ratio || 1), height: tunedHeight }];
     });
-    const layout = { items, gap: itemGap, width: Math.max(fontPx, items.reduce((sum, item) => sum + item.width, 0) + itemGap * Math.max(0, items.length - 1)) };
+    const gaps = items.slice(0, -1).map((item, index) => (
+      item.type === "asset" || items[index + 1]?.type === "asset" ? assetGap : textGap
+    ));
+    const layout = {
+      items, gaps, textGap, assetGap,
+      width: Math.max(fontPx, items.reduce((sum, item) => sum + item.width, 0) + gaps.reduce((sum, gap) => sum + gap, 0))
+    };
     if (layoutCache.size > 240) layoutCache.clear();
     layoutCache.set(cacheKey, layout);
     return layout;
@@ -265,14 +278,18 @@
     const itemScale = options.scale ?? 1;
     const rotation = options.rotation ?? 0;
     const pitch = item.type === "asset" ? (options.pitch ?? item.asset?.pitch ?? 0) : 0;
+    const yaw = item.type === "asset" ? (options.yaw ?? 0) : 0;
     const pitchRadians = pitch * Math.PI / 180;
+    const yawRadians = yaw * Math.PI / 180;
     const pitchScale = Math.max(.58, Math.cos(pitchRadians));
+    const yawScale = Math.max(.58, Math.cos(yawRadians));
     const pitchLift = item.type === "asset" ? Math.sin(pitchRadians) * (item.height || 0) * .12 : 0;
+    const yawShift = item.type === "asset" ? Math.sin(yawRadians) * (item.height || 0) * .08 : 0;
     context.save();
     context.globalAlpha *= clamp01(alpha);
-    context.translate(x + item.width / 2 + (options.x || 0), y + (options.y || 0) - pitchLift);
+    context.translate(x + item.width / 2 + (options.x || 0) + yawShift, y + (options.y || 0) - pitchLift);
     context.rotate(rotation);
-    context.scale(itemScale, itemScale * pitchScale);
+    context.scale(itemScale * yawScale, itemScale * pitchScale);
     context.fillStyle = color;
     if (item.type === "text") {
       context.fillText(item.value, -item.width / 2, 0);
@@ -282,6 +299,7 @@
       context.save();
       context.shadowColor = "rgba(0, 0, 0, .20)";
       context.shadowBlur = Math.max(2, item.height * .10);
+      context.shadowOffsetX = Math.sin(yawRadians) * item.height * .06;
       context.shadowOffsetY = Math.sin(Math.abs(pitchRadians)) * item.height * .08 + item.height * .025;
       context.drawImage(item.asset.image, -item.width / 2 + drawX, -item.height / 2 + drawY, item.width, item.height);
       context.restore();
@@ -297,7 +315,7 @@
     let cursor = x;
     layout.items.forEach((item, index) => {
       drawItem(context, item, cursor, y, color, { rotation: item.type === "asset" ? assetRotation : 0 });
-      cursor += item.width + (index < layout.items.length - 1 ? layout.gap : 0);
+      cursor += item.width + (layout.gaps[index] || 0);
     });
   }
 
@@ -357,10 +375,28 @@
     const rows = parseRows();
     const preset = fontPresets[inputs.font.value] || fontPresets["snap-inter-medium"];
     const scale = h / 900;
-    const fontPx = Math.max(8, Number(inputs.fontSize.value) * scale);
-    const lineHeight = Math.max(fontPx * .66, fontPx + Number(inputs.lineGap.value) * scale);
-    const assetHeight = fontPx * Number(inputs.assetScale.value) / 100;
-    const itemGap = Number(inputs.itemGap.value) * scale;
+    const introFontPx = Math.max(8, Number(inputs.fontSize.value) * scale);
+    const wallFontPx = Math.max(8, Number(inputs.wallFontSize.value) * scale);
+    const finalFontPx = Math.max(8, Number(inputs.finalFontSize.value) * scale);
+    const introStage = {
+      fontPx: introFontPx,
+      assetHeight: introFontPx * Number(inputs.assetScale.value) / 100,
+      textGap: Number(inputs.itemGap.value) * scale,
+      assetGap: Number(inputs.introAssetGap.value) * scale
+    };
+    const wallStage = {
+      fontPx: wallFontPx,
+      assetHeight: wallFontPx * Number(inputs.wallAssetScale.value) / 100,
+      textGap: Number(inputs.wallTextGap.value) * scale,
+      assetGap: Number(inputs.wallAssetGap.value) * scale
+    };
+    const finalStage = {
+      fontPx: finalFontPx,
+      assetHeight: finalFontPx * Number(inputs.finalAssetScale.value) / 100,
+      textGap: Number(inputs.finalTextGap.value) * scale,
+      assetGap: Number(inputs.swapBreathing.value) * scale
+    };
+    const lineHeight = Math.max(wallFontPx * .66, wallFontPx + Number(inputs.lineGap.value) * scale);
     const requestedRows = Math.max(3, Math.round(Number(inputs.rowCount.value)) | 1);
     const maxRowsForCanvas = Math.max(3, (Math.ceil(h / Math.max(1, lineHeight)) + 4) | 1);
     const uniqueRowCount = rows.length % 2 === 0 ? Math.max(1, rows.length - 1) : rows.length;
@@ -375,31 +411,31 @@
     const horizontalPhase = Number(inputs.horizontalPhase.value) * scale;
     const verticalSpeed = Number(inputs.verticalDrift.value) * scale;
 
-    context.font = `${preset.style} ${preset.weight} ${fontPx}px "${preset.family}", "Continuation SC", sans-serif`;
+    const fontFor = (stage) => `${preset.style} ${preset.weight} ${stage.fontPx}px "${preset.family}", "Continuation SC", sans-serif`;
+    context.font = fontFor(introStage);
     context.textAlign = "left";
     context.textBaseline = "middle";
     context.imageSmoothingEnabled = true;
 
     const centerSource = Math.floor(rows.length / 2);
     const lineForLane = (lane) => rows[mod(centerSource + lane, rows.length)];
-    const wallLayouts = new Map(rows.map((line) => [line, layoutTokens(context, line, fontPx, assetHeight, itemGap)]));
-    const wallContentWidth = Math.max(fontPx, ...Array.from(wallLayouts.values(), (layout) => layout.width));
+    context.font = fontFor(wallStage);
+    const wallLayouts = new Map(rows.map((line) => [line, layoutTokens(
+      context, line, wallStage.fontPx, wallStage.assetHeight, wallStage.textGap, wallStage.assetGap
+    )]));
     const wallZoom = Number(inputs.wallScale.value) / 100;
-    const drawCentered = (line, y, xOffset = 0, alpha = 1, rowScale = 1, fillWidth = false) => {
-      const layout = fillWidth
-        ? (wallLayouts.get(line) || layoutTokens(context, line, fontPx, assetHeight, 0))
-        : layoutTokens(context, line, fontPx, assetHeight, itemGap);
+    const drawCentered = (line, y, xOffset = 0, alpha = 1, rowScale = 1, stage = introStage) => {
+      context.font = fontFor(stage);
+      const isWall = stage === wallStage;
+      const layout = isWall
+        ? (wallLayouts.get(line) || layoutTokens(context, line, stage.fontPx, stage.assetHeight, stage.textGap, stage.assetGap))
+        : layoutTokens(context, line, stage.fontPx, stage.assetHeight, stage.textGap, stage.assetGap);
       context.save();
       context.globalAlpha *= clamp01(alpha);
       context.translate(w / 2 + xOffset, h / 2 + y);
-      const compositionScale = rowScale * (fillWidth ? wallZoom : 1);
+      const compositionScale = rowScale * (isWall ? wallZoom : 1);
       context.scale(compositionScale, compositionScale);
-      if (fillWidth) {
-        context.scale(wallContentWidth / Math.max(1, layout.width), 1);
-        drawSequence(context, layout, -layout.width / 2, 0, inputs.foreground.value);
-      } else {
-        drawSequence(context, layout, -layout.width / 2, 0, inputs.foreground.value);
-      }
+      drawSequence(context, layout, -layout.width / 2, 0, inputs.foreground.value);
       context.restore();
     };
     const markPhase = (phase, extras = {}) => {
@@ -409,11 +445,29 @@
       canvas.dataset.finalState = String(extras.finalState ?? -1);
       canvas.dataset.finalScale = String((extras.finalScale ?? 1).toFixed(4));
       canvas.dataset.wallScale = inputs.wallScale.value;
-      canvas.dataset.itemGap = inputs.itemGap.value;
+      canvas.dataset.introFontSize = inputs.fontSize.value;
+      canvas.dataset.introAssetScale = inputs.assetScale.value;
+      canvas.dataset.introTextGap = inputs.itemGap.value;
+      canvas.dataset.introAssetGap = inputs.introAssetGap.value;
+      canvas.dataset.wallFontSize = inputs.wallFontSize.value;
+      canvas.dataset.wallAssetScale = inputs.wallAssetScale.value;
+      canvas.dataset.wallTextGap = inputs.wallTextGap.value;
+      canvas.dataset.wallAssetGap = inputs.wallAssetGap.value;
+      canvas.dataset.finalFontSize = inputs.finalFontSize.value;
+      canvas.dataset.finalAssetScale = inputs.finalAssetScale.value;
+      canvas.dataset.finalTextGap = inputs.finalTextGap.value;
+      canvas.dataset.finalAssetGap = inputs.swapBreathing.value;
       canvas.dataset.swapMotion = extras.swapMotion || "idle";
       canvas.dataset.swapShake = String((extras.swapShake ?? 0).toFixed(3));
       canvas.dataset.swapRoom = String((extras.swapRoom ?? 0).toFixed(3));
       canvas.dataset.swapEnter = String((extras.swapEnter ?? 0).toFixed(3));
+      canvas.dataset.swapTargets = String(extras.swapTargets ?? 0);
+      canvas.dataset.swapMode = extras.swapMode || inputs.swapAppearanceMode.value;
+      canvas.dataset.swapStagger = String(((extras.swapStagger ?? Number(inputs.swapStagger.value) / 1000) * 1000).toFixed(1));
+      canvas.dataset.swapFarShift = String((extras.swapFarShift ?? 0).toFixed(3));
+      canvas.dataset.swapLocalSpread = String((extras.swapLocalSpread ?? 0).toFixed(3));
+      canvas.dataset.swapEntryAngle = String((extras.swapEntryAngle ?? 0).toFixed(2));
+      canvas.dataset.swapMinGap = String((extras.swapMinGap ?? 0).toFixed(3));
     };
 
     if (!choreography) {
@@ -423,7 +477,7 @@
         let y = lane * lineHeight * wallZoom + drift;
         if (y < -(halfRows + 1) * lineHeight * wallZoom) y += loopHeight;
         if (y > (halfRows + 1) * lineHeight * wallZoom) y -= loopHeight;
-        drawCentered(lineForLane(lane), y, horizontalPhase, 1, 1, true);
+        drawCentered(lineForLane(lane), y, horizontalPhase, 1, 1, wallStage);
       }
       markPhase("continuous", { rows: rowCount });
       return;
@@ -432,7 +486,7 @@
     if (localTime < timing.introEnd) {
       const progress = rangeProgress(localTime, 0, timing.introEnd);
       const breathingScale = lerp(.98, 1, easeOut(progress));
-      drawCentered(inputs.introWord.value.trim() || "motivation", 0, 0, 1, breathingScale);
+      drawCentered(inputs.introWord.value.trim() || "motivation", 0, 0, 1, breathingScale, introStage);
       markPhase("intro-single");
       return;
     }
@@ -442,11 +496,11 @@
       const progress = rangeProgress(localTime, timing.introEnd, timing.singleEnd);
       const outgoing = 1 - easeOut(rangeProgress(progress, 0, .28));
       if (outgoing > .002) {
-        drawCentered(inputs.introWord.value.trim() || "motivation", 0, 0, outgoing, lerp(1, .76, easeOut(progress)));
+        drawCentered(inputs.introWord.value.trim() || "motivation", 0, 0, outgoing, lerp(1, .76, easeOut(progress)), introStage);
       }
       const arrival = popEase(rangeProgress(progress, .08, .82), Math.min(.28, bounceStrength));
       const arrivalAlpha = easeOut(rangeProgress(progress, .08, .28));
-      drawCentered(primaryLine, 0, 0, arrivalAlpha, lerp(.72, 1, arrival));
+      drawCentered(primaryLine, 0, 0, arrivalAlpha, lerp(.72, 1, arrival), wallStage);
       markPhase("line-pop");
       return;
     }
@@ -480,14 +534,14 @@
         const exitScale = lerp(1, 1.10, easeOut(collapseProgress));
         const y = lane * lineHeight * wallZoom * spreadPosition + driftY;
         const rowScale = lerp(.76, 1, appear) * exitScale;
-        drawCentered(lineForLane(lane), y, horizontalPhase, alpha, rowScale, true);
+        drawCentered(lineForLane(lane), y, horizontalPhase, alpha, rowScale, wallStage);
       }
 
       if (localTime >= timing.holdEnd) {
         const nextReveal = smoother(rangeProgress(collapseProgress, .38, .92));
         const nextAlpha = Number(inputs.nextOpacity.value) / 100 * nextReveal;
         const nextY = lerp(lineHeight * .34, 0, easeOut(nextReveal));
-        drawCentered(inputs.nextWord.value.trim() || "togetherness", nextY, 0, nextAlpha, lerp(1.08, 1, easeOut(nextReveal)));
+        drawCentered(inputs.nextWord.value.trim() || "togetherness", nextY, 0, nextAlpha, lerp(1.08, 1, easeOut(nextReveal)), finalStage);
       }
       markPhase(localTime < timing.spreadEnd ? "wall-spread" : localTime < timing.holdEnd ? "wall-full" : "wall-exit", { rows: rowCount });
       return;
@@ -496,81 +550,117 @@
     const finalElapsed = Math.max(0, localTime - timing.collapseEnd);
     const finalProgress = rangeProgress(localTime, timing.collapseEnd, timing.finalEnd);
     const finalStates = parseFinalStates();
-    const swapInterval = Math.max(.06, Number(inputs.finalSwapInterval.value) / 1000);
-    const rawStateIndex = Math.floor(finalElapsed / swapInterval);
-    const stateIndex = Math.min(finalStates.length, rawStateIndex);
-    const currentLine = stateIndex === 0 ? (inputs.nextWord.value.trim() || "togetherness") : finalStates[stateIndex - 1];
-    const previousLine = stateIndex <= 1
-      ? (inputs.nextWord.value.trim() || "togetherness")
-      : finalStates[stateIndex - 2];
-    const stateTime = mod(finalElapsed, swapInterval);
-    const shakeDuration = Math.min(.09, swapInterval * .28);
-    const roomDuration = Math.min(.085, swapInterval * .25);
-    const popDuration = Math.min(.13, swapInterval * .38);
+    const baseLine = inputs.nextWord.value.trim() || "togetherness";
+    const shakeDuration = Math.max(.03, Number(inputs.swapShakeDuration.value) / 1000);
+    const popDuration = Math.max(.06, Number(inputs.swapTransitionDuration.value) / 1000);
+    const roomDuration = Math.max(.04, Math.min(.14, popDuration * .46));
+    const holdDuration = Math.max(.06, Number(inputs.finalSwapInterval.value) / 1000);
+    const swapStepDuration = shakeDuration + roomDuration + popDuration + holdDuration;
+    const simultaneous = inputs.swapAppearanceMode.value === "simultaneous";
+    const staggerSeconds = Number(inputs.swapStagger.value) / 1000;
+    const rawStateIndex = simultaneous ? 1 : Math.floor(finalElapsed / swapStepDuration) + 1;
+    const stateIndex = simultaneous ? (finalStates.length ? finalStates.length : 0) : Math.min(finalStates.length, rawStateIndex);
+    const currentLine = stateIndex === 0 ? baseLine : finalStates[stateIndex - 1];
+    const previousLine = simultaneous || stateIndex <= 1 ? baseLine : finalStates[stateIndex - 2];
+    const stateTime = simultaneous ? finalElapsed : mod(finalElapsed, swapStepDuration);
     const roomStart = shakeDuration;
-    const popStart = shakeDuration + roomDuration * .62;
+    const popStart = shakeDuration + roomDuration;
     const shrinkAmount = Number(inputs.finalShrink.value) / 100;
     const closingScale = 1 - shrinkAmount * smooth(finalProgress);
     const nextAlpha = Number(inputs.nextOpacity.value) / 100;
-    const currentLayout = layoutTokens(context, currentLine, fontPx, assetHeight, itemGap);
-    const previousLayout = layoutTokens(context, previousLine, fontPx, assetHeight, itemGap);
-    const nextLine = stateIndex < finalStates.length ? finalStates[stateIndex] : currentLine;
-    const nextLayout = layoutTokens(context, nextLine, fontPx, assetHeight, itemGap);
-    const hasSwap = stateIndex > 0 && rawStateIndex <= finalStates.length;
-    const hasUpcomingSwap = stateIndex < finalStates.length;
-    const anticipationDuration = Math.min(.09, swapInterval * .28);
-    const anticipationStart = Math.max(0, swapInterval - anticipationDuration);
-    const anticipation = hasUpcomingSwap ? smoother(rangeProgress(stateTime, anticipationStart, swapInterval)) : 0;
-    const shake = hasSwap ? smoother(rangeProgress(stateTime, 0, shakeDuration)) : 1;
-    const room = hasSwap ? smoother(rangeProgress(stateTime, roomStart, roomStart + roomDuration)) : 1;
-    const enter = hasSwap ? smoother(rangeProgress(stateTime, popStart, popStart + popDuration)) : 1;
+    const stateLines = [baseLine, ...finalStates];
+    context.font = fontFor(finalStage);
+    const stateLayouts = stateLines.map((line) => layoutTokens(
+      context, line, finalStage.fontPx, finalStage.assetHeight, finalStage.textGap, finalStage.assetGap
+    ));
+    const currentLayout = stateLayouts[stateIndex] || layoutTokens(context, currentLine, finalStage.fontPx, finalStage.assetHeight, finalStage.textGap, finalStage.assetGap);
+    const previousLayoutIndex = simultaneous ? 0 : Math.max(0, stateIndex - 1);
+    const previousLayout = stateLayouts[previousLayoutIndex] || layoutTokens(context, previousLine, finalStage.fontPx, finalStage.assetHeight, finalStage.textGap, finalStage.assetGap);
     const itemChanged = (before, after) => !before || !after || before.type !== after.type || before.value !== after.value || before.id !== after.id;
     const changedIndices = currentLayout.items.map((item, index) => index).filter((index) => itemChanged(previousLayout.items[index], currentLayout.items[index]));
-    const upcomingChangedIndices = currentLayout.items.map((item, index) => index).filter((index) => itemChanged(currentLayout.items[index], nextLayout.items[index]));
-    const positions = (layout) => {
-      let cursor = -layout.width / 2;
+    const changedRank = new Map(changedIndices.map((index, rank) => [index, rank]));
+    const staggerTail = simultaneous ? staggerSeconds * Math.max(0, changedIndices.length - 1) : 0;
+    const simultaneousEnd = shakeDuration + roomDuration + popDuration + staggerTail;
+    const hasSwap = simultaneous ? finalElapsed < simultaneousEnd : rawStateIndex <= finalStates.length;
+    const progressFor = (index, phaseStart, duration) => {
+      const delay = simultaneous ? (changedRank.get(index) || 0) * staggerSeconds : 0;
+      return smoother(rangeProgress(stateTime, phaseStart + delay, phaseStart + delay + duration));
+    };
+    const layoutRoom = simultaneous
+      ? smoother(rangeProgress(stateTime, roomStart, roomStart + roomDuration + staggerTail))
+      : (hasSwap ? smoother(rangeProgress(stateTime, roomStart, roomStart + roomDuration)) : 1);
+    const representativeIndex = changedIndices[0] ?? 0;
+    const shake = hasSwap ? progressFor(representativeIndex, 0, shakeDuration) : 1;
+    const room = hasSwap ? layoutRoom : 1;
+    const enter = hasSwap ? progressFor(representativeIndex, popStart, popDuration) : 1;
+    const safePositions = (layout) => {
+      const occupiedWidth = layout.items.reduce((sum, item, index) => (
+        sum + item.width + (layout.gaps[index] || 0)
+      ), 0);
+      let cursor = -occupiedWidth / 2;
       return layout.items.map((item, index) => {
         const position = cursor;
-        cursor += item.width + (index < layout.items.length - 1 ? layout.gap : 0);
+        cursor += item.width + (layout.gaps[index] || 0);
         return position;
       });
     };
-    const previousPositions = positions(previousLayout);
-    const currentPositions = positions(currentLayout);
-    const nextPositions = positions(nextLayout);
+    const previousPositions = safePositions(previousLayout);
+    const currentPositions = safePositions(currentLayout);
+    const shakeAmplitude = finalFontPx * Number(inputs.swapShakeStrength.value) / 100;
+    const entryAngle = Number(inputs.swapAngle.value);
+    const targetSet = new Set(changedIndices);
+    const farShift = currentPositions.reduce((maximum, position, index) => targetSet.has(index)
+      ? maximum
+      : Math.max(maximum, Math.abs(position - (previousPositions[index] ?? position))), 0);
+    const localSpread = changedIndices.reduce((maximum, index) => {
+      const leftShift = index > 0 ? Math.abs(currentPositions[index - 1] - previousPositions[index - 1]) : 0;
+      const rightShift = index + 1 < currentPositions.length ? Math.abs(currentPositions[index + 1] - previousPositions[index + 1]) : 0;
+      return Math.max(maximum, leftShift + rightShift);
+    }, 0);
+    const assetClearance = currentPositions.slice(1).reduce((minimum, position, index) => {
+      const leftItem = currentLayout.items[index];
+      const rightItem = currentLayout.items[index + 1];
+      if (leftItem.type !== "asset" && rightItem.type !== "asset") return minimum;
+      return Math.min(minimum, position - (currentPositions[index] + leftItem.width));
+    }, Infinity);
     context.save();
     context.globalAlpha *= nextAlpha;
     context.translate(w / 2, h / 2);
     context.scale(closingScale, closingScale);
     currentLayout.items.forEach((item, index) => {
       const changed = changedIndices.includes(index);
-      const upcomingChanged = upcomingChangedIndices.includes(index);
+      const itemShake = changed && hasSwap ? progressFor(index, 0, shakeDuration) : 1;
+      const itemEnter = changed && hasSwap ? progressFor(index, popStart, popDuration) : 1;
       const previousX = previousPositions[index] ?? currentPositions[index];
       const currentX = currentPositions[index];
-      const nextX = nextPositions[index] ?? currentX;
-      const transitionX = lerp(previousX, currentX, room);
-      const makeRoomX = lerp(transitionX, nextX, anticipation * .48);
-      const preShake = upcomingChanged
-        ? Math.sin(anticipation * Math.PI * 5) * fontPx * .06 * (1 - anticipation * .34)
-        : 0;
+      const transitionX = lerp(previousX, currentX, layoutRoom);
       const activeShake = changed && hasSwap
-        ? Math.sin(shake * Math.PI * 6) * fontPx * .065 * (1 - shake * .28)
+        ? Math.sin(itemShake * Math.PI * 8) * shakeAmplitude * (1 - itemShake * .34)
         : 0;
-      const verticalKick = changed ? Math.sin(enter * Math.PI) * fontPx * (index % 2 ? .16 : -.16) : 0;
-      if (changed && hasSwap && enter < .998 && previousLayout.items[index]) {
-        const exitKick = -Math.sin(room * Math.PI) * fontPx * (index % 2 ? .08 : -.08);
-        drawItem(context, previousLayout.items[index], transitionX, 0, inputs.foreground.value, {
-          alpha: 1 - enter, scale: lerp(1, .78, enter), x: activeShake, y: exitKick,
-          pitch: previousLayout.items[index].type === "asset" ? (previousLayout.items[index].asset?.pitch || 0) - 20 * room : 0
+      const activeShakeY = changed && hasSwap
+        ? Math.sin(itemShake * Math.PI * 6 + Math.PI / 2) * shakeAmplitude * .18 * (1 - itemShake)
+        : 0;
+      const verticalKick = changed ? Math.sin(itemEnter * Math.PI) * finalFontPx * (index % 2 ? .16 : -.16) : 0;
+      const entryDirection = index % 2 ? 1 : -1;
+      const entryPitch = entryDirection * entryAngle * (1 - easeOut(itemEnter));
+      const entryYaw = -entryDirection * entryAngle * .78 * (1 - easeOut(itemEnter));
+      const entryRotation = entryDirection * entryAngle * .22 * Math.PI / 180 * (1 - easeOut(itemEnter));
+      if (changed && hasSwap && itemEnter < .998 && previousLayout.items[index]) {
+        const exitKick = -Math.sin(layoutRoom * Math.PI) * finalFontPx * (index % 2 ? .08 : -.08);
+        drawItem(context, previousLayout.items[index], previousX, 0, inputs.foreground.value, {
+          alpha: 1 - itemEnter, scale: lerp(1, .78, itemEnter), x: activeShake, y: activeShakeY + exitKick,
+          pitch: previousLayout.items[index].type === "asset" ? (previousLayout.items[index].asset?.pitch || 0) - 20 * layoutRoom : 0
         });
       }
-      drawItem(context, item, makeRoomX, 0, inputs.foreground.value, {
-        alpha: changed && hasSwap ? enter : 1,
-        scale: changed && hasSwap ? lerp(.55, 1, popEase(enter, .22)) : 1,
-        x: preShake + (changed && enter <= .001 ? activeShake : 0),
+      drawItem(context, item, transitionX, 0, inputs.foreground.value, {
+        alpha: changed && hasSwap ? itemEnter : 1,
+        scale: changed && hasSwap ? lerp(.55, 1, popEase(itemEnter, .22)) : 1,
+        x: 0,
         y: verticalKick,
+        rotation: changed && item.type === "asset" ? entryRotation : 0,
+        yaw: changed && item.type === "asset" ? entryYaw : 0,
         pitch: changed && item.type === "asset"
-          ? lerp((item.asset?.pitch || 0) + (index % 2 ? 32 : -32), item.asset?.pitch || 0, easeOut(enter))
+          ? (item.asset?.pitch || 0) + entryPitch
           : 0
       });
     });
@@ -581,9 +671,14 @@
       swapShake: shake,
       swapRoom: room,
       swapEnter: enter,
-      swapMotion: anticipation > .001
-        ? "anticipation-shake"
-        : shake < .998 ? "target-shake" : room < .998 ? "make-room" : enter < .998 ? "replacement-kick" : "settled"
+      swapTargets: changedIndices.length,
+      swapMode: simultaneous ? "simultaneous" : "sequential",
+      swapStagger: staggerSeconds,
+      swapFarShift: farShift,
+      swapLocalSpread: localSpread,
+      swapEntryAngle: entryAngle * (1 - easeOut(enter)),
+      swapMinGap: Number.isFinite(assetClearance) ? assetClearance : 0,
+      swapMotion: shake < .998 ? "target-shake" : room < .998 ? "make-room" : enter < .998 ? "replacement-kick" : "settled"
     });
   }
 
@@ -636,12 +731,20 @@
     const timing = choreographyTiming();
     const formatSeconds = (seconds) => `${seconds < 1 ? seconds.toFixed(2) : seconds.toFixed(1)}秒`;
     const values = {
-      fontSizeOut: inputs.fontSize.value,
-      lineGapOut: inputs.lineGap.value,
+      fontSizeOut: `${inputs.fontSize.value}px`,
+      lineGapOut: `${inputs.lineGap.value}px`,
       assetScaleOut: `${inputs.assetScale.value}%`,
+      introAssetGapOut: `${inputs.introAssetGap.value}px`,
       rowCountOut: inputs.rowCount.value,
+      wallFontSizeOut: `${inputs.wallFontSize.value}px`,
+      wallAssetScaleOut: `${inputs.wallAssetScale.value}%`,
+      wallTextGapOut: `${inputs.wallTextGap.value}px`,
+      wallAssetGapOut: `${inputs.wallAssetGap.value}px`,
       wallScaleOut: `${inputs.wallScale.value}%`,
       itemGapOut: `${inputs.itemGap.value}px`,
+      finalFontSizeOut: `${inputs.finalFontSize.value}px`,
+      finalAssetScaleOut: `${inputs.finalAssetScale.value}%`,
+      finalTextGapOut: `${inputs.finalTextGap.value}px`,
       cycleDurationOut: formatSeconds(timing.cycle),
       introDurationOut: formatSeconds(timing.duration[0]),
       singleDurationOut: formatSeconds(timing.duration[1]),
@@ -650,7 +753,13 @@
       collapseDurationOut: formatSeconds(timing.duration[4]),
       finalDurationOut: formatSeconds(timing.duration[5]),
       finalShrinkOut: `${inputs.finalShrink.value}%`,
+      swapStaggerOut: `${inputs.swapStagger.value}ms`,
       finalSwapIntervalOut: `${inputs.finalSwapInterval.value}ms`,
+      swapShakeStrengthOut: `${inputs.swapShakeStrength.value}%`,
+      swapShakeDurationOut: `${inputs.swapShakeDuration.value}ms`,
+      swapTransitionDurationOut: `${inputs.swapTransitionDuration.value}ms`,
+      swapBreathingOut: `${inputs.swapBreathing.value}px`,
+      swapAngleOut: `${inputs.swapAngle.value}°`,
       bounceOut: `${inputs.bounce.value}%`,
       staggerOut: `${inputs.stagger.value}%`,
       edgeFadeOut: `${inputs.edgeFade.value}%`,
@@ -659,14 +768,26 @@
       nextOpacityOut: `${inputs.nextOpacity.value}%`
     };
     Object.entries(values).forEach(([id, value]) => { $(`#${id}`).textContent = value; });
+    inputs.swapStagger.disabled = inputs.swapAppearanceMode.value !== "simultaneous";
+    inputs.finalSwapInterval.disabled = inputs.swapAppearanceMode.value === "simultaneous";
     document.documentElement.style.setProperty("--text-color", inputs.foreground.value);
   }
 
   Object.values(inputs).forEach((input) => input.addEventListener("input", updateOutputs));
-  inputs.finalSwapInterval.addEventListener("input", () => setTime(choreographyTiming().collapseEnd));
+  [inputs.finalSwapInterval, inputs.swapShakeStrength, inputs.swapShakeDuration, inputs.swapTransitionDuration,
+    inputs.swapBreathing, inputs.swapAngle, inputs.finalDuration, inputs.finalFontSize,
+    inputs.finalAssetScale, inputs.finalTextGap, inputs.swapStagger]
+    .forEach((input) => input.addEventListener("input", () => setTime(choreographyTiming().collapseEnd + .025)));
+  inputs.swapAppearanceMode.addEventListener("change", () => {
+    updateOutputs();
+    setTime(choreographyTiming().collapseEnd + .025);
+  });
   inputs.finalShrink.addEventListener("input", () => setTime(choreographyTiming().collapseEnd + choreographyTiming().duration[5] * .7));
-  [inputs.wallScale, inputs.itemGap].forEach((input) => {
+  [inputs.wallScale, inputs.wallFontSize, inputs.wallAssetScale, inputs.wallTextGap, inputs.wallAssetGap, inputs.lineGap].forEach((input) => {
     input.addEventListener("input", () => setTime(choreographyTiming().singleEnd + choreographyTiming().duration[2] * .8));
+  });
+  [inputs.fontSize, inputs.assetScale, inputs.itemGap, inputs.introAssetGap].forEach((input) => {
+    input.addEventListener("input", () => setTime(choreographyTiming().duration[0] * .5));
   });
   [inputs.assetItemScale, inputs.assetOffsetX, inputs.assetOffsetY, inputs.assetPitch].forEach((input) => {
     input.addEventListener("input", updateSelectedAsset);

@@ -137,30 +137,58 @@ t{{music}}ge{{animal01}}hern{{animal08}}s{{cloud}}</textarea>
       <section class="motion-quick">
         <div class="section-heading">
           <p class="section-label">常用调节</p>
-          <small class="section-note">先调这 14 项</small>
+          <small class="section-note">开场 / 满屏 / 收尾独立</small>
         </div>
         <div class="motion-map vertical-motion-map" aria-label="动效阶段">
           <span>开场单行</span><i>→</i><span>新行弹出</span><i>→</i><span>铺满屏幕</span><i>→</i><span>满屏退场</span><i>→</i><span>单行缩小</span><i>→</i><span>图标依次切换</span>
         </div>
         <div class="controls-grid quick-grid">
-          <label>字号 <small class="stage-tag">画面</small><output id="fontSizeOut">76</output>
+          <div class="stage-control-heading"><b>01 开场单行</b><span>文字与图标独立排版</span></div>
+          <label>开场文字大小 <small class="stage-tag">开场单行</small><output id="fontSizeOut">76px</output>
             <input id="fontSize" type="range" min="24" max="160" value="76">
           </label>
-          <label>行距 <small class="stage-tag">画面</small><output id="lineGapOut">-8</output>
-            <input id="lineGap" type="range" min="-35" max="100" value="-8">
-          </label>
-          <label>图标大小 <small class="stage-tag">画面</small><output id="assetScaleOut">92%</output>
+          <label>开场图标大小 <small class="stage-tag">开场单行</small><output id="assetScaleOut">92%</output>
             <input id="assetScale" type="range" min="45" max="180" value="92">
           </label>
+          <label>开场文字间距 <small class="stage-tag">开场单行</small><output id="itemGapOut">0px</output>
+            <input id="itemGap" type="range" min="-8" max="40" value="0">
+          </label>
+          <label>开场字图间距 <small class="stage-tag">开场单行</small><output id="introAssetGapOut">0px</output>
+            <input id="introAssetGap" type="range" min="0" max="80" value="0">
+          </label>
+          <div class="stage-control-heading"><b>02 满屏铺开</b><span>只影响周围铺满的各行</span></div>
           <label>铺满行数 <small class="stage-tag">画面</small><output id="rowCountOut">11</output>
             <input id="rowCount" type="range" min="3" max="21" step="2" value="11">
           </label>
-          <label>满屏文字大小 <small class="stage-tag">画面</small><output id="wallScaleOut">112%</output>
-            <input id="wallScale" type="range" min="80" max="180" value="112">
+          <label>满屏文字大小 <small class="stage-tag">铺满阶段</small><output id="wallFontSizeOut">85px</output>
+            <input id="wallFontSize" type="range" min="18" max="160" value="85">
           </label>
-          <label>字图间距 <small class="stage-tag">画面</small><output id="itemGapOut">0px</output>
-            <input id="itemGap" type="range" min="-8" max="40" value="0">
+          <label>满屏图标大小 <small class="stage-tag">铺满阶段</small><output id="wallAssetScaleOut">92%</output>
+            <input id="wallAssetScale" type="range" min="35" max="220" value="92">
           </label>
+          <label>满屏文字间距 <small class="stage-tag">铺满阶段</small><output id="wallTextGapOut">0px</output>
+            <input id="wallTextGap" type="range" min="-12" max="60" value="0">
+          </label>
+          <label>满屏字图间距 <small class="stage-tag">铺满阶段</small><output id="wallAssetGapOut">0px</output>
+            <input id="wallAssetGap" type="range" min="0" max="80" value="0">
+          </label>
+          <label>满屏行距 <small class="stage-tag">铺满阶段</small><output id="lineGapOut">-8px</output>
+            <input id="lineGap" type="range" min="-35" max="100" value="-8">
+          </label>
+          <label>满屏整体缩放 <small class="stage-tag">铺满阶段</small><output id="wallScaleOut">100%</output>
+            <input id="wallScale" type="range" min="60" max="160" value="100">
+          </label>
+          <div class="stage-control-heading"><b>03 收尾单行</b><span>文字、图标与间距独立</span></div>
+          <label>收尾文字大小 <small class="stage-tag">最终一行</small><output id="finalFontSizeOut">76px</output>
+            <input id="finalFontSize" type="range" min="18" max="180" value="76">
+          </label>
+          <label>收尾图标大小 <small class="stage-tag">最终一行</small><output id="finalAssetScaleOut">92%</output>
+            <input id="finalAssetScale" type="range" min="35" max="220" value="92">
+          </label>
+          <label>收尾文字间距 <small class="stage-tag">最终一行</small><output id="finalTextGapOut">0px</output>
+            <input id="finalTextGap" type="range" min="-12" max="60" value="0">
+          </label>
+          <div class="stage-control-heading"><b>04 时间与替换</b><span>控制节奏和局部图标切换</span></div>
           <label>开场停留 <small class="stage-tag">阶段 1</small><output id="introDurationOut">0.30秒</output>
             <input id="introDuration" type="range" min="100" max="2000" step="50" value="300">
           </label>
@@ -176,17 +204,41 @@ t{{music}}ge{{animal01}}hern{{animal08}}s{{cloud}}</textarea>
           <label>满屏退场 <small class="stage-tag">阶段 5</small><output id="collapseDurationOut">0.30秒</output>
             <input id="collapseDuration" type="range" min="150" max="4000" step="50" value="300">
           </label>
-          <label>收尾动效 <small class="stage-tag">阶段 6</small><output id="finalDurationOut">2.4秒</output>
-            <input id="finalDuration" type="range" min="600" max="8000" step="100" value="2400">
+          <label>收尾总时长 <small class="stage-tag">阶段 6</small><output id="finalDurationOut">2.4秒</output>
+            <input id="finalDuration" type="range" min="600" max="12000" step="100" value="2400">
           </label>
           <label>收尾缩小 <small class="stage-tag">阶段 6</small><output id="finalShrinkOut">28%</output>
             <input id="finalShrink" type="range" min="0" max="55" value="28">
           </label>
-          <label>图标切换间隔 <small class="stage-tag">阶段 6</small><output id="finalSwapIntervalOut">260ms</output>
+          <label>图标出现方式 <small class="stage-tag">收尾替换</small>
+            <select id="swapAppearanceMode">
+              <option value="simultaneous" selected>几乎同时出现</option>
+              <option value="sequential">按状态逐个出现</option>
+            </select>
+          </label>
+          <label>同时出现错开 <small class="stage-tag">同时模式</small><output id="swapStaggerOut">18ms</output>
+            <input id="swapStagger" type="range" min="0" max="120" step="2" value="18">
+          </label>
+          <label>逐个模式停留 <small class="stage-tag">只用于逐个</small><output id="finalSwapIntervalOut">260ms</output>
             <input id="finalSwapInterval" type="range" min="60" max="1200" step="20" value="260">
           </label>
+          <label>局部震动幅度 <small class="stage-tag">目标字位</small><output id="swapShakeStrengthOut">6%</output>
+            <input id="swapShakeStrength" type="range" min="0" max="18" value="6">
+          </label>
+          <label>局部震动时长 <small class="stage-tag">目标字位</small><output id="swapShakeDurationOut">90ms</output>
+            <input id="swapShakeDuration" type="range" min="30" max="300" step="10" value="90">
+          </label>
+          <label>单次替换速度 <small class="stage-tag">图标弹出</small><output id="swapTransitionDurationOut">140ms</output>
+            <input id="swapTransitionDuration" type="range" min="60" max="500" step="10" value="140">
+          </label>
+          <label>收尾字图间距 <small class="stage-tag">最终一行</small><output id="swapBreathingOut">14px</output>
+            <input id="swapBreathing" type="range" min="0" max="80" step="1" value="14">
+          </label>
+          <label>图标弹出摆角 <small class="stage-tag">上下左右</small><output id="swapAngleOut">36°</output>
+            <input id="swapAngle" type="range" min="0" max="65" value="36">
+          </label>
         </div>
-        <p class="hint">“弹满屏用时”越短越快，可从 0.08 秒的瞬发调到 2 秒；收尾时目标字位先抖动、两侧让位，再弹出新图标。</p>
+        <p class="hint">“几乎同时出现”会直接读取收尾状态列表的最后一行，让全部目标字位在同一动作内震动、让位和弹出；错开设为 0ms 就是完全同时。“按状态逐个出现”保留原来的逐行变化方式。</p>
       </section>
 
       <details class="advanced-controls motion-advanced">

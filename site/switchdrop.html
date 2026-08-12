@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="降临：主体下落时驱动整屏明暗切换，落定后左移并弹出品牌标题。">
+  <title>降临 Switch Drop | ME Motion Studio</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;f[]=general-sans@400,500,600&amp;f[]=clash-display@500,600&amp;f[]=cabinet-grotesk@500,700&amp;display=swap">
+  <link rel="stylesheet" href="continuation.css">
+  <link rel="stylesheet" href="currentwall.css">
+  <link rel="stylesheet" href="switchdrop.css?v=20260813-hdvideo">
+  <link rel="stylesheet" href="me-motion-editor.css">
+  <link rel="stylesheet" href="stg-cn.css">
+</head>
+<body class="me-motion-editor">
+  <main class="current-stage switchdrop-stage" aria-label="降临明暗切换动效画布">
+    <canvas id="flowCanvas"></canvas>
+    <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+  </main>
+
+  <details class="control-panel current-panel switchdrop-panel" id="controlPanel" open>
+    <summary>
+      <span><b>降临</b><small>SWITCH DROP / 32</small></span>
+      <i aria-hidden="true">参数</i>
+    </summary>
+    <div class="panel-scroll">
+      <section class="scene-grid switchdrop-scene-grid">
+        <label>明暗方向
+          <select id="switchMode">
+            <option value="dark-to-light" selected>黑 → 白 · 黑字显现</option>
+            <option value="light-to-dark">白 → 黑 · 白字显现</option>
+          </select>
+        </label>
+        <label>明暗形态
+          <select id="switchShape">
+            <option value="uniform" selected>整屏连续调光 · 原效果</option>
+            <option value="center-iris">中心聚光收拢 · 新增</option>
+          </select>
+        </label>
+        <label>主体类型
+          <select id="subjectMode">
+            <option value="asset" selected>图标 / 图片</option>
+            <option value="text">文字</option>
+          </select>
+        </label>
+        <label>主体文字
+          <input id="subjectText" type="text" value="ME" spellcheck="false">
+        </label>
+        <label>右侧标题
+          <input id="titleText" type="text" value="hely.fun" spellcheck="false">
+        </label>
+        <p class="hint">主体从画面上方连续降临，落点不等待便转向左移；左移启动时才打开整屏灰阶开关，右侧标题随背景亮起逐渐可见。</p>
+      </section>
+
+      <section class="asset-section">
+        <div class="section-heading">
+          <p class="section-label">主体图片 / 图标</p>
+          <label class="upload-button">添加图片<input id="assetUpload" type="file" accept="image/*" multiple></label>
+        </div>
+        <label class="asset-background-toggle"><input id="assetRemoveBackground" type="checkbox" checked> 上传时自动去背景并裁掉透明空白</label>
+        <label class="asset-background-toggle"><input id="nightLogoEnabled" type="checkbox" checked> Hely Logo 进入暗部时自动切换夜光版本</label>
+        <p class="asset-process-status" id="assetProcessStatus" aria-live="polite">普通状态只使用你第一次提供的 Hely Logo，不添加阴影；进入暗部才交接夜光版本。</p>
+        <div class="asset-grid switchdrop-asset-grid" id="assetGrid"></div>
+        <p class="hint">这里只控制一个中心主体。上传多张后可随时切换，原图在浏览器本地处理，不会上传到服务器。</p>
+      </section>
+
+      <section class="font-picker">
+        <div class="switchdrop-font-grid">
+          <label><span class="section-label">标题字体</span><select id="fontFamily">
+            <option value="fs-satoshi" selected>Satoshi</option>
+            <option value="snap-inter-black">Inter Black</option>
+            <option value="fs-general-sans">General Sans</option>
+            <option value="snap-space-grotesk">Space Grotesk</option>
+            <option value="fs-cabinet">Cabinet Grotesk</option>
+            <option value="cn-noto-black">Noto Sans SC Black</option>
+          </select></label>
+          <label><span class="section-label">字体粗细</span><select id="fontWeight">
+            <option value="400">Regular · 400</option>
+            <option value="500">Medium · 500</option>
+            <option value="600">Semibold · 600</option>
+            <option value="700" selected>Bold · 700</option>
+            <option value="900">Black · 900</option>
+          </select></label>
+        </div>
+      </section>
+
+      <section class="motion-quick">
+        <div class="section-heading"><p class="section-label">动作与排版</p><small class="section-note">降临 / 开关 / 品牌展开</small></div>
+        <div class="motion-map switchdrop-motion-map" aria-label="动效阶段">
+          <span>顶部降临</span><i>→</i><span>整屏调光</span><i>→</i><span>主体左移</span><i>→</i><span>标题弹出</span>
+        </div>
+        <div class="controls-grid quick-grid">
+          <div class="stage-control-heading"><b>01 主体降临</b><span>图片与文字共用</span></div>
+          <label>主体大小 <small class="stage-tag">主体</small><output id="subjectSizeOut">190px</output>
+            <input id="subjectSize" type="range" min="50" max="420" value="190">
+          </label>
+          <label>开始高度 <small class="stage-tag">画面外</small><output id="startYOut">-24%</output>
+            <input id="startY" type="range" min="-70" max="0" value="-24">
+          </label>
+          <label>落点高度 <small class="stage-tag">最终构图</small><output id="endYOut">50%</output>
+            <input id="endY" type="range" min="25" max="75" value="50">
+          </label>
+          <label>下降时长 <small class="stage-tag">物理曲线</small><output id="dropDurationOut">1.15秒</output>
+            <input id="dropDuration" type="range" min="250" max="3200" step="10" value="1150">
+          </label>
+          <label>下降速度 <small class="stage-tag">速度倍率</small><output id="dropSpeedOut">1.00×</output>
+            <input id="dropSpeed" type="range" min="25" max="300" step="5" value="100">
+          </label>
+          <label>到底停顿 <small class="stage-tag">再开始左移</small><output id="settleDurationOut">0.00秒</output>
+            <input id="settleDuration" type="range" min="0" max="5000" step="10" value="0">
+          </label>
+          <label>下降惯性 <small class="stage-tag">收尾</small><output id="dropOvershootOut">0%</output>
+            <input id="dropOvershoot" type="range" min="0" max="22" value="0">
+          </label>
+          <label>其他素材阴影 <small class="stage-tag">Hely 不添加</small><output id="subjectShadowOut">0%</output>
+            <input id="subjectShadow" type="range" min="0" max="60" value="0">
+          </label>
+
+          <div class="stage-control-heading"><b>02 明暗开关</b><span>与左移同帧启动</span></div>
+          <label>亮起延后 <small class="stage-tag">相对左移</small><output id="switchDelayOut">0.00秒</output>
+            <input id="switchDelay" type="range" min="0" max="1200" step="10" value="0">
+          </label>
+          <label>切换时长 <small class="stage-tag">灰阶</small><output id="switchDurationOut">0.78秒</output>
+            <input id="switchDuration" type="range" min="120" max="3000" step="10" value="780">
+          </label>
+          <label>开关曲线 <small class="stage-tag">速度</small>
+            <select id="switchEase">
+              <option value="cinematic" selected>电影调光 · 慢入快出</option>
+              <option value="balanced">平衡丝滑</option>
+              <option value="snappy">快速开关</option>
+            </select>
+          </label>
+          <label>暗角羽化 <small class="stage-tag">中心模式</small><output id="irisSoftnessOut">72%</output>
+            <input id="irisSoftness" type="range" min="20" max="95" value="72">
+          </label>
+          <div class="stage-control-heading"><b>02B 夜光 Logo 交接</b><span>只作用于 Hely Logo</span></div>
+          <label>暗部临界 <small class="stage-tag">背景进度</small><output id="nightThresholdOut">62%</output>
+            <input id="nightThreshold" type="range" min="20" max="90" value="62">
+          </label>
+          <label>融合时长 <small class="stage-tag">精确到 0.01 秒</small><output id="nightBlendDurationOut">0.18秒</output>
+            <input id="nightBlendDuration" type="range" min="0" max="600" step="10" value="180">
+          </label>
+          <label>夜光强度 <small class="stage-tag">外圈光晕</small><output id="nightGlowOut">100%</output>
+            <input id="nightGlow" type="range" min="30" max="180" value="100">
+          </label>
+
+          <div class="stage-control-heading"><b>03 Logo 与标题</b><span>左移与弹出同步</span></div>
+          <label>左移时长 <small class="stage-tag">主体</small><output id="shiftDurationOut">0.46秒</output>
+            <input id="shiftDuration" type="range" min="100" max="1800" step="10" value="460">
+          </label>
+          <label>标题弹出 <small class="stage-tag">右侧</small><output id="titleDurationOut">0.42秒</output>
+            <input id="titleDuration" type="range" min="80" max="1800" step="10" value="420">
+          </label>
+          <label>标题延后 <small class="stage-tag">相对左移</small><output id="titleDelayOut">0.06秒</output>
+            <input id="titleDelay" type="range" min="0" max="900" step="10" value="60">
+          </label>
+          <label>标题大小 <small class="stage-tag">文字</small><output id="titleSizeOut">112px</output>
+            <input id="titleSize" type="range" min="28" max="260" value="112">
+          </label>
+          <label>Logo 与标题间距 <small class="stage-tag">最终</small><output id="titleGapOut">42px</output>
+            <input id="titleGap" type="range" min="0" max="180" value="42">
+          </label>
+          <label>标题字距 <small class="stage-tag">文字</small><output id="titleTrackingOut">-3px</output>
+            <input id="titleTracking" type="range" min="-12" max="40" value="-3">
+          </label>
+          <label>标题弹性 <small class="stage-tag">弹出</small><output id="titleSpringOut">18%</output>
+            <input id="titleSpring" type="range" min="0" max="55" value="18">
+          </label>
+          <label>结束定格 <small class="stage-tag">循环等待</small><output id="holdDurationOut">3.50秒</output>
+            <input id="holdDuration" type="range" min="500" max="12000" step="50" value="3500">
+          </label>
+        </div>
+        <p class="hint">“整屏连续调光”保留之前的丝滑效果；明暗切换完成后会锁定最终颜色，整个“结束定格”期间绝不反向播放，到下一轮开始才重置。</p>
+      </section>
+
+      <section class="color-row switchdrop-colors">
+        <label>开始背景<input id="startColor" type="color" value="#050505"></label>
+        <label>结束背景<input id="endColor" type="color" value="#ffffff"></label>
+        <label>标题颜色<input id="titleColor" type="color" value="#050505"></label>
+        <label>标点颜色<input id="dotColor" type="color" value="#8277f5"></label>
+        <label>文字主体<input id="subjectColor" type="color" value="#8277f5"></label>
+      </section>
+
+      <section class="transport" aria-label="时间轴控制">
+        <button id="restartButton" type="button">重播</button>
+        <button id="pauseButton" type="button">暂停</button>
+        <button id="backButton" type="button">−1 帧</button>
+        <button id="forwardButton" type="button">+1 帧</button>
+      </section>
+
+      <section class="export-panel">
+        <label class="section-label" for="exportPreset">导出尺寸</label>
+        <select id="exportPreset">
+          <option value="current">当前画板</option>
+          <option value="1080x1080">1:1 · 1080 × 1080</option>
+          <option value="1080x1350">4:5 · 1080 × 1350</option>
+          <option value="1080x1920">9:16 · 1080 × 1920</option>
+          <option value="1920x1080">16:9 · 1920 × 1080</option>
+          <option value="1200x628">横幅 · 1200 × 628</option>
+          <option value="custom">自定义尺寸</option>
+        </select>
+        <div class="custom-size" id="customSize" hidden>
+          <label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label><span>×</span>
+          <label>高<input id="exportHeight" type="number" min="240" max="3840" value="1080"></label>
+        </div>
+        <div class="export-actions">
+          <button id="exportPng" type="button">PNG 图片</button>
+          <button id="exportGif" type="button">GIF 动图</button>
+          <button id="exportVideo" type="button">视频</button>
+          <button class="export-hd-video" id="exportVerticalVideo" type="button">导出 9:16 高清视频 · 1080 × 1920</button>
+        </div>
+        <p class="export-status" id="exportStatus" aria-live="polite">9:16 高清视频会导出一次完整降临编排；Safari 会自动逐帧生成视频。</p>
+      </section>
+      <p class="formula">主体 Y 与整屏亮度共享同一时钟<br>品牌展开 = 主体左移 × 标题遮罩弹出</p>
+    </div>
+  </details>
+
+  <script src="js/continuation-gif.js"></script>
+  <script src="CCapture.all.min.js"></script>
+  <script src="token-asset-tools.js"></script>
+  <script src="switchdrop.js?v=20260813-hdvideo"></script>
+  <script src="me-motion-editor.js"></script>
+  <script src="stg-cn.js"></script>
+</body>
+</html>

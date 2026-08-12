@@ -9,6 +9,9 @@ const effects = [
   ["currentwall", "流墙", "Current Wall", "flow", "水流字墙"],
   ["verticalwall", "纵跃", "Vertical Rise", "flow", "纵向弹出"],
   ["creatorstudio", "汇聚", "Creator Merge", "type", "字位重组"],
+  ["colorrecompose", "彩组", "Color Recompose", "type", "彩色重组"],
+  ["phrasebuild", "组句", "Phrase Build", "type", "累计组词"],
+  ["switchdrop", "降临", "Switch Drop", "graphic", "主体降临 × 明暗开关"],
   ["pathwriter", "轨书", "Path Writer", "type", "路径书写"],
   ["construct", "构筑", "Construct", "graphic", "图形系统"],
   ["crash", "碰撞", "Crash", "physics", "物理粒子"],
@@ -48,7 +51,7 @@ function render() {
 
   grid.innerHTML = visible.map(([slug, zh, en, , categoryName]) => {
     const index = effects.findIndex((effect) => effect[0] === slug) + 1;
-    const imageName = slug === "crashclock" ? "final_crashclock.png" : slug === "iconburst" ? "final_iconburst.svg" : `final_${slug}.png`;
+    const imageName = slug === "crashclock" ? "final_crashclock.png" : ["iconburst", "colorrecompose", "phrasebuild", "switchdrop"].includes(slug) ? `final_${slug}.svg` : `final_${slug}.png`;
     const target = slug === "flash" ? "flash-scenes.html" : `${slug}.html`;
     const detail = slug === "flash" ? "13 个独立子风格" : categoryName;
     return `
