@@ -8,7 +8,7 @@
   const fps = 30;
   const inputs = {
     rows: $("#rowsInput"), font: $("#fontFamily"), fontSize: $("#fontSize"),
-    lineGap: $("#lineGap"), assetScale: $("#assetScale"), rowCount: $("#rowCount"),
+    lineGap: $("#lineGap"), assetScale: $("#assetScale"), rowCount: $("#rowCount"), wallScale: $("#wallScale"), itemGap: $("#itemGap"),
     background: $("#backgroundColor"), foreground: $("#textColor"),
     motionMode: $("#motionMode"), introWord: $("#introWord"), nextWord: $("#nextWord"), finalStates: $("#finalStates"),
     collapseDirection: $("#collapseDirection"), introDuration: $("#introDuration"),
@@ -237,49 +237,55 @@
   };
   const easeOut = (value) => 1 - Math.pow(1 - clamp01(value), 3);
   const rangeProgress = (value, from, to) => clamp01((value - from) / (to - from));
+  const graphemes = (value) => typeof Intl.Segmenter === "function"
+    ? Array.from(new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(value), (part) => part.segment)
+    : Array.from(value);
 
-  function layoutTokens(context, line, fontPx, assetHeight, repeatGap) {
-    const cacheKey = [line, context.font, fontPx.toFixed(3), assetHeight.toFixed(3), repeatGap.toFixed(3), assetRevision].join("|");
+  function layoutTokens(context, line, fontPx, assetHeight, itemGap) {
+    const cacheKey = [line, context.font, fontPx.toFixed(3), assetHeight.toFixed(3), itemGap.toFixed(3), assetRevision].join("|");
     const cached = layoutCache.get(cacheKey);
     if (cached) return cached;
-    const items = tokensFor(line).map((token) => {
-      if (token.type === "text") return { ...token, width: context.measureText(token.value).width };
+    const items = tokensFor(line).flatMap((token) => {
+      if (token.type === "text") return graphemes(token.value).map((value) => ({ type: "text", value, width: context.measureText(value).width }));
       const asset = assets.get(token.id);
       const tunedHeight = assetHeight * (asset?.scale || 1);
-      return { ...token, asset, width: tunedHeight * (asset?.ratio || 1), height: tunedHeight };
+      return [{ ...token, asset, width: tunedHeight * (asset?.ratio || 1), height: tunedHeight }];
     });
-    const layout = { items, width: Math.max(fontPx, items.reduce((sum, item) => sum + item.width, 0) + repeatGap) };
+    const layout = { items, gap: itemGap, width: Math.max(fontPx, items.reduce((sum, item) => sum + item.width, 0) + itemGap * Math.max(0, items.length - 1)) };
     if (layoutCache.size > 240) layoutCache.clear();
     layoutCache.set(cacheKey, layout);
     return layout;
   }
 
+  function drawItem(context, item, x, y, color, options = {}) {
+    const alpha = options.alpha ?? 1;
+    const itemScale = options.scale ?? 1;
+    const rotation = options.rotation ?? 0;
+    context.save();
+    context.globalAlpha *= clamp01(alpha);
+    context.translate(x + item.width / 2 + (options.x || 0), y + (options.y || 0));
+    context.rotate(rotation);
+    context.scale(itemScale, itemScale);
+    context.fillStyle = color;
+    if (item.type === "text") {
+      context.fillText(item.value, -item.width / 2, 0);
+    } else if (item.asset?.ready) {
+      const drawX = item.height * item.asset.offsetX / 100;
+      const drawY = item.height * item.asset.offsetY / 100;
+      context.drawImage(item.asset.image, -item.width / 2 + drawX, -item.height / 2 + drawY, item.width, item.height);
+    } else {
+      context.strokeStyle = color;
+      context.lineWidth = Math.max(1, item.height * .045);
+      context.strokeRect(-item.width / 2 + 1, -item.height / 2, Math.max(2, item.width - 2), item.height);
+    }
+    context.restore();
+  }
+
   function drawSequence(context, layout, x, y, color, assetRotation = 0) {
     let cursor = x;
-    context.fillStyle = color;
-    layout.items.forEach((item) => {
-      if (item.type === "text") {
-        context.fillText(item.value, cursor, y);
-      } else if (item.asset?.ready) {
-        const drawX = cursor + item.height * item.asset.offsetX / 100;
-        const drawY = y + item.height * item.asset.offsetY / 100;
-        if (assetRotation) {
-          context.save();
-          context.translate(drawX + item.width / 2, drawY);
-          context.rotate(assetRotation);
-          context.drawImage(item.asset.image, -item.width / 2, -item.height / 2, item.width, item.height);
-          context.restore();
-        } else {
-          context.drawImage(item.asset.image, drawX, drawY - item.height / 2, item.width, item.height);
-        }
-      } else {
-        context.save();
-        context.strokeStyle = color;
-        context.lineWidth = Math.max(1, item.height * .045);
-        context.strokeRect(cursor + 1, y - item.height / 2, Math.max(2, item.width - 2), item.height);
-        context.restore();
-      }
-      cursor += item.width;
+    layout.items.forEach((item, index) => {
+      drawItem(context, item, cursor, y, color, { rotation: item.type === "asset" ? assetRotation : 0 });
+      cursor += item.width + (index < layout.items.length - 1 ? layout.gap : 0);
     });
   }
 
@@ -342,6 +348,7 @@
     const fontPx = Math.max(8, Number(inputs.fontSize.value) * scale);
     const lineHeight = Math.max(fontPx * .66, fontPx + Number(inputs.lineGap.value) * scale);
     const assetHeight = fontPx * Number(inputs.assetScale.value) / 100;
+    const itemGap = Number(inputs.itemGap.value) * scale;
     const requestedRows = Math.max(3, Math.round(Number(inputs.rowCount.value)) | 1);
     const maxRowsForCanvas = Math.max(3, (Math.ceil(h / Math.max(1, lineHeight)) + 4) | 1);
     const uniqueRowCount = rows.length % 2 === 0 ? Math.max(1, rows.length - 1) : rows.length;
@@ -363,13 +370,13 @@
 
     const centerSource = Math.floor(rows.length / 2);
     const lineForLane = (lane) => rows[mod(centerSource + lane, rows.length)];
-    const wallLayouts = new Map(rows.map((line) => [line, layoutTokens(context, line, fontPx, assetHeight, 0)]));
+    const wallLayouts = new Map(rows.map((line) => [line, layoutTokens(context, line, fontPx, assetHeight, itemGap)]));
     const wallContentWidth = Math.max(fontPx, ...Array.from(wallLayouts.values(), (layout) => layout.width));
-    const wallZoom = Math.max(1, Math.min(1.75, w * .96 / Math.max(1, wallContentWidth)));
+    const wallZoom = Number(inputs.wallScale.value) / 100;
     const drawCentered = (line, y, xOffset = 0, alpha = 1, rowScale = 1, fillWidth = false) => {
       const layout = fillWidth
         ? (wallLayouts.get(line) || layoutTokens(context, line, fontPx, assetHeight, 0))
-        : layoutTokens(context, line, fontPx, assetHeight, 0);
+        : layoutTokens(context, line, fontPx, assetHeight, itemGap);
       context.save();
       context.globalAlpha *= clamp01(alpha);
       context.translate(w / 2 + xOffset, h / 2 + y);
@@ -389,6 +396,9 @@
       canvas.dataset.renderedRows = String(extras.rows ?? 1);
       canvas.dataset.finalState = String(extras.finalState ?? -1);
       canvas.dataset.finalScale = String((extras.finalScale ?? 1).toFixed(4));
+      canvas.dataset.wallScale = inputs.wallScale.value;
+      canvas.dataset.itemGap = inputs.itemGap.value;
+      canvas.dataset.swapMotion = extras.swapMotion || "idle";
     };
 
     if (!choreography) {
@@ -486,11 +496,65 @@
     const shrinkAmount = Number(inputs.finalShrink.value) / 100;
     const closingScale = 1 - shrinkAmount * smooth(finalProgress);
     const nextAlpha = Number(inputs.nextOpacity.value) / 100;
-    if (stateIndex > 0 && swapProgress < .998) {
-      drawCentered(previousLine, 0, 0, nextAlpha * (1 - swapProgress), closingScale * lerp(1, .985, swapProgress));
-    }
-    drawCentered(currentLine, 0, 0, nextAlpha * swapProgress, closingScale * lerp(1.015, 1, swapProgress));
-    markPhase("final-shrink-swap", { finalState: stateIndex, finalScale: closingScale });
+    const currentLayout = layoutTokens(context, currentLine, fontPx, assetHeight, itemGap);
+    const previousLayout = layoutTokens(context, previousLine, fontPx, assetHeight, itemGap);
+    const nextLine = stateIndex < finalStates.length ? finalStates[stateIndex] : currentLine;
+    const nextLayout = layoutTokens(context, nextLine, fontPx, assetHeight, itemGap);
+    const hasSwap = stateIndex > 0 && rawStateIndex <= finalStates.length;
+    const hasUpcomingSwap = stateIndex < finalStates.length;
+    const anticipationDuration = Math.min(.07, swapInterval * .24);
+    const anticipationStart = Math.max(0, swapInterval - anticipationDuration);
+    const anticipation = hasUpcomingSwap ? smoother(rangeProgress(stateTime, anticipationStart, swapInterval)) : 0;
+    const enter = hasSwap ? smoother(rangeProgress(stateTime, 0, transitionDuration)) : 1;
+    const itemChanged = (before, after) => !before || !after || before.type !== after.type || before.value !== after.value || before.id !== after.id;
+    const changedIndices = currentLayout.items.map((item, index) => index).filter((index) => itemChanged(previousLayout.items[index], currentLayout.items[index]));
+    const upcomingChangedIndices = currentLayout.items.map((item, index) => index).filter((index) => itemChanged(currentLayout.items[index], nextLayout.items[index]));
+    const positions = (layout) => {
+      let cursor = -layout.width / 2;
+      return layout.items.map((item, index) => {
+        const position = cursor;
+        cursor += item.width + (index < layout.items.length - 1 ? layout.gap : 0);
+        return position;
+      });
+    };
+    const previousPositions = positions(previousLayout);
+    const currentPositions = positions(currentLayout);
+    const nextPositions = positions(nextLayout);
+    context.save();
+    context.globalAlpha *= nextAlpha;
+    context.translate(w / 2, h / 2);
+    context.scale(closingScale, closingScale);
+    currentLayout.items.forEach((item, index) => {
+      const changed = changedIndices.includes(index);
+      const upcomingChanged = upcomingChangedIndices.includes(index);
+      const previousX = previousPositions[index] ?? currentPositions[index];
+      const currentX = currentPositions[index];
+      const nextX = nextPositions[index] ?? currentX;
+      const transitionX = lerp(previousX, currentX, enter);
+      const makeRoomX = lerp(transitionX, nextX, anticipation * .32);
+      const preShake = upcomingChanged
+        ? Math.sin(anticipation * Math.PI * 4) * fontPx * .025 * (1 - anticipation * .45)
+        : 0;
+      const verticalKick = changed ? Math.sin(enter * Math.PI) * fontPx * (index % 2 ? .10 : -.10) : 0;
+      if (changed && hasSwap && enter < .998 && previousLayout.items[index]) {
+        const exitKick = -Math.sin(enter * Math.PI) * fontPx * (index % 2 ? .055 : -.055);
+        drawItem(context, previousLayout.items[index], transitionX, 0, inputs.foreground.value, {
+          alpha: 1 - enter, scale: lerp(1, .86, enter), y: exitKick
+        });
+      }
+      drawItem(context, item, makeRoomX, 0, inputs.foreground.value, {
+        alpha: changed && hasSwap ? enter : 1,
+        scale: changed && hasSwap ? lerp(.84, 1, popEase(enter, .12)) : 1,
+        x: preShake,
+        y: verticalKick
+      });
+    });
+    context.restore();
+    markPhase("final-shrink-swap", {
+      finalState: stateIndex,
+      finalScale: closingScale,
+      swapMotion: anticipation > .001 ? "anticipation-shake" : enter < .998 ? "replacement-kick" : "settled"
+    });
   }
 
   function resizeCanvas() {
@@ -546,6 +610,8 @@
       lineGapOut: inputs.lineGap.value,
       assetScaleOut: `${inputs.assetScale.value}%`,
       rowCountOut: inputs.rowCount.value,
+      wallScaleOut: `${inputs.wallScale.value}%`,
+      itemGapOut: `${inputs.itemGap.value}px`,
       cycleDurationOut: formatSeconds(timing.cycle),
       introDurationOut: formatSeconds(timing.duration[0]),
       singleDurationOut: formatSeconds(timing.duration[1]),
@@ -569,6 +635,9 @@
   Object.values(inputs).forEach((input) => input.addEventListener("input", updateOutputs));
   inputs.finalSwapInterval.addEventListener("input", () => setTime(choreographyTiming().collapseEnd));
   inputs.finalShrink.addEventListener("input", () => setTime(choreographyTiming().collapseEnd + choreographyTiming().duration[5] * .7));
+  [inputs.wallScale, inputs.itemGap].forEach((input) => {
+    input.addEventListener("input", () => setTime(choreographyTiming().singleEnd + choreographyTiming().duration[2] * .8));
+  });
   [inputs.assetItemScale, inputs.assetOffsetX, inputs.assetOffsetY].forEach((input) => {
     input.addEventListener("input", updateSelectedAsset);
   });

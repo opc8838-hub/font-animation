@@ -134,7 +134,7 @@ t{{music}}ge{{animal01}}hern{{animal08}}s{{cloud}}</textarea>
       <section class="motion-quick">
         <div class="section-heading">
           <p class="section-label">常用调节</p>
-          <small class="section-note">先调这 12 项</small>
+          <small class="section-note">先调这 14 项</small>
         </div>
         <div class="motion-map vertical-motion-map" aria-label="动效阶段">
           <span>开场单行</span><i>→</i><span>新行弹出</span><i>→</i><span>铺满屏幕</span><i>→</i><span>满屏退场</span><i>→</i><span>单行缩小</span><i>→</i><span>图标依次切换</span>
@@ -151,6 +151,12 @@ t{{music}}ge{{animal01}}hern{{animal08}}s{{cloud}}</textarea>
           </label>
           <label>铺满行数 <small class="stage-tag">画面</small><output id="rowCountOut">11</output>
             <input id="rowCount" type="range" min="3" max="21" step="2" value="11">
+          </label>
+          <label>满屏文字大小 <small class="stage-tag">画面</small><output id="wallScaleOut">112%</output>
+            <input id="wallScale" type="range" min="80" max="180" value="112">
+          </label>
+          <label>字图间距 <small class="stage-tag">画面</small><output id="itemGapOut">0px</output>
+            <input id="itemGap" type="range" min="-8" max="40" value="0">
           </label>
           <label>开场停留 <small class="stage-tag">阶段 1</small><output id="introDurationOut">0.30秒</output>
             <input id="introDuration" type="range" min="100" max="2000" step="50" value="300">
