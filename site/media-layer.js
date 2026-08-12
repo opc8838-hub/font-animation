@@ -144,6 +144,7 @@ function stgMediaCreateAsset(file, original, dataUrl) {
   asset.originalDataUrl = dataUrl;
   asset.fileType = file.type || "";
   asset.imageName = file.name;
+  asset.libraryImage = false;
   asset.backgroundPreviewCanvases = null;
   asset.backgroundMaskStats = null;
   asset.backgroundRemoved = false;
@@ -179,6 +180,42 @@ function stgMediaCreateShapeAsset() {
   stgMediaUpdateStatus("已添加 {图" + asset.slot + "} · " + asset.imageName + "，可插入文字或切换为自由图层。", false);
   stgMediaNotifyChange(true);
   return asset;
+}
+
+function stgMediaCreateLibraryImageAsset(imageIndex) {
+  var number = String(imageIndex + 1).padStart(2, "0");
+  var url = "assets/transparent-animals/animal-" + number + ".png";
+  stgMediaSyncActiveAsset();
+  var image = new window.Image();
+  image.onload = function() {
+    var file = { name: "透明动物 " + number, type: "image/png" };
+    var asset = stgMediaCreateAsset(file, image, url);
+    asset.imageName = "透明动物 " + number;
+    asset.libraryImage = true;
+    asset.removeBackground = false;
+    asset.autoBackgroundColor = false;
+    asset.backgroundRemoved = true;
+    asset.processedWidth = image.naturalWidth || image.width;
+    asset.processedHeight = image.naturalHeight || image.height;
+    var animationCanvas = document.createElement("canvas");
+    var scale = Math.min(1, stgMedia.animationTextureLimit / Math.max(asset.processedWidth, asset.processedHeight));
+    animationCanvas.width = Math.max(1, Math.round(asset.processedWidth * scale));
+    animationCanvas.height = Math.max(1, Math.round(asset.processedHeight * scale));
+    animationCanvas.getContext("2d").drawImage(image, 0, 0, animationCanvas.width, animationCanvas.height);
+    asset.processedCanvas = animationCanvas;
+    asset.animationTextureWidth = animationCanvas.width;
+    asset.animationTextureHeight = animationCanvas.height;
+    asset.image = image;
+    stgMediaApplyAssetState(asset);
+    stgMedia.enabled = true;
+    var enabled = document.getElementById("mediaEnabled");
+    if (enabled) enabled.checked = true;
+    stgMediaRenderAssetLibrary();
+    stgMediaUpdateStatus("已添加透明动物 " + number + "；可独立缩放、移动、旋转和插入。", false);
+    stgMediaNotifyChange(true);
+  };
+  image.onerror = function() { stgMediaUpdateStatus("透明动物素材加载失败，请刷新后重试。", true); };
+  image.src = url;
 }
 
 function stgMediaShapeLabel(shape) {
@@ -960,7 +997,8 @@ function stgMediaInstallAssetAddControls() {
     <div class="stg-media-add-actions">
       <button id="mediaAddImages" type="button"><span aria-hidden="true">＋</span> 添加图片</button>
       <button id="mediaAddShape" type="button"><span aria-hidden="true">◇</span> 添加内置图形</button>
-    </div>`;
+    </div>
+    <details class="stg-media-animal-library"><summary>透明动物素材 · 31 张</summary><div class="stg-media-animal-grid"></div></details>`;
   status.insertAdjacentElement("afterend", controls);
   var library = document.getElementById("mediaAssetLibrary");
   if (library) controls.insertAdjacentElement("afterend", library);
@@ -985,6 +1023,15 @@ function stgMediaInstallAssetAddControls() {
     if (source) source.value = "shape";
     stgMediaUpdateSourceUI();
     stgMediaCreateShapeAsset();
+  });
+  var animalGrid = controls.querySelector(".stg-media-animal-grid");
+  animalGrid.innerHTML = Array.from({ length: 31 }, function(_, index) {
+    var number = String(index + 1).padStart(2, "0");
+    return '<button type="button" data-animal-index="' + index + '" title="添加透明动物 ' + number + '"><img src="assets/transparent-animals/animal-' + number + '.png" alt="" loading="lazy"><span>' + number + '</span></button>';
+  }).join("");
+  animalGrid.addEventListener("click", function(event) {
+    var button = event.target.closest("[data-animal-index]");
+    if (button) stgMediaCreateLibraryImageAsset(Number(button.dataset.animalIndex));
   });
 }
 
@@ -1043,7 +1090,7 @@ function stgMediaUpdateActiveAssetBar() {
   }
   bar.classList.remove("is-empty");
   bar.innerHTML = '<span>正在单独编辑 <strong>{图' + asset.slot + '}</strong></span><small>' +
-    (asset.source === "shape" ? "内置图形 · " + stgMediaShapeLabel(asset.shape) : "上传图片 · " + asset.imageName.replace(/[<>]/g, "")) +
+    (asset.source === "shape" ? "内置图形 · " + stgMediaShapeLabel(asset.shape) : (asset.libraryImage ? "内置透明图片 · " : "上传图片 · ") + asset.imageName.replace(/[<>]/g, "")) +
     '；下面所有参数只影响这一项</small>';
 }
 

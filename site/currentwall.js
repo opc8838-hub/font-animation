@@ -8,7 +8,7 @@
   const fps = 30;
   const inputs = {
     rows: $("#rowsInput"), font: $("#fontFamily"), fontSize: $("#fontSize"),
-    lineGap: $("#lineGap"), speed: $("#speed"), assetScale: $("#assetScale"),
+    lineGap: $("#lineGap"), speed: $("#speed"), assetScale: $("#assetScale"), wallRows: $("#wallRows"),
     wave: $("#wave"), waveRate: $("#waveRate"), vertical: $("#vertical"),
     repeatGap: $("#repeatGap"), background: $("#backgroundColor"), foreground: $("#textColor"),
     motionMode: $("#motionMode"), introWord: $("#introWord"),
@@ -50,6 +50,7 @@
   let rafId = 0;
   let activeTokenInput = inputs.rows;
   let selectedAssetId = "music";
+  let animalLibraryOpen = false;
 
   const svg = (body, background = "#ffffff") => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="${background}"/>${body}</svg>`
@@ -78,6 +79,7 @@
   }
 
   builtIns.forEach(([id, label, src]) => addAsset(id, label, src));
+  window.TokenAssetTools.animalAssets().forEach(({ id, label, src }) => addAsset(id, label, src));
 
   function parseRows() {
     const rows = inputs.rows.value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
@@ -140,10 +142,13 @@
   function renderAssetGrid() {
     const grid = $("#assetGrid");
     grid.replaceChildren();
+    let animalIndex = 0;
     assets.forEach((asset) => {
       const card = document.createElement("div");
       card.className = "asset-card";
       card.classList.toggle("is-selected", asset.id === selectedAssetId);
+      const isAnimal = asset.id.startsWith("animal");
+      if (isAnimal && animalIndex++ >= 8 && !animalLibraryOpen) card.classList.add("is-library-hidden");
       const insert = document.createElement("button");
       insert.type = "button";
       insert.className = "asset-insert";
@@ -151,6 +156,8 @@
       const preview = document.createElement("img");
       preview.src = asset.src;
       preview.alt = "";
+      preview.loading = "lazy";
+      preview.decoding = "async";
       const label = document.createElement("span");
       label.textContent = asset.label;
       insert.append(preview, label);
@@ -172,6 +179,11 @@
       }
       grid.append(card);
     });
+    const divider = document.createElement("div");
+    divider.className = "asset-library-divider";
+    divider.innerHTML = `<span>透明动物素材 · 31 张</span><button type="button">${animalLibraryOpen ? "收起" : "查看全部"}</button>`;
+    divider.querySelector("button").addEventListener("click", () => { animalLibraryOpen = !animalLibraryOpen; renderAssetGrid(); });
+    grid.insertBefore(divider, grid.children[4] || null);
   }
 
   function syncAssetTuner() {
@@ -227,18 +239,23 @@
     syncAssetTuner();
   }
 
-  $("#assetUpload").addEventListener("change", (event) => {
-    [...event.currentTarget.files].forEach((file) => {
-      if (!file.type.startsWith("image/")) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        const id = `img${++uploadSerial}`;
-        addAsset(id, file.name.replace(/\.[^.]+$/, "").slice(0, 12) || id, String(reader.result), true);
+  $("#assetUpload").addEventListener("change", async (event) => {
+    const files = [...event.currentTarget.files].filter((file) => file.type.startsWith("image/"));
+    for (const file of files) {
+      const id = `img${++uploadSerial}`;
+      $("#assetProcessStatus").textContent = `正在处理 ${file.name}…`;
+      try {
+        const result = await window.TokenAssetTools.processFile(file, { removeBackground: $("#assetRemoveBackground").checked });
+        addAsset(id, file.name.replace(/\.[^.]+$/, "").slice(0, 12) || id, result.src, true);
+        selectedAssetId = id;
         renderAssetGrid();
+        syncAssetTuner();
         insertToken(id);
-      };
-      reader.readAsDataURL(file);
-    });
+        $("#assetProcessStatus").textContent = `${file.name} · ${result.status} · 可独立调大小与位置。`;
+      } catch (error) {
+        $("#assetProcessStatus").textContent = `${file.name} 处理失败，请换用 PNG、JPG、WebP、SVG 或 GIF。`;
+      }
+    }
     event.currentTarget.value = "";
   });
 
@@ -381,8 +398,8 @@
     const waveAmp = Number(inputs.wave.value) * scale;
     const waveRate = Number(inputs.waveRate.value) / 100;
     const verticalSpeed = Number(inputs.vertical.value) * scale;
-    const laneCount = Math.ceil(h / lineHeight) + 6;
-    const halfLanes = Math.ceil(laneCount / 2);
+    const laneCount = Math.max(3, Number(inputs.wallRows.value) || 9);
+    const halfLanes = Math.floor(laneCount / 2);
     const choreography = inputs.motionMode.value === "choreography";
     const timing = choreographyTiming();
     const localTime = choreography ? mod(time, timing.cycle) : time;
@@ -590,6 +607,7 @@
       lineGapOut: inputs.lineGap.value,
       speedOut: `${(Number(inputs.speed.value) / 100).toFixed(2)}×`,
       assetScaleOut: `${inputs.assetScale.value}%`,
+      wallRowsOut: `${inputs.wallRows.value}行`,
       waveOut: inputs.wave.value,
       waveRateOut: (Number(inputs.waveRate.value) / 100).toFixed(2),
       verticalOut: inputs.vertical.value,

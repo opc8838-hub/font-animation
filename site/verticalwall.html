@@ -69,9 +69,11 @@ leveling u{{watch}}</textarea>
           <p class="section-label">图片 / 图标字位</p>
           <label class="upload-button">添加图片<input id="assetUpload" type="file" accept="image/*" multiple></label>
         </div>
+        <label class="asset-background-toggle"><input id="assetRemoveBackground" type="checkbox" checked> 上传时自动去背景并裁掉透明空白</label>
+        <p class="asset-process-status" id="assetProcessStatus" aria-live="polite">内置透明动物可直接使用；上传图片在浏览器本地高清处理。</p>
         <div class="asset-grid" id="assetGrid"></div>
         <div class="asset-tuner" id="assetTuner">
-          <div class="asset-tuner-head"><span>图标精调</span><b id="selectedAssetName">音乐</b></div>
+          <div class="asset-tuner-head"><span>当前素材精调</span><b id="selectedAssetName">音乐</b></div>
           <div class="asset-tuner-grid">
             <label>大小 <output id="assetItemScaleOut">100%</output>
               <input id="assetItemScale" type="range" min="40" max="200" value="100">
@@ -231,6 +233,7 @@ leveling u{{watch}}</textarea>
   </details>
 
   <script src="js/continuation-gif.js"></script>
+  <script src="token-asset-tools.js"></script>
   <script src="verticalwall.js"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js"></script>
