@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760">
+  <rect width="1200" height="760" fill="#050505"/>
+  <g font-family="Arial Black,Arial,sans-serif" font-size="126" font-weight="900" text-anchor="middle">
+    <text x="600" y="420" fill="#fff" opacity=".28">MAKE IT VIVID</text>
+    <text x="600" y="420"><tspan fill="#ff453a">M</tspan><tspan fill="#ff9f0a">O</tspan><tspan fill="#bf5af2">T</tspan><tspan fill="#30d158">I</tspan><tspan fill="#0a84ff">O</tspan><tspan fill="#ffd60a">N</tspan><tspan fill="#ff453a"> </tspan><tspan fill="#30d158">F</tspan><tspan fill="#bf5af2">U</tspan><tspan fill="#0a84ff">T</tspan><tspan fill="#ff9f0a">U</tspan><tspan fill="#ff453a">R</tspan><tspan fill="#30d158">E</tspan></text>
+  </g>
+  <g opacity=".72">
+    <rect x="292" y="344" width="92" height="10" fill="#bf5af2"/>
+    <rect x="802" y="390" width="110" height="9" fill="#ff453a"/>
+    <rect x="697" y="468" width="84" height="7" fill="#0a84ff"/>
+    <rect x="410" y="476" width="105" height="8" fill="#30d158"/>
+  </g>
+</svg>

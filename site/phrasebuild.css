@@ -1,0 +1,48 @@
+.phrase-build-stage { background: #fff; }
+@font-face{font-family:CRManrope;src:url('assets/fonts/Manrope-Variable.ttf');font-weight:200 800}
+@font-face{font-family:CRPoppins;src:url('assets/fonts/Poppins-Regular.ttf');font-weight:400}
+.phrase-build-panel { --panel-width: 350px; }
+.phrase-list { display: grid; gap: 8px; }
+.phrase-card { padding: 9px; display: grid; grid-template-columns: 26px minmax(0,1fr) 34px; gap: 7px; align-items: center; border: 1px solid #d2d2ce; border-radius: 10px; background: #f7f7f5; }
+.phrase-index { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #111; color: #fff; font: 700 10px/1 Consolas, monospace; }
+.phrase-fields { min-width: 0; display: grid; grid-template-columns: minmax(0,1fr) 66px; gap: 6px; }
+.phrase-fields input[type="text"] { min-width: 0; width: 100%; padding: 8px; border: 1px solid #bababa; border-radius: 7px; background: #fff; font: 500 12px/1.2 "Continuation Inter Medium", sans-serif; }
+.phrase-fields input[type="color"] { width: 100%; height: 34px; padding: 2px; border: 1px solid #bababa; border-radius: 7px; background: #fff; }
+.phrase-time-fields { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr; gap: 7px; padding-top: 3px; }
+.phrase-at-slider { padding: 7px; border-radius: 8px; background: #edf6ff; }
+.phrase-time-fields label { min-width: 0; color: #555; font-size: 9px; }
+.phrase-time-fields label > span { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 3px; font-weight: 650; }
+.phrase-time-fields output { color: #111; font: 700 9px/1 "Continuation IBM Plex Mono", monospace; }
+.phrase-time-fields input[type="range"] { width: 100%; height: 18px; margin: 0; padding: 0; accent-color: #0071e3; cursor: ew-resize; }
+.phrase-rhythm-field { display: grid; grid-template-columns: 74px minmax(0,1fr); align-items: center; gap: 7px; }
+.phrase-rhythm-field > span { display: block !important; margin: 0 !important; }
+.phrase-rhythm-field select { min-width: 0; width: 100%; height: 30px; padding: 4px 7px; border: 1px solid #c8c8c4; border-radius: 7px; background: #fff; font-size: 10px; }
+.beat-frequency-control { grid-column: 1 / -1; padding: 10px !important; border-color: #b7d9ff !important; background: #edf6ff !important; }
+.beat-timeline-wrap { margin-top: 10px; padding: 10px; border: 1px solid #d5d5d1; border-radius: 10px; background: #fff; }
+.beat-timeline-heading { display: flex; justify-content: space-between; align-items: center; color: #555; font-size: 9px; font-weight: 700; }
+.beat-timeline-heading output { color: #777; font: 600 8px/1 "Continuation IBM Plex Mono", monospace; }
+.beat-timeline-scroll { margin-top: 9px; padding: 8px 14px 5px; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; scrollbar-color: #aaa #eee; border-radius: 8px; background: #f7f7f5; }
+.beat-timeline { position: relative; height: 88px; margin-top: 5px; border-top: 2px solid #d7d7d3; touch-action: none; user-select: none; }
+.beat-timeline::before, .beat-timeline::after { content: ""; position: absolute; top: -4px; width: 1px; height: 8px; background: #999; }
+.beat-timeline::before { left: 0; } .beat-timeline::after { right: 0; }
+.beat-tick { position: absolute; top: -1px; height: 15px; color: #999; pointer-events: none; }
+.beat-tick i { display: block; width: 1px; height: 6px; background: #bbb; }
+.beat-tick.is-major i { height: 10px; background: #888; }
+.beat-tick small { position: absolute; top: 13px; left: 0; transform: translateX(-50%); font: 600 7px/1 "Continuation IBM Plex Mono", monospace; }
+.beat-marker { position: absolute; z-index: 2; top: calc(-8px + var(--beat-stack, 0) * 26px); width: 34px; min-width: 0; padding: 0; border: 0; background: transparent; transform: translateX(-50%); color: #111; cursor: grab; touch-action: none; }
+.beat-marker::before { content: ""; display: block; width: 12px; height: 12px; margin: 0 auto 4px; border: 3px solid #fff; border-radius: 50%; background: #0071e3; box-shadow: 0 0 0 1px #0071e3; }
+.beat-marker b, .beat-marker small { display: block; font: 700 8px/1.1 "Continuation IBM Plex Mono", monospace; }
+.beat-marker small { margin-top: 2px; color: #777; font-size: 7px; }
+.beat-marker.is-dragging { z-index: 5; cursor: grabbing; }
+.beat-marker.is-dragging::before { transform: scale(1.35); background: #111; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0071e3; }
+.beat-marker.is-snapped::before { background: #30b050; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #30b050; }
+.phrase-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+.phrase-tools button { min-width: 0; height: 25px; padding: 0; border: 1px solid #bbb; border-radius: 6px; background: #fff; color: #222; font-size: 10px; }
+.phrase-tools .remove-phrase { grid-column: 1 / -1; color: #d70015; }
+.add-phrase { width: 100%; min-height: 38px; margin-top: 8px; border: 1px dashed #888; border-radius: 9px; background: #fff; color: #111; font-weight: 700; }
+.phrase-motion-map { grid-template-columns: auto 12px auto 12px auto; }
+.phrase-motion-map span:nth-of-type(2) { color: #fff; background: #111; }
+.color-font-grid { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(0,.8fr); gap:8px; }
+.color-font-grid label { min-width:0; }
+.color-font-grid .section-label { margin-bottom:7px; }
+@media (max-width: 760px) { .phrase-fields { grid-template-columns: minmax(0,1fr) 54px; } }

@@ -54,6 +54,7 @@
   let rafId = 0;
   let activeTokenInput = inputs.rows;
   let selectedAssetId = "music";
+  let animalLibraryOpen = false;
 
   const svg = (body, background = "#ffffff") => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="${background}"/>${body}</svg>`
@@ -82,6 +83,7 @@
   }
 
   builtIns.forEach(([id, label, src]) => addAsset(id, label, src));
+  window.TokenAssetTools.animalAssets().forEach(({ id, label, src }) => addAsset(id, label, src));
 
   function parseRows() {
     const palette = ["#9b35ff", "#e53ca8", "#fa315f", "#ff6f3d", "#e8ef42", "#46d86e", "#53dcb0", "#39cde0", "#4f9bff", "#819ed4"];
@@ -94,10 +96,13 @@
   function renderAssetGrid() {
     const grid = $("#assetGrid");
     grid.replaceChildren();
+    let animalIndex = 0;
     assets.forEach((asset) => {
       const card = document.createElement("div");
       card.className = "asset-card";
       card.classList.toggle("is-selected", asset.id === selectedAssetId);
+      const isAnimal = asset.id.startsWith("animal");
+      if (isAnimal && animalIndex++ >= 8 && !animalLibraryOpen) card.classList.add("is-library-hidden");
       const insert = document.createElement("button");
       insert.type = "button";
       insert.className = "asset-insert";
@@ -105,6 +110,8 @@
       const preview = document.createElement("img");
       preview.src = asset.src;
       preview.alt = "";
+      preview.loading = "lazy";
+      preview.decoding = "async";
       const label = document.createElement("span");
       label.textContent = asset.label;
       insert.append(preview, label);
@@ -126,6 +133,11 @@
       }
       grid.append(card);
     });
+    const divider = document.createElement("div");
+    divider.className = "asset-library-divider";
+    divider.innerHTML = `<span>透明动物素材 · 31 张</span><button type="button">${animalLibraryOpen ? "收起" : "查看全部"}</button>`;
+    divider.querySelector("button").addEventListener("click", () => { animalLibraryOpen = !animalLibraryOpen; renderAssetGrid(); });
+    grid.insertBefore(divider, grid.children[4] || null);
   }
 
   function syncAssetTuner() {
@@ -180,18 +192,23 @@
     syncAssetTuner();
   }
 
-  $("#assetUpload").addEventListener("change", (event) => {
-    [...event.currentTarget.files].forEach((file) => {
-      if (!file.type.startsWith("image/")) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        const id = `img${++uploadSerial}`;
-        addAsset(id, file.name.replace(/\.[^.]+$/, "").slice(0, 12) || id, String(reader.result), true);
+  $("#assetUpload").addEventListener("change", async (event) => {
+    const files = [...event.currentTarget.files].filter((file) => file.type.startsWith("image/"));
+    for (const file of files) {
+      const id = `img${++uploadSerial}`;
+      $("#assetProcessStatus").textContent = `正在处理 ${file.name}…`;
+      try {
+        const result = await window.TokenAssetTools.processFile(file, { removeBackground: $("#assetRemoveBackground").checked });
+        addAsset(id, file.name.replace(/\.[^.]+$/, "").slice(0, 12) || id, result.src, true);
+        selectedAssetId = id;
         renderAssetGrid();
+        syncAssetTuner();
         insertToken(id);
-      };
-      reader.readAsDataURL(file);
-    });
+        $("#assetProcessStatus").textContent = `${file.name} · ${result.status} · 可独立调大小与位置。`;
+      } catch (error) {
+        $("#assetProcessStatus").textContent = `${file.name} 处理失败，请换用 PNG、JPG、WebP、SVG 或 GIF。`;
+      }
+    }
     event.currentTarget.value = "";
   });
 
@@ -662,7 +679,7 @@
 
   function exportDimensions() {
     const preset = $("#exportPreset").value;
-    if (preset === "current") return [Math.round(window.innerWidth), Math.round(window.innerHeight)];
+    if (preset === "current") return [Math.round(canvas.clientWidth), Math.round(canvas.clientHeight)];
     if (preset === "custom") return [Number($("#exportWidth").value), Number($("#exportHeight").value)];
     return preset.split("x").map(Number);
   }

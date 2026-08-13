@@ -64,9 +64,11 @@ everything</textarea>
           <p class="section-label">图片 / 图标字位</p>
           <label class="upload-button">添加图片<input id="assetUpload" type="file" accept="image/*" multiple></label>
         </div>
+        <label class="asset-background-toggle"><input id="assetRemoveBackground" type="checkbox" checked> 上传时自动去背景并裁掉透明空白</label>
+        <p class="asset-process-status" id="assetProcessStatus" aria-live="polite">内置透明动物可直接使用；上传图片在浏览器本地高清处理。</p>
         <div class="asset-grid" id="assetGrid"></div>
         <div class="asset-tuner" id="assetTuner">
-          <div class="asset-tuner-head"><span>图标精调</span><b id="selectedAssetName">音乐</b></div>
+          <div class="asset-tuner-head"><span>当前素材精调</span><b id="selectedAssetName">音乐</b></div>
           <div class="asset-tuner-grid">
             <label>大小 <output id="assetItemScaleOut">100%</output>
               <input id="assetItemScale" type="range" min="40" max="200" value="100">
@@ -126,10 +128,10 @@ everything</textarea>
       <section class="motion-quick">
         <div class="section-heading">
           <p class="section-label">常用调节</p>
-          <small class="section-note">先调这 8 项</small>
+          <small class="section-note">先调这 10 项</small>
         </div>
         <div class="motion-map" aria-label="动效阶段">
-          <span>中间→满屏</span><i>→</i><span>自然左流</span><i>→</i><span>中间向右</span><i>→</i><span>逐行消失</span><i>→</i><span>单行收尾</span>
+          <span>中间→满屏</span><i>→</i><span>满屏左流</span><i>→</i><span>中间向右</span><i>→</i><span>逐行消失</span><i>→</i><span>单行收尾</span>
         </div>
         <div class="controls-grid quick-grid">
         <label>字号 <small class="stage-tag">画面</small><output id="fontSizeOut">62</output>
@@ -141,11 +143,20 @@ everything</textarea>
         <label>图标大小 <small class="stage-tag">画面</small><output id="assetScaleOut">100%</output>
           <input id="assetScale" type="range" min="45" max="180" value="100">
         </label>
+        <label>行数方式 <small class="stage-tag">画面</small>
+          <select id="wallRowsMode">
+            <option value="auto" selected>自动铺满画布</option>
+            <option value="custom">自定义行数</option>
+          </select>
+        </label>
+        <label>满屏行数 <small class="stage-tag">画面</small><output id="wallRowsOut">自动铺满</output>
+          <input id="wallRows" type="range" min="3" max="25" step="2" value="9" disabled>
+        </label>
         <label>中间→满屏 <small class="stage-tag">阶段 1</small><output id="popDurationOut">0.60秒</output>
           <input id="popDuration" type="range" min="150" max="1800" step="10" value="450">
         </label>
-        <label>满屏自然左流 <small class="stage-tag">阶段 2</small><output id="fullDurationOut">1.1秒</output>
-            <input id="fullDuration" type="range" min="200" max="8000" step="100" value="1100">
+        <label>满屏向左流动时长 <small class="stage-tag">阶段 2</small><output id="fullDurationOut">1.10秒</output>
+            <input id="fullDuration" type="range" min="0" max="8000" step="50" value="1100">
           </label>
           <label>向右带动 <small class="stage-tag">阶段 3</small><output id="retreatDurationOut">0.80秒</output>
             <input id="retreatDuration" type="range" min="200" max="2500" step="50" value="800">
@@ -157,7 +168,8 @@ everything</textarea>
             <input id="finalDuration" type="range" min="600" max="6000" step="50" value="1100">
           </label>
         </div>
-        <p class="hint">“满屏自然左流”控制铺满后恒速向左多久；“向右带动”控制中间先转向、再带动上下行所用的时间。</p>
+        <p class="hint">“满屏向左流动时长”就是铺满后继续左流的真实时间。拖动时会自动从这一段开始预览；设为 0.20 秒就只左流 0.20 秒，设为 0 则直接跳过。</p>
+        <p class="hint timing-live" id="timingReadout" aria-live="polite">当前：准备预览</p>
       </section>
 
       <details class="advanced-controls motion-advanced">
@@ -248,6 +260,7 @@ everything</textarea>
   </details>
 
   <script src="js/continuation-gif.js"></script>
+  <script src="token-asset-tools.js"></script>
   <script src="currentwall.js"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js"></script>

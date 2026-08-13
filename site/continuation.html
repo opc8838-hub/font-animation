@@ -7,7 +7,7 @@
   <title>续句 Continuation | ME Motion Studio</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;f[]=general-sans@400,500,600&amp;f[]=clash-display@500,600&amp;f[]=cabinet-grotesk@500,700&amp;display=swap">
-  <link rel="stylesheet" href="continuation.css">
+  <link rel="stylesheet" href="continuation.css?v=20260813-hdvideo">
   <link rel="stylesheet" href="me-motion-editor.css">
   <link rel="stylesheet" href="stg-cn.css">
 </head>
@@ -27,11 +27,19 @@
       <i aria-hidden="true">参数</i>
     </summary>
     <div class="panel-scroll">
-      <section>
-        <label class="section-label" for="pairsInput">词组 · 每行用 | 分隔</label>
-        <textarea id="pairsInput" rows="5" spellcheck="false">One|subscription.
-Endless|creativity.</textarea>
-        <p class="hint">主词先出现，后缀作为整块接入。支持中英文，例如「一个|订阅。」</p>
+      <section class="pair-editor-section">
+        <div class="section-heading">
+          <div>
+            <p class="section-label">句组编辑</p>
+            <p class="section-kicker">固定前半句 <span aria-hidden="true">→</span> 接入后半句</p>
+          </div>
+          <button class="add-pair-button" id="addPairButton" type="button">＋ 新增</button>
+        </div>
+        <div class="pair-editor-head" aria-hidden="true">
+          <span>前半句</span><i>接入</i><span>后半句</span>
+        </div>
+        <div class="pair-editor" id="pairEditor"></div>
+        <p class="hint">不再需要输入分隔符。左右分别填写，最多 8 组；每一组都会独立播放。</p>
       </section>
 
       <section class="row-position-section">
@@ -74,10 +82,50 @@ Endless|creativity.</textarea>
         <p class="hint">本地字体均为可再分发的 OFL；Fontshare 字体由其官方 API 提供。</p>
       </section>
 
+      <section class="split-type-section">
+        <p class="section-label">前后字体独立</p>
+        <div class="split-type-grid">
+          <div class="type-side-card">
+            <b>前半句</b>
+            <label>字号 <output id="leadFontSizeOut">48</output>
+              <input id="leadFontSize" type="range" min="18" max="140" value="48">
+            </label>
+            <label>粗细
+              <select id="leadFontWeight">
+                <option value="200">纤细 · 200</option>
+                <option value="300">细体 · 300</option>
+                <option value="400">常规 · 400</option>
+                <option value="500" selected>中等 · 500</option>
+                <option value="600">半粗 · 600</option>
+                <option value="700">粗体 · 700</option>
+                <option value="800">特粗 · 800</option>
+                <option value="900">黑体 · 900</option>
+              </select>
+            </label>
+          </div>
+          <div class="type-side-card">
+            <b>后半句</b>
+            <label>字号 <output id="suffixFontSizeOut">48</output>
+              <input id="suffixFontSize" type="range" min="18" max="140" value="48">
+            </label>
+            <label>粗细
+              <select id="suffixFontWeight">
+                <option value="200">纤细 · 200</option>
+                <option value="300">细体 · 300</option>
+                <option value="400">常规 · 400</option>
+                <option value="500" selected>中等 · 500</option>
+                <option value="600">半粗 · 600</option>
+                <option value="700">粗体 · 700</option>
+                <option value="800">特粗 · 800</option>
+                <option value="900">黑体 · 900</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <p class="hint">可分别控制分隔前后的字号与粗细；固定字重字体会自动使用最接近的可用字重。</p>
+      </section>
+
       <section class="controls-grid">
-        <label>字号 <output id="fontSizeOut">48</output>
-          <input id="fontSize" type="range" min="24" max="96" value="48">
-        </label>
         <label>预备比例 <output id="anticipationOut">25%</output>
           <input id="anticipation" type="range" min="10" max="45" value="25">
         </label>
@@ -119,9 +167,15 @@ Endless|creativity.</textarea>
         </div>
       </section>
 
-      <section class="color-row">
-        <label>背景<input id="backgroundColor" type="color" value="#000000"></label>
-        <label>文字<input id="textColor" type="color" value="#ffffff"></label>
+      <section class="color-row continuation-colors">
+        <label><span>背景</span><input id="backgroundColor" type="color" value="#000000" aria-label="背景颜色"></label>
+        <label><span>文字</span><input id="textColor" type="color" value="#ffffff" aria-label="文字颜色"></label>
+        <div class="color-presets" aria-label="快速颜色">
+          <button type="button" data-color-target="backgroundColor" data-color="#000000"><i style="--swatch:#000000"></i>黑色背景</button>
+          <button type="button" data-color-target="backgroundColor" data-color="#ffffff"><i style="--swatch:#ffffff"></i>纯白背景</button>
+          <button type="button" data-color-target="textColor" data-color="#000000"><i style="--swatch:#000000"></i>黑色文字</button>
+          <button type="button" data-color-target="textColor" data-color="#ffffff"><i style="--swatch:#ffffff"></i>纯白文字</button>
+        </div>
       </section>
 
       <section class="transport" aria-label="时间轴控制">
@@ -151,8 +205,9 @@ Endless|creativity.</textarea>
           <button id="exportPng" type="button">PNG 图片</button>
           <button id="exportGif" type="button">GIF 动图</button>
           <button id="exportVideo" type="button">视频</button>
+          <button class="export-hd-video" id="exportVerticalVideo" type="button">导出 9:16 高清视频 · 1080 × 1920</button>
         </div>
-        <p class="export-status" id="exportStatus" aria-live="polite">PNG 导出当前帧；GIF / 视频导出完整循环。</p>
+        <p class="export-status" id="exportStatus" aria-live="polite">9:16 高清视频会导出完整循环；Safari 会自动逐帧生成视频。</p>
       </section>
       <p class="formula">位移 = 后词宽度 × 预备比例<br>每一项节奏均参与预览与导出的确定性逐帧计算</p>
     </div>
@@ -160,7 +215,8 @@ Endless|creativity.</textarea>
 
   <script src="js/gsap-3.13.0.min.js"></script>
   <script src="js/continuation-gif.js"></script>
-  <script src="continuation.js"></script>
+  <script src="CCapture.all.min.js"></script>
+  <script src="continuation.js?v=20260813-hdvideo"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js"></script>
 </body>

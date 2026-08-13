@@ -9,7 +9,8 @@
   const exportStatus = $("#exportStatus");
   const fps = 30;
   const inputs = {
-    pairs: $("#pairsInput"), font: $("#fontFamily"), fontSize: $("#fontSize"),
+    font: $("#fontFamily"), leadFontSize: $("#leadFontSize"), suffixFontSize: $("#suffixFontSize"),
+    leadFontWeight: $("#leadFontWeight"), suffixFontWeight: $("#suffixFontWeight"),
     anticipation: $("#anticipation"), wordGap: $("#wordGap"), settleScale: $("#settleScale"),
     introDistance: $("#introDistance"), speed: $("#speed"), background: $("#backgroundColor"),
     foreground: $("#textColor"), introDuration: $("#introDuration"), rootHold: $("#rootHold"),
@@ -18,7 +19,7 @@
   };
 
   const fontPresets = {
-    "snap-inter-medium": { family: "Continuation Inter Medium", weight: 500, style: "normal" },
+    "snap-inter-medium": { family: "Continuation Inter", weight: 500, style: "normal" },
     "snap-inter-black": { family: "Continuation Inter", weight: 900, style: "normal" },
     "snap-ibm-plex": { family: "Continuation IBM Plex Mono", weight: 700, style: "italic" },
     "snap-space-mono": { family: "Continuation Space Mono", weight: 700, style: "normal" },
@@ -43,6 +44,10 @@
   let rebuildSerial = 0;
   let currentCycle = 29 / fps;
   let rowPositions = [];
+  let phrasePairs = [
+    { lead: "One", suffix: "subscription." },
+    { lead: "Endless", suffix: "creativity." }
+  ];
 
   if (!window.gsap) {
     phraseStage.innerHTML = '<p class="load-error">GSAP 加载失败，请刷新页面。</p>';
@@ -51,13 +56,48 @@
   gsap.ticker.fps(fps);
 
   function parsePairs() {
-    const pairs = inputs.pairs.value.split(/\r?\n/).map((line) => {
-      const divider = line.indexOf("|");
-      return divider < 0
-        ? [line.trim(), ""]
-        : [line.slice(0, divider).trim(), line.slice(divider + 1).trim()];
-    }).filter(([lead]) => lead);
+    const pairs = phrasePairs
+      .map(({ lead, suffix }) => [lead.trim(), suffix.trim()])
+      .filter(([lead]) => lead);
     return pairs.length ? pairs.slice(0, 8) : [["One", "subscription."]];
+  }
+
+  function renderPairEditor() {
+    const editor = $("#pairEditor");
+    editor.replaceChildren();
+    phrasePairs.forEach((pair, index) => {
+      const row = document.createElement("div");
+      row.className = "pair-editor-row";
+      row.innerHTML = `
+        <span class="pair-number" aria-hidden="true">${String(index + 1).padStart(2, "0")}</span>
+        <label><span class="sr-only">第 ${index + 1} 组前半句</span><input class="pair-lead-input" type="text" spellcheck="false" aria-label="第 ${index + 1} 组前半句"></label>
+        <i aria-hidden="true">→</i>
+        <label><span class="sr-only">第 ${index + 1} 组后半句</span><input class="pair-suffix-input" type="text" spellcheck="false" aria-label="第 ${index + 1} 组后半句"></label>
+        <button class="remove-pair-button" type="button" aria-label="删除第 ${index + 1} 组">×</button>`;
+      const leadInput = row.querySelector(".pair-lead-input");
+      const suffixInput = row.querySelector(".pair-suffix-input");
+      const removeButton = row.querySelector(".remove-pair-button");
+      leadInput.value = pair.lead;
+      suffixInput.value = pair.suffix;
+      const updatePair = () => {
+        phrasePairs[index] = { lead: leadInput.value, suffix: suffixInput.value };
+        syncRowPositionControls();
+        scheduleRebuild();
+      };
+      leadInput.addEventListener("input", updatePair);
+      suffixInput.addEventListener("input", updatePair);
+      removeButton.disabled = phrasePairs.length === 1;
+      removeButton.addEventListener("click", () => {
+        if (phrasePairs.length === 1) return;
+        phrasePairs.splice(index, 1);
+        rowPositions.splice(index, 1);
+        renderPairEditor();
+        syncRowPositionControls();
+        scheduleRebuild();
+      });
+      editor.append(row);
+    });
+    $("#addPairButton").disabled = phrasePairs.length >= 8;
   }
 
   function updateRowPositionItem(item, position) {
@@ -125,7 +165,8 @@
 
   function updateOutputs() {
     const values = {
-      fontSizeOut: inputs.fontSize.value,
+      leadFontSizeOut: inputs.leadFontSize.value,
+      suffixFontSizeOut: inputs.suffixFontSize.value,
       anticipationOut: `${inputs.anticipation.value}%`,
       wordGapOut: inputs.wordGap.value,
       settleScaleOut: `${inputs.settleScale.value}%`,
@@ -168,7 +209,6 @@
   function applyFontPreset() {
     const preset = fontPresets[inputs.font.value] || fontPresets["snap-inter-medium"];
     document.documentElement.style.setProperty("--phrase-font", `"${preset.family}"`);
-    document.documentElement.style.setProperty("--phrase-weight", String(preset.weight));
     document.documentElement.style.setProperty("--phrase-style", preset.style);
     return preset;
   }
@@ -181,11 +221,17 @@
 
     document.documentElement.style.setProperty("--stage-background", inputs.background.value);
     document.documentElement.style.setProperty("--stage-foreground", inputs.foreground.value);
-    document.documentElement.style.setProperty("--phrase-size", `${inputs.fontSize.value}px`);
+    document.documentElement.style.setProperty("--lead-size", `${inputs.leadFontSize.value}px`);
+    document.documentElement.style.setProperty("--suffix-size", `${inputs.suffixFontSize.value}px`);
+    document.documentElement.style.setProperty("--lead-weight", inputs.leadFontWeight.value);
+    document.documentElement.style.setProperty("--suffix-weight", inputs.suffixFontWeight.value);
     const fontPreset = applyFontPreset();
     updateOutputs();
     await Promise.race([
-      document.fonts.load(`${fontPreset.style} ${fontPreset.weight} ${inputs.fontSize.value}px "${fontPreset.family}"`),
+      Promise.all([
+        document.fonts.load(`${fontPreset.style} ${inputs.leadFontWeight.value} ${inputs.leadFontSize.value}px "${fontPreset.family}"`),
+        document.fonts.load(`${fontPreset.style} ${inputs.suffixFontWeight.value} ${inputs.suffixFontSize.value}px "${fontPreset.family}"`)
+      ]),
       new Promise((resolve) => window.setTimeout(resolve, 1800))
     ]);
     if (serial !== rebuildSerial) return;
@@ -289,7 +335,6 @@
   }
 
   Object.values(inputs).forEach((input) => {
-    if (input === inputs.pairs) return;
     if (input === inputs.speed) {
       input.addEventListener("input", () => {
         updateOutputs();
@@ -297,9 +342,22 @@
       });
     } else input.addEventListener("input", scheduleRebuild);
   });
-  inputs.pairs.addEventListener("input", () => {
+  document.querySelectorAll("[data-color-target]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const input = document.getElementById(button.dataset.colorTarget);
+      if (!input) return;
+      input.value = button.dataset.color;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  });
+  $("#addPairButton").addEventListener("click", () => {
+    if (phrasePairs.length >= 8) return;
+    phrasePairs.push({ lead: "New", suffix: "continuation." });
+    rowPositions.push(50);
+    renderPairEditor();
     syncRowPositionControls();
     scheduleRebuild();
+    $("#pairEditor .pair-editor-row:last-child .pair-lead-input")?.select();
   });
 
   $("#restartButton").addEventListener("click", () => timeline.restart());
@@ -364,7 +422,10 @@
     const preset = fontPresets[inputs.font.value] || fontPresets["snap-inter-medium"];
     const previewShort = Math.max(1, Math.min(designFrame.clientWidth, designFrame.clientHeight));
     const scaleToOutput = Math.min(canvas.width, canvas.height) / previewShort;
-    const fontSize = Number(inputs.fontSize.value) * scaleToOutput;
+    const leadFontSize = Number(inputs.leadFontSize.value) * scaleToOutput;
+    const suffixFontSize = Number(inputs.suffixFontSize.value) * scaleToOutput;
+    const leadWeight = Number(inputs.leadFontWeight.value);
+    const suffixWeight = Number(inputs.suffixFontWeight.value);
     const gap = (suffixText ? Number(inputs.wordGap.value) : 0) * scaleToOutput;
     const introDistance = Number(inputs.introDistance.value) * scaleToOutput;
     const settleScale = Number(inputs.settleScale.value) / 100;
@@ -375,8 +436,9 @@
     context.fillStyle = inputs.foreground.value;
     context.textAlign = "left";
     context.textBaseline = "middle";
-    context.font = `${preset.style} ${preset.weight} ${fontSize}px "${preset.family}"`;
+    context.font = `${preset.style} ${leadWeight} ${leadFontSize}px "${preset.family}"`;
     const leadWidth = context.measureText(leadText).width;
+    context.font = `${preset.style} ${suffixWeight} ${suffixFontSize}px "${preset.family}"`;
     const suffixWidth = context.measureText(suffixText).width;
     const fullWidth = leadWidth + gap + suffixWidth;
     const maxWidth = Math.max(canvas.width * .16, 2 * (Math.min(anchorX, canvas.width - anchorX) - canvas.width * .04));
@@ -408,9 +470,11 @@
     context.scale(scale, scale);
     context.globalAlpha = 1;
     const leadX = local < timing.revealAt ? -leadWidth / 2 : -fullWidth / 2;
+    context.font = `${preset.style} ${leadWeight} ${leadFontSize}px "${preset.family}"`;
     context.fillText(leadText, leadX, 0);
     if (suffixText && suffixAlpha > 0) {
       context.globalAlpha = suffixAlpha;
+      context.font = `${preset.style} ${suffixWeight} ${suffixFontSize}px "${preset.family}"`;
       context.fillText(suffixText, -fullWidth / 2 + leadWidth + suffixGap, 0);
     }
     context.restore();
@@ -426,7 +490,7 @@
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
-  const exportButtons = [$("#exportPng"), $("#exportGif"), $("#exportVideo")];
+  const exportButtons = [$("#exportPng"), $("#exportGif"), $("#exportVideo"), $("#exportVerticalVideo")];
   function setExportBusy(busy, message) {
     exportButtons.forEach((button) => { button.disabled = busy; });
     exportStatus.textContent = message;
@@ -482,49 +546,111 @@
     }
   });
 
-  $("#exportVideo").addEventListener("click", async () => {
-    const canvas = makeExportCanvas();
+  function supportedVideoType() {
+    const candidates = [
+      "video/mp4;codecs=h264", "video/mp4;codecs=avc1.42E01E", "video/mp4",
+      "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"
+    ];
+    return candidates.find((type) => MediaRecorder.isTypeSupported(type)) || "";
+  }
+
+  async function exportWebMFrames(canvas, outputDuration, renderAt) {
+    if (typeof window.WebMWriter !== "function") throw new Error("逐帧视频编码器未加载");
+    const writer = new WebMWriter({ quality: .94, frameRate: fps });
+    const frameCount = Math.max(1, Math.ceil(outputDuration * fps));
+    for (let frame = 0; frame < frameCount; frame += 1) {
+      renderAt(frame / fps);
+      writer.addFrame(canvas);
+      if (frame % 2 === 0) {
+        exportStatus.textContent = `正在逐帧生成 ${canvas.width} × ${canvas.height} 高清视频 · ${Math.round((frame + 1) / frameCount * 100)}%`;
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+    }
+    exportStatus.textContent = "正在封装视频文件…";
+    const blob = await writer.complete();
+    if (!blob || !blob.size) throw new Error("视频文件为空");
+    downloadBlob(blob, `continuation-${canvas.width}x${canvas.height}-hd.webm`);
+    return { extension: "WEBM", size: blob.size };
+  }
+
+  async function exportVideo(verticalHD = false) {
+    const canvas = verticalHD ? document.createElement("canvas") : makeExportCanvas();
+    if (verticalHD) { canvas.width = 1080; canvas.height = 1920; }
+    const speed = Number(inputs.speed.value) / 100;
+    const outputDuration = parsePairs().length * timingValues().cycle / speed;
     if (!canvas.captureStream || !window.MediaRecorder) {
-      exportStatus.textContent = "当前浏览器不支持视频录制，请使用最新版 Chrome / Edge。";
+      setExportBusy(true, `正在逐帧生成 ${canvas.width} × ${canvas.height} 高清视频 · 0%`);
+      try {
+        const result = await exportWebMFrames(canvas, outputDuration, (time) => renderCanvasFrame(canvas, time * speed));
+        setExportBusy(false, `${result.extension} 视频已生成 · ${canvas.width} × ${canvas.height} · ${(result.size / 1024 / 1024).toFixed(1)} MB`);
+      } catch (error) {
+        console.error(error);
+        setExportBusy(false, `视频导出失败：${error.message || "编码器异常"}`);
+      }
       return;
     }
-    const candidates = ["video/mp4;codecs=avc1.42E01E", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
-    const mimeType = candidates.find((type) => MediaRecorder.isTypeSupported(type)) || "";
+    const mimeType = supportedVideoType();
     const stream = canvas.captureStream(fps);
-    const recorder = new MediaRecorder(stream, mimeType ? { mimeType, videoBitsPerSecond: 12_000_000 } : undefined);
+    let recorder;
+    try {
+      recorder = new MediaRecorder(stream, mimeType ? { mimeType, videoBitsPerSecond: verticalHD ? 20_000_000 : 12_000_000 } : undefined);
+    } catch (error) {
+      stream.getTracks().forEach((track) => track.stop());
+      setExportBusy(true, `正在逐帧生成 ${canvas.width} × ${canvas.height} 高清视频 · 0%`);
+      try {
+        const result = await exportWebMFrames(canvas, outputDuration, (time) => renderCanvasFrame(canvas, time * speed));
+        setExportBusy(false, `${result.extension} 视频已生成 · ${canvas.width} × ${canvas.height} · ${(result.size / 1024 / 1024).toFixed(1)} MB`);
+      } catch (fallbackError) {
+        console.error(fallbackError);
+        setExportBusy(false, `视频导出失败：${fallbackError.message || "编码器异常"}`);
+      }
+      return;
+    }
     const chunks = [];
     recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
-    const finished = new Promise((resolve) => {
+    const finished = new Promise((resolve, reject) => {
+      recorder.onerror = (event) => reject(event.error || new Error("视频编码失败"));
       recorder.onstop = () => {
         const type = recorder.mimeType || mimeType || "video/webm";
         const extension = type.includes("mp4") ? "mp4" : "webm";
-        downloadBlob(new Blob(chunks, { type }), `continuation-${canvas.width}x${canvas.height}.${extension}`);
-        resolve(extension.toUpperCase());
+        const blob = new Blob(chunks, { type });
+        if (!blob.size) { reject(new Error("视频文件为空")); return; }
+        downloadBlob(blob, `continuation-${canvas.width}x${canvas.height}-hd.${extension}`);
+        resolve({ extension: extension.toUpperCase(), size: blob.size });
       };
     });
-    const speed = Number(inputs.speed.value) / 100;
-    const outputDuration = parsePairs().length * timingValues().cycle / speed;
-    setExportBusy(true, `正在录制视频 · 0%`);
-    recorder.start();
+    setExportBusy(true, `正在录制 ${canvas.width} × ${canvas.height} 高清视频 · 0%`);
+    recorder.start(250);
     const startedAt = performance.now();
-    await new Promise((resolve) => {
-      function draw(now) {
-        const elapsed = (now - startedAt) / 1000;
-        renderCanvasFrame(canvas, elapsed * speed);
-        exportStatus.textContent = `正在录制视频 · ${Math.min(100, Math.round(elapsed / outputDuration * 100))}%`;
-        if (elapsed < outputDuration) requestAnimationFrame(draw);
-        else resolve();
-      }
-      requestAnimationFrame(draw);
-    });
-    recorder.stop();
-    const extension = await finished;
-    stream.getTracks().forEach((track) => track.stop());
-    setExportBusy(false, `${extension} 视频已生成 · ${canvas.width} × ${canvas.height}`);
-  });
+    try {
+      await new Promise((resolve) => {
+        function draw(now) {
+          const elapsed = Math.min(outputDuration, (now - startedAt) / 1000);
+          renderCanvasFrame(canvas, elapsed * speed);
+          exportStatus.textContent = `正在录制 ${canvas.width} × ${canvas.height} 高清视频 · ${Math.min(100, Math.round(elapsed / outputDuration * 100))}%`;
+          if (elapsed < outputDuration) requestAnimationFrame(draw);
+          else resolve();
+        }
+        requestAnimationFrame(draw);
+      });
+      recorder.stop();
+      const result = await finished;
+      setExportBusy(false, `${result.extension} 视频已生成 · ${canvas.width} × ${canvas.height} · ${(result.size / 1024 / 1024).toFixed(1)} MB`);
+    } catch (error) {
+      console.error(error);
+      if (recorder.state !== "inactive") recorder.stop();
+      setExportBusy(false, `视频导出失败：${error.message || "编码器异常"}`);
+    } finally {
+      stream.getTracks().forEach((track) => track.stop());
+    }
+  }
+
+  $("#exportVideo").addEventListener("click", () => exportVideo(false));
+  $("#exportVerticalVideo").addEventListener("click", () => exportVideo(true));
 
   window.addEventListener("resize", scheduleRebuild);
   if (window.innerWidth <= 720) $("#controlPanel").removeAttribute("open");
+  renderPairEditor();
   syncRowPositionControls();
   document.fonts.ready.then(() => rebuild());
 })();

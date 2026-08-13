@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="彩组：一句主题文字从单色标题快速重组成多彩字位的动态字体编辑器。">
+  <title>彩组 Color Recompose | ME Motion Studio</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;f[]=general-sans@400,500,600&amp;f[]=clash-display@500,600&amp;f[]=cabinet-grotesk@500,700&amp;display=swap">
+  <link rel="stylesheet" href="continuation.css">
+  <link rel="stylesheet" href="currentwall.css">
+  <link rel="stylesheet" href="creatorstudio.css">
+  <link rel="stylesheet" href="colorrecompose.css?v=20260813-fontmatch">
+  <link rel="stylesheet" href="me-motion-editor.css">
+  <link rel="stylesheet" href="stg-cn.css">
+</head>
+<body class="me-motion-editor">
+  <main class="current-stage creator-stage color-recompose-stage" aria-label="彩色文字重组动效画布">
+    <canvas id="flowCanvas"></canvas>
+    <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+  </main>
+
+  <details class="control-panel current-panel creator-panel color-recompose-panel" id="controlPanel" open>
+    <summary>
+      <span><b>彩组</b><small>COLOR RECOMPOSE / 28</small></span>
+      <i aria-hidden="true">参数</i>
+    </summary>
+    <div class="panel-scroll">
+      <section class="scene-grid creator-scene-grid">
+        <label>主题文字
+          <textarea id="titleText" rows="3" spellcheck="false">MAKE IT VIVID</textarea>
+        </label>
+        <label>彩色碎片字源
+          <textarea id="sourceText" rows="4" spellcheck="false">MOTION
+VISION
+FUTURE
+CREATE</textarea>
+        </label>
+        <p class="hint">先完整显示单色主题，随后在原字位中快速穿插上方字源的彩色字符与横向切片，最后重新锁定为完整标题。</p>
+      </section>
+
+      <section class="font-picker">
+        <div class="color-font-grid">
+        <label><span class="section-label">字体</span><select id="fontFamily">
+          <optgroup label="Snap 动效字体">
+            <option value="snap-inter-medium" selected>Inter Medium · 与续句一致</option>
+            <option value="snap-inter-black">Inter Black</option>
+            <option value="snap-ibm-plex">IBM Plex Mono Bold Italic</option>
+            <option value="snap-space-mono">Space Mono Bold</option>
+            <option value="snap-space-grotesk">Space Grotesk Bold</option>
+          </optgroup>
+          <optgroup label="Free Faces · OFL">
+            <option value="ff-space-grotesk">Space Grotesk</option>
+            <option value="ff-martian-mono">Martian Mono</option>
+            <option value="ff-oi">Oi Display</option>
+            <option value="ff-barriecito">Barriecito</option>
+          </optgroup>
+          <optgroup label="Fontshare · 官方 API">
+            <option value="fs-satoshi">Satoshi</option>
+            <option value="fs-general-sans">General Sans</option>
+            <option value="fs-clash-display">Clash Display</option>
+            <option value="fs-cabinet">Cabinet Grotesk</option>
+          </optgroup>
+          <optgroup label="中文字体">
+            <option value="cn-noto-regular">Noto Sans SC</option>
+            <option value="cn-noto-black">Noto Sans SC Black</option>
+          </optgroup>
+          <optgroup label="图标爆发字体 · 本地">
+            <option value="ib-archivo">Archivo Black</option>
+            <option value="ib-roboto-condensed">Roboto Condensed</option>
+            <option value="ib-work">Work Sans</option>
+            <option value="ib-lora">Lora Serif</option>
+            <option value="ib-fenix">Fenix</option>
+            <option value="ib-vollkorn">Vollkorn Bold Italic</option>
+            <option value="ib-cairo">Cairo</option>
+            <option value="ib-aguafina">Aguafina Script</option>
+            <option value="ib-manrope">Manrope</option>
+            <option value="ib-spartan">League Spartan</option>
+            <option value="ib-cinzel">Cinzel</option>
+            <option value="ib-instrument">Instrument Serif</option>
+            <option value="ib-bebas">Bebas Neue</option>
+            <option value="ib-poppins">Poppins</option>
+            <option value="ib-rajdhani">Rajdhani</option>
+            <option value="ib-teko">Teko</option>
+            <option value="ib-khand">Khand</option>
+            <option value="ib-fraunces">Fraunces</option>
+            <option value="ib-sc-thin">Noto Sans SC Thin</option>
+            <option value="ib-jp-thin">Noto Sans JP Thin</option>
+            <option value="ib-jp-black">Noto Sans JP Black</option>
+            <option value="ib-kr-black">Noto Sans KR Black</option>
+          </optgroup>
+        </select></label>
+        <label><span class="section-label">字体粗细</span><select id="fontWeight">
+          <option value="200">Thin · 200</option>
+          <option value="300">Light · 300</option>
+          <option value="400">Regular · 400</option>
+          <option value="500" selected>Medium · 500</option>
+          <option value="600">Semibold · 600</option>
+          <option value="700">Bold · 700</option>
+          <option value="900">Black · 900</option>
+        </select></label>
+        </div>
+        <p class="hint">默认采用与“续句”完全相同的 Inter Variable · 500。字号只改变大小；字体粗细独立调整，不会随字号一起变化。</p>
+      </section>
+
+      <section class="motion-quick">
+        <div class="section-heading"><p class="section-label">常用调节</p><small class="section-note">主题 → 彩色重组 → 定稿</small></div>
+        <div class="motion-map color-motion-map" aria-label="动效阶段">
+          <span>单色主题</span><i>→</i><span>彩色碎片重组</span><i>→</i><span>完整定稿</span>
+        </div>
+        <div class="controls-grid quick-grid">
+          <label>字号 <small class="stage-tag">画面</small><output id="fontSizeOut">78</output>
+            <input id="fontSize" type="range" min="24" max="180" value="78">
+          </label>
+          <label>字距 <small class="stage-tag">画面</small><output id="trackingOut">0px</output>
+            <input id="tracking" type="range" min="-12" max="40" value="0">
+          </label>
+          <label>单色停留 <small class="stage-tag">阶段 1</small><output id="introDurationOut">0.55秒</output>
+            <input id="introDuration" type="range" min="100" max="4000" step="50" value="550">
+          </label>
+          <label>彩色重组 <small class="stage-tag">阶段 2</small><output id="recomposeDurationOut">0.42秒</output>
+            <input id="recomposeDuration" type="range" min="120" max="2400" step="10" value="420">
+          </label>
+          <label>碎片刷新速度 <small class="stage-tag">阶段 2</small><output id="fragmentRateOut">30 FPS</output>
+            <input id="fragmentRate" type="range" min="8" max="60" step="1" value="30">
+          </label>
+          <label>定稿停留 <small class="stage-tag">阶段 3</small><output id="holdDurationOut">1.2秒</output>
+            <input id="holdDuration" type="range" min="200" max="8000" step="50" value="1200">
+          </label>
+          <label>碎片强度 <small class="stage-tag">重组</small><output id="fragmentStrengthOut">88%</output>
+            <input id="fragmentStrength" type="range" min="0" max="160" value="88">
+          </label>
+          <label>碎片抖动 <small class="stage-tag">重组</small><output id="fragmentJitterOut">8px</output>
+            <input id="fragmentJitter" type="range" min="0" max="32" value="8">
+          </label>
+          <label>碎片覆盖宽度 <small class="stage-tag">重组</small><output id="fragmentWidthOut">112%</output>
+            <input id="fragmentWidth" type="range" min="70" max="180" step="1" value="112">
+          </label>
+          <label>动效中主题字浓度 <small class="stage-tag">重组</small><output id="baseTextOpacityOut">82%</output>
+            <input id="baseTextOpacity" type="range" min="0" max="100" step="1" value="82">
+          </label>
+        </div>
+        <p class="hint">白底黑字感觉太浅时，把“主题字浓度”向右调；100% 会在彩色碎片运动时仍保持纯黑。它只影响重组阶段，开场与最终定稿不受影响。</p>
+      </section>
+
+      <section class="palette-section">
+        <div class="section-heading"><p class="section-label">碎片来源颜色</p><small class="section-note">与字源混合</small></div>
+        <div class="palette-grid">
+          <label>01<input class="palette-color" type="color" value="#ff3b30"></label>
+          <label>02<input class="palette-color" type="color" value="#ff9f0a"></label>
+          <label>03<input class="palette-color" type="color" value="#ffd60a"></label>
+          <label>04<input class="palette-color" type="color" value="#30d158"></label>
+          <label>05<input class="palette-color" type="color" value="#0a84ff"></label>
+          <label>06<input class="palette-color" type="color" value="#bf5af2"></label>
+        </div>
+      </section>
+
+      <section class="color-row">
+        <label>背景<input id="backgroundColor" type="color" value="#000000"></label>
+        <label>标题 / 定稿<input id="textColor" type="color" value="#ffffff"></label>
+        <label class="punctuation-toggle"><input id="punctuationEnabled" type="checkbox" checked> 标点独立颜色</label>
+        <label>标点颜色<input id="punctuationColor" type="color" value="#ff453a"></label>
+      </section>
+      <p class="hint">识别中英文逗号、句号、感叹号、问号、冒号、分号、引号、括号、连接号等标点。关闭“标点独立颜色”后，标点会重新跟随标题颜色。</p>
+
+      <section class="transport" aria-label="时间轴控制">
+        <button id="restartButton" type="button">重播</button>
+        <button id="pauseButton" type="button">暂停</button>
+        <button id="backButton" type="button">−1 帧</button>
+        <button id="forwardButton" type="button">+1 帧</button>
+      </section>
+
+      <section class="export-panel">
+        <label class="section-label" for="exportPreset">导出尺寸</label>
+        <select id="exportPreset">
+          <option value="current">当前画板</option>
+          <option value="1080x1080">1:1 · 1080 × 1080</option>
+          <option value="1080x1350">4:5 · 1080 × 1350</option>
+          <option value="1080x1920">9:16 · 1080 × 1920</option>
+          <option value="1920x1080">16:9 · 1920 × 1080</option>
+          <option value="custom">自定义尺寸</option>
+        </select>
+        <div class="custom-size" id="customSize" hidden>
+          <label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label><span>×</span>
+          <label>高<input id="exportHeight" type="number" min="240" max="3840" value="1080"></label>
+        </div>
+        <div class="export-actions">
+          <button id="exportPng" type="button">PNG 图片</button>
+          <button id="exportGif" type="button">GIF 动图</button>
+          <button id="exportVideo" type="button">视频</button>
+          <button class="export-hd-video" id="exportVerticalVideo" type="button">导出 9:16 高清视频 · 1080 × 1920</button>
+        </div>
+        <p class="export-status" id="exportStatus" aria-live="polite">9:16 高清视频会导出一次完整彩组循环；Safari 会自动逐帧生成视频。</p>
+      </section>
+      <p class="formula">完整标题 → 字源字符与彩色切片错位 → 原标题重新锁定<br>复用“汇聚”收尾的 attack / chaos / resolve 时间结构</p>
+    </div>
+  </details>
+
+  <script src="js/continuation-gif.js"></script>
+  <script src="CCapture.all.min.js"></script>
+  <script src="colorrecompose.js?v=20260813-fontmatch"></script>
+  <script src="me-motion-editor.js"></script>
+  <script src="stg-cn.js"></script>
+</body>
+</html>

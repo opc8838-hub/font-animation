@@ -8,7 +8,7 @@
   const fps = 30;
   const inputs = {
     rows: $("#rowsInput"), font: $("#fontFamily"), fontSize: $("#fontSize"),
-    lineGap: $("#lineGap"), speed: $("#speed"), assetScale: $("#assetScale"),
+    lineGap: $("#lineGap"), speed: $("#speed"), assetScale: $("#assetScale"), wallRowsMode: $("#wallRowsMode"), wallRows: $("#wallRows"),
     wave: $("#wave"), waveRate: $("#waveRate"), vertical: $("#vertical"),
     repeatGap: $("#repeatGap"), background: $("#backgroundColor"), foreground: $("#textColor"),
     motionMode: $("#motionMode"), introWord: $("#introWord"),
@@ -50,6 +50,7 @@
   let rafId = 0;
   let activeTokenInput = inputs.rows;
   let selectedAssetId = "music";
+  let animalLibraryOpen = false;
 
   const svg = (body, background = "#ffffff") => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="${background}"/>${body}</svg>`
@@ -78,6 +79,7 @@
   }
 
   builtIns.forEach(([id, label, src]) => addAsset(id, label, src));
+  window.TokenAssetTools.animalAssets().forEach(({ id, label, src }) => addAsset(id, label, src));
 
   function parseRows() {
     const rows = inputs.rows.value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
@@ -140,10 +142,13 @@
   function renderAssetGrid() {
     const grid = $("#assetGrid");
     grid.replaceChildren();
+    let animalIndex = 0;
     assets.forEach((asset) => {
       const card = document.createElement("div");
       card.className = "asset-card";
       card.classList.toggle("is-selected", asset.id === selectedAssetId);
+      const isAnimal = asset.id.startsWith("animal");
+      if (isAnimal && animalIndex++ >= 8 && !animalLibraryOpen) card.classList.add("is-library-hidden");
       const insert = document.createElement("button");
       insert.type = "button";
       insert.className = "asset-insert";
@@ -151,6 +156,8 @@
       const preview = document.createElement("img");
       preview.src = asset.src;
       preview.alt = "";
+      preview.loading = "lazy";
+      preview.decoding = "async";
       const label = document.createElement("span");
       label.textContent = asset.label;
       insert.append(preview, label);
@@ -172,6 +179,11 @@
       }
       grid.append(card);
     });
+    const divider = document.createElement("div");
+    divider.className = "asset-library-divider";
+    divider.innerHTML = `<span>透明动物素材 · 31 张</span><button type="button">${animalLibraryOpen ? "收起" : "查看全部"}</button>`;
+    divider.querySelector("button").addEventListener("click", () => { animalLibraryOpen = !animalLibraryOpen; renderAssetGrid(); });
+    grid.insertBefore(divider, grid.children[4] || null);
   }
 
   function syncAssetTuner() {
@@ -227,18 +239,23 @@
     syncAssetTuner();
   }
 
-  $("#assetUpload").addEventListener("change", (event) => {
-    [...event.currentTarget.files].forEach((file) => {
-      if (!file.type.startsWith("image/")) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        const id = `img${++uploadSerial}`;
-        addAsset(id, file.name.replace(/\.[^.]+$/, "").slice(0, 12) || id, String(reader.result), true);
+  $("#assetUpload").addEventListener("change", async (event) => {
+    const files = [...event.currentTarget.files].filter((file) => file.type.startsWith("image/"));
+    for (const file of files) {
+      const id = `img${++uploadSerial}`;
+      $("#assetProcessStatus").textContent = `正在处理 ${file.name}…`;
+      try {
+        const result = await window.TokenAssetTools.processFile(file, { removeBackground: $("#assetRemoveBackground").checked });
+        addAsset(id, file.name.replace(/\.[^.]+$/, "").slice(0, 12) || id, result.src, true);
+        selectedAssetId = id;
         renderAssetGrid();
+        syncAssetTuner();
         insertToken(id);
-      };
-      reader.readAsDataURL(file);
-    });
+        $("#assetProcessStatus").textContent = `${file.name} · ${result.status} · 可独立调大小与位置。`;
+      } catch (error) {
+        $("#assetProcessStatus").textContent = `${file.name} 处理失败，请换用 PNG、JPG、WebP、SVG 或 GIF。`;
+      }
+    }
     event.currentTarget.value = "";
   });
 
@@ -350,6 +367,17 @@
     };
   }
 
+  function choreographyPhase(timing, localTime) {
+    const phases = [
+      ["开场", 0, timing.leftEnd],
+      ["铺满画面", timing.leftEnd, timing.popEnd],
+      ["满屏向左流动", timing.popEnd, timing.fullEnd],
+      ["向右带动 / 逐行消失", timing.fullEnd, timing.exitEnd],
+      ["单行收尾", timing.exitEnd, timing.finalEnd]
+    ];
+    return phases.find(([, start, end]) => localTime >= start && localTime < end) || phases[phases.length - 1];
+  }
+
   function renderFrame(target, time, width, height, pixelRatio = 1) {
     const context = target.getContext("2d");
     const w = width ?? target.width / pixelRatio;
@@ -370,8 +398,22 @@
     const waveAmp = Number(inputs.wave.value) * scale;
     const waveRate = Number(inputs.waveRate.value) / 100;
     const verticalSpeed = Number(inputs.vertical.value) * scale;
-    const laneCount = Math.ceil(h / lineHeight) + 6;
-    const halfLanes = Math.ceil(laneCount / 2);
+    // Auto mode preserves the original full-screen wall: row count follows
+    // the actual canvas height, font size and line height. A fixed row count
+    // is only used after the user explicitly switches to custom mode.
+    const autoLaneCount = Math.ceil(h / lineHeight) + 6;
+    const customLaneCount = Math.max(3, Number(inputs.wallRows.value) || 9);
+    const halfLanes = inputs.wallRowsMode.value === "auto"
+      ? Math.ceil(autoLaneCount / 2)
+      : Math.floor(customLaneCount / 2);
+    const renderedLaneCount = halfLanes * 2 + 1;
+    if (target === canvas) {
+      canvas.dataset.wallRowsMode = inputs.wallRowsMode.value;
+      canvas.dataset.wallRowsResolved = String(renderedLaneCount);
+      const rowOutput = $("#wallRowsOut");
+      const rowLabel = inputs.wallRowsMode.value === "auto" ? `自动 · ${renderedLaneCount}行` : `${renderedLaneCount}行`;
+      if (rowOutput.textContent !== rowLabel) rowOutput.textContent = rowLabel;
+    }
     const choreography = inputs.motionMode.value === "choreography";
     const timing = choreographyTiming();
     const localTime = choreography ? mod(time, timing.cycle) : time;
@@ -465,7 +507,12 @@
       const y = laneIndex * lineHeight * (choreography && localTime >= timing.fullEnd ? lerp(1, .92, exitProgress) : 1) + verticalOffset + yWave;
       const velocity = fontPx * 1.45 * masterSpeed * (setting.speed / 100);
       const signedShiftRate = setting.direction === 0 ? 0 : (setting.direction < 0 ? velocity : -velocity);
-      const signedTravel = localTime * signedShiftRate;
+      // The full-wall duration is a real motion boundary, not just a label.
+      // Stop accumulating leftward distance when stage 2 ends; stage 3 owns
+      // all movement after that point. Without this clamp, a 0.20 s setting
+      // could still look like several seconds of left flow.
+      const leftFlowClock = choreography ? Math.min(localTime, timing.fullEnd) : localTime;
+      const signedTravel = leftFlowClock * signedShiftRate;
 
       if (finalStage) {
         const anchorX = localWidth / 2 - layout.width / 2;
@@ -527,8 +574,22 @@
     const ratio = Number(canvas.dataset.ratio || 1);
     const time = currentTime();
     renderFrame(canvas, time, canvas.width / ratio, canvas.height / ratio, ratio);
-    const displayTime = inputs.motionMode.value === "choreography" ? mod(time, choreographyTiming().cycle) : time;
+    const timing = choreographyTiming();
+    const displayTime = inputs.motionMode.value === "choreography" ? mod(time, timing.cycle) : time;
     frameCounter.textContent = `F ${String(Math.round(displayTime * fps)).padStart(4, "0")}`;
+    if (inputs.motionMode.value === "choreography") {
+      const [phaseName, phaseStart, phaseEnd] = choreographyPhase(timing, displayTime);
+      const phaseDuration = Math.max(0, phaseEnd - phaseStart);
+      if (canvas.dataset.motionPhase !== phaseName) canvas.dataset.motionPhase = phaseName;
+      canvas.dataset.phaseDuration = phaseDuration.toFixed(3);
+      const status = `当前：${phaseName} · 本段 ${phaseDuration.toFixed(2)} 秒 · 一轮 ${timing.cycle.toFixed(2)} 秒`;
+      if ($("#timingReadout").textContent !== status) $("#timingReadout").textContent = status;
+    } else {
+      canvas.dataset.motionPhase = "持续满屏水流";
+      delete canvas.dataset.phaseDuration;
+      const status = "当前：持续满屏水流 · 不进入下一阶段";
+      if ($("#timingReadout").textContent !== status) $("#timingReadout").textContent = status;
+    }
     rafId = requestAnimationFrame(previewLoop);
   }
 
@@ -554,12 +615,13 @@
 
   function updateOutputs() {
     const timing = choreographyTiming();
-    const formatSeconds = (seconds) => `${seconds < 1 ? seconds.toFixed(2) : seconds.toFixed(1)}秒`;
+    const formatSeconds = (seconds) => `${seconds.toFixed(2)}秒`;
     const values = {
       fontSizeOut: inputs.fontSize.value,
       lineGapOut: inputs.lineGap.value,
       speedOut: `${(Number(inputs.speed.value) / 100).toFixed(2)}×`,
       assetScaleOut: `${inputs.assetScale.value}%`,
+      wallRowsOut: inputs.wallRowsMode.value === "auto" ? "自动铺满" : `${inputs.wallRows.value}行`,
       waveOut: inputs.wave.value,
       waveRateOut: (Number(inputs.waveRate.value) / 100).toFixed(2),
       verticalOut: inputs.vertical.value,
@@ -578,10 +640,17 @@
       swapIntervalOut: `${inputs.swapInterval.value}ms`
     };
     Object.entries(values).forEach(([id, value]) => { $(`#${id}`).textContent = value; });
+    inputs.wallRows.disabled = inputs.wallRowsMode.value === "auto";
     document.documentElement.style.setProperty("--text-color", inputs.foreground.value);
   }
 
   Object.values(inputs).forEach((input) => input.addEventListener("input", updateOutputs));
+  inputs.fullDuration.addEventListener("input", () => {
+    if (inputs.motionMode.value !== "choreography") return;
+    // Direct manipulation: every slider movement previews this exact stage,
+    // so short values such as 0.20 s can be judged without waiting a full loop.
+    setTime(choreographyTiming().popEnd);
+  });
   [inputs.assetItemScale, inputs.assetOffsetX, inputs.assetOffsetY].forEach((input) => {
     input.addEventListener("input", updateSelectedAsset);
   });
@@ -590,7 +659,7 @@
 
   function exportDimensions() {
     const preset = $("#exportPreset").value;
-    if (preset === "current") return [Math.round(window.innerWidth), Math.round(window.innerHeight)];
+    if (preset === "current") return [Math.round(canvas.clientWidth), Math.round(canvas.clientHeight)];
     if (preset === "custom") return [Number($("#exportWidth").value), Number($("#exportHeight").value)];
     return preset.split("x").map(Number);
   }
