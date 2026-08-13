@@ -168,11 +168,44 @@
 .upload-button:hover { background: #c1ff1a; }
 .upload-button input { position: fixed; opacity: 0; pointer-events: none; }
 
+.asset-background-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 8px 0 4px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.asset-background-toggle input { width: 15px; height: 15px; }
+.asset-process-status { margin: 0 0 8px; color: #62615c; font: 8px/1.45 "Courier New", monospace; }
+
 .asset-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 6px;
 }
+
+.asset-library-divider {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 8px;
+  border: 1px solid #c9c8c1;
+  background: #f4f3ef;
+  font: 700 8px/1 "Courier New", monospace;
+}
+
+.asset-library-divider button {
+  min-height: 24px;
+  padding: 0 8px;
+  border: 1px solid #111;
+  background: #fff;
+  font: 700 8px/1 sans-serif;
+}
+
+.asset-card.is-library-hidden { display: none; }
 
 .asset-card {
   position: relative;

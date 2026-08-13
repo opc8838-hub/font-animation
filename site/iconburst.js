@@ -43,10 +43,55 @@
   ];
   const iconColors = [["#ffcc00", "#ff6b00"], ["#7b61ff", "#28c8ff"], ["#ff4fa3", "#7b61ff"], ["#35d07f", "#00a7ff"], ["#ff5f57", "#ffd60a"]];
   const shapeLabels = { square: "方形", circle: "圆形", ring: "圆环", triangle: "三角形", star: "星形" };
+  const iconSvg = (body, background) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="${background}"/>${body}</svg>`)}`;
+  const flowIconImages = [
+    { name: "流墙音乐", url: iconSvg('<path d="M44 24v37c-3-2-7-2-11-1-7 2-11 8-9 13s9 7 16 5c6-2 10-7 10-12V39l24-7v24c-3-2-7-2-11-1-7 2-11 8-9 13s9 7 16 5c6-2 10-7 10-12V19z" fill="white"/>', "#fa264f") },
+    { name: "流墙播放", url: iconSvg('<circle cx="50" cy="50" r="34" fill="none" stroke="white" stroke-width="6"/><path d="M41 30 70 50 41 70z" fill="white"/>', "#111111") },
+    { name: "流墙云", url: iconSvg('<circle cx="34" cy="56" r="15" fill="white"/><circle cx="51" cy="45" r="22" fill="white"/><circle cx="70" cy="56" r="16" fill="white"/><rect x="19" y="54" width="67" height="21" rx="10" fill="white"/>', "#1389ff") },
+    { name: "流墙手表", url: iconSvg('<rect x="28" y="19" width="44" height="62" rx="15" fill="#111"/><rect x="35" y="28" width="30" height="44" rx="9" fill="#d7ff2f"/><circle cx="50" cy="50" r="3" fill="#111"/>', "#d8d8d8") }
+  ];
   const transparentAnimalImages = Array.from({ length: 31 }, (_, index) => ({
     name: `透明动物 ${String(index + 1).padStart(2, "0")}`,
     url: `assets/transparent-animals/animal-${String(index + 1).padStart(2, "0")}.png`
   }));
+
+  function animalAsset(index, role, overrides) {
+    const image = transparentAnimalImages[index % transparentAnimalImages.length];
+    return defaultAsset(Object.assign({
+      id: `${role}-animal-${index}`,
+      builtin: true,
+      type: "image",
+      role,
+      name: image.name,
+      url: image.url,
+      originalDataUrl: image.url,
+      fileType: "image/png",
+      libraryImage: true,
+      removeBackground: false,
+      autoBackground: false,
+      processedWidth: 768,
+      processedHeight: 768,
+      status: "内置高清透明 PNG；可独立缩放、移动、旋转或替换。"
+    }, overrides || {}));
+  }
+
+  function flowIconAsset(index, role, overrides) {
+    const image = flowIconImages[index % flowIconImages.length];
+    return defaultAsset(Object.assign({
+      id: `${role}-flow-icon-${index}`,
+      builtin: true,
+      type: "image",
+      role,
+      name: image.name,
+      url: image.url,
+      originalDataUrl: image.url,
+      fileType: "image/svg+xml",
+      libraryImage: true,
+      removeBackground: false,
+      autoBackground: false,
+      status: "沿用流墙的内置图标；可独立缩放、移动、旋转或替换。"
+    }, overrides || {}));
+  }
   const fontMap = {
     archivoBlack: "IBArchivoBlack", robotoCondensed: "IBRobotoCondensed", space: "IBSpace", work: "IBWork", serif: "IBLora", mono: "IBMono",
     scRegular: "IBSCRegular", scBlack: "IBSCBlack", fenix: "IBFenix", spaceMonoBold: "IBSpaceMonoBold",
@@ -194,7 +239,7 @@
   function builtinAssets() {
     // Twelve readable defaults are enough to establish the cloud without
     // turning every frame into visual noise. Users can still add any number.
-    const names = ["方形", "圆形", "圆环", "星形", "胶囊方块", "能量圆", "线框圆", "闪光星", "轨道方块", "卫星圆", "脉冲环", "彗星星芒"];
+    const names = ["方形", "圆环", "星形", "能量圆"];
     const shapes = ["square", "circle", "ring", "star", "square", "circle", "ring", "star", "square", "circle", "ring", "star"];
     const orbitAssets = names.map((name, index) => defaultAsset({
       id: `builtin-${index}`,
@@ -207,6 +252,16 @@
       size: .82 + (index % 3) * .1,
       rotation: index % 2 ? 12 : -8
     }));
+    orbitAssets.splice(2, 0,
+      animalAsset(0, "orbit", { size: .88, rotation: -7 }),
+      flowIconAsset(0, "orbit", { size: .9, rotation: 5 }),
+      animalAsset(7, "orbit", { size: .82, rotation: 8 }),
+      flowIconAsset(1, "orbit", { size: .84, rotation: -4 }),
+      animalAsset(14, "orbit", { size: .92, rotation: -5 }),
+      flowIconAsset(2, "orbit", { size: .91, rotation: 7 }),
+      animalAsset(22, "orbit", { size: .86, rotation: 6 }),
+      flowIconAsset(3, "orbit", { size: .83, rotation: -6 })
+    );
     const defaultGlyphTargets = [1, 3, 5, 7];
     const defaultGlyphSpeeds = [1, .75, 1.5, 1.8];
     const glyphAssets = ["圆形", "星形", "方形", "圆环"].map((name, index) => defaultAsset({
@@ -222,6 +277,13 @@
       target: defaultGlyphTargets[index],
       sequence: index,
       replaceSpeed: defaultGlyphSpeeds[index]
+    }));
+    glyphAssets.splice(1, 1, animalAsset(4, "glyph", {
+      id: "glyph-animal-default",
+      size: .96,
+      target: defaultGlyphTargets[1],
+      sequence: 1,
+      replaceSpeed: defaultGlyphSpeeds[1]
     }));
     return orbitAssets.concat(glyphAssets);
   }

@@ -10,6 +10,21 @@
 
 .vertical-panel .quick-grid label { min-height: 58px; }
 
+.vertical-panel .stage-control-heading {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 5px;
+  padding: 8px 2px 3px;
+  border-top: 1px solid #d8d8d4;
+}
+
+.vertical-panel .stage-control-heading:first-child { margin-top: 0; border-top: 0; }
+.vertical-panel .stage-control-heading b { font: 750 11px/1.2 inherit; }
+.vertical-panel .stage-control-heading span { color: #77776f; font: 600 8px/1.2 "Courier New", monospace; }
+
 .vertical-panel .formula {
   color: #77776f;
   line-height: 1.55;

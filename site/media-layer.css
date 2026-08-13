@@ -277,6 +277,12 @@
 }
 .stg-media-add-actions button:hover { background: #eaf4ff; }
 
+.stg-media-animal-library { margin-top: 8px; border: 1px solid #d2d2d7; border-radius: 10px; background: #fff; }
+.stg-media-animal-library summary { padding: 9px 10px; color: #1d1d1f; font-size: 11px; font-weight: 700; cursor: pointer; }
+.stg-media-animal-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; padding: 0 8px 8px; }
+.stg-media-animal-grid button { min-width: 0; padding: 4px; border: 1px solid #e1e1e5; border-radius: 8px; background: #f7f7f9; color: #6e6e73; font-size: 8px; }
+.stg-media-animal-grid img { display: block; width: 100%; aspect-ratio: 1; object-fit: contain; }
+
 @media (max-width: 600px) {
   .stg-media-pair { grid-template-columns: 1fr; }
 }

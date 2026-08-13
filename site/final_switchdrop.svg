@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+  <rect width="1200" height="800" fill="#f7f7f5"/>
+  <circle cx="375" cy="400" r="137" fill="#050505"/>
+  <path d="M319 315h36v68c17-18 37-27 61-27 44 0 75 31 75 78v79h-43v-75c0-27-13-43-37-43-33 0-56 28-56 68v50h-36z" fill="#fff"/>
+  <circle cx="441" cy="486" r="18" fill="#8277f5"/>
+  <text x="550" y="438" fill="#050505" font-family="Arial, sans-serif" font-size="120" font-weight="700" letter-spacing="-6">hely</text>
+  <circle cx="804" cy="424" r="15" fill="#8277f5"/>
+  <text x="832" y="438" fill="#050505" font-family="Arial, sans-serif" font-size="120" font-weight="700" letter-spacing="-6">fun</text>
+</svg>
