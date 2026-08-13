@@ -679,7 +679,7 @@
 
   function exportDimensions() {
     const preset = $("#exportPreset").value;
-    if (preset === "current") return [Math.round(window.innerWidth), Math.round(window.innerHeight)];
+    if (preset === "current") return [Math.round(canvas.clientWidth), Math.round(canvas.clientHeight)];
     if (preset === "custom") return [Number($("#exportWidth").value), Number($("#exportHeight").value)];
     return preset.split("x").map(Number);
   }
