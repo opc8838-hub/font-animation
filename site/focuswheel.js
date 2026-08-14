@@ -10,7 +10,7 @@
 
   const inputs = {
     items: $("#itemsText"), font: $("#fontFamily"), baseWeight: $("#baseWeight"), focusWeight: $("#focusWeight"),
-    direction: $("#direction"), motionMode: $("#motionMode"), secondsPerItem: $("#secondsPerItem"), fontSize: $("#fontSize"),
+    direction: $("#direction"), motionMode: $("#motionMode"), scrollSpeed: $("#scrollSpeed"), secondsPerItem: $("#secondsPerItem"), fontSize: $("#fontSize"),
     lineGap: $("#lineGap"), focusScale: $("#focusScale"), focusRadius: $("#focusRadius"), tracking: $("#tracking"),
     horizontalPosition: $("#horizontalPosition"), focusPosition: $("#focusPosition"), focusCurve: $("#focusCurve"),
     perspective: $("#perspective"), edgeFade: $("#edgeFade"), idleOpacity: $("#idleOpacity"), maxBlur: $("#maxBlur"),
@@ -34,6 +34,11 @@
   let animationStart = performance.now();
   let pausedAt = 0;
   let paused = false;
+  let itemCacheSource = "";
+  let itemCache = referenceItems;
+  const glyphMetricCache = new Map();
+  let rafId = 0;
+  let lastEffectiveSeconds = Math.max(.12, Number(inputs.secondsPerItem.value) / 1000) / Math.max(.25, Number(inputs.scrollSpeed.value));
 
   const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
   const lerp = (start, end, progress) => start + (end - start) * progress;
@@ -44,16 +49,34 @@
   const mod = (value, divisor) => ((value % divisor) + divisor) % divisor;
 
   function parseItems() {
-    const values = inputs.items.value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
-    return values.length ? values : ["Focus", "Wheel"];
+    if (inputs.items.value === itemCacheSource) return itemCache;
+    itemCacheSource = inputs.items.value;
+    const values = itemCacheSource.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
+    itemCache = values.length ? values : ["Focus", "Wheel"];
+    return itemCache;
+  }
+
+  function effectiveSecondsPerItem() {
+    const baseSeconds = Math.max(.12, Number(inputs.secondsPerItem.value) / 1000);
+    return baseSeconds / Math.max(.25, Number(inputs.scrollSpeed.value));
   }
 
   function cycleDuration() {
-    return Math.max(.12, Number(inputs.secondsPerItem.value) / 1000) * parseItems().length;
+    return effectiveSecondsPerItem() * parseItems().length;
   }
 
   function timelineTime() {
     return paused ? pausedAt : Math.max(0, (performance.now() - animationStart) / 1000);
+  }
+
+  function preservePhaseAcrossSpeedChange() {
+    const current = timelineTime();
+    const nextEffectiveSeconds = effectiveSecondsPerItem();
+    const rebasedTime = current * nextEffectiveSeconds / Math.max(.001, lastEffectiveSeconds);
+    lastEffectiveSeconds = nextEffectiveSeconds;
+    if (paused) pausedAt = rebasedTime;
+    else animationStart = performance.now() - rebasedTime * 1000;
+    drawPreview(rebasedTime);
   }
 
   function setTime(seconds) {
@@ -92,7 +115,7 @@
   }
 
   function motionPhase(time, itemCount) {
-    const seconds = Math.max(.12, Number(inputs.secondsPerItem.value) / 1000);
+    const seconds = effectiveSecondsPerItem();
     const start = Number(inputs.startPhase.value) / 100 * itemCount;
     const raw = time / seconds + start;
     let phase = raw;
@@ -109,18 +132,21 @@
     return inputs.direction.value === "down" ? -loopedPhase : loopedPhase;
   }
 
-  function textWidth(renderContext, text, tracking) {
-    const glyphs = Array.from(text);
-    return glyphs.reduce((width, glyph, index) => width + renderContext.measureText(glyph).width + (index < glyphs.length - 1 ? tracking : 0), 0);
-  }
-
   function drawTrackedText(renderContext, text, x, y, tracking, align) {
-    const glyphs = Array.from(text);
-    const width = textWidth(renderContext, text, tracking);
+    const metricKey = `${renderContext.font}|${tracking}|${text}`;
+    let metrics = glyphMetricCache.get(metricKey);
+    if (!metrics) {
+      const glyphs = Array.from(text);
+      const widths = glyphs.map((glyph) => renderContext.measureText(glyph).width);
+      metrics = { glyphs, widths, width: widths.reduce((sum, glyphWidth) => sum + glyphWidth, 0) + Math.max(0, glyphs.length - 1) * tracking };
+      if (glyphMetricCache.size > 1200) glyphMetricCache.clear();
+      glyphMetricCache.set(metricKey, metrics);
+    }
+    const { glyphs, widths, width } = metrics;
     let cursor = align === "left" ? x : align === "right" ? x - width : x - width / 2;
     glyphs.forEach((glyph, index) => {
       renderContext.fillText(glyph, cursor, y);
-      cursor += renderContext.measureText(glyph).width + (index < glyphs.length - 1 ? tracking : 0);
+      cursor += widths[index] + (index < glyphs.length - 1 ? tracking : 0);
     });
   }
 
@@ -143,8 +169,6 @@
     const baseWeight = Number(inputs.baseWeight.value);
     const focusWeight = Number(inputs.focusWeight.value);
     const phase = motionPhase(time, count);
-    const loopHeight = Math.max(gap, count * gap);
-    const repeats = Math.max(2, Math.ceil(height / loopHeight) + 2);
     const fadeStrength = Number(inputs.edgeFade.value) / 100;
     const fadeStart = height * (0.48 - .22 * fadeStrength);
     const fadeEnd = height * .54;
@@ -159,27 +183,27 @@
     renderContext.textBaseline = "middle";
     renderContext.textAlign = "left";
 
-    for (let copy = -repeats; copy <= repeats; copy += 1) {
-      for (let index = 0; index < count; index += 1) {
-        const step = index + copy * count - phase;
-        const rawY = step * gap;
-        if (Math.abs(rawY) > height * .72 + gap) continue;
-        const distance = Math.abs(rawY) / focusRadius;
-        const focus = Math.exp(-Math.pow(distance, exponent));
-        const focusEase = smoother(focus);
-        const projectedY = focusY + rawY * (1 + perspective * focusEase);
-        const edgeProgress = clamp((Math.abs(projectedY - focusY) - fadeStart) / Math.max(1, fadeEnd - fadeStart));
-        const edgeAlpha = 1 - smoother(edgeProgress);
-        const opacity = (idleOpacity + (1 - idleOpacity) * Math.pow(focus, .88)) * edgeAlpha;
-        if (opacity <= .002) continue;
-        entries.push({
-          text: items[index], index, focus, focusEase, opacity, y: projectedY,
-          scale: 1 + (maxScale - 1) * focusEase,
-          scaleX: 1 - compression * (1 - focusEase),
-          blur: maximumBlur * Math.pow(1 - focus, 1.25),
-          weight: Math.round(lerp(baseWeight, focusWeight, focusEase))
-        });
-      }
+    const visibleSteps = Math.ceil((height * .72 + gap) / gap);
+    const phaseBase = Math.floor(phase);
+    for (let offset = -visibleSteps; offset <= visibleSteps; offset += 1) {
+      const virtualIndex = phaseBase + offset;
+      const index = mod(virtualIndex, count);
+      const rawY = (virtualIndex - phase) * gap;
+      const distance = Math.abs(rawY) / focusRadius;
+      const focus = Math.exp(-Math.pow(distance, exponent));
+      const focusEase = smoother(focus);
+      const projectedY = focusY + rawY * (1 + perspective * focusEase);
+      const edgeProgress = clamp((Math.abs(projectedY - focusY) - fadeStart) / Math.max(1, fadeEnd - fadeStart));
+      const edgeAlpha = 1 - smoother(edgeProgress);
+      const opacity = (idleOpacity + (1 - idleOpacity) * Math.pow(focus, .88)) * edgeAlpha;
+      if (opacity <= .002) continue;
+      entries.push({
+        text: items[index], index, focus, focusEase, opacity, y: projectedY,
+        scale: 1 + (maxScale - 1) * focusEase,
+        scaleX: 1 - compression * (1 - focusEase),
+        blur: maximumBlur * Math.pow(1 - focus, 1.25),
+        weight: Math.round(lerp(baseWeight, focusWeight, focusEase) / 50) * 50
+      });
     }
 
     entries.sort((a, b) => a.focus - b.focus);
@@ -210,6 +234,9 @@
       canvas.dataset.focusX = focusX.toFixed(2);
       canvas.dataset.focusY = focusY.toFixed(2);
       canvas.dataset.focusScale = String(maxScale);
+      canvas.dataset.phase = phase.toFixed(4);
+      canvas.dataset.scrollSpeed = Number(inputs.scrollSpeed.value).toFixed(2);
+      canvas.dataset.secondsPerItem = effectiveSecondsPerItem().toFixed(4);
       canvas.dataset.timelineTime = time.toFixed(4);
     }
   }
@@ -236,11 +263,12 @@
 
   function previewLoop() {
     drawPreview();
-    requestAnimationFrame(previewLoop);
+    rafId = requestAnimationFrame(previewLoop);
   }
 
   function updateOutputs() {
     const values = {
+      scrollSpeedOut: `${Number(inputs.scrollSpeed.value).toFixed(2)}× · ${effectiveSecondsPerItem().toFixed(2)}秒/项`,
       secondsPerItemOut: `${(Number(inputs.secondsPerItem.value) / 1000).toFixed(2)}秒`,
       fontSizeOut: `${inputs.fontSize.value}px`, lineGapOut: `${inputs.lineGap.value}px`, focusScaleOut: `${inputs.focusScale.value}%`,
       focusRadiusOut: `${inputs.focusRadius.value}%`, trackingOut: `${inputs.tracking.value}px`,
@@ -250,12 +278,20 @@
       snapHoldOut: `${inputs.snapHold.value}%`
     };
     Object.entries(values).forEach(([id, value]) => { $(`#${id}`).textContent = value; });
+    $("#scrollSpeedLabel").textContent = inputs.direction.value === "down" ? "下滑速度" : "上滑速度";
     inputs.snapHold.disabled = inputs.motionMode.value !== "snap";
   }
 
   Object.values(inputs).forEach((input) => input.addEventListener("input", updateOutputs));
   inputs.items.addEventListener("input", () => setTime(timelineTime()));
   inputs.motionMode.addEventListener("change", updateOutputs);
+  inputs.direction.addEventListener("change", updateOutputs);
+  inputs.scrollSpeed.addEventListener("input", preservePhaseAcrossSpeedChange);
+  inputs.secondsPerItem.addEventListener("input", preservePhaseAcrossSpeedChange);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) cancelAnimationFrame(rafId);
+    else { animationStart = performance.now() - timelineTime() * 1000; previewLoop(); }
+  });
   document.querySelectorAll("[data-align]").forEach((button) => button.addEventListener("click", () => {
     alignment = button.dataset.align;
     document.querySelectorAll("[data-align]").forEach((item) => item.classList.toggle("is-active", item === button));
@@ -266,7 +302,7 @@
   $("#restartButton").addEventListener("click", restart);
   $("#pauseButton").addEventListener("click", (event) => {
     if (paused) { animationStart = performance.now() - pausedAt * 1000; paused = false; event.currentTarget.textContent = "暂停"; }
-    else { pausedAt = timelineTime(); paused = true; event.currentTarget.textContent = "继续"; }
+    else { pausedAt = timelineTime(); paused = true; drawPreview(pausedAt); event.currentTarget.textContent = "继续"; }
   });
   $("#backButton").addEventListener("click", () => { paused = true; setTime(timelineTime() - 1 / fps); $("#pauseButton").textContent = "继续"; });
   $("#forwardButton").addEventListener("click", () => { paused = true; setTime(timelineTime() + 1 / fps); $("#pauseButton").textContent = "继续"; });

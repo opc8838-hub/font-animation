@@ -74,7 +74,8 @@ Automation</textarea>
         <div class="controls-grid quick-grid">
           <label>滚动方向 <select id="direction"><option value="up" selected>向上</option><option value="down">向下</option></select></label>
           <label>运动方式 <select id="motionMode"><option value="continuous" selected>连续流动</option><option value="snap">逐项吸附</option></select></label>
-          <label>每项时间 <output id="secondsPerItemOut">0.42秒</output><input id="secondsPerItem" type="range" min="120" max="2000" step="10" value="420"></label>
+          <label><span id="scrollSpeedLabel">上滑速度</span> <output id="scrollSpeedOut">1.00× · 0.42秒/项</output><input id="scrollSpeed" type="range" min="0.25" max="4" step="0.05" value="1"></label>
+          <label>单项基础时长 <output id="secondsPerItemOut">0.42秒</output><input id="secondsPerItem" type="range" min="120" max="2000" step="10" value="420"></label>
           <label>字号 <output id="fontSizeOut">44px</output><input id="fontSize" type="range" min="18" max="160" value="44"></label>
           <label>行距 <output id="lineGapOut">58px</output><input id="lineGap" type="range" min="24" max="180" value="58"></label>
           <label>中心放大 <output id="focusScaleOut">136%</output><input id="focusScale" type="range" min="100" max="220" value="136"></label>
