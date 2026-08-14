@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="焦轮：文字沿纵向循环流动，进入中心焦点带时放大、变黑并变清晰。">
+  <title>焦轮 Focus Wheel | ME Motion Studio</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;f[]=general-sans@400,500,600&amp;display=swap">
+  <link rel="stylesheet" href="continuation.css">
+  <link rel="stylesheet" href="currentwall.css">
+  <link rel="stylesheet" href="focuswheel.css?v=20260814-1">
+  <link rel="stylesheet" href="me-motion-editor.css">
+  <link rel="stylesheet" href="stg-cn.css">
+</head>
+<body class="me-motion-editor">
+  <main class="current-stage focus-wheel-stage" aria-label="纵向焦点文字滚轮画布">
+    <canvas id="flowCanvas"></canvas>
+    <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+  </main>
+
+  <details class="control-panel current-panel focus-wheel-panel" id="controlPanel" open>
+    <summary><span><b>焦轮</b><small>FOCUS WHEEL / 34</small></span><i aria-hidden="true">参数</i></summary>
+    <div class="panel-scroll">
+      <section class="focus-content-section">
+        <div class="section-heading"><p class="section-label">滚轮文字</p><small class="section-note">每行一个词项</small></div>
+        <textarea id="itemsText" rows="8" spellcheck="false">Stem Separation
+and more
+MIDI
+Effects
+Synths
+Chat bar
+Automation</textarea>
+        <div class="preset-actions">
+          <button id="referencePreset" type="button">参考文案</button>
+          <button id="chinesePreset" type="button">中文示例</button>
+          <button id="reverseItems" type="button">倒序排列</button>
+        </div>
+        <p class="hint">短词、长句和中文会分别测量宽度；默认都围绕右侧画布的真实中心轴排布。</p>
+      </section>
+
+      <section class="font-picker">
+        <div class="focus-font-grid">
+          <label><span class="section-label">字体</span><select id="fontFamily">
+            <option value="inter" selected>Inter · 参考字体</option>
+            <option value="space-grotesk">Space Grotesk</option>
+            <option value="satoshi">Satoshi</option>
+            <option value="general-sans">General Sans</option>
+            <option value="manrope">Manrope</option>
+            <option value="poppins">Poppins</option>
+            <option value="noto-sc">Noto Sans SC · 中文</option>
+          </select></label>
+          <label><span class="section-label">基础字重</span><select id="baseWeight">
+            <option value="300">Light · 300</option>
+            <option value="400" selected>Regular · 400</option>
+            <option value="500">Medium · 500</option>
+            <option value="600">Semibold · 600</option>
+          </select></label>
+          <label><span class="section-label">焦点字重</span><select id="focusWeight">
+            <option value="500">Medium · 500</option>
+            <option value="600">Semibold · 600</option>
+            <option value="700" selected>Bold · 700</option>
+            <option value="800">Extra Bold · 800</option>
+            <option value="900">Black · 900</option>
+          </select></label>
+        </div>
+      </section>
+
+      <section class="motion-quick">
+        <div class="section-heading"><p class="section-label">滚动与焦点</p><small class="section-note">连续循环 · 中心距离场</small></div>
+        <div class="motion-map focus-motion-map" aria-label="动效阶段">
+          <span>淡入</span><i>→</i><span>中心放大</span><i>→</i><span>淡出循环</span>
+        </div>
+        <div class="controls-grid quick-grid">
+          <label>滚动方向 <select id="direction"><option value="up" selected>向上</option><option value="down">向下</option></select></label>
+          <label>运动方式 <select id="motionMode"><option value="continuous" selected>连续流动</option><option value="snap">逐项吸附</option></select></label>
+          <label>每项时间 <output id="secondsPerItemOut">0.42秒</output><input id="secondsPerItem" type="range" min="120" max="2000" step="10" value="420"></label>
+          <label>字号 <output id="fontSizeOut">44px</output><input id="fontSize" type="range" min="18" max="160" value="44"></label>
+          <label>行距 <output id="lineGapOut">58px</output><input id="lineGap" type="range" min="24" max="180" value="58"></label>
+          <label>中心放大 <output id="focusScaleOut">136%</output><input id="focusScale" type="range" min="100" max="220" value="136"></label>
+          <label>焦点范围 <output id="focusRadiusOut">23%</output><input id="focusRadius" type="range" min="6" max="48" value="23"></label>
+          <label>字距 <output id="trackingOut">-1px</output><input id="tracking" type="range" min="-8" max="30" value="-1"></label>
+          <label>水平位置 <output id="horizontalPositionOut">50%</output><input id="horizontalPosition" type="range" min="5" max="95" value="50"></label>
+          <label>焦点高度 <output id="focusPositionOut">50%</output><input id="focusPosition" type="range" min="10" max="90" value="50"></label>
+        </div>
+        <div class="alignment-control" role="group" aria-label="文字对齐">
+          <span>文字对齐</span>
+          <button type="button" data-align="left">左</button>
+          <button class="is-active" type="button" data-align="center">中</button>
+          <button type="button" data-align="right">右</button>
+        </div>
+      </section>
+
+      <details class="advanced-panel">
+        <summary>高级质感 <span>边缘与透视</span></summary>
+        <div class="advanced-body controls-grid">
+          <label>焦点曲线 <select id="focusCurve"><option value="soft" selected>柔和宽焦点</option><option value="balanced">均衡</option><option value="sharp">锐利窄焦点</option></select></label>
+          <label>透视扩张 <output id="perspectiveOut">18%</output><input id="perspective" type="range" min="0" max="60" value="18"></label>
+          <label>边缘淡出 <output id="edgeFadeOut">86%</output><input id="edgeFade" type="range" min="0" max="100" value="86"></label>
+          <label>边缘透明度 <output id="idleOpacityOut">4%</output><input id="idleOpacity" type="range" min="0" max="50" value="4"></label>
+          <label>最大模糊 <output id="maxBlurOut">4px</output><input id="maxBlur" type="range" min="0" max="18" step="0.5" value="4"></label>
+          <label>横向压缩 <output id="compressionOut">10%</output><input id="compression" type="range" min="0" max="45" value="10"></label>
+          <label>初始位置 <output id="startPhaseOut">0%</output><input id="startPhase" type="range" min="0" max="100" value="0"></label>
+          <label>吸附停留 <output id="snapHoldOut">28%</output><input id="snapHold" type="range" min="0" max="75" value="28"></label>
+        </div>
+      </details>
+
+      <section class="color-row focus-colors">
+        <label>背景<input id="backgroundColor" type="color" value="#ffffff"></label>
+        <label>焦点文字<input id="focusColor" type="color" value="#050505"></label>
+        <label>边缘文字<input id="idleColor" type="color" value="#b7b7b7"></label>
+      </section>
+
+      <section class="transport" aria-label="时间轴控制">
+        <button id="restartButton" type="button">重播</button><button id="pauseButton" type="button">暂停</button>
+        <button id="backButton" type="button">−1 帧</button><button id="forwardButton" type="button">+1 帧</button>
+      </section>
+
+      <section class="export-panel">
+        <label class="section-label" for="exportPreset">导出尺寸</label>
+        <select id="exportPreset">
+          <option value="current">当前画板</option>
+          <option value="1080x1080">1:1 · 1080 × 1080</option>
+          <option value="1080x1350">4:5 · 1080 × 1350</option>
+          <option value="1080x1920">9:16 · 1080 × 1920</option>
+          <option value="1920x1080">16:9 · 1920 × 1080</option>
+          <option value="custom">自定义尺寸</option>
+        </select>
+        <div class="custom-size" id="customSize" hidden><label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label><span>×</span><label>高<input id="exportHeight" type="number" min="240" max="3840" value="1920"></label></div>
+        <div class="export-timing-grid">
+          <label>导出时长<select id="exportDuration"><option value="cycle" selected>完整一轮</option><option value="1">1 秒</option><option value="3">3 秒</option><option value="5">5 秒</option><option value="10">10 秒</option><option value="custom">自定义</option></select></label>
+          <label>导出帧率<select id="exportFps"><option value="15">15 FPS</option><option value="24">24 FPS</option><option value="30" selected>30 FPS</option></select></label>
+        </div>
+        <label class="custom-duration" id="customDurationWrap" hidden>自定义秒数<input id="customDuration" type="number" min="0.5" max="30" step="0.1" value="3"></label>
+        <div class="export-actions">
+          <button id="exportPng" type="button">PNG 图片</button><button id="exportGif" type="button">GIF 动图</button><button id="exportVideo" type="button">视频</button>
+          <button class="export-hd-video" id="exportVerticalVideo" type="button">导出 9:16 高清视频 · 1080 × 1920</button>
+        </div>
+        <p class="export-status" id="exportStatus" aria-live="polite">默认导出完整一轮；预览、GIF 与视频共享同一条连续时间线。</p>
+      </section>
+      <p class="formula">线性循环相位 × 中心距离场<br>位置不停顿，缩放、字重、颜色、透明度与模糊共同塑造焦点</p>
+    </div>
+  </details>
+
+  <script src="js/continuation-gif.js"></script>
+  <script src="CCapture.all.min.js"></script>
+  <script src="focuswheel.js?v=20260814-1"></script>
+  <script src="me-motion-editor.js"></script>
+  <script src="stg-cn.js"></script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 # ME Motion Studio —— 文字 × 图像动效工作室
 
 原站 [spacetypegenerator.com](https://spacetypegenerator.com)（kielm 开源项目，p5.js 实现）的本地中文版。
-**33 个字体动效 + 中文渲染 + 多图片与文字混排 + 浏览器本地抠图 + 响应式创作工作台。**
+**34 个字体动效 + 中文渲染 + 多图片与文字混排 + 浏览器本地抠图 + 响应式创作工作台。**
 
 在线浏览：[GitHub Pages](https://opc8838-hub.github.io/font-animation/gallery.html)
 
@@ -33,9 +33,9 @@ stg_cn/
 ├── translate_js.py         # UI 中文翻译脚本（含英→中映射表）
 ├── NotoSansSC-vf.ttf       # 中文字体源（可变字体，供重新实例化）
 ├── _scratch/               # 临时验证截图，可删
-└── site/                   # ★ 网站本体（33 个效果）
-    ├── gallery.html        # 效果画廊入口（33 张卡片，链接各效果）
-    ├── index.html ~ switchdrop.html  # 33 个效果页
+└── site/                   # ★ 网站本体（34 个效果）
+    ├── gallery.html        # 效果画廊入口（34 张卡片，链接各效果）
+    ├── index.html ~ focuswheel.html  # 34 个效果页
     ├── sketch_*.js          # 各效果的 p5.js 主程序
     ├── *_script/ *_res/     # 复杂效果的子模块与资源
     ├── assets/              # 字体等公共资源
@@ -79,6 +79,8 @@ stg_cn/
 9. **2026-08-12 最终整合**：以 AL8788 的 ME Motion Studio 首页、双栏工作台与共享媒体组件为最新版 UI 基线，新增续句、流墙、纵跃、汇聚、轨书、棱镜 6 个效果；这 6 个编辑器统一使用 `me-motion-editor.css` / `me-motion-editor.js`，桌面为 420px 左侧编辑器与独立右侧画布，移动端为画布上置、编辑器下置。网站现共 30 个效果。
 
 10. **2026-08-13 协作整合**：合入 AL8788 的彩组（Color Recompose）、组句（Phrase Build）、降临（Switch Drop）3 个新效果，并同步续句、流墙、纵跃、图标/图片编辑与高清视频导出改进。网站现共 33 个效果。
+
+11. **2026-08-14 焦轮**：新增 Focus Wheel 纵向焦点滚轮。多行文字以连续相位循环，进入中心焦点带时放大、加深并变清晰；支持中文、方向/速度/行距/焦点范围/对齐/模糊等编辑，以及可选时长和尺寸的 PNG、GIF、视频导出。网站现共 34 个效果。
 
 ---
 

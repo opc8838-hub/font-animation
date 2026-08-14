@@ -1,0 +1,40 @@
+@font-face { font-family: "Focus Inter"; src: url("continuation_fonts/Inter-Variable.ttf") format("truetype"); font-weight: 100 900; }
+@font-face { font-family: "Focus Space Grotesk"; src: url("continuation_fonts/SpaceGrotesk-Variable.ttf") format("truetype"); font-weight: 300 700; }
+@font-face { font-family: "Focus Manrope"; src: url("assets/fonts/Manrope-Variable.ttf") format("truetype"); font-weight: 200 800; }
+@font-face { font-family: "Focus Poppins"; src: url("assets/fonts/Poppins-Regular.ttf") format("truetype"); font-weight: 400; }
+@font-face { font-family: "Focus Noto SC"; src: url("assets/NotoSansSC-Regular.ttf") format("truetype"); font-weight: 100 900; }
+
+.focus-wheel-stage { background: #fff; }
+.focus-wheel-stage canvas { width: 100%; height: 100%; display: block; }
+.focus-wheel-panel textarea { width: 100%; min-height: 146px; resize: vertical; font: 500 13px/1.55 "Focus Inter", "Focus Noto SC", sans-serif; }
+.focus-content-section { display: grid; gap: 8px; }
+.preset-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+.preset-actions button { min-height: 34px; }
+.focus-font-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, .8fr); gap: 8px; }
+.focus-font-grid label:last-child { grid-column: 2; }
+.focus-font-grid label:first-child { grid-row: 1 / span 2; }
+.focus-font-grid .section-label { margin-bottom: 7px; }
+.focus-motion-map { grid-template-columns: auto 12px auto 12px auto; }
+.focus-motion-map span:nth-of-type(2) { color: #fff; background: #111; }
+.alignment-control { display: grid; grid-template-columns: 1fr repeat(3, 48px); align-items: center; gap: 5px; margin-top: 11px; }
+.alignment-control > span { font-size: 10px; font-weight: 700; }
+.alignment-control button { min-height: 32px; }
+.alignment-control button.is-active { border-color: #0071e3; color: #fff; background: #0071e3; }
+.advanced-panel { border: 1px solid #d1d1d1; border-radius: 11px; background: #f8f8f8; overflow: hidden; }
+.advanced-panel > summary { display: flex; align-items: center; justify-content: space-between; min-height: 42px; padding: 0 12px; cursor: pointer; font-size: 10px; font-weight: 750; list-style: none; }
+.advanced-panel > summary::-webkit-details-marker { display: none; }
+.advanced-panel > summary span { color: #777; font: 600 8px/1 "Courier New", monospace; }
+.advanced-panel[open] > summary { border-bottom: 1px solid #d8d8d8; }
+.advanced-body { padding: 12px; }
+.focus-colors { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.focus-colors label { min-width: 0; }
+.export-timing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.export-timing-grid label, .custom-duration { display: grid; gap: 5px; font-size: 9px; font-weight: 700; }
+.custom-duration { margin-top: 8px; grid-template-columns: 1fr 90px; align-items: center; }
+
+@media (max-width: 720px) {
+  .preset-actions { grid-template-columns: 1fr; }
+  .focus-font-grid { grid-template-columns: 1fr; }
+  .focus-font-grid label:first-child, .focus-font-grid label:last-child { grid-column: auto; grid-row: auto; }
+  .focus-colors { grid-template-columns: 1fr 1fr; }
+}

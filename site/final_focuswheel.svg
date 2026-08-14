@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760">
+  <defs>
+    <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset=".18" stop-color="#fff" stop-opacity="0"/>
+      <stop offset=".82" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#fff"/>
+    </linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="2.8"/></filter>
+  </defs>
+  <rect width="1200" height="760" fill="#fff"/>
+  <g font-family="Inter,Arial,sans-serif" text-anchor="middle">
+    <text x="600" y="95" font-size="52" fill="#d8d8d8" filter="url(#soft)">Synths</text>
+    <text x="600" y="185" font-size="62" fill="#b8b8b8">Chat bar</text>
+    <text x="600" y="285" font-size="76" font-weight="560" fill="#5f5f5f">Automation</text>
+    <text x="600" y="402" font-size="108" font-weight="720" fill="#050505">Stem Separation</text>
+    <text x="600" y="515" font-size="78" font-weight="560" fill="#575757">and more</text>
+    <text x="600" y="615" font-size="62" fill="#b8b8b8">MIDI</text>
+    <text x="600" y="700" font-size="50" fill="#dddddd" filter="url(#soft)">Effects</text>
+  </g>
+  <rect width="1200" height="760" fill="url(#fade)"/>
+</svg>
