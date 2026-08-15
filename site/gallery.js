@@ -13,6 +13,7 @@ const effects = [
   ["gradienttype", "渐字", "Gradient Type", "type", "流动渐变逐字输入"],
   ["glyphrelay", "字标接力", "Glyph Relay", "type", "字位图标与颜色接力"],
   ["colorcanvas", "彩幕组句", "Color Canvas", "type", "逐行弹出与彩色弧面"],
+  ["liquidtype", "液字凝结", "Liquid Type", "type", "泡沫凝结与液态材质"],
   ["colorrecompose", "彩组", "Color Recompose", "type", "彩色重组"],
   ["phrasebuild", "组句", "Phrase Build", "type", "累计组词"],
   ["switchdrop", "降临", "Switch Drop", "graphic", "主体降临 × 明暗开关"],
@@ -55,7 +56,7 @@ function render() {
 
   grid.innerHTML = visible.map(([slug, zh, en, , categoryName]) => {
     const index = effects.findIndex((effect) => effect[0] === slug) + 1;
-    const imageName = slug === "crashclock" ? "final_crashclock.png" : ["iconburst", "focuswheel", "gradienttype", "glyphrelay", "colorcanvas", "colorrecompose", "phrasebuild", "switchdrop"].includes(slug) ? `final_${slug}.svg` : `final_${slug}.png`;
+    const imageName = slug === "crashclock" ? "final_crashclock.png" : ["iconburst", "focuswheel", "gradienttype", "glyphrelay", "colorcanvas", "liquidtype", "colorrecompose", "phrasebuild", "switchdrop"].includes(slug) ? `final_${slug}.svg` : `final_${slug}.png`;
     const target = slug === "flash" ? "flash-scenes.html" : `${slug}.html`;
     const detail = slug === "flash" ? "13 个独立子风格" : categoryName;
     return `
