@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">彩幕组句 Color Canvas</title><desc id="desc">绿色柔软弧面背景上的四行白色文字</desc>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#143407"/><stop offset=".48" stop-color="#71c821"/><stop offset="1" stop-color="#cfff35"/></linearGradient><radialGradient id="orb"><stop stop-color="#dfff70"/><stop offset=".55" stop-color="#75d730"/><stop offset="1" stop-color="#1e5410" stop-opacity="0"/></radialGradient></defs>
+  <rect width="1200" height="800" fill="url(#bg)"/><circle cx="285" cy="250" r="490" fill="url(#orb)"/><circle cx="930" cy="450" r="430" fill="url(#orb)" opacity=".7"/>
+  <g fill="#fff" font-family="Arial,sans-serif" font-weight="600" font-size="132"><text x="100" y="205">Take</text><text x="680" y="340">your</text><text x="110" y="475">design</text><text x="240" y="610">anywhere.</text></g>
+  <text x="42" y="754" fill="#fff" opacity=".65" font-family="Arial" font-size="18" letter-spacing="4">COLOR CANVAS · 37</text>
+</svg>
