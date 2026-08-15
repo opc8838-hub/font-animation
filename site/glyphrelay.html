@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="continuation.css">
   <link rel="stylesheet" href="currentwall.css">
   <link rel="stylesheet" href="focuswheel.css">
-  <link rel="stylesheet" href="glyphrelay.css?v=20260815-1">
+  <link rel="stylesheet" href="glyphrelay.css?v=20260815-3">
   <link rel="stylesheet" href="me-motion-editor.css">
   <link rel="stylesheet" href="stg-cn.css">
 </head>
@@ -44,12 +44,15 @@
         <div class="controls-grid quick-grid">
           <label>整体速度 <output id="playbackSpeedOut">1.00×</output><input id="playbackSpeed" type="range" min="0.25" max="4" step="0.05" value="1"></label>
           <label>第一段停留 <output id="sceneADurationOut">1.60秒</output><input id="sceneADuration" type="range" min="200" max="5000" step="20" value="1600"></label>
-          <label>换色时长 <output id="colorDurationOut">0.95秒</output><input id="colorDuration" type="range" min="120" max="3000" step="10" value="950"></label>
+          <label>放大换色时长 <output id="colorDurationOut">0.95秒</output><input id="colorDuration" type="range" min="120" max="3000" step="10" value="950"></label>
           <label>第二段停留 <output id="sceneBHoldOut">0.70秒</output><input id="sceneBHold" type="range" min="0" max="4000" step="10" value="700"></label>
           <label>彩虹轨迹时长 <output id="arcDurationOut">0.85秒</output><input id="arcDuration" type="range" min="120" max="3000" step="10" value="850"></label>
           <label>第三段停留 <output id="sceneCHoldOut">1.10秒</output><input id="sceneCHold" type="range" min="0" max="5000" step="10" value="1100"></label>
           <label>换色节奏 <select id="colorRhythm"><option value="relay" selected>逐字接力</option><option value="center">中心向两侧</option><option value="sweep">左到右扫过</option><option value="flash">同时亮起</option></select></label>
           <label>换色柔和度 <output id="colorSoftnessOut">24%</output><input id="colorSoftness" type="range" min="0" max="80" value="24"></label>
+          <label>第二段运动节奏 <select id="sceneBMotionRhythm"><option value="fluid" selected>水流连续</option><option value="fast">快速放大</option><option value="linear">匀速放大</option><option value="spring">轻微回弹</option></select></label>
+          <label>放大起点 <output id="sceneBStartScaleOut">52%</output><input id="sceneBStartScale" type="range" min="15" max="120" value="52"></label>
+          <label>放大终点 <output id="sceneBPeakScaleOut">148%</output><input id="sceneBPeakScale" type="range" min="70" max="260" value="148"></label>
           <label>字号 <output id="fontSizeOut">122px</output><input id="fontSize" type="range" min="24" max="260" value="122"></label>
           <label>字距 <output id="trackingOut">-5px</output><input id="tracking" type="range" min="-18" max="38" value="-5"></label>
           <label>水平位置 <output id="textXOut">50%</output><input id="textX" type="range" min="5" max="95" value="50"></label>
@@ -93,6 +96,6 @@
     </div>
   </details>
 
-  <script src="js/continuation-gif.js"></script><script src="CCapture.all.min.js"></script><script src="glyphrelay.js?v=20260815-1"></script><script src="me-motion-editor.js"></script><script src="stg-cn.js?v=20260815-glyphrelay"></script>
+  <script src="js/continuation-gif.js"></script><script src="CCapture.all.min.js"></script><script src="glyphrelay.js?v=20260815-3"></script><script src="me-motion-editor.js"></script><script src="stg-cn.js?v=20260815-glyphrelay"></script>
 </body>
 </html>
