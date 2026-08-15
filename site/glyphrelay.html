@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="字标接力：多段文字硬切、字位图标替换、逐字换色和彩虹轨迹收拢动效。">
+  <meta name="description" content="字标接力：开头轻推、逐字颜色心跳和收尾抖动换图标动效。">
   <title>字标接力 Glyph Relay | ME Motion Studio</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="continuation.css">
@@ -23,10 +23,14 @@
     <summary><span><b>字标接力</b><small>GLYPH RELAY / 36</small></span><i aria-hidden="true">参数</i></summary>
     <div class="panel-scroll">
       <section class="relay-copy-section">
-        <div class="section-heading"><p class="section-label">三段文案</p><small class="section-note">字位替换 → 颜色接力 → 彩虹收拢</small></div>
+        <div class="section-heading"><p class="section-label">三段文案</p><small class="section-note">轻推替字 → 颜色心跳 → 抖动换图标</small></div>
         <label class="stacked-control">第一段<input id="sceneAText" type="text" value="a season of"></label>
         <label class="stacked-control">第二段<input id="sceneBText" type="text" value="joy"></label>
         <label class="stacked-control">第三段<input id="sceneCText" type="text" value="motivation"></label>
+        <label class="stacked-control">第一段逐字间距<input id="sceneAGaps" type="text" value="" placeholder="例如 0,12,-6,0"></label>
+        <label class="stacked-control">第二段逐字间距<input id="sceneBGaps" type="text" value="" placeholder="每个数字控制前一个字位后的间距"></label>
+        <label class="stacked-control">第三段逐字间距<input id="sceneCGaps" type="text" value="" placeholder="文字与图标之间也可独立调整"></label>
+        <p class="hint">逐字间距按逗号填写：第 1 个数字控制第 1 个字位后方的距离，依次类推；正数拉开，负数收紧，空缺按 0px。</p>
         <div class="preset-actions"><button id="referencePreset" type="button">参考文案</button><button id="chinesePreset" type="button">中文示例</button><button id="restartTop" type="button">从头播放</button></div>
         <p class="hint">原视频的手机状态栏、账号、互动按钮和悬浮球已排除，只保留白色画布内的文字与图标动画。</p>
       </section>
@@ -40,13 +44,13 @@
 
       <section class="motion-quick">
         <div class="section-heading"><p class="section-label">场景节奏</p><small class="section-note">所有切换时间都可编辑</small></div>
-        <div class="motion-map relay-motion-map" aria-label="动效阶段"><span>替字停留</span><i>→</i><span>颜色扫过</span><i>→</i><span>彩虹入字</span></div>
+        <div class="motion-map relay-motion-map" aria-label="动效阶段"><span>向右轻推</span><i>→</i><span>颜色心跳</span><i>→</i><span>抖动换图标</span></div>
         <div class="controls-grid quick-grid">
           <label>整体速度 <output id="playbackSpeedOut">1.00×</output><input id="playbackSpeed" type="range" min="0.25" max="4" step="0.05" value="1"></label>
           <label>第一段停留 <output id="sceneADurationOut">0.56秒</output><input id="sceneADuration" type="range" min="200" max="5000" step="20" value="560"></label>
           <label>颜色接力时长 <output id="colorDurationOut">0.26秒</output><input id="colorDuration" type="range" min="120" max="3000" step="10" value="260"></label>
           <label>第二段停留 <output id="sceneBHoldOut">0.22秒</output><input id="sceneBHold" type="range" min="0" max="4000" step="10" value="220"></label>
-          <label>彩虹轨迹时长 <output id="arcDurationOut">0.27秒</output><input id="arcDuration" type="range" min="120" max="3000" step="10" value="270"></label>
+          <label>收尾切换时长 <output id="arcDurationOut">0.27秒</output><input id="arcDuration" type="range" min="120" max="3000" step="10" value="270"></label>
           <label>第三段停留 <output id="sceneCHoldOut">0.30秒</output><input id="sceneCHold" type="range" min="0" max="5000" step="10" value="300"></label>
           <label>换色节奏 <select id="colorRhythm"><option value="relay" selected>逐字接力</option><option value="center">中心向两侧</option><option value="sweep">左到右扫过</option><option value="flash">同时亮起</option></select></label>
           <label>换色柔和度 <output id="colorSoftnessOut">24%</output><input id="colorSoftness" type="range" min="0" max="80" value="24"></label>
@@ -58,6 +62,8 @@
           <label>字距 <output id="trackingOut">-5px</output><input id="tracking" type="range" min="-18" max="38" value="-5"></label>
           <label>水平位置 <output id="textXOut">50%</output><input id="textX" type="range" min="5" max="95" value="50"></label>
           <label>垂直位置 <output id="textYOut">50%</output><input id="textY" type="range" min="5" max="95" value="50"></label>
+          <label>开头向右距离 <output id="introShiftOut">22px</output><input id="introShift" type="range" min="-100" max="180" value="22"></label>
+          <label>开头轻微放大 <output id="introScaleOut">2%</output><input id="introScale" type="range" min="0" max="15" step="0.5" value="2"></label>
         </div>
       </section>
 
@@ -67,14 +73,15 @@
           <label>内置图标 <select id="iconPreset"><option value="music" selected>音乐</option><option value="play">播放</option><option value="cloud">云朵</option><option value="watch">手表</option><option value="target">彩色靶心</option><option value="animal-01">透明动物 01</option><option value="animal-08">透明动物 08</option><option value="animal-15">透明动物 15</option><option value="animal-23">透明动物 23</option><option value="upload">用户上传</option></select></label>
           <label class="relay-upload">上传图片 / GIF<input id="iconUpload" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"></label>
           <label>第一段替换字位 <output id="targetAOut">5</output><input id="targetA" type="range" min="1" max="20" value="5"></label>
-          <label>第三段彩色字位 <output id="targetCOut">2</output><input id="targetC" type="range" min="1" max="20" value="2"></label>
+          <label>第三段切换图标字位 <output id="targetCOut">2</output><input id="targetC" type="range" min="1" max="20" value="2"></label>
           <label>第三段轮廓字位 <output id="outlineTargetOut">9</output><input id="outlineTarget" type="range" min="1" max="20" value="9"></label>
           <label>图标大小 <output id="iconSizeOut">98%</output><input id="iconSize" type="range" min="20" max="220" value="98"></label>
           <label>图标槽宽 <output id="iconGapOut">100%</output><input id="iconGap" type="range" min="35" max="190" value="100"></label>
           <label>图标水平微调 <output id="iconXOut">0px</output><input id="iconX" type="range" min="-100" max="100" value="0"></label>
           <label>图标垂直微调 <output id="iconYOut">0px</output><input id="iconY" type="range" min="-100" max="100" value="0"></label>
-          <label>彩虹弧度 <output id="arcCurveOut">72%</output><input id="arcCurve" type="range" min="10" max="100" value="72"></label>
-          <label>彩虹粗细 <output id="arcWidthOut">8px</output><input id="arcWidth" type="range" min="1" max="30" value="8"></label>
+          <label>收尾切换方式 <select id="endingMotion"><option value="shake" selected>抖动切换</option><option value="bounce">弹跳切换</option><option value="snap">直接切换</option></select></label>
+          <label>收尾抖动强度 <output id="endingShakeOut">8%</output><input id="endingShake" type="range" min="0" max="30" value="8"></label>
+          <label>收尾抖动时长 <output id="endingShakeDurationOut">0.09秒</output><input id="endingShakeDuration" type="range" min="20" max="300" step="10" value="90"></label>
         </div>
       </section>
 
@@ -93,10 +100,10 @@
         <div class="export-actions"><button id="exportPng" type="button">PNG 图片</button><button id="exportGif" type="button">GIF 动图</button><button id="exportVideo" type="button">视频</button><button class="export-hd-video" id="exportVerticalVideo" type="button">导出 9:16 高清视频 · 1080 × 1920</button></div>
         <p class="export-status" id="exportStatus" aria-live="polite">三段场景、图标与颜色共用同一条确定性时间线。</p>
       </section>
-      <p class="formula">硬切场景 × 字位素材 × 彩色轨迹<br>复用图标爆发的字位替换和颜色采样原理，画布只绘制当前可见场景</p>
+      <p class="formula">轻推场景 × 单字心跳 × 抖动换图标<br>复用纵跃的字位抖动、让位和图标弹入原理，画布只绘制当前可见场景</p>
     </div>
   </details>
 
-  <script src="js/continuation-gif.js"></script><script src="CCapture.all.min.js"></script><script src="glyphrelay.js?v=20260815-5"></script><script src="me-motion-editor.js"></script><script src="stg-cn.js?v=20260815-glyphrelay"></script>
+  <script src="js/continuation-gif.js"></script><script src="CCapture.all.min.js"></script><script src="glyphrelay.js?v=20260815-6"></script><script src="me-motion-editor.js"></script><script src="stg-cn.js?v=20260815-glyphrelay"></script>
 </body>
 </html>
