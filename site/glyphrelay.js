@@ -7,7 +7,7 @@
   const inputs = {
     a: $("#sceneAText"), b: $("#sceneBText"), c: $("#sceneCText"), gapA: $("#sceneAGaps"), gapB: $("#sceneBGaps"), gapC: $("#sceneCGaps"), font: $("#fontFamily"), weight: $("#fontWeight"), speed: $("#playbackSpeed"),
     aDuration: $("#sceneADuration"), colorDuration: $("#colorDuration"), bHold: $("#sceneBHold"), arcDuration: $("#arcDuration"), cHold: $("#sceneCHold"),
-    colorRhythm: $("#colorRhythm"), softness: $("#colorSoftness"), bMotionRhythm: $("#sceneBMotionRhythm"), bBurst: $("#sceneBBurstDuration"), bStartScale: $("#sceneBStartScale"), bPeakScale: $("#sceneBPeakScale"), fontSize: $("#fontSize"), tracking: $("#tracking"), textX: $("#textX"), textY: $("#textY"), introShift: $("#introShift"), introScale: $("#introScale"),
+    colorRhythm: $("#colorRhythm"), softness: $("#colorSoftness"), bMotionRhythm: $("#sceneBMotionRhythm"), bBurst: $("#sceneBBurstDuration"), bStartScale: $("#sceneBStartScale"), bPeakScale: $("#sceneBPeakScale"), fontSizeA: $("#fontSizeA"), fontSizeB: $("#fontSizeB"), fontSizeC: $("#fontSizeC"), tracking: $("#tracking"), textX: $("#textX"), textY: $("#textY"), introShift: $("#introShift"), introScale: $("#introScale"),
     iconPreset: $("#iconPreset"), iconUpload: $("#iconUpload"), targetA: $("#targetA"), targetC: $("#targetC"), outlineTarget: $("#outlineTarget"),
     iconSize: $("#iconSize"), iconGap: $("#iconGap"), iconX: $("#iconX"), iconY: $("#iconY"), endingMotion: $("#endingMotion"), endingShake: $("#endingShake"), endingShakeDuration: $("#endingShakeDuration"),
     background: $("#backgroundColor"), textColor: $("#textColor"), colorA: $("#colorA"), colorB: $("#colorB"), colorC: $("#colorC")
@@ -92,9 +92,9 @@
     const values = String(input?.value || "").split(/[,，\s]+/).filter(Boolean).map(Number);
     return Array.from({ length: Math.max(0, count - 1) }, (_, index) => (Number.isFinite(values[index]) ? values[index] : 0) * scale);
   }
-  function layoutText(renderContext, text, replacements, width, height, gapInput) {
+  function layoutText(renderContext, text, replacements, width, height, gapInput, fontSizeInput) {
     const scale = scaleFor(width, height);
-    let fontSize = Number(inputs.fontSize.value) * scale;
+    let fontSize = Number(fontSizeInput.value) * scale;
     let tracking = Number(inputs.tracking.value) * scale;
     const family = fontMap[inputs.font.value] || fontMap.inter;
     renderContext.font = `${inputs.weight.value} ${fontSize}px ${family}`;
@@ -176,7 +176,7 @@
 
   function drawSceneA(renderContext, width, height, progress) {
     const target = clamp(Number(inputs.targetA.value) - 1, 0, Math.max(0, Array.from(inputs.a.value).length - 1));
-    const layout = layoutText(renderContext, inputs.a.value, [target], width, height, inputs.gapA);
+    const layout = layoutText(renderContext, inputs.a.value, [target], width, height, inputs.gapA, inputs.fontSizeA);
     const drift = Math.pow(clamp(progress), 2.35);
     const groupScale = 1 + Number(inputs.introScale.value) / 100 * drift;
     const centerX = width * Number(inputs.textX.value) / 100;
@@ -223,7 +223,7 @@
     return { pulse: edge, heartbeat: heartbeatMotion(local) * edge, color: relayPaletteColor(local) };
   }
   function drawSceneB(renderContext, width, height, progress, colored) {
-    const layout = layoutText(renderContext, inputs.b.value, [], width, height, inputs.gapB);
+    const layout = layoutText(renderContext, inputs.b.value, [], width, height, inputs.gapB, inputs.fontSizeB);
     const startScale = Number(inputs.bStartScale.value) / 100;
     const peakScale = Number(inputs.bPeakScale.value) / 100;
     renderContext.textBaseline = "middle";
@@ -243,8 +243,8 @@
     const characters = Array.from(inputs.c.value);
     const target = clamp(Number(inputs.targetC.value) - 1, 0, Math.max(0, characters.length - 1));
     const outline = clamp(Number(inputs.outlineTarget.value) - 1, 0, Math.max(0, characters.length - 1));
-    const plainLayout = layoutText(renderContext, inputs.c.value, [outline], width, height, inputs.gapC);
-    const finalLayout = layoutText(renderContext, inputs.c.value, [target, outline], width, height, inputs.gapC);
+    const plainLayout = layoutText(renderContext, inputs.c.value, [outline], width, height, inputs.gapC, inputs.fontSizeC);
+    const finalLayout = layoutText(renderContext, inputs.c.value, [target, outline], width, height, inputs.gapC, inputs.fontSizeC);
     const mode = inputs.endingMotion.value;
     const shakeShare = clamp(Number(inputs.endingShakeDuration.value) / Math.max(1, Number(inputs.arcDuration.value)), .07, .68);
     const shakeProgress = mode === "snap" ? 1 : smooth(progress / shakeShare);
@@ -307,7 +307,7 @@
 
   function updateOutputs() {
     previewDirty = true;
-    const values = { playbackSpeedOut: `${Number(inputs.speed.value).toFixed(2)}×`, sceneADurationOut: `${(inputs.aDuration.value / 1000).toFixed(2)}秒`, colorDurationOut: `${(inputs.colorDuration.value / 1000).toFixed(2)}秒`, sceneBHoldOut: `${(inputs.bHold.value / 1000).toFixed(2)}秒`, arcDurationOut: `${(inputs.arcDuration.value / 1000).toFixed(2)}秒`, sceneCHoldOut: `${(inputs.cHold.value / 1000).toFixed(2)}秒`, colorSoftnessOut: `${inputs.softness.value}%`, sceneBBurstDurationOut: `${(inputs.bBurst.value / 1000).toFixed(2)}秒`, sceneBStartScaleOut: `${inputs.bStartScale.value}%`, sceneBPeakScaleOut: `${inputs.bPeakScale.value}%`, fontSizeOut: `${inputs.fontSize.value}px`, trackingOut: `${inputs.tracking.value}px`, textXOut: `${inputs.textX.value}%`, textYOut: `${inputs.textY.value}%`, introShiftOut: `${inputs.introShift.value}px`, introScaleOut: `${inputs.introScale.value}%`, targetAOut: inputs.targetA.value, targetCOut: inputs.targetC.value, outlineTargetOut: inputs.outlineTarget.value, iconSizeOut: `${inputs.iconSize.value}%`, iconGapOut: `${inputs.iconGap.value}%`, iconXOut: `${inputs.iconX.value}px`, iconYOut: `${inputs.iconY.value}px`, endingShakeOut: `${inputs.endingShake.value}%`, endingShakeDurationOut: `${(inputs.endingShakeDuration.value / 1000).toFixed(2)}秒` };
+    const values = { playbackSpeedOut: `${Number(inputs.speed.value).toFixed(2)}×`, sceneADurationOut: `${(inputs.aDuration.value / 1000).toFixed(2)}秒`, colorDurationOut: `${(inputs.colorDuration.value / 1000).toFixed(2)}秒`, sceneBHoldOut: `${(inputs.bHold.value / 1000).toFixed(2)}秒`, arcDurationOut: `${(inputs.arcDuration.value / 1000).toFixed(2)}秒`, sceneCHoldOut: `${(inputs.cHold.value / 1000).toFixed(2)}秒`, colorSoftnessOut: `${inputs.softness.value}%`, sceneBBurstDurationOut: `${(inputs.bBurst.value / 1000).toFixed(2)}秒`, sceneBStartScaleOut: `${inputs.bStartScale.value}%`, sceneBPeakScaleOut: `${inputs.bPeakScale.value}%`, fontSizeAOut: `${inputs.fontSizeA.value}px`, fontSizeBOut: `${inputs.fontSizeB.value}px`, fontSizeCOut: `${inputs.fontSizeC.value}px`, trackingOut: `${inputs.tracking.value}px`, textXOut: `${inputs.textX.value}%`, textYOut: `${inputs.textY.value}%`, introShiftOut: `${inputs.introShift.value}px`, introScaleOut: `${inputs.introScale.value}%`, targetAOut: inputs.targetA.value, targetCOut: inputs.targetC.value, outlineTargetOut: inputs.outlineTarget.value, iconSizeOut: `${inputs.iconSize.value}%`, iconGapOut: `${inputs.iconGap.value}%`, iconXOut: `${inputs.iconX.value}px`, iconYOut: `${inputs.iconY.value}px`, endingShakeOut: `${inputs.endingShake.value}%`, endingShakeDurationOut: `${(inputs.endingShakeDuration.value / 1000).toFixed(2)}秒` };
     Object.entries(values).forEach(([id, value]) => { $(`#${id}`).textContent = value; });
   }
   Object.values(inputs).forEach((input) => input.addEventListener("input", updateOutputs));
