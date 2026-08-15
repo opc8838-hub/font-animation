@@ -1,0 +1,30 @@
+@font-face { font-family: "Gradient Inter"; src: url("continuation_fonts/Inter-Variable.ttf") format("truetype"); font-weight: 100 900; }
+@font-face { font-family: "Gradient Space Grotesk"; src: url("continuation_fonts/SpaceGrotesk-Variable.ttf") format("truetype"); font-weight: 300 700; }
+@font-face { font-family: "Gradient Manrope"; src: url("assets/fonts/Manrope-Variable.ttf") format("truetype"); font-weight: 200 800; }
+@font-face { font-family: "Gradient Poppins"; src: url("assets/fonts/Poppins-Regular.ttf") format("truetype"); font-weight: 400; }
+@font-face { font-family: "Gradient Work Sans"; src: url("assets/WorkSans-Regular.ttf") format("truetype"); font-weight: 400; }
+@font-face { font-family: "Gradient Noto SC"; src: url("assets/NotoSansSC-Regular.ttf") format("truetype"); font-weight: 100 900; }
+
+.gradient-type-stage { background: #d800d5; }
+.gradient-type-stage canvas { width: 100%; height: 100%; display: block; }
+.gradient-type-panel textarea,
+.gradient-type-panel input[type="text"] { width: 100%; font: 500 13px/1.55 "Gradient Inter", "Gradient Noto SC", sans-serif; }
+.gradient-type-panel textarea { min-height: 84px; resize: vertical; }
+.gradient-copy-section { display: grid; gap: 9px; }
+.stacked-control { display: grid; gap: 5px; color: #4a4a4a; font-size: 9px; font-weight: 750; }
+.gradient-font-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, .8fr); gap: 8px; }
+.gradient-font-grid .section-label { margin-bottom: 7px; }
+.gradient-motion-map { grid-template-columns: auto 12px auto 12px auto; }
+.gradient-motion-map span:nth-of-type(2) { color: #fff; background: #111; }
+.gradient-controls { display: grid; gap: 10px; }
+.gradient-palette { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.gradient-palette label { min-width: 0; }
+.gradient-palette input[type="color"] { width: 28px; }
+.gradient-type-panel input:disabled,
+.gradient-type-panel select:disabled { opacity: .38; cursor: not-allowed; }
+.gradient-type-panel .formula { line-height: 1.55; }
+
+@media (max-width: 720px) {
+  .gradient-font-grid { grid-template-columns: 1fr; }
+  .gradient-palette { grid-template-columns: 1fr 1fr; }
+}

@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="渐字：流动彩色渐变背景上的居中逐字输入动效，支持中文、节奏编辑和多尺寸导出。">
+  <title>渐字 Gradient Type | ME Motion Studio</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="continuation.css">
+  <link rel="stylesheet" href="currentwall.css">
+  <link rel="stylesheet" href="focuswheel.css">
+  <link rel="stylesheet" href="gradienttype.css?v=20260815-1">
+  <link rel="stylesheet" href="me-motion-editor.css">
+  <link rel="stylesheet" href="stg-cn.css">
+</head>
+<body class="me-motion-editor">
+  <main class="current-stage gradient-type-stage" aria-label="流动渐变逐字输入画布">
+    <canvas id="gradientCanvas"></canvas>
+    <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+  </main>
+
+  <details class="control-panel current-panel gradient-type-panel" id="controlPanel" open>
+    <summary><span><b>渐字</b><small>GRADIENT TYPE / 35</small></span><i aria-hidden="true">参数</i></summary>
+    <div class="panel-scroll">
+      <section class="gradient-copy-section">
+        <div class="section-heading"><p class="section-label">文案</p><small class="section-note">开场完整显示 → 主句逐字出现</small></div>
+        <label class="stacked-control">开场短句<input id="introText" type="text" value="SUNO Studio 2.0" spellcheck="false"></label>
+        <label class="stacked-control">主打句<textarea id="mainText" rows="4" spellcheck="false">Obsession isn't a flaw.</textarea></label>
+        <div class="preset-actions">
+          <button id="referencePreset" type="button">参考文案</button>
+          <button id="chinesePreset" type="button">中文示例</button>
+          <button id="swapCopy" type="button">交换两句</button>
+        </div>
+        <p class="hint">只复刻画布内的文字与彩色背景；原视频中的账号、按钮、手机状态栏和播放器不会带入。</p>
+      </section>
+
+      <section class="font-picker">
+        <div class="gradient-font-grid">
+          <label><span class="section-label">字体</span><select id="fontFamily">
+            <option value="inter" selected>Inter · 参考字体</option>
+            <option value="space-grotesk">Space Grotesk</option>
+            <option value="manrope">Manrope</option>
+            <option value="poppins">Poppins</option>
+            <option value="work-sans">Work Sans</option>
+            <option value="noto-sc">Noto Sans SC · 中文</option>
+          </select></label>
+          <label><span class="section-label">字重</span><select id="fontWeight">
+            <option value="300">Light · 300</option>
+            <option value="400" selected>Regular · 400</option>
+            <option value="500">Medium · 500</option>
+            <option value="600">Semibold · 600</option>
+            <option value="700">Bold · 700</option>
+          </select></label>
+        </div>
+      </section>
+
+      <section class="motion-quick">
+        <div class="section-heading"><p class="section-label">打字节奏</p><small class="section-note">单条确定性时间线</small></div>
+        <div class="motion-map gradient-motion-map" aria-label="动效阶段">
+          <span>完整短句</span><i>→</i><span>逐字输入</span><i>→</i><span>快速切句</span>
+        </div>
+        <div class="controls-grid quick-grid">
+          <label>输入节奏 <select id="typingRhythm">
+            <option value="uniform" selected>匀速逐字</option>
+            <option value="accelerate">由慢到快</option>
+            <option value="decelerate">快速开场后慢收</option>
+            <option value="pulse">三段脉冲</option>
+            <option value="punch">瞬发推进</option>
+          </select></label>
+          <label>整体播放速度 <output id="playbackSpeedOut">1.00×</output><input id="playbackSpeed" type="range" min="0.25" max="4" step="0.05" value="1"></label>
+          <label>单字间隔 <output id="charIntervalOut">33ms</output><input id="charInterval" type="range" min="10" max="300" step="1" value="33"></label>
+          <label>开场停留 <output id="introHoldOut">167ms</output><input id="introHold" type="range" min="0" max="3000" step="1" value="167"></label>
+          <label>清空间隔 <output id="clearGapOut">0ms</output><input id="clearGap" type="range" min="0" max="1200" step="10" value="0"></label>
+          <label>主句停留 <output id="mainHoldOut">1050ms</output><input id="mainHold" type="range" min="0" max="5000" step="10" value="1050"></label>
+          <label>字号 <output id="fontSizeOut">46px</output><input id="fontSize" type="range" min="14" max="220" value="46"></label>
+          <label>字距 <output id="trackingOut">-1px</output><input id="tracking" type="range" min="-8" max="30" step="0.5" value="-1"></label>
+          <label>行距 <output id="lineHeightOut">118%</output><input id="lineHeight" type="range" min="80" max="220" value="118"></label>
+          <label>最大宽度 <output id="maxWidthOut">82%</output><input id="maxWidth" type="range" min="25" max="96" value="82"></label>
+          <label>水平位置 <output id="textXOut">50%</output><input id="textX" type="range" min="5" max="95" value="50"></label>
+          <label>垂直位置 <output id="textYOut">50%</output><input id="textY" type="range" min="5" max="95" value="50"></label>
+        </div>
+        <div class="alignment-control" role="group" aria-label="文字对齐">
+          <span>文字对齐</span>
+          <button type="button" data-align="left">左</button>
+          <button class="is-active" type="button" data-align="center">中</button>
+          <button type="button" data-align="right">右</button>
+        </div>
+      </section>
+
+      <section class="gradient-controls">
+        <div class="section-heading"><p class="section-label">流动渐变</p><small class="section-note">背景始终连续运动</small></div>
+        <div class="controls-grid">
+          <label>配色预设 <select id="palettePreset">
+            <option value="reference" selected>参考落日</option>
+            <option value="neon">霓虹夜色</option>
+            <option value="ocean">蓝紫海洋</option>
+            <option value="acid">酸性亮彩</option>
+            <option value="custom">自定义配色</option>
+          </select></label>
+          <label>渐变方向 <output id="gradientAngleOut">90°</output><input id="gradientAngle" type="range" min="0" max="360" value="90"></label>
+          <label>渐变速度 <output id="gradientSpeedOut">1.00×</output><input id="gradientSpeed" type="range" min="0" max="4" step="0.05" value="1"></label>
+          <label>色带密度 <output id="gradientScaleOut">100%</output><input id="gradientScale" type="range" min="55" max="220" value="100"></label>
+        </div>
+        <div class="color-row gradient-palette">
+          <label>颜色 1<input id="color1" type="color" value="#d800d5"></label>
+          <label>颜色 2<input id="color2" type="color" value="#ff006f"></label>
+          <label>颜色 3<input id="color3" type="color" value="#ff2e19"></label>
+          <label>颜色 4<input id="color4" type="color" value="#f39668"></label>
+        </div>
+      </section>
+
+      <details class="advanced-panel">
+        <summary>文字质感 <span>颜色、阴影与光标</span></summary>
+        <div class="advanced-body controls-grid">
+          <label>文字颜色<input id="textColor" type="color" value="#ffffff"></label>
+          <label>阴影颜色<input id="shadowColor" type="color" value="#5a1630"></label>
+          <label>阴影强度 <output id="shadowStrengthOut">58%</output><input id="shadowStrength" type="range" min="0" max="100" value="58"></label>
+          <label>阴影距离 <output id="shadowOffsetOut">2px</output><input id="shadowOffset" type="range" min="0" max="18" value="2"></label>
+          <label>打字光标 <select id="caretStyle"><option value="none" selected>关闭</option><option value="line">竖线</option><option value="block">方块</option></select></label>
+          <label>光标闪烁 <output id="caretBlinkOut">500ms</output><input id="caretBlink" type="range" min="120" max="1200" step="10" value="500"></label>
+          <label>初始时间 <output id="startOffsetOut">0%</output><input id="startOffset" type="range" min="0" max="100" value="0"></label>
+        </div>
+      </details>
+
+      <section class="transport" aria-label="时间轴控制">
+        <button id="restartButton" type="button">重播</button><button id="pauseButton" type="button">暂停</button>
+        <button id="backButton" type="button">−1 帧</button><button id="forwardButton" type="button">+1 帧</button>
+      </section>
+
+      <section class="export-panel">
+        <label class="section-label" for="exportPreset">导出尺寸</label>
+        <select id="exportPreset">
+          <option value="current">当前画板</option>
+          <option value="1080x1080">1:1 · 1080 × 1080</option>
+          <option value="1080x1350">4:5 · 1080 × 1350</option>
+          <option value="1080x1920">9:16 · 1080 × 1920</option>
+          <option value="1920x1080">16:9 · 1920 × 1080</option>
+          <option value="custom">自定义尺寸</option>
+        </select>
+        <div class="custom-size" id="customSize" hidden><label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label><span>×</span><label>高<input id="exportHeight" type="number" min="240" max="3840" value="1920"></label></div>
+        <div class="export-timing-grid">
+          <label>导出时长<select id="exportDuration"><option value="cycle" selected>完整一轮</option><option value="1">1 秒</option><option value="3">3 秒</option><option value="5">5 秒</option><option value="10">10 秒</option><option value="custom">自定义</option></select></label>
+          <label>导出帧率<select id="exportFps"><option value="15">15 FPS</option><option value="24">24 FPS</option><option value="30" selected>30 FPS</option><option value="60">60 FPS</option></select></label>
+        </div>
+        <label class="custom-duration" id="customDurationWrap" hidden>自定义秒数<input id="customDuration" type="number" min="0.5" max="30" step="0.1" value="3"></label>
+        <div class="export-actions">
+          <button id="exportPng" type="button">PNG 图片</button><button id="exportGif" type="button">GIF 动图</button><button id="exportVideo" type="button">视频</button>
+          <button class="export-hd-video" id="exportVerticalVideo" type="button">导出 9:16 高清视频 · 1080 × 1920</button>
+        </div>
+        <p class="export-status" id="exportStatus" aria-live="polite">预览、GIF 与视频共用同一条确定性时间线。</p>
+      </section>
+      <p class="formula">循环渐变 × 居中逐字输入<br>字符只改变可见数量，不创建逐字 DOM 动画，保证快速播放时仍然流畅</p>
+    </div>
+  </details>
+
+  <script src="js/continuation-gif.js"></script>
+  <script src="CCapture.all.min.js"></script>
+  <script src="gradienttype.js?v=20260815-1"></script>
+  <script src="me-motion-editor.js"></script>
+  <script src="stg-cn.js?v=20260815-gradienttype"></script>
+</body>
+</html>
