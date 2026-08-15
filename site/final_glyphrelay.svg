@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">字标接力 Glyph Relay</title><desc id="desc">白色画布上的 motivation 文字、彩色字位和彩虹轨迹</desc>
+  <rect width="1200" height="800" fill="#fff"/>
+  <g font-family="Arial, sans-serif" font-weight="700" font-size="132" fill="#050505">
+    <text x="164" y="442">m</text><text x="388" y="442">tivation</text>
+  </g>
+  <g transform="translate(345 397)">
+    <circle r="60" fill="#ff1747"/><circle r="48" fill="#ffde00"/><circle r="36" fill="#23b886"/><circle r="24" fill="#32c5ff"/><circle r="12" fill="#111"/>
+  </g>
+  <path d="M45 90 C 115 105 185 150 235 220 C 280 285 310 335 345 397" fill="none" stroke="#ff1747" stroke-width="12" stroke-linecap="round"/>
+  <path d="M52 82 C 122 97 192 142 242 212 C 287 277 317 327 352 389" fill="none" stroke="#ffde00" stroke-width="12" stroke-linecap="round"/>
+  <path d="M59 74 C 129 89 199 134 249 204 C 294 269 324 319 359 381" fill="none" stroke="#23b886" stroke-width="12" stroke-linecap="round"/>
+  <text x="42" y="750" font-family="Arial" font-size="18" letter-spacing="4" fill="#777">GLYPH RELAY · 36</text>
+</svg>

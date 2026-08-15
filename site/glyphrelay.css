@@ -1,0 +1,20 @@
+@font-face { font-family: "Relay Inter"; src: url("continuation_fonts/Inter-Variable.ttf") format("truetype"); font-weight: 100 900; }
+@font-face { font-family: "Relay Space"; src: url("continuation_fonts/SpaceGrotesk-Variable.ttf") format("truetype"); font-weight: 300 700; }
+@font-face { font-family: "Relay Manrope"; src: url("assets/fonts/Manrope-Variable.ttf") format("truetype"); font-weight: 200 800; }
+@font-face { font-family: "Relay Poppins"; src: url("assets/fonts/Poppins-Regular.ttf") format("truetype"); font-weight: 400; }
+@font-face { font-family: "Relay Noto"; src: url("assets/NotoSansSC-Regular.ttf") format("truetype"); font-weight: 100 900; }
+.glyph-relay-stage { background: #fff; }
+.glyph-relay-stage canvas { width: 100%; height: 100%; display: block; }
+.relay-copy-section { display: grid; gap: 8px; }
+.relay-copy-section input[type="text"] { width: 100%; font: 500 13px/1.4 "Relay Inter", "Relay Noto", sans-serif; }
+.relay-font-grid { display: grid; grid-template-columns: 1.45fr .8fr; gap: 8px; }
+.relay-font-grid .section-label { margin-bottom: 7px; }
+.relay-motion-map { grid-template-columns: auto 12px auto 12px auto; }
+.relay-motion-map span:nth-of-type(2) { color: #fff; background: #111; }
+.relay-icon-section { display: grid; gap: 10px; }
+.relay-upload { position: relative; overflow: hidden; }
+.relay-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.relay-colors { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.relay-colors label { min-width: 0; }
+.relay-colors input[type="color"] { width: 28px; }
+@media (max-width: 720px) { .relay-font-grid { grid-template-columns: 1fr; } .relay-colors { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
