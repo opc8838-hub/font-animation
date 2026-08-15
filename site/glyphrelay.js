@@ -45,11 +45,12 @@
     return `rgb(${a.map((channel, index) => Math.round(lerp(channel, b[index], t))).join(",")})`;
   }
   function relayPaletteColor(progress) {
-    const colors = [inputs.colorA.value, inputs.colorC.value, inputs.colorB.value];
-    const scaled = mod(progress, 1) * colors.length;
-    const index = Math.floor(scaled);
-    const blend = smooth((scaled - index - .72) / .28);
-    return mixColor(colors[index], colors[(index + 1) % colors.length], blend);
+    const p = clamp(progress);
+    if (p < .2) return inputs.colorA.value;
+    if (p < .35) return mixColor(inputs.colorA.value, inputs.colorC.value, smooth((p - .2) / .15));
+    if (p < .5) return inputs.colorC.value;
+    if (p < .65) return mixColor(inputs.colorC.value, inputs.colorB.value, smooth((p - .5) / .15));
+    return inputs.colorB.value;
   }
 
   function timing() {
@@ -191,38 +192,45 @@
     if (mode === "center") order = Math.abs(index - (count - 1) / 2) / Math.max(1, (count - 1) / 2);
     if (mode === "sweep") return smooth((progress - order * .5) / .28) * (1 - smooth((progress - .72 - order * .18) / .2));
     const softness = Number(inputs.softness.value) / 100;
-    const energy = smooth(progress / .045) * (1 - smooth((progress - .82) / .13));
-    const wave = .5 + .5 * Math.sin((progress * 3.85 - order * .78) * Math.PI * 2 - Math.PI / 2);
-    return energy * Math.pow(clamp(wave), lerp(2.15, .55, softness));
+    const wave = .5 + .5 * Math.sin((progress * 2.2 - order * .72) * Math.PI * 2 - Math.PI / 2);
+    return Math.pow(clamp(wave), lerp(2.15, .55, softness));
   }
-  function sceneBMotion(progress) {
+  function heartbeatMotion(progress) {
     const p = clamp(progress);
-    if (inputs.bMotionRhythm.value === "linear") return p;
-    if (inputs.bMotionRhythm.value === "fast") return 1 - Math.pow(1 - p, 5);
-    if (inputs.bMotionRhythm.value === "spring") return clamp(1 - Math.pow(2, -7 * p) * Math.cos(p * Math.PI * 3.2), 0, 1.08);
-    return popEase(p, .2);
+    if (inputs.bMotionRhythm.value === "linear") return 1 - Math.abs(p * 2 - 1);
+    if (inputs.bMotionRhythm.value === "fast") return Math.pow(Math.sin(Math.PI * p), .42);
+    if (inputs.bMotionRhythm.value === "spring") return clamp(Math.sin(Math.PI * p) * (1 + Math.sin(Math.PI * p * 3) * .16), 0, 1.1);
+    return Math.pow(Math.sin(Math.PI * p), .72);
+  }
+  function relayLetterState(index, count, progress) {
+    if (inputs.colorRhythm.value !== "relay") {
+      const pulse = colorPulse(index, count, progress);
+      return { pulse, heartbeat: pulse, color: relayPaletteColor(mod(progress + index / Math.max(1, count), 1)) };
+    }
+    const heartbeatShare = clamp(Number(inputs.bBurst.value) / Math.max(1, Number(inputs.colorDuration.value)), .12, .84);
+    const lastStart = Math.max(.04, 1 - heartbeatShare - .05);
+    const reverseIndex = Math.max(0, count - 1 - index);
+    const start = .025 + (count > 1 ? reverseIndex / (count - 1) * lastStart : lastStart / 2);
+    const local = (progress - start) / heartbeatShare;
+    if (local <= 0 || local >= 1) return { pulse: 0, heartbeat: 0, color: inputs.textColor.value };
+    const edge = smooth(local / .04) * (1 - smooth((local - .96) / .04));
+    return { pulse: edge, heartbeat: heartbeatMotion(local) * edge, color: relayPaletteColor(local) };
   }
   function drawSceneB(renderContext, width, height, progress, colored) {
     const layout = layoutText(renderContext, inputs.b.value, [], width, height);
     const startScale = Number(inputs.bStartScale.value) / 100;
     const peakScale = Number(inputs.bPeakScale.value) / 100;
-    const burstShare = clamp(Number(inputs.bBurst.value) / Math.max(1, Number(inputs.colorDuration.value)), .04, .95);
-    const motion = colored ? sceneBMotion(progress / burstShare) : 1;
-    const scale = lerp(startScale, peakScale, motion);
-    const centerX = width * Number(inputs.textX.value) / 100;
-    const centerY = height * Number(inputs.textY.value) / 100;
-    const lift = (1 - clamp(motion)) * height * .026;
-    renderContext.save();
-    renderContext.translate(centerX, centerY + lift);
-    renderContext.scale(scale, scale);
-    renderContext.translate(-centerX, -centerY);
     renderContext.textBaseline = "middle";
     layout.items.forEach((item) => {
-      const pulse = colored ? colorPulse(item.index, layout.items.length, progress) : 0;
-      renderContext.fillStyle = mixColor(inputs.textColor.value, relayPaletteColor(item.index / Math.max(1, layout.items.length - 1) + progress * 2.2), pulse);
-      renderContext.fillText(item.character, item.x, item.y);
+      const state = colored ? relayLetterState(item.index, layout.items.length, progress) : { pulse: 0, heartbeat: 0, color: inputs.textColor.value };
+      const letterScale = lerp(startScale, peakScale, state.heartbeat);
+      renderContext.save();
+      renderContext.translate(item.centerX, item.y);
+      renderContext.scale(letterScale, letterScale);
+      renderContext.fillStyle = mixColor(inputs.textColor.value, state.color, state.pulse);
+      renderContext.fillText(item.character, item.x - item.centerX, 0);
+      renderContext.restore();
     });
-    renderContext.restore();
     return layout;
   }
   function bezierPoint(start, controlA, controlB, end, t) {
