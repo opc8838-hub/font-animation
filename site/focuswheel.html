@@ -67,15 +67,24 @@ Automation</textarea>
       </section>
 
       <section class="motion-quick">
-        <div class="section-heading"><p class="section-label">滚动与焦点</p><small class="section-note">连续循环 · 中心距离场</small></div>
+        <div class="section-heading"><p class="section-label">滚动节奏</p><small class="section-note">共享相位 · 整组滑动</small></div>
         <div class="motion-map focus-motion-map" aria-label="动效阶段">
-          <span>淡入</span><i>→</i><span>中心放大</span><i>→</i><span>淡出循环</span>
+          <span>整体滑动</span><i>→</i><span>连续变速</span><i>→</i><span>无缝循环</span>
         </div>
         <div class="controls-grid quick-grid">
           <label>滚动方向 <select id="direction"><option value="up" selected>向上</option><option value="down">向下</option></select></label>
-          <label>运动方式 <select id="motionMode"><option value="continuous" selected>连续流动</option><option value="snap">逐项吸附</option></select></label>
+          <label>滚动节奏 <select id="scrollRhythm">
+            <option value="uniform" selected>匀速滑行</option>
+            <option value="accelerate">柔和加速后回落</option>
+            <option value="rush">快速推进后慢收</option>
+            <option value="brake">快速减速后恢复</option>
+            <option value="breathe">双段呼吸变速</option>
+          </select></label>
+          <label>字体表现 <select id="focusMotion"><option value="group" selected>整体滑动 · 不变形</option><option value="soft">中心轻聚焦</option><option value="focus">中心强聚焦</option></select></label>
           <label><span id="scrollSpeedLabel">上滑速度</span> <output id="scrollSpeedOut">1.00× · 0.42秒/项</output><input id="scrollSpeed" type="range" min="0.25" max="4" step="0.05" value="1"></label>
           <label>单项基础时长 <output id="secondsPerItemOut">0.42秒</output><input id="secondsPerItem" type="range" min="120" max="2000" step="10" value="420"></label>
+          <label>节奏周期 <output id="rhythmPeriodOut">2.40秒</output><input id="rhythmPeriod" type="range" min="600" max="6000" step="50" value="2400"></label>
+          <label>变速幅度 <output id="rhythmStrengthOut">65%</output><input id="rhythmStrength" type="range" min="0" max="100" value="65"></label>
           <label>字号 <output id="fontSizeOut">44px</output><input id="fontSize" type="range" min="18" max="160" value="44"></label>
           <label>行距 <output id="lineGapOut">58px</output><input id="lineGap" type="range" min="24" max="180" value="58"></label>
           <label>中心放大 <output id="focusScaleOut">136%</output><input id="focusScale" type="range" min="100" max="220" value="136"></label>
@@ -102,7 +111,6 @@ Automation</textarea>
           <label>最大模糊（暂停/导出） <output id="maxBlurOut">4px</output><input id="maxBlur" type="range" min="0" max="18" step="0.5" value="4"></label>
           <label>横向压缩 <output id="compressionOut">10%</output><input id="compression" type="range" min="0" max="45" value="10"></label>
           <label>初始位置 <output id="startPhaseOut">0%</output><input id="startPhase" type="range" min="0" max="100" value="0"></label>
-          <label>吸附停留 <output id="snapHoldOut">28%</output><input id="snapHold" type="range" min="0" max="75" value="28"></label>
         </div>
       </details>
 
@@ -139,13 +147,13 @@ Automation</textarea>
         </div>
         <p class="export-status" id="exportStatus" aria-live="polite">默认导出完整一轮；预览、GIF 与视频共享同一条连续时间线。</p>
       </section>
-      <p class="formula">线性循环相位 × 中心距离场<br>位置不停顿，缩放、字重、颜色、透明度与模糊共同塑造焦点</p>
+      <p class="formula">共享循环相位 × 连续速度曲线<br>默认整组文字不变形；五种节奏只改变滑行快慢，切换参数也不会跳位</p>
     </div>
   </details>
 
   <script src="js/continuation-gif.js"></script>
   <script src="CCapture.all.min.js"></script>
-  <script src="focuswheel.js?v=20260815-1"></script>
+  <script src="focuswheel.js?v=20260815-2"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js"></script>
 </body>

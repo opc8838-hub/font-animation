@@ -10,11 +10,12 @@
 
   const inputs = {
     items: $("#itemsText"), font: $("#fontFamily"), baseWeight: $("#baseWeight"), focusWeight: $("#focusWeight"),
-    direction: $("#direction"), motionMode: $("#motionMode"), scrollSpeed: $("#scrollSpeed"), secondsPerItem: $("#secondsPerItem"), fontSize: $("#fontSize"),
+    direction: $("#direction"), rhythm: $("#scrollRhythm"), focusMotion: $("#focusMotion"), scrollSpeed: $("#scrollSpeed"), secondsPerItem: $("#secondsPerItem"),
+    rhythmPeriod: $("#rhythmPeriod"), rhythmStrength: $("#rhythmStrength"), fontSize: $("#fontSize"),
     lineGap: $("#lineGap"), focusScale: $("#focusScale"), focusRadius: $("#focusRadius"), tracking: $("#tracking"),
     horizontalPosition: $("#horizontalPosition"), focusPosition: $("#focusPosition"), focusCurve: $("#focusCurve"),
     perspective: $("#perspective"), edgeFade: $("#edgeFade"), idleOpacity: $("#idleOpacity"), maxBlur: $("#maxBlur"),
-    compression: $("#compression"), startPhase: $("#startPhase"), snapHold: $("#snapHold"),
+    compression: $("#compression"), startPhase: $("#startPhase"),
     background: $("#backgroundColor"), focusColor: $("#focusColor"), idleColor: $("#idleColor")
   };
 
@@ -39,7 +40,7 @@
   const glyphMetricCache = new Map();
   let rafId = 0;
   let previewDirty = true;
-  let lastEffectiveSeconds = Math.max(.12, Number(inputs.secondsPerItem.value) / 1000) / Math.max(.25, Number(inputs.scrollSpeed.value));
+  let lastTimingConfig;
 
   const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
   const lerp = (start, end, progress) => start + (end - start) * progress;
@@ -57,24 +58,75 @@
     return itemCache;
   }
 
-  function effectiveSecondsPerItem() {
-    const baseSeconds = Math.max(.12, Number(inputs.secondsPerItem.value) / 1000);
-    return baseSeconds / Math.max(.25, Number(inputs.scrollSpeed.value));
+  function readTimingConfig() {
+    return {
+      secondsPerItem: Math.max(.03, Math.max(.12, Number(inputs.secondsPerItem.value) / 1000) / Math.max(.25, Number(inputs.scrollSpeed.value))),
+      rhythm: inputs.rhythm.value,
+      period: Math.max(.6, Number(inputs.rhythmPeriod.value) / 1000),
+      strength: clamp(Number(inputs.rhythmStrength.value) / 100)
+    };
+  }
+
+  function effectiveSecondsPerItem(config = readTimingConfig()) {
+    return config.secondsPerItem;
+  }
+
+  // Integrate a positive, periodic velocity curve. Every preset has an
+  // average speed of 1 and matching speed at both ends, so acceleration may
+  // feel fast but the position and velocity never jump at a loop boundary.
+  function rhythmDistance(time, config = readTimingConfig()) {
+    if (config.rhythm === "uniform" || config.strength <= .001) return Math.max(0, time);
+    const safeTime = Math.max(0, time);
+    const cycles = Math.floor(safeTime / config.period);
+    const fraction = safeTime / config.period - cycles;
+    const tau = Math.PI * 2;
+    let adjusted = fraction;
+    if (config.rhythm === "accelerate") {
+      const amount = config.strength * .82;
+      adjusted = fraction - amount * Math.sin(tau * fraction) / tau;
+    } else if (config.rhythm === "rush") {
+      const amount = config.strength * .58;
+      adjusted = fraction + amount * (1 - Math.cos(tau * fraction)) / tau + amount * .35 * (1 - Math.cos(tau * 2 * fraction)) / (tau * 2);
+    } else if (config.rhythm === "brake") {
+      const amount = config.strength * .58;
+      adjusted = fraction - amount * (1 - Math.cos(tau * fraction)) / tau - amount * .35 * (1 - Math.cos(tau * 2 * fraction)) / (tau * 2);
+    } else if (config.rhythm === "breathe") {
+      const amount = config.strength * .72;
+      adjusted = fraction + amount * (1 - Math.cos(tau * 2 * fraction)) / (tau * 2);
+    }
+    return (cycles + adjusted) * config.period;
+  }
+
+  function timeForRhythmDistance(distance, config = readTimingConfig()) {
+    const target = Math.max(0, distance);
+    if (config.rhythm === "uniform" || config.strength <= .001 || target === 0) return target;
+    let low = 0;
+    let high = target + config.period;
+    while (rhythmDistance(high, config) < target) high += config.period;
+    for (let index = 0; index < 28; index += 1) {
+      const middle = (low + high) / 2;
+      if (rhythmDistance(middle, config) < target) low = middle;
+      else high = middle;
+    }
+    return (low + high) / 2;
   }
 
   function cycleDuration() {
-    return effectiveSecondsPerItem() * parseItems().length;
+    const config = readTimingConfig();
+    return timeForRhythmDistance(config.secondsPerItem * parseItems().length, config);
   }
 
   function timelineTime() {
     return paused ? pausedAt : Math.max(0, (performance.now() - animationStart) / 1000);
   }
 
-  function preservePhaseAcrossSpeedChange() {
+  function preservePhaseAcrossTimingChange() {
     const current = timelineTime();
-    const nextEffectiveSeconds = effectiveSecondsPerItem();
-    const rebasedTime = current * nextEffectiveSeconds / Math.max(.001, lastEffectiveSeconds);
-    lastEffectiveSeconds = nextEffectiveSeconds;
+    const previousConfig = lastTimingConfig || readTimingConfig();
+    const travelledItems = rhythmDistance(current, previousConfig) / previousConfig.secondsPerItem;
+    const nextConfig = readTimingConfig();
+    const rebasedTime = timeForRhythmDistance(travelledItems * nextConfig.secondsPerItem, nextConfig);
+    lastTimingConfig = nextConfig;
     if (paused) pausedAt = rebasedTime;
     else animationStart = performance.now() - rebasedTime * 1000;
     drawPreview(rebasedTime);
@@ -91,6 +143,7 @@
     pausedAt = 0;
     animationStart = performance.now();
     paused = false;
+    lastTimingConfig = readTimingConfig();
     previewDirty = true;
     $("#pauseButton").textContent = "暂停";
   }
@@ -118,16 +171,10 @@
   }
 
   function motionPhase(time, itemCount) {
-    const seconds = effectiveSecondsPerItem();
+    const timing = readTimingConfig();
+    const seconds = effectiveSecondsPerItem(timing);
     const start = Number(inputs.startPhase.value) / 100 * itemCount;
-    const raw = time / seconds + start;
-    let phase = raw;
-    if (inputs.motionMode.value === "snap") {
-      const whole = Math.floor(raw);
-      const fraction = raw - whole;
-      const hold = Math.min(.75, Number(inputs.snapHold.value) / 100);
-      phase = fraction <= hold ? whole : whole + smoother((fraction - hold) / Math.max(.001, 1 - hold));
-    }
+    const phase = rhythmDistance(time, timing) / seconds + start;
     // Keep the phase inside one item cycle. Without wrapping, a long-running
     // preview eventually moves beyond the finite set of repeated rows and the
     // canvas appears empty even though the animation is still running.
@@ -165,6 +212,7 @@
     const focusX = width * Number(inputs.horizontalPosition.value) / 100;
     const focusY = height * Number(inputs.focusPosition.value) / 100;
     const maxScale = Number(inputs.focusScale.value) / 100;
+    const focusMotionStrength = inputs.focusMotion.value === "group" ? 0 : inputs.focusMotion.value === "soft" ? .32 : 1;
     const perspective = Number(inputs.perspective.value) / 100;
     const compression = Number(inputs.compression.value) / 100;
     const idleOpacity = Number(inputs.idleOpacity.value) / 100;
@@ -200,17 +248,17 @@
       const distance = Math.abs(rawY) / focusRadius;
       const focus = Math.exp(-Math.pow(distance, exponent));
       const focusEase = smoother(focus);
-      const projectedY = focusY + rawY * (1 + perspective * focusEase);
+      const projectedY = focusY + rawY * (1 + perspective * focusEase * focusMotionStrength);
       const edgeProgress = clamp((Math.abs(projectedY - focusY) - fadeStart) / Math.max(1, fadeEnd - fadeStart));
       const edgeAlpha = 1 - smoother(edgeProgress);
       const opacity = (idleOpacity + (1 - idleOpacity) * Math.pow(focus, .88)) * edgeAlpha;
       if (opacity <= .002) continue;
       entries.push({
         text: items[index], index, focus, focusEase, opacity, y: projectedY,
-        scale: 1 + (maxScale - 1) * focusEase,
-        scaleX: 1 - compression * (1 - focusEase),
+        scale: 1 + (maxScale - 1) * focusEase * focusMotionStrength,
+        scaleX: 1 - compression * (1 - focusEase) * focusMotionStrength,
         blur: maximumBlur * Math.pow(1 - focus, 1.25),
-        weight: Math.round(lerp(baseWeight, focusWeight, focusEase) / 50) * 50
+        weight: Math.round(lerp(baseWeight, focusWeight, focusEase * focusMotionStrength) / 50) * 50
       });
     }
 
@@ -233,7 +281,7 @@
 
     if (target === canvas) {
       const active = entries.reduce((closest, entry) => !closest || Math.abs(entry.y - focusY) < Math.abs(closest.y - focusY) ? entry : closest, null);
-      canvas.dataset.motionPhase = inputs.motionMode.value;
+      canvas.dataset.motionPhase = inputs.rhythm.value;
       canvas.dataset.activeIndex = String((active?.index ?? 0) + 1);
       canvas.dataset.activeText = active?.text || "";
       canvas.dataset.itemCount = String(count);
@@ -242,9 +290,12 @@
       canvas.dataset.focusX = focusX.toFixed(2);
       canvas.dataset.focusY = focusY.toFixed(2);
       canvas.dataset.focusScale = String(maxScale);
+      canvas.dataset.focusMotion = inputs.focusMotion.value;
       canvas.dataset.phase = phase.toFixed(4);
       canvas.dataset.scrollSpeed = Number(inputs.scrollSpeed.value).toFixed(2);
       canvas.dataset.secondsPerItem = effectiveSecondsPerItem().toFixed(4);
+      canvas.dataset.rhythmPeriod = (Number(inputs.rhythmPeriod.value) / 1000).toFixed(2);
+      canvas.dataset.rhythmStrength = (Number(inputs.rhythmStrength.value) / 100).toFixed(2);
       canvas.dataset.previewQuality = highQualityBlur ? "high" : "realtime";
       canvas.dataset.timelineTime = time.toFixed(4);
     }
@@ -281,24 +332,29 @@
     const values = {
       scrollSpeedOut: `${Number(inputs.scrollSpeed.value).toFixed(2)}× · ${effectiveSecondsPerItem().toFixed(2)}秒/项`,
       secondsPerItemOut: `${(Number(inputs.secondsPerItem.value) / 1000).toFixed(2)}秒`,
+      rhythmPeriodOut: `${(Number(inputs.rhythmPeriod.value) / 1000).toFixed(2)}秒`, rhythmStrengthOut: `${inputs.rhythmStrength.value}%`,
       fontSizeOut: `${inputs.fontSize.value}px`, lineGapOut: `${inputs.lineGap.value}px`, focusScaleOut: `${inputs.focusScale.value}%`,
       focusRadiusOut: `${inputs.focusRadius.value}%`, trackingOut: `${inputs.tracking.value}px`,
       horizontalPositionOut: `${inputs.horizontalPosition.value}%`, focusPositionOut: `${inputs.focusPosition.value}%`,
       perspectiveOut: `${inputs.perspective.value}%`, edgeFadeOut: `${inputs.edgeFade.value}%`, idleOpacityOut: `${inputs.idleOpacity.value}%`,
-      maxBlurOut: `${inputs.maxBlur.value}px`, compressionOut: `${inputs.compression.value}%`, startPhaseOut: `${inputs.startPhase.value}%`,
-      snapHoldOut: `${inputs.snapHold.value}%`
+      maxBlurOut: `${inputs.maxBlur.value}px`, compressionOut: `${inputs.compression.value}%`, startPhaseOut: `${inputs.startPhase.value}%`
     };
     Object.entries(values).forEach(([id, value]) => { $(`#${id}`).textContent = value; });
     $("#scrollSpeedLabel").textContent = inputs.direction.value === "down" ? "下滑速度" : "上滑速度";
-    inputs.snapHold.disabled = inputs.motionMode.value !== "snap";
+    const groupMotion = inputs.focusMotion.value === "group";
+    inputs.focusWeight.disabled = groupMotion;
+    inputs.focusScale.disabled = groupMotion;
+    inputs.perspective.disabled = groupMotion;
+    inputs.compression.disabled = groupMotion;
+    inputs.rhythmPeriod.disabled = inputs.rhythm.value === "uniform";
+    inputs.rhythmStrength.disabled = inputs.rhythm.value === "uniform";
   }
 
+  lastTimingConfig = readTimingConfig();
   Object.values(inputs).forEach((input) => input.addEventListener("input", updateOutputs));
   inputs.items.addEventListener("input", () => setTime(timelineTime()));
-  inputs.motionMode.addEventListener("change", updateOutputs);
   inputs.direction.addEventListener("change", updateOutputs);
-  inputs.scrollSpeed.addEventListener("input", preservePhaseAcrossSpeedChange);
-  inputs.secondsPerItem.addEventListener("input", preservePhaseAcrossSpeedChange);
+  [inputs.scrollSpeed, inputs.secondsPerItem, inputs.rhythm, inputs.rhythmPeriod, inputs.rhythmStrength].forEach((input) => input.addEventListener("input", preservePhaseAcrossTimingChange));
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) cancelAnimationFrame(rafId);
     else { animationStart = performance.now() - timelineTime() * 1000; previewLoop(); }
