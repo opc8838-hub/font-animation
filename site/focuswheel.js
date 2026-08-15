@@ -38,6 +38,7 @@
   let itemCache = referenceItems;
   const glyphMetricCache = new Map();
   let rafId = 0;
+  let previewDirty = true;
   let lastEffectiveSeconds = Math.max(.12, Number(inputs.secondsPerItem.value) / 1000) / Math.max(.25, Number(inputs.scrollSpeed.value));
 
   const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
@@ -82,6 +83,7 @@
   function setTime(seconds) {
     pausedAt = Math.max(0, seconds);
     animationStart = performance.now() - pausedAt * 1000;
+    previewDirty = true;
     drawPreview(pausedAt);
   }
 
@@ -89,6 +91,7 @@
     pausedAt = 0;
     animationStart = performance.now();
     paused = false;
+    previewDirty = true;
     $("#pauseButton").textContent = "暂停";
   }
 
@@ -165,7 +168,12 @@
     const perspective = Number(inputs.perspective.value) / 100;
     const compression = Number(inputs.compression.value) / 100;
     const idleOpacity = Number(inputs.idleOpacity.value) / 100;
-    const maximumBlur = Number(inputs.maxBlur.value) * unit;
+    // Real-time canvas filters are extremely expensive: applying blur to each
+    // row every frame can saturate the browser/GPU process. The editor uses the
+    // distance-field opacity while playing, then restores full blur for a
+    // paused still or deterministic export frame.
+    const highQualityBlur = target !== canvas || paused;
+    const maximumBlur = (highQualityBlur ? Number(inputs.maxBlur.value) : 0) * unit;
     const baseWeight = Number(inputs.baseWeight.value);
     const focusWeight = Number(inputs.focusWeight.value);
     const phase = motionPhase(time, count);
@@ -237,12 +245,13 @@
       canvas.dataset.phase = phase.toFixed(4);
       canvas.dataset.scrollSpeed = Number(inputs.scrollSpeed.value).toFixed(2);
       canvas.dataset.secondsPerItem = effectiveSecondsPerItem().toFixed(4);
+      canvas.dataset.previewQuality = highQualityBlur ? "high" : "realtime";
       canvas.dataset.timelineTime = time.toFixed(4);
     }
   }
 
   function resizeCanvas() {
-    const ratio = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+    const ratio = Math.min(1.25, Math.max(1, window.devicePixelRatio || 1));
     const width = Math.max(1, canvas.clientWidth || window.innerWidth);
     const height = Math.max(1, canvas.clientHeight || window.innerHeight);
     const pixelWidth = Math.round(width * ratio);
@@ -258,15 +267,17 @@
     resizeCanvas();
     const ratio = Number(canvas.dataset.ratio || 1);
     renderFrame(canvas, time, canvas.width / ratio, canvas.height / ratio, ratio);
+    previewDirty = false;
     frameCounter.textContent = `F ${String(Math.floor(time * fps)).padStart(4, "0")}`;
   }
 
   function previewLoop() {
-    drawPreview();
+    if (!paused || previewDirty) drawPreview();
     rafId = requestAnimationFrame(previewLoop);
   }
 
   function updateOutputs() {
+    previewDirty = true;
     const values = {
       scrollSpeedOut: `${Number(inputs.scrollSpeed.value).toFixed(2)}× · ${effectiveSecondsPerItem().toFixed(2)}秒/项`,
       secondsPerItemOut: `${(Number(inputs.secondsPerItem.value) / 1000).toFixed(2)}秒`,
@@ -301,8 +312,8 @@
   $("#reverseItems").addEventListener("click", () => { inputs.items.value = parseItems().reverse().join("\n"); restart(); });
   $("#restartButton").addEventListener("click", restart);
   $("#pauseButton").addEventListener("click", (event) => {
-    if (paused) { animationStart = performance.now() - pausedAt * 1000; paused = false; event.currentTarget.textContent = "暂停"; }
-    else { pausedAt = timelineTime(); paused = true; drawPreview(pausedAt); event.currentTarget.textContent = "继续"; }
+    if (paused) { animationStart = performance.now() - pausedAt * 1000; paused = false; previewDirty = true; event.currentTarget.textContent = "暂停"; }
+    else { pausedAt = timelineTime(); paused = true; previewDirty = true; drawPreview(pausedAt); event.currentTarget.textContent = "继续"; }
   });
   $("#backButton").addEventListener("click", () => { paused = true; setTime(timelineTime() - 1 / fps); $("#pauseButton").textContent = "继续"; });
   $("#forwardButton").addEventListener("click", () => { paused = true; setTime(timelineTime() + 1 / fps); $("#pauseButton").textContent = "继续"; });
