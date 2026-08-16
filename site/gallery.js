@@ -15,7 +15,7 @@ const effects = [
   ["wordgather", "词序汇聚", "Word Gather", "type", "分散词组汇合与彩幕收尾"],
   ["focusportal", "焦点转场", "Focus Portal", "type", "字母或图标放大旋转转场"],
   ["rapidsequence", "速序轮播", "Rapid Sequence", "flow", "逐行滚入与快速文字轮播"],
-  ["citystack", "城市字塔", "City Stack", "type", "高字重中英文字逐项点亮叠满"],
+  ["citystack", "城市字塔", "City Stack", "type", "港版黑体中英文字逐项点亮叠满"],
   ["colorcanvas", "彩幕组句", "Color Canvas", "type", "逐行弹出与彩色弧面"],
   ["liquidtype", "液字凝结", "Liquid Type", "type", "泡沫凝结与液态材质"],
   ["scrapbin", "揉纸入篓", "Scrap Bin", "physics", "文字揉皱与重力入篓"],

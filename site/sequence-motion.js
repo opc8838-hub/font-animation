@@ -50,10 +50,12 @@
     </section>`;
   const cityFont = `
     <section>
-      <div class="section-heading"><p class="section-label">字体</p><small class="section-note">参考版使用高字重几何黑体</small></div>
+      <div class="section-heading"><p class="section-label">字体</p><small class="section-note">参考版分层使用香港现代黑体：主字中等、英文常规、副标题加粗</small></div>
       <div class="sequence-font-grid">
-        <label><span class="section-label">字体家族</span><select id="fontFamily"><option value="noto" selected>Noto Sans SC · 原版</option><option value="city-black">Noto Sans SC Black</option><option value="inter">Inter</option><option value="space">Space Grotesk</option><option value="manrope">Manrope</option><option value="poppins">Poppins</option></select></label>
-        <label><span class="section-label">字重</span><select id="fontWeight"><option value="500">Medium</option><option value="600">Semibold</option><option value="700">Bold</option><option value="800" selected>Extra Bold</option><option value="900">Black</option></select></label>
+        <label><span class="section-label">字体家族</span><select id="fontFamily"><option value="noto-hk" selected>Noto Sans HK · 香港版参考</option><option value="noto">Noto Sans SC</option><option value="city-black">Noto Sans SC Black</option><option value="inter">Inter</option><option value="space">Space Grotesk</option><option value="manrope">Manrope</option><option value="poppins">Poppins</option></select></label>
+        <label><span class="section-label">主中文字重</span><select id="cityHanWeight"><option value="300">Light</option><option value="400">Regular</option><option value="500" selected>Medium</option><option value="600">Semibold</option><option value="700">Bold</option><option value="800">Extra Bold</option></select></label>
+        <label><span class="section-label">英文字重</span><select id="cityEnglishWeight"><option value="300">Light</option><option value="400">Regular</option><option value="500" selected>Medium</option><option value="600">Semibold</option><option value="700">Bold</option></select></label>
+        <label><span class="section-label">副标题字重</span><select id="citySubtitleWeight"><option value="400">Regular</option><option value="500">Medium</option><option value="600">Semibold</option><option value="700" selected>Bold</option><option value="800">Extra Bold</option></select></label>
       </div>
     </section>`;
   const commonColors = `
@@ -273,23 +275,23 @@
         <div class="section-heading"><p class="section-label">字体间距</p><small class="section-note">横向字距与纵向行距分别调整</small></div>
         <div class="controls-grid">
           ${slider("汉字横向间距", "cityHanLetterGap", -80, 160, 1, 8, "pixels")}
-          ${slider("汉字纵向间距", "cityHanVerticalGap", -100, 180, 1, 40, "pixels")}
+          ${slider("汉字纵向间距", "cityHanVerticalGap", -100, 180, 1, 57, "pixels")}
           <label class="check-control"><span>主文字每行等宽</span><input id="cityUniformLineWidth" type="checkbox" checked></label>
           ${slider("统一行宽", "cityLineWidth", 280, 900, 1, 520, "pixels")}
           ${slider("英文横向间距", "cityEnglishLetterGap", -30, 120, 1, 0, "pixels")}
-          ${slider("英文纵向间距", "cityEnglishVerticalGap", -100, 180, 1, 0, "pixels")}
+          ${slider("英文纵向间距", "cityEnglishVerticalGap", -100, 180, 1, 14, "pixels")}
           ${slider("副标题横向间距", "citySubtitleLetterGap", -30, 100, 1, 3, "pixels")}
           ${slider("署名横向间距", "cityFooterLetterGap", -20, 80, 1, 0, "pixels")}
-          ${slider("中英文纵向距离", "cityBlockGap", -40, 180, 1, 24, "pixels")}
-          ${slider("副标题纵向距离", "citySubtitleGap", -20, 180, 1, 18, "pixels")}
-          ${slider("署名纵向距离", "cityFooterGap", 40, 700, 1, 150, "pixels")}
+          ${slider("中英文纵向距离", "cityBlockGap", -40, 180, 1, 34, "pixels")}
+          ${slider("副标题纵向距离", "citySubtitleGap", -20, 180, 1, 21, "pixels")}
+          ${slider("署名纵向距离", "cityFooterGap", 40, 700, 1, 240, "pixels")}
         </div>
         <label class="stacked-control">各行横向比例 · 关闭等宽时使用<input id="cityHanRowScaleX" type="text" value="100,100" placeholder="百分比，例如 100,92"></label>
-        <label class="stacked-control">各行纵向比例<input id="cityHanRowScaleY" type="text" value="88,112" placeholder="百分比，例如 88,112；第一行扁、第二行高"></label>
+        <label class="stacked-control">各行纵向比例<input id="cityHanRowScaleY" type="text" value="96,130" placeholder="百分比，例如 96,130；第一行扁、第二行高"></label>
       </section>
       <details class="sequence-advanced"><summary>高级细调</summary><div class="controls-grid">
         ${slider("汉字大小", "cityHanSize", 60, 340, 1, 250, "pixels")}
-        ${slider("英文大小", "cityEnglishSize", 36, 220, 1, 180, "pixels")}
+        ${slider("英文大小", "cityEnglishSize", 36, 220, 1, 170, "pixels")}
         ${slider("副标题大小", "citySubtitleSize", 18, 120, 1, 80, "pixels")}
         ${slider("署名大小", "cityFooterSize", 16, 100, 1, 60, "pixels")}
         ${slider("进入位移", "cityEntryDistance", 0, 180, 1, 0, "pixels")}
@@ -307,7 +309,7 @@
   const fontMap = {
     inter: '"Relay Inter", "Relay Noto", sans-serif', space: '"Relay Space", "Relay Noto", sans-serif',
     manrope: '"Relay Manrope", "Relay Noto", sans-serif', poppins: '"Relay Poppins", "Relay Noto", sans-serif',
-    noto: '"Relay Noto", sans-serif', "city-black": '"City Noto Black", "Relay Noto", sans-serif'
+    noto: '"Relay Noto", sans-serif', "noto-hk": '"City Noto HK", "Relay Noto", sans-serif', "city-black": '"City Noto Black", "Relay Noto", sans-serif'
   };
   const value = (id, fallback = "") => { const element = $(`#${id}`); return element ? element.value : fallback; };
   const number = (id, fallback = 0) => { const result = Number(value(id, fallback)); return Number.isFinite(result) ? result : fallback; };
@@ -363,6 +365,10 @@
   }
   function setFont(context, size) {
     context.font = `${number("fontWeight", 500)} ${size}px ${fontMap[value("fontFamily", "inter")] || fontMap.inter}`;
+    context.textBaseline = "middle"; context.textAlign = "left";
+  }
+  function setCityFont(context, size, weightId, fallbackWeight) {
+    context.font = `${number(weightId, fallbackWeight)} ${size}px ${fontMap[value("fontFamily", "noto-hk")] || fontMap["noto-hk"]}`;
     context.textBaseline = "middle"; context.textAlign = "left";
   }
   function logicalScale(width, height) { return Math.max(.22, Math.min(width / 1280, height / 720)); }
@@ -665,14 +671,14 @@
     return groups;
   }
   function renderCity(context, phase, width, height) {
-    const t = timing(), scale = Math.max(.24, Math.min(width / 1080, height / 1280)), centerX = width * number("textX", 50) / 100, centerY = height * number("textY", 44) / 100;
+    const t = timing(), scale = Math.max(.24, Math.min(width / 1080, height / 1480)), centerX = width * number("textX", 50) / 100, centerY = height * number("textY", 44) / 100;
     fillBackground(context, width, height, value("backgroundColor", "#050505"));
     const hanLines = lines("cityHanLines"), englishLines = lines("cityEnglishLines"), subtitle = graphemes(value("citySubtitle", "亚洲国际都会")), footer = value("cityFooter", "discoverhongkong.cn");
-    const hanSize = number("cityHanSize", 250) * scale, englishSize = number("cityEnglishSize", 180) * scale, englishLineHeight = Math.max(englishSize * .35, englishSize * .84 + number("cityEnglishVerticalGap", 0) * scale);
-    const subtitleSize = number("citySubtitleSize", 80) * scale, footerSize = number("cityFooterSize", 60) * scale, blockGap = number("cityBlockGap", 24) * scale, subtitleGap = number("citySubtitleGap", 18) * scale, footerGap = number("cityFooterGap", 150) * scale;
+    const hanSize = number("cityHanSize", 250) * scale, englishSize = number("cityEnglishSize", 170) * scale, englishLineHeight = Math.max(englishSize * .35, englishSize * .84 + number("cityEnglishVerticalGap", 14) * scale);
+    const subtitleSize = number("citySubtitleSize", 80) * scale, footerSize = number("cityFooterSize", 60) * scale, blockGap = number("cityBlockGap", 34) * scale, subtitleGap = number("citySubtitleGap", 21) * scale, footerGap = number("cityFooterGap", 240) * scale;
     const hanLetterGap = number("cityHanLetterGap", 8) * scale, englishLetterGap = number("cityEnglishLetterGap", 0) * scale, subtitleLetterGap = number("citySubtitleLetterGap", 3) * scale, footerLetterGap = number("cityFooterLetterGap", 0) * scale;
     const hanColor = value("accentColor", "#1dff11"), englishColor = value("cityEnglishColor", "#1dff11"), subtitleColor = value("citySubtitleColor", "#1dff11");
-    const rowScaleXs = csv("cityHanRowScaleX"), rowScaleYs = csv("cityHanRowScaleY"), hanVerticalGap = number("cityHanVerticalGap", 40) * scale;
+    const rowScaleXs = csv("cityHanRowScaleX"), rowScaleYs = csv("cityHanRowScaleY"), hanVerticalGap = number("cityHanVerticalGap", 57) * scale;
     const uniformLineWidth = checked("cityUniformLineWidth"), targetLineWidth = number("cityLineWidth", 520) * scale;
     const hanRows = hanLines.map((line, row) => ({ line, scaleX: Math.max(.2, (rowScaleXs[row] ?? 100) / 100), scaleY: Math.max(.2, (rowScaleYs[row] ?? 100) / 100) }));
     hanRows.forEach((row) => { row.height = Math.max(hanSize * .35, hanSize * .82 * row.scaleY); });
@@ -680,7 +686,7 @@
     const mainHeight = hanHeight + blockGap + englishLines.length * englishLineHeight + subtitleGap + subtitleSize, top = centerY - mainHeight / 2;
     const targets = cityFlashKeySet(), pulses = t.cityMode === "pulse" ? t.pulseSchedule.byKey : null, participates = (key) => targets === null || targets.has(key);
     context.save();
-    setFont(context, hanSize); let characterIndex = 0, rowY = top;
+    setCityFont(context, hanSize, "cityHanWeight", 500); let characterIndex = 0, rowY = top;
     hanRows.forEach((row) => {
       const metrics = cityTextMetrics(context, row.line, hanLetterGap), fitted = uniformLineWidth ? cityFitGlyphScale(context, row.line, hanLetterGap, targetLineWidth) : { scaleX: row.scaleX, bounds: cityInkBounds(context, row.line, hanLetterGap, row.scaleX) };
       const rowScaleX = fitted.scaleX, scaledWidths = metrics.widths.map((item) => item * rowScaleX), total = scaledWidths.reduce((sum, item) => sum + item, 0) + Math.max(0, scaledWidths.length - 1) * hanLetterGap; let x = centerX - total / 2 - fitted.bounds.center;
@@ -689,14 +695,15 @@
         else { const itemTiming = t.hanSchedule.byIndex.get(characterIndex) || { start: t.leadIn, duration: t.entry }; drawCityItem(context, char, itemX, itemY, phase, itemTiming.start, itemTiming.duration, scale, hanColor, 0, participates(key), rowScaleX, row.scaleY); }
         x += scaledWidths[index] + hanLetterGap; characterIndex += 1; }); rowY += row.height + hanVerticalGap;
     });
-    const englishTop = top + hanHeight + blockGap; setFont(context, englishSize);
+    const englishTop = top + hanHeight + blockGap; setCityFont(context, englishSize, "cityEnglishWeight", 500);
     englishLines.forEach((line, index) => { const key = `E${index + 1}`, text = line.toUpperCase(), ink = cityInkBounds(context, text, englishLetterGap), lineScaleX = uniformLineWidth ? targetLineWidth / Math.max(1, ink.width) : 1, lineX = centerX - ink.center * lineScaleX; if (t.cityMode === "pulse") drawCityPulseItem(context, text, lineX, englishTop + englishLineHeight * (index + .5), phase, t.leadIn, pulses.get(key), englishColor, englishLetterGap, lineScaleX); else drawCityItem(context, text, lineX, englishTop + englishLineHeight * (index + .5), phase, t.englishStart + index * (t.entry + t.englishInterval), t.entry, scale, englishColor, englishLetterGap, participates(key), lineScaleX); });
-    const subtitleY = englishTop + englishLines.length * englishLineHeight + subtitleGap + subtitleSize / 2; setFont(context, subtitleSize);
-    const subtitleWidths = subtitle.map((char) => context.measureText(char).width), subtitleTotal = subtitleWidths.reduce((sum, item) => sum + item, 0) + Math.max(0, subtitle.length - 1) * subtitleLetterGap, subtitleGroups = citySubtitleGroups(subtitle.length), subtitleRank = new Map(subtitleGroups.flatMap((group, rank) => group.map((index) => [index, rank]))); let subtitleX = centerX - subtitleTotal / 2;
-    subtitle.forEach((char, index) => { const key = `S${index + 1}`, x = subtitleX + subtitleWidths[index] / 2; if (t.cityMode === "pulse") drawCityPulseItem(context, char, x, subtitleY, phase, t.leadIn, pulses.get(key), subtitleColor); else drawCityItem(context, char, x, subtitleY, phase, t.subtitleStart + (subtitleRank.get(index) || 0) * (t.entry + t.subtitleInterval), t.entry, scale, subtitleColor, 0, participates(key)); subtitleX += subtitleWidths[index] + subtitleLetterGap; }); context.restore();
+    const subtitleY = englishTop + englishLines.length * englishLineHeight + subtitleGap + subtitleSize / 2; setCityFont(context, subtitleSize, "citySubtitleWeight", 700);
+    const subtitleText = subtitle.join(""), subtitleMetrics = cityTextMetrics(context, subtitleText, subtitleLetterGap), subtitleFitted = uniformLineWidth ? cityFitGlyphScale(context, subtitleText, subtitleLetterGap, targetLineWidth) : { scaleX: 1, bounds: cityInkBounds(context, subtitleText, subtitleLetterGap) };
+    const subtitleScaleX = subtitleFitted.scaleX, subtitleWidths = subtitleMetrics.widths.map((item) => item * subtitleScaleX), subtitleTotal = subtitleWidths.reduce((sum, item) => sum + item, 0) + Math.max(0, subtitle.length - 1) * subtitleLetterGap, subtitleGroups = citySubtitleGroups(subtitle.length), subtitleRank = new Map(subtitleGroups.flatMap((group, rank) => group.map((index) => [index, rank]))); let subtitleX = centerX - subtitleTotal / 2 - subtitleFitted.bounds.center;
+    subtitle.forEach((char, index) => { const key = `S${index + 1}`, x = subtitleX + subtitleWidths[index] / 2; if (t.cityMode === "pulse") drawCityPulseItem(context, char, x, subtitleY, phase, t.leadIn, pulses.get(key), subtitleColor, 0, subtitleScaleX); else drawCityItem(context, char, x, subtitleY, phase, t.subtitleStart + (subtitleRank.get(index) || 0) * (t.entry + t.subtitleInterval), t.entry, scale, subtitleColor, 0, participates(key), subtitleScaleX); subtitleX += subtitleWidths[index] + subtitleLetterGap; }); context.restore();
     const footerStart = t.cityMode === "pulse" ? t.leadIn : t.footerStart;
     if (phase >= footerStart && footer) {
-      const reveal = smoother((phase - footerStart) / Math.max(.001, t.footerFade)); context.save(); context.globalAlpha = reveal; context.fillStyle = value("textColor", "#d5d5d5"); context.font = `600 ${footerSize}px ${fontMap[value("fontFamily", "noto")] || fontMap.noto}`; context.textAlign = "center"; context.textBaseline = "middle"; context.translate(centerX, subtitleY + subtitleSize / 2 + footerGap); fillCityText(context, footer, footerLetterGap); context.restore();
+      const reveal = smoother((phase - footerStart) / Math.max(.001, t.footerFade)); context.save(); context.globalAlpha = reveal; context.fillStyle = value("textColor", "#d5d5d5"); context.font = `600 ${footerSize}px ${fontMap[value("fontFamily", "noto-hk")] || fontMap["noto-hk"]}`; context.textAlign = "center"; context.textBaseline = "middle"; context.translate(centerX, subtitleY + subtitleSize / 2 + footerGap); fillCityText(context, footer, footerLetterGap); context.restore();
     }
   }
 
@@ -773,37 +780,37 @@
     else {
       assignValues({
         cityHanLines: "只在\n香港", cityEnglishLines: "HONG\nKONG", citySubtitle: "亚洲国际都会", cityFooter: "discoverhongkong.cn",
-        cityTimelineMode: "build", cityHanOrder: "row-ltr", cityCustomOrder: "1,2,3,4", cityFlashSequence: "全部", cityHanDurations: "", cityFlashGaps: "", fontWeight: 800, playbackSpeed: 1, cityLeadIn: 670, cityPulseDelay: 120, cityHanInterval: 40, cityEnglishInterval: 40,
+        cityTimelineMode: "build", cityHanOrder: "row-ltr", cityCustomOrder: "1,2,3,4", cityFlashSequence: "全部", cityHanDurations: "", cityFlashGaps: "", cityHanWeight: 500, cityEnglishWeight: 500, citySubtitleWeight: 700, playbackSpeed: 1, cityLeadIn: 670, cityPulseDelay: 120, cityHanInterval: 40, cityEnglishInterval: 40,
         cityEntryDuration: 320, citySectionGap: 150, citySubtitleDelay: 260, citySubtitleInterval: 40, cityFooterDelay: 500,
-        cityFooterFade: 300, finalHold: 716, cityRhythm: "flash", cityHanSize: 250, cityEnglishSize: 180, citySubtitleSize: 80,
-        cityFooterSize: 60, cityHanLetterGap: 8, cityHanVerticalGap: 40, cityUniformLineWidth: true, cityLineWidth: 520, cityHanRowScaleX: "100,100", cityHanRowScaleY: "88,112", cityEnglishLetterGap: 0, cityEnglishVerticalGap: 0,
-        citySubtitleLetterGap: 3, cityFooterLetterGap: 0, cityBlockGap: 24, citySubtitleGap: 18, cityFooterGap: 150,
+        cityFooterFade: 300, finalHold: 716, cityRhythm: "flash", cityHanSize: 250, cityEnglishSize: 170, citySubtitleSize: 80,
+        cityFooterSize: 60, cityHanLetterGap: 8, cityHanVerticalGap: 57, cityUniformLineWidth: true, cityLineWidth: 520, cityHanRowScaleX: "100,100", cityHanRowScaleY: "96,130", cityEnglishLetterGap: 0, cityEnglishVerticalGap: 14,
+        citySubtitleLetterGap: 3, cityFooterLetterGap: 0, cityBlockGap: 34, citySubtitleGap: 21, cityFooterGap: 240,
         cityEntryDistance: 0, cityEntryScale: 100, cityFlashCount: 4, cityFlashStrength: 88, textX: 50, textY: 44,
         backgroundColor: "#050505", accentColor: "#1dff11", cityEnglishColor: "#1dff11", citySubtitleColor: "#1dff11",
         cityFlashColor: "#0a5010", textColor: "#d5d5d5"
       });
     }
-    $("#fontFamily").value = mode === "city" ? "noto" : "inter"; updateOutputs(); restart();
+    $("#fontFamily").value = mode === "city" ? "noto-hk" : "inter"; updateOutputs(); restart();
   }
   function setAltReference() {
     if (mode !== "city") return;
     assignValues({
       cityHanLines: "只在\n香港", cityEnglishLines: "HONG\nKONG", citySubtitle: "亚洲国际都会", cityFooter: "discoverhongkong.cn",
       cityTimelineMode: "pulse", cityFlashSequence: "H3,S3+S4,E1,E2", cityHanDurations: "520,240,300,460", cityFlashGaps: "360,100,200,0",
-      fontWeight: 800, playbackSpeed: 1, cityLeadIn: 200, cityPulseDelay: 120, cityHanInterval: 40, cityEntryDuration: 320, cityFlashCount: 4,
-      cityFooterFade: 100, finalHold: 1066, cityRhythm: "flash", cityHanSize: 250, cityEnglishSize: 180, citySubtitleSize: 80, cityFooterSize: 60,
-      cityHanLetterGap: 8, cityHanVerticalGap: 40, cityUniformLineWidth: true, cityLineWidth: 520, cityHanRowScaleX: "100,100", cityHanRowScaleY: "88,112", cityEnglishLetterGap: 0, cityEnglishVerticalGap: 0,
-      citySubtitleLetterGap: 3, cityFooterLetterGap: 0, cityBlockGap: 24, citySubtitleGap: 18, cityFooterGap: 150,
+      cityHanWeight: 500, cityEnglishWeight: 500, citySubtitleWeight: 700, playbackSpeed: 1, cityLeadIn: 200, cityPulseDelay: 120, cityHanInterval: 40, cityEntryDuration: 320, cityFlashCount: 4,
+      cityFooterFade: 100, finalHold: 1066, cityRhythm: "flash", cityHanSize: 250, cityEnglishSize: 170, citySubtitleSize: 80, cityFooterSize: 60,
+      cityHanLetterGap: 8, cityHanVerticalGap: 57, cityUniformLineWidth: true, cityLineWidth: 520, cityHanRowScaleX: "100,100", cityHanRowScaleY: "96,130", cityEnglishLetterGap: 0, cityEnglishVerticalGap: 14,
+      citySubtitleLetterGap: 3, cityFooterLetterGap: 0, cityBlockGap: 34, citySubtitleGap: 21, cityFooterGap: 240,
       cityFlashStrength: 92, textX: 50, textY: 44, backgroundColor: "#050505", accentColor: "#c176ff", cityEnglishColor: "#c176ff", citySubtitleColor: "#c176ff", cityFlashColor: "#281536", textColor: "#f2f2f2"
     });
-    $("#fontFamily").value = "noto"; updateOutputs(); restart();
+    $("#fontFamily").value = "noto-hk"; updateOutputs(); restart();
   }
   function setChinese() {
     if (mode === "gather") { $("#gatherWords").value = "全新|界面|灵感|设计"; $("#finalTitle").value = "现在开始"; }
     else if (mode === "portal") { $("#portalSequence").value = "你好\n[icon]\n重新认识\n未来\n现在\n出发"; $("#portalPhrase").value = "最快的灵感，就在此刻。"; $("#focusIndex").value = "1"; }
     else if (mode === "rapid") { $("#headlineLines").value = "流畅。\n醒目。\n自由。"; $("#bridgeText").value = "这就是灵感。"; $("#rapidItems").value = "快速切换\n丝滑滚动\n自由节奏\n图标收束\n马上开始"; }
     else assignValues({ cityHanLines: "灵感\n发生", cityEnglishLines: "CREATE\nMORE", citySubtitle: "每一次相遇", cityFooter: "hello-motion.cn", cityTimelineMode: "build", cityFlashSequence: "全部", cityHanDurations: "", cityFlashGaps: "", cityUniformLineWidth: true, cityLineWidth: 520, cityHanRowScaleX: "100,100", cityHanRowScaleY: "88,108" });
-    $("#fontFamily").value = "noto"; updateOutputs(); restart();
+    $("#fontFamily").value = "noto-hk"; updateOutputs(); restart();
   }
   $("#referencePreset").addEventListener("click", setReference); $("#referenceAltPreset")?.addEventListener("click", setAltReference); $("#chinesePreset").addEventListener("click", setChinese);
   [$("#restartTop"), $("#restartButton")].forEach((button) => button.addEventListener("click", restart));

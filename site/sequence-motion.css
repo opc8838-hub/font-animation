@@ -1,4 +1,5 @@
 @font-face { font-family: "City Noto Black"; src: url("assets/NotoSansSC-Black.ttf") format("truetype"); font-weight: 900; font-display: swap; }
+@font-face { font-family: "City Noto HK"; src: url("assets/fonts/NotoSansHK-Variable.ttf") format("truetype"); font-weight: 100 900; font-display: swap; }
 .sequence-stage { background: #f5f4fb; }
 .sequence-stage canvas { display: block; width: 100%; height: 100%; }
 .sequence-panel .panel-scroll { padding-top: 6px; }

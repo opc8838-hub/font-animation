@@ -17,6 +17,7 @@ The following local fonts were added after reviewing the collections on Fontshar
 | Noto Sans SC Thin | Existing project CJK assets | `site/resources/NotoSansSC-Thin.otf` | SIL OFL 1.1 |
 | Noto Sans JP Thin / Black | Existing project CJK assets | `site/assets` + `site/resources` | SIL OFL 1.1 |
 | Noto Sans KR Black | Existing project CJK assets | `site/resources/NotoSansKR-Black.otf` | SIL OFL 1.1 |
+| Noto Sans HK Variable | City Stack video font matching | google/fonts `ofl/notosanshk` | SIL OFL 1.1 |
 
 Upstream repository: https://github.com/google/fonts
 

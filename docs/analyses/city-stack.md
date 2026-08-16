@@ -10,7 +10,7 @@
 
 ## One-sentence target
 
-A fixed-top, high-weight Chinese/English word tower builds one item at a time with a brief neon flash and restrained upward settle, then completes an edge-to-center subtitle and fades in a gray signature.
+A fixed-top Chinese/English word tower builds one item at a time with a brief neon flash and restrained upward settle, then completes an edge-to-center subtitle and fades in a gray signature.
 
 ## Phase table
 
@@ -44,10 +44,10 @@ A fixed-top, high-weight Chinese/English word tower builds one item at a time wi
 - Composition center: actual right-hand stage center, not browser-window center.
 - Alignment: every line is independently measured and horizontally centered on a shared vertical axis.
 - Anchor behavior: the top of the tower remains fixed while new rows extend downward.
-- Typography: geometric sans / Chinese grotesk at Extra Bold to Black weight, tight line height, minimal tracking, square proportions.
-- Font reconstruction: preserve the original editor's Noto Sans SC face at weight 800. The first Chinese row uses an 88% vertical transform and the second uses 112%, while the original 40px row gap is retained; the first row is visibly flatter and `香港` visibly taller without changing type weight.
-- Width rule: all primary Chinese and English lines normalize to one editable 520px logical width. Added primary lines inherit the same width automatically, so every left and right edge remains aligned despite different scripts or character counts.
-- Measured final geometry at 540×1166: five green line widths are 247–262px; Chinese row starts are about 123px apart; English row starts are about 74px apart; the final green block spans y=275–745 and is centered near x=270.
+- Typography: official open-source Noto Sans HK variable font. Primary Chinese and English use Medium 500; the fifth subtitle line uses Bold 700; the signature uses Semibold 600.
+- Font reconstruction: the source frame is a Hong Kong modern grotesk rather than the previous synthetic Extra Bold Simplified-Chinese face. The first Chinese row uses a 96% vertical transform and the second uses 130%, with a 57px logical row gap. This reproduces the source's flatter first line and much taller `香港` line.
+- Width rule: all five visible title lines—both Chinese rows, both English rows, and the subtitle—normalize to one editable 520px logical ink width. Added Chinese or English lines inherit the same target automatically, so every left and right edge remains aligned despite different scripts or character counts.
+- Source-frame measurements at 540×1166: line widths 254/259/248/248/247px; heights 108/149/62/61/35px; the final coloured block spans y=276–746 and is centered near x=270.
 - Responsive behavior: a portrait-oriented logical composition scales uniformly into desktop, mobile, and export dimensions.
 
 ## Timing and easing
@@ -63,7 +63,7 @@ A fixed-top, high-weight Chinese/English word tower builds one item at a time wi
 
 - Shared UI/export engine: `sequence-motion.js`, `sequence-motion.css`, `me-motion-editor.css/js`.
 - Shared deterministic playback: pause, single-frame stepping, cycle-relative export, aspect-ratio presets.
-- Shared local font assets: Relay Noto variable font, with Inter/Space Grotesk/Manrope/Poppins alternates.
+- Shared local font assets: Noto Sans HK variable font from the official Google Fonts GitHub repository, with Noto Sans SC/Inter/Space Grotesk/Manrope/Poppins alternates.
 - New core logic: additive grid/line tower, full-lockup selective-pulse mode, tokenized unit/group ordering, subtitle outside-to-center ordering, synchronized short flash pulses, and per-row X/Y glyph transforms.
 
 ## User-editable parameters
@@ -78,7 +78,7 @@ A fixed-top, high-weight Chinese/English word tower builds one item at a time wi
 
 ## Uncertainties to verify
 
-- The exact source typeface appears customized or brand-selected; the local Noto Sans SC variable font is the closest redistributable project font and remains user-replaceable.
+- The campaign does not publish a typeface name. Frame-level glyph comparison identifies Noto Sans HK Medium as the closest redistributable match; it uses the correct Hong Kong regional glyph set and remains user-replaceable.
 - A few one-frame brightness changes may partly come from source video compression/exposure; the implementation treats them as a controlled flash amount rather than random noise.
 
 ## Acceptance evidence
@@ -97,4 +97,6 @@ A fixed-top, high-weight Chinese/English word tower builds one item at a time wi
 - [x] Alternate-reference keyframes at 0.40s (`H3`), 1.23s (`S3+S4`), and 1.60s (`E1`)
 - [x] Single-target `H2` test disables every other flash and recalculates the loop to 1.91s
 - [x] Alternate preset loop equals 3.57s reference duration
-- [x] Visible-ink alignment check: main-line widths 244/243/243/243px; row heights 104/120px for the first and second Chinese rows
+- [x] Official OFL Noto Sans HK variable font loads locally at weights 500/500/700
+- [x] Five-line visible-ink normalization includes the subtitle, not only the first four lines
+- [x] Source-frame geometry recorded as widths 254/259/248/248/247px and heights 108/149/62/61/35px
