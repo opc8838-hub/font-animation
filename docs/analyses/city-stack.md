@@ -44,7 +44,7 @@ A fixed-top, high-weight Chinese/English word tower builds one item at a time wi
 - Default implementation loop: 4.20s.
 - Default phase model: 0.60s lead-in; 0.18s Chinese interval; 0.22s English interval; 0.11s subtitle interval; 0.50s footer delay; 0.30s footer fade; 0.79s hold.
 - Entry easing: fast opacity/brightness arrival with a 28px logical upward settle and restrained scale-down from 112% to 100%.
-- Flash model: short shared luminance dip when a new unit joins, adjustable independently from entry duration.
+- Flash model: only the currently entering character or English line receives the short dark-to-neon pulse; already-visible text keeps its own stable color.
 
 ## Reuse plan
 
@@ -57,11 +57,11 @@ A fixed-top, high-weight Chinese/English word tower builds one item at a time wi
 
 ### Common
 
-- Four text areas/fields, font family, weight, overall speed, opening delay, Chinese interval, English interval, entry duration, section gap, subtitle delay/interval, footer delay/fade, final hold, entry rhythm, background, primary text color, and signature color.
+- Four text areas/fields, font family, weight, overall speed, opening delay, Chinese interval, English interval, entry duration, section gap, subtitle delay/interval, footer delay/fade, final hold, entry rhythm, background, separate Chinese/English/subtitle/signature colors, and a dedicated local-flash color.
 
 ### Advanced
 
-- Chinese/English/subtitle/footer sizes, Chinese and English line height, block/subtitle/footer gaps, entry distance, entry scale, flash strength, and stage X/Y position.
+- Chinese/English/subtitle/footer sizes; independent horizontal spacing for Chinese, English, subtitle, and signature; independent vertical spacing for Chinese rows, English rows, Chinese-to-English, subtitle, and signature; entry distance, entry scale, local-flash strength, and stage X/Y position.
 
 ## Uncertainties to verify
 
