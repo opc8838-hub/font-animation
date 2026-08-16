@@ -15,10 +15,10 @@ A fixed-top, high-weight Chinese/English word tower builds one item at a time wi
 
 | Time | Source frames | Phase | Visible evidence | Motion interpretation | Confidence |
 | --- | --- | --- | --- | --- | --- |
-| 0.00–0.63s | 000–018 | Background lead-in | no title text is visible | deliberate opening delay before the typographic build | high |
-| 0.63–1.60s | 019–047 | Chinese block build | `只 → 在 → 香 → 港` fills a fixed two-column grid | characters are appended at final grid positions with a short brightness dip/flash and small upward settle; the top anchor does not move | high |
-| 1.60–2.00s | 048–059 | English lines | `HONG`, then `KONG`, extends the tower downward | English enters as complete line units, not letter-by-letter | high |
-| 2.00–2.93s | 060–087 | Subtitle completion | `亚洲`, then `都会`, then the middle `国际` completes `亚洲国际都会` | subtitle order expands from the two outer pairs toward the center pair | high |
+| 0.00–0.67s | 000–019 | Background lead-in | no title text is visible | deliberate opening delay before the typographic build | high |
+| 0.67–1.53s | 020–045 | Chinese block build | `只 → 在 → 香 → 港` fills a fixed two-column grid | every character appears at its final position, stays bright for roughly 3–4 frames, drops almost out for 2–3 frames, then relights and stabilizes | high |
+| 1.53–2.10s | 046–062 | English lines | `HONG`, then `KONG`, extends the tower downward while the last Chinese character is settling | English enters as complete line units with the same visible bright/off/relight structure | high |
+| 2.10–2.93s | 063–087 | Subtitle completion | `亚洲`, then `都会`, then the middle `国际` completes `亚洲国际都会` | subtitle arrives as three two-character groups, expanding from the two outer pairs toward the center pair | high |
 | 2.93–3.50s | 088–104 | Signature reveal | gray `discoverhongkong.cn` appears below the green tower | independent soft opacity fade with no large movement | high |
 | 3.50–4.23s | 105–126 | Final hold | completed lockup remains stable | clean hold for legibility | high |
 
@@ -36,15 +36,16 @@ A fixed-top, high-weight Chinese/English word tower builds one item at a time wi
 - Alignment: every line is independently measured and horizontally centered on a shared vertical axis.
 - Anchor behavior: the top of the tower remains fixed while new rows extend downward.
 - Typography: geometric sans / Chinese grotesk at Extra Bold to Black weight, tight line height, minimal tracking, square proportions.
+- Measured final geometry at 540×1166: five green line widths are 247–262px; Chinese row starts are about 123px apart; English row starts are about 74px apart; the final green block spans y=275–745 and is centered near x=270.
 - Responsive behavior: a portrait-oriented logical composition scales uniformly into desktop, mobile, and export dimensions.
 
 ## Timing and easing
 
 - Total reference loop: 4.233334s.
-- Default implementation loop: 4.20s.
-- Default phase model: 0.60s lead-in; 0.18s Chinese interval; 0.22s English interval; 0.11s subtitle interval; 0.50s footer delay; 0.30s footer fade; 0.79s hold.
-- Entry easing: fast opacity/brightness arrival with a 28px logical upward settle and restrained scale-down from 112% to 100%.
-- Flash model: only the currently entering character or English line receives the short dark-to-neon pulse; already-visible text keeps its own stable color.
+- Default implementation loop: 4.24s (the nearest 10ms-editor value to the 4.233334s source).
+- Default phase model: 0.67s lead-in; 0.36s first-to-second-character interval; 0.18s later Chinese interval; 0.30s English interval; 0.15s subtitle-group interval; 0.50s footer delay; 0.30s footer fade; 0.716s hold.
+- Entry geometry: the reference default has no translation and no scale change; alternative rise/snap rhythms remain editable.
+- Flash model: only the currently entering character or English line follows a roughly 0.32s bright → almost off → dim → bright sequence; already-visible text stays stable.
 
 ## Reuse plan
 

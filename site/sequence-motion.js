@@ -65,10 +65,10 @@
   const cityColors = `
     <section class="sequence-colors">
       <label>背景<input id="backgroundColor" type="color" value="#050505"></label>
-      <label>主汉字<input id="accentColor" type="color" value="#21ff2f"></label>
-      <label>英文字<input id="cityEnglishColor" type="color" value="#21ff2f"></label>
-      <label>副标题<input id="citySubtitleColor" type="color" value="#21ff2f"></label>
-      <label>单项闪烁<input id="cityFlashColor" type="color" value="#0b6324"></label>
+      <label>主汉字<input id="accentColor" type="color" value="#1dff11"></label>
+      <label>英文字<input id="cityEnglishColor" type="color" value="#1dff11"></label>
+      <label>副标题<input id="citySubtitleColor" type="color" value="#1dff11"></label>
+      <label>单项闪烁<input id="cityFlashColor" type="color" value="#0a5010"></label>
       <label>署名<input id="textColor" type="color" value="#d5d5d5"></label>
     </section>`;
   const commonExport = `
@@ -237,51 +237,52 @@
         <label class="stacked-control">英文叠字<textarea id="cityEnglishLines">HONG\nKONG</textarea></label>
         <label class="stacked-control">底部副标题<input id="citySubtitle" type="text" value="亚洲国际都会"></label>
         <label class="stacked-control">末尾署名<input id="cityFooter" type="text" value="discoverhongkong.cn"></label>
-        <div class="sequence-preset-actions"><button id="referencePreset" type="button">参考文案</button><button id="chinesePreset" type="button">中文示例</button><button id="restartTop" type="button">从头播放</button></div>
+        <div class="sequence-preset-actions"><button id="referencePreset" type="button">原片 1:1</button><button id="chinesePreset" type="button">中文示例</button><button id="restartTop" type="button">从头播放</button></div>
       </section>
       ${cityFont}
       <section>
-        <div class="section-heading"><p class="section-label">核心节奏</p><small class="section-note">按原片顺序逐字点亮，再补全英文与副标题</small></div>
+        <div class="section-heading"><p class="section-label">核心节奏</p><small class="section-note">原片为单字亮起、熄灭、再点亮，正常速度清晰可见</small></div>
         <div class="motion-map"><span>${config.map[0]}</span><i>→</i><span>${config.map[1]}</span><i>→</i><span>${config.map[2]}</span></div>
         <div class="controls-grid">
           ${slider("整体速度", "playbackSpeed", .25, 3, .05, 1, "speed")}
-          ${slider("开始出现时间", "cityLeadIn", 0, 2400, 10, 600, "seconds")}
+          ${slider("开始出现时间", "cityLeadIn", 0, 2400, 10, 667, "seconds")}
+          ${slider("首字后间隔", "cityFirstHanInterval", 40, 1200, 10, 360, "seconds")}
           ${slider("汉字逐字间隔", "cityHanInterval", 40, 1000, 10, 180, "seconds")}
-          ${slider("英文逐行间隔", "cityEnglishInterval", 40, 1200, 10, 220, "seconds")}
-          ${slider("单项进入时间", "cityEntryDuration", 40, 1000, 10, 140, "seconds")}
-          ${slider("中英文间隔", "citySectionGap", 0, 1200, 10, 80, "seconds")}
-          ${slider("副标题等待", "citySubtitleDelay", 0, 1800, 10, 200, "seconds")}
-          ${slider("副标题逐字间隔", "citySubtitleInterval", 20, 600, 10, 110, "seconds")}
+          ${slider("英文逐行间隔", "cityEnglishInterval", 40, 1200, 10, 300, "seconds")}
+          ${slider("单项闪断时长", "cityEntryDuration", 80, 1000, 10, 320, "seconds")}
+          ${slider("末个汉字到英文", "citySectionGap", 0, 1200, 10, 150, "seconds")}
+          ${slider("末行英文到副标", "citySubtitleDelay", 0, 1800, 10, 260, "seconds")}
+          ${slider("副标题分组间隔", "citySubtitleInterval", 20, 600, 10, 150, "seconds")}
           ${slider("署名等待", "cityFooterDelay", 0, 2400, 10, 500, "seconds")}
           ${slider("署名淡入", "cityFooterFade", 60, 1600, 10, 300, "seconds")}
-          ${slider("完成后停留", "finalHold", 0, 6000, 10, 790, "seconds")}
+          ${slider("完成后停留", "finalHold", 0, 6000, 10, 716, "seconds")}
           <label>进入节奏<select id="cityRhythm"><option value="flash" selected>闪现点亮</option><option value="rise">柔和上升</option><option value="snap">快速弹入</option><option value="cut">直接切入</option></select></label>
         </div>
       </section>
       <section>
         <div class="section-heading"><p class="section-label">字体间距</p><small class="section-note">横向字距与纵向行距分别调整</small></div>
         <div class="controls-grid">
-          ${slider("汉字横向间距", "cityHanLetterGap", -80, 160, 1, 0, "pixels")}
-          ${slider("汉字纵向间距", "cityHanVerticalGap", -100, 180, 1, 0, "pixels")}
+          ${slider("汉字横向间距", "cityHanLetterGap", -80, 160, 1, 8, "pixels")}
+          ${slider("汉字纵向间距", "cityHanVerticalGap", -100, 180, 1, 40, "pixels")}
           ${slider("英文横向间距", "cityEnglishLetterGap", -30, 120, 1, 0, "pixels")}
           ${slider("英文纵向间距", "cityEnglishVerticalGap", -100, 180, 1, 0, "pixels")}
-          ${slider("副标题横向间距", "citySubtitleLetterGap", -30, 100, 1, 0, "pixels")}
+          ${slider("副标题横向间距", "citySubtitleLetterGap", -30, 100, 1, 3, "pixels")}
           ${slider("署名横向间距", "cityFooterLetterGap", -20, 80, 1, 0, "pixels")}
-          ${slider("中英文纵向距离", "cityBlockGap", -40, 180, 1, 8, "pixels")}
+          ${slider("中英文纵向距离", "cityBlockGap", -40, 180, 1, 24, "pixels")}
           ${slider("副标题纵向距离", "citySubtitleGap", -20, 180, 1, 18, "pixels")}
           ${slider("署名纵向距离", "cityFooterGap", 40, 700, 1, 150, "pixels")}
         </div>
       </section>
       <details class="sequence-advanced"><summary>高级细调</summary><div class="controls-grid">
-        ${slider("汉字大小", "cityHanSize", 60, 340, 1, 200, "pixels")}
-        ${slider("英文大小", "cityEnglishSize", 36, 220, 1, 150, "pixels")}
-        ${slider("副标题大小", "citySubtitleSize", 18, 120, 1, 66, "pixels")}
+        ${slider("汉字大小", "cityHanSize", 60, 340, 1, 250, "pixels")}
+        ${slider("英文大小", "cityEnglishSize", 36, 220, 1, 180, "pixels")}
+        ${slider("副标题大小", "citySubtitleSize", 18, 120, 1, 80, "pixels")}
         ${slider("署名大小", "cityFooterSize", 16, 100, 1, 60, "pixels")}
-        ${slider("进入位移", "cityEntryDistance", 0, 180, 1, 28, "pixels")}
-        ${slider("进入放大", "cityEntryScale", 100, 180, 1, 112, "percent")}
-        ${slider("单项闪烁强度", "cityFlashStrength", 0, 100, 1, 68, "percent")}
+        ${slider("进入位移", "cityEntryDistance", 0, 180, 1, 0, "pixels")}
+        ${slider("进入放大", "cityEntryScale", 100, 180, 1, 100, "percent")}
+        ${slider("单项闪烁强度", "cityFlashStrength", 0, 100, 1, 88, "percent")}
         ${slider("水平位置", "textX", 5, 95, 1, 50, "percent")}
-        ${slider("垂直位置", "textY", 10, 90, 1, 45, "percent")}
+        ${slider("垂直位置", "textY", 10, 90, 1, 44, "percent")}
       </div></details>
       ${cityColors}${commonExport}`;
   }
@@ -369,13 +370,14 @@
       return { intro, interval, sequence, phrase, zoom, hold, cycle: Math.max(1 / fps, sequence + phrase + zoom + hold) };
     }
     if (mode === "city") {
-      const hanCount = Math.max(1, lines("cityHanLines").reduce((sum, line) => sum + graphemes(line).length, 0)), englishCount = Math.max(1, lines("cityEnglishLines").length), subtitleCount = Math.max(1, graphemes(value("citySubtitle", "亚洲国际都会")).length);
-      const leadIn = number("cityLeadIn", 600) / 1000 / divisor, hanInterval = number("cityHanInterval", 180) / 1000 / divisor, englishInterval = number("cityEnglishInterval", 220) / 1000 / divisor, entry = number("cityEntryDuration", 140) / 1000 / divisor;
-      const sectionGap = number("citySectionGap", 80) / 1000 / divisor, subtitleDelay = number("citySubtitleDelay", 200) / 1000 / divisor, subtitleInterval = number("citySubtitleInterval", 110) / 1000 / divisor;
-      const footerDelay = number("cityFooterDelay", 500) / 1000 / divisor, footerFade = number("cityFooterFade", 300) / 1000 / divisor, hold = number("finalHold", 790) / 1000 / divisor;
-      const hanEnd = leadIn + Math.max(0, hanCount - 1) * hanInterval + entry, englishStart = hanEnd + sectionGap, englishEnd = englishStart + Math.max(0, englishCount - 1) * englishInterval + entry;
-      const subtitleStart = englishEnd + subtitleDelay, subtitleEnd = subtitleStart + Math.max(0, subtitleCount - 1) * subtitleInterval + entry, footerStart = subtitleEnd + footerDelay, cycle = footerStart + footerFade + hold;
-      return { leadIn, hanInterval, englishInterval, entry, sectionGap, subtitleDelay, subtitleInterval, footerDelay, footerFade, hold, hanEnd, englishStart, englishEnd, subtitleStart, subtitleEnd, footerStart, cycle: Math.max(1 / fps, cycle) };
+      const hanCount = Math.max(1, lines("cityHanLines").reduce((sum, line) => sum + graphemes(line).length, 0)), englishCount = Math.max(1, lines("cityEnglishLines").length), subtitleGroupCount = Math.max(1, citySubtitleGroups(graphemes(value("citySubtitle", "亚洲国际都会")).length).length);
+      const leadIn = number("cityLeadIn", 667) / 1000 / divisor, firstHanInterval = number("cityFirstHanInterval", 360) / 1000 / divisor, hanInterval = number("cityHanInterval", 180) / 1000 / divisor, englishInterval = number("cityEnglishInterval", 300) / 1000 / divisor, entry = number("cityEntryDuration", 320) / 1000 / divisor;
+      const sectionGap = number("citySectionGap", 150) / 1000 / divisor, subtitleDelay = number("citySubtitleDelay", 260) / 1000 / divisor, subtitleInterval = number("citySubtitleInterval", 150) / 1000 / divisor;
+      const footerDelay = number("cityFooterDelay", 500) / 1000 / divisor, footerFade = number("cityFooterFade", 300) / 1000 / divisor, hold = number("finalHold", 716) / 1000 / divisor;
+      const hanLastStart = leadIn + (hanCount > 1 ? firstHanInterval + Math.max(0, hanCount - 2) * hanInterval : 0), hanEnd = hanLastStart + entry, englishStart = hanLastStart + sectionGap;
+      const englishLastStart = englishStart + Math.max(0, englishCount - 1) * englishInterval, englishEnd = englishLastStart + entry, subtitleStart = englishLastStart + subtitleDelay;
+      const subtitleLastStart = subtitleStart + Math.max(0, subtitleGroupCount - 1) * subtitleInterval, subtitleEnd = subtitleLastStart + entry, footerStart = subtitleEnd + footerDelay, cycle = footerStart + footerFade + hold;
+      return { leadIn, firstHanInterval, hanInterval, englishInterval, entry, sectionGap, subtitleDelay, subtitleInterval, footerDelay, footerFade, hold, hanLastStart, hanEnd, englishStart, englishLastStart, englishEnd, subtitleStart, subtitleLastStart, subtitleEnd, footerStart, cycle: Math.max(1 / fps, cycle) };
     }
     const lineCount = Math.max(1, lines("headlineLines").length), stagger = number("lineStagger", 230) / 1000 / divisor, roll = number("lineRoll", 190) / 1000 / divisor, headlineHold = number("headlineHold", 1350) / 1000 / divisor;
     const headline = Math.max(roll, (lineCount - 1) * stagger + roll) + headlineHold, bridge = number("bridgeHold", 650) / 1000 / divisor, icon = number("iconHold", 350) / 1000 / divisor;
@@ -531,6 +533,15 @@
     if (rhythm === "rise") return smoother(raw);
     return easeOut(raw);
   }
+  function cityFlicker(progress) {
+    const p = clamp(progress);
+    if (p < .32) return { alpha: 1, dim: 0 };
+    if (p < .42) return { alpha: lerp(1, .04, smooth((p - .32) / .1)), dim: smooth((p - .32) / .1) };
+    if (p < .55) return { alpha: .04, dim: 1 };
+    if (p < .68) return { alpha: lerp(.04, .36, smooth((p - .55) / .13)), dim: 1 };
+    if (p < .8) return { alpha: .36, dim: 1 };
+    return { alpha: lerp(.36, 1, smooth((p - .8) / .2)), dim: 1 - smooth((p - .8) / .2) };
+  }
   function cityTextMetrics(context, text, letterGap = 0) {
     const characters = graphemes(text), widths = characters.map((character) => context.measureText(character).width);
     return { characters, widths, total: widths.reduce((sum, width) => sum + width, 0) + Math.max(0, characters.length - 1) * letterGap };
@@ -541,36 +552,39 @@
   }
   function drawCityItem(context, text, x, y, phase, start, duration, scale, color, letterGap = 0) {
     if (phase < start || !text) return;
-    const progress = cityEntryProgress(phase, start, duration), rhythm = value("cityRhythm", "flash"), distance = number("cityEntryDistance", 28) * scale, startScale = number("cityEntryScale", 112) / 100;
+    const raw = clamp((phase - start) / Math.max(.001, duration)), progress = cityEntryProgress(phase, start, duration), rhythm = value("cityRhythm", "flash"), distance = number("cityEntryDistance", 0) * scale, startScale = number("cityEntryScale", 100) / 100;
     const travel = rhythm === "flash" ? distance * .28 : rhythm === "cut" ? 0 : distance, itemScale = rhythm === "cut" ? 1 : lerp(startScale, 1, clamp(progress));
-    const localPulse = rhythm === "flash" ? Math.sin(clamp(progress) * Math.PI) : 0, flashMix = number("cityFlashStrength", 68) / 100 * localPulse;
-    context.save(); context.globalAlpha *= clamp(progress); context.fillStyle = mixHex(color, value("cityFlashColor", "#0b6324"), flashMix); context.translate(x, y + travel * (1 - clamp(progress))); context.scale(itemScale, itemScale); context.textAlign = "center"; fillCityText(context, text, letterGap); context.restore();
+    const flicker = rhythm === "flash" ? cityFlicker(raw) : { alpha: clamp(progress), dim: 0 }, flashMix = number("cityFlashStrength", 88) / 100 * flicker.dim;
+    context.save(); context.globalAlpha *= flicker.alpha; context.fillStyle = mixHex(color, value("cityFlashColor", "#0a5010"), flashMix); context.translate(x, y + travel * (1 - clamp(progress))); context.scale(itemScale, itemScale); context.textAlign = "center"; fillCityText(context, text, letterGap); context.restore();
   }
-  function citySubtitleOrder(length) {
-    if (length <= 2) return Array.from({ length }, (_, index) => index);
-    const result = [0, 1]; if (length > 3) result.push(length - 2); result.push(length - 1);
-    for (let index = 2; index < length - 2; index += 1) result.push(index);
-    return [...new Set(result.filter((index) => index >= 0 && index < length))];
+  function citySubtitleGroups(length) {
+    if (length <= 2) return [Array.from({ length }, (_, index) => index)];
+    const used = new Set(), groups = [];
+    const push = (indices) => { const clean = indices.filter((index) => index >= 0 && index < length && !used.has(index)); if (clean.length) { clean.forEach((index) => used.add(index)); groups.push(clean); } };
+    push([0, 1]); push([length - 2, length - 1]);
+    for (let index = 2; index < length - 2; index += 2) push([index, index + 1]);
+    return groups;
   }
+  function cityHanStart(index, timingData) { return timingData.leadIn + (index === 0 ? 0 : timingData.firstHanInterval + Math.max(0, index - 1) * timingData.hanInterval); }
   function renderCity(context, phase, width, height) {
-    const t = timing(), scale = Math.max(.24, Math.min(width / 1080, height / 1280)), centerX = width * number("textX", 50) / 100, centerY = height * number("textY", 45) / 100;
+    const t = timing(), scale = Math.max(.24, Math.min(width / 1080, height / 1280)), centerX = width * number("textX", 50) / 100, centerY = height * number("textY", 44) / 100;
     fillBackground(context, width, height, value("backgroundColor", "#050505"));
     const hanLines = lines("cityHanLines"), englishLines = lines("cityEnglishLines"), subtitle = graphemes(value("citySubtitle", "亚洲国际都会")), footer = value("cityFooter", "discoverhongkong.cn");
-    const hanSize = number("cityHanSize", 200) * scale, hanLineHeight = Math.max(hanSize * .35, hanSize * .82 + number("cityHanVerticalGap", 0) * scale), englishSize = number("cityEnglishSize", 150) * scale, englishLineHeight = Math.max(englishSize * .35, englishSize * .84 + number("cityEnglishVerticalGap", 0) * scale);
-    const subtitleSize = number("citySubtitleSize", 66) * scale, footerSize = number("cityFooterSize", 60) * scale, blockGap = number("cityBlockGap", 8) * scale, subtitleGap = number("citySubtitleGap", 18) * scale, footerGap = number("cityFooterGap", 150) * scale;
-    const hanLetterGap = number("cityHanLetterGap", 0) * scale, englishLetterGap = number("cityEnglishLetterGap", 0) * scale, subtitleLetterGap = number("citySubtitleLetterGap", 0) * scale, footerLetterGap = number("cityFooterLetterGap", 0) * scale;
-    const hanColor = value("accentColor", "#21ff2f"), englishColor = value("cityEnglishColor", "#21ff2f"), subtitleColor = value("citySubtitleColor", "#21ff2f");
+    const hanSize = number("cityHanSize", 250) * scale, hanLineHeight = Math.max(hanSize * .35, hanSize * .82 + number("cityHanVerticalGap", 40) * scale), englishSize = number("cityEnglishSize", 180) * scale, englishLineHeight = Math.max(englishSize * .35, englishSize * .84 + number("cityEnglishVerticalGap", 0) * scale);
+    const subtitleSize = number("citySubtitleSize", 80) * scale, footerSize = number("cityFooterSize", 60) * scale, blockGap = number("cityBlockGap", 24) * scale, subtitleGap = number("citySubtitleGap", 18) * scale, footerGap = number("cityFooterGap", 150) * scale;
+    const hanLetterGap = number("cityHanLetterGap", 8) * scale, englishLetterGap = number("cityEnglishLetterGap", 0) * scale, subtitleLetterGap = number("citySubtitleLetterGap", 3) * scale, footerLetterGap = number("cityFooterLetterGap", 0) * scale;
+    const hanColor = value("accentColor", "#1dff11"), englishColor = value("cityEnglishColor", "#1dff11"), subtitleColor = value("citySubtitleColor", "#1dff11");
     const mainHeight = hanLines.length * hanLineHeight + blockGap + englishLines.length * englishLineHeight + subtitleGap + subtitleSize, top = centerY - mainHeight / 2;
     context.save();
     setFont(context, hanSize); let characterIndex = 0;
     hanLines.forEach((line, rowIndex) => {
       const metrics = cityTextMetrics(context, line, hanLetterGap); let x = centerX - metrics.total / 2;
-      metrics.characters.forEach((char, index) => { const itemX = x + metrics.widths[index] / 2, itemY = top + hanLineHeight * (rowIndex + .5); drawCityItem(context, char, itemX, itemY, phase, t.leadIn + characterIndex * t.hanInterval, t.entry, scale, hanColor); x += metrics.widths[index] + hanLetterGap; characterIndex += 1; });
+      metrics.characters.forEach((char, index) => { const itemX = x + metrics.widths[index] / 2, itemY = top + hanLineHeight * (rowIndex + .5); drawCityItem(context, char, itemX, itemY, phase, cityHanStart(characterIndex, t), t.entry, scale, hanColor); x += metrics.widths[index] + hanLetterGap; characterIndex += 1; });
     });
     const englishTop = top + hanLines.length * hanLineHeight + blockGap; setFont(context, englishSize);
     englishLines.forEach((line, index) => drawCityItem(context, line.toUpperCase(), centerX, englishTop + englishLineHeight * (index + .5), phase, t.englishStart + index * t.englishInterval, t.entry, scale, englishColor, englishLetterGap));
     const subtitleY = englishTop + englishLines.length * englishLineHeight + subtitleGap + subtitleSize / 2; setFont(context, subtitleSize);
-    const subtitleWidths = subtitle.map((char) => context.measureText(char).width), subtitleTotal = subtitleWidths.reduce((sum, item) => sum + item, 0) + Math.max(0, subtitle.length - 1) * subtitleLetterGap, subtitleOrder = citySubtitleOrder(subtitle.length), subtitleRank = new Map(subtitleOrder.map((index, rank) => [index, rank])); let subtitleX = centerX - subtitleTotal / 2;
+    const subtitleWidths = subtitle.map((char) => context.measureText(char).width), subtitleTotal = subtitleWidths.reduce((sum, item) => sum + item, 0) + Math.max(0, subtitle.length - 1) * subtitleLetterGap, subtitleGroups = citySubtitleGroups(subtitle.length), subtitleRank = new Map(subtitleGroups.flatMap((group, rank) => group.map((index) => [index, rank]))); let subtitleX = centerX - subtitleTotal / 2;
     subtitle.forEach((char, index) => { drawCityItem(context, char, subtitleX + subtitleWidths[index] / 2, subtitleY, phase, t.subtitleStart + (subtitleRank.get(index) || 0) * t.subtitleInterval, t.entry, scale, subtitleColor); subtitleX += subtitleWidths[index] + subtitleLetterGap; }); context.restore();
     if (phase >= t.footerStart && footer) {
       const reveal = smoother((phase - t.footerStart) / Math.max(.001, t.footerFade)); context.save(); context.globalAlpha = reveal; context.fillStyle = value("textColor", "#d5d5d5"); context.font = `600 ${footerSize}px ${fontMap[value("fontFamily", "noto")] || fontMap.noto}`; context.textAlign = "center"; context.textBaseline = "middle"; context.translate(centerX, subtitleY + subtitleSize / 2 + footerGap); fillCityText(context, footer, footerLetterGap); context.restore();
@@ -642,11 +656,24 @@
   $("#iconUpload")?.addEventListener("change", (event) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { const image = new Image(); image.onload = () => { uploadedIcon = image; $("#iconPreset").value = "upload"; }; image.src = reader.result; }; reader.readAsDataURL(file); });
   $("#finalUpload")?.addEventListener("change", (event) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { const image = new Image(); image.onload = () => { uploadedFinal = image; }; image.src = reader.result; }; reader.readAsDataURL(file); });
 
+  function assignValues(values) { Object.entries(values).forEach(([id, next]) => { const input = $(`#${id}`); if (input) input.value = String(next); }); }
   function setReference() {
     if (mode === "gather") { $("#gatherWords").value = "All|new|interface|design"; $("#finalTitle").value = "iOS"; }
     else if (mode === "portal") { $("#portalSequence").value = "13\n[icon]\nIntroducing\niPhone\n13\nPro"; $("#portalPhrase").value = "Our fastest model yet."; $("#focusIndex").value = "1"; }
     else if (mode === "rapid") { $("#headlineLines").value = "Smooth.\nStylish.\nCustomizable."; $("#bridgeText").value = "That's iPhone."; $("#rapidItems").value = "M4 Neural Engine\nPro camera system\nAction mode\nSpatial audio\nAll-day battery\nSimply powerful"; }
-    else { $("#cityHanLines").value = "只在\n香港"; $("#cityEnglishLines").value = "HONG\nKONG"; $("#citySubtitle").value = "亚洲国际都会"; $("#cityFooter").value = "discoverhongkong.cn"; }
+    else {
+      assignValues({
+        cityHanLines: "只在\n香港", cityEnglishLines: "HONG\nKONG", citySubtitle: "亚洲国际都会", cityFooter: "discoverhongkong.cn",
+        fontWeight: 800, playbackSpeed: 1, cityLeadIn: 670, cityFirstHanInterval: 360, cityHanInterval: 180, cityEnglishInterval: 300,
+        cityEntryDuration: 320, citySectionGap: 150, citySubtitleDelay: 260, citySubtitleInterval: 150, cityFooterDelay: 500,
+        cityFooterFade: 300, finalHold: 716, cityRhythm: "flash", cityHanSize: 250, cityEnglishSize: 180, citySubtitleSize: 80,
+        cityFooterSize: 60, cityHanLetterGap: 8, cityHanVerticalGap: 40, cityEnglishLetterGap: 0, cityEnglishVerticalGap: 0,
+        citySubtitleLetterGap: 3, cityFooterLetterGap: 0, cityBlockGap: 24, citySubtitleGap: 18, cityFooterGap: 150,
+        cityEntryDistance: 0, cityEntryScale: 100, cityFlashStrength: 88, textX: 50, textY: 44,
+        backgroundColor: "#050505", accentColor: "#1dff11", cityEnglishColor: "#1dff11", citySubtitleColor: "#1dff11",
+        cityFlashColor: "#0a5010", textColor: "#d5d5d5"
+      });
+    }
     $("#fontFamily").value = mode === "city" ? "noto" : "inter"; updateOutputs(); restart();
   }
   function setChinese() {
