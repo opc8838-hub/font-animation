@@ -4,6 +4,7 @@
 
 - Reference file: `动效11.qt`
 - Metadata: H.264, 4.233334s, 30fps, 127 video frames, 540×1166
+- Alternate reference: `动效11-1.qt`, H.264, 3.566667s, 30fps, 108 frames, 540×1166.
 - Relevant crop: only the central green/gray typography is reconstructed; the horse-racing footage, social-app chrome, and account UI are intentionally excluded.
 - Analysis date: 2026-08-16
 
@@ -29,6 +30,14 @@ A fixed-top, high-weight Chinese/English word tower builds one item at a time wi
 - Replaced/removed elements: none; this is an additive build.
 - Background behavior: a single editable solid color; the reference footage is out of scope by user request.
 - Layer order: base background → primary green title tower → gray signature.
+- Alternate-reference behavior: the complete lockup cuts on at 0.20s, then only explicitly selected units pulse; every unit omitted from the flash sequence remains fully stable.
+
+## Alternate reference 11-1
+
+- Measured local-flash order: `香` (`H3`) → `国际` together (`S3+S4`) → `HONG` (`E1`) → `KONG` (`E2`). `只`, `在`, `港`, `亚洲`, and `都会` never drop out.
+- Default editor token sequence: `H3,S3+S4,E1,E2`. Commas are strict serial order; `+` means a simultaneous group. Removing a token disables flashing for that unit, and arbitrary valid `H`, `E`, and `S` positions are accepted.
+- Reconstructed timing: full tower at 0.20s; first pulse at 0.32s; per-group durations 0.52/0.24/0.30/0.46s; post-group waits 0.36/0.10/0.20/0s; total loop 3.57s.
+- The selected item does not make one slow fade. It performs four quick bright/off/relight pulses inside its assigned duration, matching the frame-level strobe visible in the alternate clip.
 
 ## Spatial rules
 
@@ -36,6 +45,7 @@ A fixed-top, high-weight Chinese/English word tower builds one item at a time wi
 - Alignment: every line is independently measured and horizontally centered on a shared vertical axis.
 - Anchor behavior: the top of the tower remains fixed while new rows extend downward.
 - Typography: geometric sans / Chinese grotesk at Extra Bold to Black weight, tight line height, minimal tracking, square proportions.
+- Font reconstruction: use the repository's actual `NotoSansSC-Black.ttf` face rather than browser-simulated bold. The second Chinese row uses the same face with a default 122% vertical transform; this accounts for the conspicuously tall `香港` without introducing a mismatched typeface.
 - Measured final geometry at 540×1166: five green line widths are 247–262px; Chinese row starts are about 123px apart; English row starts are about 74px apart; the final green block spans y=275–745 and is centered near x=270.
 - Responsive behavior: a portrait-oriented logical composition scales uniformly into desktop, mobile, and export dimensions.
 
@@ -46,23 +56,24 @@ A fixed-top, high-weight Chinese/English word tower builds one item at a time wi
 - Default phase model: 0.67s lead-in; every Chinese character receives a complete 0.32s flash and a 0.04s post-flash wait before the next character begins. English lines and subtitle groups use the same 0.32s + 0.04s serial rule, followed by a 0.50s footer delay, 0.30s footer fade, and 0.716s hold.
 - Entry geometry: the reference default has no translation and no scale change; alternative rise/snap rhythms remain editable.
 - Flash model: only the currently entering character or English line follows a 0.32s bright → almost off → dim → bright sequence; already-visible text stays stable. A following unit cannot start until the current unit has completed the entire sequence and its post-flash wait.
+- Alternate pulse model: all text is present first; only sequence-listed units receive a configurable 1–6 pulse strobe. Group and item timing remains deterministic and strictly serial.
 
 ## Reuse plan
 
 - Shared UI/export engine: `sequence-motion.js`, `sequence-motion.css`, `me-motion-editor.css/js`.
 - Shared deterministic playback: pause, single-frame stepping, cycle-relative export, aspect-ratio presets.
 - Shared local font assets: Relay Noto variable font, with Inter/Space Grotesk/Manrope/Poppins alternates.
-- New core logic: additive grid/line tower, subtitle outside-to-center ordering, and synchronized short flash pulses.
+- New core logic: additive grid/line tower, full-lockup selective-pulse mode, tokenized unit/group ordering, subtitle outside-to-center ordering, synchronized short flash pulses, and per-row X/Y glyph transforms.
 
 ## User-editable parameters
 
 ### Common
 
-- Four text areas/fields, arbitrary Chinese character count, font family, weight, overall speed, opening delay, unified flash duration, wait-after-each-flash, English/subtitle waits, section gap, subtitle delay, footer delay/fade, final hold, entry rhythm, background, separate Chinese/English/subtitle/signature colors, and a dedicated local-flash color.
+- Four text areas/fields, arbitrary Chinese character count, build/pulse structure, selectable flash targets and grouped ordering, font family, weight, overall speed, opening delay, full-lockup-to-first-pulse delay, unified or per-item flash durations, unified or per-item waits, flash count, English/subtitle waits, section gap, subtitle delay, footer delay/fade, final hold, entry rhythm, background, separate Chinese/English/subtitle/signature colors, and a dedicated local-flash color.
 
 ### Advanced
 
-- Five Chinese order modes (row left-to-right, row right-to-left, column top-to-bottom, reverse, and custom); a custom 1-based position sequence; optional comma-separated per-character flash durations; Chinese/English/subtitle/footer sizes; independent horizontal spacing for Chinese, English, subtitle, and signature; independent vertical spacing for Chinese rows, English rows, Chinese-to-English, subtitle, and signature; entry distance, entry scale, local-flash strength, and stage X/Y position.
+- Five Chinese build-order modes (row left-to-right, row right-to-left, column top-to-bottom, reverse, and custom); a custom 1-based position sequence; optional comma-separated per-item durations and waits; arbitrary per-row horizontal and vertical percentages; Chinese/English/subtitle/footer sizes; independent horizontal spacing for Chinese, English, subtitle, and signature; independent vertical spacing for Chinese rows, English rows, Chinese-to-English, subtitle, and signature; entry distance, entry scale, local-flash strength, and stage X/Y position.
 
 ## Uncertainties to verify
 
@@ -82,3 +93,6 @@ A fixed-top, high-weight Chinese/English word tower builds one item at a time wi
 - [x] WEBM video generated at 320×320, 1s, 15fps
 - [x] Strict no-overlap keyframe: while `在` is flashing, `香` is not yet visible
 - [x] Six-character custom order and six independent durations recalculate the complete timeline
+- [x] Alternate-reference keyframes at 0.40s (`H3`), 1.23s (`S3+S4`), and 1.60s (`E1`)
+- [x] Single-target `H2` test disables every other flash and recalculates the loop to 1.91s
+- [x] Alternate preset loop equals 3.57s reference duration

@@ -1,3 +1,4 @@
+@font-face { font-family: "City Noto Black"; src: url("assets/NotoSansSC-Black.ttf") format("truetype"); font-weight: 900; font-display: swap; }
 .sequence-stage { background: #f5f4fb; }
 .sequence-stage canvas { display: block; width: 100%; height: 100%; }
 .sequence-panel .panel-scroll { padding-top: 6px; }
@@ -5,7 +6,7 @@
 .sequence-panel .stacked-control { display: grid; gap: 7px; color: #5f5f66; font-size: 11px; font-weight: 650; }
 .sequence-panel textarea { font: 500 13px/1.5 "Relay Inter", "Relay Noto", sans-serif !important; }
 .sequence-panel .sequence-content { display: grid; gap: 9px; }
-.sequence-panel .sequence-preset-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+.sequence-panel .sequence-preset-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; }
 .sequence-panel .sequence-font-grid { display: grid; grid-template-columns: 1.35fr .75fr; gap: 8px; }
 .sequence-panel .sequence-font-grid label { display: grid; gap: 7px; }
 .sequence-panel .controls-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
