@@ -835,5 +835,5 @@
   }
   $("#exportVideo").addEventListener("click", () => exportVideo(false)); $("#exportVerticalVideo").addEventListener("click", () => exportVideo(true));
 
-  updateOutputs(); lastCycle = timing().cycle; document.fonts.ready.then(restart); previewLoop();
+  updateOutputs(); lastCycle = timing().cycle; document.fonts.ready.then(() => { if (mode === "city") setAltReference(); else restart(); }); previewLoop();
 })();
