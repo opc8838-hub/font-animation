@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
+  <rect width="1600" height="900" fill="#f4f3fb"/>
+  <g fill="#0a0a0c" font-family="Arial,sans-serif" font-size="78" font-weight="500"><text x="520" y="330">Smooth.</text><text x="520" y="430">Stylish.</text><text x="520" y="530">Customizable.</text></g>
+  <g opacity=".22" fill="#6c63ff" font-family="Arial,sans-serif" font-size="54"><text x="1220" y="255">Spatial audio</text><text x="1220" y="360">Action mode</text><text x="1220" y="465">M4 Engine</text><text x="1220" y="570">All-day battery</text></g>
+  <rect x="185" y="335" width="190" height="190" rx="48" fill="#6c63ff"/><path d="M258 388 L258 472 L325 430 Z" fill="white"/>
+</svg>

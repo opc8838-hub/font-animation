@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
+  <rect width="1600" height="900" fill="#f4f3fb"/><g fill="#0a0a0c" font-family="Arial,sans-serif" font-weight="500"><text x="225" y="505" font-size="92">Our fastest model yet.</text></g>
+  <circle cx="330" cy="478" r="145" fill="none" stroke="#0a0a0c" stroke-width="32"/><circle cx="330" cy="478" r="205" fill="none" stroke="#6c63ff" stroke-width="5" opacity=".45"/><circle cx="330" cy="478" r="265" fill="none" stroke="#6c63ff" stroke-width="3" opacity=".18"/>
+  <path d="M455 545 C720 660 1100 700 1510 620" fill="none" stroke="#0a0a0c" stroke-width="22" opacity=".09"/>
+</svg>

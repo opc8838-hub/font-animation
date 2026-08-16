@@ -12,6 +12,9 @@ const effects = [
   ["focuswheel", "焦轮", "Focus Wheel", "flow", "纵向焦点滚轮"],
   ["gradienttype", "渐字", "Gradient Type", "type", "流动渐变逐字输入"],
   ["glyphrelay", "字标接力", "Glyph Relay", "type", "字位图标与颜色接力"],
+  ["wordgather", "词序汇聚", "Word Gather", "type", "分散词组汇合与彩幕收尾"],
+  ["focusportal", "焦点转场", "Focus Portal", "type", "字母或图标放大旋转转场"],
+  ["rapidsequence", "速序轮播", "Rapid Sequence", "flow", "逐行滚入与快速文字轮播"],
   ["colorcanvas", "彩幕组句", "Color Canvas", "type", "逐行弹出与彩色弧面"],
   ["liquidtype", "液字凝结", "Liquid Type", "type", "泡沫凝结与液态材质"],
   ["scrapbin", "揉纸入篓", "Scrap Bin", "physics", "文字揉皱与重力入篓"],
@@ -60,7 +63,7 @@ function render() {
 
   grid.innerHTML = visible.map(([slug, zh, en, , categoryName]) => {
     const index = effects.findIndex((effect) => effect[0] === slug) + 1;
-    const imageName = slug === "crashclock" ? "final_crashclock.png" : ["iconburst", "focuswheel", "gradienttype", "glyphrelay", "colorcanvas", "liquidtype", "scrapbin", "terminalbrand", "slotstories", "mediacascade", "colorrecompose", "phrasebuild", "switchdrop"].includes(slug) ? `final_${slug}.svg` : `final_${slug}.png`;
+    const imageName = slug === "crashclock" ? "final_crashclock.png" : ["iconburst", "focuswheel", "gradienttype", "glyphrelay", "wordgather", "focusportal", "rapidsequence", "colorcanvas", "liquidtype", "scrapbin", "terminalbrand", "slotstories", "mediacascade", "colorrecompose", "phrasebuild", "switchdrop"].includes(slug) ? `final_${slug}.svg` : `final_${slug}.png`;
     const target = slug === "flash" ? "flash-scenes.html" : `${slug}.html`;
     const detail = slug === "flash" ? "13 个独立子风格" : categoryName;
     return `
