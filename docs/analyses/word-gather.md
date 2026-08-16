@@ -11,15 +11,15 @@
 
 ## One-sentence target
 
-Four word groups appear at different vertical and horizontal positions, continuously converge into one centered line, then matched-cut to a short title and expanding color field.
+Four word groups assemble as a relay: each group reveals character-by-character, rises into the composition, and continuously enlarges while the already-visible phrase re-centers; the assembled line then matched-cuts to a short title and expanding color field.
 
 ## Phase table
 
 | Time | Source frames | Phase | Visible evidence | Motion interpretation | Confidence |
 | --- | --- | --- | --- | --- | --- |
 | 0.00–0.16s | 000–004 | Blank / first cue | pale empty panel, then `All` appears above center | short blank lead-in and a crisp scale/opacity entrance | high |
-| 0.16–0.82s | 005–024 | Staggered words | `All`, `new`, and `interface` appear at successively lower positions | each word receives its own start offset and start time | high |
-| 0.82–1.40s | 025–041 | Final word + convergence | `design` arrives low-right while earlier words keep moving | all visible words keep sharing a continuous convergence progress; no word freezes | high |
+| 0.16–0.82s | 005–024 | Relay build | `All`, `new`, and `interface` appear in reading order, with later groups entering from below | each group reveals internally from left to right; prior content shifts to keep the currently assembled phrase centered | high |
+| 0.82–1.40s | 025–041 | Final group + enlargement | `design` rises into the line while the entire assembly continues growing | vertical entry, phrase re-centering, and global enlargement overlap continuously; no word freezes | high |
 | 1.40–1.57s | 042–046 | Aligned phrase | `All new interface design` becomes one centered baseline | final layout is measured as one group | high |
 | 1.57–1.74s | 047–051 | Matched title cut | phrase disappears and the small `iOS` title replaces it | brief scale/opacity cut rather than a long dissolve | medium |
 | 1.74–2.23s | 052–066 | Color reveal / hold | colored blurred field expands behind the title and icon | radial reveal into a full-frame gradient, followed by a short hold | high |
@@ -35,8 +35,8 @@ Four word groups appear at different vertical and horizontal positions, continuo
 ## Spatial rules
 
 - Composition center: actual right-hand stage center, not browser-window center.
-- Alignment: scattered words use independent start offsets; the final phrase uses one measured centered baseline.
-- Scale behavior: short pop on entry; no continuous per-letter animation.
+- Alignment: the currently visible prefix/suffix is measured as one centered cluster; adding a new group smoothly redistributes the whole cluster toward the final centered baseline.
+- Scale behavior: the assembly enlarges continuously throughout the build; characters inside the entering group reveal sequentially.
 - Responsive/aspect-ratio behavior: normalized 1280×720 composition is centered and uniformly scaled inside any output size.
 - Entry/exit boundaries: starts inside the stage; final color reveal expands beyond all edges.
 
@@ -45,7 +45,7 @@ Four word groups appear at different vertical and horizontal positions, continuo
 - Total reference loop: 2.233333s.
 - Default implementation loop: 2.23s.
 - Phase durations: 1.40s gather, 0.17s title cut, 0.35s color reveal, 0.31s hold.
-- Overlaps: each later word starts before earlier words finish converging.
+- Overlaps: each later group starts while the already-visible cluster is still enlarging, creating a continuous relay rather than simultaneous scatter motion.
 - Holds with residual motion: none observed after the final color field settles.
 - Hard cuts: phrase-to-title is intentionally crisp.
 - Easing hypothesis: quintic smooth convergence plus a restrained back-ease entry pop.
@@ -56,17 +56,17 @@ Four word groups appear at different vertical and horizontal positions, continuo
 - Shared UI files: `me-motion-editor.css/js`, Current Wall / Focus Wheel inspector primitives.
 - Shared media/image files: `assets/transparent-animals/` and uploaded image/GIF decoding.
 - Shared export files: `js/continuation-gif.js`, `CCapture.all.min.js` / WebM writer.
-- New core logic required: per-word start offsets converging into one measured phrase plus radial color reveal.
+- New core logic required: weighted progressive phrase layout, per-group relay timing, per-character reveal order, vertical entry direction, continuous group scaling, plus radial color reveal.
 
 ## User-editable parameters
 
 ### Common
 
-- Word groups, final title, font, weight, overall speed, gather duration, stagger, title-cut duration, color-reveal duration, hold, icon choice and icon size.
+- Word groups, final title, font, weight, overall speed, horizontal reveal order, vertical entry direction, lead-in, group interval, group rise duration, character interval, character reveal duration, settle, title-cut duration, color-reveal duration, hold, icon choice and icon size.
 
 ### Advanced
 
-- Gather/final font sizes, word gap, stage position, pop strength, and each word's X/Y start offset.
+- Gather/final font sizes, word gap, stage position, entry distance, start/end scale, and motion softness.
 
 ## Uncertainties to verify
 
@@ -89,3 +89,4 @@ Four word groups appear at different vertical and horizontal positions, continuo
 ## Feedback discoveries
 
 - 2026-08-16: normal-speed and slow-motion clips must be paired by measured duration rather than filename suffix; for this pair, take 2 is the normal-speed source.
+- 2026-08-16: first implementation incorrectly modeled the scene as independent scattered words. User feedback clarified the essential behavior: sequential group relay, internal character reveal, vertical rise/fall, progressive re-centering, and continuous enlargement.

@@ -21,7 +21,7 @@
     : Array.from(value || "");
 
   const config = {
-    gather: { title: "词序汇聚", en: "WORD GATHER / 37", file: "word-gather", map: ["分散出现", "汇合成句", "彩幕收尾"] },
+    gather: { title: "词序汇聚", en: "WORD GATHER / 37", file: "word-gather", map: ["逐字出现", "接力成句", "彩幕收尾"] },
     portal: { title: "焦点转场", en: "FOCUS PORTAL / 38", file: "focus-portal", map: ["文字序列", "锁定字位", "放大转场"] },
     rapid: { title: "速序轮播", en: "RAPID SEQUENCE / 39", file: "rapid-sequence", map: ["逐行滚入", "快速轮播", "图标收束"] }
   }[mode];
@@ -60,19 +60,30 @@
   function gatherPanel() {
     return `
       <section class="sequence-content">
-        <div class="section-heading"><p class="section-label">内容</p><small class="section-note">用竖线分开每个词组</small></div>
-        <label class="stacked-control">汇聚词组<textarea id="gatherWords">All|new|interface|design</textarea></label>
+        <div class="section-heading"><p class="section-label">内容</p><small class="section-note">用竖线分组；每组内部逐字出现</small></div>
+        <label class="stacked-control">接力词组<textarea id="gatherWords">All|new|interface|design</textarea></label>
         <label class="stacked-control">收尾标题<input id="finalTitle" type="text" value="iOS"></label>
         <div class="sequence-preset-actions"><button id="referencePreset" type="button">参考文案</button><button id="chinesePreset" type="button">中文示例</button><button id="restartTop" type="button">从头播放</button></div>
       </section>
       ${commonFont}
       <section>
-        <div class="section-heading"><p class="section-label">核心节奏</p><small class="section-note">正常速度约 2.2 秒一轮</small></div>
+        <div class="section-heading"><p class="section-label">出现方向</p><small class="section-note">参考视频为从左到右、从下向上</small></div>
+        <div class="controls-grid">
+          <label>词组顺序<select id="revealOrder"><option value="ltr" selected>从左到右</option><option value="rtl">从右到左</option></select></label>
+          <label>进入方向<select id="verticalDirection"><option value="up" selected>从下向上</option><option value="down">从上向下</option></select></label>
+        </div>
+      </section>
+      <section>
+        <div class="section-heading"><p class="section-label">核心节奏</p><small class="section-note">逐组接力，并在组合过程中持续放大</small></div>
         <div class="motion-map"><span>${config.map[0]}</span><i>→</i><span>${config.map[1]}</span><i>→</i><span>${config.map[2]}</span></div>
         <div class="controls-grid">
           ${slider("整体速度", "playbackSpeed", .25, 3, .05, 1, "speed")}
-          ${slider("汇聚总时长", "buildDuration", 300, 5000, 20, 1400, "seconds")}
-          ${slider("逐词间隔", "wordStagger", 0, 1200, 10, 160, "seconds")}
+          ${slider("开场等待", "gatherLeadIn", 0, 1500, 10, 140, "seconds")}
+          ${slider("词组接力间隔", "groupInterval", 40, 1600, 10, 200, "seconds")}
+          ${slider("单组上升时间", "groupRise", 80, 1800, 10, 420, "seconds")}
+          ${slider("组内逐字间隔", "characterInterval", 0, 240, 2, 24, "seconds")}
+          ${slider("单字出现时间", "characterReveal", 30, 800, 10, 130, "seconds")}
+          ${slider("合并后停留", "gatherSettle", 0, 2000, 10, 240, "seconds")}
           ${slider("标题切换", "titleTransition", 80, 1800, 10, 170, "seconds")}
           ${slider("彩幕展开", "colorReveal", 80, 2200, 10, 350, "seconds")}
           ${slider("收尾停留", "finalHold", 0, 5000, 10, 310, "seconds")}
@@ -93,8 +104,11 @@
         ${slider("词间距", "wordGap", -30, 120, 1, 18, "pixels")}
         ${slider("水平位置", "textX", 5, 95, 1, 50, "percent")}
         ${slider("垂直位置", "textY", 5, 95, 1, 50, "percent")}
-        ${slider("弹入力度", "popStrength", 0, 100, 1, 38, "percent")}
-      </div><label class="stacked-control">每词水平起点（逗号分隔）<input id="scatterX" type="text" value="-170,-80,55,190"></label><label class="stacked-control">每词垂直起点（逗号分隔）<input id="scatterY" type="text" value="-150,95,145,175"></label></details>
+        ${slider("进入距离", "entryDistance", 0, 420, 1, 112, "pixels")}
+        ${slider("开场文字大小", "gatherStartScale", 20, 100, 1, 58, "percent")}
+        ${slider("合并文字大小", "gatherEndScale", 60, 180, 1, 100, "percent")}
+        ${slider("位移柔和度", "gatherSoftness", 0, 100, 1, 82, "percent")}
+      </div></details>
       ${commonColors}${commonExport}`;
   }
 
@@ -254,8 +268,12 @@
   function timing() {
     const divisor = speed();
     if (mode === "gather") {
-      const build = number("buildDuration", 1400) / 1000 / divisor, transition = number("titleTransition", 170) / 1000 / divisor, color = number("colorReveal", 350) / 1000 / divisor, hold = number("finalHold", 310) / 1000 / divisor;
-      return { build, transition, color, hold, cycle: Math.max(1 / fps, build + transition + color + hold) };
+      const words = splitWords(), leadIn = number("gatherLeadIn", 140) / 1000 / divisor, interval = number("groupInterval", 200) / 1000 / divisor;
+      const rise = number("groupRise", 420) / 1000 / divisor, characterInterval = number("characterInterval", 24) / 1000 / divisor, characterReveal = number("characterReveal", 130) / 1000 / divisor;
+      const longestCharacterRun = Math.max(0, ...words.map((word) => Math.max(0, graphemes(word).length - 1) * characterInterval + characterReveal));
+      const groupMotion = Math.max(rise, longestCharacterRun), settle = number("gatherSettle", 240) / 1000 / divisor;
+      const build = leadIn + Math.max(0, words.length - 1) * interval + groupMotion + settle, transition = number("titleTransition", 170) / 1000 / divisor, color = number("colorReveal", 350) / 1000 / divisor, hold = number("finalHold", 310) / 1000 / divisor;
+      return { leadIn, interval, rise, characterInterval, characterReveal, groupMotion, settle, build, transition, color, hold, cycle: Math.max(1 / fps, build + transition + color + hold) };
     }
     if (mode === "portal") {
       const sequenceCount = Math.max(1, lines("portalSequence").length), intro = number("introHold", 1200) / 1000 / divisor, interval = number("sequenceInterval", 340) / 1000 / divisor;
@@ -297,14 +315,46 @@
     const t = timing(), scale = logicalScale(width, height), centerX = width * number("textX", 50) / 100, centerY = height * number("textY", 50) / 100;
     fillBackground(context, width, height);
     if (phase < t.build) {
-      const words = splitWords(), size = number("fontSize", 58) * scale, gap = number("wordGap", 18) * scale, offsetsX = csv("scatterX"), offsetsY = csv("scatterY"), stagger = number("wordStagger", 160) / 1000 / speed();
-      setFont(context, size); const metrics = wordMetrics(context, words, gap); context.fillStyle = value("textColor", "#09090b");
-      words.forEach((word, index) => {
-        const start = index * stagger, available = Math.max(.12, t.build - start), local = clamp((phase - start) / available), appear = easeOut((phase - start) / Math.min(.16 / speed(), available * .35)); if (appear <= 0) return;
-        const move = smoother(local), strength = number("popStrength", 38) / 100, x0 = (offsetsX[index] ?? (index - (words.length - 1) / 2) * 95) * scale, y0 = (offsetsY[index] ?? ((index % 2 ? 1 : -1) * (95 + index * 20))) * scale;
-        const x = centerX + lerp(x0, metrics[index].x, move), y = centerY + lerp(y0, 0, move), pop = lerp(.72, 1, backOut(clamp(appear * (1 + strength * .35))));
-        context.save(); context.globalAlpha = appear; context.translate(x + metrics[index].width / 2, y); context.scale(pop, pop); context.fillText(word, -metrics[index].width / 2, 0); context.restore();
+      const words = splitWords(), size = number("fontSize", 58) * scale, gap = number("wordGap", 18) * scale;
+      const rightToLeft = value("revealOrder", "ltr") === "rtl", order = rightToLeft ? [...words.keys()].reverse() : [...words.keys()];
+      const verticalSign = value("verticalDirection", "up") === "down" ? -1 : 1, distance = number("entryDistance", 112) * scale, softness = number("gatherSoftness", 82) / 100;
+      const startScale = number("gatherStartScale", 58) / 100, endScale = number("gatherEndScale", 100) / 100;
+      const buildProgress = smooth((phase - t.leadIn) / Math.max(.001, t.build - t.leadIn - t.settle * .35));
+      setFont(context, size);
+      const widths = words.map((word) => context.measureText(word).width), rankByIndex = new Map(order.map((index, rank) => [index, rank]));
+      const presence = words.map((word, index) => {
+        const rank = rankByIndex.get(index), local = clamp((phase - t.leadIn - rank * t.interval) / Math.max(.001, t.rise));
+        return lerp(local, smoother(local), softness);
       });
+      const activeIndices = presence.map((progress, index) => progress > .0001 ? index : -1).filter((index) => index >= 0);
+      const firstActive = activeIndices.length ? Math.min(...activeIndices) : 0, lastActive = activeIndices.length ? Math.max(...activeIndices) : -1;
+      let total = 0;
+      for (let index = firstActive; index <= lastActive; index += 1) total += widths[index] * presence[index];
+      for (let index = firstActive; index < lastActive; index += 1) total += gap * Math.min(presence[index], presence[index + 1]);
+      let cursor = -total / 2; const positions = [];
+      for (let index = firstActive; index <= lastActive; index += 1) {
+        const slot = widths[index] * presence[index]; positions[index] = cursor + slot / 2;
+        cursor += slot + (index < lastActive ? gap * Math.min(presence[index], presence[index + 1]) : 0);
+      }
+      const groupScale = lerp(startScale, endScale, buildProgress);
+      context.save(); context.translate(centerX, centerY); context.scale(groupScale, groupScale); context.fillStyle = value("textColor", "#09090b");
+      words.forEach((word, index) => {
+        const groupProgress = presence[index]; if (groupProgress <= 0) return;
+        const chars = graphemes(word), rank = rankByIndex.get(index), groupStart = t.leadIn + rank * t.interval;
+        const characterOrder = rightToLeft ? [...chars.keys()].reverse() : [...chars.keys()], characterRank = new Map(characterOrder.map((characterIndex, orderIndex) => [characterIndex, orderIndex]));
+        const characterWidths = chars.map((character) => context.measureText(character).width), wordWidth = characterWidths.reduce((sum, item) => sum + item, 0), wordLeft = positions[index] - wordWidth / 2;
+        let characterX = wordLeft;
+        chars.forEach((character, characterIndex) => {
+          const revealStart = groupStart + characterRank.get(characterIndex) * t.characterInterval, reveal = smooth((phase - revealStart) / Math.max(.001, t.characterReveal));
+          if (reveal > 0) {
+            context.save(); context.globalAlpha = reveal;
+            context.translate(0, verticalSign * distance * (1 - groupProgress) + verticalSign * distance * .16 * (1 - reveal));
+            const characterScale = lerp(.88, 1, reveal); context.scale(characterScale, characterScale); context.fillText(character, characterX, 0); context.restore();
+          }
+          characterX += characterWidths[characterIndex];
+        });
+      });
+      context.restore();
       return;
     }
     if (phase < t.build + t.transition) {
