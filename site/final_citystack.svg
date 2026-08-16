@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540">
+  <rect width="960" height="540" fill="#050505"/>
+  <g fill="#21ff2f" font-family="Arial, 'Noto Sans SC', sans-serif" font-weight="900" text-anchor="middle">
+    <text x="480" y="172" font-size="92">只在</text>
+    <text x="480" y="258" font-size="92">香港</text>
+    <text x="480" y="338" font-size="66">HONG</text>
+    <text x="480" y="400" font-size="66">KONG</text>
+    <text x="480" y="445" font-size="28">亚洲国际都会</text>
+  </g>
+  <text x="480" y="497" fill="#cfcfcf" font-family="Arial, sans-serif" font-size="18" font-weight="600" text-anchor="middle">discoverhongkong.cn</text>
+</svg>
