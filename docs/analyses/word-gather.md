@@ -19,7 +19,8 @@ Four word groups assemble as a relay: each group reveals character-by-character,
 | --- | --- | --- | --- | --- | --- |
 | 0.00–0.16s | 000–004 | Blank / first cue | pale empty panel, then `All` appears above center | short blank lead-in and a crisp scale/opacity entrance | high |
 | 0.16–0.82s | 005–024 | Relay build | `All`, `new`, and `interface` appear in reading order, with later groups entering from below | each group reveals internally from left to right; prior content shifts to keep the currently assembled phrase centered | high |
-| 0.82–1.40s | 025–041 | Final group + enlargement | `design` rises into the line while the entire assembly continues growing | vertical entry, phrase re-centering, and global enlargement overlap continuously; no word freezes | high |
+| 0.82–1.20s | 025–035 | Final group rise | `design` enters from below while the preceding groups remain at the smaller assembly size | vertical entry and phrase re-centering finish before the major scale change | high |
+| 1.20–1.40s | 036–041 | Assembled phrase enlargement | the four groups settle onto one baseline and then become noticeably larger | a separate whole-phrase zoom follows the rise; the two actions are sequential, not simultaneous | high |
 | 1.40–1.57s | 042–046 | Aligned phrase | `All new interface design` becomes one centered baseline | final layout is measured as one group | high |
 | 1.57–1.74s | 047–051 | Matched title cut | phrase disappears and the small `iOS` title replaces it | brief scale/opacity cut rather than a long dissolve | medium |
 | 1.74–2.23s | 052–066 | Color reveal / hold | colored blurred field expands behind the title and icon | radial reveal into a full-frame gradient, followed by a short hold | high |
@@ -36,7 +37,7 @@ Four word groups assemble as a relay: each group reveals character-by-character,
 
 - Composition center: actual right-hand stage center, not browser-window center.
 - Alignment: the currently visible prefix/suffix is measured as one centered cluster; adding a new group smoothly redistributes the whole cluster toward the final centered baseline.
-- Scale behavior: the assembly enlarges continuously throughout the build; characters inside the entering group reveal sequentially.
+- Scale behavior: reference mode keeps the assembly small while groups rise, then enlarges the whole centered phrase; an alternate retained mode allows enlargement to run simultaneously with the rise.
 - Responsive/aspect-ratio behavior: normalized 1280×720 composition is centered and uniformly scaled inside any output size.
 - Entry/exit boundaries: starts inside the stage; final color reveal expands beyond all edges.
 
@@ -44,7 +45,7 @@ Four word groups assemble as a relay: each group reveals character-by-character,
 
 - Total reference loop: 2.233333s.
 - Default implementation loop: 2.23s.
-- Phase durations: 1.40s gather, 0.17s title cut, 0.35s color reveal, 0.31s hold.
+- Phase durations: 1.16s relay/rise, 0.04s post-rise delay, 0.20s whole-phrase zoom, 0.17s title cut, 0.35s color reveal, 0.31s hold.
 - Overlaps: each later group starts while the already-visible cluster is still enlarging, creating a continuous relay rather than simultaneous scatter motion.
 - Holds with residual motion: none observed after the final color field settles.
 - Hard cuts: phrase-to-title is intentionally crisp.
@@ -62,7 +63,7 @@ Four word groups assemble as a relay: each group reveals character-by-character,
 
 ### Common
 
-- Word groups, final title, font, weight, overall speed, horizontal reveal order, vertical entry direction, lead-in, group interval, group rise duration, character interval, character reveal duration, settle, title-cut duration, color-reveal duration, hold, icon choice and icon size.
+- Word groups, final title, font, weight, overall speed, motion version, horizontal reveal order, vertical entry direction, lead-in, group interval, group rise duration, character interval, character reveal duration, post-rise delay, zoom duration, zoom easing, title-cut duration, color-reveal duration, hold, icon choice and icon size.
 
 ### Advanced
 
@@ -90,3 +91,4 @@ Four word groups assemble as a relay: each group reveals character-by-character,
 
 - 2026-08-16: normal-speed and slow-motion clips must be paired by measured duration rather than filename suffix; for this pair, take 2 is the normal-speed source.
 - 2026-08-16: first implementation incorrectly modeled the scene as independent scattered words. User feedback clarified the essential behavior: sequential group relay, internal character reveal, vertical rise/fall, progressive re-centering, and continuous enlargement.
+- 2026-08-16: normal and slow frames show that the reference separates motion into two stages: groups rise/re-center first, then the assembled phrase enlarges. The previous simultaneous-rise-and-enlarge behavior is retained as an explicit alternate style instead of being discarded.

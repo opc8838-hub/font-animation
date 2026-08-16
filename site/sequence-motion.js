@@ -69,6 +69,7 @@
       <section>
         <div class="section-heading"><p class="section-label">出现方向</p><small class="section-note">参考视频为从左到右、从下向上</small></div>
         <div class="controls-grid">
+          <label>动作版本<select id="gatherStyle"><option value="reference" selected>原版 · 先上升后放大</option><option value="simultaneous">同步上升放大 · 保留版</option></select></label>
           <label>词组顺序<select id="revealOrder"><option value="ltr" selected>从左到右</option><option value="rtl">从右到左</option></select></label>
           <label>进入方向<select id="verticalDirection"><option value="up" selected>从下向上</option><option value="down">从上向下</option></select></label>
         </div>
@@ -83,7 +84,9 @@
           ${slider("单组上升时间", "groupRise", 80, 1800, 10, 420, "seconds")}
           ${slider("组内逐字间隔", "characterInterval", 0, 240, 2, 24, "seconds")}
           ${slider("单字出现时间", "characterReveal", 30, 800, 10, 130, "seconds")}
-          ${slider("合并后停留", "gatherSettle", 0, 2000, 10, 240, "seconds")}
+          ${slider("汇合后等待", "gatherZoomDelay", 0, 1200, 10, 40, "seconds")}
+          ${slider("整体放大时间", "gatherZoomDuration", 40, 1600, 10, 200, "seconds")}
+          <label>放大节奏<select id="gatherZoomCurve"><option value="natural" selected>自然柔和</option><option value="fast">快速收束</option><option value="spring">轻弹放大</option><option value="linear">匀速</option></select></label>
           ${slider("标题切换", "titleTransition", 80, 1800, 10, 170, "seconds")}
           ${slider("彩幕展开", "colorReveal", 80, 2200, 10, 350, "seconds")}
           ${slider("收尾停留", "finalHold", 0, 5000, 10, 310, "seconds")}
@@ -271,9 +274,10 @@
       const words = splitWords(), leadIn = number("gatherLeadIn", 140) / 1000 / divisor, interval = number("groupInterval", 200) / 1000 / divisor;
       const rise = number("groupRise", 420) / 1000 / divisor, characterInterval = number("characterInterval", 24) / 1000 / divisor, characterReveal = number("characterReveal", 130) / 1000 / divisor;
       const longestCharacterRun = Math.max(0, ...words.map((word) => Math.max(0, graphemes(word).length - 1) * characterInterval + characterReveal));
-      const groupMotion = Math.max(rise, longestCharacterRun), settle = number("gatherSettle", 240) / 1000 / divisor;
-      const build = leadIn + Math.max(0, words.length - 1) * interval + groupMotion + settle, transition = number("titleTransition", 170) / 1000 / divisor, color = number("colorReveal", 350) / 1000 / divisor, hold = number("finalHold", 310) / 1000 / divisor;
-      return { leadIn, interval, rise, characterInterval, characterReveal, groupMotion, settle, build, transition, color, hold, cycle: Math.max(1 / fps, build + transition + color + hold) };
+      const groupMotion = Math.max(rise, longestCharacterRun), zoomDelay = number("gatherZoomDelay", 40) / 1000 / divisor, zoom = number("gatherZoomDuration", 200) / 1000 / divisor;
+      const motionEnd = leadIn + Math.max(0, words.length - 1) * interval + groupMotion, build = motionEnd + zoomDelay + zoom;
+      const transition = number("titleTransition", 170) / 1000 / divisor, color = number("colorReveal", 350) / 1000 / divisor, hold = number("finalHold", 310) / 1000 / divisor;
+      return { leadIn, interval, rise, characterInterval, characterReveal, groupMotion, motionEnd, zoomDelay, zoom, build, transition, color, hold, cycle: Math.max(1 / fps, build + transition + color + hold) };
     }
     if (mode === "portal") {
       const sequenceCount = Math.max(1, lines("portalSequence").length), intro = number("introHold", 1200) / 1000 / divisor, interval = number("sequenceInterval", 340) / 1000 / divisor;
@@ -311,6 +315,13 @@
     context.save(); context.globalAlpha *= alpha; context.translate(centerX, centerY); context.scale(titleScale, titleScale); context.fillStyle = value("textColor", "#09090b"); context.fillText(title, -total / 2, 0);
     if (iconSpace) drawIcon(context, -total / 2 + textWidth + size * .16 + iconSpace / 2, 0, iconSpace, 1); context.restore();
   }
+  function gatherZoomCurve(progress) {
+    const p = clamp(progress), curve = value("gatherZoomCurve", "natural");
+    if (curve === "fast") return easeOut(p);
+    if (curve === "spring") return backOut(p);
+    if (curve === "linear") return p;
+    return smoother(p);
+  }
   function renderGather(context, phase, width, height) {
     const t = timing(), scale = logicalScale(width, height), centerX = width * number("textX", 50) / 100, centerY = height * number("textY", 50) / 100;
     fillBackground(context, width, height);
@@ -319,7 +330,10 @@
       const rightToLeft = value("revealOrder", "ltr") === "rtl", order = rightToLeft ? [...words.keys()].reverse() : [...words.keys()];
       const verticalSign = value("verticalDirection", "up") === "down" ? -1 : 1, distance = number("entryDistance", 112) * scale, softness = number("gatherSoftness", 82) / 100;
       const startScale = number("gatherStartScale", 58) / 100, endScale = number("gatherEndScale", 100) / 100;
-      const buildProgress = smooth((phase - t.leadIn) / Math.max(.001, t.build - t.leadIn - t.settle * .35));
+      const simultaneous = value("gatherStyle", "reference") === "simultaneous";
+      const scaleProgress = simultaneous
+        ? smooth((phase - t.leadIn) / Math.max(.001, t.build - t.leadIn - t.zoom * .35))
+        : gatherZoomCurve((phase - t.motionEnd - t.zoomDelay) / Math.max(.001, t.zoom));
       setFont(context, size);
       const widths = words.map((word) => context.measureText(word).width), rankByIndex = new Map(order.map((index, rank) => [index, rank]));
       const presence = words.map((word, index) => {
@@ -336,7 +350,7 @@
         const slot = widths[index] * presence[index]; positions[index] = cursor + slot / 2;
         cursor += slot + (index < lastActive ? gap * Math.min(presence[index], presence[index + 1]) : 0);
       }
-      const groupScale = lerp(startScale, endScale, buildProgress);
+      const groupScale = lerp(startScale, endScale, scaleProgress);
       context.save(); context.translate(centerX, centerY); context.scale(groupScale, groupScale); context.fillStyle = value("textColor", "#09090b");
       words.forEach((word, index) => {
         const groupProgress = presence[index]; if (groupProgress <= 0) return;
@@ -358,7 +372,7 @@
       return;
     }
     if (phase < t.build + t.transition) {
-      const p = smooth((phase - t.build) / Math.max(.001, t.transition)); drawGatherPhrase(context, width, height, scale, 1 - p, 1 + p * .08); drawGatherTitle(context, width, height, scale, smooth((p - .36) / .64), lerp(.72, 1, backOut((p - .36) / .64))); return;
+      const p = smooth((phase - t.build) / Math.max(.001, t.transition)), endScale = number("gatherEndScale", 100) / 100; drawGatherPhrase(context, width, height, scale, 1 - p, endScale * (1 + p * .08)); drawGatherTitle(context, width, height, scale, smooth((p - .36) / .64), lerp(.72, 1, backOut((p - .36) / .64))); return;
     }
     const colorStart = t.build + t.transition;
     if (phase < colorStart + t.color) {
