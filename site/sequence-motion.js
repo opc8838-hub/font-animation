@@ -52,8 +52,8 @@
     <section>
       <div class="section-heading"><p class="section-label">字体</p><small class="section-note">参考版使用高字重几何黑体</small></div>
       <div class="sequence-font-grid">
-        <label><span class="section-label">字体家族</span><select id="fontFamily"><option value="city-black" selected>Noto Sans SC Black · 原片</option><option value="noto">Noto Sans SC · 可变字重</option><option value="inter">Inter</option><option value="space">Space Grotesk</option><option value="manrope">Manrope</option><option value="poppins">Poppins</option></select></label>
-        <label><span class="section-label">字重</span><select id="fontWeight"><option value="500">Medium</option><option value="600">Semibold</option><option value="700">Bold</option><option value="800">Extra Bold</option><option value="900" selected>Black</option></select></label>
+        <label><span class="section-label">字体家族</span><select id="fontFamily"><option value="noto" selected>Noto Sans SC · 原版</option><option value="city-black">Noto Sans SC Black</option><option value="inter">Inter</option><option value="space">Space Grotesk</option><option value="manrope">Manrope</option><option value="poppins">Poppins</option></select></label>
+        <label><span class="section-label">字重</span><select id="fontWeight"><option value="500">Medium</option><option value="600">Semibold</option><option value="700">Bold</option><option value="800" selected>Extra Bold</option><option value="900">Black</option></select></label>
       </div>
     </section>`;
   const commonColors = `
@@ -273,7 +273,7 @@
         <div class="section-heading"><p class="section-label">字体间距</p><small class="section-note">横向字距与纵向行距分别调整</small></div>
         <div class="controls-grid">
           ${slider("汉字横向间距", "cityHanLetterGap", -80, 160, 1, 8, "pixels")}
-          ${slider("汉字纵向间距", "cityHanVerticalGap", -100, 180, 1, 16, "pixels")}
+          ${slider("汉字纵向间距", "cityHanVerticalGap", -100, 180, 1, 40, "pixels")}
           ${slider("英文横向间距", "cityEnglishLetterGap", -30, 120, 1, 0, "pixels")}
           ${slider("英文纵向间距", "cityEnglishVerticalGap", -100, 180, 1, 0, "pixels")}
           ${slider("副标题横向间距", "citySubtitleLetterGap", -30, 100, 1, 3, "pixels")}
@@ -283,7 +283,7 @@
           ${slider("署名纵向距离", "cityFooterGap", 40, 700, 1, 150, "pixels")}
         </div>
         <label class="stacked-control">各行横向比例<input id="cityHanRowScaleX" type="text" value="100,100" placeholder="百分比，例如 100,92"></label>
-        <label class="stacked-control">各行纵向比例<input id="cityHanRowScaleY" type="text" value="100,122" placeholder="百分比，例如 100,122；第二行更高"></label>
+        <label class="stacked-control">各行纵向比例<input id="cityHanRowScaleY" type="text" value="100,110" placeholder="百分比，例如 100,110；第二行轻微拉高"></label>
       </section>
       <details class="sequence-advanced"><summary>高级细调</summary><div class="controls-grid">
         ${slider("汉字大小", "cityHanSize", 60, 340, 1, 250, "pixels")}
@@ -751,37 +751,37 @@
     else {
       assignValues({
         cityHanLines: "只在\n香港", cityEnglishLines: "HONG\nKONG", citySubtitle: "亚洲国际都会", cityFooter: "discoverhongkong.cn",
-        cityTimelineMode: "build", cityHanOrder: "row-ltr", cityCustomOrder: "1,2,3,4", cityFlashSequence: "全部", cityHanDurations: "", cityFlashGaps: "", fontWeight: 900, playbackSpeed: 1, cityLeadIn: 670, cityPulseDelay: 120, cityHanInterval: 40, cityEnglishInterval: 40,
+        cityTimelineMode: "build", cityHanOrder: "row-ltr", cityCustomOrder: "1,2,3,4", cityFlashSequence: "全部", cityHanDurations: "", cityFlashGaps: "", fontWeight: 800, playbackSpeed: 1, cityLeadIn: 670, cityPulseDelay: 120, cityHanInterval: 40, cityEnglishInterval: 40,
         cityEntryDuration: 320, citySectionGap: 150, citySubtitleDelay: 260, citySubtitleInterval: 40, cityFooterDelay: 500,
         cityFooterFade: 300, finalHold: 716, cityRhythm: "flash", cityHanSize: 250, cityEnglishSize: 180, citySubtitleSize: 80,
-        cityFooterSize: 60, cityHanLetterGap: 8, cityHanVerticalGap: 16, cityHanRowScaleX: "100,100", cityHanRowScaleY: "100,122", cityEnglishLetterGap: 0, cityEnglishVerticalGap: 0,
+        cityFooterSize: 60, cityHanLetterGap: 8, cityHanVerticalGap: 40, cityHanRowScaleX: "100,100", cityHanRowScaleY: "100,110", cityEnglishLetterGap: 0, cityEnglishVerticalGap: 0,
         citySubtitleLetterGap: 3, cityFooterLetterGap: 0, cityBlockGap: 24, citySubtitleGap: 18, cityFooterGap: 150,
         cityEntryDistance: 0, cityEntryScale: 100, cityFlashCount: 4, cityFlashStrength: 88, textX: 50, textY: 44,
         backgroundColor: "#050505", accentColor: "#1dff11", cityEnglishColor: "#1dff11", citySubtitleColor: "#1dff11",
         cityFlashColor: "#0a5010", textColor: "#d5d5d5"
       });
     }
-    $("#fontFamily").value = mode === "city" ? "city-black" : "inter"; updateOutputs(); restart();
+    $("#fontFamily").value = mode === "city" ? "noto" : "inter"; updateOutputs(); restart();
   }
   function setAltReference() {
     if (mode !== "city") return;
     assignValues({
       cityHanLines: "只在\n香港", cityEnglishLines: "HONG\nKONG", citySubtitle: "亚洲国际都会", cityFooter: "discoverhongkong.cn",
       cityTimelineMode: "pulse", cityFlashSequence: "H3,S3+S4,E1,E2", cityHanDurations: "520,240,300,460", cityFlashGaps: "360,100,200,0",
-      fontWeight: 900, playbackSpeed: 1, cityLeadIn: 200, cityPulseDelay: 120, cityHanInterval: 40, cityEntryDuration: 320, cityFlashCount: 4,
+      fontWeight: 800, playbackSpeed: 1, cityLeadIn: 200, cityPulseDelay: 120, cityHanInterval: 40, cityEntryDuration: 320, cityFlashCount: 4,
       cityFooterFade: 100, finalHold: 1066, cityRhythm: "flash", cityHanSize: 250, cityEnglishSize: 180, citySubtitleSize: 80, cityFooterSize: 60,
-      cityHanLetterGap: 8, cityHanVerticalGap: 16, cityHanRowScaleX: "100,100", cityHanRowScaleY: "100,122", cityEnglishLetterGap: 0, cityEnglishVerticalGap: 0,
+      cityHanLetterGap: 8, cityHanVerticalGap: 40, cityHanRowScaleX: "100,100", cityHanRowScaleY: "100,110", cityEnglishLetterGap: 0, cityEnglishVerticalGap: 0,
       citySubtitleLetterGap: 3, cityFooterLetterGap: 0, cityBlockGap: 24, citySubtitleGap: 18, cityFooterGap: 150,
       cityFlashStrength: 92, textX: 50, textY: 44, backgroundColor: "#050505", accentColor: "#c176ff", cityEnglishColor: "#c176ff", citySubtitleColor: "#c176ff", cityFlashColor: "#281536", textColor: "#f2f2f2"
     });
-    $("#fontFamily").value = "city-black"; updateOutputs(); restart();
+    $("#fontFamily").value = "noto"; updateOutputs(); restart();
   }
   function setChinese() {
     if (mode === "gather") { $("#gatherWords").value = "全新|界面|灵感|设计"; $("#finalTitle").value = "现在开始"; }
     else if (mode === "portal") { $("#portalSequence").value = "你好\n[icon]\n重新认识\n未来\n现在\n出发"; $("#portalPhrase").value = "最快的灵感，就在此刻。"; $("#focusIndex").value = "1"; }
     else if (mode === "rapid") { $("#headlineLines").value = "流畅。\n醒目。\n自由。"; $("#bridgeText").value = "这就是灵感。"; $("#rapidItems").value = "快速切换\n丝滑滚动\n自由节奏\n图标收束\n马上开始"; }
-    else assignValues({ cityHanLines: "灵感\n发生", cityEnglishLines: "CREATE\nMORE", citySubtitle: "每一次相遇", cityFooter: "hello-motion.cn", cityTimelineMode: "build", cityFlashSequence: "全部", cityHanDurations: "", cityFlashGaps: "", cityHanRowScaleX: "100,100", cityHanRowScaleY: "100,112" });
-    $("#fontFamily").value = mode === "city" ? "city-black" : "noto"; updateOutputs(); restart();
+    else assignValues({ cityHanLines: "灵感\n发生", cityEnglishLines: "CREATE\nMORE", citySubtitle: "每一次相遇", cityFooter: "hello-motion.cn", cityTimelineMode: "build", cityFlashSequence: "全部", cityHanDurations: "", cityFlashGaps: "", cityHanRowScaleX: "100,100", cityHanRowScaleY: "100,108" });
+    $("#fontFamily").value = "noto"; updateOutputs(); restart();
   }
   $("#referencePreset").addEventListener("click", setReference); $("#referenceAltPreset")?.addEventListener("click", setAltReference); $("#chinesePreset").addEventListener("click", setChinese);
   [$("#restartTop"), $("#restartButton")].forEach((button) => button.addEventListener("click", restart));

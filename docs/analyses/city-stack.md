@@ -45,7 +45,7 @@ A fixed-top, high-weight Chinese/English word tower builds one item at a time wi
 - Alignment: every line is independently measured and horizontally centered on a shared vertical axis.
 - Anchor behavior: the top of the tower remains fixed while new rows extend downward.
 - Typography: geometric sans / Chinese grotesk at Extra Bold to Black weight, tight line height, minimal tracking, square proportions.
-- Font reconstruction: use the repository's actual `NotoSansSC-Black.ttf` face rather than browser-simulated bold. The second Chinese row uses the same face with a default 122% vertical transform; this accounts for the conspicuously tall `香港` without introducing a mismatched typeface.
+- Font reconstruction: preserve the original editor's Noto Sans SC face at weight 800. Only the second Chinese row receives a restrained 110% vertical transform, while the original 40px row gap is retained; `香港` is slightly taller without making the whole lockup heavier or cramped.
 - Measured final geometry at 540×1166: five green line widths are 247–262px; Chinese row starts are about 123px apart; English row starts are about 74px apart; the final green block spans y=275–745 and is centered near x=270.
 - Responsive behavior: a portrait-oriented logical composition scales uniformly into desktop, mobile, and export dimensions.
 
