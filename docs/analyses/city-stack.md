@@ -42,10 +42,10 @@ A fixed-top, high-weight Chinese/English word tower builds one item at a time wi
 ## Timing and easing
 
 - Total reference loop: 4.233334s.
-- Default implementation loop: 4.24s (the nearest 10ms-editor value to the 4.233334s source).
-- Default phase model: 0.67s lead-in; 0.36s first-to-second-character interval; 0.18s later Chinese interval; 0.30s English interval; 0.15s subtitle-group interval; 0.50s footer delay; 0.30s footer fade; 0.716s hold.
+- Default implementation loop: 5.72s. After visual review, the editor default deliberately prioritizes clearly readable, strictly serial flashes over the source video's partially overlapping 4.23s timing.
+- Default phase model: 0.67s lead-in; every Chinese character receives a complete 0.32s flash and a 0.04s post-flash wait before the next character begins. English lines and subtitle groups use the same 0.32s + 0.04s serial rule, followed by a 0.50s footer delay, 0.30s footer fade, and 0.716s hold.
 - Entry geometry: the reference default has no translation and no scale change; alternative rise/snap rhythms remain editable.
-- Flash model: only the currently entering character or English line follows a roughly 0.32s bright → almost off → dim → bright sequence; already-visible text stays stable.
+- Flash model: only the currently entering character or English line follows a 0.32s bright → almost off → dim → bright sequence; already-visible text stays stable. A following unit cannot start until the current unit has completed the entire sequence and its post-flash wait.
 
 ## Reuse plan
 
@@ -58,11 +58,11 @@ A fixed-top, high-weight Chinese/English word tower builds one item at a time wi
 
 ### Common
 
-- Four text areas/fields, font family, weight, overall speed, opening delay, Chinese interval, English interval, entry duration, section gap, subtitle delay/interval, footer delay/fade, final hold, entry rhythm, background, separate Chinese/English/subtitle/signature colors, and a dedicated local-flash color.
+- Four text areas/fields, arbitrary Chinese character count, font family, weight, overall speed, opening delay, unified flash duration, wait-after-each-flash, English/subtitle waits, section gap, subtitle delay, footer delay/fade, final hold, entry rhythm, background, separate Chinese/English/subtitle/signature colors, and a dedicated local-flash color.
 
 ### Advanced
 
-- Chinese/English/subtitle/footer sizes; independent horizontal spacing for Chinese, English, subtitle, and signature; independent vertical spacing for Chinese rows, English rows, Chinese-to-English, subtitle, and signature; entry distance, entry scale, local-flash strength, and stage X/Y position.
+- Five Chinese order modes (row left-to-right, row right-to-left, column top-to-bottom, reverse, and custom); a custom 1-based position sequence; optional comma-separated per-character flash durations; Chinese/English/subtitle/footer sizes; independent horizontal spacing for Chinese, English, subtitle, and signature; independent vertical spacing for Chinese rows, English rows, Chinese-to-English, subtitle, and signature; entry distance, entry scale, local-flash strength, and stage X/Y position.
 
 ## Uncertainties to verify
 
@@ -80,3 +80,5 @@ A fixed-top, high-weight Chinese/English word tower builds one item at a time wi
 - [x] PNG generated at 320×320
 - [x] GIF generated at 320×320, 1s, 15fps
 - [x] WEBM video generated at 320×320, 1s, 15fps
+- [x] Strict no-overlap keyframe: while `在` is flashing, `香` is not yet visible
+- [x] Six-character custom order and six independent durations recalculate the complete timeline

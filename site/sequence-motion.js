@@ -232,8 +232,13 @@
   function cityPanel() {
     return `
       <section class="sequence-content">
-        <div class="section-heading"><p class="section-label">文字内容</p><small class="section-note">汉字与英文分别按行编辑</small></div>
+        <div class="section-heading"><p class="section-label">文字内容</p><small class="section-note">输入任意字数；换行决定排版，顺序单独编排</small></div>
         <label class="stacked-control">主汉字<textarea id="cityHanLines">只在\n香港</textarea></label>
+        <div class="controls-grid">
+          <label>汉字闪烁顺序<select id="cityHanOrder"><option value="row-ltr" selected>逐行 · 左到右</option><option value="row-rtl">逐行 · 右到左</option><option value="column">逐列 · 上到下</option><option value="reverse">全部倒序</option><option value="custom">自定义字位</option></select></label>
+          <label>自定义顺序<input id="cityCustomOrder" type="text" value="1,2,3,4" placeholder="例如 2,1,4,3"></label>
+        </div>
+        <label class="stacked-control">逐字闪烁时长 · 可选<input id="cityHanDurations" type="text" value="" placeholder="毫秒，例如 320,450,280；留空使用统一时长"></label>
         <label class="stacked-control">英文叠字<textarea id="cityEnglishLines">HONG\nKONG</textarea></label>
         <label class="stacked-control">底部副标题<input id="citySubtitle" type="text" value="亚洲国际都会"></label>
         <label class="stacked-control">末尾署名<input id="cityFooter" type="text" value="discoverhongkong.cn"></label>
@@ -246,13 +251,12 @@
         <div class="controls-grid">
           ${slider("整体速度", "playbackSpeed", .25, 3, .05, 1, "speed")}
           ${slider("开始出现时间", "cityLeadIn", 0, 2400, 10, 667, "seconds")}
-          ${slider("首字后间隔", "cityFirstHanInterval", 40, 1200, 10, 360, "seconds")}
-          ${slider("汉字逐字间隔", "cityHanInterval", 40, 1000, 10, 180, "seconds")}
-          ${slider("英文逐行间隔", "cityEnglishInterval", 40, 1200, 10, 300, "seconds")}
-          ${slider("单项闪断时长", "cityEntryDuration", 80, 1000, 10, 320, "seconds")}
+          ${slider("每字闪完后等待", "cityHanInterval", 0, 1000, 10, 40, "seconds")}
+          ${slider("英文每行闪完后等待", "cityEnglishInterval", 0, 1200, 10, 40, "seconds")}
+          ${slider("统一单字闪烁时长", "cityEntryDuration", 80, 1000, 10, 320, "seconds")}
           ${slider("末个汉字到英文", "citySectionGap", 0, 1200, 10, 150, "seconds")}
           ${slider("末行英文到副标", "citySubtitleDelay", 0, 1800, 10, 260, "seconds")}
-          ${slider("副标题分组间隔", "citySubtitleInterval", 20, 600, 10, 150, "seconds")}
+          ${slider("副标题每组结束后等待", "citySubtitleInterval", 0, 600, 10, 40, "seconds")}
           ${slider("署名等待", "cityFooterDelay", 0, 2400, 10, 500, "seconds")}
           ${slider("署名淡入", "cityFooterFade", 60, 1600, 10, 300, "seconds")}
           ${slider("完成后停留", "finalHold", 0, 6000, 10, 716, "seconds")}
@@ -298,7 +302,7 @@
   const number = (id, fallback = 0) => { const result = Number(value(id, fallback)); return Number.isFinite(result) ? result : fallback; };
   const checked = (id) => Boolean($(`#${id}`)?.checked);
   const lines = (id) => String(value(id)).split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
-  const csv = (id) => String(value(id)).split(/[,，\s]+/).map(Number).filter(Number.isFinite);
+  const csv = (id) => String(value(id)).split(/[,，\s]+/).map((item) => item.trim()).filter(Boolean).map(Number).filter(Number.isFinite);
   const speed = () => Math.max(.25, number("playbackSpeed", 1));
   const imageCache = new Map();
   let uploadedIcon = null;
@@ -352,6 +356,27 @@
   }
   function logicalScale(width, height) { return Math.max(.22, Math.min(width / 1280, height / 720)); }
   function splitWords() { const raw = String(value("gatherWords", "All|new|interface|design")); return raw.includes("|") ? raw.split("|").map((item) => item.trim()).filter(Boolean) : raw.split(/\s+/).filter(Boolean); }
+  function cityHanItems() {
+    const items = []; lines("cityHanLines").forEach((line, row) => graphemes(line).forEach((character, column) => items.push({ character, row, column, flat: items.length })));
+    return items;
+  }
+  function cityHanSequence(items = cityHanItems()) {
+    const modeName = value("cityHanOrder", "row-ltr"); let ordered = [...items];
+    if (modeName === "row-rtl") ordered.sort((a, b) => a.row - b.row || b.column - a.column);
+    else if (modeName === "column") ordered.sort((a, b) => a.column - b.column || a.row - b.row);
+    else if (modeName === "reverse") ordered.reverse();
+    else if (modeName === "custom") {
+      const requested = csv("cityCustomOrder").map((item) => Math.round(item) - 1), used = new Set(); ordered = [];
+      requested.forEach((flat) => { const item = items.find((candidate) => candidate.flat === flat); if (item && !used.has(flat)) { used.add(flat); ordered.push(item); } });
+      items.forEach((item) => { if (!used.has(item.flat)) ordered.push(item); });
+    }
+    return ordered;
+  }
+  function cityHanSchedule(divisor = 1) {
+    const items = cityHanItems(), ordered = cityHanSequence(items), overrides = csv("cityHanDurations"), defaultDuration = number("cityEntryDuration", 320) / 1000 / divisor, gap = number("cityHanInterval", 40) / 1000 / divisor, leadIn = number("cityLeadIn", 670) / 1000 / divisor, byIndex = new Map(); let cursor = leadIn;
+    ordered.forEach((item, rank) => { const duration = Math.max(.08 / divisor, (overrides[rank] ?? number("cityEntryDuration", 320)) / 1000 / divisor); byIndex.set(item.flat, { start: cursor, duration, rank }); cursor += duration + (rank < ordered.length - 1 ? gap : 0); });
+    return { items, ordered, byIndex, leadIn, gap, end: ordered.length ? cursor : leadIn + defaultDuration };
+  }
 
   function timing() {
     const divisor = speed();
@@ -370,14 +395,14 @@
       return { intro, interval, sequence, phrase, zoom, hold, cycle: Math.max(1 / fps, sequence + phrase + zoom + hold) };
     }
     if (mode === "city") {
-      const hanCount = Math.max(1, lines("cityHanLines").reduce((sum, line) => sum + graphemes(line).length, 0)), englishCount = Math.max(1, lines("cityEnglishLines").length), subtitleGroupCount = Math.max(1, citySubtitleGroups(graphemes(value("citySubtitle", "亚洲国际都会")).length).length);
-      const leadIn = number("cityLeadIn", 667) / 1000 / divisor, firstHanInterval = number("cityFirstHanInterval", 360) / 1000 / divisor, hanInterval = number("cityHanInterval", 180) / 1000 / divisor, englishInterval = number("cityEnglishInterval", 300) / 1000 / divisor, entry = number("cityEntryDuration", 320) / 1000 / divisor;
-      const sectionGap = number("citySectionGap", 150) / 1000 / divisor, subtitleDelay = number("citySubtitleDelay", 260) / 1000 / divisor, subtitleInterval = number("citySubtitleInterval", 150) / 1000 / divisor;
+      const hanSchedule = cityHanSchedule(divisor), englishCount = Math.max(1, lines("cityEnglishLines").length), subtitleGroupCount = Math.max(1, citySubtitleGroups(graphemes(value("citySubtitle", "亚洲国际都会")).length).length);
+      const leadIn = hanSchedule.leadIn, hanInterval = hanSchedule.gap, englishInterval = number("cityEnglishInterval", 40) / 1000 / divisor, entry = number("cityEntryDuration", 320) / 1000 / divisor;
+      const sectionGap = number("citySectionGap", 150) / 1000 / divisor, subtitleDelay = number("citySubtitleDelay", 260) / 1000 / divisor, subtitleInterval = number("citySubtitleInterval", 40) / 1000 / divisor;
       const footerDelay = number("cityFooterDelay", 500) / 1000 / divisor, footerFade = number("cityFooterFade", 300) / 1000 / divisor, hold = number("finalHold", 716) / 1000 / divisor;
-      const hanLastStart = leadIn + (hanCount > 1 ? firstHanInterval + Math.max(0, hanCount - 2) * hanInterval : 0), hanEnd = hanLastStart + entry, englishStart = hanLastStart + sectionGap;
-      const englishLastStart = englishStart + Math.max(0, englishCount - 1) * englishInterval, englishEnd = englishLastStart + entry, subtitleStart = englishLastStart + subtitleDelay;
-      const subtitleLastStart = subtitleStart + Math.max(0, subtitleGroupCount - 1) * subtitleInterval, subtitleEnd = subtitleLastStart + entry, footerStart = subtitleEnd + footerDelay, cycle = footerStart + footerFade + hold;
-      return { leadIn, firstHanInterval, hanInterval, englishInterval, entry, sectionGap, subtitleDelay, subtitleInterval, footerDelay, footerFade, hold, hanLastStart, hanEnd, englishStart, englishLastStart, englishEnd, subtitleStart, subtitleLastStart, subtitleEnd, footerStart, cycle: Math.max(1 / fps, cycle) };
+      const hanEnd = hanSchedule.end, englishStart = hanEnd + sectionGap;
+      const englishLastStart = englishStart + Math.max(0, englishCount - 1) * (entry + englishInterval), englishEnd = englishLastStart + entry, subtitleStart = englishEnd + subtitleDelay;
+      const subtitleLastStart = subtitleStart + Math.max(0, subtitleGroupCount - 1) * (entry + subtitleInterval), subtitleEnd = subtitleLastStart + entry, footerStart = subtitleEnd + footerDelay, cycle = footerStart + footerFade + hold;
+      return { leadIn, hanInterval, hanSchedule, englishInterval, entry, sectionGap, subtitleDelay, subtitleInterval, footerDelay, footerFade, hold, hanEnd, englishStart, englishLastStart, englishEnd, subtitleStart, subtitleLastStart, subtitleEnd, footerStart, cycle: Math.max(1 / fps, cycle) };
     }
     const lineCount = Math.max(1, lines("headlineLines").length), stagger = number("lineStagger", 230) / 1000 / divisor, roll = number("lineRoll", 190) / 1000 / divisor, headlineHold = number("headlineHold", 1350) / 1000 / divisor;
     const headline = Math.max(roll, (lineCount - 1) * stagger + roll) + headlineHold, bridge = number("bridgeHold", 650) / 1000 / divisor, icon = number("iconHold", 350) / 1000 / divisor;
@@ -565,7 +590,6 @@
     for (let index = 2; index < length - 2; index += 2) push([index, index + 1]);
     return groups;
   }
-  function cityHanStart(index, timingData) { return timingData.leadIn + (index === 0 ? 0 : timingData.firstHanInterval + Math.max(0, index - 1) * timingData.hanInterval); }
   function renderCity(context, phase, width, height) {
     const t = timing(), scale = Math.max(.24, Math.min(width / 1080, height / 1280)), centerX = width * number("textX", 50) / 100, centerY = height * number("textY", 44) / 100;
     fillBackground(context, width, height, value("backgroundColor", "#050505"));
@@ -579,13 +603,13 @@
     setFont(context, hanSize); let characterIndex = 0;
     hanLines.forEach((line, rowIndex) => {
       const metrics = cityTextMetrics(context, line, hanLetterGap); let x = centerX - metrics.total / 2;
-      metrics.characters.forEach((char, index) => { const itemX = x + metrics.widths[index] / 2, itemY = top + hanLineHeight * (rowIndex + .5); drawCityItem(context, char, itemX, itemY, phase, cityHanStart(characterIndex, t), t.entry, scale, hanColor); x += metrics.widths[index] + hanLetterGap; characterIndex += 1; });
+      metrics.characters.forEach((char, index) => { const itemX = x + metrics.widths[index] / 2, itemY = top + hanLineHeight * (rowIndex + .5), itemTiming = t.hanSchedule.byIndex.get(characterIndex) || { start: t.leadIn, duration: t.entry }; drawCityItem(context, char, itemX, itemY, phase, itemTiming.start, itemTiming.duration, scale, hanColor); x += metrics.widths[index] + hanLetterGap; characterIndex += 1; });
     });
     const englishTop = top + hanLines.length * hanLineHeight + blockGap; setFont(context, englishSize);
-    englishLines.forEach((line, index) => drawCityItem(context, line.toUpperCase(), centerX, englishTop + englishLineHeight * (index + .5), phase, t.englishStart + index * t.englishInterval, t.entry, scale, englishColor, englishLetterGap));
+    englishLines.forEach((line, index) => drawCityItem(context, line.toUpperCase(), centerX, englishTop + englishLineHeight * (index + .5), phase, t.englishStart + index * (t.entry + t.englishInterval), t.entry, scale, englishColor, englishLetterGap));
     const subtitleY = englishTop + englishLines.length * englishLineHeight + subtitleGap + subtitleSize / 2; setFont(context, subtitleSize);
     const subtitleWidths = subtitle.map((char) => context.measureText(char).width), subtitleTotal = subtitleWidths.reduce((sum, item) => sum + item, 0) + Math.max(0, subtitle.length - 1) * subtitleLetterGap, subtitleGroups = citySubtitleGroups(subtitle.length), subtitleRank = new Map(subtitleGroups.flatMap((group, rank) => group.map((index) => [index, rank]))); let subtitleX = centerX - subtitleTotal / 2;
-    subtitle.forEach((char, index) => { drawCityItem(context, char, subtitleX + subtitleWidths[index] / 2, subtitleY, phase, t.subtitleStart + (subtitleRank.get(index) || 0) * t.subtitleInterval, t.entry, scale, subtitleColor); subtitleX += subtitleWidths[index] + subtitleLetterGap; }); context.restore();
+    subtitle.forEach((char, index) => { drawCityItem(context, char, subtitleX + subtitleWidths[index] / 2, subtitleY, phase, t.subtitleStart + (subtitleRank.get(index) || 0) * (t.entry + t.subtitleInterval), t.entry, scale, subtitleColor); subtitleX += subtitleWidths[index] + subtitleLetterGap; }); context.restore();
     if (phase >= t.footerStart && footer) {
       const reveal = smoother((phase - t.footerStart) / Math.max(.001, t.footerFade)); context.save(); context.globalAlpha = reveal; context.fillStyle = value("textColor", "#d5d5d5"); context.font = `600 ${footerSize}px ${fontMap[value("fontFamily", "noto")] || fontMap.noto}`; context.textAlign = "center"; context.textBaseline = "middle"; context.translate(centerX, subtitleY + subtitleSize / 2 + footerGap); fillCityText(context, footer, footerLetterGap); context.restore();
     }
@@ -664,8 +688,8 @@
     else {
       assignValues({
         cityHanLines: "只在\n香港", cityEnglishLines: "HONG\nKONG", citySubtitle: "亚洲国际都会", cityFooter: "discoverhongkong.cn",
-        fontWeight: 800, playbackSpeed: 1, cityLeadIn: 670, cityFirstHanInterval: 360, cityHanInterval: 180, cityEnglishInterval: 300,
-        cityEntryDuration: 320, citySectionGap: 150, citySubtitleDelay: 260, citySubtitleInterval: 150, cityFooterDelay: 500,
+        cityHanOrder: "row-ltr", cityCustomOrder: "1,2,3,4", cityHanDurations: "", fontWeight: 800, playbackSpeed: 1, cityLeadIn: 670, cityHanInterval: 40, cityEnglishInterval: 40,
+        cityEntryDuration: 320, citySectionGap: 150, citySubtitleDelay: 260, citySubtitleInterval: 40, cityFooterDelay: 500,
         cityFooterFade: 300, finalHold: 716, cityRhythm: "flash", cityHanSize: 250, cityEnglishSize: 180, citySubtitleSize: 80,
         cityFooterSize: 60, cityHanLetterGap: 8, cityHanVerticalGap: 40, cityEnglishLetterGap: 0, cityEnglishVerticalGap: 0,
         citySubtitleLetterGap: 3, cityFooterLetterGap: 0, cityBlockGap: 24, citySubtitleGap: 18, cityFooterGap: 150,
