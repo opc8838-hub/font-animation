@@ -274,6 +274,8 @@
         <div class="controls-grid">
           ${slider("汉字横向间距", "cityHanLetterGap", -80, 160, 1, 8, "pixels")}
           ${slider("汉字纵向间距", "cityHanVerticalGap", -100, 180, 1, 40, "pixels")}
+          <label class="check-control"><span>主文字每行等宽</span><input id="cityUniformLineWidth" type="checkbox" checked></label>
+          ${slider("统一行宽", "cityLineWidth", 280, 900, 1, 520, "pixels")}
           ${slider("英文横向间距", "cityEnglishLetterGap", -30, 120, 1, 0, "pixels")}
           ${slider("英文纵向间距", "cityEnglishVerticalGap", -100, 180, 1, 0, "pixels")}
           ${slider("副标题横向间距", "citySubtitleLetterGap", -30, 100, 1, 3, "pixels")}
@@ -282,8 +284,8 @@
           ${slider("副标题纵向距离", "citySubtitleGap", -20, 180, 1, 18, "pixels")}
           ${slider("署名纵向距离", "cityFooterGap", 40, 700, 1, 150, "pixels")}
         </div>
-        <label class="stacked-control">各行横向比例<input id="cityHanRowScaleX" type="text" value="100,100" placeholder="百分比，例如 100,92"></label>
-        <label class="stacked-control">各行纵向比例<input id="cityHanRowScaleY" type="text" value="100,110" placeholder="百分比，例如 100,110；第二行轻微拉高"></label>
+        <label class="stacked-control">各行横向比例 · 关闭等宽时使用<input id="cityHanRowScaleX" type="text" value="100,100" placeholder="百分比，例如 100,92"></label>
+        <label class="stacked-control">各行纵向比例<input id="cityHanRowScaleY" type="text" value="88,112" placeholder="百分比，例如 88,112；第一行扁、第二行高"></label>
       </section>
       <details class="sequence-advanced"><summary>高级细调</summary><div class="controls-grid">
         ${slider("汉字大小", "cityHanSize", 60, 340, 1, 250, "pixels")}
@@ -610,6 +612,24 @@
     const characters = graphemes(text), widths = characters.map((character) => context.measureText(character).width);
     return { characters, widths, total: widths.reduce((sum, width) => sum + width, 0) + Math.max(0, characters.length - 1) * letterGap };
   }
+  function cityInkBounds(context, text, letterGap = 0, glyphScale = 1) {
+    const characters = graphemes(text), previousAlign = context.textAlign; context.textAlign = "center";
+    const metrics = characters.map((character) => context.measureText(character)); context.textAlign = previousAlign;
+    const widths = metrics.map((item) => item.width), total = widths.reduce((sum, width) => sum + width * glyphScale, 0) + Math.max(0, characters.length - 1) * letterGap;
+    let cursor = -total / 2, left = Infinity, right = -Infinity;
+    metrics.forEach((item, index) => {
+      const center = cursor + item.width * glyphScale / 2, fallback = item.width / 2;
+      const inkLeft = Number.isFinite(item.actualBoundingBoxLeft) ? item.actualBoundingBoxLeft : fallback, inkRight = Number.isFinite(item.actualBoundingBoxRight) ? item.actualBoundingBoxRight : fallback;
+      left = Math.min(left, center - inkLeft * glyphScale); right = Math.max(right, center + inkRight * glyphScale); cursor += item.width * glyphScale + letterGap;
+    });
+    if (!characters.length) return { width: 0, center: 0, total: 0 };
+    return { width: Math.max(0, right - left), center: (left + right) / 2, total };
+  }
+  function cityFitGlyphScale(context, text, letterGap, targetWidth) {
+    let low = .2, high = 5;
+    for (let index = 0; index < 20; index += 1) { const middle = (low + high) / 2; if (cityInkBounds(context, text, letterGap, middle).width < targetWidth) low = middle; else high = middle; }
+    const scaleX = (low + high) / 2; return { scaleX, bounds: cityInkBounds(context, text, letterGap, scaleX) };
+  }
   function fillCityText(context, text, letterGap = 0) {
     const metrics = cityTextMetrics(context, text, letterGap); let x = -metrics.total / 2;
     metrics.characters.forEach((character, index) => { context.fillText(character, x + metrics.widths[index] / 2, 0); x += metrics.widths[index] + letterGap; });
@@ -653,6 +673,7 @@
     const hanLetterGap = number("cityHanLetterGap", 8) * scale, englishLetterGap = number("cityEnglishLetterGap", 0) * scale, subtitleLetterGap = number("citySubtitleLetterGap", 3) * scale, footerLetterGap = number("cityFooterLetterGap", 0) * scale;
     const hanColor = value("accentColor", "#1dff11"), englishColor = value("cityEnglishColor", "#1dff11"), subtitleColor = value("citySubtitleColor", "#1dff11");
     const rowScaleXs = csv("cityHanRowScaleX"), rowScaleYs = csv("cityHanRowScaleY"), hanVerticalGap = number("cityHanVerticalGap", 40) * scale;
+    const uniformLineWidth = checked("cityUniformLineWidth"), targetLineWidth = number("cityLineWidth", 520) * scale;
     const hanRows = hanLines.map((line, row) => ({ line, scaleX: Math.max(.2, (rowScaleXs[row] ?? 100) / 100), scaleY: Math.max(.2, (rowScaleYs[row] ?? 100) / 100) }));
     hanRows.forEach((row) => { row.height = Math.max(hanSize * .35, hanSize * .82 * row.scaleY); });
     const hanHeight = hanRows.reduce((sum, row) => sum + row.height, 0) + Math.max(0, hanRows.length - 1) * hanVerticalGap;
@@ -661,14 +682,15 @@
     context.save();
     setFont(context, hanSize); let characterIndex = 0, rowY = top;
     hanRows.forEach((row) => {
-      const metrics = cityTextMetrics(context, row.line, hanLetterGap), scaledWidths = metrics.widths.map((item) => item * row.scaleX), total = scaledWidths.reduce((sum, item) => sum + item, 0) + Math.max(0, scaledWidths.length - 1) * hanLetterGap; let x = centerX - total / 2;
+      const metrics = cityTextMetrics(context, row.line, hanLetterGap), fitted = uniformLineWidth ? cityFitGlyphScale(context, row.line, hanLetterGap, targetLineWidth) : { scaleX: row.scaleX, bounds: cityInkBounds(context, row.line, hanLetterGap, row.scaleX) };
+      const rowScaleX = fitted.scaleX, scaledWidths = metrics.widths.map((item) => item * rowScaleX), total = scaledWidths.reduce((sum, item) => sum + item, 0) + Math.max(0, scaledWidths.length - 1) * hanLetterGap; let x = centerX - total / 2 - fitted.bounds.center;
       metrics.characters.forEach((char, index) => { const key = `H${characterIndex + 1}`, itemX = x + scaledWidths[index] / 2, itemY = rowY + row.height / 2;
-        if (t.cityMode === "pulse") drawCityPulseItem(context, char, itemX, itemY, phase, t.leadIn, pulses.get(key), hanColor, 0, row.scaleX, row.scaleY);
-        else { const itemTiming = t.hanSchedule.byIndex.get(characterIndex) || { start: t.leadIn, duration: t.entry }; drawCityItem(context, char, itemX, itemY, phase, itemTiming.start, itemTiming.duration, scale, hanColor, 0, participates(key), row.scaleX, row.scaleY); }
+        if (t.cityMode === "pulse") drawCityPulseItem(context, char, itemX, itemY, phase, t.leadIn, pulses.get(key), hanColor, 0, rowScaleX, row.scaleY);
+        else { const itemTiming = t.hanSchedule.byIndex.get(characterIndex) || { start: t.leadIn, duration: t.entry }; drawCityItem(context, char, itemX, itemY, phase, itemTiming.start, itemTiming.duration, scale, hanColor, 0, participates(key), rowScaleX, row.scaleY); }
         x += scaledWidths[index] + hanLetterGap; characterIndex += 1; }); rowY += row.height + hanVerticalGap;
     });
     const englishTop = top + hanHeight + blockGap; setFont(context, englishSize);
-    englishLines.forEach((line, index) => { const key = `E${index + 1}`; if (t.cityMode === "pulse") drawCityPulseItem(context, line.toUpperCase(), centerX, englishTop + englishLineHeight * (index + .5), phase, t.leadIn, pulses.get(key), englishColor, englishLetterGap); else drawCityItem(context, line.toUpperCase(), centerX, englishTop + englishLineHeight * (index + .5), phase, t.englishStart + index * (t.entry + t.englishInterval), t.entry, scale, englishColor, englishLetterGap, participates(key)); });
+    englishLines.forEach((line, index) => { const key = `E${index + 1}`, text = line.toUpperCase(), ink = cityInkBounds(context, text, englishLetterGap), lineScaleX = uniformLineWidth ? targetLineWidth / Math.max(1, ink.width) : 1, lineX = centerX - ink.center * lineScaleX; if (t.cityMode === "pulse") drawCityPulseItem(context, text, lineX, englishTop + englishLineHeight * (index + .5), phase, t.leadIn, pulses.get(key), englishColor, englishLetterGap, lineScaleX); else drawCityItem(context, text, lineX, englishTop + englishLineHeight * (index + .5), phase, t.englishStart + index * (t.entry + t.englishInterval), t.entry, scale, englishColor, englishLetterGap, participates(key), lineScaleX); });
     const subtitleY = englishTop + englishLines.length * englishLineHeight + subtitleGap + subtitleSize / 2; setFont(context, subtitleSize);
     const subtitleWidths = subtitle.map((char) => context.measureText(char).width), subtitleTotal = subtitleWidths.reduce((sum, item) => sum + item, 0) + Math.max(0, subtitle.length - 1) * subtitleLetterGap, subtitleGroups = citySubtitleGroups(subtitle.length), subtitleRank = new Map(subtitleGroups.flatMap((group, rank) => group.map((index) => [index, rank]))); let subtitleX = centerX - subtitleTotal / 2;
     subtitle.forEach((char, index) => { const key = `S${index + 1}`, x = subtitleX + subtitleWidths[index] / 2; if (t.cityMode === "pulse") drawCityPulseItem(context, char, x, subtitleY, phase, t.leadIn, pulses.get(key), subtitleColor); else drawCityItem(context, char, x, subtitleY, phase, t.subtitleStart + (subtitleRank.get(index) || 0) * (t.entry + t.subtitleInterval), t.entry, scale, subtitleColor, 0, participates(key)); subtitleX += subtitleWidths[index] + subtitleLetterGap; }); context.restore();
@@ -743,7 +765,7 @@
   $("#iconUpload")?.addEventListener("change", (event) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { const image = new Image(); image.onload = () => { uploadedIcon = image; $("#iconPreset").value = "upload"; }; image.src = reader.result; }; reader.readAsDataURL(file); });
   $("#finalUpload")?.addEventListener("change", (event) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { const image = new Image(); image.onload = () => { uploadedFinal = image; }; image.src = reader.result; }; reader.readAsDataURL(file); });
 
-  function assignValues(values) { Object.entries(values).forEach(([id, next]) => { const input = $(`#${id}`); if (input) input.value = String(next); }); }
+  function assignValues(values) { Object.entries(values).forEach(([id, next]) => { const input = $(`#${id}`); if (!input) return; if (input.type === "checkbox") input.checked = Boolean(next); else input.value = String(next); }); }
   function setReference() {
     if (mode === "gather") { $("#gatherWords").value = "All|new|interface|design"; $("#finalTitle").value = "iOS"; }
     else if (mode === "portal") { $("#portalSequence").value = "13\n[icon]\nIntroducing\niPhone\n13\nPro"; $("#portalPhrase").value = "Our fastest model yet."; $("#focusIndex").value = "1"; }
@@ -754,7 +776,7 @@
         cityTimelineMode: "build", cityHanOrder: "row-ltr", cityCustomOrder: "1,2,3,4", cityFlashSequence: "全部", cityHanDurations: "", cityFlashGaps: "", fontWeight: 800, playbackSpeed: 1, cityLeadIn: 670, cityPulseDelay: 120, cityHanInterval: 40, cityEnglishInterval: 40,
         cityEntryDuration: 320, citySectionGap: 150, citySubtitleDelay: 260, citySubtitleInterval: 40, cityFooterDelay: 500,
         cityFooterFade: 300, finalHold: 716, cityRhythm: "flash", cityHanSize: 250, cityEnglishSize: 180, citySubtitleSize: 80,
-        cityFooterSize: 60, cityHanLetterGap: 8, cityHanVerticalGap: 40, cityHanRowScaleX: "100,100", cityHanRowScaleY: "100,110", cityEnglishLetterGap: 0, cityEnglishVerticalGap: 0,
+        cityFooterSize: 60, cityHanLetterGap: 8, cityHanVerticalGap: 40, cityUniformLineWidth: true, cityLineWidth: 520, cityHanRowScaleX: "100,100", cityHanRowScaleY: "88,112", cityEnglishLetterGap: 0, cityEnglishVerticalGap: 0,
         citySubtitleLetterGap: 3, cityFooterLetterGap: 0, cityBlockGap: 24, citySubtitleGap: 18, cityFooterGap: 150,
         cityEntryDistance: 0, cityEntryScale: 100, cityFlashCount: 4, cityFlashStrength: 88, textX: 50, textY: 44,
         backgroundColor: "#050505", accentColor: "#1dff11", cityEnglishColor: "#1dff11", citySubtitleColor: "#1dff11",
@@ -770,7 +792,7 @@
       cityTimelineMode: "pulse", cityFlashSequence: "H3,S3+S4,E1,E2", cityHanDurations: "520,240,300,460", cityFlashGaps: "360,100,200,0",
       fontWeight: 800, playbackSpeed: 1, cityLeadIn: 200, cityPulseDelay: 120, cityHanInterval: 40, cityEntryDuration: 320, cityFlashCount: 4,
       cityFooterFade: 100, finalHold: 1066, cityRhythm: "flash", cityHanSize: 250, cityEnglishSize: 180, citySubtitleSize: 80, cityFooterSize: 60,
-      cityHanLetterGap: 8, cityHanVerticalGap: 40, cityHanRowScaleX: "100,100", cityHanRowScaleY: "100,110", cityEnglishLetterGap: 0, cityEnglishVerticalGap: 0,
+      cityHanLetterGap: 8, cityHanVerticalGap: 40, cityUniformLineWidth: true, cityLineWidth: 520, cityHanRowScaleX: "100,100", cityHanRowScaleY: "88,112", cityEnglishLetterGap: 0, cityEnglishVerticalGap: 0,
       citySubtitleLetterGap: 3, cityFooterLetterGap: 0, cityBlockGap: 24, citySubtitleGap: 18, cityFooterGap: 150,
       cityFlashStrength: 92, textX: 50, textY: 44, backgroundColor: "#050505", accentColor: "#c176ff", cityEnglishColor: "#c176ff", citySubtitleColor: "#c176ff", cityFlashColor: "#281536", textColor: "#f2f2f2"
     });
@@ -780,7 +802,7 @@
     if (mode === "gather") { $("#gatherWords").value = "全新|界面|灵感|设计"; $("#finalTitle").value = "现在开始"; }
     else if (mode === "portal") { $("#portalSequence").value = "你好\n[icon]\n重新认识\n未来\n现在\n出发"; $("#portalPhrase").value = "最快的灵感，就在此刻。"; $("#focusIndex").value = "1"; }
     else if (mode === "rapid") { $("#headlineLines").value = "流畅。\n醒目。\n自由。"; $("#bridgeText").value = "这就是灵感。"; $("#rapidItems").value = "快速切换\n丝滑滚动\n自由节奏\n图标收束\n马上开始"; }
-    else assignValues({ cityHanLines: "灵感\n发生", cityEnglishLines: "CREATE\nMORE", citySubtitle: "每一次相遇", cityFooter: "hello-motion.cn", cityTimelineMode: "build", cityFlashSequence: "全部", cityHanDurations: "", cityFlashGaps: "", cityHanRowScaleX: "100,100", cityHanRowScaleY: "100,108" });
+    else assignValues({ cityHanLines: "灵感\n发生", cityEnglishLines: "CREATE\nMORE", citySubtitle: "每一次相遇", cityFooter: "hello-motion.cn", cityTimelineMode: "build", cityFlashSequence: "全部", cityHanDurations: "", cityFlashGaps: "", cityUniformLineWidth: true, cityLineWidth: 520, cityHanRowScaleX: "100,100", cityHanRowScaleY: "88,108" });
     $("#fontFamily").value = "noto"; updateOutputs(); restart();
   }
   $("#referencePreset").addEventListener("click", setReference); $("#referenceAltPreset")?.addEventListener("click", setAltReference); $("#chinesePreset").addEventListener("click", setChinese);

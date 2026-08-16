@@ -45,7 +45,8 @@ A fixed-top, high-weight Chinese/English word tower builds one item at a time wi
 - Alignment: every line is independently measured and horizontally centered on a shared vertical axis.
 - Anchor behavior: the top of the tower remains fixed while new rows extend downward.
 - Typography: geometric sans / Chinese grotesk at Extra Bold to Black weight, tight line height, minimal tracking, square proportions.
-- Font reconstruction: preserve the original editor's Noto Sans SC face at weight 800. Only the second Chinese row receives a restrained 110% vertical transform, while the original 40px row gap is retained; `香港` is slightly taller without making the whole lockup heavier or cramped.
+- Font reconstruction: preserve the original editor's Noto Sans SC face at weight 800. The first Chinese row uses an 88% vertical transform and the second uses 112%, while the original 40px row gap is retained; the first row is visibly flatter and `香港` visibly taller without changing type weight.
+- Width rule: all primary Chinese and English lines normalize to one editable 520px logical width. Added primary lines inherit the same width automatically, so every left and right edge remains aligned despite different scripts or character counts.
 - Measured final geometry at 540×1166: five green line widths are 247–262px; Chinese row starts are about 123px apart; English row starts are about 74px apart; the final green block spans y=275–745 and is centered near x=270.
 - Responsive behavior: a portrait-oriented logical composition scales uniformly into desktop, mobile, and export dimensions.
 
@@ -73,7 +74,7 @@ A fixed-top, high-weight Chinese/English word tower builds one item at a time wi
 
 ### Advanced
 
-- Five Chinese build-order modes (row left-to-right, row right-to-left, column top-to-bottom, reverse, and custom); a custom 1-based position sequence; optional comma-separated per-item durations and waits; arbitrary per-row horizontal and vertical percentages; Chinese/English/subtitle/footer sizes; independent horizontal spacing for Chinese, English, subtitle, and signature; independent vertical spacing for Chinese rows, English rows, Chinese-to-English, subtitle, and signature; entry distance, entry scale, local-flash strength, and stage X/Y position.
+- Five Chinese build-order modes (row left-to-right, row right-to-left, column top-to-bottom, reverse, and custom); a custom 1-based position sequence; optional comma-separated per-item durations and waits; automatic equal-width primary lines with editable target width; arbitrary per-row horizontal and vertical percentages when equal-width mode is disabled; Chinese/English/subtitle/footer sizes; independent horizontal spacing for Chinese, English, subtitle, and signature; independent vertical spacing for Chinese rows, English rows, Chinese-to-English, subtitle, and signature; entry distance, entry scale, local-flash strength, and stage X/Y position.
 
 ## Uncertainties to verify
 
@@ -96,3 +97,4 @@ A fixed-top, high-weight Chinese/English word tower builds one item at a time wi
 - [x] Alternate-reference keyframes at 0.40s (`H3`), 1.23s (`S3+S4`), and 1.60s (`E1`)
 - [x] Single-target `H2` test disables every other flash and recalculates the loop to 1.91s
 - [x] Alternate preset loop equals 3.57s reference duration
+- [x] Visible-ink alignment check: main-line widths 244/243/243/243px; row heights 104/120px for the first and second Chinese rows
