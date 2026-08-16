@@ -79,13 +79,17 @@
         <div class="motion-map"><span>${config.map[0]}</span><i>→</i><span>${config.map[1]}</span><i>→</i><span>${config.map[2]}</span></div>
         <div class="controls-grid">
           ${slider("整体速度", "playbackSpeed", .25, 3, .05, 1, "speed")}
-          ${slider("开场等待", "gatherLeadIn", 0, 1500, 10, 140, "seconds")}
+          ${slider("开始上升时间", "gatherLeadIn", 0, 1500, 10, 140, "seconds")}
           ${slider("词组接力间隔", "groupInterval", 40, 1600, 10, 200, "seconds")}
           ${slider("单组上升时间", "groupRise", 80, 1800, 10, 420, "seconds")}
+          ${slider("第一组起始距离", "entryDistance", 0, 520, 1, 48, "pixels")}
+          ${slider("每组递增距离", "entryStep", 0, 240, 1, 84, "pixels")}
           ${slider("组内逐字间隔", "characterInterval", 0, 240, 2, 24, "seconds")}
           ${slider("单字出现时间", "characterReveal", 30, 800, 10, 130, "seconds")}
           ${slider("汇合后等待", "gatherZoomDelay", 0, 1200, 10, 40, "seconds")}
           ${slider("整体放大时间", "gatherZoomDuration", 40, 1600, 10, 200, "seconds")}
+          ${slider("上升阶段大小", "gatherStartScale", 20, 100, 1, 46, "percent")}
+          ${slider("放大完成大小", "gatherEndScale", 60, 180, 1, 116, "percent")}
           <label>放大节奏<select id="gatherZoomCurve"><option value="natural" selected>自然柔和</option><option value="fast">快速收束</option><option value="spring">轻弹放大</option><option value="linear">匀速</option></select></label>
           ${slider("标题切换", "titleTransition", 80, 1800, 10, 170, "seconds")}
           ${slider("彩幕展开", "colorReveal", 80, 2200, 10, 350, "seconds")}
@@ -107,9 +111,6 @@
         ${slider("词间距", "wordGap", -30, 120, 1, 18, "pixels")}
         ${slider("水平位置", "textX", 5, 95, 1, 50, "percent")}
         ${slider("垂直位置", "textY", 5, 95, 1, 50, "percent")}
-        ${slider("进入距离", "entryDistance", 0, 420, 1, 112, "pixels")}
-        ${slider("开场文字大小", "gatherStartScale", 20, 100, 1, 58, "percent")}
-        ${slider("合并文字大小", "gatherEndScale", 60, 180, 1, 100, "percent")}
         ${slider("位移柔和度", "gatherSoftness", 0, 100, 1, 82, "percent")}
       </div></details>
       ${commonColors}${commonExport}`;
@@ -328,8 +329,8 @@
     if (phase < t.build) {
       const words = splitWords(), size = number("fontSize", 58) * scale, gap = number("wordGap", 18) * scale;
       const rightToLeft = value("revealOrder", "ltr") === "rtl", order = rightToLeft ? [...words.keys()].reverse() : [...words.keys()];
-      const verticalSign = value("verticalDirection", "up") === "down" ? -1 : 1, distance = number("entryDistance", 112) * scale, softness = number("gatherSoftness", 82) / 100;
-      const startScale = number("gatherStartScale", 58) / 100, endScale = number("gatherEndScale", 100) / 100;
+      const verticalSign = value("verticalDirection", "up") === "down" ? -1 : 1, baseDistance = number("entryDistance", 48) * scale, distanceStep = number("entryStep", 84) * scale, softness = number("gatherSoftness", 82) / 100;
+      const startScale = number("gatherStartScale", 46) / 100, endScale = number("gatherEndScale", 116) / 100;
       const simultaneous = value("gatherStyle", "reference") === "simultaneous";
       const scaleProgress = simultaneous
         ? smooth((phase - t.leadIn) / Math.max(.001, t.build - t.leadIn - t.zoom * .35))
@@ -355,6 +356,7 @@
       words.forEach((word, index) => {
         const groupProgress = presence[index]; if (groupProgress <= 0) return;
         const chars = graphemes(word), rank = rankByIndex.get(index), groupStart = t.leadIn + rank * t.interval;
+        const wordDistance = baseDistance + rank * distanceStep, unscaledDistance = wordDistance / Math.max(.001, groupScale);
         const characterOrder = rightToLeft ? [...chars.keys()].reverse() : [...chars.keys()], characterRank = new Map(characterOrder.map((characterIndex, orderIndex) => [characterIndex, orderIndex]));
         const characterWidths = chars.map((character) => context.measureText(character).width), wordWidth = characterWidths.reduce((sum, item) => sum + item, 0), wordLeft = positions[index] - wordWidth / 2;
         let characterX = wordLeft;
@@ -362,7 +364,7 @@
           const revealStart = groupStart + characterRank.get(characterIndex) * t.characterInterval, reveal = smooth((phase - revealStart) / Math.max(.001, t.characterReveal));
           if (reveal > 0) {
             context.save(); context.globalAlpha = reveal;
-            context.translate(0, verticalSign * distance * (1 - groupProgress) + verticalSign * distance * .16 * (1 - reveal));
+            context.translate(0, verticalSign * unscaledDistance * (1 - groupProgress) + verticalSign * unscaledDistance * .16 * (1 - reveal));
             const characterScale = lerp(.88, 1, reveal); context.scale(characterScale, characterScale); context.fillText(character, characterX, 0); context.restore();
           }
           characterX += characterWidths[characterIndex];
@@ -372,7 +374,7 @@
       return;
     }
     if (phase < t.build + t.transition) {
-      const p = smooth((phase - t.build) / Math.max(.001, t.transition)), endScale = number("gatherEndScale", 100) / 100; drawGatherPhrase(context, width, height, scale, 1 - p, endScale * (1 + p * .08)); drawGatherTitle(context, width, height, scale, smooth((p - .36) / .64), lerp(.72, 1, backOut((p - .36) / .64))); return;
+      const p = smooth((phase - t.build) / Math.max(.001, t.transition)), endScale = number("gatherEndScale", 116) / 100; drawGatherPhrase(context, width, height, scale, 1 - p, endScale * (1 + p * .08)); drawGatherTitle(context, width, height, scale, smooth((p - .36) / .64), lerp(.72, 1, backOut((p - .36) / .64))); return;
     }
     const colorStart = t.build + t.transition;
     if (phase < colorStart + t.color) {

@@ -36,7 +36,7 @@ Four word groups assemble as a relay: each group reveals character-by-character,
 ## Spatial rules
 
 - Composition center: actual right-hand stage center, not browser-window center.
-- Alignment: the currently visible prefix/suffix is measured as one centered cluster; adding a new group smoothly redistributes the whole cluster toward the final centered baseline.
+- Alignment: the currently visible prefix/suffix is measured as one centered cluster; adding a new group smoothly redistributes the whole cluster toward the final centered baseline. Later groups begin progressively farther from that baseline (`All` nearest, `design` farthest in the reference order).
 - Scale behavior: reference mode keeps the assembly small while groups rise, then enlarges the whole centered phrase; an alternate retained mode allows enlargement to run simultaneously with the rise.
 - Responsive/aspect-ratio behavior: normalized 1280×720 composition is centered and uniformly scaled inside any output size.
 - Entry/exit boundaries: starts inside the stage; final color reveal expands beyond all edges.
@@ -63,11 +63,11 @@ Four word groups assemble as a relay: each group reveals character-by-character,
 
 ### Common
 
-- Word groups, final title, font, weight, overall speed, motion version, horizontal reveal order, vertical entry direction, lead-in, group interval, group rise duration, character interval, character reveal duration, post-rise delay, zoom duration, zoom easing, title-cut duration, color-reveal duration, hold, icon choice and icon size.
+- Word groups, final title, font, weight, overall speed, motion version, horizontal reveal order, vertical entry direction, rise start time, first-group start distance, per-group distance increment, group interval, group rise duration, character interval, character reveal duration, rise-stage scale, completed zoom scale, post-rise delay, zoom duration, zoom easing, title-cut duration, color-reveal duration, hold, icon choice and icon size.
 
 ### Advanced
 
-- Gather/final font sizes, word gap, stage position, entry distance, start/end scale, and motion softness.
+- Gather/final font sizes, word gap, stage position, and motion softness.
 
 ## Uncertainties to verify
 
@@ -92,3 +92,4 @@ Four word groups assemble as a relay: each group reveals character-by-character,
 - 2026-08-16: normal-speed and slow-motion clips must be paired by measured duration rather than filename suffix; for this pair, take 2 is the normal-speed source.
 - 2026-08-16: first implementation incorrectly modeled the scene as independent scattered words. User feedback clarified the essential behavior: sequential group relay, internal character reveal, vertical rise/fall, progressive re-centering, and continuous enlargement.
 - 2026-08-16: normal and slow frames show that the reference separates motion into two stages: groups rise/re-center first, then the assembled phrase enlarges. The previous simultaneous-rise-and-enlarge behavior is retained as an explicit alternate style instead of being discarded.
+- 2026-08-16: later feedback identified insufficient visible travel. Re-checking both speeds showed progressively lower starts for later groups. The renderer now uses a first-group distance plus a per-group increment, and vertical travel is decoupled from text scale so shrinking the text no longer also shrinks the path.
