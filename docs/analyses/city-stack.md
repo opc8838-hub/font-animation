@@ -98,5 +98,6 @@ A fixed-top Chinese/English word tower builds one item at a time with a brief ne
 - [x] Single-target `H2` test disables every other flash and recalculates the loop to 1.91s
 - [x] Alternate preset loop equals 3.57s reference duration
 - [x] Official OFL Noto Sans HK variable font loads locally at weights 500/500/700
+- [x] Uniform width mode performs a final raster-pixel fit so every visible line shares the same left and right edges
 - [x] Five-line visible-ink normalization includes the subtitle, not only the first four lines
 - [x] Source-frame geometry recorded as widths 254/259/248/248/247px and heights 108/149/62/61/35px

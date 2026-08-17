@@ -631,10 +631,33 @@
     if (!characters.length) return { width: 0, center: 0, total: 0 };
     return { width: Math.max(0, right - left), center: (left + right) / 2, total };
   }
-  function cityFitGlyphScale(context, text, letterGap, targetWidth) {
-    let low = .2, high = 5;
-    for (let index = 0; index < 20; index += 1) { const middle = (low + high) / 2; if (cityInkBounds(context, text, letterGap, middle).width < targetWidth) low = middle; else high = middle; }
-    const scaleX = (low + high) / 2; return { scaleX, bounds: cityInkBounds(context, text, letterGap, scaleX) };
+  let cityRasterCanvas = null;
+  function cityRasterInkBounds(context, text, letterGap, glyphScale, mode = "split", scaleY = 1, originX = 0) {
+    if (!cityRasterCanvas) { cityRasterCanvas = document.createElement("canvas"); cityRasterCanvas.width = 2048; cityRasterCanvas.height = 512; }
+    const raster = cityRasterCanvas.getContext("2d", { willReadFrequently: true }), centerX = cityRasterCanvas.width / 2, centerY = cityRasterCanvas.height / 2;
+    raster.setTransform(1, 0, 0, 1, 0, 0); raster.clearRect(0, 0, cityRasterCanvas.width, cityRasterCanvas.height); raster.font = context.font; raster.textAlign = "center"; raster.textBaseline = "middle"; raster.fillStyle = "#fff";
+    raster.save(); raster.translate(centerX + originX, centerY);
+    if (mode === "group") { raster.scale(glyphScale, scaleY); fillCityText(raster, text, letterGap); }
+    else {
+      const metrics = cityTextMetrics(raster, text, letterGap), scaledWidths = metrics.widths.map((width) => width * glyphScale), total = scaledWidths.reduce((sum, width) => sum + width, 0) + Math.max(0, scaledWidths.length - 1) * letterGap;
+      let cursor = -total / 2;
+      metrics.characters.forEach((character, index) => { raster.save(); raster.translate(cursor + scaledWidths[index] / 2, 0); raster.scale(glyphScale, scaleY); raster.fillText(character, 0, 0); raster.restore(); cursor += scaledWidths[index] + letterGap; });
+    }
+    raster.restore();
+    const pixels = raster.getImageData(0, 0, cityRasterCanvas.width, cityRasterCanvas.height).data; let left = cityRasterCanvas.width, right = -1;
+    for (let y = 0; y < cityRasterCanvas.height; y += 1) for (let x = 0; x < cityRasterCanvas.width; x += 1) if (pixels[(y * cityRasterCanvas.width + x) * 4 + 3] >= 148) { left = Math.min(left, x); right = Math.max(right, x); }
+    if (right < left) return { width: 0, center: 0, left: 0, right: 0 };
+    return { width: right - left + 1, center: (left + right) / 2 - centerX, left: left - centerX, right: right - centerX };
+  }
+  const cityUniformLayerCache = new Map();
+  function drawCityUniformLine(context, text, letterGap, targetWidth, centerX, centerY, mode, scaleY, painter) {
+    const fontReady = document.fonts ? document.fonts.check(context.font) : true, key = [context.font, text, letterGap.toFixed(3), mode, scaleY.toFixed(3), fontReady].join("|"); let layer = cityUniformLayerCache.get(key);
+    if (!layer) {
+      const bounds = cityRasterInkBounds(context, text, letterGap, 1, mode, scaleY), padding = 3, fontSize = Number((context.font.match(/([\d.]+)px/) || [0, 200])[1]), canvas = document.createElement("canvas"); canvas.width = Math.max(8, Math.ceil(bounds.width) + padding * 2); canvas.height = Math.max(64, Math.ceil(fontSize * Math.max(1, scaleY) * 1.7) + 24);
+      layer = { bounds, padding, canvas, context: canvas.getContext("2d"), originX: padding - bounds.left, originY: canvas.height / 2 }; cityUniformLayerCache.set(key, layer);
+    }
+    const layerContext = layer.context; layerContext.setTransform(1, 0, 0, 1, 0, 0); layerContext.clearRect(0, 0, layer.canvas.width, layer.canvas.height); layerContext.font = context.font; layerContext.textAlign = "center"; layerContext.textBaseline = "middle"; painter(layerContext, layer.originX, layer.originY);
+    const destinationWidth = Math.max(1, Math.round(targetWidth)), destinationX = Math.round(centerX - destinationWidth / 2), destinationY = centerY - layer.originY, sourceLeft = Math.min(layer.canvas.width - 1, layer.padding + 1), sourceRight = Math.max(0, Math.min(layer.canvas.width - 1, layer.padding + layer.bounds.width - 2)); context.save(); context.imageSmoothingEnabled = false; context.beginPath(); context.rect(destinationX, destinationY, destinationWidth, layer.canvas.height); context.clip(); context.drawImage(layer.canvas, layer.padding, 0, layer.bounds.width, layer.canvas.height, destinationX, destinationY, destinationWidth, layer.canvas.height); context.drawImage(layer.canvas, sourceLeft, 0, 1, layer.canvas.height, destinationX, destinationY, 1, layer.canvas.height); context.drawImage(layer.canvas, sourceRight, 0, 1, layer.canvas.height, destinationX + destinationWidth - 1, destinationY, 1, layer.canvas.height); context.restore();
   }
   function fillCityText(context, text, letterGap = 0) {
     const metrics = cityTextMetrics(context, text, letterGap); let x = -metrics.total / 2;
@@ -688,19 +711,24 @@
     context.save();
     setCityFont(context, hanSize, "cityHanWeight", 500); let characterIndex = 0, rowY = top;
     hanRows.forEach((row) => {
-      const metrics = cityTextMetrics(context, row.line, hanLetterGap), fitted = uniformLineWidth ? cityFitGlyphScale(context, row.line, hanLetterGap, targetLineWidth) : { scaleX: row.scaleX, bounds: cityInkBounds(context, row.line, hanLetterGap, row.scaleX) };
-      const rowScaleX = fitted.scaleX, scaledWidths = metrics.widths.map((item) => item * rowScaleX), total = scaledWidths.reduce((sum, item) => sum + item, 0) + Math.max(0, scaledWidths.length - 1) * hanLetterGap; let x = centerX - total / 2 - fitted.bounds.center;
-      metrics.characters.forEach((char, index) => { const key = `H${characterIndex + 1}`, itemX = x + scaledWidths[index] / 2, itemY = rowY + row.height / 2;
-        if (t.cityMode === "pulse") drawCityPulseItem(context, char, itemX, itemY, phase, t.leadIn, pulses.get(key), hanColor, 0, rowScaleX, row.scaleY);
-        else { const itemTiming = t.hanSchedule.byIndex.get(characterIndex) || { start: t.leadIn, duration: t.entry }; drawCityItem(context, char, itemX, itemY, phase, itemTiming.start, itemTiming.duration, scale, hanColor, 0, participates(key), rowScaleX, row.scaleY); }
-        x += scaledWidths[index] + hanLetterGap; characterIndex += 1; }); rowY += row.height + hanVerticalGap;
+      const metrics = cityTextMetrics(context, row.line, hanLetterGap), itemY = rowY + row.height / 2;
+      const paintHanRow = (paintContext, originX, originY, rowScaleX) => { const scaledWidths = metrics.widths.map((item) => item * rowScaleX), total = scaledWidths.reduce((sum, item) => sum + item, 0) + Math.max(0, scaledWidths.length - 1) * hanLetterGap; let x = originX - total / 2;
+        metrics.characters.forEach((char, index) => { const key = `H${characterIndex + 1}`, itemX = x + scaledWidths[index] / 2;
+          if (t.cityMode === "pulse") drawCityPulseItem(paintContext, char, itemX, originY, phase, t.leadIn, pulses.get(key), hanColor, 0, rowScaleX, row.scaleY);
+          else { const itemTiming = t.hanSchedule.byIndex.get(characterIndex) || { start: t.leadIn, duration: t.entry }; drawCityItem(paintContext, char, itemX, originY, phase, itemTiming.start, itemTiming.duration, scale, hanColor, 0, participates(key), rowScaleX, row.scaleY); }
+          x += scaledWidths[index] + hanLetterGap; characterIndex += 1; }); };
+      if (uniformLineWidth) drawCityUniformLine(context, row.line, hanLetterGap, targetLineWidth, centerX, itemY, "split", row.scaleY, (paintContext, originX, originY) => paintHanRow(paintContext, originX, originY, 1));
+      else { const bounds = cityInkBounds(context, row.line, hanLetterGap, row.scaleX); paintHanRow(context, centerX - bounds.center, itemY, row.scaleX); }
+      rowY += row.height + hanVerticalGap;
     });
     const englishTop = top + hanHeight + blockGap; setCityFont(context, englishSize, "cityEnglishWeight", 500);
-    englishLines.forEach((line, index) => { const key = `E${index + 1}`, text = line.toUpperCase(), ink = cityInkBounds(context, text, englishLetterGap), lineScaleX = uniformLineWidth ? targetLineWidth / Math.max(1, ink.width) : 1, lineX = centerX - ink.center * lineScaleX; if (t.cityMode === "pulse") drawCityPulseItem(context, text, lineX, englishTop + englishLineHeight * (index + .5), phase, t.leadIn, pulses.get(key), englishColor, englishLetterGap, lineScaleX); else drawCityItem(context, text, lineX, englishTop + englishLineHeight * (index + .5), phase, t.englishStart + index * (t.entry + t.englishInterval), t.entry, scale, englishColor, englishLetterGap, participates(key), lineScaleX); });
+    englishLines.forEach((line, index) => { const key = `E${index + 1}`, text = line.toUpperCase(), lineY = englishTop + englishLineHeight * (index + .5), paintEnglish = (paintContext, x, y) => { if (t.cityMode === "pulse") drawCityPulseItem(paintContext, text, x, y, phase, t.leadIn, pulses.get(key), englishColor, englishLetterGap); else drawCityItem(paintContext, text, x, y, phase, t.englishStart + index * (t.entry + t.englishInterval), t.entry, scale, englishColor, englishLetterGap, participates(key)); };
+      if (uniformLineWidth) drawCityUniformLine(context, text, englishLetterGap, targetLineWidth, centerX, lineY, "group", 1, paintEnglish); else { const ink = cityInkBounds(context, text, englishLetterGap); paintEnglish(context, centerX - ink.center, lineY); }
+    });
     const subtitleY = englishTop + englishLines.length * englishLineHeight + subtitleGap + subtitleSize / 2; setCityFont(context, subtitleSize, "citySubtitleWeight", 700);
-    const subtitleText = subtitle.join(""), subtitleMetrics = cityTextMetrics(context, subtitleText, subtitleLetterGap), subtitleFitted = uniformLineWidth ? cityFitGlyphScale(context, subtitleText, subtitleLetterGap, targetLineWidth) : { scaleX: 1, bounds: cityInkBounds(context, subtitleText, subtitleLetterGap) };
-    const subtitleScaleX = subtitleFitted.scaleX, subtitleWidths = subtitleMetrics.widths.map((item) => item * subtitleScaleX), subtitleTotal = subtitleWidths.reduce((sum, item) => sum + item, 0) + Math.max(0, subtitle.length - 1) * subtitleLetterGap, subtitleGroups = citySubtitleGroups(subtitle.length), subtitleRank = new Map(subtitleGroups.flatMap((group, rank) => group.map((index) => [index, rank]))); let subtitleX = centerX - subtitleTotal / 2 - subtitleFitted.bounds.center;
-    subtitle.forEach((char, index) => { const key = `S${index + 1}`, x = subtitleX + subtitleWidths[index] / 2; if (t.cityMode === "pulse") drawCityPulseItem(context, char, x, subtitleY, phase, t.leadIn, pulses.get(key), subtitleColor, 0, subtitleScaleX); else drawCityItem(context, char, x, subtitleY, phase, t.subtitleStart + (subtitleRank.get(index) || 0) * (t.entry + t.subtitleInterval), t.entry, scale, subtitleColor, 0, participates(key), subtitleScaleX); subtitleX += subtitleWidths[index] + subtitleLetterGap; }); context.restore();
+    const subtitleText = subtitle.join(""), subtitleMetrics = cityTextMetrics(context, subtitleText, subtitleLetterGap), subtitleGroups = citySubtitleGroups(subtitle.length), subtitleRank = new Map(subtitleGroups.flatMap((group, rank) => group.map((index) => [index, rank])));
+    const paintSubtitle = (paintContext, originX, originY) => { let subtitleX = originX - subtitleMetrics.total / 2; subtitle.forEach((char, index) => { const key = `S${index + 1}`, x = subtitleX + subtitleMetrics.widths[index] / 2; if (t.cityMode === "pulse") drawCityPulseItem(paintContext, char, x, originY, phase, t.leadIn, pulses.get(key), subtitleColor); else drawCityItem(paintContext, char, x, originY, phase, t.subtitleStart + (subtitleRank.get(index) || 0) * (t.entry + t.subtitleInterval), t.entry, scale, subtitleColor, 0, participates(key)); subtitleX += subtitleMetrics.widths[index] + subtitleLetterGap; }); };
+    if (uniformLineWidth) drawCityUniformLine(context, subtitleText, subtitleLetterGap, targetLineWidth, centerX, subtitleY, "split", 1, paintSubtitle); else { const bounds = cityInkBounds(context, subtitleText, subtitleLetterGap); paintSubtitle(context, centerX - bounds.center, subtitleY); } context.restore();
     const footerStart = t.cityMode === "pulse" ? t.leadIn : t.footerStart;
     if (phase >= footerStart && footer) {
       const reveal = smoother((phase - footerStart) / Math.max(.001, t.footerFade)); context.save(); context.globalAlpha = reveal; context.fillStyle = value("textColor", "#d5d5d5"); context.font = `600 ${footerSize}px ${fontMap[value("fontFamily", "noto-hk")] || fontMap["noto-hk"]}`; context.textAlign = "center"; context.textBaseline = "middle"; context.translate(centerX, subtitleY + subtitleSize / 2 + footerGap); fillCityText(context, footer, footerLetterGap); context.restore();
