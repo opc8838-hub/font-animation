@@ -12,7 +12,7 @@ Do not commit the source `.qt`. Demo stills were cropped from the BEFORE/AFTER p
 
 ## One-sentence target
 
-A blank board fills with an original photo on top and an effect photo below, holds that comparison, then the original expands into a generate card, a ring counts to 100%, and the frame cuts to the effect image.
+A 9:16 phone frame first shows the full-screen BEFORE/AFTER comparison, slides to a second page that only has a Before label and one upload box, fills 100%, then cuts to the effect image full screen.
 
 ## Phase table
 

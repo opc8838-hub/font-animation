@@ -569,105 +569,53 @@
     });
     gif.render();
   });
-  function supportedVideoType() {
-    const candidates = [
-      "video/mp4;codecs=h264", "video/mp4;codecs=avc1.42E01E", "video/mp4",
-      "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"
-    ];
-    return candidates.find((type) => MediaRecorder.isTypeSupported(type)) || "";
-  }
-  async function exportWebMFrames(output, duration) {
-    if (typeof window.WebMWriter !== "function") throw new Error("逐帧视频编码器未加载");
-    const writer = new WebMWriter({ quality: 0.94, frameRate: fps });
-    const frameCount = Math.max(1, Math.ceil(duration * fps));
-    for (let frame = 0; frame < frameCount; frame += 1) {
-      renderFrame(output, frame / fps, output.width, output.height, 1);
-      writer.addFrame(output);
-      if (frame % 2 === 0) {
-        exportStatus.textContent = `正在逐帧生成 ${output.width} × ${output.height} 高清视频 · ${Math.round((frame + 1) / frameCount * 100)}%`;
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      }
+  async function exportVideo(verticalHD) {
+    if (!window.HME || typeof HME.createH264MP4Encoder !== "function") {
+      setExportBusy(false, "MP4 编码器未加载，请刷新后重试。");
+      return;
     }
-    exportStatus.textContent = "正在封装视频文件…";
-    const blob = await writer.complete();
-    if (!blob || !blob.size) throw new Error("视频文件为空");
-    downloadBlob(blob, `search-typing-${output.width}x${output.height}-hd.webm`);
-    return { extension: "WEBM", size: blob.size };
-  }
-  async function exportVideo(verticalHD = false) {
-    const output = verticalHD ? document.createElement("canvas") : makeExportCanvas();
+    let width;
+    let height;
     if (verticalHD) {
-      output.width = 1080;
-      output.height = 1920;
+      width = 1080;
+      height = 1920;
+    } else {
+      [width, height] = exportDimensions();
     }
+    width = Math.max(240, Math.min(3840, Math.round(width / 2) * 2));
+    height = Math.max(240, Math.min(3840, Math.round(height / 2) * 2));
+    const output = document.createElement("canvas");
+    output.width = width;
+    output.height = height;
+    const context = output.getContext("2d", { willReadFrequently: true });
     const duration = cycleLength();
-    if (!output.captureStream || typeof MediaRecorder === "undefined") {
-      setExportBusy(true, `正在逐帧生成 ${output.width} × ${output.height} 高清视频 · 0%`);
-      try {
-        const result = await exportWebMFrames(output, duration);
-        setExportBusy(false, `${result.extension} 视频已生成 · ${output.width} × ${output.height} · ${(result.size / 1024 / 1024).toFixed(1)} MB`);
-      } catch (error) {
-        console.error(error);
-        setExportBusy(false, `视频导出失败：${error.message || "编码器异常"}`);
-      }
-      return;
-    }
-    const stream = output.captureStream(fps);
-    const mimeType = supportedVideoType();
-    let recorder;
+    const frameCount = Math.max(1, Math.ceil(duration * fps));
+    setExportBusy(true, `正在导出 MP4 ${width} × ${height} · 0%`);
+    const encoder = await HME.createH264MP4Encoder();
+    encoder.outputFilename = `search-typing-${width}x${height}.mp4`;
+    encoder.width = width;
+    encoder.height = height;
+    encoder.frameRate = fps;
+    encoder.kbps = 20000;
+    encoder.groupOfPictures = 15;
+    encoder.initialize();
     try {
-      recorder = new MediaRecorder(stream, mimeType ? { mimeType, videoBitsPerSecond: verticalHD ? 20_000_000 : 12_000_000 } : undefined);
-    } catch (error) {
-      stream.getTracks().forEach((track) => track.stop());
-      setExportBusy(true, `正在逐帧生成 ${output.width} × ${output.height} 高清视频 · 0%`);
-      try {
-        const result = await exportWebMFrames(output, duration);
-        setExportBusy(false, `${result.extension} 视频已生成 · ${output.width} × ${output.height} · ${(result.size / 1024 / 1024).toFixed(1)} MB`);
-      } catch (fallbackError) {
-        console.error(fallbackError);
-        setExportBusy(false, `视频导出失败：${fallbackError.message || "编码器异常"}`);
-      }
-      return;
-    }
-    const chunks = [];
-    recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
-    const finished = new Promise((resolve, reject) => {
-      recorder.onerror = (event) => reject(event.error || new Error("视频编码失败"));
-      recorder.onstop = () => {
-        const type = recorder.mimeType || mimeType || "video/webm";
-        const extension = type.includes("mp4") ? "mp4" : "webm";
-        const blob = new Blob(chunks, { type });
-        if (!blob.size) {
-          reject(new Error("视频文件为空"));
-          return;
+      for (let frame = 0; frame < frameCount; frame += 1) {
+        renderFrame(output, frame / fps, width, height, 1);
+        encoder.addFrameRgba(context.getImageData(0, 0, width, height).data);
+        if (frame % 2 === 0) {
+          exportStatus.textContent = `正在导出 MP4 ${width} × ${height} · ${Math.round((frame + 1) / frameCount * 100)}%`;
+          await new Promise((resolve) => setTimeout(resolve, 0));
         }
-        downloadBlob(blob, `search-typing-${output.width}x${output.height}-hd.${extension}`);
-        resolve({ extension: extension.toUpperCase(), size: blob.size });
-      };
-    });
-    setExportBusy(true, `正在录制 ${output.width} × ${output.height} 高清视频 · 0%`);
-    recorder.start(250);
-    const start = performance.now();
-    try {
-      await new Promise((resolve) => {
-        const step = (now) => {
-          const elapsed = Math.min(duration, (now - start) / 1000);
-          renderFrame(output, elapsed, output.width, output.height, 1);
-          exportStatus.textContent = `正在录制 ${output.width} × ${output.height} 高清视频 · ${Math.min(100, Math.round(elapsed / duration * 100))}%`;
-          if (elapsed < duration) requestAnimationFrame(step);
-          else resolve();
-        };
-        requestAnimationFrame(step);
-      });
-      recorder.stop();
-      const result = await finished;
-      setExportBusy(false, `${result.extension} 视频已生成 · ${output.width} × ${output.height} · ${(result.size / 1024 / 1024).toFixed(1)} MB`);
+      }
+      encoder.finalize();
+      const bytes = encoder.FS.readFile(encoder.outputFilename);
+      downloadBlob(new Blob([bytes], { type: "video/mp4" }), `search-typing-${width}x${height}.mp4`);
+      setExportBusy(false, `MP4 已生成 · ${width} × ${height} · ${(bytes.length / 1024 / 1024).toFixed(1)} MB`);
     } catch (error) {
-      console.error(error);
-      if (recorder.state !== "inactive") recorder.stop();
-      setExportBusy(false, `视频导出失败：${error.message || "编码器异常"}`);
+      setExportBusy(false, `MP4 导出失败：${error.message || "编码器异常"}`);
     } finally {
-      stream.getTracks().forEach((track) => track.stop());
+      try { encoder.delete(); } catch (_) {}
     }
   }
   $("#exportVideo").addEventListener("click", () => exportVideo(false));
