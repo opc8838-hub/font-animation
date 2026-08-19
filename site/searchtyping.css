@@ -1,0 +1,77 @@
+@font-face{font-family:CRManrope;src:url('assets/fonts/Manrope-Variable.ttf');font-weight:200 800}
+@font-face{font-family:CRPoppins;src:url('assets/fonts/Poppins-Regular.ttf')}
+@font-face{font-family:CRSCThin;src:url('resources/NotoSansSC-Thin.otf');font-weight:200}
+
+.search-typing-stage {
+  background: #0b0b0d;
+}
+
+.search-typing-panel .search-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.search-typing-panel textarea {
+  width: 100%;
+  min-height: 92px;
+}
+
+.search-typing-panel .search-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+}
+
+.search-typing-panel .search-toggle input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #0071e3;
+}
+
+.search-typing-map {
+  grid-template-columns: auto 10px auto 10px auto 10px auto 10px auto;
+}
+
+.search-typing-panel .pan-rhythm {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(17, 17, 17, 0.08);
+}
+
+.search-typing-panel .pan-rhythm-presets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 8px 0 10px;
+  border: 1px solid var(--ink, #111);
+  overflow: hidden;
+}
+
+.search-typing-panel .pan-rhythm-presets button {
+  appearance: none;
+  border: 0;
+  border-right: 1px solid var(--ink, #111);
+  background: #fff;
+  color: #111;
+  min-height: 38px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.search-typing-panel .pan-rhythm-presets button:last-child {
+  border-right: 0;
+}
+
+.search-typing-panel .pan-rhythm-presets button[aria-pressed="true"] {
+  background: #0071e3;
+  color: #fff;
+}
+
+@media (max-width: 760px) {
+  .search-typing-panel .search-row {
+    grid-template-columns: 1fr;
+  }
+}

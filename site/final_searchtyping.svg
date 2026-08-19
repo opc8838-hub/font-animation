@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+  <rect width="1200" height="800" fill="#0b0b0d"/>
+  <defs>
+    <linearGradient id="bar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c4c4c4"/>
+      <stop offset=".4" stop-color="#f3f3f3"/>
+      <stop offset="1" stop-color="#fdfdfd"/>
+    </linearGradient>
+  </defs>
+  <rect x="90" y="318" width="1020" height="164" rx="45" fill="url(#bar)"/>
+  <circle cx="186" cy="400" r="28" fill="none" stroke="#111" stroke-width="8"/>
+  <path d="M208 422 L232 446" fill="none" stroke="#111" stroke-width="8" stroke-linecap="round"/>
+  <text x="248" y="424" fill="#111" font-family="Arial, sans-serif" font-size="58" font-weight="300">世界上最美的城市是</text>
+  <rect x="778" y="352" width="8" height="96" fill="#111"/>
+</svg>

@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="搜写：搜索框逐字打入，镜头推近再横移，打完后整框退远。">
+  <title>搜写 Search Typing | ME Motion Studio</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&amp;f[]=general-sans@400,500,600&amp;f[]=cabinet-grotesk@500,700&amp;display=swap">
+  <link rel="stylesheet" href="continuation.css">
+  <link rel="stylesheet" href="currentwall.css">
+  <link rel="stylesheet" href="searchtyping.css">
+  <link rel="stylesheet" href="me-motion-editor.css">
+  <link rel="stylesheet" href="stg-cn.css">
+</head>
+<body class="me-motion-editor">
+  <main class="current-stage search-typing-stage" aria-label="搜索框打字动效画布">
+    <canvas id="flowCanvas"></canvas>
+    <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+  </main>
+
+  <details class="control-panel current-panel search-typing-panel" id="controlPanel" open>
+    <summary>
+      <span><b>搜写</b><small>SEARCH TYPING / 34</small></span>
+      <i aria-hidden="true">参数</i>
+    </summary>
+    <div class="panel-scroll">
+      <section class="scene-grid">
+        <label>搜索句
+          <textarea id="searchText" rows="3" spellcheck="false">世界上最美的城市是哪里，今年最值得去的季节是什么</textarea>
+        </label>
+        <p class="hint">整句一次排好，再按字符裁切显现，后出现的字不会把前面的字距挤歪。空格和标点后会多停一拍。</p>
+      </section>
+
+      <section class="font-picker">
+        <div class="search-row">
+          <label><span class="section-label">字体</span><select id="fontFamily">
+            <optgroup label="几何无衬线">
+              <option value="snap-inter-medium">Inter · 接近参考 Outfit</option>
+              <option value="snap-space-grotesk">Space Grotesk</option>
+              <option value="ib-manrope">Manrope</option>
+              <option value="ib-poppins">Poppins</option>
+              <option value="fs-satoshi">Satoshi</option>
+              <option value="fs-general-sans">General Sans</option>
+            </optgroup>
+            <optgroup label="中文字体">
+              <option value="cn-noto-regular" selected>Noto Sans SC</option>
+              <option value="cn-noto-black">Noto Sans SC Black</option>
+              <option value="ib-sc-thin">Noto Sans SC Thin</option>
+            </optgroup>
+          </select></label>
+          <label><span class="section-label">字体粗细</span><select id="fontWeight">
+            <option value="200">Thin · 200</option>
+            <option value="300" selected>Light · 300</option>
+            <option value="400">Regular · 400</option>
+            <option value="500">Medium · 500</option>
+            <option value="600">Semibold · 600</option>
+            <option value="700">Bold · 700</option>
+            <option value="900">Black · 900</option>
+          </select></label>
+        </div>
+        <p class="hint">参考组件用 Outfit Light 300。仓库沿用现有字体，默认 Noto Sans SC Light，中英文都能打。</p>
+      </section>
+
+      <section class="motion-quick">
+        <div class="section-heading"><p class="section-label">常用调节</p><small class="section-note">停住 → 打字推近 → 横移 → 整框退远</small></div>
+        <div class="motion-map search-typing-map" aria-label="动效阶段">
+          <span>停住</span><i>→</i><span>打字</span><i>→</i><span>推近</span><i>→</i><span>横移</span><i>→</i><span>退远</span>
+        </div>
+        <div class="controls-grid quick-grid">
+          <label>打字速度 <small class="stage-tag">打字</small><output id="charsPerSecondOut">14 字/秒</output>
+            <input id="charsPerSecond" type="range" min="4" max="28" step="1" value="14">
+          </label>
+          <label>人手感 <small class="stage-tag">打字</small><output id="humanizeOut">35%</output>
+            <input id="humanize" type="range" min="0" max="100" step="1" value="35">
+          </label>
+          <label>开场停住 <small class="stage-tag">阶段 1</small><output id="startDelayOut">0.50秒</output>
+            <input id="startDelay" type="range" min="0" max="2000" step="50" value="500">
+          </label>
+          <label>打完停留 <small class="stage-tag">阶段 4</small><output id="holdAfterOut">0.90秒</output>
+            <input id="holdAfter" type="range" min="0" max="4000" step="50" value="900">
+          </label>
+          <label>退远时间 <small class="stage-tag">阶段 5</small><output id="recedeDurationOut">1.20秒</output>
+            <input id="recedeDuration" type="range" min="0" max="4000" step="50" value="1200">
+          </label>
+          <label>推近倍数 <small class="stage-tag">镜头</small><output id="dollyOut">1.25×</output>
+            <input id="dolly" type="range" min="100" max="180" step="1" value="125">
+          </label>
+          <label>搜索框高度 <small class="stage-tag">画面</small><output id="fieldHeightOut">27%</output>
+            <input id="fieldHeight" type="range" min="12" max="42" step="1" value="27">
+          </label>
+          <label>全局速度 <small class="stage-tag">整段</small><output id="speedOut">1.00×</output>
+            <input id="speed" type="range" min="40" max="200" step="5" value="100">
+          </label>
+        </div>
+        <div class="pan-rhythm" aria-label="镜头从左到右">
+          <div class="section-heading">
+            <p class="section-label">镜头横移 · 从左到右</p>
+            <small class="section-note">光标顶到画面右边后，整框横移。默认「稳」，不再一闪而过。</small>
+          </div>
+          <div class="pan-rhythm-presets" role="group" aria-label="横移快慢">
+            <button type="button" data-pan-ms="500">快 · 0.5秒</button>
+            <button type="button" data-pan-ms="1400" aria-pressed="true">稳 · 1.4秒</button>
+            <button type="button" data-pan-ms="2600">慢 · 2.6秒</button>
+          </div>
+          <div class="controls-grid quick-grid">
+            <label>横移时间 <small class="stage-tag">镜头</small><output id="panDurationOut">1.40秒</output>
+              <input id="panDuration" type="range" min="300" max="4000" step="50" value="1400">
+            </label>
+            <label>横移曲线 <small class="stage-tag">节奏</small>
+              <select id="panEase">
+                <option value="linear">匀速</option>
+                <option value="cubic" selected>柔和 · 两端慢中间快</option>
+                <option value="sine">更柔 · 整段圆滑</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section class="advanced-controls">
+        <div class="section-heading"><p class="section-label">镜头与节拍</p><small class="section-note">进阶</small></div>
+        <div class="controls-grid">
+          <label>推近时间 <output id="dollyDurationOut">0.80秒</output>
+            <input id="dollyDuration" type="range" min="0" max="2400" step="50" value="800">
+          </label>
+          <label>词后停拍 <output id="wordPauseOut">1.55×</output>
+            <input id="wordPause" type="range" min="100" max="300" step="5" value="155">
+          </label>
+          <label>标点停拍 <output id="punctuationPauseOut">2.20×</output>
+            <input id="punctuationPause" type="range" min="100" max="400" step="5" value="220">
+          </label>
+          <label>前方可见比例 <output id="frontVisibleOut">56%</output>
+            <input id="frontVisible" type="range" min="35" max="80" step="1" value="56">
+          </label>
+          <label>边距 <output id="edgeInsetOut">40px</output>
+            <input id="edgeInset" type="range" min="8" max="120" step="1" value="40">
+          </label>
+          <label>光标闪烁 <output id="caretBlinksOut">1.0 次/秒</output>
+            <input id="caretBlinks" type="range" min="0" max="30" step="1" value="10">
+          </label>
+        </div>
+      </section>
+
+      <section class="color-row">
+        <label>表面<select id="surface">
+          <option value="glass" selected>玻璃 · 深色背景</option>
+          <option value="shadcn">卡片 · 浅色背景</option>
+        </select></label>
+        <label>图标<select id="icon">
+          <option value="search" selected>放大镜</option>
+          <option value="sparkle">星芒</option>
+          <option value="none">无</option>
+        </select></label>
+        <label>背景<input id="backgroundColor" type="color" value="#0b0b0d"></label>
+        <label>文字<input id="textColor" type="color" value="#111111"></label>
+        <label class="search-toggle"><input id="caretEnabled" type="checkbox" checked> 显示光标</label>
+      </section>
+      <p class="hint">玻璃面只在深色背景上干净。浅色页请改成「卡片」，并把背景调亮。</p>
+
+      <section class="transport" aria-label="时间轴控制">
+        <button id="restartButton" type="button">重播</button>
+        <button id="pauseButton" type="button">暂停</button>
+        <button id="backButton" type="button">−1 帧</button>
+        <button id="forwardButton" type="button">+1 帧</button>
+      </section>
+
+      <section class="export-panel">
+        <label class="section-label" for="exportPreset">导出尺寸</label>
+        <select id="exportPreset">
+          <option value="current">当前画板</option>
+          <option value="1080x1080">1:1 · 1080 × 1080</option>
+          <option value="1080x1350">4:5 · 1080 × 1350</option>
+          <option value="1080x1920">9:16 · 1080 × 1920</option>
+          <option value="1920x1080">16:9 · 1920 × 1080</option>
+          <option value="custom">自定义尺寸</option>
+        </select>
+        <div class="custom-size" id="customSize" hidden>
+          <label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label><span>×</span>
+          <label>高<input id="exportHeight" type="number" min="240" max="3840" value="1080"></label>
+        </div>
+        <div class="export-actions">
+          <button id="exportPng" type="button">PNG 图片</button>
+          <button id="exportGif" type="button">GIF 动图</button>
+          <button id="exportVideo" type="button">视频</button>
+          <button class="export-hd-video" id="exportVerticalVideo" type="button">导出 9:16 高清视频 · 1080 × 1920</button>
+        </div>
+        <p class="export-status" id="exportStatus" aria-live="polite">导出按输出画布尺寸单独居中，不把左侧编辑器算进去。</p>
+      </section>
+      <p class="formula">停住闪标 → 逐字打入并推近 → 光标到边后整框横移 → 打完停留 → 退到整框入画<br>镜头比例来自 snapcn SearchTyping，未改仓库里其它动效</p>
+    </div>
+  </details>
+
+  <script src="js/continuation-gif.js"></script>
+  <script src="CCapture.all.min.js"></script>
+  <script src="searchtyping.js"></script>
+  <script src="me-motion-editor.js"></script>
+  <script src="stg-cn.js"></script>
+</body>
+</html>
