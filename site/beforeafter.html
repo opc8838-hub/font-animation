@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="对照：先排原图和效果图，再生成到 100%，连贯切到成片。">
+  <title>对照 Before After | ME Motion Studio</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;f[]=general-sans@400,500,600&amp;display=swap">
+  <link rel="stylesheet" href="continuation.css">
+  <link rel="stylesheet" href="currentwall.css">
+  <link rel="stylesheet" href="beforeafter.css">
+  <link rel="stylesheet" href="me-motion-editor.css">
+  <link rel="stylesheet" href="stg-cn.css">
+</head>
+<body class="me-motion-editor">
+  <main class="current-stage beforeafter-stage" aria-label="对照动效画布">
+    <canvas id="flowCanvas"></canvas>
+    <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+  </main>
+
+  <details class="control-panel current-panel beforeafter-panel" id="controlPanel" open>
+    <summary>
+      <span><b>对照</b><small>BEFORE AFTER / 35</small></span>
+      <i aria-hidden="true">参数</i>
+    </summary>
+    <div class="panel-scroll">
+      <section class="scene-grid">
+        <div class="section-heading">
+          <p class="section-label">两张图</p>
+          <small class="section-note">上面原图 · 下面效果图</small>
+        </div>
+        <div class="ba-uploads">
+          <label class="ba-upload">
+            <span>原图 · BEFORE</span>
+            <input id="beforeFile" type="file" accept="image/*">
+            <small id="beforeName">默认风景原图</small>
+          </label>
+          <label class="ba-upload">
+            <span>效果图 · AFTER</span>
+            <input id="afterFile" type="file" accept="image/*">
+            <small id="afterName">默认风景效果图</small>
+          </label>
+        </div>
+        <div class="search-row">
+          <label>上标签<input id="beforeLabel" type="text" value="BEFORE" spellcheck="false"></label>
+          <label>下标签<input id="afterLabel" type="text" value="AFTER" spellcheck="false"></label>
+        </div>
+        <p class="hint">先空白，原图飞入上方，效果图落到下方，停一两秒，再推进生成环，到 100% 后切到效果图。界面只做成类似上传卡，不抄原 App。</p>
+      </section>
+
+      <section class="motion-quick">
+        <div class="section-heading"><p class="section-label">时间轴</p><small class="section-note">空白 → 对照 → 生成 → 成片</small></div>
+        <div class="motion-map beforeafter-map" aria-label="动效阶段">
+          <span>空白</span><i>→</i><span>飞入</span><i>→</i><span>对照</span><i>→</i><span>100%</span><i>→</i><span>成片</span>
+        </div>
+        <div class="controls-grid quick-grid">
+          <label>对照停留 <small class="stage-tag">上下排好</small><output id="compareHoldOut">1.40秒</output>
+            <input id="compareHold" type="range" min="400" max="4000" step="50" value="1400">
+          </label>
+          <label>生成时间 <small class="stage-tag">0 → 100%</small><output id="generateDurationOut">0.90秒</output>
+            <input id="generateDuration" type="range" min="300" max="3000" step="50" value="900">
+          </label>
+          <label>成片停留 <small class="stage-tag">切完</small><output id="resultHoldOut">1.60秒</output>
+            <input id="resultHold" type="range" min="400" max="5000" step="50" value="1600">
+          </label>
+          <label>全局速度 <small class="stage-tag">整段</small><output id="speedOut">1.00×</output>
+            <input id="speed" type="range" min="40" max="200" step="5" value="100">
+          </label>
+        </div>
+      </section>
+
+      <section class="advanced-controls">
+        <div class="section-heading"><p class="section-label">镜头与样式</p><small class="section-note">进阶</small></div>
+        <div class="controls-grid">
+          <label>开场空白 <output id="blankHoldOut">0.35秒</output>
+            <input id="blankHold" type="range" min="0" max="1500" step="50" value="350">
+          </label>
+          <label>飞入时间 <output id="dropDurationOut">0.70秒</output>
+            <input id="dropDuration" type="range" min="200" max="2000" step="50" value="700">
+          </label>
+          <label>推进对照 <output id="morphDurationOut">0.45秒</output>
+            <input id="morphDuration" type="range" min="150" max="1200" step="50" value="450">
+          </label>
+          <label>切换柔度 <output id="cutSoftOut">0.18秒</output>
+            <input id="cutSoft" type="range" min="0" max="500" step="10" value="180">
+          </label>
+          <label>卡片圆角 <output id="radiusOut">22px</output>
+            <input id="radius" type="range" min="4" max="48" step="1" value="22">
+          </label>
+          <label>页边距 <output id="pagePadOut">7%</output>
+            <input id="pagePad" type="range" min="3" max="14" step="1" value="7">
+          </label>
+        </div>
+        <div class="color-row">
+          <label>对照底<input id="compareBg" type="color" value="#f6f6f4"></label>
+          <label>生成底<input id="generateBg" type="color" value="#0c0c0e"></label>
+          <label>标签色<input id="labelColor" type="color" value="#1a1a1a"></label>
+          <label>进度环<input id="ringColor" type="color" value="#ff6b9a"></label>
+        </div>
+      </section>
+
+      <section class="transport" aria-label="时间轴控制">
+        <button id="restartButton" type="button">重播</button>
+        <button id="pauseButton" type="button">暂停</button>
+        <button id="backButton" type="button">−1 帧</button>
+        <button id="forwardButton" type="button">+1 帧</button>
+      </section>
+
+      <section class="export-panel">
+        <label class="section-label" for="exportPreset">导出尺寸</label>
+        <select id="exportPreset">
+          <option value="current">当前画板</option>
+          <option value="1080x1080">1:1 · 1080 × 1080</option>
+          <option value="1080x1350">4:5 · 1080 × 1350</option>
+          <option value="1080x1920">9:16 · 1080 × 1920</option>
+          <option value="1920x1080">16:9 · 1920 × 1080</option>
+          <option value="custom">自定义尺寸</option>
+        </select>
+        <div class="custom-size" id="customSize" hidden>
+          <label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label><span>×</span>
+          <label>高<input id="exportHeight" type="number" min="240" max="3840" value="1920"></label>
+        </div>
+        <div class="export-actions">
+          <button id="exportPng" type="button">PNG 图片</button>
+          <button id="exportGif" type="button">GIF 动图</button>
+          <button id="exportVideo" type="button">视频</button>
+          <button class="export-hd-video" id="exportVerticalVideo" type="button">导出 9:16 高清视频 · 1080 × 1920</button>
+        </div>
+        <p class="export-status" id="exportStatus" aria-live="polite">导出按输出画布单独排版，不含左侧编辑器。</p>
+      </section>
+      <p class="formula">空白 → 原图飞入 / 效果图落下 → 对照停留 → 原图推进生成环 → 100% 切成片</p>
+    </div>
+  </details>
+
+  <script src="js/continuation-gif.js"></script>
+  <script src="CCapture.all.min.js"></script>
+  <script src="beforeafter.js"></script>
+  <script src="me-motion-editor.js"></script>
+  <script src="stg-cn.js"></script>
+</body>
+</html>

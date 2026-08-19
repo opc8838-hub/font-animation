@@ -1,0 +1,59 @@
+.beforeafter-stage {
+  background: #f6f6f4;
+}
+
+.beforeafter-panel .search-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.beforeafter-map {
+  grid-template-columns: auto 10px auto 10px auto 10px auto 10px auto;
+}
+
+.ba-uploads {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.ba-upload {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 78px;
+  padding: 10px;
+  border: 1px dashed #b8b8bd;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.ba-upload span {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.ba-upload small {
+  color: #8e8e93;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ba-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+@media (max-width: 760px) {
+  .ba-uploads,
+  .beforeafter-panel .search-row {
+    grid-template-columns: 1fr;
+  }
+}
