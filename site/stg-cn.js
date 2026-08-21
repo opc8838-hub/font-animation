@@ -1,7 +1,7 @@
 (function () {
   const effects = [
     ["index", "圆柱", "Cylinder"], ["field", "场域", "Field"], ["stripes", "条纹", "Stripes"],
-    ["coil", "线圈", "Coil"], ["continuation", "续句", "Continuation"], ["currentwall", "流墙", "Current Wall"], ["verticalwall", "纵跃", "Vertical Rise"], ["creatorstudio", "汇聚", "Creator Merge"], ["colorrecompose", "彩组", "Color Recompose"], ["phrasebuild", "组句", "Phrase Build"], ["switchdrop", "降临", "Switch Drop"], ["searchtyping", "搜写", "Search Typing"], ["beforeafter", "对照", "Before After"], ["textswell", "胀句", "Text Swell"], ["pathwriter", "轨书", "Path Writer"], ["flag", "旗帜", "Flag"], ["morisawa", "森泽", "Morisawa"],
+    ["coil", "线圈", "Coil"], ["continuation", "续句", "Continuation"], ["currentwall", "流墙", "Current Wall"], ["verticalwall", "纵跃", "Vertical Rise"], ["creatorstudio", "汇聚", "Creator Merge"], ["colorrecompose", "彩组", "Color Recompose"], ["phrasebuild", "组句", "Phrase Build"], ["switchdrop", "降临", "Switch Drop"], ["searchtyping", "搜写", "Search Typing"], ["beforeafter", "对照", "Before After"], ["textswell", "胀句", "Text Swell"], ["wordflip", "翻词", "Word Flip"], ["pathwriter", "轨书", "Path Writer"], ["flag", "旗帜", "Flag"], ["morisawa", "森泽", "Morisawa"],
     ["cascade", "瀑布", "Cascade"], ["ribbon", "丝带", "Ribbon"], ["layers", "层叠", "Layers"],
     ["iconburst", "图标爆发", "Icon Burst"],
     ["danger", "警示", "Danger"], ["string", "琴弦", "String"], ["badge", "徽章", "Badge"],

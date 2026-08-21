@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+  <rect width="1200" height="800" fill="#fafafa"/>
+  <text x="90" y="430" fill="#101828" font-family="Arial, sans-serif" font-size="64" font-weight="600">我想做一套</text>
+  <text x="520" y="390" fill="#2a8bf5" font-family="Arial, sans-serif" font-size="92" font-weight="700" transform="rotate(-18 620 390)">干净</text>
+  <text x="860" y="430" fill="#101828" font-family="Arial, sans-serif" font-size="64" font-weight="600">封面</text>
+</svg>
