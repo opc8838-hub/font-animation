@@ -420,7 +420,7 @@
   function pairButtons(onPick, activeFrom, activeTo) {
     return COLOR_PAIRS.map(([name, from, to]) => {
       const active = activeFrom === from && activeTo === to ? " is-active" : "";
-      return `<button type="button" class="color-pair${active}" data-from="${from}" data-to="${to}" title="${name}" style="--a:${from};--b:${to}"></button>`;
+      return `<span class="color-pair${active}" role="button" tabindex="0" data-from="${from}" data-to="${to}" title="${name}" style="background-image:linear-gradient(90deg,${from},${to})"></span>`;
     }).join("");
   }
 
@@ -469,7 +469,7 @@
     return null;
   }
   function loopFrames() {
-    return flipStartFrame(wordList().length) + 8;
+    return Math.max(1, flipStartFrame(wordList().length));
   }
   function cycleLength() {
     return loopFrames() / FPS / speed();
@@ -533,14 +533,21 @@
         renderColorPairBar();
       });
     });
-    host.querySelectorAll(".color-pair").forEach((button) => {
-      button.addEventListener("click", () => {
-        const card = button.closest(".flip-word-card");
+    host.querySelectorAll(".color-pair").forEach((chip) => {
+      const apply = () => {
+        const card = chip.closest(".flip-word-card");
         const index = [...host.children].indexOf(card);
         if (index < 0) return;
-        wordColors[index] = { from: button.dataset.from, to: button.dataset.to };
+        wordColors[index] = { from: chip.dataset.from, to: chip.dataset.to };
         renderWordColorList();
         renderColorPairBar();
+      };
+      chip.addEventListener("click", apply);
+      chip.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          apply();
+        }
       });
     });
   }
@@ -628,7 +635,7 @@
     const space = ctx.measureText(" ").width;
     const total = prefixLayout.width + space + slot + space + suffixLayout.width;
     const fit = Math.min(1, (w * 0.88) / Math.max(1, total));
-    const frame = time * FPS * speed();
+    const frame = FX.mod(time, cycleLength()) * FPS * speed();
     const cps = Math.max(3, num("#cps", 9));
     const { index: entering, local } = wordAt(frame);
     const typingEnd = typingEndFrame();

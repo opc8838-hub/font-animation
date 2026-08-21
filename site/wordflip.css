@@ -190,12 +190,17 @@ body.wordflip-editor .flip-beat-block small {
   margin-bottom: 12px;
 }
 
+body.me-motion-editor .wordflip-panel .color-pair,
 .color-pair {
+  display: inline-block;
   width: 48px;
   height: 28px;
-  border: 1px solid #111;
+  border: 1px solid #111 !important;
+  border-radius: 6px !important;
   cursor: pointer;
-  background: linear-gradient(90deg, var(--a), var(--b));
+  background-color: transparent !important;
+  background-image: linear-gradient(90deg, #2a8bf5, #e11d48);
+  background-size: 100% 100%;
 }
 
 .color-pair.is-active {
