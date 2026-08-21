@@ -2,7 +2,10 @@
   "use strict";
 
   const PREVIEW = new URLSearchParams(location.search).has("preview");
-  if (PREVIEW) document.body.classList.add("is-preview");
+  if (PREVIEW) {
+    document.documentElement.classList.add("is-preview");
+    document.body.classList.add("is-preview");
+  }
 
   const { $, clamp01, lerp, formatSeconds } = FX;
   const FPS = 30;
@@ -489,7 +492,8 @@
     ctx.clearRect(0, 0, w, h);
     ctx.fillStyle = $("#backgroundColor").value;
     ctx.fillRect(0, 0, w, h);
-    const fontPx = Number($("#fontSize").value);
+    const basePx = Number($("#fontSize").value);
+    const fontPx = PREVIEW ? Math.max(basePx, Math.min(w, h) * 0.2) : basePx;
     const weight = Number($("#fontWeight").value);
     FX.applyFont(ctx, $("#fontFamily").value, fontPx, weight);
     ctx.textAlign = "left";

@@ -128,7 +128,44 @@ main { overflow: hidden; }
   display: block;
   pointer-events: none;
   background: #fafafa;
-  transform: scale(1);
+}
+
+.effect-card.has-live-preview {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  min-height: 240px;
+}
+
+.effect-card.has-live-preview .effect-link {
+  display: block;
+  height: 100%;
+}
+
+.effect-card.has-live-preview .effect-preview {
+  position: absolute;
+  inset: 0;
+  aspect-ratio: auto;
+  height: 100%;
+}
+
+.effect-card.has-live-preview .effect-preview iframe.effect-live {
+  position: absolute;
+  inset: 0;
+}
+
+.effect-card.has-live-preview .effect-body {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  min-height: 0;
+  padding: 48px 20px 18px;
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, .92) 46%);
+}
+
+.effect-card.has-live-preview .effect-number {
+  z-index: 3;
 }
 .effect-number { position: absolute; top: 14px; left: 14px; min-width: 36px; height: 28px; display: grid; place-items: center; border-radius: 999px; background: rgba(255,255,255,.82); color: #1d1d1f; -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); font-size: 11px; font-weight: 680; font-variant-numeric: tabular-nums; }
 .effect-body { min-height: 112px; padding: 19px 20px 21px; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: end; gap: 14px; }

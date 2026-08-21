@@ -2,8 +2,10 @@ body.textswell-editor {
   --me-panel-width: 540px;
 }
 
-html:has(body.is-preview),
-body.me-motion-editor.is-preview {
+html.is-preview,
+html.is-preview body,
+html.is-preview body.textswell-editor,
+html.is-preview body.me-motion-editor {
   width: 100%;
   height: 100%;
   margin: 0;
@@ -12,20 +14,25 @@ body.me-motion-editor.is-preview {
   --me-panel-width: 0px;
 }
 
-body.me-motion-editor.is-preview .control-panel,
-body.me-motion-editor.is-preview .canvas-mark {
+html.is-preview .control-panel,
+html.is-preview .canvas-mark {
   display: none !important;
 }
 
-body.me-motion-editor.is-preview .current-stage {
+html.is-preview .current-stage {
   inset: 0 !important;
   width: 100% !important;
   max-width: 100% !important;
   height: 100% !important;
 }
 
+html.is-preview #flowCanvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
 @media (max-width: 760px) {
-  body.me-motion-editor.is-preview .current-stage {
+  html.is-preview .current-stage {
     inset: 0 !important;
     width: 100% !important;
     height: 100% !important;
