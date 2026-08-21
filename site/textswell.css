@@ -2,6 +2,36 @@ body.textswell-editor {
   --me-panel-width: 540px;
 }
 
+html:has(body.is-preview),
+body.me-motion-editor.is-preview {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #fafafa;
+  --me-panel-width: 0px;
+}
+
+body.me-motion-editor.is-preview .control-panel,
+body.me-motion-editor.is-preview .canvas-mark {
+  display: none !important;
+}
+
+body.me-motion-editor.is-preview .current-stage {
+  inset: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+}
+
+@media (max-width: 760px) {
+  body.me-motion-editor.is-preview .current-stage {
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
+
 .textswell-panel #titleText {
   min-height: 148px;
   padding: 12px;

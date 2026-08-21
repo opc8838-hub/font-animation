@@ -60,6 +60,19 @@ const count = document.querySelector("#visibleCount");
 const emptyState = document.querySelector("#emptyState");
 const filterButtons = [...document.querySelectorAll(".filter")];
 let activeFilter = "all";
+const livePreviews = new Set(["textswell"]);
+const liveObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    const frame = entry.target;
+    if (entry.isIntersecting) {
+      if (frame.dataset.src && frame.getAttribute("src") !== frame.dataset.src) {
+        frame.src = frame.dataset.src;
+      }
+    } else if (frame.getAttribute("src")) {
+      frame.removeAttribute("src");
+    }
+  });
+}, { rootMargin: "120px 0px", threshold: 0.15 });
 
 function render() {
   const query = searchInput.value.trim().toLocaleLowerCase("zh-CN");
@@ -74,11 +87,14 @@ function render() {
     const imageName = slug === "crashclock" ? "final_crashclock.png" : ["iconburst", "colorrecompose", "phrasebuild", "switchdrop", "searchtyping", "beforeafter", "assemble", "verbcue", "tighten", "titlecard", "lockup", "promptcue", "pullback", "textswell", "wordflip", "textbuild", "textswap", "textreveal", "phoneframe", "laptopframe", "orbitgallery", "followerrush", "logoassemble", "moodboard"].includes(slug) ? `final_${slug}.svg` : `final_${slug}.png`;
     const target = slug === "flash" ? "flash-scenes.html" : `${slug}.html`;
     const detail = slug === "flash" ? "13 个独立子风格" : categoryName;
+    const preview = livePreviews.has(slug)
+      ? `<iframe class="effect-live" title="${zh}实时预览" data-src="${slug}.html?preview=1" loading="lazy" tabindex="-1"></iframe>`
+      : `<img src="${imageName}" alt="${zh}动态字体效果预览" ${index > 8 ? 'loading="lazy"' : ""}>`;
     return `
-      <article class="effect-card">
+      <article class="effect-card${livePreviews.has(slug) ? " has-live-preview" : ""}">
         <a class="effect-link" href="${target}" aria-label="打开${zh}效果">
           <div class="effect-preview">
-            <img src="${imageName}" alt="${zh}动态字体效果预览" ${index > 8 ? 'loading="lazy"' : ""}>
+            ${preview}
             <span class="effect-number">${String(index).padStart(2, "0")}</span>
           </div>
           <div class="effect-body">
@@ -92,6 +108,8 @@ function render() {
   if (count) count.textContent = String(visible.length);
   grid.hidden = visible.length === 0;
   emptyState.hidden = visible.length !== 0;
+  liveObserver.disconnect();
+  grid.querySelectorAll("iframe.effect-live").forEach((frame) => liveObserver.observe(frame));
 }
 
 filterButtons.forEach((button) => {

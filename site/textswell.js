@@ -1,6 +1,9 @@
 (() => {
   "use strict";
 
+  const PREVIEW = new URLSearchParams(location.search).has("preview");
+  if (PREVIEW) document.body.classList.add("is-preview");
+
   const { $, clamp01, lerp, formatSeconds } = FX;
   const FPS = 30;
   const FIT = 0.97;
@@ -869,6 +872,25 @@
     renderAssetGrid();
     renderUsedIcons();
   });
+
+  try {
+    const saved = localStorage.getItem("textswell-scheme");
+    if (saved) applyState(JSON.parse(saved));
+  } catch (_) {}
+
+  if (!PREVIEW) {
+    let persistTimer = 0;
+    const persist = () => {
+      clearTimeout(persistTimer);
+      persistTimer = setTimeout(() => {
+        try { localStorage.setItem("textswell-scheme", JSON.stringify(collectState())); } catch (_) {}
+      }, 250);
+    };
+    document.querySelectorAll("input, textarea, select").forEach((field) => {
+      field.addEventListener("input", persist);
+      field.addEventListener("change", persist);
+    });
+  }
 
   renderAssetGrid();
   syncAssetTuner();
