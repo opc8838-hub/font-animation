@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="夹图：左右两个词中间夹实物或图标，按功能卡轮播。">
+  <title>夹图 Lockup | ME Motion Studio</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&amp;f[]=general-sans@400,500,600&amp;display=swap">
+  <link rel="stylesheet" href="continuation.css">
+  <link rel="stylesheet" href="currentwall.css">
+  <link rel="stylesheet" href="fx-kit.css">
+  <link rel="stylesheet" href="me-motion-editor.css">
+  <link rel="stylesheet" href="stg-cn.css">
+</head>
+<body class="me-motion-editor">
+  <main class="current-stage fx-stage is-light" aria-label="夹图动效画布">
+    <canvas id="flowCanvas"></canvas>
+    <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+  </main>
+  <details class="control-panel current-panel fx-panel" id="controlPanel" open>
+    <summary>
+      <span><b>夹图</b><small>LOCKUP / 40</small></span>
+      <i aria-hidden="true">参数</i>
+    </summary>
+    <div class="panel-scroll">
+
+      <section class="scene-grid">
+        <div class="search-row">
+          <label>左1<input id="aL" type="text" value="操作" spellcheck="false"></label>
+          <label>右1<input id="aR" type="text" value="按钮" spellcheck="false"></label>
+        </div>
+        <div class="search-row">
+          <label>左2<input id="bL" type="text" value="USB" spellcheck="false"></label>
+          <label>右2<input id="bR" type="text" value="C" spellcheck="false"></label>
+        </div>
+        <div class="search-row">
+          <label>左3<input id="cL" type="text" value="面容" spellcheck="false"></label>
+          <label>右3<input id="cR" type="text" value="ID" spellcheck="false"></label>
+        </div>
+        <label>字卡<input id="midText" type="text" value="5G" spellcheck="false"></label>
+        <p class="hint">四张功能卡轮播。中间分别是机身、5G线、插头、面容框。对应动效5。</p>
+      </section>
+      <section class="color-row">
+        <label>背景<input id="backgroundColor" type="color" value="#f4f4f6"></label>
+        <label>字色<input id="textColor" type="color" value="#111111"></label>
+        <label>5G色<input id="accentColor" type="color" value="#7b4dff"></label>
+      </section>
+      <section class="controls-grid">
+        <label>每卡时长 <output id="sceneOut">1.60秒</output>
+          <input id="sceneDuration" type="range" min="700" max="3000" step="50" value="1600">
+        </label>
+        <label>字号 <output id="fontSizeOut">8%</output>
+          <input id="fontSize" type="range" min="4" max="16" step="1" value="8">
+        </label>
+        <label>全局速度 <output id="speedOut">1.00×</output>
+          <input id="speed" type="range" min="40" max="200" step="5" value="100">
+        </label>
+      </section>
+      <section class="transport" aria-label="时间轴控制">
+        <button id="restartButton" type="button">重播</button>
+        <button id="pauseButton" type="button">暂停</button>
+        <button id="backButton" type="button">−1 帧</button>
+        <button id="forwardButton" type="button">+1 帧</button>
+      </section>
+      <section class="export-panel">
+        <label class="section-label" for="exportPreset">导出尺寸</label>
+        <select id="exportPreset">
+          <option value="current">当前画板</option>
+          <option value="1080x1080">1:1 · 1080 × 1080</option>
+          <option value="1080x1920" selected>9:16 · 1080 × 1920</option>
+          <option value="1920x1080">16:9 · 1920 × 1080</option>
+          <option value="custom">自定义尺寸</option>
+        </select>
+        <div class="custom-size" id="customSize" hidden>
+          <label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label><span>×</span>
+          <label>高<input id="exportHeight" type="number" min="240" max="3840" value="1920"></label>
+        </div>
+        <div class="export-actions">
+          <button id="exportPng" type="button">PNG 图片</button>
+          <button id="exportGif" type="button">GIF 动图</button>
+          <button id="exportVideo" type="button">导出 MP4</button>
+          <button class="export-hd-video" id="exportVerticalVideo" type="button">导出 9:16 MP4 · 1080 × 1920</button>
+        </div>
+        <p class="export-status" id="exportStatus" aria-live="polite">导出按输出画布单独排版。</p>
+      </section>
+      <p class="formula">操作按钮 → 5G → USB-C → 面容 ID</p>
+    </div>
+  </details>
+  <script src="js/continuation-gif.js"></script>
+  <script src="js/h264-mp4-encoder.web.js"></script>
+  <script src="fx-kit.js"></script>
+  <script src="lockup.js"></script>
+  <script src="me-motion-editor.js"></script>
+  <script src="stg-cn.js"></script>
+</body>
+</html>

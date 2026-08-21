@@ -1,0 +1,41 @@
+@font-face{font-family:CRManrope;src:url('assets/fonts/Manrope-Variable.ttf');font-weight:200 800}
+@font-face{font-family:CRPoppins;src:url('assets/fonts/Poppins-Regular.ttf')}
+@font-face{font-family:CRSCThin;src:url('resources/NotoSansSC-Thin.otf');font-weight:200}
+
+.assemble-stage {
+  background: #000;
+}
+
+.assemble-panel .search-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.assemble-panel textarea {
+  width: 100%;
+  min-height: 72px;
+}
+
+.assemble-map {
+  grid-template-columns: auto 10px auto 10px auto 10px auto 10px auto;
+}
+
+.assemble-swatches {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.assemble-swatches label {
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+}
+
+@media (max-width: 760px) {
+  .assemble-panel .search-row,
+  .assemble-swatches {
+    grid-template-columns: 1fr 1fr;
+  }
+}
