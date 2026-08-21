@@ -1,7 +1,7 @@
 # ME Motion Studio —— 文字 × 图像动效工作室
 
 原站 [spacetypegenerator.com](https://spacetypegenerator.com)（kielm 开源项目，p5.js 实现）的本地中文版。
-**35 个字体动效 + 中文渲染 + 多图片与文字混排 + 浏览器本地抠图 + 响应式创作工作台。**
+**36 个字体动效 + 中文渲染 + 多图片与文字混排 + 浏览器本地抠图 + 响应式创作工作台。**
 
 在线浏览：[GitHub Pages](https://opc8838-hub.github.io/font-animation/gallery.html)
 
@@ -35,8 +35,8 @@ stg_cn/
 ├── NotoSansSC-vf.ttf       # 中文字体源（可变字体，供重新实例化）
 ├── _scratch/               # 临时验证截图，可删
 └── site/                   # ★ 网站本体（34 个效果）
-    ├── gallery.html        # 效果画廊入口（35 张卡片，链接各效果）
-    ├── index.html ~ beforeafter.html  # 35 个效果页
+    ├── gallery.html        # 效果画廊入口（36 张卡片，链接各效果）
+    ├── index.html ~ textswell.html  # 36 个效果页
     ├── sketch_*.js          # 各效果的 p5.js 主程序
     ├── *_script/ *_res/     # 复杂效果的子模块与资源
     ├── assets/              # 字体等公共资源
@@ -83,7 +83,9 @@ stg_cn/
 
 11. **2026-08-19 搜写**：新增搜写（Search Typing），移植 snapcn 搜索框逐字打入 + 推近横移退远镜头。独立文件，未改其它动效。网站当时共 34 个效果。
 
-12. **2026-08-19 对照**：新增对照（Before After）。上原图下效果图，停顿后推进生成环到 100%，再切成片。独立文件。网站现共 35 个效果。
+12. **2026-08-19 对照**：新增对照（Before After）。上原图下效果图，停顿后推进生成环到 100%，再切成片。独立文件。网站当时共 35 个效果。
+
+13. **2026-08-21 胀句**：新增胀句（Text Swell）。按 snapcn `text-swell` 开源时序 1:1 重做：首词升起推近、后词弹起顶入、整句收回。文案默认 `Hely fun excellent`，每词独立字色，可插图标，可保存方案并导出 MP4。网站现共 36 个效果。
 
 ---
 
