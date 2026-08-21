@@ -182,3 +182,127 @@ body.wordflip-editor .flip-beat-block small {
   width: 18px;
   height: 18px;
 }
+
+.color-pair-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.color-pair {
+  width: 48px;
+  height: 28px;
+  border: 1px solid #111;
+  cursor: pointer;
+  background: linear-gradient(90deg, var(--a), var(--b));
+}
+
+.color-pair.is-active {
+  outline: 3px solid #2864ff;
+  outline-offset: 1px;
+}
+
+.flip-word-card .color-pair-row {
+  margin: 0;
+}
+
+.wordflip-panel .asset-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.wordflip-panel .asset-grid-core {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 8px;
+}
+
+.wordflip-panel .asset-insert {
+  min-height: 88px;
+  grid-template-rows: 52px auto;
+  font-size: 11px;
+}
+
+.wordflip-panel .asset-insert img {
+  width: 48px;
+  height: 48px;
+}
+
+.wordflip-panel .asset-tuner {
+  padding: 14px;
+}
+
+.wordflip-panel .asset-tuner-grid label,
+.wordflip-panel .icon-tune-grid label {
+  display: grid;
+  grid-template-columns: 48px 1fr 56px;
+  align-items: center;
+  font-size: 12px;
+  gap: 8px;
+}
+
+.textswell-used {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.textswell-used-empty {
+  margin: 0;
+  padding: 12px;
+  border: 1px dashed #c9c8c1;
+  color: #62615c;
+  font-size: 12px;
+}
+
+.icon-tune-card {
+  padding: 12px;
+  border: 1px solid #111;
+  background: #fff;
+}
+
+.icon-tune-card.is-active {
+  outline: 3px solid #2864ff;
+  outline-offset: -3px;
+}
+
+.icon-tune-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.icon-tune-head img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  background: #f4f3ef;
+}
+
+.icon-tune-head b { font-size: 14px; }
+.icon-tune-head small {
+  display: block;
+  color: #62615c;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.icon-tune-grid { display: grid; gap: 10px; }
+
+.icon-nudge {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.icon-nudge button {
+  min-height: 36px;
+  border: 1px solid #111;
+  background: #fff;
+  font: 700 13px/1 sans-serif;
+  cursor: pointer;
+}
+
+.icon-nudge button:hover { background: #c1ff1a; }

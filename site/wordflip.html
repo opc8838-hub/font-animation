@@ -64,7 +64,8 @@
               <option value="ib-fraunces">Fraunces</option>
             </optgroup>
           </select></label>
-        <p class="hint">前半句和后半句逐字打入。中间槽位先留空，再把翻转词按 snapcn 的 easeInBack 立体翻进去，行宽不会被挤。</p>
+        <p class="hint">前半句和后半句逐字打入。中间槽位先留空，再把翻转词按 snapcn 的 easeInBack 立体翻进去，行宽不会被挤。默认没有图标；要点图标时，先点一下要插入的那一栏。</p>
+        <p class="hint" id="insertHint">当前插入到：前半句</p>
       </section>
 
       <section class="wordflip-save-row">
@@ -92,9 +93,41 @@
       <section class="swell-words">
         <div class="section-heading">
           <p class="section-label">翻转词色</p>
-          <small class="section-note">每个词自己的左右渐变</small>
+          <small class="section-note">点色块一套配色，也可自己调左右渐变</small>
         </div>
+        <div class="color-pair-row" id="colorPairBar"></div>
         <div id="wordColorList"></div>
+      </section>
+
+      <section class="asset-section">
+        <div class="section-heading">
+          <p class="section-label">流墙图标 · 音乐 / 播放 / 云 / 手表</p>
+          <label class="upload-button">添加图片<input id="assetUpload" type="file" accept="image/*" multiple></label>
+        </div>
+        <p class="asset-process-status">默认画面没有图标。点图标插到当前输入框光标处。插进去的每一枚都能单独调大小、间距和位置。</p>
+        <div class="asset-grid asset-grid-core" id="coreIconGrid"></div>
+        <div class="section-heading" style="margin-top:14px">
+          <p class="section-label">透明动物</p>
+        </div>
+        <div class="asset-grid" id="assetGrid"></div>
+        <div class="asset-tuner" id="assetTuner">
+          <div class="asset-tuner-head"><span>素材库精调</span><b id="selectedAssetName">音乐</b></div>
+          <div class="asset-tuner-grid">
+            <label>大小 <output id="assetItemScaleOut">100%</output>
+              <input id="assetItemScale" type="range" min="20" max="300" value="100">
+            </label>
+            <label>左右 <output id="assetOffsetXOut">0%</output>
+              <input id="assetOffsetX" type="range" min="-150" max="150" value="0">
+            </label>
+            <label>上下 <output id="assetOffsetYOut">0%</output>
+              <input id="assetOffsetY" type="range" min="-150" max="150" value="0">
+            </label>
+          </div>
+        </div>
+        <div class="section-heading" style="margin-top:14px">
+          <p class="section-label">句子里的图标 · 逐个挪位置</p>
+        </div>
+        <div class="textswell-used" id="usedIcons"></div>
       </section>
 
       <section class="color-row">
@@ -134,6 +167,9 @@
         </label>
         <label>字距 <output id="trackingOut">-0.02em</output>
           <input id="tracking" type="range" min="-80" max="80" step="1" value="-20">
+        </label>
+        <label>图标间距 <output id="iconGapOut">0.18em</output>
+          <input id="iconGap" type="range" min="0" max="80" step="1" value="18">
         </label>
         <label>字号 <output id="fontSizeOut">72</output>
           <input id="fontSize" type="range" min="28" max="140" step="1" value="72">
@@ -179,6 +215,7 @@
   </details>
   <script src="js/continuation-gif.js"></script>
   <script src="js/h264-mp4-encoder.web.js"></script>
+  <script src="token-asset-tools.js"></script>
   <script src="fx-kit.js"></script>
   <script src="wordflip.js"></script>
   <script src="me-motion-editor.js"></script>
