@@ -56,8 +56,8 @@
           <label data-color-slot="3">颜色 C<input id="ibColorC" type="color" value="#32c5ff"></label>
           <label data-color-slot="4">颜色 D<input id="ibColorD" type="color" value="#ffd60a"></label>
         </div>
-        <div class="ib-two"><label>换色速度 <output id="ibColorSpeedValue">5.0×</output><input id="ibColorSpeed" type="range" min="0.5" max="6" value="5" step="0.1"></label><label>颜色停留 <output id="ibSoftnessValue">28%</output><input id="ibSoftness" type="range" min="8" max="70" value="28"></label></div>
-        <p class="ib-help">只启用所选数量的颜色；最后一个启用颜色会作为整句统一收尾色，因此左右字数不一致时也不会出现两边颜色不同。</p>
+        <div class="ib-two"><label>换色速度 <output id="ibColorSpeedValue">5.0×</output><input id="ibColorSpeed" type="range" min="0.5" max="24" value="5" step="0.1"></label><label>颜色停留 <output id="ibSoftnessValue">28%</output><input id="ibSoftness" type="range" min="8" max="70" value="28"></label></div>
+        <p class="ib-help">扫色严格按已启用的 A → B → C → D 顺序经过；最后一个启用颜色会作为整句统一收尾色。换色速度最高 24×，可做超级快速扫色。</p>
       </section>
 
       <section class="ib-section">
@@ -209,7 +209,7 @@
   </main>
   <script src="js/continuation-gif.js"></script>
   <script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="iconburst.js?v=20260824-31"></script>
+  <script src="iconburst.js?v=20260824-32"></script>
   <script src="stg-cn.js"></script>
 </body>
 </html>

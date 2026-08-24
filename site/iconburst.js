@@ -162,7 +162,7 @@
     }, overrides || {}));
   }
   function collisionColorProgress(value) {
-    const colorSpeed = clamp(Number($("ibColorSpeed").value), .5, 6);
+    const colorSpeed = clamp(Number($("ibColorSpeed").value), .5, 24);
     // Keep a visible blend window even at the fastest setting. The previous
     // multiplier completed a color change in less than one 30fps frame.
     const durationScale = clamp(5 / colorSpeed, .82, 3);
@@ -889,12 +889,15 @@
     const colors = activeEffectColors();
     if (!colors.length) return base;
     const position = count > 1 ? index / (count - 1) : 0;
-    const softness = .05 + clamp(Number($("ibSoftness").value), 0, 100) / 100 * .10;
-    // One continuous front travels beyond both edges. Behind the front, every
-    // glyph passes through A → B → C → D and settles on the final active color.
-    const colorHead = -.10 + 1.44 * clamp(colorReveal, 0, 1);
+    const softness = .04 + clamp(Number($("ibSoftness").value), 0, 100) / 100 * .09;
+    // Keep every enabled swatch inside the visible sweep trail. The previous
+    // narrow trail compressed intermediate selected colors until they were
+    // almost invisible and made the sweep appear to ignore them.
+    const paletteWidth = .20 + colors.length * .14;
+    const colorTravel = 1 + paletteWidth + softness * 2;
+    const colorHead = -softness + colorTravel * clamp(colorReveal, 0, 1);
     const coverage = smoothstep(clamp((colorHead - position + softness) / (softness * 2), 0, 1));
-    const paletteProgress = clamp((colorHead - position) / .28, 0, 1);
+    const paletteProgress = clamp((colorHead - position) / paletteWidth, 0, 1);
     let color = mixHex(base, sampleColorList(colors, paletteProgress), coverage);
     // The return to the base color uses the same left-to-right light front,
     // preventing the fully colored word from snapping back in one frame.
@@ -1036,19 +1039,18 @@
     // Color begins with the centre pair, not after every pair has already
     // arrived. This overlap is the visual hand-off between collision and color.
     const lettersMoveStart = contactStartSeconds;
-    const colorSpeed = clamp(Number($("ibColorSpeed").value), .5, 6);
+    const colorSpeed = clamp(Number($("ibColorSpeed").value), .5, 24);
     const colorHold = clamp(Number($("ibSoftness").value), 8, 70);
-    const colorDuration = clamp(.11 * (5 / colorSpeed), .085, .55);
-    // A quick colored light sweep continues briefly after the compact word
-    // forms. Its soft edge supplies continuity without turning into a fade.
-    const colorTailDuration = clamp(.16 * (5 / colorSpeed), .10, .55);
+    // The colored front has its own clock. It must not inherit the duration of
+    // the last colliding pair or the speed control becomes visually inert.
+    const colorDuration = clamp(.55 * (5 / colorSpeed), .11, 2.50);
     const colorHoldDuration = clamp(.02 + (colorHold - 28) / 42 * .16, .01, .18);
-    const whiteDuration = clamp(.08 * (5 / colorSpeed), .06, .40);
-    // The color wave starts with pair one, but it is not allowed to finish
-    // before the final outer pair arrives. This keeps collision and color on
-    // one continuous beat instead of racing into the reset chapter.
-    const colorFullSeconds = Math.max(lettersMoveStart + colorDuration, contactSeconds + colorTailDuration);
-    const whiteStartSeconds = colorFullSeconds + colorHoldDuration;
+    const whiteDuration = clamp(.20 * (5 / colorSpeed), .04, .80);
+    const colorFullSeconds = lettersMoveStart + colorDuration;
+    // A fast sweep can finish while the outer letters are still arriving.
+    // Keep its final selected color until the word is compact, then return to
+    // the base color before in-place glyph replacement begins.
+    const whiteStartSeconds = Math.max(colorFullSeconds + colorHoldDuration, contactSeconds + .02);
     const whiteFullSeconds = whiteStartSeconds + whiteDuration;
     const replaceStartSeconds = whiteFullSeconds + .04;
     return {
