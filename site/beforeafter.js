@@ -10,7 +10,9 @@
   const canvas = $("#flowCanvas");
   const frameCounter = $("#frameCounter");
   const exportStatus = $("#exportStatus");
+  const schemeStatus = $("#schemeStatus");
   const fps = 30;
+  const SAVE_KEY = "me-beforeafter-preset";
   const inputs = {
     beforeLabel: $("#beforeLabel"),
     afterLabel: $("#afterLabel"),
@@ -41,7 +43,15 @@
     beforePanX: $("#beforePanX"),
     beforePanY: $("#beforePanY"),
     afterPanX: $("#afterPanX"),
-    afterPanY: $("#afterPanY")
+    afterPanY: $("#afterPanY"),
+    sliderEnabled: $("#sliderEnabled"),
+    sliderStart: $("#sliderStart"),
+    sliderEnd: $("#sliderEnd"),
+    sliderDuration: $("#sliderDuration"),
+    sliderHold: $("#sliderHold"),
+    sliderMode: $("#sliderMode"),
+    sliderHandleSize: $("#sliderHandleSize"),
+    sliderLineColor: $("#sliderLineColor")
   };
 
   const fontMap = {
@@ -58,6 +68,9 @@
   let animationStart = performance.now();
   let pausedAt = 0;
   let paused = false;
+  let sliderOverride = null;
+  let dragPointerId = null;
+  let autoSaveTimer = 0;
 
   const clamp01 = (value) => Math.max(0, Math.min(1, value));
   const lerp = (a, b, t) => a + (b - a) * t;
@@ -109,7 +122,15 @@
       beforePanX: Number(inputs.beforePanX && inputs.beforePanX.value || 0) / 100,
       beforePanY: Number(inputs.beforePanY && inputs.beforePanY.value || 0) / 100,
       afterPanX: Number(inputs.afterPanX && inputs.afterPanX.value || 0) / 100,
-      afterPanY: Number(inputs.afterPanY && inputs.afterPanY.value || 0) / 100
+      afterPanY: Number(inputs.afterPanY && inputs.afterPanY.value || 0) / 100,
+      sliderEnabled: Boolean(inputs.sliderEnabled && inputs.sliderEnabled.checked),
+      sliderStart: Number(inputs.sliderStart && inputs.sliderStart.value || 18) / 100,
+      sliderEnd: Number(inputs.sliderEnd && inputs.sliderEnd.value || 82) / 100,
+      sliderDuration: Number(inputs.sliderDuration && inputs.sliderDuration.value || 1800) / 1000,
+      sliderHold: Number(inputs.sliderHold && inputs.sliderHold.value || 1000) / 1000,
+      sliderMode: inputs.sliderMode && inputs.sliderMode.value || "roundTrip",
+      sliderHandleSize: Number(inputs.sliderHandleSize && inputs.sliderHandleSize.value || 44),
+      sliderLineColor: colorValue("sliderLineColor", "#ffffff")
     };
   }
 
@@ -121,7 +142,11 @@
     const generateEnd = dropEnd + options.generateDuration;
     const hundredHoldEnd = generateEnd + options.hundredHold;
     const resultEnd = hundredHoldEnd + options.resultHold;
-    return { compareEnd, switchEnd, uploadEnd, dropEnd, generateEnd, hundredHoldEnd, resultEnd };
+    const sliderTravel = options.sliderEnabled ? options.sliderDuration * (options.sliderMode === "roundTrip" ? 2 : 1) : 0;
+    const sliderMoveEnd = resultEnd + sliderTravel;
+    const sliderEnd = sliderMoveEnd + (options.sliderEnabled ? options.sliderHold : 0);
+    const cycleEnd = options.sliderEnabled ? sliderEnd : resultEnd;
+    return { compareEnd, switchEnd, uploadEnd, dropEnd, generateEnd, hundredHoldEnd, resultEnd, sliderMoveEnd, sliderEnd, cycleEnd };
   }
 
   function loadImage(src) {
@@ -292,6 +317,80 @@
     if (photos.after) drawCover(context, photos.after, box.x, box.y, box.w, box.h, radius, options.afterPanX, options.afterPanY);
   }
 
+  function drawSliderChip(context, text, x, y, align, size, family) {
+    context.save();
+    context.font = `650 ${size}px "${family}", "IBSCRegular", sans-serif`;
+    const width = context.measureText(text).width + size * 1.15;
+    const height = size * 1.65;
+    const left = align === "right" ? x - width : x;
+    context.fillStyle = "rgba(20,20,22,.58)";
+    roundRect(context, left, y - height, width, height, height * .34);
+    context.fill();
+    context.fillStyle = "#ffffff";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText(text, left + width / 2, y - height / 2 + 1);
+    context.restore();
+  }
+
+  function drawSliderCompare(context, w, h, options, position) {
+    const source = compareLayout(w, h, options).before;
+    const box = { x: source.x, y: (h - source.h) / 2, w: source.w, h: source.h };
+    const radius = options.radius * Math.min(w, h) / 720;
+    const split = box.x + box.w * clamp01(position);
+    context.fillStyle = options.compareBg;
+    context.fillRect(0, 0, w, h);
+
+    if (photos.before) drawCover(context, photos.before, box.x, box.y, box.w, box.h, radius, options.beforePanX, options.beforePanY);
+    else drawEmpty(context, box.x, box.y, box.w, box.h, radius, "#8d8d92");
+
+    context.save();
+    roundRect(context, box.x, box.y, box.w, box.h, radius);
+    context.clip();
+    context.beginPath();
+    context.rect(split, box.y, Math.max(0, box.x + box.w - split), box.h);
+    context.clip();
+    if (photos.after) drawCover(context, photos.after, box.x, box.y, box.w, box.h, radius, options.afterPanX, options.afterPanY);
+    context.restore();
+
+    const lineWidth = Math.max(2, Math.min(w, h) * .004);
+    context.save();
+    context.strokeStyle = options.sliderLineColor;
+    context.lineWidth = lineWidth;
+    context.beginPath();
+    context.moveTo(split, box.y);
+    context.lineTo(split, box.y + box.h);
+    context.stroke();
+
+    const handleRadius = Math.max(14, options.sliderHandleSize * Math.min(w, h) / 720);
+    const cy = box.y + box.h / 2;
+    context.shadowColor = "rgba(0,0,0,.2)";
+    context.shadowBlur = handleRadius * .36;
+    context.fillStyle = "rgba(255,255,255,.94)";
+    context.beginPath();
+    context.arc(split, cy, handleRadius, 0, Math.PI * 2);
+    context.fill();
+    context.shadowColor = "transparent";
+    context.strokeStyle = "rgba(72,72,76,.55)";
+    context.lineWidth = Math.max(1.5, handleRadius * .075);
+    const arrow = handleRadius * .37;
+    context.beginPath();
+    context.moveTo(split - arrow * .18, cy - arrow);
+    context.lineTo(split - arrow, cy);
+    context.lineTo(split - arrow * .18, cy + arrow);
+    context.moveTo(split + arrow * .18, cy - arrow);
+    context.lineTo(split + arrow, cy);
+    context.lineTo(split + arrow * .18, cy + arrow);
+    context.stroke();
+    context.restore();
+
+    const chipSize = Math.max(12, h * .021) * options.labelSize;
+    const chipY = box.y + box.h - Math.max(10, h * .012);
+    drawSliderChip(context, options.beforeLabel, box.x + Math.max(10, box.w * .035), chipY, "left", chipSize, options.beforeFont);
+    drawSliderChip(context, options.afterLabel, box.x + box.w - Math.max(10, box.w * .035), chipY, "right", chipSize, options.afterFont);
+    return box;
+  }
+
   function drawUploadPage(context, w, h, options, drop, progress) {
     const layout = uploadLayout(w, h);
     const radius = Math.min(w, h) * 0.035;
@@ -317,13 +416,13 @@
     }
   }
 
-  function renderFrame(target, time, width, height, pixelRatio = 1) {
+  function renderFrame(target, time, width, height, pixelRatio = 1, manualSliderPosition = null) {
     const context = target.getContext("2d");
     const w = width ?? target.width / pixelRatio;
     const h = height ?? target.height / pixelRatio;
     const options = settings();
     const line = marks(options);
-    const clock = mod(time * options.speed, Math.max(0.05, line.resultEnd));
+    const clock = mod(time * options.speed, Math.max(0.05, line.cycleEnd));
     const radius = options.radius * Math.min(w, h) / 720;
 
     let phase = "compare";
@@ -331,7 +430,20 @@
     let drop = 0;
     let progress = 0;
     let reveal = 0;
-    if (clock >= line.hundredHoldEnd) {
+    let sliderPosition = options.sliderStart;
+    if (options.sliderEnabled && clock >= line.resultEnd) {
+      phase = "slider";
+      const elapsed = Math.max(0, clock - line.resultEnd);
+      const leg = Math.max(.001, options.sliderDuration);
+      if (options.sliderMode === "roundTrip" && elapsed > leg) {
+        const back = easeInOutCubic((elapsed - leg) / leg);
+        sliderPosition = lerp(options.sliderEnd, options.sliderStart, back);
+      } else {
+        sliderPosition = lerp(options.sliderStart, options.sliderEnd, easeInOutCubic(elapsed / leg));
+      }
+      if (target === canvas && sliderOverride != null) sliderPosition = sliderOverride;
+      if (manualSliderPosition != null) sliderPosition = clamp01(manualSliderPosition);
+    } else if (clock >= line.hundredHoldEnd) {
       phase = "result";
       switchT = 1;
       drop = 1;
@@ -364,7 +476,9 @@
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = "high";
 
-    if (phase === "result") {
+    if (phase === "slider") {
+      drawSliderCompare(context, w, h, options, sliderPosition);
+    } else if (phase === "result") {
       if (reveal < 1) {
         drawUploadPage(context, w, h, options, 1, 1);
         context.globalAlpha = reveal;
@@ -387,6 +501,7 @@
     if (target === canvas) {
       canvas.dataset.motionPhase = phase;
       canvas.dataset.progress = progress.toFixed(3);
+      canvas.dataset.sliderPosition = sliderPosition.toFixed(3);
     }
   }
 
@@ -408,13 +523,71 @@
   }
   function cycleLength() {
     const options = settings();
-    return Math.max(0.05, marks(options).resultEnd / Math.max(0.05, options.speed));
+    return Math.max(0.05, marks(options).cycleEnd / Math.max(0.05, options.speed));
+  }
+
+  function timelineBeats(options = settings(), line = marks(options)) {
+    const beats = [
+      { kind: "intro", name: "图片对比页", start: 0, end: line.compareEnd },
+      { kind: "orbit", name: "切到上传页", start: line.compareEnd, end: line.switchEnd },
+      { kind: "hold", name: "原图飞入", start: line.switchEnd, end: line.dropEnd },
+      { kind: "color", name: "生成到 100%", start: line.dropEnd, end: line.generateEnd },
+      { kind: "hold", name: "满格停留", start: line.generateEnd, end: line.hundredHoldEnd },
+      { kind: "replace", name: "效果图成片", start: line.hundredHoldEnd, end: line.resultEnd }
+    ];
+    if (options.sliderEnabled) beats.push({ kind: "contact", name: "滑动对比", start: line.resultEnd, end: line.sliderEnd });
+    return beats.map((beat, index) => ({ ...beat, index, duration: Math.max(0, beat.end - beat.start) }));
+  }
+
+  function renderTimeline() {
+    const track = $("#beforeAfterTimelineTrack");
+    const list = $("#beforeAfterTimelineList");
+    if (!track || !list) return;
+    const options = settings();
+    const line = marks(options);
+    const beats = timelineBeats(options, line);
+    track.replaceChildren();
+    list.replaceChildren();
+    beats.forEach((beat) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `me-choreo-block is-${beat.kind}`;
+      button.style.flex = `${Math.max(.08, beat.duration)} 1 0`;
+      button.dataset.beatIndex = String(beat.index);
+      button.innerHTML = `<em>${beat.index + 1}</em><strong>${beat.name}</strong><small>${formatSeconds(beat.duration)}</small>`;
+      button.addEventListener("click", () => {
+        sliderOverride = null;
+        setTime((beat.start + .001) / Math.max(.05, options.speed));
+      });
+      track.append(button);
+      const row = document.createElement("li");
+      row.innerHTML = `<i class="is-${beat.kind}"></i><b>${beat.index + 1}. ${beat.name}</b><span>${beat.start.toFixed(2)}s → ${beat.end.toFixed(2)}s</span>`;
+      list.append(row);
+    });
+    const playhead = document.createElement("i");
+    playhead.className = "me-choreo-playhead";
+    playhead.id = "beforeAfterTimelinePlayhead";
+    playhead.setAttribute("aria-hidden", "true");
+    track.append(playhead);
+  }
+
+  function updateTimelinePlayhead(time) {
+    const options = settings();
+    const line = marks(options);
+    const clock = mod(time * options.speed, Math.max(.05, line.cycleEnd));
+    const playhead = $("#beforeAfterTimelinePlayhead");
+    if (playhead) playhead.style.left = `${(clock / Math.max(.05, line.cycleEnd) * 100).toFixed(3)}%`;
+    const active = timelineBeats(options, line).find((beat) => clock >= beat.start && clock < beat.end)?.index ?? 0;
+    document.querySelectorAll("#beforeAfterTimelineTrack [data-beat-index]").forEach((element) => {
+      element.classList.toggle("is-active", Number(element.dataset.beatIndex) === active);
+    });
   }
 
   function previewLoop() {
     resizeCanvas();
     const ratio = Number(canvas.dataset.ratio || 1);
     renderFrame(canvas, currentTime(), canvas.width / ratio, canvas.height / ratio, ratio);
+    updateTimelinePlayhead(currentTime());
     frameCounter.textContent = `F ${String(Math.round(mod(currentTime(), cycleLength()) * fps)).padStart(4, "0")}`;
     requestAnimationFrame(previewLoop);
   }
@@ -448,15 +621,25 @@
     $("#beforePanYOut").textContent = axis(options.beforePanY, "上", "下");
     $("#afterPanXOut").textContent = axis(options.afterPanX, "左", "右");
     $("#afterPanYOut").textContent = axis(options.afterPanY, "上", "下");
+    $("#sliderStartOut").textContent = `${Math.round(options.sliderStart * 100)}%`;
+    $("#sliderEndOut").textContent = `${Math.round(options.sliderEnd * 100)}%`;
+    $("#sliderDurationOut").textContent = formatSeconds(options.sliderDuration);
+    $("#sliderHoldOut").textContent = formatSeconds(options.sliderHold);
+    $("#sliderHandleSizeOut").textContent = String(Math.round(options.sliderHandleSize));
+    $(".ba-slider-section")?.classList.toggle("is-disabled", !options.sliderEnabled);
+    $("#previewSliderButton").disabled = !options.sliderEnabled;
     const percentOut = $("#percentColorOut");
     if (percentOut) percentOut.textContent = options.percentColor;
+    renderTimeline();
   }
 
   Object.values(inputs).forEach((input) => {
     if (!input) return;
     const onEdit = () => {
+      if ([inputs.sliderEnabled, inputs.sliderStart, inputs.sliderEnd, inputs.sliderDuration, inputs.sliderHold, inputs.sliderMode].includes(input)) sliderOverride = null;
       updateOutputs();
-      const live = input === inputs.radius || input === inputs.pagePad || input === inputs.beforeFont || input === inputs.afterFont || input === inputs.labelSize || input === inputs.labelTracking || input === inputs.labelPad || input === inputs.beforeShift || input === inputs.afterShift || input === inputs.frameScale || input === inputs.beforePanX || input === inputs.beforePanY || input === inputs.afterPanX || input === inputs.afterPanY || input.type === "color";
+      scheduleAutoSave();
+      const live = input === inputs.radius || input === inputs.pagePad || input === inputs.beforeFont || input === inputs.afterFont || input === inputs.labelSize || input === inputs.labelTracking || input === inputs.labelPad || input === inputs.beforeShift || input === inputs.afterShift || input === inputs.frameScale || input === inputs.beforePanX || input === inputs.beforePanY || input === inputs.afterPanX || input === inputs.afterPanY || input === inputs.sliderStart || input === inputs.sliderEnd || input === inputs.sliderHandleSize || input.type === "color";
       if (!live) setTime(0);
     };
     input.addEventListener("input", onEdit);
@@ -467,6 +650,7 @@
     if (!file) return;
     photos[kind] = await fileToImage(file);
     $(kind === "before" ? "#beforeName" : "#afterName").textContent = file.name;
+    scheduleAutoSave();
     setTime(0);
   }
   const defaultPhotos = { before: "assets/beforeafter-before.jpg", after: "assets/beforeafter-after.jpg" };
@@ -475,16 +659,18 @@
 
   $("#beforeFile").addEventListener("change", (event) => onUpload("before", event.target.files[0]));
   $("#afterFile").addEventListener("change", (event) => onUpload("after", event.target.files[0]));
-  $("#clearButton").addEventListener("click", async () => {
+  async function restoreDefault() {
+    clearTimeout(autoSaveTimer);
     if (approvedDefaultPreset) {
       await applyPreset(approvedDefaultPreset);
       localStorage.removeItem(SAVE_KEY);
       $("#beforeFile").value = "";
       $("#afterFile").value = "";
       exportStatus.textContent = "已恢复图片对比默认示例。";
+      if (schemeStatus) schemeStatus.textContent = "已恢复默认示例。";
       if (paused) {
         paused = false;
-        $("#pauseButton").textContent = "暂停";
+        syncPauseButtons();
       }
       return;
     }
@@ -498,7 +684,9 @@
       ["compareHold", "1400"], ["generateDuration", "900"], ["hundredHold", "800"], ["resultHold", "1600"], ["speed", "100"],
       ["pageSwitch", "400"], ["uploadHold", "350"], ["dropDuration", "550"], ["cutSoft", "180"],
       ["radius", "22"], ["pagePad", "7"],
-      ["compareBg", "#ffffff"], ["beforeColor", "#111111"], ["afterColor", "#111111"]
+      ["compareBg", "#ffffff"], ["beforeColor", "#111111"], ["afterColor", "#111111"],
+      ["sliderStart", "18"], ["sliderEnd", "82"], ["sliderDuration", "1800"], ["sliderHold", "1000"],
+      ["sliderMode", "roundTrip"], ["sliderHandleSize", "44"], ["sliderLineColor", "#ffffff"]
     ];
     formIds.forEach(([id, value]) => {
       const field = document.getElementById(id);
@@ -513,36 +701,119 @@
       photos.before = before;
       photos.after = after;
     } catch (_) {}
+    inputs.sliderEnabled.checked = true;
+    sliderOverride = null;
     updateOutputs();
     setTime(0);
     if (paused) {
       paused = false;
-      $("#pauseButton").textContent = "暂停";
+      syncPauseButtons();
     }
+  }
+
+  $("#resetButton").addEventListener("click", restoreDefault);
+  $("#clearButton").addEventListener("click", () => {
+    clearTimeout(autoSaveTimer);
+    photos.before = null;
+    photos.after = null;
+    $("#beforeName").textContent = "未选择原图";
+    $("#afterName").textContent = "未选择效果图";
+    inputs.beforeLabel.value = "Before";
+    inputs.afterLabel.value = "After";
+    inputs.sliderEnabled.checked = false;
+    sliderOverride = null;
+    localStorage.removeItem(SAVE_KEY);
+    updateOutputs();
+    restartPlayback();
+    exportStatus.textContent = "已清空图片和第二阶段，可重新上传制作。";
+    if (schemeStatus) schemeStatus.textContent = "已清理，可重新上传图片制作。";
   });
 
-  $("#restartButton").addEventListener("click", () => setTime(0));
-  $("#pauseButton").addEventListener("click", (event) => {
+  function syncPauseButtons() {
+    $("#pauseButton").textContent = paused ? "继续" : "暂停";
+    $("#stagePauseIcon").textContent = paused ? "▶" : "Ⅱ";
+    $("#stagePauseLabel").textContent = paused ? "继续" : "暂停";
+    $("#stagePauseButton").setAttribute("aria-pressed", String(paused));
+  }
+
+  function restartPlayback() {
+    sliderOverride = null;
+    paused = false;
+    setTime(0);
+    syncPauseButtons();
+  }
+
+  function togglePause() {
     if (paused) {
       animationStart = performance.now() - pausedAt * 1000;
       paused = false;
-      event.currentTarget.textContent = "暂停";
     } else {
       pausedAt = currentTime();
       paused = true;
-      event.currentTarget.textContent = "继续";
     }
-  });
+    syncPauseButtons();
+  }
+
+  $("#restartButton").addEventListener("click", restartPlayback);
+  $("#stageRestartButton").addEventListener("click", restartPlayback);
+  $("#pauseButton").addEventListener("click", togglePause);
+  $("#stagePauseButton").addEventListener("click", togglePause);
   $("#backButton").addEventListener("click", () => {
     paused = true;
     setTime(currentTime() - 1 / fps);
-    $("#pauseButton").textContent = "继续";
+    syncPauseButtons();
   });
   $("#forwardButton").addEventListener("click", () => {
     paused = true;
     setTime(currentTime() + 1 / fps);
-    $("#pauseButton").textContent = "继续";
+    syncPauseButtons();
   });
+
+  $("#previewSliderButton").addEventListener("click", () => {
+    if (!inputs.sliderEnabled.checked) return;
+    const options = settings();
+    sliderOverride = options.sliderStart;
+    paused = true;
+    setTime((marks(options).resultEnd + .001) / Math.max(.05, options.speed));
+    syncPauseButtons();
+  });
+
+  function setSliderFromPointer(event) {
+    const options = settings();
+    if (!options.sliderEnabled) return false;
+    const rect = canvas.getBoundingClientRect();
+    const w = Math.max(1, canvas.clientWidth);
+    const h = Math.max(1, canvas.clientHeight);
+    const px = (event.clientX - rect.left) * w / Math.max(1, rect.width);
+    const py = (event.clientY - rect.top) * h / Math.max(1, rect.height);
+    const source = compareLayout(w, h, options).before;
+    const box = { x: source.x, y: (h - source.h) / 2, w: source.w, h: source.h };
+    if (event.type === "pointerdown" && (px < box.x || px > box.x + box.w || py < box.y || py > box.y + box.h)) return false;
+    sliderOverride = clamp01((px - box.x) / Math.max(1, box.w));
+    paused = true;
+    setTime((marks(options).resultEnd + .001) / Math.max(.05, options.speed));
+    syncPauseButtons();
+    return true;
+  }
+
+  canvas.addEventListener("pointerdown", (event) => {
+    if (!setSliderFromPointer(event)) return;
+    dragPointerId = event.pointerId;
+    canvas.setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+  });
+  canvas.addEventListener("pointermove", (event) => {
+    if (dragPointerId !== event.pointerId) return;
+    setSliderFromPointer(event);
+    event.preventDefault();
+  });
+  const finishSliderDrag = (event) => {
+    if (dragPointerId !== event.pointerId) return;
+    dragPointerId = null;
+    canvas.releasePointerCapture?.(event.pointerId);
+  };
+  canvas.addEventListener("pointerup", finishSliderDrag);
+  canvas.addEventListener("pointercancel", finishSliderDrag);
 
   function exportDimensions() {
     const preset = $("#exportPreset").value;
@@ -578,7 +849,7 @@
   });
   $("#exportPng").addEventListener("click", () => {
     const output = makeExportCanvas();
-    renderFrame(output, currentTime(), output.width, output.height, 1);
+    renderFrame(output, currentTime(), output.width, output.height, 1, sliderOverride);
     output.toBlob((blob) => {
       if (!blob) return;
       downloadBlob(blob, `before-after-${output.width}x${output.height}.png`);
@@ -616,7 +887,6 @@
     gif.render();
   });
 
-  const SAVE_KEY = "me-beforeafter-preset";
   const fieldIds = Object.keys(inputs);
 
   function imageToDataURL(image) {
@@ -633,10 +903,10 @@
     const fields = {};
     fieldIds.forEach((id) => {
       const el = inputs[id];
-      if (el && "value" in el) fields[id] = el.value;
+      if (el && "value" in el) fields[id] = el.type === "checkbox" ? el.checked : el.value;
     });
     return {
-      version: 1,
+      version: 2,
       fields,
       beforeName: $("#beforeName") ? $("#beforeName").textContent : "",
       afterName: $("#afterName") ? $("#afterName").textContent : "",
@@ -647,16 +917,42 @@
 
   async function applyPreset(preset) {
     if (!preset || !preset.fields) return;
-    Object.entries(preset.fields).forEach(([id, value]) => {
+    const fields = {
+      sliderEnabled: true,
+      sliderStart: "18",
+      sliderEnd: "82",
+      sliderDuration: "1800",
+      sliderHold: "1000",
+      sliderMode: "roundTrip",
+      sliderHandleSize: "44",
+      sliderLineColor: "#ffffff",
+      ...preset.fields
+    };
+    Object.entries(fields).forEach(([id, value]) => {
       const field = inputs[id] || document.getElementById(id);
-      if (field && value != null) field.value = value;
+      if (!field || value == null) return;
+      if (field.type === "checkbox") field.checked = value === true || value === "true" || value === "on" || value === 1;
+      else field.value = value;
     });
     if (preset.beforeName && $("#beforeName")) $("#beforeName").textContent = preset.beforeName;
     if (preset.afterName && $("#afterName")) $("#afterName").textContent = preset.afterName;
     if (preset.beforeImage) photos.before = await loadImage(preset.beforeImage);
     if (preset.afterImage) photos.after = await loadImage(preset.afterImage);
+    sliderOverride = null;
     updateOutputs();
     setTime(0);
+  }
+
+  function scheduleAutoSave() {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(() => {
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify(collectPreset()));
+        if (schemeStatus) schemeStatus.textContent = "已自动保存当前图片对比方案。";
+      } catch (_) {
+        if (schemeStatus) schemeStatus.textContent = "自动保存空间不足，请使用“保存方案”下载 JSON。";
+      }
+    }, 500);
   }
 
   function savePreset(downloadFile) {
@@ -669,6 +965,7 @@
       downloadBlob(new Blob([JSON.stringify(preset)], { type: "application/json" }), "beforeafter-preset.json");
     }
     exportStatus.textContent = downloadFile ? "方案已保存，并下载了模板文件。换尺寸后可直接导出。" : "方案已保存。换尺寸后可直接导出。";
+    if (schemeStatus) schemeStatus.textContent = downloadFile ? "方案已保存并下载 JSON。" : "方案已保存。";
   }
 
   $("#saveButton").addEventListener("click", () => savePreset(true));
@@ -681,6 +978,7 @@
       await applyPreset(preset);
       localStorage.setItem(SAVE_KEY, JSON.stringify(preset));
       exportStatus.textContent = "方案已导入。";
+      if (schemeStatus) schemeStatus.textContent = "方案已导入，滑杆阶段与图片已同步恢复。";
     } catch (error) {
       exportStatus.textContent = `导入失败：${error.message || "文件无效"}`;
     }
@@ -757,7 +1055,6 @@
     } catch (error) {
       console.error("Image Compare default preset failed to load", error);
     }
-
     let initialPreset = approvedDefaultPreset;
     try {
       const raw = localStorage.getItem(SAVE_KEY);

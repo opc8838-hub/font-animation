@@ -19,6 +19,10 @@
       <canvas id="flowCanvas"></canvas>
     </div>
     <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+    <div class="me-stage-controls" aria-label="画布播放控制">
+      <button id="stagePauseButton" type="button" aria-pressed="false"><span id="stagePauseIcon">Ⅱ</span> <span id="stagePauseLabel">暂停</span></button>
+      <button id="stageRestartButton" type="button">↻ 重播</button>
+    </div>
   </main>
 
   <details class="control-panel current-panel beforeafter-panel" id="controlPanel" open>
@@ -27,7 +31,22 @@
       <i aria-hidden="true">参数</i>
     </summary>
     <div class="panel-scroll">
+      <section class="ba-block scheme-section">
+        <p class="section-label">方案</p>
+        <div class="me-scheme-actions">
+          <button id="saveButton" type="button">保存方案</button>
+          <label class="me-scheme-import">导入方案<input id="importFile" type="file" accept="application/json,.json"></label>
+          <button id="resetButton" type="button">恢复默认</button>
+          <button id="clearButton" type="button">清理重做</button>
+        </div>
+        <p class="hint ba-scheme-status" id="schemeStatus" aria-live="polite">图片、取景、滑杆阶段与时间都会随方案保存。</p>
+      </section>
+
       <section class="ba-block">
+        <div class="section-heading">
+          <p class="section-label">图片</p>
+          <small class="section-note">原图 · 效果图</small>
+        </div>
         <div class="ba-uploads">
           <label class="ba-upload">
             <span>原图</span>
@@ -39,11 +58,6 @@
             <input id="afterFile" type="file" accept="image/*">
             <small id="afterName">默认风景效果图</small>
           </label>
-        </div>
-        <div class="ba-save-row">
-          <button id="saveButton" type="button">保存方案</button>
-          <label class="ba-import">导入方案<input id="importFile" type="file" accept="application/json,.json"></label>
-          <button id="clearButton" type="button">清理记录</button>
         </div>
       </section>
 
@@ -177,10 +191,51 @@
         </div>
       </section>
 
+      <section class="ba-block ba-slider-section">
+        <div class="section-heading">
+          <p class="section-label">滑动对比 · 第二阶段</p>
+          <small class="section-note">可选 · 画面可直接拖动</small>
+        </div>
+        <div class="ba-slider-enable">
+          <label class="ba-check"><input id="sliderEnabled" type="checkbox" checked><span>添加滑动对比阶段</span></label>
+          <button id="previewSliderButton" type="button">直接预览</button>
+        </div>
+        <div class="controls-grid ba-dense" id="sliderControls">
+          <label>滑杆起点 <output id="sliderStartOut">18%</output>
+            <input id="sliderStart" type="range" min="2" max="98" step="1" value="18">
+          </label>
+          <label>滑杆终点 <output id="sliderEndOut">82%</output>
+            <input id="sliderEnd" type="range" min="2" max="98" step="1" value="82">
+          </label>
+          <label>单程时间 <output id="sliderDurationOut">1.80秒</output>
+            <input id="sliderDuration" type="range" min="300" max="5000" step="50" value="1800">
+          </label>
+          <label>阶段停留 <output id="sliderHoldOut">1.00秒</output>
+            <input id="sliderHold" type="range" min="0" max="5000" step="50" value="1000">
+          </label>
+          <label>滑动方式
+            <select id="sliderMode">
+              <option value="roundTrip" selected>左右往返</option>
+              <option value="oneWay">单向滑动</option>
+            </select>
+          </label>
+          <label>手柄大小 <output id="sliderHandleSizeOut">44</output>
+            <input id="sliderHandleSize" type="range" min="24" max="90" step="1" value="44">
+          </label>
+        </div>
+        <div class="color-row ba-slider-colors">
+          <label>分隔线<input id="sliderLineColor" type="color" value="#ffffff"></label>
+        </div>
+        <p class="hint">播放和导出会按起点、终点与时间自动滑动；进入该阶段后，也可直接在画面上左右拖动。</p>
+      </section>
+
       <section class="motion-quick">
-        <div class="section-heading"><p class="section-label">时间轴</p><small class="section-note">图片对比页 → 上传页 → 100% → 成片</small></div>
-        <div class="motion-map beforeafter-map" aria-label="动效阶段">
-          <span>对比全屏</span><i>→</i><span>上传页</span><i>→</i><span>100%</span><i>→</i><span>成片</span>
+        <div class="section-heading"><p class="section-label">动效时间轴</p><small class="section-note">点一段可跳到该阶段</small></div>
+        <div class="me-choreo-track" id="beforeAfterTimeline" aria-label="图片对比动效时间轴">
+          <div class="me-choreo-scroll">
+            <div class="me-choreo-bar" id="beforeAfterTimelineTrack"></div>
+          </div>
+          <ol class="me-choreo-legend" id="beforeAfterTimelineList"></ol>
         </div>
         <div class="controls-grid quick-grid">
           <label>对比停留 <small class="stage-tag">上下排好</small><output id="compareHoldOut">1.40秒</output>
@@ -257,14 +312,13 @@
         </div>
         <p class="export-status" id="exportStatus" aria-live="polite">导出按输出画布单独排版，不含左侧编辑器。</p>
       </section>
-      <p class="formula">对比全屏 → Before 上传页 → 100% → 全屏效果图</p>
+      <p class="formula">图片对比 → 生成效果 → 可选滑杆对比</p>
     </div>
   </details>
 
   <script src="js/continuation-gif.js"></script>
-  <script src="CCapture.all.min.js"></script>
   <script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="beforeafter.js?v=20260824-default1"></script>
+  <script src="beforeafter.js?v=20260824-slider5"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260824-names1"></script>
 </body>

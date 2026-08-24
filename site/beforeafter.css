@@ -50,7 +50,10 @@
   display: block;
   width: 100%;
   height: 100%;
+  touch-action: none;
 }
+
+.ba-phone #flowCanvas[data-motion-phase="slider"] { cursor: ew-resize; }
 
 @media (max-width: 760px) {
   .ba-phone {
@@ -139,32 +142,37 @@ body.me-motion-editor .beforeafter-panel .formula {
   gap: 8px;
 }
 
-.ba-save-row {
+.ba-scheme-status { margin: 8px 0 0 !important; }
+
+.ba-slider-enable {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 6px;
-  margin-top: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
-.ba-import {
-  position: relative;
+.ba-slider-enable .ba-check {
   display: flex;
   align-items: center;
-  justify-content: center;
-  min-height: 38px;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #dedee3;
   border-radius: 10px;
-  background: #e8e8ed;
+  background: #fff;
   font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
+  font-weight: 650;
 }
 
-.ba-import input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-}
+.ba-slider-enable .ba-check input { width: 18px; height: 18px; accent-color: #0071e3; }
+.ba-slider-enable button { min-height: 40px !important; color: #0763ae !important; background: #edf5fd !important; }
+.ba-slider-colors { grid-template-columns: 1fr; margin-top: 7px; }
+.ba-slider-section.is-disabled #sliderControls,
+.ba-slider-section.is-disabled .ba-slider-colors { opacity: .42; pointer-events: none; }
+
+.beforeafter-panel .me-choreo-bar { min-width: 780px; }
+.beforeafter-panel .me-choreo-legend b { font-size: 10px; }
 
 .ba-upload {
   position: relative;
