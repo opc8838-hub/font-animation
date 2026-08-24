@@ -98,7 +98,7 @@ function render() {
   grid.innerHTML = visible.map(([slug, zh, en, , categoryName]) => {
     const index = effects.findIndex((effect) => effect[0] === slug) + 1;
     const imageName = slug === "crashclock" ? "final_crashclock.png" : ["iconburst", "focuswheel", "gradienttype", "glyphrelay", "wordgather", "focusportal", "rapidsequence", "citystack", "colorcanvas", "liquidtype", "scrapbin", "terminalbrand", "slotstories", "mediacascade", "colorrecompose", "phrasebuild", "switchdrop", "searchtyping", "beforeafter", "assemble", "verbcue", "tighten", "titlecard", "lockup", "promptcue", "pullback", "textswell", "wordflip", "textbuild", "textswap", "textreveal", "phoneframe", "laptopframe", "orbitgallery", "followerrush", "logoassemble", "moodboard"].includes(slug) ? `final_${slug}.svg` : `final_${slug}.png`;
-    const target = slug === "flash" ? "flash-scenes.html" : slug === "iconburst" ? "iconburst.html?v=20260824-10" : `${slug}.html`;
+    const target = slug === "flash" ? "flash-scenes.html" : slug === "iconburst" ? "iconburst.html?v=20260824-11" : `${slug}.html`;
     const detail = slug === "flash" ? "13 个独立子风格" : categoryName;
     const preview = livePreviews.has(slug)
       ? `<iframe class="effect-live" title="${zh}实时预览" data-src="${slug}.html?preview=1&amp;v=20260824-2" loading="lazy" tabindex="-1"></iframe>`

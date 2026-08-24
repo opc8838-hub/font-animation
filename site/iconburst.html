@@ -141,6 +141,7 @@
           <label>慢动作速度 <output id="ibDriftValue">28%</output><input id="ibDrift" type="range" min="15" max="60" value="28"></label>
           <label>终点前转幅度 <output id="ibOvershootValue">58%</output><input id="ibOvershoot" type="range" min="0" max="100" value="58"></label>
           <label>图文同步速度 <output id="ibSyncValue">1.25×</output><input id="ibSync" type="range" min="50" max="180" value="125" step="5"></label>
+          <label>字体靠拢速度 <output id="ibCollisionSpeedValue">1.50×</output><input id="ibCollisionSpeed" type="range" min="0.5" max="3" value="1.5" step="0.1"></label>
           <label>单对碰撞时长 <output id="ibCollisionDurationValue">0.26 秒</output><input id="ibCollisionDuration" type="range" min="80" max="800" value="260" step="10"></label>
           <label>逐对碰撞间隔 <output id="ibPairStaggerValue">0.10 秒</output><input id="ibPairStagger" type="range" min="40" max="260" value="95" step="5"></label>
           <label>球体旋转速度 <output id="ibOrbitSpeedValue">1.00×</output><input id="ibOrbitSpeed" type="range" min="50" max="200" value="100" step="5"></label>
@@ -150,7 +151,7 @@
           <label>替字收尾放大 <output id="ibFinalScaleValue">+5.5%</output><input id="ibFinalScale" type="range" min="0" max="10" value="5.5" step="0.5"></label>
           <label>收尾放大时长 <output id="ibFinalScaleDurationValue">0.52 秒</output><input id="ibFinalScaleDuration" type="range" min="200" max="1200" value="520" step="20"></label>
         </div>
-        <p class="ib-help">图文同步速度控制开场图标相对文字的快慢：1.00× 为同速，调高会让图标更快跟上文字，调低则更慢；两者由同一条连续时间线计算，不会再等文字播完才启动图标。慢动作速度表示聚拢后的惯性速度；终点前转幅度控制图标到达终点后还向前走多少。图标先完整前转，最后才缩小消失。</p>
+        <p class="ib-help">“字体靠拢速度”是最直观的总控：调高会同时缩短每一对字体的移动时间与接力间隔；下面的单对时长和逐对间隔可继续精调。换色速度会直接控制每一对字体靠拢时的颜色跃迁。</p>
         <label>循环速度 <output id="ibSpeedValue">1.0×</output><input id="ibSpeed" type="range" min="0.5" max="2" value="1" step="0.1"></label>
         <button id="ibRestart" class="ib-primary" type="button">从头播放</button>
       </section>
@@ -193,7 +194,7 @@
   </main>
   <script src="js/continuation-gif.js"></script>
   <script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="iconburst.js?v=20260824-10"></script>
+  <script src="iconburst.js?v=20260824-11"></script>
   <script src="stg-cn.js"></script>
 </body>
 </html>

@@ -139,6 +139,11 @@
     const t = clamp(value, 0, 1);
     return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   }
+  function collisionColorProgress(value) {
+    const colorSpeed = clamp(Number($("ibColorSpeed").value), .5, 6);
+    const velocity = .45 + colorSpeed * .75;
+    return easeOut(clamp(value * velocity, 0, 1));
+  }
   function createMonotoneSampler(keyframes) {
     const slopes = keyframes.slice(0, -1).map((point, index) => (keyframes[index + 1][1] - point[1]) / (keyframes[index + 1][0] - point[0]));
     const tangents = keyframes.map((point, index) => {
@@ -784,8 +789,9 @@
     const collapseStartSeconds = holdEndSeconds;
     const iconsGoneSeconds = collapseStartSeconds + .20;
     const pairCount = incomingPairCount();
-    const pairStaggerSeconds = clamp(Number($("ibPairStagger").value) / 1000, .04, .26);
-    const collisionDurationSeconds = clamp(Number($("ibCollisionDuration").value) / 1000, .08, .80);
+    const collisionSpeed = clamp(Number($("ibCollisionSpeed").value), .5, 3);
+    const pairStaggerSeconds = clamp(Number($("ibPairStagger").value) / 1000 / collisionSpeed, .015, .52);
+    const collisionDurationSeconds = clamp(Number($("ibCollisionDuration").value) / 1000 / collisionSpeed, .04, 1.60);
     // The centre pair starts while the icon cloud is still suspended. Each
     // following pair joins in rank order, so arbitrary text lengths generate
     // their own collision choreography instead of collapsing all at once.
@@ -915,7 +921,7 @@
     "ibText", "ibFont", "ibWeight", "ibFontSize", "ibTracking",
     "ibColorMode", "ibBaseColor", "ibColorA", "ibColorB", "ibColorC", "ibColorD", "ibBackground", "ibColorSpeed", "ibSoftness",
     "ibContentMode", "ibRange", "ibSize", "ibReplaceCount", "ibBeat", "ibReplaceSpeed", "ibCollapse", "ibHang", "ibDrift", "ibOvershoot",
-    "ibSync", "ibCollisionDuration", "ibPairStagger", "ibOrbitSpeed", "ibWordReturn", "ibDensity", "ibCurve", "ibFinalScale", "ibFinalScaleDuration", "ibSpeed"
+    "ibSync", "ibCollisionSpeed", "ibCollisionDuration", "ibPairStagger", "ibOrbitSpeed", "ibWordReturn", "ibDensity", "ibCurve", "ibFinalScale", "ibFinalScaleDuration", "ibSpeed"
   ];
   const defaultControlValues = Object.fromEntries(schemeControlIds.map((id) => [id, $(id).value]));
 
@@ -1327,7 +1333,7 @@
         const rankRatio = maxRank > 0 ? rank / maxRank : 0;
         const openDistance = sideShift * (.88 + .12 * rankRatio);
         letter.style.setProperty("--incoming-letter-x", `${(direction * openDistance * (1 - close)).toFixed(2)}px`);
-        letter.style.setProperty("--incoming-letter-color", mixHex(collisionBaseColor, collisionColors[inwardOrder % collisionColors.length], easeOut(localProgress)));
+        letter.style.setProperty("--incoming-letter-color", mixHex(collisionBaseColor, collisionColors[inwardOrder % collisionColors.length], collisionColorProgress(localProgress)));
       });
     });
 
@@ -1813,7 +1819,7 @@
           const openDistance = sideShift * (.88 + .12 * rankRatio);
           const x = startX + sideLayout.centers[index] + direction * openDistance * (1 - close) + direction * orbitShift;
           const pairColors = [$("ibColorA").value, $("ibColorC").value, $("ibColorB").value, $("ibColorD").value];
-          ctx.fillStyle = mixHex($("ibBaseColor").value, pairColors[rank % pairColors.length], easeOut(localProgress));
+          ctx.fillStyle = mixHex($("ibBaseColor").value, pairColors[rank % pairColors.length], collisionColorProgress(localProgress));
           ctx.textAlign = "center";
           ctx.textBaseline = "alphabetic";
           ctx.fillText(letter.textContent, x, baseline);
@@ -2131,6 +2137,7 @@
     ["ibHang", "ibHangValue", (value) => `${(Number(value) / 100).toFixed(2)} 秒`],
     ["ibDrift", "ibDriftValue", (value) => `${value}%`],
     ["ibSync", "ibSyncValue", (value) => `${(Number(value) / 100).toFixed(2)}×`],
+    ["ibCollisionSpeed", "ibCollisionSpeedValue", (value) => `${Number(value).toFixed(2)}×`],
     ["ibCollisionDuration", "ibCollisionDurationValue", (value) => `${(Number(value) / 1000).toFixed(2)} 秒`],
     ["ibPairStagger", "ibPairStaggerValue", (value) => `${(Number(value) / 1000).toFixed(2)} 秒`],
     ["ibOvershoot", "ibOvershootValue", (value) => `${value}%`],
@@ -2147,7 +2154,7 @@
   // control restarts the complete choreography so the user sees the title
   // grow over time in its actual replacement chapter.
   ["ibFinalScale", "ibFinalScaleDuration"].forEach((id) => $(id).addEventListener("change", restart));
-  ["ibWordReturn", "ibSync", "ibCollisionDuration", "ibPairStagger", "ibOrbitSpeed", "ibOvershoot"].forEach((id) => $(id).addEventListener("change", restart));
+  ["ibWordReturn", "ibSync", "ibCollisionSpeed", "ibCollisionDuration", "ibPairStagger", "ibOrbitSpeed", "ibOvershoot"].forEach((id) => $(id).addEventListener("change", restart));
 
   $("ibSaveScheme").addEventListener("click", () => {
     const scheme = collectScheme();
