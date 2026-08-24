@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="对照：先排原图和效果图，再生成到 100%，连贯切到成片。">
-  <title>对照 Before After | ME Motion Studio</title>
+  <meta name="description" content="图片对比：先排原图和效果图，再生成到 100%，连贯切到成片。">
+  <title>图片对比 Before After | ME Motion Studio</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;f[]=general-sans@400,500,600&amp;display=swap">
   <link rel="stylesheet" href="continuation.css">
@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="stg-cn.css">
 </head>
 <body class="me-motion-editor">
-  <main class="current-stage beforeafter-stage" aria-label="对照动效画布">
+  <main class="current-stage beforeafter-stage" aria-label="图片对比动效画布">
     <div class="ba-phone">
       <canvas id="flowCanvas"></canvas>
     </div>
@@ -23,7 +23,7 @@
 
   <details class="control-panel current-panel beforeafter-panel" id="controlPanel" open>
     <summary>
-      <span><b>对照</b><small>BEFORE AFTER / 35</small></span>
+      <span><b>图片对比</b><small>BEFORE AFTER / 35</small></span>
       <i aria-hidden="true">参数</i>
     </summary>
     <div class="panel-scroll">
@@ -178,12 +178,12 @@
       </section>
 
       <section class="motion-quick">
-        <div class="section-heading"><p class="section-label">时间轴</p><small class="section-note">对照页 → 上传页 → 100% → 成片</small></div>
+        <div class="section-heading"><p class="section-label">时间轴</p><small class="section-note">图片对比页 → 上传页 → 100% → 成片</small></div>
         <div class="motion-map beforeafter-map" aria-label="动效阶段">
-          <span>对照全屏</span><i>→</i><span>上传页</span><i>→</i><span>100%</span><i>→</i><span>成片</span>
+          <span>对比全屏</span><i>→</i><span>上传页</span><i>→</i><span>100%</span><i>→</i><span>成片</span>
         </div>
         <div class="controls-grid quick-grid">
-          <label>对照停留 <small class="stage-tag">上下排好</small><output id="compareHoldOut">1.40秒</output>
+          <label>对比停留 <small class="stage-tag">上下排好</small><output id="compareHoldOut">1.40秒</output>
             <input id="compareHold" type="range" min="400" max="4000" step="50" value="1400">
           </label>
           <label>生成时间 <small class="stage-tag">0 → 100%</small><output id="generateDurationOut">0.90秒</output>
@@ -257,15 +257,15 @@
         </div>
         <p class="export-status" id="exportStatus" aria-live="polite">导出按输出画布单独排版，不含左侧编辑器。</p>
       </section>
-      <p class="formula">对照全屏 → Before 上传页 → 100% → 全屏效果图</p>
+      <p class="formula">对比全屏 → Before 上传页 → 100% → 全屏效果图</p>
     </div>
   </details>
 
   <script src="js/continuation-gif.js"></script>
   <script src="CCapture.all.min.js"></script>
   <script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="beforeafter.js?v=20260824-fonts1"></script>
+  <script src="beforeafter.js?v=20260824-default1"></script>
   <script src="me-motion-editor.js"></script>
-  <script src="stg-cn.js?v=20260824-fonts1"></script>
+  <script src="stg-cn.js?v=20260824-names1"></script>
 </body>
 </html>

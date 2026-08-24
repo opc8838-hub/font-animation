@@ -26,7 +26,7 @@ const effects = [
   ["phrasebuild", "组句", "Phrase Build", "type", "累计组词"],
   ["switchdrop", "降临", "Switch Drop", "graphic", "主体降临 × 明暗开关"],
   ["searchtyping", "搜写", "Search Typing", "type", "搜索框逐字打入"],
-  ["beforeafter", "对照", "Before After", "type", "原图对照 · 生成切成片"],
+  ["beforeafter", "图片对比", "Before After", "type", "原图对比 · 生成切成片"],
   ["assemble", "拼字", "Assemble", "type", "碎片飞入拼成字标"],
   ["verbcue", "动令", "Verb Cue", "type", "短句打散 · 像素扫清"],
   ["tighten", "收距", "Tighten", "type", "词距先松后紧"],

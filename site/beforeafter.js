@@ -470,10 +470,24 @@
     setTime(0);
   }
   const defaultPhotos = { before: "assets/beforeafter-before.jpg", after: "assets/beforeafter-after.jpg" };
+  const DEFAULT_PRESET_URL = "assets/presets/beforeafter-default.json?v=20260824-1";
+  let approvedDefaultPreset = null;
 
   $("#beforeFile").addEventListener("change", (event) => onUpload("before", event.target.files[0]));
   $("#afterFile").addEventListener("change", (event) => onUpload("after", event.target.files[0]));
   $("#clearButton").addEventListener("click", async () => {
+    if (approvedDefaultPreset) {
+      await applyPreset(approvedDefaultPreset);
+      localStorage.removeItem(SAVE_KEY);
+      $("#beforeFile").value = "";
+      $("#afterFile").value = "";
+      exportStatus.textContent = "已恢复图片对比默认示例。";
+      if (paused) {
+        paused = false;
+        $("#pauseButton").textContent = "暂停";
+      }
+      return;
+    }
     const formIds = [
       ["beforeLabel", "Before"], ["afterLabel", "After"],
       ["beforeFont", "space"], ["afterFont", "space"],
@@ -724,17 +738,33 @@
   $("#exportVideo").addEventListener("click", () => exportVideo(false));
   $("#exportVerticalVideo").addEventListener("click", () => exportVideo(true));
 
-  Promise.all([
-    loadImage("assets/beforeafter-before.jpg"),
-    loadImage("assets/beforeafter-after.jpg")
-  ]).then(async ([before, after]) => {
-    photos.before = before;
-    photos.after = after;
+  (async function initializePreset() {
+    try {
+      const [before, after] = await Promise.all([
+        loadImage(defaultPhotos.before),
+        loadImage(defaultPhotos.after)
+      ]);
+      photos.before = before;
+      photos.after = after;
+    } catch (_) {}
+
+    try {
+      const response = await fetch(DEFAULT_PRESET_URL, { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const preset = await response.json();
+      if (!preset?.fields) throw new Error("方案格式不正确");
+      approvedDefaultPreset = preset;
+    } catch (error) {
+      console.error("Image Compare default preset failed to load", error);
+    }
+
+    let initialPreset = approvedDefaultPreset;
     try {
       const raw = localStorage.getItem(SAVE_KEY);
-      if (raw) await applyPreset(JSON.parse(raw));
+      if (raw) initialPreset = JSON.parse(raw);
     } catch (_) {}
-  }).catch(() => {});
+    if (initialPreset) await applyPreset(initialPreset);
+  })();
 
   if (document.fonts && document.fonts.load) {
     Object.values(fontMap).forEach((family) => {
