@@ -429,3 +429,33 @@ body.me-motion-editor #insertSelectedAsset { min-height: 40px; padding: 0 12px; 
   .current-panel { --panel-width: min(340px, calc(100vw - 20px)); }
   .canvas-mark { right: 8px; bottom: 8px; }
 }
+
+html.is-preview,
+html.is-preview body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+html.is-preview body > :not(.current-stage) {
+  display: none !important;
+}
+
+html.is-preview #controlPanel,
+html.is-preview .current-panel {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+html.is-preview .current-stage {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+html.is-preview .water-stage-controls,
+html.is-preview .canvas-mark {
+  display: none !important;
+}

@@ -1,6 +1,13 @@
 (() => {
   "use strict";
 
+  const PREVIEW = new URLSearchParams(location.search).has("preview");
+  const DEFAULT_SCHEME_URL = "assets/presets/water-flow-default.json?v=20260824-1";
+  if (PREVIEW) {
+    document.documentElement.classList.add("is-preview");
+    document.body.classList.add("is-preview");
+  }
+
   const $ = (selector) => document.querySelector(selector);
   const canvas = $("#flowCanvas");
   const frameCounter = $("#frameCounter");
@@ -1197,21 +1204,44 @@
     }
   });
 
-  window.addEventListener("beforeunload", () => cancelAnimationFrame(rafId));
-  if (window.innerWidth <= 720) $("#controlPanel").removeAttribute("open");
-  renderAssetGrid();
-  renderSelectedAssets();
-  syncAssetTuner();
-  syncRowSettings();
-  updateOutputs();
-  syncPlaybackControls();
-  defaultSchemeSnapshot = collectScheme();
-  try {
-    const storedScheme = JSON.parse(localStorage.getItem(SCHEME_STORAGE_KEY) || "null");
+  async function initializeEditor() {
+    if (window.innerWidth <= 720) $("#controlPanel").removeAttribute("open");
+    renderAssetGrid();
+    renderSelectedAssets();
+    syncAssetTuner();
+    syncRowSettings();
+    updateOutputs();
+    syncPlaybackControls();
+
+    // Keep a functional in-page fallback, then replace it with the approved
+    // exported scheme. Editor reset and the gallery preview both use this
+    // exact object so the card cannot drift from the effect page.
+    defaultSchemeSnapshot = collectScheme();
+    try {
+      const response = await fetch(DEFAULT_SCHEME_URL, { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const approvedScheme = await response.json();
+      if (approvedScheme?.type !== "me-water-flow" || !approvedScheme.controls) throw new Error("方案格式不正确");
+      defaultSchemeSnapshot = cloneScheme(approvedScheme);
+    } catch (error) {
+      console.error("Water Flow default scheme failed to load", error);
+      $("#schemeStatus").textContent = "默认方案读取失败，已使用内置备用示例。";
+    }
+
+    let storedScheme = null;
+    if (!PREVIEW) {
+      try {
+        storedScheme = JSON.parse(localStorage.getItem(SCHEME_STORAGE_KEY) || "null");
+      } catch (_) {
+        $("#schemeStatus").textContent = "本机方案读取失败，已使用默认示例。";
+      }
+    }
     if (storedScheme?.controls) applyScheme(storedScheme, "已恢复上次自动保存的水流方案。" );
-  } catch (_) {
-    $("#schemeStatus").textContent = "本机方案读取失败，已使用默认示例。";
+    else applyScheme(cloneScheme(defaultSchemeSnapshot), PREVIEW ? "" : "已载入水流默认示例。" );
+    snapshotHistory();
+    document.fonts.ready.finally(previewLoop);
   }
-  snapshotHistory();
-  document.fonts.ready.finally(previewLoop);
+
+  window.addEventListener("beforeunload", () => cancelAnimationFrame(rafId));
+  initializeEditor();
 })();

@@ -73,8 +73,8 @@ const count = document.querySelector("#visibleCount");
 const emptyState = document.querySelector("#emptyState");
 const filterButtons = [...document.querySelectorAll(".filter")];
 let activeFilter = "all";
-const livePreviews = new Set(["textswell"]);
-const featuredPreviews = new Set(["textswell", "iconburst"]);
+const livePreviews = new Set(["textswell", "currentwall"]);
+const featuredPreviews = new Set(["textswell", "currentwall", "iconburst"]);
 const liveObserver = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
     const frame = entry.target;
@@ -99,12 +99,12 @@ function render() {
   grid.innerHTML = visible.map(([slug, zh, en, , categoryName]) => {
     const index = effects.findIndex((effect) => effect[0] === slug) + 1;
     const imageName = slug === "crashclock" ? "final_crashclock.png" : ["iconburst", "focuswheel", "gradienttype", "glyphrelay", "wordgather", "focusportal", "rapidsequence", "citystack", "colorcanvas", "liquidtype", "scrapbin", "terminalbrand", "slotstories", "mediacascade", "colorrecompose", "phrasebuild", "switchdrop", "searchtyping", "beforeafter", "assemble", "verbcue", "tighten", "titlecard", "lockup", "promptcue", "pullback", "textswell", "wordflip", "textbuild", "textswap", "textreveal", "phoneframe", "laptopframe", "orbitgallery", "followerrush", "logoassemble", "moodboard"].includes(slug) ? `final_${slug}.svg` : `final_${slug}.png`;
-    const target = slug === "flash" ? "flash-scenes.html" : slug === "iconburst" ? "iconburst.html?from=gallery&v=20260824-37" : `${slug}.html`;
+    const target = slug === "flash" ? "flash-scenes.html" : slug === "iconburst" ? "iconburst.html?from=gallery&v=20260824-37" : slug === "currentwall" ? "currentwall.html?from=gallery&v=20260824-ui9" : `${slug}.html`;
     const detail = slug === "flash" ? "13 个独立子风格" : categoryName;
     const preview = slug === "iconburst"
       ? `<video class="effect-loop" src="assets/previews/iconburst-card.mp4?v=20260824-1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
       : livePreviews.has(slug)
-        ? `<iframe class="effect-live" title="${zh}实时预览" data-src="${slug}.html?preview=1&amp;v=20260824-37" loading="lazy" tabindex="-1"></iframe>`
+        ? `<iframe class="effect-live" title="${zh}实时预览" data-src="${slug}.html?preview=1&amp;v=${slug === "currentwall" ? "20260824-ui9" : "20260824-37"}" loading="lazy" tabindex="-1"></iframe>`
         : `<img src="${imageName}" alt="${zh}动态字体效果预览" ${index > 8 ? 'loading="lazy"' : ""}>`;
     return `
       <article class="effect-card${featuredPreviews.has(slug) ? " has-live-preview" : ""}" data-effect="${slug}">
