@@ -45,14 +45,36 @@
   const shapeLabels = { square: "方形", circle: "圆形", ring: "圆环", triangle: "三角形", star: "星形" };
   const iconSvg = (body, background) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="${background}"/>${body}</svg>`)}`;
   const flowIconImages = [
-    { name: "流墙音乐", url: iconSvg('<path d="M44 24v37c-3-2-7-2-11-1-7 2-11 8-9 13s9 7 16 5c6-2 10-7 10-12V39l24-7v24c-3-2-7-2-11-1-7 2-11 8-9 13s9 7 16 5c6-2 10-7 10-12V19z" fill="white"/>', "#fa264f") },
+    { name: "流墙音乐", url: iconSvg('<g transform="translate(-4 0)"><path d="M44 24v37c-3-2-7-2-11-1-7 2-11 8-9 13s9 7 16 5c6-2 10-7 10-12V39l24-7v24c-3-2-7-2-11-1-7 2-11 8-9 13s9 7 16 5c6-2 10-7 10-12V19z" fill="white"/></g>', "#fa264f") },
     { name: "流墙播放", url: iconSvg('<circle cx="50" cy="50" r="34" fill="none" stroke="white" stroke-width="6"/><path d="M41 30 70 50 41 70z" fill="white"/>', "#111111") },
     { name: "流墙云", url: iconSvg('<circle cx="34" cy="56" r="15" fill="white"/><circle cx="51" cy="45" r="22" fill="white"/><circle cx="70" cy="56" r="16" fill="white"/><rect x="19" y="54" width="67" height="21" rx="10" fill="white"/>', "#1389ff") },
     { name: "流墙手表", url: iconSvg('<rect x="28" y="19" width="44" height="62" rx="15" fill="#111"/><rect x="35" y="28" width="30" height="44" rx="9" fill="#d7ff2f"/><circle cx="50" cy="50" r="3" fill="#111"/>', "#d8d8d8") }
   ];
   const transparentAnimalImages = Array.from({ length: 31 }, (_, index) => ({
     name: `透明动物 ${String(index + 1).padStart(2, "0")}`,
-    url: `assets/transparent-animals/animal-${String(index + 1).padStart(2, "0")}.png`
+    url: `assets/transparent-animals/animal-${String(index + 1).padStart(2, "0")}.png`,
+    fileType: "image/png",
+    width: 768,
+    height: 768
+  }));
+  const botSeriesImages = [
+    "bloub-capsule-colere-brun.gif",
+    "bloub-cercle-attentif-violet.gif",
+    "bloub-cercle-curieux-encre.gif",
+    "bloub-galet-blase-orange.gif",
+    "bloub-galet-somnolent-rouge.gif",
+    "bloub-goutte-curieux-turquoise.gif",
+    "bloub-hexagone-surpris-gris.gif",
+    "bloub-nuage-mefiant-rouge.gif",
+    "bloub-nuage-neutre-bleu.gif",
+    "bloub-squircle-effraye-orange.gif",
+    "bloub-triangle-mefiant-ambre.gif"
+  ].map((filename, index) => ({
+    name: `Bot 动态表情 ${String(index + 1).padStart(2, "0")}`,
+    url: `assets/bot-series/${filename}`,
+    fileType: "image/gif",
+    width: 320,
+    height: 320
   }));
 
   function animalAsset(index, role, overrides) {
@@ -300,9 +322,13 @@
   }
 
   function renderImageLibraries() {
-    const markup = transparentAnimalImages.map((image, index) => `<button type="button" data-image-index="${index}" title="添加${image.name}"><img src="${image.url}" alt="${image.name}" loading="lazy"><span>${String(index + 1).padStart(2, "0")}</span></button>`).join("");
-    $("ibOrbitImageLibrary").innerHTML = markup;
-    $("ibGlyphImageLibrary").innerHTML = markup;
+    const renderLibrary = (libraryId, images) => {
+      $(libraryId).innerHTML = images.map((image, index) => `<button type="button" data-image-index="${index}" title="添加${safe(image.name)}"><img src="${image.url}" alt="${safe(image.name)}" loading="lazy"><span>${String(index + 1).padStart(2, "0")}</span></button>`).join("");
+    };
+    renderLibrary("ibOrbitImageLibrary", transparentAnimalImages);
+    renderLibrary("ibGlyphImageLibrary", transparentAnimalImages);
+    renderLibrary("ibOrbitBotLibrary", botSeriesImages);
+    renderLibrary("ibGlyphBotLibrary", botSeriesImages);
   }
 
   function renderIcons() {
@@ -2115,11 +2141,11 @@
     });
   }
 
-  function bindImageLibrary(libraryId, role) {
+  function bindImageLibrary(libraryId, role, images) {
     $(libraryId).addEventListener("click", (event) => {
       const button = event.target.closest("[data-image-index]");
       if (!button) return;
-      const image = transparentAnimalImages[Number(button.dataset.imageIndex)];
+      const image = images[Number(button.dataset.imageIndex)];
       if (!image) return;
       const sequence = role === "glyph" ? state.assets.filter((asset) => asset.role === "glyph").length : 0;
       const asset = defaultAsset({
@@ -2128,13 +2154,15 @@
         name: image.name,
         url: image.url,
         originalDataUrl: image.url,
-        fileType: "image/png",
+        fileType: image.fileType,
         libraryImage: true,
         removeBackground: false,
         autoBackground: false,
-        processedWidth: 768,
-        processedHeight: 768,
-        status: "内置高清透明 PNG；当前资源可独立缩放、移动、旋转或替换。",
+        processedWidth: image.width,
+        processedHeight: image.height,
+        status: image.fileType === "image/gif"
+          ? "内置 Bot 动态 GIF；保留原动画，可独立缩放、移动、旋转或替换。"
+          : "内置高清透明 PNG；当前资源可独立缩放、移动、旋转或替换。",
         target: -1,
         sequence
       });
@@ -2153,8 +2181,10 @@
   bindFileInput("ibGlyphFiles", "glyph");
   bindShapeButton("ibAddOrbitShape", "ibOrbitShape", "ibOrbitShapeColor", "orbit");
   bindShapeButton("ibAddGlyphShape", "ibGlyphShape", "ibGlyphShapeColor", "glyph");
-  bindImageLibrary("ibOrbitImageLibrary", "orbit");
-  bindImageLibrary("ibGlyphImageLibrary", "glyph");
+  bindImageLibrary("ibOrbitImageLibrary", "orbit", transparentAnimalImages);
+  bindImageLibrary("ibGlyphImageLibrary", "glyph", transparentAnimalImages);
+  bindImageLibrary("ibOrbitBotLibrary", "orbit", botSeriesImages);
+  bindImageLibrary("ibGlyphBotLibrary", "glyph", botSeriesImages);
 
   window.addEventListener("resize", invalidateLetterAnchors, { passive: true });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(invalidateLetterAnchors);
