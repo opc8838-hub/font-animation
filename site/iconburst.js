@@ -785,11 +785,13 @@
       ? 0
       : clamp((seconds - settleEnd) / slowDuration, 0, 1);
     const slowMultiplier = clamp(Number($("ibDrift").value) / 100, .15, .60);
+    const syncRate = clamp(Number($("ibSync").value) / 100, .50, 1.80);
     const overshootStrength = clamp(Number($("ibOvershoot").value) / 100, 0, 1);
-    const gatherAtSlowStart = sampleIconGather(settleEnd);
+    const iconMotionTime = (time) => Math.max(0, time * syncRate);
+    const gatherAtSlowStart = sampleIconGather(iconMotionTime(settleEnd));
     const slowElapsed = clamp(seconds - settleEnd, 0, holdEndSeconds - settleEnd);
     const velocityWindow = .008;
-    const gatherBeforeSlow = sampleIconGather(settleEnd - velocityWindow);
+    const gatherBeforeSlow = sampleIconGather(iconMotionTime(settleEnd - velocityWindow));
     const entryGatherVelocity = Math.max(.01, (gatherAtSlowStart - gatherBeforeSlow) / velocityWindow);
     const slowGatherVelocity = entryGatherVelocity * slowMultiplier;
     // One integrated motion clock drives radius, longitude, depth and pitch.
@@ -816,7 +818,7 @@
     const collapseAdvance = slowGatherVelocity * collapseElapsed
       + (exitVelocity - slowGatherVelocity) * collapseDuration * accelerationIntegral;
     const iconGather = seconds <= settleEnd
-      ? sampleIconGather(seconds)
+      ? sampleIconGather(iconMotionTime(seconds))
       : gatherAtSlowStart + slowGatherAdvance + collapseAdvance;
     const orbitAngleDegrees = sampleOrbitalSweep(iconGather) * 180 / Math.PI;
     const orbitStartDegrees = sampleOrbitalSweep(gatherAtSlowStart) * 180 / Math.PI;
@@ -928,6 +930,7 @@
       orbitAngleDegrees,
       driftStrength: slowMultiplier,
       slowMultiplier,
+      syncRate,
       exitVelocity,
       wordReturnDuration,
       overshootStrength,
@@ -1459,6 +1462,7 @@
     ["ibCollapse", "ibCollapseValue", (value) => `${value}%`],
     ["ibHang", "ibHangValue", (value) => `${(Number(value) / 100).toFixed(2)} 秒`],
     ["ibDrift", "ibDriftValue", (value) => `${value}%`],
+    ["ibSync", "ibSyncValue", (value) => `${(Number(value) / 100).toFixed(2)}×`],
     ["ibOvershoot", "ibOvershootValue", (value) => `${value}%`],
     ["ibDensity", "ibDensityValue", (value) => `${value}%`],
     ["ibFinalScale", "ibFinalScaleValue", (value) => `+${Number(value).toFixed(1)}%`],
@@ -1473,7 +1477,7 @@
   // control restarts the complete choreography so the user sees the title
   // grow over time in its actual replacement chapter.
   ["ibFinalScale", "ibFinalScaleDuration"].forEach((id) => $(id).addEventListener("change", restart));
-  ["ibWordReturn", "ibOrbitSpeed", "ibOvershoot"].forEach((id) => $(id).addEventListener("change", restart));
+  ["ibWordReturn", "ibSync", "ibOrbitSpeed", "ibOvershoot"].forEach((id) => $(id).addEventListener("change", restart));
 
   const assetInputs = ["ibAssetShape", "ibAssetColor", "ibAssetTarget", "ibAssetHold", "ibAssetSize", "ibAssetOpacity", "ibAssetX", "ibAssetY", "ibAssetRotation", "ibAssetMotion"];
   assetInputs.forEach((id) => $(id).addEventListener("input", () => {

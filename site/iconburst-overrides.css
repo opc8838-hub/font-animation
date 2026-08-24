@@ -7,6 +7,8 @@ body .ib-composition {
 
 body .ib-word {
   transform: none;
+  text-shadow: none;
+  filter: none;
 }
 
 body .ib-switch-word {
@@ -22,6 +24,8 @@ body .ib-switch-word {
   pointer-events: none;
   transform-origin: 50% 50%;
   will-change: transform, opacity;
+  text-shadow: none;
+  filter: none;
 }
 
 body .ib-intro-word {
@@ -529,8 +533,8 @@ body .ib-orbit-layer .ib-icon::before {
   border: 1px solid rgba(255, 255, 255, .10);
   border-radius: 24%;
   background: linear-gradient(145deg, rgba(255, 255, 255, .055), rgba(8, 8, 10, .30));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10), var(--shadow-x, 2px) var(--shadow-y, 4px) var(--shadow-blur, 8px) rgba(0, 0, 0, var(--shadow-alpha, .35)), 0 12px 24px rgba(0, 0, 0, .16);
-  opacity: var(--plate-alpha, 0);
+  box-shadow: none;
+  opacity: 0;
   transform: translate3d(var(--shadow-x, 0px), var(--shadow-y, 3px), -8px) scale(.95);
   pointer-events: none;
 }
@@ -541,11 +545,11 @@ body .ib-orbit-layer .ib-icon > * {
 }
 
 body .ib-orbit-layer .ib-icon img {
-  filter: drop-shadow(0 1px 1px rgba(255, 255, 255, .14)) drop-shadow(var(--shadow-x, 2px) var(--shadow-y, 4px) var(--shadow-blur, 8px) rgba(0, 0, 0, var(--shadow-alpha, .38)));
+  filter: none;
 }
 
 body .ib-orbit-layer .ib-icon .ib-geom {
-  filter: drop-shadow(var(--shadow-x, 2px) var(--shadow-y, 4px) var(--shadow-blur, 8px) rgba(0, 0, 0, var(--shadow-alpha, .34)));
+  filter: none;
 }
 
 @media (max-width: 470px) {
