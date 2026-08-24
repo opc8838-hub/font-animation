@@ -101,10 +101,10 @@ function render() {
     const target = slug === "flash" ? "flash-scenes.html" : `${slug}.html`;
     const detail = slug === "flash" ? "13 个独立子风格" : categoryName;
     const preview = livePreviews.has(slug)
-      ? `<iframe class="effect-live" title="${zh}实时预览" data-src="${slug}.html?preview=1" loading="lazy" tabindex="-1"></iframe>`
+      ? `<iframe class="effect-live" title="${zh}实时预览" data-src="${slug}.html?preview=1&amp;v=20260824-2" loading="lazy" tabindex="-1"></iframe>`
       : `<img src="${imageName}" alt="${zh}动态字体效果预览" ${index > 8 ? 'loading="lazy"' : ""}>`;
     return `
-      <article class="effect-card${livePreviews.has(slug) ? " has-live-preview" : ""}">
+      <article class="effect-card${livePreviews.has(slug) ? " has-live-preview" : ""}" data-effect="${slug}">
         <a class="effect-link" href="${target}" aria-label="打开${zh}效果">
           <div class="effect-preview">
             ${preview}

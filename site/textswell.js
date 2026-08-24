@@ -33,7 +33,39 @@
   const WORD_EASE = bezier(0.22, 0.8, 0.36, 1);
   const LETTER_EASE = bezier(0.4, 0, 0.2, 1);
 
-  const DEFAULT_TEXT = "Hely {{music}} fun {{play}} excellent";
+  const DEFAULT_TEXT = "Hely . fun{{animal13}} excellent";
+  const STORAGE_KEY = "textswell-scheme";
+  const DEFAULT_STATE = {
+    version: 2,
+    text: DEFAULT_TEXT,
+    fontFamily: "snap-inter-medium",
+    fontWeight: "600",
+    backgroundColor: "#fafafa",
+    textColor: "#101828",
+    tracking: "-30",
+    iconGap: "18",
+    letterSwell: "50",
+    frontScale: "320",
+    leadScale: "370",
+    startScale: "155",
+    endScale: "100",
+    recedeMs: "600",
+    endHoldMs: "400",
+    fontSize: "72",
+    speed: "125",
+    wordMotion: [
+      { bounce: false, speed: 1, color: "#101828" },
+      { bounce: true, speed: 0.45, color: "#cb5be1" },
+      { bounce: true, speed: 1, color: "#101828" },
+      { bounce: true, speed: 1, color: "#101828" }
+    ],
+    instanceTunes: {
+      "music#0": { scale: 1, offsetX: 0, offsetY: 0, bounce: true },
+      "play#0": { scale: 1, offsetX: 0, offsetY: 0, bounce: true },
+      "animal13#0": { scale: 1.23, offsetX: 0, offsetY: 8, bounce: true }
+    },
+    uploads: []
+  };
   const assets = new Map();
   const instanceTunes = new Map();
   let wordMotion = [];
@@ -714,7 +746,7 @@
       if (asset.removable) uploads.push({ id: asset.id, label: asset.label, src: asset.src, scale: asset.scale, offsetX: asset.offsetX, offsetY: asset.offsetY });
     });
     return {
-      version: 1,
+      version: 2,
       text: $("#titleText").value,
       fontFamily: $("#fontFamily").value,
       fontWeight: $("#fontWeight").value,
@@ -831,7 +863,7 @@
     link.download = "textswell-scheme.json";
     link.click();
     setTimeout(() => URL.revokeObjectURL(link.href), 1500);
-    localStorage.setItem("textswell-scheme", JSON.stringify(collectState()));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState()));
     const status = $("#exportStatus");
     if (status) status.textContent = "方案已保存到本机，并下载了 JSON。";
   });
@@ -842,15 +874,8 @@
     applyState(JSON.parse(await file.text()));
   });
   $("#clearButton").addEventListener("click", () => {
-    localStorage.removeItem("textswell-scheme");
-    wordMotion = [];
-    instanceTunes.clear();
-    $("#titleText").value = DEFAULT_TEXT;
-    syncWordMotion();
-    renderUsedIcons();
-    renderWordMotionList();
-    renderChoreoTrack();
-    if (player) player.setTime(0);
+    localStorage.removeItem(STORAGE_KEY);
+    applyState(DEFAULT_STATE);
   });
   ["#assetItemScale", "#assetOffsetX", "#assetOffsetY"].forEach((id) => {
     const node = $(id);
@@ -877,17 +902,25 @@
     renderUsedIcons();
   });
 
+  let initializedFromSavedState = false;
   try {
-    const saved = localStorage.getItem("textswell-scheme");
-    if (saved) applyState(JSON.parse(saved));
+    const saved = !PREVIEW && localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Number(parsed?.version) >= 2) {
+        applyState(parsed);
+        initializedFromSavedState = true;
+      }
+    }
   } catch (_) {}
+  if (!initializedFromSavedState) applyState(DEFAULT_STATE);
 
   if (!PREVIEW) {
     let persistTimer = 0;
     const persist = () => {
       clearTimeout(persistTimer);
       persistTimer = setTimeout(() => {
-        try { localStorage.setItem("textswell-scheme", JSON.stringify(collectState())); } catch (_) {}
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState())); } catch (_) {}
       }, 250);
     };
     document.querySelectorAll("input, textarea, select").forEach((field) => {
