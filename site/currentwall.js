@@ -14,6 +14,7 @@
     motionMode: $("#motionMode"), introWord: $("#introWord"),
     reversePull: $("#reversePull"), burst: $("#burst"), finalLine: $("#finalLine"), finalSwap: $("#finalSwap"),
     introLeft: $("#introLeft"), introReturn: $("#introReturn"), popDuration: $("#popDuration"),
+    revealStagger: $("#revealStagger"), exitStagger: $("#exitStagger"),
     fullDuration: $("#fullDuration"), exitDuration: $("#exitDuration"), finalDuration: $("#finalDuration"),
     retreatDuration: $("#retreatDuration"), swapMoment: $("#swapMoment"), swapInterval: $("#swapInterval"), assetItemScale: $("#assetItemScale"),
     assetOffsetX: $("#assetOffsetX"), assetOffsetY: $("#assetOffsetY"),
@@ -619,7 +620,7 @@
         // the full-wall stage, avoiding a visible speed drop at the boundary.
         const settleEnd = Math.min(.72, returnCut + .28);
         wallScale = lerp(initialScale, 1, easeOut(rangeProgress(formationProgress, 0, settleEnd)));
-        revealLimit = lerp(1.05, halfLanes + 1, easeOut(rangeProgress(formationProgress, .04, .78)));
+        revealLimit = halfLanes + 1;
         wallShiftX = formationProgress < returnCut
           ? lerp(-fontPx * .72, fontPx * .42, easeOut(formationProgress / returnCut))
           : lerp(fontPx * .42, 0, easeOut(rangeProgress(formationProgress, returnCut, settleEnd)));
@@ -643,6 +644,23 @@
     context.scale(wallScale, wallScale);
     context.translate(-localWidth / 2, 0);
 
+    const formationActive = choreography && localTime >= timing.leftEnd && localTime < timing.popEnd;
+    const formationElapsed = Math.max(0, localTime - timing.leftEnd);
+    const formationDuration = Math.max(.001, timing.popEnd - timing.leftEnd);
+    const revealStaggerRequested = Number(inputs.revealStagger.value) / 1000;
+    const revealFade = Math.max(.07, Math.min(formationDuration * .34, Math.max(.1, revealStaggerRequested * 2.2)));
+    const revealStagger = halfLanes > 0
+      ? Math.min(revealStaggerRequested, Math.max(0, formationDuration - revealFade) / halfLanes)
+      : 0;
+    const exitDuration = Math.max(.001, timing.exitEnd - timing.fullEnd);
+    const exitElapsed = Math.max(0, localTime - timing.fullEnd);
+    const exitRowCount = Math.max(1, halfLanes * 2);
+    const exitStaggerRequested = Number(inputs.exitStagger.value) / 1000;
+    const exitFade = Math.max(.09, Math.min(exitDuration * .34, Math.max(.12, exitStaggerRequested * 2.25)));
+    const exitStagger = exitRowCount > 1
+      ? Math.min(exitStaggerRequested, Math.max(0, exitDuration - exitFade) / (exitRowCount - 1))
+      : 0;
+
     for (let laneIndex = -halfLanes; laneIndex <= halfLanes; laneIndex += 1) {
       if (choreography && finalStage && laneIndex !== 0) continue;
       const sourceIndex = mod(laneIndex, rows.length);
@@ -656,16 +674,24 @@
       const layout = layoutTokens(context, line, fontPx, assetHeight, repeatGap, assetGap);
       const laneDistance = Math.abs(laneIndex);
       let rowAlpha = laneDistance <= revealLimit ? 1 : 0;
+      let rowFormationProgress = 1;
+      if (formationActive) {
+        const revealStart = laneDistance * revealStagger;
+        rowFormationProgress = smoother(rangeProgress(formationElapsed, revealStart, revealStart + revealFade));
+        rowAlpha *= rowFormationProgress;
+      }
       if (choreography && localTime >= timing.fullEnd && localTime < timing.exitEnd && laneIndex !== 0) {
-        const inwardOrder = (halfLanes - laneDistance) / Math.max(1, halfLanes);
-        const disappearAt = .48 + inwardOrder * .32 + (laneIndex > 0 ? .014 : 0);
-        rowAlpha *= 1 - smoother(rangeProgress(exitProgress, disappearAt, Math.min(.99, disappearAt + .2)));
+        const topToBottomOrder = laneIndex < 0 ? laneIndex + halfLanes : halfLanes - 1 + laneIndex;
+        const disappearStart = topToBottomOrder * exitStagger;
+        rowAlpha *= 1 - smoother(rangeProgress(exitElapsed, disappearStart, disappearStart + exitFade));
       }
       if (rowAlpha <= .001 || wallAlpha <= .001) continue;
 
       const yWave = Math.sin(localTime * waveRate * 1.45 + laneIndex * .72) * waveAmp * .28;
       const xWave = Math.sin(localTime * waveRate * .92 + laneIndex * .91) * waveAmp;
-      const y = laneIndex * lineHeight * (choreography && localTime >= timing.fullEnd ? lerp(1, .92, exitProgress) : 1) + verticalOffset + yWave;
+      const targetY = laneIndex * lineHeight * (choreography && localTime >= timing.fullEnd ? lerp(1, .92, exitProgress) : 1);
+      const y = (formationActive ? lerp(0, targetY, rowFormationProgress) : targetY)
+        + (verticalOffset + yWave) * (formationActive ? rowFormationProgress : 1);
       const velocity = fontPx * 1.45 * masterSpeed * (setting.speed / 100);
       const signedShiftRate = setting.direction === 0 ? 0 : (setting.direction < 0 ? velocity : -velocity);
       // The full-wall duration is a real motion boundary, not just a label.
@@ -682,13 +708,13 @@
       }
 
       let groupRight = 0;
-      const exitElapsed = Math.max(0, localTime - timing.fullEnd);
+      const exitMovementElapsed = Math.max(0, localTime - timing.fullEnd);
       const rightDuration = Math.min(Number(inputs.retreatDuration.value) / 1000, timing.duration[4]);
       const rightForce = Number(inputs.reversePull.value) / 100;
       if (choreography && localTime >= timing.fullEnd) {
         const distanceRatio = laneDistance / Math.max(1, halfLanes);
         const followDelay = distanceRatio * rightDuration * .18;
-        const flowProgress = rangeProgress(exitElapsed, followDelay, Math.min(timing.duration[4], followDelay + rightDuration));
+        const flowProgress = rangeProgress(exitMovementElapsed, followDelay, Math.min(timing.duration[4], followDelay + rightDuration));
         groupRight = localWidth * .34 * rightForce * smoother(flowProgress);
       }
       const shift = signedTravel + setting.phase / 100 * layout.width + xWave - groupRight - wallShiftX;
@@ -701,7 +727,7 @@
         const entryRepeatedAnchor = -mod(entryShift, layout.width) - layout.width;
         const entryApproachAnchor = entryRepeatedAnchor + Math.floor((entryCenteredAnchor - entryRepeatedAnchor) / layout.width) * layout.width;
         const entryOffset = (entryApproachAnchor - entryCenteredAnchor) * localWidth / w;
-        const rightProgress = rangeProgress(exitElapsed, 0, rightDuration);
+        const rightProgress = rangeProgress(exitMovementElapsed, 0, rightDuration);
         const entryWaveShiftRate = Math.cos(timing.fullEnd * waveRate * .92) * waveAmp * waveRate * .92;
         const velocityCarry = (signedShiftRate + entryWaveShiftRate) * rightDuration
           * rightProgress * Math.pow(1 - rightProgress, 3);
@@ -813,9 +839,11 @@
       introLeftOut: Math.round(timing.duration[0] * 1000),
       introReturnOut: Math.round(timing.duration[1] * 1000),
       popDurationOut: formatSeconds(timing.duration[1] + timing.duration[2]),
+      revealStaggerOut: `${inputs.revealStagger.value}ms`,
       fullDurationOut: formatSeconds(timing.duration[3]),
       retreatDurationOut: formatSeconds(Math.min(Number(inputs.retreatDuration.value) / 1000, timing.duration[4])),
       exitDurationOut: formatSeconds(timing.duration[4]),
+      exitStaggerOut: `${inputs.exitStagger.value}ms`,
       finalDurationOut: formatSeconds(timing.duration[5]),
       swapMomentOut: `${inputs.swapMoment.value}%`,
       swapIntervalOut: `${inputs.swapInterval.value}ms`
@@ -832,6 +860,16 @@
     // Direct manipulation: every slider movement previews this exact stage,
     // so short values such as 0.20 s can be judged without waiting a full loop.
     setTime(choreographyTiming().popEnd);
+  });
+  [inputs.popDuration, inputs.revealStagger].forEach((input) => {
+    input.addEventListener("input", () => {
+      if (inputs.motionMode.value === "choreography") setTime(choreographyTiming().leftEnd + .02);
+    });
+  });
+  [inputs.exitDuration, inputs.exitStagger].forEach((input) => {
+    input.addEventListener("input", () => {
+      if (inputs.motionMode.value === "choreography") setTime(choreographyTiming().fullEnd + .02);
+    });
   });
   [inputs.assetItemScale, inputs.assetOffsetX, inputs.assetOffsetY, inputs.assetGapBefore, inputs.assetGapAfter].forEach((input) => {
     input.addEventListener("input", () => {

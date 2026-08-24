@@ -143,7 +143,7 @@ everything</textarea>
       <section class="motion-quick">
         <div class="section-heading">
           <p class="section-label">常用调节</p>
-          <small class="section-note">先调这 10 项</small>
+          <small class="section-note">画面与逐行节奏</small>
         </div>
         <div class="controls-grid quick-grid">
         <label>字号 <small class="stage-tag">画面</small><output id="fontSizeOut">62</output>
@@ -170,6 +170,9 @@ everything</textarea>
         <label>中间→满屏 <small class="stage-tag">阶段 1</small><output id="popDurationOut">0.60秒</output>
           <input id="popDuration" type="range" min="150" max="1800" step="10" value="450">
         </label>
+        <label>铺屏逐行间隔 <small class="stage-tag">阶段 1</small><output id="revealStaggerOut">45ms</output>
+          <input id="revealStagger" type="range" min="0" max="180" step="5" value="45">
+        </label>
         <label>满屏向左流动时长 <small class="stage-tag">阶段 2</small><output id="fullDurationOut">1.10秒</output>
             <input id="fullDuration" type="range" min="0" max="8000" step="50" value="1100">
           </label>
@@ -179,11 +182,14 @@ everything</textarea>
           <label>逐行消失 <small class="stage-tag">阶段 4</small><output id="exitDurationOut">1.1秒</output>
             <input id="exitDuration" type="range" min="500" max="3500" step="50" value="1100">
           </label>
+          <label>消失逐行间隔 <small class="stage-tag">阶段 4</small><output id="exitStaggerOut">50ms</output>
+            <input id="exitStagger" type="range" min="0" max="220" step="5" value="50">
+          </label>
           <label>单行收尾 <small class="stage-tag">阶段 5</small><output id="finalDurationOut">1.1秒</output>
             <input id="finalDuration" type="range" min="600" max="6000" step="50" value="1100">
           </label>
         </div>
-        <p class="hint">“满屏向左流动时长”就是铺满后继续左流的真实时间。拖动时会自动从这一段开始预览；设为 0.20 秒就只左流 0.20 秒，设为 0 则直接跳过。</p>
+        <p class="hint">铺屏从中间向上下逐行展开；消失从最上方开始逐行向下推进，并始终保留中间一行。逐行间隔越大，接力感越明显；总时长控制整段快慢。</p>
         <p class="hint timing-live" id="timingReadout" aria-live="polite">当前：准备预览</p>
       </section>
 
@@ -305,7 +311,7 @@ everything</textarea>
   <script src="js/h264-mp4-encoder.web.js"></script>
   <script src="token-asset-tools.js"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
-  <script src="currentwall.js?v=20260824-ui3"></script>
+  <script src="currentwall.js?v=20260824-ui4"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
 </body>
