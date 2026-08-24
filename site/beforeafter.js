@@ -334,9 +334,8 @@
   }
 
   function drawSliderCompare(context, w, h, options, position) {
-    const source = compareLayout(w, h, options).before;
-    const box = { x: source.x, y: (h - source.h) / 2, w: source.w, h: source.h };
-    const radius = options.radius * Math.min(w, h) / 720;
+    const box = uploadLayout(w, h).box;
+    const radius = Math.min(w, h) * 0.035;
     const split = box.x + box.w * clamp01(position);
     context.fillStyle = options.compareBg;
     context.fillRect(0, 0, w, h);
@@ -786,8 +785,7 @@
     const h = Math.max(1, canvas.clientHeight);
     const px = (event.clientX - rect.left) * w / Math.max(1, rect.width);
     const py = (event.clientY - rect.top) * h / Math.max(1, rect.height);
-    const source = compareLayout(w, h, options).before;
-    const box = { x: source.x, y: (h - source.h) / 2, w: source.w, h: source.h };
+    const box = uploadLayout(w, h).box;
     if (event.type === "pointerdown" && (px < box.x || px > box.x + box.w || py < box.y || py > box.y + box.h)) return false;
     sliderOverride = clamp01((px - box.x) / Math.max(1, box.w));
     paused = true;
