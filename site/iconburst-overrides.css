@@ -125,9 +125,15 @@ body .ib-word.is-gradient > span {
 
 body .ib-asset {
   grid-template-columns: 16px 38px minmax(0, 1fr) auto;
-  cursor: pointer;
+  cursor: grab;
+  user-select: none;
   transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
 }
+
+body .ib-asset button,
+body .ib-asset select,
+body .ib-asset input,
+body .ib-asset label { cursor: auto; user-select: auto; }
 
 .ib-drag-handle {
   width: 16px;
@@ -154,6 +160,7 @@ body .ib-asset.is-dragging {
   background: #eef7ff;
   box-shadow: 0 8px 24px rgba(0, 113, 227, .2);
   opacity: .92;
+  cursor: grabbing;
 }
 
 body .ib-asset.is-dragging .ib-drag-handle { cursor: grabbing; }
@@ -344,12 +351,11 @@ body .ib-asset.is-active {
 .ib-glyph-guide strong { color: #0066cc; font-size: 10px; }
 
 .ib-layer-items {
-  max-height: 190px;
-  padding-right: 3px;
+  max-height: none;
+  padding-right: 0;
   display: grid;
   gap: 7px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  overflow: visible;
 }
 
 .ib-layer-tools {

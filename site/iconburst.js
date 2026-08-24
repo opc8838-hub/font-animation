@@ -451,27 +451,52 @@
   }
 
   let assetDrag = null;
-  let suppressAssetClick = false;
+  let suppressAssetClickUntil = 0;
 
   $("ibAssets").addEventListener("pointerdown", (event) => {
     const handle = event.target.closest(".ib-drag-handle");
-    const row = handle?.closest(".ib-asset");
+    const row = event.target.closest(".ib-asset");
     const list = row?.closest(".ib-layer-items");
-    if (!handle || !row || !list) return;
-    event.preventDefault();
-    handle.setPointerCapture?.(event.pointerId);
-    row.classList.add("is-dragging");
-    handle.setAttribute("aria-grabbed", "true");
-    assetDrag = { handle, row, list, pointerId: event.pointerId, startY: event.clientY, moved: false };
+    const interactive = event.target.closest("button, select, input, textarea, label, a");
+    if (!row || !list || (!handle && interactive)) return;
+    // Mouse users can grab anywhere on the card. On touch screens the visible
+    // handle remains the drag target so normal vertical page scrolling works.
+    if (event.pointerType !== "mouse" && !handle) return;
+    row.setPointerCapture?.(event.pointerId);
+    assetDrag = {
+      handle,
+      row,
+      list,
+      pointerId: event.pointerId,
+      startY: event.clientY,
+      started: false,
+      moved: false
+    };
   });
 
   window.addEventListener("pointermove", (event) => {
     if (!assetDrag || event.pointerId !== assetDrag.pointerId) return;
+    if (!assetDrag.started && Math.abs(event.clientY - assetDrag.startY) < 5) return;
     event.preventDefault();
+    if (!assetDrag.started) {
+      assetDrag.started = true;
+      assetDrag.row.classList.add("is-dragging");
+      assetDrag.handle?.setAttribute("aria-grabbed", "true");
+    }
     const { row, list } = assetDrag;
-    const listRect = list.getBoundingClientRect();
-    if (event.clientY < listRect.top + 30) list.scrollTop -= 12;
-    if (event.clientY > listRect.bottom - 30) list.scrollTop += 12;
+    const editor = document.querySelector(".ib-editor");
+    const editorRect = editor?.getBoundingClientRect();
+    if (editor && editorRect) {
+      const edge = 72;
+      let scrollDelta = 0;
+      if (event.clientY < editorRect.top + edge) scrollDelta = -18;
+      else if (event.clientY > editorRect.bottom - edge) scrollDelta = 18;
+      if (scrollDelta) {
+        const editorStyle = getComputedStyle(editor);
+        if (editorStyle.overflowY === "auto" || editorStyle.overflowY === "scroll") editor.scrollTop += scrollDelta;
+        else window.scrollBy(0, scrollDelta);
+      }
+    }
     const target = document.elementFromPoint(event.clientX, event.clientY)?.closest(".ib-asset");
     if (!target || target === row || target.parentElement !== list) return;
     const before = event.clientY < target.getBoundingClientRect().top + target.offsetHeight / 2;
@@ -484,12 +509,11 @@
 
   function finishAssetDrag(event) {
     if (!assetDrag || (event.pointerId != null && event.pointerId !== assetDrag.pointerId)) return;
-    const { handle, row, list, pointerId, moved, startY } = assetDrag;
-    handle.releasePointerCapture?.(pointerId);
-    handle.removeAttribute("aria-grabbed");
+    const { handle, row, list, pointerId, moved, started } = assetDrag;
+    row.releasePointerCapture?.(pointerId);
+    handle?.removeAttribute("aria-grabbed");
     row.classList.remove("is-dragging");
-    suppressAssetClick = moved || Math.abs((event.clientY ?? startY) - startY) > 4;
-    if (suppressAssetClick) setTimeout(() => { suppressAssetClick = false; }, 0);
+    if (started) suppressAssetClickUntil = performance.now() + 300;
     assetDrag = null;
     if (moved) commitAssetOrder(list);
   }
@@ -2116,7 +2140,7 @@
   });
 
   $("ibAssets").addEventListener("click", (event) => {
-    if (suppressAssetClick) { suppressAssetClick = false; return; }
+    if (performance.now() < suppressAssetClickUntil) return;
     const row = event.target.closest(".ib-asset");
     if (!row) return;
     const asset = state.assets.find((item) => item.id === row.dataset.id);
