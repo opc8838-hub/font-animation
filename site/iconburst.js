@@ -141,8 +141,10 @@
   }
   function collisionColorProgress(value) {
     const colorSpeed = clamp(Number($("ibColorSpeed").value), .5, 6);
-    const velocity = .45 + colorSpeed * .75;
-    return easeOut(clamp(value * velocity, 0, 1));
+    // Keep a visible blend window even at the fastest setting. The previous
+    // multiplier completed a color change in less than one 30fps frame.
+    const durationScale = clamp(5 / colorSpeed, .82, 3);
+    return smoothstep(clamp(value / durationScale, 0, 1));
   }
   // The reference is a two-beat impact, not a uniformly staggered squeeze.
   // Inner pairs chase each other quickly; the outermost letter on each side
@@ -170,7 +172,7 @@
     return {
       distanceFactor,
       scale: 1 + .065 * impactPulse,
-      color: collisionColorProgress(clamp((progress - .27) / .36, 0, 1))
+      color: collisionColorProgress(clamp((progress - .18) / .78, 0, 1))
     };
   }
   function createMonotoneSampler(keyframes) {
@@ -270,6 +272,16 @@
   }
   function colorUniformProgress(colorReveal) {
     return smoothstep(clamp((colorReveal - .68) / .32, 0, 1));
+  }
+  function colorWaveAlpha(index, count, colorReveal) {
+    if (count <= 1) return smoothstep(colorReveal);
+    const midpoint = (count - 1) / 2;
+    const distance = Math.abs(index - midpoint) / Math.max(1, midpoint);
+    // Each letter overlaps the next one instead of switching as a hard batch.
+    // The outermost letters deliberately finish at reveal=1.
+    const start = Math.max(0, distance - .22);
+    const end = distance > .999 ? 1 : Math.min(1, distance + .08);
+    return smoothstep(clamp((colorReveal - start) / Math.max(.001, end - start), 0, 1));
   }
   function palette() { return [$("ibBaseColor").value].concat(activeEffectColors()); }
   function samplePalette(progress) {
@@ -947,12 +959,15 @@
     const colorSpeed = clamp(Number($("ibColorSpeed").value), .5, 6);
     const colorHold = clamp(Number($("ibSoftness").value), 8, 70);
     const colorDuration = clamp(.11 * (5 / colorSpeed), .085, .55);
+    // The slowed reference keeps the color front travelling for another six
+    // to seven 30fps frames after the compact word has formed.
+    const colorTailDuration = clamp(.22 * (5 / colorSpeed), .14, .65);
     const colorHoldDuration = clamp(.02 + (colorHold - 28) / 42 * .16, .01, .18);
     const whiteDuration = clamp(.08 * (5 / colorSpeed), .06, .40);
     // The color wave starts with pair one, but it is not allowed to finish
     // before the final outer pair arrives. This keeps collision and color on
     // one continuous beat instead of racing into the reset chapter.
-    const colorFullSeconds = Math.max(lettersMoveStart + colorDuration, contactSeconds);
+    const colorFullSeconds = Math.max(lettersMoveStart + colorDuration, contactSeconds + colorTailDuration);
     const whiteStartSeconds = colorFullSeconds + colorHoldDuration;
     const whiteFullSeconds = whiteStartSeconds + whiteDuration;
     const replaceStartSeconds = whiteFullSeconds + .04;
@@ -1333,10 +1348,9 @@
     const letterContract = 1;
 
     let colorReveal = 0;
-    const colorKickSeconds = lettersMoveStart + .05;
-    if (seconds >= lettersMoveStart && seconds < colorKickSeconds) colorReveal = .12 + .38 * easeOut((seconds - lettersMoveStart) / .05);
-    else if (seconds >= colorKickSeconds && seconds < colorFullSeconds) colorReveal = .50 + .50 * easeOut((seconds - colorKickSeconds) / (colorFullSeconds - colorKickSeconds));
-    else if (seconds >= colorFullSeconds) colorReveal = 1;
+    if (seconds >= lettersMoveStart && seconds < colorFullSeconds) {
+      colorReveal = smoothstep((seconds - lettersMoveStart) / Math.max(.001, colorFullSeconds - lettersMoveStart));
+    } else if (seconds >= colorFullSeconds) colorReveal = 1;
 
     let whiteReveal = 0;
     if (seconds >= whiteStartSeconds && seconds < whiteFullSeconds) whiteReveal = .12 + .88 * easeOut((seconds - whiteStartSeconds) / (whiteFullSeconds - whiteStartSeconds));
@@ -1547,10 +1561,12 @@
 
     const uniformColorProgress = colorUniformProgress(timeline.colorReveal);
     const uniformColor = finalEffectColor();
-    Array.from(colorWord.children).forEach((letter) => {
+    const colorLetters = Array.from(colorWord.children);
+    colorLetters.forEach((letter, index) => {
       if (!letter.textContent.trim()) return;
       const transitionColor = letter.dataset.effectColor || uniformColor;
       letter.style.setProperty("--overlay-color", mixHex(transitionColor, uniformColor, uniformColorProgress));
+      letter.style.setProperty("--overlay-alpha", colorWaveAlpha(index, colorLetters.length, timeline.colorReveal).toFixed(4));
     });
 
     const overlayActive = colorMode === "unfold" && timeline.seconds >= timeline.contactSeconds && timeline.seconds < timeline.replaceStartSeconds;
@@ -1948,13 +1964,11 @@
         const whiteThreshold = timeline.whiteReveal;
         if (distance <= whiteThreshold) return base;
       }
-      if (distance <= timeline.colorReveal) {
-        const colors = activeEffectColors();
-        const progress = count > 1 ? index / (count - 1) : 0;
-        const transitionColor = sampleColorList(colors, progress);
-        return mixHex(transitionColor, finalEffectColor(), colorUniformProgress(timeline.colorReveal));
-      }
-      return base;
+      const colors = activeEffectColors();
+      const progress = count > 1 ? index / (count - 1) : 0;
+      const transitionColor = sampleColorList(colors, progress);
+      const targetColor = mixHex(transitionColor, finalEffectColor(), colorUniformProgress(timeline.colorReveal));
+      return mixHex(base, targetColor, colorWaveAlpha(index, count, timeline.colorReveal));
     }
     const progress = clamp((timeline.seconds - timeline.contactSeconds) / Math.max(.001, timeline.replaceStartSeconds - timeline.contactSeconds), 0, 1);
     return samplePalette(clamp(progress + index / Math.max(1, count) * .35, 0, 1));

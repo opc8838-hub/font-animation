@@ -105,9 +105,13 @@ body .ib-color-word {
   background: none;
   -webkit-background-clip: initial;
   background-clip: initial;
+  clip-path: none;
 }
 
-body .ib-word.ib-color-word > span { color: var(--overlay-color, var(--color-a, #8c2bff)); }
+body .ib-word.ib-color-word > span {
+  color: var(--overlay-color, var(--color-a, #8c2bff));
+  opacity: var(--overlay-alpha, 0);
+}
 body .ib-word.ib-white-word > span { color: var(--base, #fff); }
 
 body .ib-word > span {
