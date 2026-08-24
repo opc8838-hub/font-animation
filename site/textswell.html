@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <script>if (new URLSearchParams(location.search).has("preview")) document.documentElement.classList.add("is-preview");</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="胀句：首词升起推向镜头，第二词逐字母弹起顶入，整句再收回。">
+  <title>胀句 Text Swell | ME Motion Studio</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;display=swap">
+  <link rel="stylesheet" href="continuation.css">
+  <link rel="stylesheet" href="currentwall.css">
+  <link rel="stylesheet" href="colorrecompose.css">
+  <link rel="stylesheet" href="fx-kit.css">
+  <link rel="stylesheet" href="textswell.css">
+  <link rel="stylesheet" href="me-motion-editor.css">
+  <link rel="stylesheet" href="stg-cn.css">
+</head>
+<body class="me-motion-editor textswell-editor">
+  <main class="current-stage fx-stage is-light" aria-label="胀句动效画布">
+    <canvas id="flowCanvas"></canvas>
+    <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+  </main>
+  <details class="control-panel current-panel fx-panel textswell-panel" id="controlPanel" open>
+    <summary><span><b>胀句</b><small>TEXT SWELL / 36</small></span><i aria-hidden="true">参数</i></summary>
+    <div class="panel-scroll">
+      <section class="scene-grid">
+        <label>句子
+          <textarea id="titleText" rows="6" spellcheck="false">Hely {{music}} fun {{play}} excellent</textarea>
+        </label>
+        <label>字体<select id="fontFamily">
+            <optgroup label="中文">
+              <option value="cn-noto-regular">Noto Sans SC</option>
+              <option value="cn-noto-black">Noto Sans SC Black</option>
+              <option value="ib-sc-thin">思源黑体 Thin</option>
+              <option value="ib-jp-thin">Noto Sans JP Thin</option>
+              <option value="ib-jp-black">Noto Sans JP Black</option>
+              <option value="ib-kr-black">Noto Sans KR Black</option>
+            </optgroup>
+            <optgroup label="Snap">
+              <option value="snap-inter-medium" selected>Inter Medium</option>
+              <option value="snap-inter-black">Inter Black</option>
+              <option value="snap-ibm-plex">IBM Plex Mono Italic</option>
+              <option value="snap-space-mono">Space Mono Bold</option>
+              <option value="snap-space-grotesk">Space Grotesk Bold</option>
+            </optgroup>
+            <optgroup label="图标爆发">
+              <option value="ib-archivo">Archivo Black</option>
+              <option value="ib-roboto-condensed">Roboto Condensed</option>
+              <option value="ib-work">Work Sans</option>
+              <option value="ib-lora">Lora</option>
+              <option value="ib-fenix">Fenix</option>
+              <option value="ib-vollkorn">Vollkorn Italic</option>
+              <option value="ib-cairo">Cairo</option>
+              <option value="ib-aguafina">Aguafina Script</option>
+              <option value="ib-manrope">Manrope</option>
+              <option value="ib-spartan">League Spartan</option>
+              <option value="ib-cinzel">Cinzel</option>
+              <option value="ib-instrument">Instrument Serif</option>
+              <option value="ib-bebas">Bebas Neue</option>
+              <option value="ib-poppins">Poppins</option>
+              <option value="ib-rajdhani">Rajdhani</option>
+              <option value="ib-teko">Teko</option>
+              <option value="ib-khand">Khand</option>
+              <option value="ib-fraunces">Fraunces</option>
+            </optgroup>
+          </select></label>
+        <p class="hint">空格分词。第一词升起并推向镜头；后面每个词都可以单独开弹起，并调快慢。点下方图标插到光标处。</p>
+      </section>
+
+      <section class="swell-save-row">
+        <button id="saveButton" type="button">保存方案</button>
+        <label class="swell-import">导入方案<input id="importFile" type="file" accept="application/json,.json"></label>
+        <button id="clearButton" type="button">清理重来</button>
+      </section>
+
+      <section class="swell-choreo">
+        <div class="section-heading">
+          <p class="section-label">编舞时间轴</p>
+          <small class="section-note">点一段可跳到那一拍</small>
+        </div>
+        <div class="swell-track" id="choreoTrack" aria-label="动效编舞">
+          <div class="swell-track-bar" id="choreoBar">
+            <div class="swell-beat-block is-lead" role="button" tabindex="0" style="width:16%;min-height:88px;background:#d7ff2f;border:1px solid #111;padding:8px;color:#111"><em>1</em><strong>首词升起</strong><small>0.33秒</small></div>
+            <div class="swell-beat-block is-lead" role="button" tabindex="0" style="width:18%;min-height:88px;background:#d7ff2f;border:1px solid #111;padding:8px;color:#111"><em>2</em><strong>推向镜头</strong><small>0.67秒</small></div>
+            <div class="swell-beat-block is-bounce" role="button" tabindex="0" style="width:20%;min-height:88px;background:#8ec8ff;border:1px solid #111;padding:8px;color:#111"><em>3</em><strong>第二词弹起</strong><small>0.70秒</small></div>
+            <div class="swell-beat-block is-push" role="button" tabindex="0" style="width:18%;min-height:88px;background:#f3d19e;border:1px solid #111;padding:8px;color:#111"><em>4</em><strong>后词顶入</strong><small>0.47秒</small></div>
+            <div class="swell-beat-block is-hold" role="button" tabindex="0" style="width:12%;min-height:88px;background:#e7e7ea;border:1px solid #111;padding:8px;color:#111"><em>5</em><strong>停住</strong><small>0.20秒</small></div>
+            <div class="swell-beat-block is-recede" role="button" tabindex="0" style="width:16%;min-height:88px;background:#ffc4d6;border:1px solid #111;padding:8px;color:#111"><em>6</em><strong>整句收回</strong><small>0.60秒</small></div>
+            <div class="swell-playhead" id="choreoPlayhead"></div>
+          </div>
+          <ol class="swell-track-legend">
+            <li><i class="is-lead"></i><b>1. 首词升起</b><span>从下方上来</span></li>
+            <li><i class="is-lead"></i><b>2. 推向镜头</b><span>整行变大</span></li>
+            <li><i class="is-bounce"></i><b>3. 第二词弹起</b><span>字母/图标从基线胀开</span></li>
+            <li><i class="is-push"></i><b>4. 后词顶入</b><span>把前面的词顶开</span></li>
+            <li><i class="is-hold"></i><b>5. 停住</b><span>看清整句</span></li>
+            <li><i class="is-recede"></i><b>6. 整句收回</b><span>落到最终大小</span></li>
+          </ol>
+        </div>
+        <p class="swell-beat" id="choreoBeat">1. 首词升起</p>
+      </section>
+
+      <section class="swell-words">
+        <div class="section-heading">
+          <p class="section-label">词位弹起 · 除首词外都可以动</p>
+          <small class="section-note">图标和字一样，开了就会弹</small>
+        </div>
+        <div id="wordMotionList"></div>
+      </section>
+
+      <section class="asset-section">
+        <div class="section-heading">
+          <p class="section-label">流墙图标 · 音乐 / 播放 / 云 / 手表</p>
+          <label class="upload-button">添加图片<input id="assetUpload" type="file" accept="image/*" multiple></label>
+        </div>
+        <p class="asset-process-status">点图标插入到句子光标处。下面 31 只透明动物也可以插。插进去的每一枚都能单独挪位置。</p>
+        <div class="asset-grid asset-grid-core" id="coreIconGrid"></div>
+        <div class="section-heading" style="margin-top:14px">
+          <p class="section-label">透明动物</p>
+        </div>
+        <div class="asset-grid" id="assetGrid"></div>
+        <div class="asset-tuner" id="assetTuner">
+          <div class="asset-tuner-head"><span>素材库精调</span><b id="selectedAssetName">音乐</b></div>
+          <div class="asset-tuner-grid">
+            <label>大小 <output id="assetItemScaleOut">100%</output>
+              <input id="assetItemScale" type="range" min="20" max="300" value="100">
+            </label>
+            <label>左右 <output id="assetOffsetXOut">0%</output>
+              <input id="assetOffsetX" type="range" min="-150" max="150" value="0">
+            </label>
+            <label>上下 <output id="assetOffsetYOut">0%</output>
+              <input id="assetOffsetY" type="range" min="-150" max="150" value="0">
+            </label>
+          </div>
+        </div>
+        <div class="section-heading" style="margin-top:14px">
+          <p class="section-label">句子里的图标 · 逐个挪位置</p>
+        </div>
+        <div class="textswell-used" id="usedIcons"></div>
+      </section>
+
+      <section class="color-row">
+        <label>背景<input id="backgroundColor" type="color" value="#fafafa"></label>
+        <label>字色<input id="textColor" type="color" value="#101828"></label>
+        <label>字重<select id="fontWeight">
+          <option value="400">400</option>
+          <option value="500">500</option>
+          <option value="600" selected>600</option>
+          <option value="700">700</option>
+          <option value="800">800</option>
+          <option value="900">900</option>
+        </select></label>
+      </section>
+
+      <section class="controls-grid">
+        <label>字距 <output id="trackingOut">-0.03em</output>
+          <input id="tracking" type="range" min="-80" max="80" step="1" value="-30">
+        </label>
+        <label>图标间距 <output id="iconGapOut">0.18em</output>
+          <input id="iconGap" type="range" min="0" max="80" step="1" value="18">
+        </label>
+        <label>字母胀幅 <output id="letterSwellOut">23%</output>
+          <input id="letterSwell" type="range" min="0" max="60" step="1" value="23">
+        </label>
+        <label>前推倍数 <output id="frontScaleOut">2.10×</output>
+          <input id="frontScale" type="range" min="110" max="320" step="5" value="210">
+        </label>
+        <label>首词放大 <output id="leadScaleOut">2.10×</output>
+          <input id="leadScale" type="range" min="110" max="400" step="5" value="210">
+        </label>
+        <label>首词起幅 <output id="startScaleOut">1.00×</output>
+          <input id="startScale" type="range" min="50" max="160" step="5" value="100">
+        </label>
+        <label>收尾缩小 <output id="endScaleOut">1.00×</output>
+          <input id="endScale" type="range" min="40" max="160" step="5" value="100">
+        </label>
+        <label>收尾时间 <output id="recedeMsOut">0.60秒</output>
+          <input id="recedeMs" type="range" min="150" max="2500" step="10" value="600">
+        </label>
+        <label>收尾停留 <output id="endHoldMsOut">0.40秒</output>
+          <input id="endHoldMs" type="range" min="0" max="3000" step="10" value="400">
+        </label>
+        <label>字号 <output id="fontSizeOut">72</output>
+          <input id="fontSize" type="range" min="28" max="140" step="1" value="72">
+        </label>
+        <label>全局速度 <output id="speedOut">1.00×</output>
+          <input id="speed" type="range" min="40" max="200" step="5" value="100">
+        </label>
+      </section>
+      <p class="hint">时序按 snapcn 开源帧数：升起 10、推近 20、词延迟 27、词间隔 14、顶入 12、弹起 3、落下 6、停 6、收回 18。</p>
+
+      <section class="transport">
+        <button id="restartButton" type="button">重播</button>
+        <button id="pauseButton" type="button">暂停</button>
+        <button id="backButton" type="button">−1 帧</button>
+        <button id="forwardButton" type="button">+1 帧</button>
+      </section>
+      <section class="export-panel">
+        <label class="section-label" for="exportPreset">导出尺寸</label>
+        <select id="exportPreset">
+          <option value="current">当前画板</option>
+          <option value="1080x1080">1:1 · 1080 × 1080</option>
+          <option value="1080x1920">9:16 · 1080 × 1920</option>
+          <option value="1920x1080" selected>16:9 · 1920 × 1080</option>
+          <option value="custom">自定义尺寸</option>
+        </select>
+        <div class="custom-size" id="customSize" hidden>
+          <label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1920"></label><span>×</span>
+          <label>高<input id="exportHeight" type="number" min="240" max="3840" value="1080"></label>
+        </div>
+        <div class="export-actions">
+          <button id="exportPng" type="button">PNG 图片</button>
+          <button id="exportGif" type="button">GIF 动图</button>
+          <button id="exportVideo" type="button">导出 MP4</button>
+          <button class="export-hd-video" id="exportVerticalVideo" type="button">导出 9:16 MP4 · 1080 × 1920</button>
+        </div>
+        <p class="export-status" id="exportStatus">导出按输出画布单独排版。</p>
+      </section>
+      <p class="formula">Hely 升起推近 → fun 逐字母弹起并顶开 → excellent 顶入 → 整句收回<br>时序与缓动来自 snapcn text-swell 开源文件</p>
+    </div>
+  </details>
+  <script src="js/continuation-gif.js"></script>
+  <script src="js/h264-mp4-encoder.web.js"></script>
+  <script src="token-asset-tools.js"></script>
+  <script src="fx-kit.js"></script>
+  <script src="textswell.js"></script>
+  <script src="me-motion-editor.js"></script>
+  <script src="stg-cn.js"></script>
+</body>
+</html>

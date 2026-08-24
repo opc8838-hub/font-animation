@@ -1,0 +1,313 @@
+body.wordflip-editor {
+  --me-panel-width: 540px;
+}
+
+.wordflip-save-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin: 4px 0 12px;
+}
+
+.wordflip-save-row button,
+.wordflip-import {
+  min-height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #111;
+  background: #fff;
+  font: 700 13px/1 sans-serif;
+  cursor: pointer;
+}
+
+.wordflip-import {
+  position: relative;
+  overflow: hidden;
+}
+
+.wordflip-import input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.wordflip-track {
+  display: grid;
+  gap: 10px;
+  min-height: 180px;
+  padding: 10px;
+  border: 1px solid #111;
+  background: #fff;
+}
+
+.wordflip-track-bar {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  min-height: 88px;
+  overflow: auto hidden;
+}
+
+body.wordflip-editor .flip-beat-block {
+  display: flex !important;
+  flex: 1 0 auto;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+  min-width: 72px;
+  min-height: 88px;
+  padding: 8px 6px !important;
+  border: 1px solid #111 !important;
+  color: #111 !important;
+  font: 700 11px/1.2 sans-serif !important;
+  text-align: left;
+  cursor: pointer;
+  background: #ececef !important;
+}
+
+body.wordflip-editor .flip-beat-block.is-type { background: #d7ff2f !important; }
+body.wordflip-editor .flip-beat-block.is-hold { background: #e7e7ea !important; }
+body.wordflip-editor .flip-beat-block.is-flip { background: #8ec8ff !important; }
+body.wordflip-editor .flip-beat-block.is-active {
+  outline: 3px solid #111;
+  outline-offset: -3px;
+}
+
+body.wordflip-editor .flip-beat-block em {
+  font-size: 16px;
+  font-style: normal;
+}
+
+body.wordflip-editor .flip-beat-block strong {
+  display: block;
+  font-size: 12px;
+}
+
+body.wordflip-editor .flip-beat-block small {
+  color: #444;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.wordflip-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #111;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.wordflip-legend {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wordflip-legend li {
+  display: grid;
+  grid-template-columns: 16px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.wordflip-legend i {
+  width: 14px;
+  height: 14px;
+  border: 1px solid #111;
+}
+
+.wordflip-legend i.is-type { background: #d7ff2f; }
+.wordflip-legend i.is-hold { background: #e7e7ea; }
+.wordflip-legend i.is-flip { background: #8ec8ff; }
+
+.wordflip-legend span {
+  color: #62615c;
+}
+
+.wordflip-beat {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.flip-word-card {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 12px;
+  border: 1px solid #111;
+  background: #fff;
+}
+
+.flip-word-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.word-color {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  font-size: 13px;
+}
+
+.word-color input[type="color"] {
+  width: 52px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid #111;
+  background: #fff;
+  cursor: pointer;
+}
+
+.wordflip-panel label.swell-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  font-size: 13px;
+}
+
+.wordflip-panel label.swell-toggle input {
+  width: 18px;
+  height: 18px;
+}
+
+.color-pair-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+body.me-motion-editor .wordflip-panel .color-pair,
+.color-pair {
+  display: inline-block;
+  width: 48px;
+  height: 28px;
+  border: 1px solid #111 !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  background-color: transparent !important;
+  background-image: linear-gradient(90deg, #2a8bf5, #e11d48);
+  background-size: 100% 100%;
+}
+
+.color-pair.is-active {
+  outline: 3px solid #2864ff;
+  outline-offset: 1px;
+}
+
+.flip-word-card .color-pair-row {
+  margin: 0;
+}
+
+.wordflip-panel .asset-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.wordflip-panel .asset-grid-core {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 8px;
+}
+
+.wordflip-panel .asset-insert {
+  min-height: 88px;
+  grid-template-rows: 52px auto;
+  font-size: 11px;
+}
+
+.wordflip-panel .asset-insert img {
+  width: 48px;
+  height: 48px;
+}
+
+.wordflip-panel .asset-tuner {
+  padding: 14px;
+}
+
+.wordflip-panel .asset-tuner-grid label,
+.wordflip-panel .icon-tune-grid label {
+  display: grid;
+  grid-template-columns: 48px 1fr 56px;
+  align-items: center;
+  font-size: 12px;
+  gap: 8px;
+}
+
+.textswell-used {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.textswell-used-empty {
+  margin: 0;
+  padding: 12px;
+  border: 1px dashed #c9c8c1;
+  color: #62615c;
+  font-size: 12px;
+}
+
+.icon-tune-card {
+  padding: 12px;
+  border: 1px solid #111;
+  background: #fff;
+}
+
+.icon-tune-card.is-active {
+  outline: 3px solid #2864ff;
+  outline-offset: -3px;
+}
+
+.icon-tune-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.icon-tune-head img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  background: #f4f3ef;
+}
+
+.icon-tune-head b { font-size: 14px; }
+.icon-tune-head small {
+  display: block;
+  color: #62615c;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.icon-tune-grid { display: grid; gap: 10px; }
+
+.icon-nudge {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.icon-nudge button {
+  min-height: 36px;
+  border: 1px solid #111;
+  background: #fff;
+  font: 700 13px/1 sans-serif;
+  cursor: pointer;
+}
+
+.icon-nudge button:hover { background: #c1ff1a; }

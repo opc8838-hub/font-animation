@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="拼字：彩色碎片和图标飞入，拼成标题后再收成单色字标。">
+  <title>拼字 Assemble | ME Motion Studio</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&amp;f[]=general-sans@400,500,600&amp;f[]=cabinet-grotesk@500,700&amp;display=swap">
+  <link rel="stylesheet" href="continuation.css">
+  <link rel="stylesheet" href="currentwall.css">
+  <link rel="stylesheet" href="assemble.css">
+  <link rel="stylesheet" href="me-motion-editor.css">
+  <link rel="stylesheet" href="stg-cn.css">
+</head>
+<body class="me-motion-editor">
+  <main class="current-stage assemble-stage" aria-label="拼字动效画布">
+    <canvas id="flowCanvas"></canvas>
+    <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+  </main>
+
+  <details class="control-panel current-panel assemble-panel" id="controlPanel" open>
+    <summary>
+      <span><b>拼字</b><small>ASSEMBLE / 36</small></span>
+      <i aria-hidden="true">参数</i>
+    </summary>
+    <div class="panel-scroll">
+      <section class="scene-grid">
+        <label>标题
+          <textarea id="titleText" rows="2" spellcheck="false">Creator Studio</textarea>
+        </label>
+        <p class="hint">碎片沿标题线逐个弹出，短距滑进字位，再很快收成单色。不抄商标，前标用圆点。</p>
+      </section>
+
+      <section class="font-picker">
+        <div class="search-row">
+          <label><span class="section-label">字体</span><select id="fontFamily">
+            <optgroup label="几何无衬线">
+              <option value="snap-inter-medium" selected>Inter</option>
+              <option value="snap-space-grotesk">Space Grotesk</option>
+              <option value="ib-manrope">Manrope</option>
+              <option value="ib-poppins">Poppins</option>
+              <option value="fs-satoshi">Satoshi</option>
+            </optgroup>
+            <optgroup label="中文字体">
+              <option value="cn-noto-regular">Noto Sans SC</option>
+              <option value="cn-noto-black">Noto Sans SC Black</option>
+              <option value="ib-sc-thin">Noto Sans SC Thin</option>
+            </optgroup>
+          </select></label>
+          <label><span class="section-label">字体粗细</span><select id="fontWeight">
+            <option value="300">Light · 300</option>
+            <option value="400">Regular · 400</option>
+            <option value="500">Medium · 500</option>
+            <option value="600">Semibold · 600</option>
+            <option value="700" selected>Bold · 700</option>
+            <option value="800">ExtraBold · 800</option>
+            <option value="900">Black · 900</option>
+          </select></label>
+        </div>
+      </section>
+
+      <section class="motion-quick">
+        <div class="section-heading"><p class="section-label">常用调节</p><small class="section-note">散开 → 飞入 → 彩色停 → 收成单色</small></div>
+        <div class="motion-map assemble-map" aria-label="动效阶段">
+          <span>散开</span><i>→</i><span>飞入</span><i>→</i><span>彩色</span><i>→</i><span>收色</span><i>→</i><span>停住</span>
+        </div>
+        <div class="controls-grid quick-grid">
+          <label>飞入 <small class="stage-tag">阶段 2</small><output id="flyOut">0.95秒</output>
+            <input id="flyDuration" type="range" min="200" max="2400" step="50" value="950">
+          </label>
+          <label>彩色停留 <small class="stage-tag">阶段 3</small><output id="colorHoldOut">0.35秒</output>
+            <input id="colorHold" type="range" min="0" max="2000" step="50" value="350">
+          </label>
+          <label>收成单色 <small class="stage-tag">阶段 4</small><output id="flattenOut">0.40秒</output>
+            <input id="flattenDuration" type="range" min="100" max="1600" step="50" value="400">
+          </label>
+          <label>收住 <small class="stage-tag">阶段 5</small><output id="holdOut">1.20秒</output>
+            <input id="holdDuration" type="range" min="0" max="3000" step="50" value="1200">
+          </label>
+          <label>图标占比 <small class="stage-tag">碎片</small><output id="iconMixOut">55%</output>
+            <input id="iconMix" type="range" min="0" max="80" step="1" value="55">
+          </label>
+          <label>全局速度 <small class="stage-tag">整段</small><output id="speedOut">1.00×</output>
+            <input id="speed" type="range" min="40" max="200" step="5" value="100">
+          </label>
+        </div>
+      </section>
+
+      <section class="color-row">
+        <label>背景<input id="backgroundColor" type="color" value="#000000"></label>
+        <label>收成字色<input id="textColor" type="color" value="#ffffff"></label>
+        <label class="search-toggle" style="display:flex;align-items:center;gap:8px;min-height:42px">
+          <input id="leadingMark" type="checkbox" checked> 前标圆点
+        </label>
+      </section>
+      <section>
+        <p class="section-label">碎片颜色</p>
+        <div class="assemble-swatches">
+          <label>1<input id="c0" class="palette-color" type="color" value="#34c759"></label>
+          <label>2<input id="c1" class="palette-color" type="color" value="#ff9f0a"></label>
+          <label>3<input id="c2" class="palette-color" type="color" value="#bf5af2"></label>
+          <label>4<input id="c3" class="palette-color" type="color" value="#ffd60a"></label>
+          <label>5<input id="c4" class="palette-color" type="color" value="#0a84ff"></label>
+          <label>6<input id="c5" class="palette-color" type="color" value="#ff375f"></label>
+          <label>7<input id="c6" class="palette-color" type="color" value="#64d2ff"></label>
+          <label>8<input id="c7" class="palette-color" type="color" value="#ffd60a"></label>
+        </div>
+      </section>
+
+      <section class="advanced-controls">
+        <div class="section-heading"><p class="section-label">散开与字号</p><small class="section-note">进阶</small></div>
+        <div class="controls-grid">
+          <label>散开时间 <output id="scatterOut">0.08秒</output>
+            <input id="scatterDuration" type="range" min="0" max="800" step="20" value="80">
+          </label>
+          <label>横向散开 <output id="spreadXOut">16%</output>
+            <input id="spreadX" type="range" min="4" max="120" step="1" value="16">
+          </label>
+          <label>纵向散开 <output id="spreadYOut">6%</output>
+            <input id="spreadY" type="range" min="2" max="60" step="1" value="6">
+          </label>
+          <label>字号 <output id="fontSizeOut">8%</output>
+            <input id="fontSize" type="range" min="4" max="16" step="1" value="8">
+          </label>
+          <label>字距 <output id="trackingOut">0</output>
+            <input id="tracking" type="range" min="-20" max="40" step="1" value="0">
+          </label>
+          <label>错拍 <output id="staggerOut">55ms</output>
+            <input id="stagger" type="range" min="0" max="80" step="2" value="55">
+          </label>
+        </div>
+      </section>
+
+      <section class="transport" aria-label="时间轴控制">
+        <button id="restartButton" type="button">重播</button>
+        <button id="pauseButton" type="button">暂停</button>
+        <button id="backButton" type="button">−1 帧</button>
+        <button id="forwardButton" type="button">+1 帧</button>
+      </section>
+
+      <section class="export-panel">
+        <label class="section-label" for="exportPreset">导出尺寸</label>
+        <select id="exportPreset">
+          <option value="current">当前画板</option>
+          <option value="1080x1080">1:1 · 1080 × 1080</option>
+          <option value="1080x1350">4:5 · 1080 × 1350</option>
+          <option value="1080x1920" selected>9:16 · 1080 × 1920</option>
+          <option value="1920x1080">16:9 · 1920 × 1080</option>
+          <option value="custom">自定义尺寸</option>
+        </select>
+        <div class="custom-size" id="customSize" hidden>
+          <label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label><span>×</span>
+          <label>高<input id="exportHeight" type="number" min="240" max="3840" value="1920"></label>
+        </div>
+        <div class="export-actions">
+          <button id="exportPng" type="button">PNG 图片</button>
+          <button id="exportGif" type="button">GIF 动图</button>
+          <button id="exportVideo" type="button">导出 MP4</button>
+          <button class="export-hd-video" id="exportVerticalVideo" type="button">导出 9:16 MP4 · 1080 × 1920</button>
+        </div>
+        <p class="export-status" id="exportStatus" aria-live="polite">导出按输出画布单独排版，不含左侧编辑器。</p>
+      </section>
+      <p class="formula">散开碎片 → 飞入字位 → 彩色标题 → 收成单色字标<br>参考动效1，独立文件，未改其它动效</p>
+    </div>
+  </details>
+
+  <script src="js/continuation-gif.js"></script>
+  <script src="CCapture.all.min.js"></script>
+  <script src="js/h264-mp4-encoder.web.js"></script>
+  <script src="assemble.js"></script>
+  <script src="me-motion-editor.js"></script>
+  <script src="stg-cn.js"></script>
+</body>
+</html>

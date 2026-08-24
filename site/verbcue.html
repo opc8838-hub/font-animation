@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="动令：黑底短句轮换，字母打散、像素扫清、词距切开再合上。">
+  <title>动令 Verb Cue | ME Motion Studio</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&amp;f[]=general-sans@400,500,600&amp;display=swap">
+  <link rel="stylesheet" href="continuation.css">
+  <link rel="stylesheet" href="currentwall.css">
+  <link rel="stylesheet" href="fx-kit.css">
+  <link rel="stylesheet" href="me-motion-editor.css">
+  <link rel="stylesheet" href="stg-cn.css">
+</head>
+<body class="me-motion-editor">
+  <main class="current-stage fx-stage " aria-label="动令动效画布">
+    <canvas id="flowCanvas"></canvas>
+    <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+  </main>
+  <details class="control-panel current-panel fx-panel" id="controlPanel" open>
+    <summary>
+      <span><b>动令</b><small>VERB CUE / 37</small></span>
+      <i aria-hidden="true">参数</i>
+    </summary>
+    <div class="panel-scroll">
+
+      <section class="scene-grid">
+        <label>打散句<input id="scatterText" type="text" value="Move it." spellcheck="false"></label>
+        <label>像素句<input id="pixelText" type="text" value="Upscale it." spellcheck="false"></label>
+        <label>切开句<input id="splitText" type="text" value="Share it." spellcheck="false"></label>
+        <label>收住句<input id="holdText" type="text" value="Get it for $12.99/mo." spellcheck="false"></label>
+        <p class="hint">按动效2的四段走：先垃圾桶，再三句处理，最后价格。每段文案可改。</p>
+      </section>
+      <section class="color-row">
+        <label>背景<input id="backgroundColor" type="color" value="#000000"></label>
+        <label>打散色<input id="scatterColor" type="color" value="#ffffff"></label>
+        <label>像素色<input id="pixelColor" type="color" value="#32d74b"></label>
+        <label>切开色<input id="splitColor" type="color" value="#0a84ff"></label>
+        <label>收住色<input id="holdColor" type="color" value="#ffffff"></label>
+      </section>
+      <section class="controls-grid">
+        <label>每段时长 <output id="sceneOut">1.40秒</output>
+          <input id="sceneDuration" type="range" min="600" max="2800" step="50" value="1400">
+        </label>
+        <label>字号 <output id="fontSizeOut">8%</output>
+          <input id="fontSize" type="range" min="4" max="16" step="1" value="8">
+        </label>
+        <label>全局速度 <output id="speedOut">1.00×</output>
+          <input id="speed" type="range" min="40" max="200" step="5" value="100">
+        </label>
+      </section>
+      <section class="transport" aria-label="时间轴控制">
+        <button id="restartButton" type="button">重播</button>
+        <button id="pauseButton" type="button">暂停</button>
+        <button id="backButton" type="button">−1 帧</button>
+        <button id="forwardButton" type="button">+1 帧</button>
+      </section>
+      <section class="export-panel">
+        <label class="section-label" for="exportPreset">导出尺寸</label>
+        <select id="exportPreset">
+          <option value="current">当前画板</option>
+          <option value="1080x1080">1:1 · 1080 × 1080</option>
+          <option value="1080x1920" selected>9:16 · 1080 × 1920</option>
+          <option value="1920x1080">16:9 · 1920 × 1080</option>
+          <option value="custom">自定义尺寸</option>
+        </select>
+        <div class="custom-size" id="customSize" hidden>
+          <label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label><span>×</span>
+          <label>高<input id="exportHeight" type="number" min="240" max="3840" value="1920"></label>
+        </div>
+        <div class="export-actions">
+          <button id="exportPng" type="button">PNG 图片</button>
+          <button id="exportGif" type="button">GIF 动图</button>
+          <button id="exportVideo" type="button">导出 MP4</button>
+          <button class="export-hd-video" id="exportVerticalVideo" type="button">导出 9:16 MP4 · 1080 × 1920</button>
+        </div>
+        <p class="export-status" id="exportStatus" aria-live="polite">导出按输出画布单独排版。</p>
+      </section>
+      <p class="formula">垃圾桶 → Move 打散归位 → Upscale 像素扫清 → Share 切开复合 → 价格停住</p>
+    </div>
+  </details>
+  <script src="js/continuation-gif.js"></script>
+  <script src="js/h264-mp4-encoder.web.js"></script>
+  <script src="fx-kit.js"></script>
+  <script src="verbcue.js"></script>
+  <script src="me-motion-editor.js"></script>
+  <script src="stg-cn.js"></script>
+</body>
+</html>

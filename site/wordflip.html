@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="翻词：先打出前后句，中间槽位立体翻词，行宽不挤。">
+  <title>翻词 Word Flip | ME Motion Studio</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;display=swap">
+  <link rel="stylesheet" href="continuation.css">
+  <link rel="stylesheet" href="currentwall.css">
+  <link rel="stylesheet" href="colorrecompose.css">
+  <link rel="stylesheet" href="fx-kit.css">
+  <link rel="stylesheet" href="wordflip.css">
+  <link rel="stylesheet" href="me-motion-editor.css">
+  <link rel="stylesheet" href="stg-cn.css">
+</head>
+<body class="me-motion-editor wordflip-editor">
+  <main class="current-stage fx-stage is-light" aria-label="翻词动效画布">
+    <canvas id="flowCanvas"></canvas>
+    <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+  </main>
+  <details class="control-panel current-panel fx-panel wordflip-panel" id="controlPanel" open>
+    <summary><span><b>翻词</b><small>WORD FLIP / 37</small></span><i aria-hidden="true">参数</i></summary>
+    <div class="panel-scroll">
+      <section class="scene-grid">
+        <label>前半句<input id="prefix" type="text" value="我想做一套" spellcheck="false"></label>
+        <label>翻转词（空格分隔）<input id="words" type="text" value="干净 锋利 温柔" spellcheck="false"></label>
+        <label>后半句<input id="suffix" type="text" value="封面" spellcheck="false"></label>
+        <label>字体<select id="fontFamily">
+            <optgroup label="中文">
+              <option value="cn-noto-regular">Noto Sans SC</option>
+              <option value="cn-noto-black">Noto Sans SC Black</option>
+              <option value="ib-sc-thin">思源黑体 Thin</option>
+              <option value="ib-jp-thin">Noto Sans JP Thin</option>
+              <option value="ib-jp-black">Noto Sans JP Black</option>
+              <option value="ib-kr-black">Noto Sans KR Black</option>
+            </optgroup>
+            <optgroup label="Snap">
+              <option value="snap-inter-medium" selected>Inter Medium</option>
+              <option value="snap-inter-black">Inter Black</option>
+              <option value="snap-ibm-plex">IBM Plex Mono Italic</option>
+              <option value="snap-space-mono">Space Mono Bold</option>
+              <option value="snap-space-grotesk">Space Grotesk Bold</option>
+            </optgroup>
+            <optgroup label="图标爆发">
+              <option value="ib-archivo">Archivo Black</option>
+              <option value="ib-roboto-condensed">Roboto Condensed</option>
+              <option value="ib-work">Work Sans</option>
+              <option value="ib-lora">Lora</option>
+              <option value="ib-fenix">Fenix</option>
+              <option value="ib-vollkorn">Vollkorn Italic</option>
+              <option value="ib-cairo">Cairo</option>
+              <option value="ib-aguafina">Aguafina Script</option>
+              <option value="ib-manrope">Manrope</option>
+              <option value="ib-spartan">League Spartan</option>
+              <option value="ib-cinzel">Cinzel</option>
+              <option value="ib-instrument">Instrument Serif</option>
+              <option value="ib-bebas">Bebas Neue</option>
+              <option value="ib-poppins">Poppins</option>
+              <option value="ib-rajdhani">Rajdhani</option>
+              <option value="ib-teko">Teko</option>
+              <option value="ib-khand">Khand</option>
+              <option value="ib-fraunces">Fraunces</option>
+            </optgroup>
+          </select></label>
+        <p class="hint">前半句和后半句逐字打入。中间槽位先留空，再把翻转词按 snapcn 的 easeInBack 立体翻进去，行宽不会被挤。默认没有图标；要点图标时，先点一下要插入的那一栏。</p>
+        <p class="hint" id="insertHint">当前插入到：前半句</p>
+      </section>
+
+      <section class="wordflip-save-row">
+        <button id="saveButton" type="button">保存方案</button>
+        <label class="wordflip-import">导入方案<input id="importFile" type="file" accept="application/json,.json"></label>
+        <button id="clearButton" type="button">清理重来</button>
+      </section>
+
+      <section class="swell-choreo">
+        <div class="section-heading">
+          <p class="section-label">编舞时间轴</p>
+          <small class="section-note">点一段可跳到那一拍</small>
+        </div>
+        <div class="wordflip-track" id="choreoTrack" aria-label="动效编舞">
+          <div class="wordflip-track-bar" id="choreoBar"></div>
+          <ol class="wordflip-legend">
+            <li><i class="is-type"></i><b>打字</b><span>前半句再后半句</span></li>
+            <li><i class="is-hold"></i><b>停住</b><span>槽位仍空着</span></li>
+            <li><i class="is-flip"></i><b>翻词</b><span>先下沉再抛出</span></li>
+          </ol>
+        </div>
+        <p class="wordflip-beat" id="choreoBeat">1. 打前半句</p>
+      </section>
+
+      <section class="swell-words">
+        <div class="section-heading">
+          <p class="section-label">翻转词色</p>
+          <small class="section-note">点色块一套配色，也可自己调左右渐变</small>
+        </div>
+        <div class="color-pair-row" id="colorPairBar"></div>
+        <div id="wordColorList"></div>
+      </section>
+
+      <section class="asset-section">
+        <div class="section-heading">
+          <p class="section-label">流墙图标 · 音乐 / 播放 / 云 / 手表</p>
+          <label class="upload-button">添加图片<input id="assetUpload" type="file" accept="image/*" multiple></label>
+        </div>
+        <p class="asset-process-status">默认画面没有图标。点图标插到当前输入框光标处。插进去的每一枚都能单独调大小、间距和位置。</p>
+        <div class="asset-grid asset-grid-core" id="coreIconGrid"></div>
+        <div class="section-heading" style="margin-top:14px">
+          <p class="section-label">透明动物</p>
+        </div>
+        <div class="asset-grid" id="assetGrid"></div>
+        <div class="asset-tuner" id="assetTuner">
+          <div class="asset-tuner-head"><span>素材库精调</span><b id="selectedAssetName">音乐</b></div>
+          <div class="asset-tuner-grid">
+            <label>大小 <output id="assetItemScaleOut">100%</output>
+              <input id="assetItemScale" type="range" min="20" max="300" value="100">
+            </label>
+            <label>左右 <output id="assetOffsetXOut">0%</output>
+              <input id="assetOffsetX" type="range" min="-150" max="150" value="0">
+            </label>
+            <label>上下 <output id="assetOffsetYOut">0%</output>
+              <input id="assetOffsetY" type="range" min="-150" max="150" value="0">
+            </label>
+          </div>
+        </div>
+        <div class="section-heading" style="margin-top:14px">
+          <p class="section-label">句子里的图标 · 逐个挪位置</p>
+        </div>
+        <div class="textswell-used" id="usedIcons"></div>
+      </section>
+
+      <section class="color-row">
+        <label>背景<input id="backgroundColor" type="color" value="#fafafa"></label>
+        <label>句色<input id="textColor" type="color" value="#101828"></label>
+        <label>字重<select id="fontWeight">
+          <option value="400">400</option>
+          <option value="500">500</option>
+          <option value="600" selected>600</option>
+          <option value="700">700</option>
+          <option value="800">800</option>
+          <option value="900">900</option>
+        </select></label>
+      </section>
+
+      <section class="controls-grid">
+        <label>打字速度 <output id="cpsOut">9 字/秒</output>
+          <input id="cps" type="range" min="3" max="24" step="0.5" value="9">
+        </label>
+        <label>打完停顿 <output id="pauseOut">0.20秒</output>
+          <input id="pause" type="range" min="0" max="40" step="1" value="6">
+        </label>
+        <label>翻转间隔 <output id="cycleOut">1.17秒</output>
+          <input id="cycle" type="range" min="16" max="90" step="1" value="35">
+        </label>
+        <label>抛出时长 <output id="exitOut">0.30秒</output>
+          <input id="exitDuration" type="range" min="4" max="24" step="1" value="9">
+        </label>
+        <label>落入时长 <output id="enterOut">0.30秒</output>
+          <input id="enterDuration" type="range" min="4" max="24" step="1" value="9">
+        </label>
+        <label>重叠帧 <output id="overlapOut">3 帧</output>
+          <input id="overlap" type="range" min="0" max="8" step="1" value="3">
+        </label>
+        <label>透视 <output id="perspectiveOut">6.5em</output>
+          <input id="perspective" type="range" min="20" max="200" step="5" value="65">
+        </label>
+        <label>字距 <output id="trackingOut">-0.02em</output>
+          <input id="tracking" type="range" min="-80" max="80" step="1" value="-20">
+        </label>
+        <label>图标间距 <output id="iconGapOut">0.18em</output>
+          <input id="iconGap" type="range" min="0" max="80" step="1" value="18">
+        </label>
+        <label>字号 <output id="fontSizeOut">72</output>
+          <input id="fontSize" type="range" min="28" max="140" step="1" value="72">
+        </label>
+        <label>全局速度 <output id="speedOut">1.00×</output>
+          <input id="speed" type="range" min="40" max="200" step="5" value="100">
+        </label>
+        <label class="swell-toggle">光标
+          <input id="caret" type="checkbox" checked>
+        </label>
+      </section>
+      <p class="hint">时序按 snapcn 开源帧数：打字 9 字/秒、停 6、周期 35、抛出 9、落入 9、重叠 3。翻转动画是 easeInBack 下沉再抛出，不是压扁。</p>
+
+      <section class="transport">
+        <button id="restartButton" type="button">重播</button>
+        <button id="pauseButton" type="button">暂停</button>
+        <button id="backButton" type="button">−1 帧</button>
+        <button id="forwardButton" type="button">+1 帧</button>
+      </section>
+      <section class="export-panel">
+        <label class="section-label" for="exportPreset">导出尺寸</label>
+        <select id="exportPreset">
+          <option value="current">当前画板</option>
+          <option value="1080x1080">1:1 · 1080 × 1080</option>
+          <option value="1080x1920" selected>9:16 · 1080 × 1920</option>
+          <option value="1920x1080">16:9 · 1920 × 1080</option>
+          <option value="custom">自定义尺寸</option>
+        </select>
+        <div class="custom-size" id="customSize" hidden>
+          <label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label><span>×</span>
+          <label>高<input id="exportHeight" type="number" min="240" max="3840" value="1920"></label>
+        </div>
+        <div class="export-actions">
+          <button id="exportPng" type="button">PNG 图片</button>
+          <button id="exportGif" type="button">GIF 动图</button>
+          <button id="exportVideo" type="button">导出 MP4</button>
+          <button class="export-hd-video" id="exportVerticalVideo" type="button">导出 9:16 MP4 · 1080 × 1920</button>
+        </div>
+        <p class="export-status" id="exportStatus">导出按输出画布单独排版。</p>
+      </section>
+      <p class="formula">我想做一套 → 槽位翻入 干净 / 锋利 / 温柔 → 封面<br>时序与缓动来自 snapcn word-flip 开源文件</p>
+    </div>
+  </details>
+  <script src="js/continuation-gif.js"></script>
+  <script src="js/h264-mp4-encoder.web.js"></script>
+  <script src="token-asset-tools.js"></script>
+  <script src="fx-kit.js"></script>
+  <script src="wordflip.js"></script>
+  <script src="me-motion-editor.js"></script>
+  <script src="stg-cn.js"></script>
+</body>
+</html>

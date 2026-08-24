@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+  <rect width="1200" height="800" fill="#000"/>
+  <circle cx="248" cy="400" r="38" fill="#34c759"/>
+  <text x="304" y="424" font-family="Arial Black, Arial, sans-serif" font-size="72" font-weight="800">
+    <tspan fill="#0a84ff">C</tspan><tspan fill="#ff9f0a">r</tspan><tspan fill="#bf5af2">e</tspan><tspan fill="#ffd60a">a</tspan><tspan fill="#ff375f">t</tspan><tspan fill="#64d2ff">o</tspan><tspan fill="#34c759">r</tspan>
+    <tspan fill="#ffffff"> </tspan>
+    <tspan fill="#ff9f0a">S</tspan><tspan fill="#0a84ff">t</tspan><tspan fill="#bf5af2">u</tspan><tspan fill="#ffd60a">d</tspan><tspan fill="#ff375f">i</tspan><tspan fill="#64d2ff">o</tspan>
+  </text>
+</svg>

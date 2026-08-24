@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+  <rect width="1200" height="800" fill="#f6f6f4"/>
+  <text x="600" y="78" text-anchor="middle" fill="#1a1a1a" font-family="Arial, sans-serif" font-size="28" font-weight="600" letter-spacing="10">BEFORE</text>
+  <rect x="150" y="100" width="900" height="270" rx="28" fill="#7d868f"/>
+  <text x="600" y="430" text-anchor="middle" fill="#1a1a1a" font-family="Arial, sans-serif" font-size="28" font-weight="600" letter-spacing="10">AFTER</text>
+  <rect x="150" y="452" width="900" height="270" rx="28" fill="#3aa0d6"/>
+  <circle cx="600" cy="587" r="52" fill="none" stroke="#ff6b9a" stroke-width="8"/>
+  <text x="600" y="597" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif" font-size="26" font-weight="600">100%</text>
+</svg>

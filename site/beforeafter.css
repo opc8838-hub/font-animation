@@ -1,0 +1,207 @@
+@font-face{font-family:IBRobotoCondensed;src:url('assets/RobotoCondensed-Bold.ttf')}
+@font-face{font-family:IBSpace;src:url('assets/fonts/SpaceGrotesk-Variable.ttf')}
+@font-face{font-family:IBWork;src:url('assets/WorkSans-Regular.ttf')}
+@font-face{font-family:IBLora;src:url('assets/fonts/Lora-Variable.ttf')}
+@font-face{font-family:IBMono;src:url('assets/fonts/MartianMono-Variable.ttf')}
+@font-face{font-family:IBManrope;src:url('assets/fonts/Manrope-Variable.ttf')}
+@font-face{font-family:IBSpartan;src:url('assets/fonts/LeagueSpartan-Variable.ttf')}
+@font-face{font-family:IBCinzel;src:url('assets/fonts/Cinzel-Variable.ttf')}
+@font-face{font-family:IBInstrument;src:url('assets/fonts/InstrumentSerif-Regular.ttf')}
+@font-face{font-family:IBBebas;src:url('assets/fonts/BebasNeue-Regular.ttf')}
+@font-face{font-family:IBPoppins;src:url('assets/fonts/Poppins-Regular.ttf')}
+@font-face{font-family:IBRajdhani;src:url('assets/fonts/Rajdhani-Bold.ttf')}
+@font-face{font-family:IBTeko;src:url('assets/fonts/Teko-Variable.ttf')}
+@font-face{font-family:IBKhand;src:url('assets/fonts/Khand-Regular.ttf')}
+@font-face{font-family:IBFraunces;src:url('assets/fonts/Fraunces-Variable.ttf')}
+@font-face{font-family:IBSCThin;src:url('resources/NotoSansSC-Thin.otf')}
+@font-face{font-family:IBJPThin;src:url('assets/NotoSansJP-Thin.otf')}
+@font-face{font-family:IBJPBlack;src:url('resources/NotoSansJP-Black.otf')}
+@font-face{font-family:IBKRBlack;src:url('resources/NotoSansKR-Black.otf')}
+@font-face{font-family:IBArchivoBlack;src:url('assets/ArchivoBlack-Regular.ttf')}
+@font-face{font-family:IBSCRegular;src:url('assets/NotoSansSC-Regular.ttf')}
+@font-face{font-family:IBSCBlack;src:url('assets/NotoSansSC-Black.ttf')}
+@font-face{font-family:IBFenix;src:url('assets/fonts/Fenix-Regular.ttf')}
+@font-face{font-family:IBSpaceMonoBold;src:url('assets/SpaceMono-Bold.ttf')}
+@font-face{font-family:IBVollkornBoldItalic;src:url('assets/Vollkorn-BoldItalic.ttf')}
+@font-face{font-family:IBCairoBold;src:url('assets/Cairo-Bold.ttf')}
+@font-face{font-family:IBAguafina;src:url('assets/AguafinaScript-Regular.ttf')}
+
+.beforeafter-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e8e8ea;
+}
+
+.ba-phone {
+  position: relative;
+  z-index: 1;
+  height: min(94dvh, 100%);
+  width: auto;
+  aspect-ratio: 9 / 16;
+  max-width: calc(100% - 36px);
+  overflow: hidden;
+  border-radius: 28px;
+  background: #ffffff;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
+}
+
+.ba-phone #flowCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 760px) {
+  .ba-phone {
+    width: min(calc(100% - 20px), calc(54dvh * 9 / 16));
+    max-height: 54dvh;
+    border-radius: 18px;
+  }
+}
+
+body.me-motion-editor .beforeafter-panel .panel-scroll {
+  padding: 8px 10px 18px !important;
+}
+
+body.me-motion-editor .beforeafter-panel .panel-scroll > section {
+  margin: 6px 0 0 !important;
+  padding: 10px !important;
+  border-radius: 12px !important;
+}
+
+body.me-motion-editor .beforeafter-panel :is(input[type="text"], select) {
+  min-height: 32px !important;
+  padding: 5px 8px !important;
+  font-size: 12px !important;
+}
+
+body.me-motion-editor .beforeafter-panel .hint {
+  display: none;
+}
+
+body.me-motion-editor .beforeafter-panel .formula {
+  margin: 8px 2px 0 !important;
+  font-size: 10px !important;
+}
+
+.beforeafter-panel .ba-text-colors {
+  grid-template-columns: 1fr 1fr;
+  margin-top: 6px;
+}
+
+.beforeafter-panel .search-row,
+.beforeafter-panel .ba-dense {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.ba-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.ba-col {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 10px;
+  background: #f4f4f6;
+}
+
+.ba-col-title {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ba-col label,
+.beforeafter-panel .ba-dense label {
+  display: grid;
+  gap: 2px;
+  padding: 6px 8px !important;
+}
+
+.ba-col output,
+.beforeafter-panel .ba-dense output {
+  font-size: 10px;
+}
+
+.beforeafter-map {
+  grid-template-columns: auto 10px auto 10px auto 10px auto;
+}
+
+.ba-uploads {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.ba-save-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.ba-import {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  border-radius: 10px;
+  background: #e8e8ed;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ba-import input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.ba-upload {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 48px;
+  padding: 8px;
+  border: 1px dashed #b8b8bd;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.ba-upload span {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+.ba-upload small {
+  color: #8e8e93;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ba-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+@media (max-width: 760px) {
+  .ba-uploads,
+  .beforeafter-panel .search-row {
+    grid-template-columns: 1fr;
+  }
+}

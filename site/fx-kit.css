@@ -1,0 +1,32 @@
+@font-face{font-family:CRArchivo;src:url('assets/ArchivoBlack-Regular.ttf');font-weight:900}
+@font-face{font-family:CRRobotoCondensed;src:url('assets/RobotoCondensed-Bold.ttf');font-weight:700}
+@font-face{font-family:CRWork;src:url('assets/WorkSans-Regular.ttf');font-weight:400}
+@font-face{font-family:CRLora;src:url('assets/fonts/Lora-Variable.ttf');font-weight:100 900}
+@font-face{font-family:CRFenix;src:url('assets/fonts/Fenix-Regular.ttf');font-weight:400}
+@font-face{font-family:CRVollkorn;src:url('assets/Vollkorn-BoldItalic.ttf');font-style:italic;font-weight:700}
+@font-face{font-family:CRCairo;src:url('assets/Cairo-Bold.ttf');font-weight:700}
+@font-face{font-family:CRAguafina;src:url('assets/AguafinaScript-Regular.ttf');font-weight:400}
+@font-face{font-family:CRManrope;src:url('assets/fonts/Manrope-Variable.ttf');font-weight:200 800}
+@font-face{font-family:CRSpartan;src:url('assets/fonts/LeagueSpartan-Variable.ttf');font-weight:100 900}
+@font-face{font-family:CRCinzel;src:url('assets/fonts/Cinzel-Variable.ttf');font-weight:400 900}
+@font-face{font-family:CRInstrument;src:url('assets/fonts/InstrumentSerif-Regular.ttf')}
+@font-face{font-family:CRBebas;src:url('assets/fonts/BebasNeue-Regular.ttf')}
+@font-face{font-family:CRPoppins;src:url('assets/fonts/Poppins-Regular.ttf')}
+@font-face{font-family:CRRajdhani;src:url('assets/fonts/Rajdhani-Bold.ttf')}
+@font-face{font-family:CRTeko;src:url('assets/fonts/Teko-Variable.ttf');font-weight:300 700}
+@font-face{font-family:CRKhand;src:url('assets/fonts/Khand-Regular.ttf')}
+@font-face{font-family:CRFraunces;src:url('assets/fonts/Fraunces-Variable.ttf');font-weight:100 900}
+@font-face{font-family:CRSCThin;src:url('resources/NotoSansSC-Thin.otf');font-weight:200}
+@font-face{font-family:CRJPThin;src:url('assets/NotoSansJP-Thin.otf');font-weight:200}
+@font-face{font-family:CRJPBlack;src:url('resources/NotoSansJP-Black.otf');font-weight:900}
+@font-face{font-family:CRKRBlack;src:url('resources/NotoSansKR-Black.otf');font-weight:900}
+
+.fx-stage { background: #000; }
+.fx-stage.is-light { background: #f3f3f5; }
+.fx-panel .search-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fx-panel textarea { width: 100%; min-height: 64px; }
+.fx-map { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; margin: 8px 0 12px; }
+.fx-map i { opacity: .4; }
+@media (max-width: 760px) {
+  .fx-panel .search-row { grid-template-columns: 1fr; }
+}

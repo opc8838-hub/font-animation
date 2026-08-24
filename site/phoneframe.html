@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="机框：手机从侧面摆正，屏幕里是你的图。">
+  <title>机框 Phone Frame | ME Motion Studio</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;display=swap">
+  <link rel="stylesheet" href="continuation.css">
+  <link rel="stylesheet" href="currentwall.css">
+  <link rel="stylesheet" href="colorrecompose.css">
+  <link rel="stylesheet" href="fx-kit.css">
+  <link rel="stylesheet" href="me-motion-editor.css">
+  <link rel="stylesheet" href="stg-cn.css">
+</head>
+<body class="me-motion-editor">
+  <main class="current-stage fx-stage " aria-label="机框动效画布">
+    <canvas id="flowCanvas"></canvas>
+    <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+  </main>
+  <details class="control-panel current-panel fx-panel" id="controlPanel" open>
+    <summary><span><b>机框</b><small>PHONE FRAME / 48</small></span><i aria-hidden="true">参数</i></summary>
+    <div class="panel-scroll">
+      <section class="scene-grid"><label>标题<input id="titleText" type="text" value="把产品放进手机里" spellcheck="false"></label><label>字体<select id="fontFamily">
+            <optgroup label="中文">
+              <option value="cn-noto-regular" selected>Noto Sans SC</option>
+              <option value="cn-noto-black">Noto Sans SC Black</option>
+              <option value="ib-sc-thin">思源黑体 Thin</option>
+              <option value="ib-jp-thin">Noto Sans JP Thin</option>
+              <option value="ib-jp-black">Noto Sans JP Black</option>
+              <option value="ib-kr-black">Noto Sans KR Black</option>
+            </optgroup>
+            <optgroup label="Snap">
+              <option value="snap-inter-medium">Inter Medium</option>
+              <option value="snap-inter-black">Inter Black</option>
+              <option value="snap-ibm-plex">IBM Plex Mono Italic</option>
+              <option value="snap-space-mono">Space Mono Bold</option>
+              <option value="snap-space-grotesk">Space Grotesk Bold</option>
+            </optgroup>
+            <optgroup label="图标爆发">
+              <option value="ib-archivo">Archivo Black</option>
+              <option value="ib-roboto-condensed">Roboto Condensed</option>
+              <option value="ib-work">Work Sans</option>
+              <option value="ib-lora">Lora</option>
+              <option value="ib-fenix">Fenix</option>
+              <option value="ib-vollkorn">Vollkorn Italic</option>
+              <option value="ib-cairo">Cairo</option>
+              <option value="ib-aguafina">Aguafina Script</option>
+              <option value="ib-manrope">Manrope</option>
+              <option value="ib-spartan">League Spartan</option>
+              <option value="ib-cinzel">Cinzel</option>
+              <option value="ib-instrument">Instrument Serif</option>
+              <option value="ib-bebas">Bebas Neue</option>
+              <option value="ib-poppins">Poppins</option>
+              <option value="ib-rajdhani">Rajdhani</option>
+              <option value="ib-teko">Teko</option>
+              <option value="ib-khand">Khand</option>
+              <option value="ib-fraunces">Fraunces</option>
+            </optgroup>
+          </select></label>
+        <p class="hint">屏幕用仓里的示例图，可换成你自己的上传（后续）。</p></section>
+      <section class="color-row"><label>背景<input id="backgroundColor" type="color" value="#0b0b0d"></label><label>字色<input id="textColor" type="color" value="#f5f5f5"></label></section>
+      <section class="controls-grid">
+        <label>摆正 <output id="tiltOut">1.10秒</output><input id="tiltDuration" type="range" min="300" max="2400" step="10" value="1100"></label>
+        <label>字号 <output id="fontSizeOut">5%</output><input id="fontSize" type="range" min="3" max="12" step="1" value="5"></label>
+        <label>全局速度 <output id="speedOut">1.00×</output><input id="speed" type="range" min="40" max="200" step="5" value="100"></label>
+      </section>
+      <section class="transport">
+        <button id="restartButton" type="button">重播</button>
+        <button id="pauseButton" type="button">暂停</button>
+        <button id="backButton" type="button">−1 帧</button>
+        <button id="forwardButton" type="button">+1 帧</button>
+      </section>
+      <section class="export-panel">
+        <label class="section-label" for="exportPreset">导出尺寸</label>
+        <select id="exportPreset">
+          <option value="current">当前画板</option>
+          <option value="1080x1080">1:1 · 1080 × 1080</option>
+          <option value="1080x1920" selected>9:16 · 1080 × 1920</option>
+          <option value="1920x1080">16:9 · 1920 × 1080</option>
+          <option value="custom">自定义尺寸</option>
+        </select>
+        <div class="custom-size" id="customSize" hidden>
+          <label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label><span>×</span>
+          <label>高<input id="exportHeight" type="number" min="240" max="3840" value="1920"></label>
+        </div>
+        <div class="export-actions">
+          <button id="exportPng" type="button">PNG 图片</button>
+          <button id="exportGif" type="button">GIF 动图</button>
+          <button id="exportVideo" type="button">导出 MP4</button>
+          <button class="export-hd-video" id="exportVerticalVideo" type="button">导出 9:16 MP4 · 1080 × 1920</button>
+        </div>
+        <p class="export-status" id="exportStatus">导出按输出画布单独排版。</p>
+      </section>
+      <p class="formula">侧倾入画 → 摆正 → 屏幕图亮起</p>
+    </div>
+  </details>
+  <script src="js/continuation-gif.js"></script>
+  <script src="js/h264-mp4-encoder.web.js"></script>
+  <script src="fx-kit.js"></script>
+  <script src="phoneframe.js"></script>
+  <script src="me-motion-editor.js"></script>
+  <script src="stg-cn.js"></script>
+</body>
+</html>

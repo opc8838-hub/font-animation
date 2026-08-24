@@ -25,6 +25,26 @@ const effects = [
   ["colorrecompose", "彩组", "Color Recompose", "type", "彩色重组"],
   ["phrasebuild", "组句", "Phrase Build", "type", "累计组词"],
   ["switchdrop", "降临", "Switch Drop", "graphic", "主体降临 × 明暗开关"],
+  ["searchtyping", "搜写", "Search Typing", "type", "搜索框逐字打入"],
+  ["beforeafter", "对照", "Before After", "type", "原图对照 · 生成切成片"],
+  ["assemble", "拼字", "Assemble", "type", "碎片飞入拼成字标"],
+  ["verbcue", "动令", "Verb Cue", "type", "短句打散 · 像素扫清"],
+  ["tighten", "收距", "Tighten", "type", "词距先松后紧"],
+  ["titlecard", "标卡", "Title Card", "type", "主副标题再切标志"],
+  ["lockup", "夹图", "Lockup", "type", "左右字夹中间物"],
+  ["promptcue", "点令", "Prompt Cue", "type", "融化落格点选"],
+  ["pullback", "退远", "Pullback", "type", "标题缓慢退远"],
+  ["textswell", "胀句", "Text Swell", "type", "首词推近 · 后词顶入"],
+  ["wordflip", "翻词", "Word Flip", "type", "打字后立体翻词"],
+  ["textbuild", "垒词", "Text Build", "type", "一词入场 · 让位居中"],
+  ["textswap", "换句", "Text Swap", "type", "旧句冲镜换新句"],
+  ["textreveal", "显句", "Text Reveal", "type", "首词特写再组句"],
+  ["phoneframe", "机框", "Phone Frame", "graphic", "手机框摆正亮屏"],
+  ["laptopframe", "本框", "Laptop Frame", "graphic", "笔记本打开钻屏"],
+  ["orbitgallery", "旋廊", "Orbit Gallery", "graphic", "照片螺旋进中心"],
+  ["followerrush", "涌粉", "Follower Rush", "graphic", "关注通知叠头像"],
+  ["logoassemble", "标聚", "Logo Assemble", "graphic", "卡片塌成品牌"],
+  ["moodboard", "图墙", "Moodboard", "graphic", "散图推进主图"],
   ["pathwriter", "轨书", "Path Writer", "type", "路径书写"],
   ["construct", "构筑", "Construct", "graphic", "图形系统"],
   ["crash", "碰撞", "Crash", "physics", "物理粒子"],
@@ -53,6 +73,19 @@ const count = document.querySelector("#visibleCount");
 const emptyState = document.querySelector("#emptyState");
 const filterButtons = [...document.querySelectorAll(".filter")];
 let activeFilter = "all";
+const livePreviews = new Set(["textswell"]);
+const liveObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    const frame = entry.target;
+    if (entry.isIntersecting) {
+      if (frame.dataset.src && frame.getAttribute("src") !== frame.dataset.src) {
+        frame.src = frame.dataset.src;
+      }
+    } else if (frame.getAttribute("src")) {
+      frame.removeAttribute("src");
+    }
+  });
+}, { rootMargin: "120px 0px", threshold: 0.15 });
 
 function render() {
   const query = searchInput.value.trim().toLocaleLowerCase("zh-CN");
@@ -64,14 +97,17 @@ function render() {
 
   grid.innerHTML = visible.map(([slug, zh, en, , categoryName]) => {
     const index = effects.findIndex((effect) => effect[0] === slug) + 1;
-    const imageName = slug === "crashclock" ? "final_crashclock.png" : ["iconburst", "focuswheel", "gradienttype", "glyphrelay", "wordgather", "focusportal", "rapidsequence", "citystack", "colorcanvas", "liquidtype", "scrapbin", "terminalbrand", "slotstories", "mediacascade", "colorrecompose", "phrasebuild", "switchdrop"].includes(slug) ? `final_${slug}.svg` : `final_${slug}.png`;
+    const imageName = slug === "crashclock" ? "final_crashclock.png" : ["iconburst", "focuswheel", "gradienttype", "glyphrelay", "wordgather", "focusportal", "rapidsequence", "citystack", "colorcanvas", "liquidtype", "scrapbin", "terminalbrand", "slotstories", "mediacascade", "colorrecompose", "phrasebuild", "switchdrop", "searchtyping", "beforeafter", "assemble", "verbcue", "tighten", "titlecard", "lockup", "promptcue", "pullback", "textswell", "wordflip", "textbuild", "textswap", "textreveal", "phoneframe", "laptopframe", "orbitgallery", "followerrush", "logoassemble", "moodboard"].includes(slug) ? `final_${slug}.svg` : `final_${slug}.png`;
     const target = slug === "flash" ? "flash-scenes.html" : `${slug}.html`;
     const detail = slug === "flash" ? "13 个独立子风格" : categoryName;
+    const preview = livePreviews.has(slug)
+      ? `<iframe class="effect-live" title="${zh}实时预览" data-src="${slug}.html?preview=1" loading="lazy" tabindex="-1"></iframe>`
+      : `<img src="${imageName}" alt="${zh}动态字体效果预览" ${index > 8 ? 'loading="lazy"' : ""}>`;
     return `
-      <article class="effect-card">
+      <article class="effect-card${livePreviews.has(slug) ? " has-live-preview" : ""}">
         <a class="effect-link" href="${target}" aria-label="打开${zh}效果">
           <div class="effect-preview">
-            <img src="${imageName}" alt="${zh}动态字体效果预览" ${index > 8 ? 'loading="lazy"' : ""}>
+            ${preview}
             <span class="effect-number">${String(index).padStart(2, "0")}</span>
           </div>
           <div class="effect-body">
@@ -85,6 +121,8 @@ function render() {
   if (count) count.textContent = String(visible.length);
   grid.hidden = visible.length === 0;
   emptyState.hidden = visible.length !== 0;
+  liveObserver.disconnect();
+  grid.querySelectorAll("iframe.effect-live").forEach((frame) => liveObserver.observe(frame));
 }
 
 filterButtons.forEach((button) => {
