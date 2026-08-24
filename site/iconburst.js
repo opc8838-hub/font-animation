@@ -42,7 +42,7 @@
     [-.038, -.018], [.050, .012], [-.052, .082], [.042, .112]
   ];
   const iconColors = [["#ffcc00", "#ff6b00"], ["#7b61ff", "#28c8ff"], ["#ff4fa3", "#7b61ff"], ["#35d07f", "#00a7ff"], ["#ff5f57", "#ffd60a"]];
-  const shapeLabels = { square: "方形", circle: "圆形", ring: "圆环", triangle: "三角形", star: "星形" };
+  const shapeLabels = { circle: "圆形", ring: "圆环", "rainbow-ring": "彩虹圆环", star: "星形" };
   const iconSvg = (body, background) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="${background}"/>${body}</svg>`)}`;
   const flowIconImages = [
     { name: "流墙音乐", url: iconSvg('<g transform="translate(-4 0)"><path d="M44 24v37c-3-2-7-2-11-1-7 2-11 8-9 13s9 7 16 5c6-2 10-7 10-12V39l24-7v24c-3-2-7-2-11-1-7 2-11 8-9 13s9 7 16 5c6-2 10-7 10-12V19z" fill="white"/></g>', "#fa264f") },
@@ -229,7 +229,7 @@
       type: "shape",
       role: "orbit",
       name: "内置图形",
-      shape: "square",
+      shape: "circle",
       color: "#ffcc00",
       color2: "#ff6b00",
       size: 1,
@@ -261,8 +261,8 @@
   function builtinAssets() {
     // Twelve readable defaults are enough to establish the cloud without
     // turning every frame into visual noise. Users can still add any number.
-    const names = ["方形", "圆环", "星形", "能量圆"];
-    const shapes = ["square", "circle", "ring", "star", "square", "circle", "ring", "star", "square", "circle", "ring", "star"];
+    const names = ["圆形", "圆环", "彩虹圆环", "星形"];
+    const shapes = ["circle", "ring", "rainbow-ring", "star"];
     const orbitAssets = names.map((name, index) => defaultAsset({
       id: `builtin-${index}`,
       builtin: true,
@@ -286,12 +286,12 @@
     );
     const defaultGlyphTargets = [1, 3, 5, 7];
     const defaultGlyphSpeeds = [1, .75, 1.5, 1.8];
-    const glyphAssets = ["圆形", "星形", "方形", "圆环"].map((name, index) => defaultAsset({
+    const glyphAssets = ["圆形", "圆环", "彩虹圆环", "星形"].map((name, index) => defaultAsset({
       id: `glyph-${index}`,
       builtin: true,
       role: "glyph",
       name: `替字${name}`,
-      shape: ["circle", "star", "square", "ring"][index],
+      shape: ["circle", "ring", "rainbow-ring", "star"][index],
       color: iconColors[(index + 1) % iconColors.length][0],
       color2: iconColors[(index + 1) % iconColors.length][1],
       size: .9 + index * .06,
@@ -314,7 +314,7 @@
   function contentMode() { return $("ibContentMode").value; }
   function replacementEnabled() { return contentMode() === "replace-one" || contentMode() === "replace-multi"; }
   function shapeMarkup(asset) {
-    return `<span class="ib-geom ${asset.shape || "square"}" style="--c1:${asset.color};--c2:${asset.color2 || asset.color}"></span>`;
+    return `<span class="ib-geom ${asset.shape || "circle"}" style="--c1:${asset.color};--c2:${asset.color2 || asset.color}"></span>`;
   }
   function assetPreview(asset) {
     if (asset.type === "image") return asset.url ? `<img src="${asset.url}" alt="">` : '<span class="ib-image-empty">＋</span>';
@@ -859,10 +859,23 @@
     });
   }
 
+  function migrateAsset(asset) {
+    const migrated = defaultAsset(asset);
+    if (migrated.name === "流墙音乐" || /flow-icon-0$/.test(migrated.id || "")) {
+      migrated.name = flowIconImages[0].name;
+      migrated.url = flowIconImages[0].url;
+      migrated.originalDataUrl = flowIconImages[0].url;
+      migrated.fileType = "image/svg+xml";
+    }
+    return migrated;
+  }
+
   function applyScheme(scheme, options = {}) {
     if (!scheme || typeof scheme !== "object") return;
     Object.entries(scheme.controls || {}).forEach(([id, value]) => { if ($(id) && value != null) $(id).value = String(value); });
-    state.assets = Array.isArray(scheme.assets) ? scheme.assets.map((asset) => defaultAsset(asset)) : builtinAssets();
+    state.assets = Array.isArray(scheme.assets)
+      ? scheme.assets.map(migrateAsset).filter((asset) => asset.type !== "shape" || !["square", "triangle", "heart"].includes(asset.shape))
+      : builtinAssets();
     state.assets.forEach(hydrateAssetImage);
     state.activeAssetId = null;
     updateWord();
@@ -1529,7 +1542,7 @@
       ctx.lineWidth = Math.max(2, size * .09);
       ctx.beginPath();
       if (asset.shape === "circle") ctx.arc(0, 0, half, 0, Math.PI * 2);
-      else if (asset.shape === "ring") ctx.arc(0, 0, half * .86, 0, Math.PI * 2);
+      else if (asset.shape === "ring" || asset.shape === "rainbow-ring") ctx.arc(0, 0, half * .86, 0, Math.PI * 2);
       else if (asset.shape === "triangle") { ctx.moveTo(0, -half); ctx.lineTo(half, half); ctx.lineTo(-half, half); ctx.closePath(); }
       else if (asset.shape === "star") {
         for (let point = 0; point < 10; point += 1) {
@@ -1540,7 +1553,12 @@
         }
         ctx.closePath();
       } else ctx.rect(-half, -half, half * 2, half * 2);
-      if (asset.shape === "ring") ctx.stroke(); else ctx.fill();
+      if (asset.shape === "rainbow-ring") {
+        const rainbow = ctx.createConicGradient(-Math.PI / 2, 0, 0);
+        [[0, "#ff3b30"], [.17, "#ff9500"], [.34, "#ffcc00"], [.5, "#34c759"], [.67, "#0a84ff"], [.84, "#5856d6"], [1, "#ff2d8d"]].forEach(([stop, color]) => rainbow.addColorStop(stop, color));
+        ctx.strokeStyle = rainbow;
+        ctx.stroke();
+      } else if (asset.shape === "ring") ctx.stroke(); else ctx.fill();
     }
     ctx.restore();
   }
@@ -2070,7 +2088,7 @@
     if (!asset) return;
     if ($("ibAssetSource").value === "shape") {
       asset.type = "shape";
-      asset.name = `内置${shapeLabels[asset.shape || "square"]}`;
+      asset.name = `内置${shapeLabels[asset.shape || "circle"]}`;
       asset.status = "已将这一项切换为内置图形；其他资源不受影响。";
       renderIcons(); renderAssets();
     } else if (asset.originalDataUrl) {
