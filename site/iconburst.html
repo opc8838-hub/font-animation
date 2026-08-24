@@ -6,8 +6,8 @@
   <title>图标爆发 Icon Burst | ME Motion Studio</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="stg-cn.css">
-  <link rel="stylesheet" href="iconburst.css?v=20260824-3">
-  <link rel="stylesheet" href="iconburst-overrides.css?v=20260824-3">
+  <link rel="stylesheet" href="iconburst.css?v=20260824-4">
+  <link rel="stylesheet" href="iconburst-overrides.css?v=20260824-4">
 </head>
 <body>
   <main class="ib-app">
@@ -16,6 +16,17 @@
         <a href="gallery.html" aria-label="返回效果库">‹</a>
         <div><small>NEW STYLE 24</small><h1>图标爆发 · Icon Burst</h1></div>
       </header>
+
+      <section class="ib-section ib-scheme-section">
+        <p class="ib-kicker">方案</p>
+        <div class="ib-scheme-row">
+          <button id="ibSaveScheme" type="button">保存方案</button>
+          <label>导入方案<input id="ibImportScheme" type="file" accept="application/json,.json"></label>
+          <button id="ibResetScheme" type="button">恢复默认</button>
+          <button id="ibClearScheme" type="button">清理重做</button>
+        </div>
+        <p id="ibSchemeStatus" class="ib-help" aria-live="polite">文字、节奏、颜色与全部图片/图标都会随方案保存。</p>
+      </section>
 
       <section class="ib-section">
         <p class="ib-kicker">文字</p>
@@ -121,6 +132,8 @@
           <label>慢动作速度 <output id="ibDriftValue">28%</output><input id="ibDrift" type="range" min="15" max="60" value="28"></label>
           <label>终点前转幅度 <output id="ibOvershootValue">58%</output><input id="ibOvershoot" type="range" min="0" max="100" value="58"></label>
           <label>图文同步速度 <output id="ibSyncValue">1.25×</output><input id="ibSync" type="range" min="50" max="180" value="125" step="5"></label>
+          <label>单对碰撞时长 <output id="ibCollisionDurationValue">0.26 秒</output><input id="ibCollisionDuration" type="range" min="80" max="800" value="260" step="10"></label>
+          <label>逐对碰撞间隔 <output id="ibPairStaggerValue">0.05 秒</output><input id="ibPairStagger" type="range" min="10" max="160" value="50" step="5"></label>
           <label>球体旋转速度 <output id="ibOrbitSpeedValue">1.00×</output><input id="ibOrbitSpeed" type="range" min="50" max="200" value="100" step="5"></label>
           <label>字体回归时长 <output id="ibWordReturnValue">0.36 秒</output><input id="ibWordReturn" type="range" min="80" max="1200" value="360" step="20"></label>
           <label>图标聚拢密度 <output id="ibDensityValue">40%</output><input id="ibDensity" type="range" min="0" max="100" value="40"></label>
@@ -131,6 +144,22 @@
         <p class="ib-help">图文同步速度控制开场图标相对文字的快慢：1.00× 为同速，调高会让图标更快跟上文字，调低则更慢；两者由同一条连续时间线计算，不会再等文字播完才启动图标。慢动作速度表示聚拢后的惯性速度；终点前转幅度控制图标到达终点后还向前走多少。图标先完整前转，最后才缩小消失。</p>
         <label>循环速度 <output id="ibSpeedValue">1.0×</output><input id="ibSpeed" type="range" min="0.5" max="2" value="1" step="0.1"></label>
         <button id="ibRestart" class="ib-primary" type="button">从头播放</button>
+      </section>
+
+      <section class="ib-section ib-choreo-section">
+        <div class="ib-section-heading"><p class="ib-kicker">编舞时间轴</p><small>点一段可跳到那一拍</small></div>
+        <div id="ibChoreoTrack" class="ib-choreo-track" aria-label="图标爆发编舞时间轴"></div>
+        <p id="ibChoreoBeat" class="ib-choreo-beat">1 · 中央标题与图标起步</p>
+      </section>
+
+      <section class="ib-section ib-export-section">
+        <p class="ib-kicker">导出</p>
+        <label>导出尺寸<select id="ibExportPreset"><option value="current">当前画板</option><option value="1080x1080">1:1 · 1080 × 1080</option><option value="1080x1350">4:5 · 1080 × 1350</option><option value="1080x1920">9:16 · 1080 × 1920</option><option value="1920x1080" selected>16:9 · 1920 × 1080</option><option value="custom">自定义尺寸</option></select></label>
+        <div id="ibCustomSize" class="ib-custom-size" hidden><label>宽<input id="ibExportWidth" type="number" min="240" max="3840" value="1920"></label><span>×</span><label>高<input id="ibExportHeight" type="number" min="240" max="3840" value="1080"></label></div>
+        <div class="ib-two"><label>导出时长<select id="ibExportDuration"><option value="cycle" selected>完整一轮</option><option value="3">3 秒</option><option value="5">5 秒</option><option value="10">10 秒</option><option value="custom">自定义</option></select></label><label>帧率<select id="ibExportFps"><option value="15">15 FPS</option><option value="24">24 FPS</option><option value="30" selected>30 FPS</option><option value="60">60 FPS</option></select></label></div>
+        <label id="ibCustomDurationWrap" hidden>自定义秒数<input id="ibCustomDuration" type="number" min="0.5" max="30" step="0.1" value="4"></label>
+        <div class="ib-export-actions"><button id="ibExportPng" type="button">PNG 图片</button><button id="ibExportGif" type="button">GIF 动图</button><button id="ibExportVideo" type="button">MP4 视频</button><button id="ibExportVerticalVideo" type="button">9:16 MP4</button></div>
+        <p id="ibExportStatus" class="ib-help" aria-live="polite">导出使用与预览相同的文字、图标素材和确定性时间轴。</p>
       </section>
     </aside>
 
@@ -152,7 +181,9 @@
       </div>
     </section>
   </main>
-  <script src="iconburst.js?v=20260824-3"></script>
+  <script src="js/continuation-gif.js"></script>
+  <script src="js/h264-mp4-encoder.web.js"></script>
+  <script src="iconburst.js?v=20260824-4"></script>
   <script src="stg-cn.js"></script>
 </body>
 </html>

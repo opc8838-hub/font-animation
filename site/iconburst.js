@@ -351,6 +351,7 @@
     $("ibOrbitCount").textContent = String(orbitAssets.length);
     $("ibGlyphCount").textContent = String(glyphAssets.length);
     renderAssetEditor();
+    scheduleSchemePersist();
   }
 
   function selectAsset(assetId) {
@@ -439,6 +440,7 @@
     $("ibAssetTargetField").hidden = !replacementEnabled() || !asset || asset.role !== "glyph";
     $("ibContentModeHint").textContent = hints[mode];
     renderAssets();
+    renderChoreoTrack();
   }
 
   function updateAssetReadouts(asset) {
@@ -536,6 +538,7 @@
     state.assets.forEach((asset) => { if (asset.target >= word.children.length) asset.target = -1; });
     updateTypography();
     renderAssets();
+    renderChoreoTrack();
   }
 
   function resetLetters() {
@@ -658,6 +661,11 @@
     return { groups, total: groups.reduce((sum, group) => sum + group.duration, 0) };
   }
 
+  function incomingPairCount() {
+    const ranks = [incomingLeft, incomingRight].flatMap((side) => Array.from(side.children).map((letter) => Number(letter.dataset.rank || 0)));
+    return Math.max(1, (ranks.length ? Math.max(...ranks) : 0) + 1);
+  }
+
   function timelineMarkers() {
     const wordsEnterStart = .39;
     const wordReturnDuration = clamp(Number($("ibWordReturn").value) / 1000, .08, 1.20);
@@ -669,9 +677,14 @@
     const holdEndSeconds = settleEnd + slowDuration;
     const collapseStartSeconds = holdEndSeconds;
     const iconsGoneSeconds = collapseStartSeconds + .20;
-    // Give the outer-to-inner letter cascade enough time to read as individual
-    // letters while keeping the whole title contact fast.
-    const contactSeconds = iconsGoneSeconds + .16;
+    const pairCount = incomingPairCount();
+    const pairStaggerSeconds = clamp(Number($("ibPairStagger").value) / 1000, .01, .16);
+    const collisionDurationSeconds = clamp(Number($("ibCollisionDuration").value) / 1000, .08, .80);
+    // The centre pair starts while the icon cloud is still suspended. Each
+    // following pair joins in rank order, so arbitrary text lengths generate
+    // their own collision choreography instead of collapsing all at once.
+    const contactStartSeconds = Math.max(settleEnd, collapseStartSeconds - .12);
+    const contactSeconds = Math.max(iconsGoneSeconds, contactStartSeconds + collisionDurationSeconds + (pairCount - 1) * pairStaggerSeconds);
     const lettersMoveStart = contactSeconds;
     const colorSpeed = clamp(Number($("ibColorSpeed").value), .5, 6);
     const colorHold = clamp(Number($("ibSoftness").value), 8, 70);
@@ -689,7 +702,11 @@
       holdEndSeconds,
       collapseStartSeconds,
       iconsGoneSeconds,
+      contactStartSeconds,
       contactSeconds,
+      pairCount,
+      pairStaggerSeconds,
+      collisionDurationSeconds,
       lettersMoveStart,
       colorFullSeconds,
       whiteStartSeconds,
@@ -704,6 +721,153 @@
     const scaleDuration = clamp(Number($("ibFinalScaleDuration").value), 200, 1200);
     const replacementDuration = Math.max(playback.total, scaleDuration + 100);
     return Math.max(2400, replaceStartSeconds * 1000 + replacementDuration + 60);
+  }
+
+  function seekToSeconds(seconds) {
+    const rate = Math.max(.01, Number($("ibSpeed").value));
+    const elapsed = Math.max(0, seconds) * 1000 / rate;
+    state.start = performance.now() - elapsed;
+    state.pausedAt = elapsed;
+  }
+
+  function choreoBeats(playback = glyphPlaybackConfig()) {
+    const markers = timelineMarkers();
+    const total = animationDuration(playback) / 1000;
+    return [
+      { id: "intro", kind: "intro", label: "中央标题与图标起步", start: 0, end: markers.wordsEnterStart },
+      { id: "orbit", kind: "orbit", label: "文字接入 · 图标聚拢", start: markers.wordsEnterStart, end: markers.settleEnd },
+      { id: "hold", kind: "hold", label: "图标滞空继续流动", start: markers.settleEnd, end: markers.contactStartSeconds },
+      { id: "contact", kind: "contact", label: `${markers.pairCount} 对字体逐对碰撞`, start: markers.contactStartSeconds, end: markers.contactSeconds },
+      { id: "color", kind: "color", label: "碰合换色", start: markers.contactSeconds, end: markers.replaceStartSeconds },
+      { id: "replace", kind: "replace", label: replacementEnabled() ? "文字切换图标 / 图片" : "紧凑标题停留", start: markers.replaceStartSeconds, end: total }
+    ].filter((beat) => beat.end > beat.start + .001);
+  }
+
+  function renderChoreoTrack() {
+    const track = $("ibChoreoTrack");
+    if (!track) return;
+    const beats = choreoBeats();
+    const total = Math.max(.001, beats[beats.length - 1]?.end || state.duration / 1000);
+    const scroll = document.createElement("div");
+    scroll.className = "ib-choreo-scroll";
+    const bar = document.createElement("div");
+    bar.className = "ib-choreo-bar";
+    beats.forEach((beat, index) => {
+      const block = document.createElement("div");
+      block.className = `ib-choreo-block is-${beat.kind}`;
+      block.dataset.beat = beat.id;
+      block.tabIndex = 0;
+      block.style.flex = `${Math.max(.08, beat.end - beat.start)} 1 0`;
+      block.innerHTML = `<em>${index + 1}</em><strong>${beat.label}</strong><small>${(beat.end - beat.start).toFixed(2)}秒</small>`;
+      const jump = () => seekToSeconds(beat.start);
+      block.addEventListener("click", jump);
+      block.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") jump(); });
+      bar.append(block);
+    });
+    const playhead = document.createElement("div");
+    playhead.className = "ib-choreo-playhead";
+    playhead.id = "ibChoreoPlayhead";
+    bar.append(playhead);
+    scroll.append(bar);
+    const legend = document.createElement("ol");
+    legend.className = "ib-choreo-legend";
+    beats.forEach((beat, index) => {
+      const item = document.createElement("li");
+      item.innerHTML = `<i class="is-${beat.kind}"></i><b>${index + 1}. ${beat.label}</b><span>${beat.start.toFixed(2)}s → ${beat.end.toFixed(2)}s</span>`;
+      legend.append(item);
+    });
+    track.replaceChildren(scroll, legend);
+    const head = $("ibChoreoPlayhead");
+    if (head) head.style.left = "0%";
+    track.dataset.duration = String(total);
+  }
+
+  let choreoRenderPending = false;
+  function scheduleChoreoRender() {
+    if (choreoRenderPending) return;
+    choreoRenderPending = true;
+    requestAnimationFrame(() => { choreoRenderPending = false; renderChoreoTrack(); });
+  }
+
+  function updateChoreoPlayhead(seconds) {
+    const beats = choreoBeats();
+    const total = Math.max(.001, beats[beats.length - 1]?.end || 1);
+    const current = beats.find((beat) => seconds >= beat.start && seconds < beat.end) || beats[beats.length - 1];
+    const head = $("ibChoreoPlayhead");
+    if (head) head.style.left = `${clamp(seconds / total, 0, 1) * 100}%`;
+    document.querySelectorAll(".ib-choreo-block[data-beat]").forEach((block) => block.classList.toggle("is-active", block.dataset.beat === current?.id));
+    if ($("ibChoreoBeat") && current) $("ibChoreoBeat").textContent = `${beats.indexOf(current) + 1} · ${current.label}`;
+  }
+
+  const SCHEME_STORAGE_KEY = "iconburst-scheme-v2";
+  const schemeControlIds = [
+    "ibText", "ibFont", "ibWeight", "ibFontSize", "ibTracking",
+    "ibColorMode", "ibBaseColor", "ibColorA", "ibColorB", "ibColorC", "ibColorD", "ibBackground", "ibColorSpeed", "ibSoftness",
+    "ibContentMode", "ibRange", "ibSize", "ibReplaceCount", "ibBeat", "ibReplaceSpeed", "ibCollapse", "ibHang", "ibDrift", "ibOvershoot",
+    "ibSync", "ibCollisionDuration", "ibPairStagger", "ibOrbitSpeed", "ibWordReturn", "ibDensity", "ibCurve", "ibFinalScale", "ibFinalScaleDuration", "ibSpeed"
+  ];
+  const defaultControlValues = Object.fromEntries(schemeControlIds.map((id) => [id, $(id).value]));
+
+  function serializableAsset(asset) {
+    const copy = {};
+    Object.entries(asset).forEach(([key, value]) => {
+      if (["originalImage", "processing"].includes(key) || typeof value === "function") return;
+      copy[key] = value;
+    });
+    copy.processing = false;
+    return copy;
+  }
+
+  function collectScheme() {
+    return {
+      version: 2,
+      controls: Object.fromEntries(schemeControlIds.map((id) => [id, $(id).value])),
+      assets: state.assets.map(serializableAsset)
+    };
+  }
+
+  function hydrateAssetImage(asset) {
+    if (asset.type !== "image" || !asset.url) return;
+    loadImage(asset.url).then((image) => { asset.originalImage = image; }).catch(() => {
+      asset.status = "图片未能重新载入，请重新选择该素材。";
+    });
+  }
+
+  function applyScheme(scheme, options = {}) {
+    if (!scheme || typeof scheme !== "object") return;
+    Object.entries(scheme.controls || {}).forEach(([id, value]) => { if ($(id) && value != null) $(id).value = String(value); });
+    state.assets = Array.isArray(scheme.assets) ? scheme.assets.map((asset) => defaultAsset(asset)) : builtinAssets();
+    state.assets.forEach(hydrateAssetImage);
+    state.activeAssetId = null;
+    updateWord();
+    updateContentModeUI();
+    renderIcons();
+    renderAssets();
+    readouts.forEach(([id, output, format]) => { if ($(id) && $(output)) $(output).textContent = format($(id).value); });
+    renderChoreoTrack();
+    restart();
+    if (options.status && $("ibSchemeStatus")) $("ibSchemeStatus").textContent = options.status;
+  }
+
+  function defaultScheme(includeAssets = true) {
+    return { version: 2, controls: { ...defaultControlValues }, assets: includeAssets ? builtinAssets().map(serializableAsset) : [] };
+  }
+
+  function downloadBlob(blob, filename) {
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = filename;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  }
+
+  let schemePersistTimer = 0;
+  function scheduleSchemePersist() {
+    clearTimeout(schemePersistTimer);
+    schemePersistTimer = setTimeout(() => {
+      try { localStorage.setItem(SCHEME_STORAGE_KEY, JSON.stringify(collectScheme())); } catch (_) {}
+    }, 250);
   }
 
   function replacementState(contentTime, enabled, playback) {
@@ -768,7 +932,11 @@
       holdEndSeconds,
       collapseStartSeconds,
       iconsGoneSeconds,
+      contactStartSeconds,
       contactSeconds,
+      pairCount,
+      pairStaggerSeconds,
+      collisionDurationSeconds,
       lettersMoveStart,
       colorFullSeconds,
       whiteStartSeconds,
@@ -837,9 +1005,9 @@
     const incomingReveal = incomingEntry > .02 ? 1 : 0;
     const incomingYaw = 0;
     const incomingOrbit = incomingEntry;
-    const gapClose = seconds < iconsGoneSeconds
+    const gapClose = seconds < contactStartSeconds
       ? 0
-      : easeInOut(clamp((seconds - iconsGoneSeconds) / (contactSeconds - iconsGoneSeconds), 0, 1));
+      : easeInOut(clamp((seconds - contactStartSeconds) / Math.max(.001, contactSeconds - contactStartSeconds), 0, 1));
     const letterContract = 1;
 
     let colorReveal = 0;
@@ -907,10 +1075,14 @@
       whiteReveal,
       colorActive,
       gapClose,
-      contactProgress: clamp((seconds - iconsGoneSeconds) / (contactSeconds - iconsGoneSeconds), 0, 1),
+      contactProgress: clamp((seconds - contactStartSeconds) / Math.max(.001, contactSeconds - contactStartSeconds), 0, 1),
       collapseStartSeconds,
       iconsGoneSeconds,
+      contactStartSeconds,
       contactSeconds,
+      pairCount,
+      pairStaggerSeconds,
+      collisionDurationSeconds,
       replaceStartSeconds,
       whiteStartSeconds,
       groupScale: 1,
@@ -968,6 +1140,7 @@
     if (colorActive && colorMode !== "unfold") animateColor(colorTime, true);
     if (replacementActive) label = "11 · 按资源顺序 · 使用各自速度与停留时间";
     phaseLabel.textContent = label;
+    updateChoreoPlayhead(timeline.seconds);
 
     const groupScale = timeline.groupScale;
     composition.style.setProperty("--group-scale", timeline.groupScale.toFixed(4));
@@ -1014,8 +1187,8 @@
         // letter joining in sequence toward the outside edge. This reads as a
         // word feeding into the center and avoids letters overtaking each other.
         const inwardOrder = rank;
-        const delay = Math.min(.48, inwardOrder * .16);
-        const localProgress = clamp((timeline.contactProgress - delay) / Math.max(.16, 1 - delay), 0, 1);
+        const letterStart = timeline.contactStartSeconds + inwardOrder * timeline.pairStaggerSeconds;
+        const localProgress = clamp((timeline.seconds - letterStart) / timeline.collisionDurationSeconds, 0, 1);
         const close = easeOutExpo(localProgress);
         const rankRatio = maxRank > 0 ? rank / maxRank : 0;
         const openDistance = sideShift * (.88 + .12 * rankRatio);
@@ -1212,7 +1385,7 @@
       incomingReveal: timeline.incomingReveal, incomingYaw: timeline.incomingYaw,
       openingSync: timeline.openingSync,
       gapClose: timeline.gapClose, contactProgress: timeline.contactProgress,
-      contactStart: timeline.iconsGoneSeconds, contactEnd: timeline.contactSeconds,
+      contactStart: timeline.contactStartSeconds, contactEnd: timeline.contactSeconds,
       wordGap, openGap, closedGap,
       colorActive, replacementActive, contentTime: colorTime, velocityZone: timeline.velocityZone,
       replacementExpansion, replacementScaleProgress,
@@ -1252,6 +1425,259 @@
       image.onerror = reject;
       image.src = dataUrl;
     });
+  }
+
+  function exportDimensions(verticalHD = false) {
+    if (verticalHD) return [1080, 1920];
+    const preset = $("ibExportPreset").value;
+    if (preset === "current") return [Math.max(240, Math.round(stage.clientWidth)), Math.max(240, Math.round(stage.clientHeight))];
+    if (preset === "custom") return [Number($("ibExportWidth").value), Number($("ibExportHeight").value)];
+    return preset.split("x").map(Number);
+  }
+
+  function exportDurationSeconds() {
+    const value = $("ibExportDuration").value;
+    if (value === "cycle") return state.duration / 1000 / Math.max(.01, Number($("ibSpeed").value));
+    if (value === "custom") return clamp(Number($("ibCustomDuration").value), .5, 30);
+    return Number(value);
+  }
+
+  function makeExportCanvas(verticalHD = false) {
+    const [rawWidth, rawHeight] = exportDimensions(verticalHD);
+    const canvas = document.createElement("canvas");
+    canvas.width = clamp(Math.round(rawWidth / 2) * 2, 240, 3840);
+    canvas.height = clamp(Math.round(rawHeight / 2) * 2, 240, 3840);
+    return canvas;
+  }
+
+  async function preloadExportAssets() {
+    await Promise.all(state.assets.map(async (asset, index) => {
+      if (asset.type !== "image" || !asset.url || asset.originalImage?.complete) return;
+      const domImage = state.iconElements[index]?.querySelector("img");
+      if (domImage?.complete && domImage.naturalWidth) { asset.originalImage = domImage; return; }
+      try { asset.originalImage = await loadImage(asset.url); } catch (_) {}
+    }));
+    if (document.fonts?.ready) await document.fonts.ready;
+  }
+
+  function trackedLayout(ctx, text, tracking) {
+    const characters = Array.from(text);
+    const widths = characters.map((character) => ctx.measureText(character === " " ? "\u00a0" : character).width);
+    const total = widths.reduce((sum, width) => sum + width, 0) + Math.max(0, characters.length - 1) * tracking;
+    const centers = [];
+    let cursor = -total / 2;
+    widths.forEach((width) => { centers.push(cursor + width / 2); cursor += width + tracking; });
+    return { characters, widths, centers, total };
+  }
+
+  function drawTrackedText(ctx, layout, centerX, baselineY, tracking, colorFor, hiddenTargets = new Set(), scale = 1) {
+    ctx.save();
+    ctx.translate(centerX, baselineY);
+    ctx.scale(scale, scale);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+    layout.characters.forEach((character, index) => {
+      if (hiddenTargets.has(index)) return;
+      ctx.fillStyle = typeof colorFor === "function" ? colorFor(index, character) : colorFor;
+      ctx.fillText(character === " " ? "\u00a0" : character, layout.centers[index], 0);
+    });
+    ctx.restore();
+  }
+
+  function drawAssetToCanvas(ctx, asset, x, y, size, rotation, alpha) {
+    if (!(alpha > .001) || !(size > .1)) return;
+    ctx.save();
+    ctx.globalAlpha = clamp(alpha, 0, 1);
+    ctx.translate(x, y);
+    ctx.rotate(rotation * Math.PI / 180);
+    if (asset.type === "image" && asset.originalImage?.complete && asset.originalImage.naturalWidth) {
+      const image = asset.originalImage;
+      const ratio = image.naturalWidth / Math.max(1, image.naturalHeight);
+      const width = ratio >= 1 ? size : size * ratio;
+      const height = ratio >= 1 ? size / ratio : size;
+      ctx.drawImage(image, -width / 2, -height / 2, width, height);
+    } else {
+      const half = size * .44;
+      ctx.fillStyle = asset.color || "#ffcc00";
+      ctx.strokeStyle = asset.color || "#ffcc00";
+      ctx.lineWidth = Math.max(2, size * .09);
+      ctx.beginPath();
+      if (asset.shape === "circle") ctx.arc(0, 0, half, 0, Math.PI * 2);
+      else if (asset.shape === "ring") ctx.arc(0, 0, half * .86, 0, Math.PI * 2);
+      else if (asset.shape === "triangle") { ctx.moveTo(0, -half); ctx.lineTo(half, half); ctx.lineTo(-half, half); ctx.closePath(); }
+      else if (asset.shape === "star") {
+        for (let point = 0; point < 10; point += 1) {
+          const radius = point % 2 ? half * .45 : half;
+          const angle = -Math.PI / 2 + point * Math.PI / 5;
+          const px = Math.cos(angle) * radius, py = Math.sin(angle) * radius;
+          if (!point) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+      } else ctx.rect(-half, -half, half * 2, half * 2);
+      if (asset.shape === "ring") ctx.stroke(); else ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function exportTextColor(index, count, timeline) {
+    const base = $("ibBaseColor").value;
+    const mode = $("ibColorMode").value;
+    if (timeline.seconds < timeline.contactSeconds || mode === "flash") return base;
+    const midpoint = (count - 1) / 2;
+    const distance = Math.abs(index - midpoint) / Math.max(1, midpoint);
+    if (mode === "unfold") {
+      if (timeline.seconds >= timeline.whiteStartSeconds) {
+        const whiteThreshold = timeline.whiteReveal;
+        if (distance <= whiteThreshold) return base;
+      }
+      if (distance <= timeline.colorReveal) {
+        const colors = [$("ibColorA").value, $("ibColorC").value, $("ibColorB").value, $("ibColorD").value];
+        const progress = count > 1 ? index / (count - 1) : 0;
+        const scaled = Math.min(.9999, progress) * (colors.length - 1);
+        const colorIndex = Math.floor(scaled);
+        return mixHex(colors[colorIndex], colors[colorIndex + 1], scaled - colorIndex);
+      }
+      return base;
+    }
+    const progress = clamp((timeline.seconds - timeline.contactSeconds) / Math.max(.001, timeline.replaceStartSeconds - timeline.contactSeconds), 0, 1);
+    return samplePalette(clamp(progress + index / Math.max(1, count) * .35, 0, 1));
+  }
+
+  function renderExportFrame(canvas, realSeconds) {
+    const ctx = canvas.getContext("2d", { alpha: false, willReadFrequently: true });
+    const width = canvas.width, height = canvas.height;
+    ctx.fillStyle = $("ibBackground").value;
+    ctx.fillRect(0, 0, width, height);
+    const playback = glyphPlaybackConfig();
+    state.duration = animationDuration(playback);
+    const speed = Math.max(.01, Number($("ibSpeed").value));
+    const baseCycleSeconds = state.duration / 1000;
+    const seconds = ((realSeconds * speed) % baseCycleSeconds + baseCycleSeconds) % baseCycleSeconds;
+    const timeline = masterTimeline(seconds / baseCycleSeconds, baseCycleSeconds, playback.total);
+    const family = fontMap[$("ibFont").value] || "IBSpace";
+    const fontPx = clamp(Math.min(width * .09, height * .16), 36, Math.min(width, height) * .24) * Number($("ibFontSize").value) / 100;
+    const screenScale = stage.clientWidth ? width / stage.clientWidth : 1;
+    const tracking = Number($("ibTracking").value) * clamp(screenScale, .5, 4);
+    ctx.font = `${$("ibWeight").value} ${fontPx}px "${family}"`;
+    const text = $("ibText").value || "GOOD JOB";
+    const layout = trackedLayout(ctx, text, tracking);
+    const baseline = height / 2 + fontPx * .34;
+    const finalScaleProgress = smoothstep(clamp(Math.max(0, seconds - timeline.replaceStartSeconds) * 1000 / clamp(Number($("ibFinalScaleDuration").value), 200, 1200), 0, 1));
+    const finalScale = 1 + Number($("ibFinalScale").value) / 100 * finalScaleProgress;
+
+    if (timeline.introOpacity > .001) {
+      ctx.globalAlpha = timeline.introOpacity;
+      drawTrackedText(ctx, layout, width / 2, baseline, tracking, $("ibBaseColor").value, new Set(), timeline.introScale);
+      ctx.globalAlpha = 1;
+    }
+
+    const leftLetters = Array.from(incomingLeft.children);
+    const rightLetters = Array.from(incomingRight.children);
+    if (timeline.incomingOpacity > .001 && (leftLetters.length || rightLetters.length)) {
+      ctx.save();
+      ctx.globalAlpha = timeline.incomingOpacity;
+      const leftText = leftLetters.map((letter) => letter.textContent).join("");
+      const rightText = rightLetters.map((letter) => letter.textContent).join("");
+      const leftLayout = trackedLayout(ctx, leftText, tracking);
+      const rightLayout = trackedLayout(ctx, rightText, tracking);
+      const closedGap = state.naturalGap ? fontPx * .18 : 0;
+      const openGap = closedGap + width * .22 * Number($("ibCollapse").value) / 100;
+      const gap = closedGap + (openGap - closedGap) * (1 - timeline.gapClose);
+      const sideShift = (openGap - closedGap) / 2;
+      const orbitArc = Math.sin(Math.PI * timeline.incomingOrbit);
+      const orbitShift = (1 - timeline.incomingOrbit) * clamp(width * .46, 120, width * .46) - orbitArc * width * .015 * Number($("ibCurve").value) / 100;
+      const drawSide = (letters, sideLayout, direction, startX) => {
+        const maxRank = Math.max(0, ...letters.map((letter) => Number(letter.dataset.rank || 0)));
+        letters.forEach((letter, index) => {
+          const rank = Number(letter.dataset.rank || 0);
+          const letterStart = timeline.contactStartSeconds + rank * timeline.pairStaggerSeconds;
+          const close = easeOutExpo(clamp((timeline.seconds - letterStart) / timeline.collisionDurationSeconds, 0, 1));
+          const rankRatio = maxRank > 0 ? rank / maxRank : 0;
+          const openDistance = sideShift * (.88 + .12 * rankRatio);
+          const x = startX + sideLayout.centers[index] + direction * openDistance * (1 - close) + direction * orbitShift;
+          ctx.fillStyle = $("ibBaseColor").value;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "alphabetic";
+          ctx.fillText(letter.textContent, x, baseline);
+        });
+      };
+      drawSide(leftLetters, leftLayout, -1, width / 2 - gap / 2 - leftLayout.total / 2);
+      drawSide(rightLetters, rightLayout, 1, width / 2 + gap / 2 + rightLayout.total / 2);
+      ctx.restore();
+    }
+
+    const replacementTime = Math.max(0, (seconds - timeline.replaceStartSeconds) * 1000);
+    const replacementActive = replacementEnabled() && seconds >= timeline.replaceStartSeconds && seconds < timeline.replaceEnd * baseCycleSeconds;
+    const replacements = replacementState(replacementTime, replacementActive, playback);
+    const hiddenTargets = new Set();
+    const glyphsToDraw = [];
+    replacements.forEach((replacement, assetId) => {
+      if (replacement.swap) hiddenTargets.add(replacement.target);
+      const asset = state.assets.find((item) => item.id === assetId);
+      if (asset && replacement.swap) glyphsToDraw.push({ asset, replacement });
+    });
+    if (timeline.wordOpacity > .001) {
+      ctx.globalAlpha = timeline.wordOpacity;
+      drawTrackedText(ctx, layout, width / 2, baseline, tracking, (index) => exportTextColor(index, layout.characters.length, timeline), hiddenTargets, finalScale);
+      ctx.globalAlpha = 1;
+    }
+
+    const compositionWidth = width * .82;
+    const compositionHeight = height * .62;
+    const range = Number($("ibRange").value) / 100;
+    const iconSize = Number($("ibSize").value) / 100;
+    const orbitSpeed = clamp(Number($("ibOrbitSpeed").value) / 100, .5, 2);
+    const curveStrength = Number($("ibCurve").value) / 100;
+    const orbitAssets = state.assets.filter((asset) => asset.role === "orbit");
+    const poses = orbitAssets.map((asset, orbitIndex) => {
+      const seed = seeds[orbitIndex % seeds.length];
+      const orbitCount = Math.max(1, orbitAssets.length);
+      const angleJitter = seed[2] * 1.65 * Math.PI / 180;
+      const sphereY = 1 - 2 * (orbitIndex + .5) / orbitCount;
+      const latitudeRadius = Math.sqrt(Math.max(0, 1 - sphereY * sphereY));
+      const baseLongitude = orbitIndex * Math.PI * (3 - Math.sqrt(5)) + angleJitter * .28;
+      const orbitalAngle = baseLongitude + timeline.orbitAngleDegrees * curveStrength * orbitSpeed * Math.PI / 180;
+      const sphereX = Math.cos(orbitalAngle) * latitudeRadius;
+      const sphereZ = Math.sin(orbitalAngle) * latitudeRadius;
+      const pitch = (-16 + 27 * easeInOut(clamp(timeline.iconGather, 0, 1))) * Math.PI / 180;
+      const projectedY = sphereY * Math.cos(pitch) - sphereZ * Math.sin(pitch);
+      const projectedZ = sphereY * Math.sin(pitch) + sphereZ * Math.cos(pitch);
+      const radialProgress = easeInOut(clamp(timeline.iconGather, 0, 1));
+      const startRadius = Math.min(compositionWidth, compositionHeight) * range * (.49 + (orbitIndex % 3) * .018);
+      const spreadScale = 1.45 - .83 * clamp(Number($("ibDensity").value) / 100, 0, 1);
+      const clusterRadius = Math.min(compositionWidth, compositionHeight) * (.118 + (orbitIndex % 3) * .003) * spreadScale;
+      const sphereRadius = startRadius + (clusterRadius - startRadius) * radialProgress;
+      const perspective = 1 / (1 - projectedZ * .22);
+      let x = sphereX * sphereRadius * perspective;
+      let y = projectedY * sphereRadius * perspective * .94;
+      const crossT = clamp((timeline.iconGather - .58) / .39, 0, 1);
+      const crossPulse = Math.pow(Math.sin(Math.PI * crossT), 2);
+      const crossingDrift = Math.min(compositionWidth, compositionHeight) * .018 * curveStrength * crossPulse;
+      x += -Math.sin(orbitalAngle) * crossingDrift;
+      y += Math.cos(orbitalAngle) * Math.cos(pitch) * crossingDrift;
+      let collapseScale = 1;
+      if (timeline.seconds >= timeline.collapseStartSeconds) {
+        const local = clamp((timeline.seconds - timeline.collapseStartSeconds) / Math.max(.001, timeline.iconsGoneSeconds - timeline.collapseStartSeconds), 0, 1);
+        collapseScale = 1 - easeInOut(clamp((local - .65) / .35, 0, 1));
+      }
+      const depthScale = clamp(1 + projectedZ * .22, .76, 1.24);
+      const startScale = 1.12 + (orbitIndex % 4) * .09;
+      const gatherScale = startScale + (1 - startScale) * timeline.iconGather;
+      return { asset, depth: projectedZ, x: width / 2 + x + asset.x / 100 * compositionWidth * .28, y: height / 2 + y + asset.y / 100 * compositionHeight * .28, size: Math.min(width, height) * .085 * iconSize * asset.size * gatherScale * collapseScale * depthScale, alpha: timeline.iconPresence * asset.opacity * collapseScale, rotation: asset.rotation + 10 * Math.sin(Math.PI * clamp(timeline.iconGather, 0, 1)) };
+    }).sort((a, b) => a.depth - b.depth);
+    poses.forEach((pose) => drawAssetToCanvas(ctx, pose.asset, pose.x, pose.y, pose.size, pose.rotation, pose.alpha));
+
+    glyphsToDraw.forEach(({ asset, replacement }) => {
+      const x = width / 2 + (layout.centers[replacement.target] || 0) * finalScale + asset.x / 100 * width * .08;
+      const y = baseline - fontPx * .38 + asset.y / 100 * height * .08;
+      drawAssetToCanvas(ctx, asset, x, y, fontPx * .92 * asset.size * finalScale, asset.rotation, asset.opacity * replacement.envelope);
+    });
+  }
+
+  const exportButtons = [$("ibExportPng"), $("ibExportGif"), $("ibExportVideo"), $("ibExportVerticalVideo")];
+  function setExportBusy(busy, message) {
+    exportButtons.forEach((button) => { button.disabled = busy; });
+    $("ibExportStatus").textContent = message;
   }
 
   function pixelDistance(pixels, offset, background) {
@@ -1463,6 +1889,8 @@
     ["ibHang", "ibHangValue", (value) => `${(Number(value) / 100).toFixed(2)} 秒`],
     ["ibDrift", "ibDriftValue", (value) => `${value}%`],
     ["ibSync", "ibSyncValue", (value) => `${(Number(value) / 100).toFixed(2)}×`],
+    ["ibCollisionDuration", "ibCollisionDurationValue", (value) => `${(Number(value) / 1000).toFixed(2)} 秒`],
+    ["ibPairStagger", "ibPairStaggerValue", (value) => `${(Number(value) / 1000).toFixed(2)} 秒`],
     ["ibOvershoot", "ibOvershootValue", (value) => `${value}%`],
     ["ibDensity", "ibDensityValue", (value) => `${value}%`],
     ["ibFinalScale", "ibFinalScaleValue", (value) => `+${Number(value).toFixed(1)}%`],
@@ -1472,12 +1900,126 @@
     ["ibCurve", "ibCurveValue", (value) => `${value}%`],
     ["ibSpeed", "ibSpeedValue", (value) => `${Number(value).toFixed(1)}×`]
   ];
-  readouts.forEach(([id, output, format]) => $(id).addEventListener("input", () => { $(output).textContent = format($(id).value); }));
+  readouts.forEach(([id, output, format]) => $(id).addEventListener("input", () => { $(output).textContent = format($(id).value); scheduleChoreoRender(); scheduleSchemePersist(); }));
   // Amplitude is not a static font-size edit. Releasing either final-scale
   // control restarts the complete choreography so the user sees the title
   // grow over time in its actual replacement chapter.
   ["ibFinalScale", "ibFinalScaleDuration"].forEach((id) => $(id).addEventListener("change", restart));
-  ["ibWordReturn", "ibSync", "ibOrbitSpeed", "ibOvershoot"].forEach((id) => $(id).addEventListener("change", restart));
+  ["ibWordReturn", "ibSync", "ibCollisionDuration", "ibPairStagger", "ibOrbitSpeed", "ibOvershoot"].forEach((id) => $(id).addEventListener("change", restart));
+
+  $("ibSaveScheme").addEventListener("click", () => {
+    const scheme = collectScheme();
+    localStorage.setItem(SCHEME_STORAGE_KEY, JSON.stringify(scheme));
+    downloadBlob(new Blob([JSON.stringify(scheme, null, 2)], { type: "application/json" }), "iconburst-scheme.json");
+    $("ibSchemeStatus").textContent = "方案已保存到本机，并下载了 JSON。";
+  });
+  $("ibImportScheme").addEventListener("change", async (event) => {
+    const file = event.currentTarget.files[0];
+    event.currentTarget.value = "";
+    if (!file) return;
+    try {
+      const scheme = JSON.parse(await file.text());
+      applyScheme(scheme, { status: "方案已导入；文字长度、碰撞对数和素材编辑项已自动重建。" });
+      localStorage.setItem(SCHEME_STORAGE_KEY, JSON.stringify(collectScheme()));
+    } catch (error) {
+      $("ibSchemeStatus").textContent = `导入失败：${error.message}`;
+    }
+  });
+  $("ibResetScheme").addEventListener("click", () => {
+    localStorage.removeItem(SCHEME_STORAGE_KEY);
+    applyScheme(defaultScheme(true), { status: "已恢复默认示例与全部内置素材。" });
+  });
+  $("ibClearScheme").addEventListener("click", () => {
+    const blank = defaultScheme(false);
+    blank.controls.ibText = "GOOD JOB";
+    blank.controls.ibContentMode = "text";
+    localStorage.removeItem(SCHEME_STORAGE_KEY);
+    applyScheme(blank, { status: "已清空全部图片和图标，可从空白方案重新添加。" });
+  });
+  document.querySelector(".ib-editor")?.addEventListener("input", scheduleSchemePersist);
+  document.querySelector(".ib-editor")?.addEventListener("change", scheduleSchemePersist);
+
+  $("ibExportPreset").addEventListener("change", () => { $("ibCustomSize").hidden = $("ibExportPreset").value !== "custom"; });
+  $("ibExportDuration").addEventListener("change", () => { $("ibCustomDurationWrap").hidden = $("ibExportDuration").value !== "custom"; });
+
+  function currentRealSeconds() {
+    const elapsed = state.playing ? performance.now() - state.start : state.pausedAt;
+    return Math.max(0, elapsed / 1000);
+  }
+
+  $("ibExportPng").addEventListener("click", async () => {
+    setExportBusy(true, "正在准备高清素材…");
+    try {
+      await preloadExportAssets();
+      const output = makeExportCanvas(false);
+      renderExportFrame(output, currentRealSeconds());
+      output.toBlob((blob) => {
+        if (blob) downloadBlob(blob, `icon-burst-${output.width}x${output.height}.png`);
+        setExportBusy(false, blob ? `PNG 已生成 · ${output.width} × ${output.height}` : "PNG 生成失败");
+      }, "image/png");
+    } catch (error) { setExportBusy(false, `PNG 导出失败：${error.message}`); }
+  });
+
+  $("ibExportGif").addEventListener("click", async () => {
+    if (!window.GIF) { $("ibExportStatus").textContent = "GIF 编码器未加载，请刷新后重试。"; return; }
+    setExportBusy(true, "正在准备高清素材…");
+    try {
+      await preloadExportAssets();
+      const output = makeExportCanvas(false);
+      const fps = Math.min(30, Number($("ibExportFps").value) || 15);
+      const duration = exportDurationSeconds();
+      const frames = Math.max(1, Math.ceil(duration * fps));
+      const gif = new GIF({ workers: 2, quality: 10, width: output.width, height: output.height, workerScript: "js/continuation-gif.worker.js" });
+      for (let frame = 0; frame < frames; frame += 1) {
+        renderExportFrame(output, frame / fps);
+        gif.addFrame(output, { copy: true, delay: 1000 / fps });
+        if (frame % 4 === 0) $("ibExportStatus").textContent = `正在准备 GIF · ${frame + 1} / ${frames} 帧`;
+      }
+      gif.on("progress", (progress) => { $("ibExportStatus").textContent = `正在编码 GIF · ${Math.round(progress * 100)}%`; });
+      gif.on("finished", (blob) => { downloadBlob(blob, `icon-burst-${output.width}x${output.height}.gif`); setExportBusy(false, `GIF 已生成 · ${output.width} × ${output.height}`); });
+      gif.render();
+    } catch (error) { setExportBusy(false, `GIF 导出失败：${error.message}`); }
+  });
+
+  async function exportMp4(verticalHD = false) {
+    if (!window.HME || typeof HME.createH264MP4Encoder !== "function") { $("ibExportStatus").textContent = "MP4 编码器未加载，请刷新后重试。"; return; }
+    setExportBusy(true, "正在准备高清素材…");
+    let encoder;
+    try {
+      await preloadExportAssets();
+      const output = makeExportCanvas(verticalHD);
+      const context = output.getContext("2d", { willReadFrequently: true });
+      const fps = Number($("ibExportFps").value) || 30;
+      const duration = exportDurationSeconds();
+      const frameCount = Math.max(1, Math.ceil(duration * fps));
+      encoder = await HME.createH264MP4Encoder();
+      encoder.outputFilename = `icon-burst-${output.width}x${output.height}.mp4`;
+      encoder.width = output.width;
+      encoder.height = output.height;
+      encoder.frameRate = fps;
+      encoder.kbps = verticalHD ? 20000 : 16000;
+      encoder.groupOfPictures = 15;
+      encoder.initialize();
+      for (let frame = 0; frame < frameCount; frame += 1) {
+        renderExportFrame(output, frame / fps);
+        encoder.addFrameRgba(context.getImageData(0, 0, output.width, output.height).data);
+        if (frame % 2 === 0) {
+          $("ibExportStatus").textContent = `正在导出 MP4 ${output.width} × ${output.height} · ${Math.round((frame + 1) / frameCount * 100)}%`;
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+      }
+      encoder.finalize();
+      const bytes = encoder.FS.readFile(encoder.outputFilename);
+      downloadBlob(new Blob([bytes], { type: "video/mp4" }), encoder.outputFilename);
+      setExportBusy(false, `MP4 已生成 · ${output.width} × ${output.height} · ${(bytes.length / 1024 / 1024).toFixed(1)} MB`);
+    } catch (error) {
+      setExportBusy(false, `MP4 导出失败：${error.message || "编码器异常"}`);
+    } finally {
+      try { encoder?.delete(); } catch (_) {}
+    }
+  }
+  $("ibExportVideo").addEventListener("click", () => exportMp4(false));
+  $("ibExportVerticalVideo").addEventListener("click", () => exportMp4(true));
 
   const assetInputs = ["ibAssetShape", "ibAssetColor", "ibAssetTarget", "ibAssetHold", "ibAssetSize", "ibAssetOpacity", "ibAssetX", "ibAssetY", "ibAssetRotation", "ibAssetMotion"];
   assetInputs.forEach((id) => $(id).addEventListener("input", () => {
@@ -1652,8 +2194,15 @@
   // Keep both layer cards compact on entry. An editor opens inside the exact
   // layer card only after the user chooses an individual asset.
   state.activeAssetId = null;
-  updateWord();
-  updateContentModeUI();
-  renderIcons();
+  let storedScheme = null;
+  try { storedScheme = JSON.parse(localStorage.getItem(SCHEME_STORAGE_KEY) || "null"); } catch (_) {}
+  if (storedScheme && Number(storedScheme.version) >= 2) {
+    applyScheme(storedScheme, { status: "已恢复上次自动保存的方案。" });
+  } else {
+    updateWord();
+    updateContentModeUI();
+    renderIcons();
+    renderChoreoTrack();
+  }
   requestAnimationFrame(animate);
 })();
