@@ -867,11 +867,13 @@
   function getLetterAnchors() {
     if (state.letterAnchors && state.letterAnchors.length === word.children.length) return state.letterAnchors;
     const compositionRect = composition.getBoundingClientRect();
+    const scaleX = composition.offsetWidth ? compositionRect.width / composition.offsetWidth : 1;
+    const scaleY = composition.offsetHeight ? compositionRect.height / composition.offsetHeight : 1;
     state.letterAnchors = Array.from(word.children).map((letter) => {
       const rect = letter.getBoundingClientRect();
       return {
-        x: rect.left + rect.width / 2 - (compositionRect.left + compositionRect.width / 2),
-        y: rect.top + rect.height / 2 - (compositionRect.top + compositionRect.height / 2)
+        x: (rect.left + rect.width / 2 - (compositionRect.left + compositionRect.width / 2)) / Math.max(.001, scaleX),
+        y: (rect.top + rect.height / 2 - (compositionRect.top + compositionRect.height / 2)) / Math.max(.001, scaleY)
       };
     });
     return state.letterAnchors;
@@ -880,6 +882,36 @@
   function lightLetter(letter, color, intensity) {
     const level = clamp(intensity, 0, 1);
     letter.style.setProperty("--letter-color", mixHex($("ibBaseColor").value, color, level));
+  }
+
+  function linearSweepColor(index, count, colorReveal, whiteReveal = 0) {
+    const base = $("ibBaseColor").value;
+    const colors = activeEffectColors();
+    if (!colors.length) return base;
+    const position = count > 1 ? index / (count - 1) : 0;
+    const softness = .05 + clamp(Number($("ibSoftness").value), 0, 100) / 100 * .10;
+    // One continuous front travels beyond both edges. Behind the front, every
+    // glyph passes through A → B → C → D and settles on the final active color.
+    const colorHead = -.10 + 1.44 * clamp(colorReveal, 0, 1);
+    const coverage = smoothstep(clamp((colorHead - position + softness) / (softness * 2), 0, 1));
+    const paletteProgress = clamp((colorHead - position) / .28, 0, 1);
+    let color = mixHex(base, sampleColorList(colors, paletteProgress), coverage);
+    // The return to the base color uses the same left-to-right light front,
+    // preventing the fully colored word from snapping back in one frame.
+    if (whiteReveal > 0) {
+      const whiteHead = -.08 + 1.38 * clamp(whiteReveal, 0, 1);
+      const whiteCoverage = smoothstep(clamp((whiteHead - position + softness) / (softness * 2), 0, 1));
+      color = mixHex(color, base, whiteCoverage);
+    }
+    return color;
+  }
+
+  function applyLinearSweep(letters, colorReveal, whiteReveal = 0) {
+    const count = letters.length;
+    letters.forEach((letter, index) => {
+      if (!letter.textContent.trim()) return;
+      letter.style.setProperty("--letter-color", linearSweepColor(index, count, colorReveal, whiteReveal));
+    });
   }
 
   function animateColor(contentTime, oneShot) {
@@ -1441,7 +1473,7 @@
     } else if (seconds >= colorFullSeconds) colorReveal = 1;
 
     let whiteReveal = 0;
-    if (seconds >= whiteStartSeconds && seconds < whiteFullSeconds) whiteReveal = .12 + .88 * easeOut((seconds - whiteStartSeconds) / (whiteFullSeconds - whiteStartSeconds));
+    if (seconds >= whiteStartSeconds && seconds < whiteFullSeconds) whiteReveal = easeInOut((seconds - whiteStartSeconds) / (whiteFullSeconds - whiteStartSeconds));
     else if (seconds >= whiteFullSeconds) whiteReveal = 1;
 
     const iconPresence = seconds < iconsGoneSeconds ? 1 : 0;
@@ -1464,7 +1496,7 @@
     else if (seconds >= collapseStartSeconds && seconds < iconsGoneSeconds) { velocityZone = "shared-accelerated-close"; label = "05 · 共同加速 · 图标沿弧线缩没"; }
     else if (seconds >= contactStartSeconds && seconds < contactSeconds) { velocityZone = "title-contact"; label = "06 · 中心第一对开始 · 逐对靠拢并同步换色"; }
     else if (seconds >= contactSeconds && seconds < whiteStartSeconds) { velocityZone = "contact-color-expands"; label = "07 · 逐对碰合完成 · 颜色继续展开"; }
-    else if (seconds >= whiteStartSeconds && seconds < whiteFullSeconds) { velocityZone = "white-reset-expands"; label = "07 · 白色由中心向两侧复位"; }
+    else if (seconds >= whiteStartSeconds && seconds < whiteFullSeconds) { velocityZone = "white-reset-expands"; label = "07 · 白色从左向右扫回复位"; }
     else if (seconds >= whiteFullSeconds && seconds < replaceStartSeconds) { velocityZone = "compact-title-hold"; label = "08 · 紧凑白色标题"; }
     else if (seconds >= replaceStartSeconds) { velocityZone = "glyph-replacement"; label = "09 · 可选文字切换图标 / 图片"; }
 
@@ -1561,8 +1593,9 @@
     let label = timeline.label;
     const replacements = replacementState(replacementTime, replacementActive, playback);
     const colorMode = $("ibColorMode").value;
-    if (colorActive && colorMode !== "unfold") animateColor(colorTime, true);
-    if (colorMode !== "unfold" && timeline.colorReveal >= .999 && timeline.seconds < timeline.whiteStartSeconds) {
+    if (colorActive && colorMode === "sweep") applyLinearSweep(Array.from(word.children), timeline.colorReveal, timeline.whiteReveal);
+    else if (colorActive && colorMode !== "unfold") animateColor(colorTime, true);
+    if (colorMode !== "unfold" && colorMode !== "sweep" && timeline.colorReveal >= .999 && timeline.seconds < timeline.whiteStartSeconds) {
       Array.from(word.children).forEach((letter) => { if (letter.textContent.trim()) letter.style.setProperty("--letter-color", finalEffectColor()); });
     }
     if (replacementActive) label = "11 · 按资源顺序 · 使用各自速度与停留时间";
@@ -1604,6 +1637,7 @@
     const sideShift = (openGap - closedGap) / 2;
     const collisionColors = activeEffectColors();
     const collisionBaseColor = $("ibBaseColor").value;
+    const collisionLetterCount = Math.max(1, Array.from(word.children).length);
     [
       { element: incomingLeft, direction: -1 },
       { element: incomingRight, direction: 1 }
@@ -1620,7 +1654,11 @@
         const openDistance = sideShift * (.88 + .12 * rankRatio);
         letter.style.setProperty("--incoming-letter-x", `${(direction * openDistance * beat.distanceFactor).toFixed(2)}px`);
         letter.style.setProperty("--incoming-letter-scale", beat.scale.toFixed(4));
-        letter.style.setProperty("--incoming-letter-color", mixHex(collisionBaseColor, collisionColors[inwardOrder % collisionColors.length], beat.color));
+        const letterIndex = clamp(Number(letter.dataset.letter || 0), 0, collisionLetterCount - 1);
+        const collisionColor = colorMode === "sweep"
+          ? linearSweepColor(letterIndex, collisionLetterCount, timeline.colorReveal, timeline.whiteReveal)
+          : mixHex(collisionBaseColor, collisionColors[inwardOrder % collisionColors.length], beat.color);
+        letter.style.setProperty("--incoming-letter-color", collisionColor);
       });
     });
 
@@ -1632,7 +1670,7 @@
     // A very small persistent opening accompanies the shared scale-up. It is
     // driven by phase rather than the per-icon envelope, so it does not fall
     // back after an icon's hold time ends.
-    const replacementExpansion = replacementScaleProgress * fontSize * .012;
+    const replacementExpansion = 0;
     const letterOffsets = new Map();
     visibleLetters.forEach((letter, index) => {
       const distance = index - midpoint;
@@ -1681,7 +1719,7 @@
       const replacement = replacements.get(asset.id);
       let anchorX = 0, anchorY = 0;
       if (replacement && anchors[replacement.target]) {
-        anchorX = anchors[replacement.target].x + (letterOffsets.get(replacement.target) || 0);
+        anchorX = anchors[replacement.target].x;
         anchorY = anchors[replacement.target].y;
       }
       const envelope = replacement ? replacement.envelope : 0;
@@ -2042,6 +2080,7 @@
   function exportTextColor(index, count, timeline) {
     const base = $("ibBaseColor").value;
     const mode = $("ibColorMode").value;
+    if (mode === "sweep") return linearSweepColor(index, count, timeline.colorReveal, timeline.whiteReveal);
     if (timeline.seconds < timeline.contactSeconds) return base;
     if (timeline.colorReveal >= .999 && timeline.seconds < timeline.whiteStartSeconds) return finalEffectColor();
     if (mode === "flash") return base;
@@ -2115,7 +2154,10 @@
           const openDistance = sideShift * (.88 + .12 * rankRatio);
           const x = startX + sideLayout.centers[index] + direction * openDistance * beat.distanceFactor + direction * orbitShift;
           const pairColors = activeEffectColors();
-          ctx.fillStyle = mixHex($("ibBaseColor").value, pairColors[rank % pairColors.length], beat.color);
+          const letterIndex = clamp(Number(letter.dataset.letter || 0), 0, Math.max(0, layout.characters.length - 1));
+          ctx.fillStyle = $("ibColorMode").value === "sweep"
+            ? linearSweepColor(letterIndex, layout.characters.length, timeline.colorReveal, timeline.whiteReveal)
+            : mixHex($("ibBaseColor").value, pairColors[rank % pairColors.length], beat.color);
           ctx.textAlign = "center";
           ctx.textBaseline = "alphabetic";
           ctx.save();
