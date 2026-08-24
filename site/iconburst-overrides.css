@@ -659,7 +659,9 @@ body.ib-card-preview .ib-stage {
 
 body.ib-card-preview .ib-composition {
   width: 100%;
-  height: 100%;
+  height: auto;
+  max-height: 100%;
+  aspect-ratio: 16 / 9;
 }
 
 .ib-asset-drawer {
