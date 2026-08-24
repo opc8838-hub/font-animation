@@ -6,8 +6,8 @@
   <title>图标爆发 Icon Burst | ME Motion Studio</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="stg-cn.css">
-  <link rel="stylesheet" href="iconburst.css?v=20260824-15">
-  <link rel="stylesheet" href="iconburst-overrides.css?v=20260824-15">
+  <link rel="stylesheet" href="iconburst.css?v=20260824-16">
+  <link rel="stylesheet" href="iconburst-overrides.css?v=20260824-16">
 </head>
 <body>
   <main class="ib-app">
@@ -107,14 +107,15 @@
               <div id="ibGlyphEditorSlot" class="ib-editor-slot"></div>
             </section>
           </div>
+          <aside id="ibAssetDrawer" class="ib-asset-drawer" aria-label="当前素材编辑面板" hidden>
           <div id="ibAssetEditor" class="ib-asset-editor" hidden>
-            <div class="ib-active-asset"><span>正在单独编辑</span><strong id="ibActiveAsset">—</strong></div>
-            <label>这一个资源的内容<select id="ibAssetSource"><option value="shape">内置图形</option><option value="image">图片</option></select></label>
-            <label id="ibAssetTargetField">这个图片 / 图标替换哪个字（仅当前资源）<select id="ibAssetTarget"><option value="-1">自动轮换</option></select></label>
-            <label id="ibAssetHoldField">这一个字体图标停留多久 <output id="ibAssetHoldValue">160 ms</output><input id="ibAssetHold" type="range" min="40" max="1200" value="160" step="20"></label>
+            <div class="ib-active-asset"><span>正在单独编辑</span><strong id="ibActiveAsset">—</strong><button id="ibCloseAssetDrawer" type="button">关闭</button></div>
+            <label>素材类型<select id="ibAssetSource"><option value="shape">内置图形</option><option value="image">图片</option></select></label>
+            <label id="ibAssetTargetField">替换字位<select id="ibAssetTarget"><option value="-1">自动轮换</option></select></label>
+            <label id="ibAssetHoldField">图标停留时间 <output id="ibAssetHoldValue">160 ms</output><input id="ibAssetHold" type="range" min="40" max="1200" value="160" step="20"></label>
             <div id="ibAssetShapeFields" class="ib-two"><label>图形<select id="ibAssetShape"><option value="ring">圆环</option><option value="rainbow-ring">彩虹圆环</option></select></label><label>图形颜色<input id="ibAssetColor" type="color" value="#ffcc00"></label></div>
             <div id="ibAssetImageFields" class="ib-image-fields" hidden>
-              <label class="ib-upload ib-replace-upload">替换这一个资源的图片<input id="ibAssetFile" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif"></label>
+              <label class="ib-upload ib-replace-upload">替换当前素材图片<input id="ibAssetFile" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif"></label>
               <label class="ib-check"><input id="ibRemoveBackground" type="checkbox" checked> 自动去除四角连通背景（保护主体内部白色）</label>
               <div class="ib-two"><label>背景颜色<input id="ibBackgroundColor" type="color" value="#ffffff"></label><label>自动识别四角<label class="ib-check ib-check-compact"><input id="ibAutoBackground" type="checkbox" checked> 开启</label></label></div>
               <div class="ib-two"><label>背景容差 <output id="ibToleranceValue">32</output><input id="ibTolerance" type="range" min="4" max="90" value="32"></label><label>边缘过渡 <output id="ibFeatherValue">4</output><input id="ibFeather" type="range" min="0" max="24" value="4"></label></div>
@@ -125,6 +126,7 @@
             <div class="ib-two"><label>水平偏移 <output id="ibAssetXValue">0%</output><input id="ibAssetX" type="range" min="-100" max="100" value="0"></label><label>垂直偏移 <output id="ibAssetYValue">0%</output><input id="ibAssetY" type="range" min="-100" max="100" value="0"></label></div>
             <div class="ib-two"><label>独立旋转 <output id="ibAssetRotationValue">0°</output><input id="ibAssetRotation" type="range" min="-180" max="180" value="0"></label><label>附加运动<select id="ibAssetMotion"><option value="replace">文字替换</option><option value="burst">爆发</option><option value="float">漂浮</option><option value="orbit">环绕</option></select></label></div>
           </div>
+          </aside>
           <div class="ib-two">
             <label>爆发范围 <output id="ibRangeValue">72%</output><input id="ibRange" type="range" min="25" max="110" value="72"></label>
             <label>图标大小 <output id="ibSizeValue">100%</output><input id="ibSize" type="range" min="40" max="180" value="100"></label>
@@ -195,7 +197,7 @@
   </main>
   <script src="js/continuation-gif.js"></script>
   <script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="iconburst.js?v=20260824-15"></script>
+  <script src="iconburst.js?v=20260824-16"></script>
   <script src="stg-cn.js"></script>
 </body>
 </html>

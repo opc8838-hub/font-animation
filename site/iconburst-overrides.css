@@ -586,6 +586,28 @@ body .ib-asset-actions .ib-remove {
   background: #edf5fd;
 }
 
+.ib-asset-drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: var(--asset-drawer-left, var(--panel, 420px));
+  z-index: 1002;
+  width: var(--asset-drawer-width, min(420px, calc(100vw - var(--panel, 420px))));
+  padding: 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border-left: 1px solid #d2d2d7;
+  background: #f5f5f7;
+  box-shadow: 18px 0 44px rgba(0, 0, 0, .16);
+}
+
+.ib-asset-drawer[hidden] { display: none !important; }
+.ib-asset-drawer .ib-asset-editor { min-height: 100%; }
+
+@media (max-width: 760px) {
+  .ib-asset-drawer { left: 0; width: 100vw; }
+}
+
 .ib-asset-editor[hidden] {
   display: none !important;
 }
@@ -607,6 +629,18 @@ body .ib-asset-actions .ib-remove {
 .ib-active-asset strong {
   color: #0066cc;
   font-size: 12px;
+}
+
+.ib-active-asset button {
+  flex: 0 0 auto;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: #fff;
+  color: #0066cc;
+  font: 650 10px/1 inherit;
+  cursor: pointer;
 }
 
 .ib-asset-editor input[type="color"] {

@@ -452,6 +452,8 @@
 
   function setLayerManager(panel, expanded) {
     if (!panel) return;
+    $("ibAssetDrawer").hidden = true;
+    $("ibAssetEditor").hidden = true;
     document.querySelectorAll(".ib-layer-panel.is-list-expanded").forEach((item) => {
       if (item !== panel) {
         item.classList.remove("is-list-expanded");
@@ -476,10 +478,6 @@
     if (expanded) panel.scrollTop = 0;
   }
 
-  function openLayerManager(role) {
-    setLayerManager($(role === "glyph" ? "ibGlyphPanel" : "ibOrbitPanel"), true);
-  }
-
   $("ibAssets").addEventListener("click", (event) => {
     const toggle = event.target.closest("[data-layer-toggle]");
     if (!toggle) return;
@@ -489,6 +487,11 @@
 
   window.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
+    if (!$("ibAssetDrawer").hidden) {
+      $("ibAssetDrawer").hidden = true;
+      $("ibAssetEditor").hidden = true;
+      return;
+    }
     const panel = document.querySelector(".ib-layer-panel.is-list-expanded");
     if (panel) setLayerManager(panel, false);
   });
@@ -497,6 +500,10 @@
     const panel = document.querySelector(".ib-layer-panel.is-list-expanded");
     const editorWidth = document.querySelector(".ib-editor")?.getBoundingClientRect().width;
     if (panel && editorWidth) panel.style.setProperty("--panel", `${editorWidth}px`);
+    if (!$("ibAssetDrawer").hidden && editorWidth) {
+      $("ibAssetDrawer").style.setProperty("--asset-drawer-left", `${editorWidth}px`);
+      $("ibAssetDrawer").style.setProperty("--asset-drawer-width", `${Math.min(420, Math.max(0, window.innerWidth - editorWidth))}px`);
+    }
   }, { passive: true });
 
   let assetDrag = null;
@@ -591,12 +598,18 @@
 
   function renderAssetEditor() {
     const editor = $("ibAssetEditor");
+    const drawer = $("ibAssetDrawer");
     const asset = activeAsset();
     $("ibOrbitPanel").classList.toggle("is-editing", Boolean(asset && asset.role !== "glyph"));
     $("ibGlyphPanel").classList.toggle("is-editing", Boolean(asset && asset.role === "glyph"));
-    editor.hidden = !asset;
-    if (!asset) return;
-    $(asset.role === "glyph" ? "ibGlyphEditorSlot" : "ibOrbitEditorSlot").append(editor);
+    const panel = asset ? $(asset.role === "glyph" ? "ibGlyphPanel" : "ibOrbitPanel") : null;
+    const showDrawer = Boolean(asset && panel?.classList.contains("is-list-expanded"));
+    drawer.hidden = !showDrawer;
+    editor.hidden = !showDrawer;
+    if (!showDrawer) return;
+    const editorWidth = document.querySelector(".ib-editor")?.getBoundingClientRect().width || 420;
+    drawer.style.setProperty("--asset-drawer-left", `${editorWidth}px`);
+    drawer.style.setProperty("--asset-drawer-width", `${Math.min(420, Math.max(0, window.innerWidth - editorWidth))}px`);
     $("ibActiveAsset").textContent = `${asset.role === "glyph" ? "字体图标" : "环绕图标"} · ${asset.name}`;
     $("ibAssetSource").value = asset.type;
     $("ibAssetShapeFields").hidden = asset.type !== "shape";
@@ -2438,6 +2451,11 @@
     if (asset && file) assignFileToAsset(asset, file);
   });
 
+  $("ibCloseAssetDrawer").addEventListener("click", () => {
+    $("ibAssetDrawer").hidden = true;
+    $("ibAssetEditor").hidden = true;
+  });
+
   $("ibAssetEditor").addEventListener("click", (event) => {
     const button = event.target.closest("[data-asset-size]");
     const asset = activeAsset();
@@ -2471,7 +2489,6 @@
       const added = files.map((file, index) => defaultAsset({ id: `upload-${Date.now()}-${index}`, type: "image", role, name: file.name, status: "等待处理…", sequence: role === "glyph" ? sequenceStart + index : 0 }));
       state.assets.push(...added);
       if (added.length) state.activeAssetId = added[added.length - 1].id;
-      if (added.length) openLayerManager(role);
       renderAssets(); renderIcons();
       added.forEach((asset, index) => assignFileToAsset(asset, files[index]));
     });
@@ -2485,7 +2502,6 @@
       const asset = defaultAsset({ role, shape, color, color2: $("ibColorC").value, name: `内置${shapeLabels[shape]}`, target: -1, sequence });
       state.assets.push(asset);
       state.activeAssetId = asset.id;
-      openLayerManager(role);
       renderAssets(); renderIcons();
     });
   }
@@ -2517,7 +2533,6 @@
       });
       state.assets.push(asset);
       state.activeAssetId = asset.id;
-      openLayerManager(role);
       renderAssets();
       renderIcons();
       loadImage(image.url).then((loadedImage) => { asset.originalImage = loadedImage; }).catch(() => {
