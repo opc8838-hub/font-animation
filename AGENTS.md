@@ -43,3 +43,8 @@ These rules apply to the whole repository and are intended for both human contri
 - Relevant PNG/GIF/video exports are actually generated at least once.
 - The gallery card, global navigation, effect count, and README are updated.
 
+## Reusable project skill
+
+When creating a new motion effect or adding shared editor/export capabilities in this repository, use the project skill at [`.codex/skills/build-font-animation-effects/SKILL.md`](.codex/skills/build-font-animation-effects/SKILL.md). Read its referenced baseline or reuse map only when the current task needs that detail.
+
+The skill supplies the default requirements for the shared icon library, asset sizing/spacing, scheme save/import/reset/clear/undo/redo, timeline controls, responsive canvas, and PNG/GIF/video export. The user should not need to repeat those requirements for each effect.
