@@ -7,7 +7,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="stg-cn.css">
   <link rel="stylesheet" href="iconburst.css?v=20260824-17">
-  <link rel="stylesheet" href="iconburst-overrides.css?v=20260824-17">
+  <link rel="stylesheet" href="iconburst-overrides.css?v=20260824-18">
 </head>
 <body>
   <main class="ib-app">
@@ -82,6 +82,10 @@
                 <summary>＋ 添加 Bot 系列动态素材 <span>11 个</span></summary>
                 <div id="ibOrbitBotLibrary" class="ib-image-library-grid" aria-label="环绕 Bot 动态素材库"></div>
               </details>
+              <details class="ib-image-library">
+                <summary>＋ 添加音乐、播放、云朵、手表 <span>4 个</span></summary>
+                <div id="ibOrbitFlowLibrary" class="ib-image-library-grid" aria-label="环绕经典图标素材库"></div>
+              </details>
               <div class="ib-shape-add"><select id="ibOrbitShape"><option value="ring">圆环</option><option value="rainbow-ring">彩虹圆环</option></select><input id="ibOrbitShapeColor" type="color" value="#ffcc00" aria-label="环绕图形颜色"><button id="ibAddOrbitShape" type="button">＋ 环绕图形</button></div>
               <div id="ibOrbitItems" class="ib-layer-items"></div>
               <div id="ibOrbitEditorSlot" class="ib-editor-slot"></div>
@@ -101,6 +105,10 @@
                   <summary>＋ 添加 Bot 系列动态素材 <span>11 个</span></summary>
                   <div id="ibGlyphBotLibrary" class="ib-image-library-grid" aria-label="字体替换 Bot 动态素材库"></div>
                 </details>
+                <details class="ib-image-library">
+                  <summary>＋ 添加音乐、播放、云朵、手表 <span>4 个</span></summary>
+                  <div id="ibGlyphFlowLibrary" class="ib-image-library-grid" aria-label="字体替换经典图标素材库"></div>
+                </details>
                 <div class="ib-shape-add"><select id="ibGlyphShape"><option value="ring">圆环</option><option value="rainbow-ring">彩虹圆环</option></select><input id="ibGlyphShapeColor" type="color" value="#7b61ff" aria-label="字体图形颜色"><button id="ibAddGlyphShape" type="button">＋ 字体图形</button></div>
                 <div id="ibGlyphItems" class="ib-layer-items"></div>
               </div>
@@ -113,7 +121,7 @@
             <label>素材类型<select id="ibAssetSource"><option value="shape">内置图形</option><option value="image">图片</option></select></label>
             <label id="ibAssetTargetField">替换字位<select id="ibAssetTarget"><option value="-1">自动轮换</option></select></label>
             <label id="ibAssetHoldField">图标停留时间 <output id="ibAssetHoldValue">160 ms</output><input id="ibAssetHold" type="range" min="40" max="1200" value="160" step="20"></label>
-            <div id="ibAssetShapeFields" class="ib-two"><label>图形<select id="ibAssetShape"><option value="ring">圆环</option><option value="rainbow-ring">彩虹圆环</option></select></label><label>图形颜色<input id="ibAssetColor" type="color" value="#ffcc00"></label></div>
+            <div id="ibAssetShapeFields" class="ib-two"><label>图形<select id="ibAssetShape"><option value="ring">圆环</option><option value="rainbow-ring">彩虹圆环</option><option value="star">星形（当前方案）</option></select></label><label>图形颜色<input id="ibAssetColor" type="color" value="#ffcc00"></label></div>
             <div id="ibAssetImageFields" class="ib-image-fields" hidden>
               <label class="ib-upload ib-replace-upload">替换当前素材图片<input id="ibAssetFile" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif"></label>
               <label class="ib-check"><input id="ibRemoveBackground" type="checkbox" checked> 自动去除四角连通背景（保护主体内部白色）</label>
@@ -197,7 +205,7 @@
   </main>
   <script src="js/continuation-gif.js"></script>
   <script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="iconburst.js?v=20260824-17"></script>
+  <script src="iconburst.js?v=20260824-18"></script>
   <script src="stg-cn.js"></script>
 </body>
 </html>

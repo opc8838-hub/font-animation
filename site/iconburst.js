@@ -46,7 +46,7 @@
     [-.038, -.018], [.050, .012], [-.052, .082], [.042, .112]
   ];
   const iconColors = [["#ffcc00", "#ff6b00"], ["#7b61ff", "#28c8ff"], ["#ff4fa3", "#7b61ff"], ["#35d07f", "#00a7ff"], ["#ff5f57", "#ffd60a"]];
-  const shapeLabels = { ring: "圆环", "rainbow-ring": "彩虹圆环" };
+  const shapeLabels = { ring: "圆环", "rainbow-ring": "彩虹圆环", star: "星形" };
   const iconSvg = (body, background) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="${background}"/>${body}</svg>`)}`;
   const flowIconImages = [
     { name: "流墙音乐", url: iconSvg('<g transform="translate(-4 0)"><path d="M44 24v37c-3-2-7-2-11-1-7 2-11 8-9 13s9 7 16 5c6-2 10-7 10-12V39l24-7v24c-3-2-7-2-11-1-7 2-11 8-9 13s9 7 16 5c6-2 10-7 10-12V19z" fill="white"/></g>', "#fa264f") },
@@ -55,7 +55,7 @@
     { name: "流墙手表", url: iconSvg('<rect x="28" y="19" width="44" height="62" rx="15" fill="#111"/><rect x="35" y="28" width="30" height="44" rx="9" fill="#d7ff2f"/><circle cx="50" cy="50" r="3" fill="#111"/>', "#d8d8d8") }
   ];
   const transparentAnimalImages = Array.from({ length: 31 }, (_, index) => ({
-    name: `透明动物 ${String(index + 1).padStart(2, "0")}`,
+    name: index === 4 ? "鲸鱼" : `透明动物 ${String(index + 1).padStart(2, "0")}`,
     url: `assets/transparent-animals/animal-${String(index + 1).padStart(2, "0")}.png`,
     fileType: "image/png",
     width: 768,
@@ -283,22 +283,8 @@
   }
 
   function builtinAssets() {
-    // Twelve readable defaults are enough to establish the cloud without
-    // turning every frame into visual noise. Users can still add any number.
-    const names = ["圆环", "彩虹圆环"];
-    const shapes = ["ring", "rainbow-ring"];
-    const orbitAssets = names.map((name, index) => defaultAsset({
-      id: `builtin-${index}`,
-      builtin: true,
-      role: "orbit",
-      name: `内置${name}`,
-      shape: shapes[index],
-      color: iconColors[index % iconColors.length][0],
-      color2: iconColors[index % iconColors.length][1],
-      size: .82 + (index % 3) * .1,
-      rotation: index % 2 ? 12 : -8
-    }));
-    orbitAssets.splice(2, 0,
+    // Default matches the scheme saved in the editor on 2026-08-24.
+    const orbitAssets = [
       animalAsset(0, "orbit", { size: .88, rotation: -7 }),
       flowIconAsset(0, "orbit", { size: .9, rotation: 5 }),
       animalAsset(7, "orbit", { size: .82, rotation: 8 }),
@@ -306,31 +292,42 @@
       animalAsset(14, "orbit", { size: .92, rotation: -5 }),
       flowIconAsset(2, "orbit", { size: .91, rotation: 7 }),
       animalAsset(22, "orbit", { size: .86, rotation: 6 }),
-      flowIconAsset(3, "orbit", { size: .83, rotation: -6 })
-    );
-    const defaultGlyphTargets = [1, 3, 5, 7];
-    const defaultGlyphSpeeds = [1, .75, 1.5, 1.8];
-    const glyphAssets = ["圆环", "彩虹圆环"].map((name, index) => defaultAsset({
-      id: `glyph-${index}`,
-      builtin: true,
-      role: "glyph",
-      name: `替字${name}`,
-      shape: ["ring", "rainbow-ring"][index],
-      color: iconColors[(index + 1) % iconColors.length][0],
-      color2: iconColors[(index + 1) % iconColors.length][1],
-      size: .9 + index * .06,
-      motion: "replace",
-      target: defaultGlyphTargets[index],
-      sequence: index,
-      replaceSpeed: defaultGlyphSpeeds[index]
-    }));
-    glyphAssets.splice(1, 0, animalAsset(4, "glyph", {
-      id: "glyph-animal-default",
-      size: .96,
-      target: defaultGlyphTargets[1],
-      sequence: 1,
-      replaceSpeed: defaultGlyphSpeeds[1]
-    }));
+      flowIconAsset(3, "orbit", { size: .83, rotation: -6 }),
+      defaultAsset({
+        id: "builtin-2",
+        builtin: true,
+        role: "orbit",
+        name: "内置星形",
+        shape: "star",
+        color: iconColors[2][0],
+        color2: iconColors[2][1],
+        size: 1.02,
+        rotation: -8
+      })
+    ];
+    const glyphAssets = [
+      animalAsset(4, "glyph", {
+        id: "glyph-animal-default",
+        size: .96,
+        target: 3,
+        sequence: 0,
+        replaceSpeed: .75
+      }),
+      defaultAsset({
+        id: "glyph-3",
+        builtin: true,
+        role: "glyph",
+        name: "替字圆环",
+        shape: "ring",
+        color: iconColors[4][0],
+        color2: iconColors[4][1],
+        size: 1.08,
+        motion: "replace",
+        target: 7,
+        sequence: 1,
+        replaceSpeed: 1.8
+      })
+    ];
     return orbitAssets.concat(glyphAssets);
   }
 
@@ -353,6 +350,8 @@
     renderLibrary("ibGlyphImageLibrary", transparentAnimalImages);
     renderLibrary("ibOrbitBotLibrary", botSeriesImages);
     renderLibrary("ibGlyphBotLibrary", botSeriesImages);
+    renderLibrary("ibOrbitFlowLibrary", flowIconImages);
+    renderLibrary("ibGlyphFlowLibrary", flowIconImages);
   }
 
   function renderIcons() {
@@ -1075,6 +1074,9 @@
       migrated.originalDataUrl = flowIconImages[0].url;
       migrated.fileType = "image/svg+xml";
     }
+    if (migrated.type === "image" && /animal-05\.png(?:$|[?#])/.test(migrated.url || "")) {
+      migrated.name = "鲸鱼";
+    }
     return migrated;
   }
 
@@ -1084,7 +1086,7 @@
     if (Number(scheme.version || 0) < 3 && Number(controls.ibPairStagger || 0) <= 50) controls.ibPairStagger = 95;
     Object.entries(controls).forEach(([id, value]) => { if ($(id) && value != null) $(id).value = String(value); });
     state.assets = Array.isArray(scheme.assets)
-      ? scheme.assets.map(migrateAsset).filter((asset) => asset.type !== "shape" || !["square", "triangle", "heart", "circle", "star"].includes(asset.shape))
+      ? scheme.assets.map(migrateAsset).filter((asset) => asset.type !== "shape" || !["square", "triangle", "heart", "circle"].includes(asset.shape))
       : builtinAssets();
     setBackgroundMedia(scheme.backgroundMedia || null);
     state.assets.forEach(hydrateAssetImage);
@@ -2550,6 +2552,8 @@
   bindImageLibrary("ibGlyphImageLibrary", "glyph", transparentAnimalImages);
   bindImageLibrary("ibOrbitBotLibrary", "orbit", botSeriesImages);
   bindImageLibrary("ibGlyphBotLibrary", "glyph", botSeriesImages);
+  bindImageLibrary("ibOrbitFlowLibrary", "orbit", flowIconImages);
+  bindImageLibrary("ibGlyphFlowLibrary", "glyph", flowIconImages);
 
   window.addEventListener("resize", invalidateLetterAnchors, { passive: true });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(invalidateLetterAnchors);

@@ -384,7 +384,15 @@ body .ib-asset.is-active {
   box-shadow: none;
 }
 
-.ib-layer-panel.is-list-expanded > :not(.ib-layer-title):not(.ib-layer-items) {
+.ib-layer-panel.is-list-expanded > :not(.ib-layer-title):not(.ib-layer-items):not(.ib-layer-tools) {
+  display: none !important;
+}
+
+.ib-glyph-panel.is-list-expanded > .ib-layer-tools {
+  display: block !important;
+}
+
+.ib-glyph-panel.is-list-expanded > .ib-layer-tools > :not(.ib-layer-items) {
   display: none !important;
 }
 
