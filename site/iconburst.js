@@ -457,15 +457,19 @@
         item.classList.remove("is-list-expanded");
         const otherToggle = item.querySelector("[data-layer-toggle]");
         if (otherToggle) {
-          otherToggle.textContent = "展开管理";
+          otherToggle.textContent = "展开已选";
           otherToggle.setAttribute("aria-expanded", "false");
         }
       }
     });
     panel.classList.toggle("is-list-expanded", expanded);
+    if (expanded) {
+      const editorWidth = document.querySelector(".ib-editor")?.getBoundingClientRect().width;
+      if (editorWidth) panel.style.setProperty("--panel", `${editorWidth}px`);
+    }
     const toggle = panel.querySelector("[data-layer-toggle]");
     if (toggle) {
-      toggle.textContent = expanded ? "收起" : "展开管理";
+      toggle.textContent = expanded ? "收起" : "展开已选";
       toggle.setAttribute("aria-expanded", String(expanded));
     }
     document.body.classList.toggle("ib-list-manager-open", Boolean(document.querySelector(".ib-layer-panel.is-list-expanded")));
@@ -488,6 +492,12 @@
     const panel = document.querySelector(".ib-layer-panel.is-list-expanded");
     if (panel) setLayerManager(panel, false);
   });
+
+  window.addEventListener("resize", () => {
+    const panel = document.querySelector(".ib-layer-panel.is-list-expanded");
+    const editorWidth = document.querySelector(".ib-editor")?.getBoundingClientRect().width;
+    if (panel && editorWidth) panel.style.setProperty("--panel", `${editorWidth}px`);
+  }, { passive: true });
 
   let assetDrag = null;
   let suppressAssetClickUntil = 0;
