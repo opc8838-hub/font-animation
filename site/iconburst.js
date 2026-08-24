@@ -144,6 +144,35 @@
     const velocity = .45 + colorSpeed * .75;
     return easeOut(clamp(value * velocity, 0, 1));
   }
+  // The reference is a two-beat impact, not a uniformly staggered squeeze.
+  // Inner pairs chase each other quickly; the outermost letter on each side
+  // waits for that first impact before it closes the word on the second beat.
+  function collisionPairStartOffset(rank, maxRank, pairStaggerSeconds) {
+    if (maxRank <= 1) return rank * pairStaggerSeconds;
+    if (rank === maxRank) return ((maxRank - 1) * .32 + 2.8) * pairStaggerSeconds;
+    return rank * pairStaggerSeconds * .32;
+  }
+  function collisionBeat(value) {
+    const progress = clamp(value, 0, 1);
+    let distanceFactor = 1;
+    if (progress < .16) {
+      // A small outward preparation makes the following inward force legible.
+      distanceFactor = 1 + .105 * smoothstep(progress / .16);
+    } else if (progress < .68) {
+      const impact = easeOutExpo((progress - .16) / .52);
+      // Cross the resting point slightly instead of stopping on it.
+      distanceFactor = 1.105 + (-.075 - 1.105) * impact;
+    } else {
+      const settle = clamp((progress - .68) / .32, 0, 1);
+      distanceFactor = -.075 * (1 - easeOut(settle)) * Math.cos(settle * Math.PI * .75);
+    }
+    const impactPulse = Math.exp(-Math.pow((progress - .67) / .13, 2));
+    return {
+      distanceFactor,
+      scale: 1 + .065 * impactPulse,
+      color: collisionColorProgress(clamp((progress - .27) / .36, 0, 1))
+    };
+  }
   function createMonotoneSampler(keyframes) {
     const slopes = keyframes.slice(0, -1).map((point, index) => (keyframes[index + 1][1] - point[1]) / (keyframes[index + 1][0] - point[0]));
     const tangents = keyframes.map((point, index) => {
@@ -910,7 +939,8 @@
     // following pair joins in rank order, so arbitrary text lengths generate
     // their own collision choreography instead of collapsing all at once.
     const contactStartSeconds = collapseStartSeconds + .03;
-    const contactSeconds = Math.max(iconsGoneSeconds, contactStartSeconds + collisionDurationSeconds + (pairCount - 1) * pairStaggerSeconds);
+    const lastPairOffsetSeconds = collisionPairStartOffset(pairCount - 1, pairCount - 1, pairStaggerSeconds);
+    const contactSeconds = Math.max(iconsGoneSeconds, contactStartSeconds + collisionDurationSeconds + lastPairOffsetSeconds);
     // Color begins with the centre pair, not after every pair has already
     // arrived. This overlap is the visual hand-off between collision and color.
     const lettersMoveStart = contactStartSeconds;
@@ -1480,17 +1510,15 @@
       const maxRank = Math.max(0, ...letters.map((letter) => Number(letter.dataset.rank || 0)));
       letters.forEach((letter) => {
         const rank = Number(letter.dataset.rank || 0);
-        // rank 0 is nearest the center. It leads the move, with each following
-        // letter joining in sequence toward the outside edge. This reads as a
-        // word feeding into the center and avoids letters overtaking each other.
         const inwardOrder = rank;
-        const letterStart = timeline.contactStartSeconds + inwardOrder * timeline.pairStaggerSeconds;
+        const letterStart = timeline.contactStartSeconds + collisionPairStartOffset(rank, maxRank, timeline.pairStaggerSeconds);
         const localProgress = clamp((timeline.seconds - letterStart) / timeline.collisionDurationSeconds, 0, 1);
-        const close = easeOut(localProgress);
+        const beat = collisionBeat(localProgress);
         const rankRatio = maxRank > 0 ? rank / maxRank : 0;
         const openDistance = sideShift * (.88 + .12 * rankRatio);
-        letter.style.setProperty("--incoming-letter-x", `${(direction * openDistance * (1 - close)).toFixed(2)}px`);
-        letter.style.setProperty("--incoming-letter-color", mixHex(collisionBaseColor, collisionColors[inwardOrder % collisionColors.length], collisionColorProgress(localProgress)));
+        letter.style.setProperty("--incoming-letter-x", `${(direction * openDistance * beat.distanceFactor).toFixed(2)}px`);
+        letter.style.setProperty("--incoming-letter-scale", beat.scale.toFixed(4));
+        letter.style.setProperty("--incoming-letter-color", mixHex(collisionBaseColor, collisionColors[inwardOrder % collisionColors.length], beat.color));
       });
     });
 
@@ -1978,17 +2006,21 @@
         const maxRank = Math.max(0, ...letters.map((letter) => Number(letter.dataset.rank || 0)));
         letters.forEach((letter, index) => {
           const rank = Number(letter.dataset.rank || 0);
-          const letterStart = timeline.contactStartSeconds + rank * timeline.pairStaggerSeconds;
+          const letterStart = timeline.contactStartSeconds + collisionPairStartOffset(rank, maxRank, timeline.pairStaggerSeconds);
           const localProgress = clamp((timeline.seconds - letterStart) / timeline.collisionDurationSeconds, 0, 1);
-          const close = easeOut(localProgress);
+          const beat = collisionBeat(localProgress);
           const rankRatio = maxRank > 0 ? rank / maxRank : 0;
           const openDistance = sideShift * (.88 + .12 * rankRatio);
-          const x = startX + sideLayout.centers[index] + direction * openDistance * (1 - close) + direction * orbitShift;
+          const x = startX + sideLayout.centers[index] + direction * openDistance * beat.distanceFactor + direction * orbitShift;
           const pairColors = activeEffectColors();
-          ctx.fillStyle = mixHex($("ibBaseColor").value, pairColors[rank % pairColors.length], collisionColorProgress(localProgress));
+          ctx.fillStyle = mixHex($("ibBaseColor").value, pairColors[rank % pairColors.length], beat.color);
           ctx.textAlign = "center";
           ctx.textBaseline = "alphabetic";
-          ctx.fillText(letter.textContent, x, baseline);
+          ctx.save();
+          ctx.translate(x, baseline);
+          ctx.scale(beat.scale, beat.scale);
+          ctx.fillText(letter.textContent, 0, 0);
+          ctx.restore();
         });
       };
       drawSide(leftLetters, leftLayout, -1, width / 2 - gap / 2 - leftLayout.total / 2);

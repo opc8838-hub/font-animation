@@ -78,7 +78,8 @@ body .ib-incoming-word.is-unmasked > span {
 body .ib-incoming-letter {
   display: inline-block;
   color: var(--incoming-letter-color, var(--base));
-  transform: translate3d(var(--incoming-letter-x, 0px), 0, 0);
+  transform: translate3d(var(--incoming-letter-x, 0px), 0, 0) scale(var(--incoming-letter-scale, 1));
+  transform-origin: 50% 58%;
   will-change: color, transform;
 }
 
