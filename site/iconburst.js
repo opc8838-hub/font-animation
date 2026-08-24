@@ -346,36 +346,53 @@
   }
 
   function builtinAssets() {
-    // Default matches “11111111111.json”, saved from the editor on 2026-08-24.
+    // Default matches “11111111111.json” (the white “最最最1” scheme plus the new cluster-X control).
     const orbitAssets = [
-      animalAsset(0, "orbit", { size: .88, rotation: -7 }),
-      flowIconAsset(0, "orbit", { size: .9, rotation: 5 }),
-      animalAsset(7, "orbit", { size: .82, rotation: 8 }),
-      flowIconAsset(1, "orbit", { size: .84, rotation: -4 }),
-      animalAsset(14, "orbit", { size: .92, rotation: -5 }),
-      flowIconAsset(2, "orbit", { size: .91, rotation: 7 }),
-      animalAsset(22, "orbit", { size: .86, rotation: 6 }),
-      flowIconAsset(3, "orbit", { size: .83, rotation: -6 }),
+      animalAsset(7, "orbit", { size: 1.25, x: -5, y: 39, rotation: 8 }),
+      flowIconAsset(0, "orbit", { size: .66, y: -2, rotation: -34 }),
+      flowIconAsset(2, "orbit", { size: .47, x: 24, y: 22, rotation: 7 }),
+      animalAsset(14, "orbit", { size: .92, x: -5, y: 28, rotation: -5 }),
+      botAsset(4, "orbit", { id: "orbit-bot-4", size: 1.17, x: 12, y: 2 }),
+      botAsset(8, "orbit", { id: "orbit-bot-8", x: -2, y: -15 }),
+      animalAsset(16, "orbit", { size: 1.88, x: -5 }),
+      animalAsset(0, "orbit", { size: 1.39, x: 23, y: -5, rotation: -7 }),
+      animalAsset(22, "orbit", { size: .86, x: -33, rotation: 6 }),
+      botAsset(9, "orbit", { id: "orbit-bot-9", x: 27, y: 80 }),
       defaultAsset({
         id: "builtin-2",
         builtin: true,
         role: "orbit",
-        name: "内置圆环",
-        shape: "ring",
-        color: "#ff4fa3",
-        color2: "#7b61ff",
-        size: 1.02,
+        name: "内置彩虹圆环",
+        shape: "rainbow-ring",
+        color: "#c35088",
+        color2: "#c35088",
+        size: .47,
+        x: 20,
         rotation: -8
-      })
+      }),
+      botAsset(5, "orbit", { id: "orbit-bot-5", y: -37 }),
+      botAsset(0, "orbit", { id: "orbit-bot-0", size: 1.27 }),
+      animalAsset(1, "orbit", { size: 1.71, x: -3, y: -29, rotation: 8, motion: "float" }),
+      animalAsset(28, "orbit", { x: -12 }),
+      animalAsset(30, "orbit", { x: 16, y: -12 }),
+      flowIconAsset(1, "orbit", { size: .5, x: 30, y: 100, rotation: -4 })
     ];
     const glyphAssets = [
       animalAsset(4, "glyph", {
         id: "glyph-animal-default",
-        size: .96,
+        size: 1.08,
+        x: 3,
         target: 3,
-        sequence: 1,
+        sequence: 0,
         replaceSpeed: .75,
-        holdMs: 160
+        holdMs: 240
+      }),
+      animalAsset(20, "glyph", {
+        id: "glyph-animal-20",
+        size: 1.28,
+        target: 1,
+        sequence: 1,
+        holdMs: 400
       }),
       defaultAsset({
         id: "glyph-3",
@@ -388,9 +405,16 @@
         size: 1.08,
         motion: "replace",
         target: 7,
+        sequence: 2,
+        replaceSpeed: 1.8
+      }),
+      botAsset(10, "glyph", {
+        id: "glyph-bot-10",
+        size: .71,
+        x: -3,
+        target: -1,
         sequence: 3,
-        replaceSpeed: 1.8,
-        holdMs: 160
+        holdMs: 600
       })
     ];
     return orbitAssets.concat(glyphAssets);
@@ -1111,38 +1135,38 @@
     ibText: "GOOD JOB",
     ibFont: "archivoBlack",
     ibWeight: "800",
-    ibFontSize: "100",
-    ibTracking: "-4",
-    ibColorMode: "unfold",
-    ibColorCount: "4",
-    ibBaseColor: "#ffffff",
-    ibColorA: "#7747ff",
-    ibColorB: "#ff4fa3",
-    ibColorC: "#32c5ff",
-    ibColorD: "#ffd60a",
-    ibBackground: "#050506",
-    ibColorSpeed: "5",
-    ibSoftness: "28",
+    ibFontSize: "88",
+    ibTracking: "-2",
+    ibColorMode: "sweep",
+    ibColorCount: "3",
+    ibBaseColor: "#000000",
+    ibColorA: "#6a37f6",
+    ibColorB: "#b84dff",
+    ibColorC: "#d589f0",
+    ibColorD: "#bf73e7",
+    ibBackground: "#ffffff",
+    ibColorSpeed: "5.9",
+    ibSoftness: "8",
     ibContentMode: "replace-multi",
-    ibRange: "72",
+    ibRange: "98",
     ibSize: "100",
-    ibReplaceCount: "1",
+    ibReplaceCount: "all",
     ibBeat: "80",
-    ibReplaceSpeed: "4",
-    ibCollapse: "62",
+    ibReplaceSpeed: "4.5",
+    ibCollapse: "87",
     ibClusterX: "0",
-    ibHang: "80",
-    ibDrift: "28",
+    ibHang: "20",
+    ibDrift: "22",
     ibOvershoot: "58",
-    ibSync: "125",
+    ibSync: "140",
     ibCollisionSpeed: "1.5",
     ibCollisionDuration: "260",
     ibPairStagger: "95",
-    ibOrbitSpeed: "100",
+    ibOrbitSpeed: "155",
     ibWordReturn: "360",
-    ibDensity: "40",
+    ibDensity: "41",
     ibCurve: "72",
-    ibFinalScale: "5.5",
+    ibFinalScale: "6.5",
     ibFinalScaleDuration: "520",
     ibSpeed: "1"
   };
