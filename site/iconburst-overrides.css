@@ -34,10 +34,23 @@ body .ib-intro-word {
 }
 
 body .ib-incoming-word {
-  display: flex;
+  width: 100%;
+  max-width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: center;
-  gap: var(--word-gap, 120px);
+  column-gap: var(--word-gap, 120px);
   transform: none;
+}
+
+body .ib-incoming-word > span:first-child {
+  justify-self: end;
+  text-align: right;
+}
+
+body .ib-incoming-word > span:last-child {
+  justify-self: start;
+  text-align: left;
 }
 
 body .ib-incoming-word > span:first-child {
@@ -53,6 +66,7 @@ body .ib-incoming-word > span:last-child {
 }
 
 body .ib-incoming-word > span {
+  white-space: nowrap;
   backface-visibility: hidden;
   will-change: transform, clip-path;
 }
