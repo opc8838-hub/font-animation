@@ -678,19 +678,29 @@
       if (formationActive) {
         const revealStart = laneDistance * revealStagger;
         rowFormationProgress = smoother(rangeProgress(formationElapsed, revealStart, revealStart + revealFade));
-        rowAlpha *= rowFormationProgress;
+        // Rows used to travel all the way out from y=0 while fading. Several
+        // translucent copies therefore crossed already-visible rows and read
+        // as grey ghosting. Keep each row opaque and reveal it close to its
+        // own lane; the stagger still provides the centre-out progression.
+        rowAlpha *= rowFormationProgress > .035 ? 1 : 0;
       }
       if (choreography && localTime >= timing.fullEnd && localTime < timing.exitEnd && laneIndex !== 0) {
         const topToBottomOrder = laneIndex < 0 ? laneIndex + halfLanes : halfLanes - 1 + laneIndex;
         const disappearStart = topToBottomOrder * exitStagger;
-        rowAlpha *= 1 - smoother(rangeProgress(exitElapsed, disappearStart, disappearStart + exitFade));
+        const rowExitProgress = smoother(rangeProgress(exitElapsed, disappearStart, disappearStart + exitFade));
+        // Row-by-row removal should be crisp. Partial opacity made departing
+        // rows look like retained shadows over the live wall.
+        rowAlpha *= rowExitProgress < .965 ? 1 : 0;
       }
       if (rowAlpha <= .001 || wallAlpha <= .001) continue;
 
       const yWave = Math.sin(localTime * waveRate * 1.45 + laneIndex * .72) * waveAmp * .28;
       const xWave = Math.sin(localTime * waveRate * .92 + laneIndex * .91) * waveAmp;
       const targetY = laneIndex * lineHeight * (choreography && localTime >= timing.fullEnd ? lerp(1, .92, exitProgress) : 1);
-      const y = (formationActive ? lerp(0, targetY, rowFormationProgress) : targetY)
+      const formationOffset = formationActive && laneIndex !== 0
+        ? -Math.sign(laneIndex) * lineHeight * .22 * (1 - rowFormationProgress)
+        : 0;
+      const y = targetY + formationOffset
         + (verticalOffset + yWave) * (formationActive ? rowFormationProgress : 1);
       const velocity = fontPx * 1.45 * masterSpeed * (setting.speed / 100);
       const signedShiftRate = setting.direction === 0 ? 0 : (setting.direction < 0 ? velocity : -velocity);
