@@ -346,18 +346,18 @@
   }
 
   function builtinAssets() {
-    // Default matches “11111111111.json” (the white “最最最1” scheme plus the new cluster-X control).
+    // Default matches the user-approved Desktop/好.json scheme.
     const orbitAssets = [
-      animalAsset(7, "orbit", { size: 1.25, x: -5, y: 39, rotation: 8 }),
-      flowIconAsset(0, "orbit", { size: .66, y: -2, rotation: -34 }),
-      flowIconAsset(2, "orbit", { size: .47, x: 24, y: 22, rotation: 7 }),
-      animalAsset(14, "orbit", { size: .92, x: -5, y: 28, rotation: -5 }),
-      botAsset(4, "orbit", { id: "orbit-bot-4", size: 1.17, x: 12, y: 2 }),
-      botAsset(8, "orbit", { id: "orbit-bot-8", x: -2, y: -15 }),
-      animalAsset(16, "orbit", { size: 1.88, x: -5 }),
-      animalAsset(0, "orbit", { size: 1.39, x: 23, y: -5, rotation: -7 }),
+      animalAsset(7, "orbit", { size: 1.25, x: -12, y: 43, rotation: 8 }),
+      flowIconAsset(0, "orbit", { size: .66, x: 9, y: 3, rotation: -34 }),
+      flowIconAsset(2, "orbit", { size: .44, x: 12, y: 39, rotation: 7, motion: "burst" }),
+      animalAsset(14, "orbit", { size: .92, x: -21, y: 28, rotation: -5 }),
+      botAsset(4, "orbit", { id: "asset-1787541798107-f7srpo4wp74", size: 1.17, x: 21, y: 18 }),
+      botAsset(8, "orbit", { id: "asset-1787541786819-8txbw0ri9u5", size: 1.17, x: 27, y: -15 }),
+      animalAsset(16, "orbit", { id: "asset-1787546329677-4v6f2tev1t3", size: 1.88, x: -14 }),
+      animalAsset(0, "orbit", { size: 1.39, x: 34, y: -5, rotation: -7 }),
       animalAsset(22, "orbit", { size: .86, x: -33, rotation: 6 }),
-      botAsset(9, "orbit", { id: "orbit-bot-9", x: 27, y: 80 }),
+      botAsset(9, "orbit", { id: "asset-1787546594968-2i0m9arp6m8", x: 9, y: 80 }),
       defaultAsset({
         id: "builtin-2",
         builtin: true,
@@ -366,16 +366,17 @@
         shape: "rainbow-ring",
         color: "#c35088",
         color2: "#c35088",
-        size: .47,
-        x: 20,
+        size: .25,
+        x: -26,
+        y: -9,
         rotation: -8
       }),
-      botAsset(5, "orbit", { id: "orbit-bot-5", y: -37 }),
-      botAsset(0, "orbit", { id: "orbit-bot-0", size: 1.27 }),
-      animalAsset(1, "orbit", { size: 1.71, x: -3, y: -29, rotation: 8, motion: "float" }),
-      animalAsset(28, "orbit", { x: -12 }),
-      animalAsset(30, "orbit", { x: 16, y: -12 }),
-      flowIconAsset(1, "orbit", { size: .5, x: 30, y: 100, rotation: -4 })
+      botAsset(5, "orbit", { id: "asset-1787541806043-k5p68ob6sjq", size: 1.15, x: -13, y: -31 }),
+      botAsset(0, "orbit", { id: "asset-1787541793520-prqzk1jrof", size: .69, x: 34, y: 66 }),
+      animalAsset(1, "orbit", { id: "asset-1787545440266-t9ixo4q0zp", size: 1.71, x: 3, y: -41, rotation: 8, motion: "float" }),
+      animalAsset(28, "orbit", { id: "asset-1787545462401-ufm9pq0nnuq", size: .74, x: -3, y: -6 }),
+      animalAsset(30, "orbit", { id: "asset-1787545485795-htbyjo3maq", x: 21, y: -23 }),
+      flowIconAsset(1, "orbit", { size: .5, x: 7, y: 77, rotation: -4 })
     ];
     const glyphAssets = [
       animalAsset(4, "glyph", {
@@ -388,7 +389,7 @@
         holdMs: 240
       }),
       animalAsset(20, "glyph", {
-        id: "glyph-animal-20",
+        id: "asset-1787548078283-aadgpae989o",
         size: 1.28,
         target: 1,
         sequence: 1,
@@ -409,11 +410,19 @@
         replaceSpeed: 1.8
       }),
       botAsset(10, "glyph", {
-        id: "glyph-bot-10",
-        size: .71,
-        x: -3,
-        target: -1,
+        id: "asset-1787548088170-o2942v3cenr",
+        size: 1.2,
+        x: 6,
+        y: 3,
+        target: 8,
         sequence: 3,
+        holdMs: 1000
+      }),
+      botAsset(2, "glyph", {
+        id: "asset-1787554949010-orgtjde8pw",
+        size: 1.17,
+        target: -1,
+        sequence: 4,
         holdMs: 600
       })
     ];
@@ -1166,20 +1175,20 @@
   ];
   const defaultControlValues = Object.fromEntries(schemeControlIds.map((id) => [id, $(id).value]));
   const latestDefaultControls = {
-    ibText: "GOOD JOB",
+    ibText: "GOOD  JOB",
     ibFont: "archivoBlack",
     ibWeight: "800",
     ibFontSize: "88",
     ibTracking: "-2",
-    ibColorMode: "sweep",
+    ibColorMode: "unfold",
     ibColorCount: "3",
-    ibBaseColor: "#000000",
-    ibColorA: "#6a37f6",
+    ibBaseColor: "#050505",
+    ibColorA: "#6c3df0",
     ibColorB: "#b84dff",
-    ibColorC: "#d589f0",
+    ibColorC: "#9a6ddf",
     ibColorD: "#bf73e7",
-    ibBackground: "#ffffff",
-    ibColorSpeed: "5.9",
+    ibBackground: "#f5f5f5",
+    ibColorSpeed: "9.7",
     ibSoftness: "8",
     ibContentMode: "replace-multi",
     ibRange: "98",
@@ -1187,21 +1196,21 @@
     ibReplaceCount: "all",
     ibBeat: "80",
     ibReplaceSpeed: "4.5",
-    ibCollapse: "87",
-    ibClusterX: "0",
+    ibCollapse: "91",
+    ibClusterX: "-14",
     ibHang: "20",
     ibDrift: "22",
     ibOvershoot: "58",
-    ibSync: "140",
-    ibCollisionSpeed: "1.5",
-    ibCollisionDuration: "260",
-    ibPairStagger: "95",
-    ibOrbitSpeed: "155",
+    ibSync: "155",
+    ibCollisionSpeed: "2",
+    ibCollisionDuration: "210",
+    ibPairStagger: "40",
+    ibOrbitSpeed: "145",
     ibWordReturn: "360",
-    ibDensity: "41",
-    ibCurve: "72",
-    ibFinalScale: "6.5",
-    ibFinalScaleDuration: "520",
+    ibDensity: "85",
+    ibCurve: "58",
+    ibFinalScale: "4",
+    ibFinalScaleDuration: "300",
     ibSpeed: "1"
   };
 
