@@ -106,11 +106,27 @@ body .ib-color-word {
   -webkit-background-clip: initial;
   background-clip: initial;
   clip-path: none;
+  -webkit-mask-image: linear-gradient(90deg,
+    transparent 0,
+    transparent calc(var(--color-sweep-inset, 50%) - 5%),
+    #000 var(--color-sweep-inset, 50%),
+    #000 calc(100% - var(--color-sweep-inset, 50%)),
+    transparent calc(105% - var(--color-sweep-inset, 50%)),
+    transparent 100%);
+  mask-image: linear-gradient(90deg,
+    transparent 0,
+    transparent calc(var(--color-sweep-inset, 50%) - 5%),
+    #000 var(--color-sweep-inset, 50%),
+    #000 calc(100% - var(--color-sweep-inset, 50%)),
+    transparent calc(105% - var(--color-sweep-inset, 50%)),
+    transparent 100%);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
 }
 
 body .ib-word.ib-color-word > span {
   color: var(--overlay-color, var(--color-a, #8c2bff));
-  opacity: var(--overlay-alpha, 0);
+  opacity: 1;
 }
 body .ib-word.ib-white-word > span { color: var(--base, #fff); }
 

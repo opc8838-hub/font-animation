@@ -279,8 +279,8 @@
     const distance = Math.abs(index - midpoint) / Math.max(1, midpoint);
     // Each letter overlaps the next one instead of switching as a hard batch.
     // The outermost letters deliberately finish at reveal=1.
-    const start = Math.max(0, distance - .22);
-    const end = distance > .999 ? 1 : Math.min(1, distance + .08);
+    const start = Math.max(0, distance - .15);
+    const end = distance > .999 ? 1 : Math.min(1, distance + .05);
     return smoothstep(clamp((colorReveal - start) / Math.max(.001, end - start), 0, 1));
   }
   function palette() { return [$("ibBaseColor").value].concat(activeEffectColors()); }
@@ -959,9 +959,9 @@
     const colorSpeed = clamp(Number($("ibColorSpeed").value), .5, 6);
     const colorHold = clamp(Number($("ibSoftness").value), 8, 70);
     const colorDuration = clamp(.11 * (5 / colorSpeed), .085, .55);
-    // The slowed reference keeps the color front travelling for another six
-    // to seven 30fps frames after the compact word has formed.
-    const colorTailDuration = clamp(.22 * (5 / colorSpeed), .14, .65);
+    // A quick colored light sweep continues briefly after the compact word
+    // forms. Its soft edge supplies continuity without turning into a fade.
+    const colorTailDuration = clamp(.16 * (5 / colorSpeed), .10, .55);
     const colorHoldDuration = clamp(.02 + (colorHold - 28) / 42 * .16, .01, .18);
     const whiteDuration = clamp(.08 * (5 / colorSpeed), .06, .40);
     // The color wave starts with pair one, but it is not allowed to finish
@@ -1562,17 +1562,16 @@
     const uniformColorProgress = colorUniformProgress(timeline.colorReveal);
     const uniformColor = finalEffectColor();
     const colorLetters = Array.from(colorWord.children);
-    colorLetters.forEach((letter, index) => {
+    colorLetters.forEach((letter) => {
       if (!letter.textContent.trim()) return;
       const transitionColor = letter.dataset.effectColor || uniformColor;
       letter.style.setProperty("--overlay-color", mixHex(transitionColor, uniformColor, uniformColorProgress));
-      letter.style.setProperty("--overlay-alpha", colorWaveAlpha(index, colorLetters.length, timeline.colorReveal).toFixed(4));
     });
 
     const overlayActive = colorMode === "unfold" && timeline.seconds >= timeline.contactSeconds && timeline.seconds < timeline.replaceStartSeconds;
     colorWord.style.opacity = overlayActive ? "1" : "0";
     whiteWord.style.opacity = colorMode === "unfold" && timeline.seconds >= timeline.whiteStartSeconds && timeline.seconds < timeline.replaceStartSeconds ? "1" : "0";
-    colorWord.style.setProperty("--reveal-inset", `${(50 * (1 - timeline.colorReveal)).toFixed(3)}%`);
+    colorWord.style.setProperty("--color-sweep-inset", `${(50 * (1 - timeline.colorReveal)).toFixed(3)}%`);
     whiteWord.style.setProperty("--reveal-inset", `${(50 * (1 - timeline.whiteReveal)).toFixed(3)}%`);
 
     const range = Number($("ibRange").value) / 100;
