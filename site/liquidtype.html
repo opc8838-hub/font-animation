@@ -1,37 +1,133 @@
-<!doctype html><html lang="zh-CN"><head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="液字凝结：文字从泡沫颗粒凝成蓝色软胶，再转为红色烟雾。">
-  <title>液字凝结 Liquid Type | ME Motion Studio</title><link rel="icon" href="data:,">
-  <link rel="stylesheet" href="continuation.css"><link rel="stylesheet" href="currentwall.css"><link rel="stylesheet" href="focuswheel.css"><link rel="stylesheet" href="me-motion-editor.css"><link rel="stylesheet" href="liquidtype.css?v=20260815-1"><link rel="stylesheet" href="stg-cn.css">
-</head><body class="me-motion-editor">
-  <main class="current-stage liquid-type-stage" aria-label="液态凝结文字画布"><canvas id="liquidCanvas"></canvas><div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div></main>
-  <details class="control-panel current-panel liquid-type-panel" open><summary><span><b>液字凝结</b><small>LIQUID TYPE / 38</small></span><i aria-hidden="true">参数</i></summary><div class="panel-scroll">
-    <section><div class="section-heading"><p class="section-label">文字</p><small class="section-note">泡沫和水滴沿实际字形生成</small></div><input id="copyText" type="text" value="Prompt it."><div class="preset-actions"><button id="referencePreset" type="button">参考文案</button><button id="chinesePreset" type="button">中文示例</button><button id="restartTop" type="button">从头播放</button></div><p class="hint">保留参考视频中的材质变形；手机状态栏、账号、按钮和悬浮球均已移除。</p></section>
-    <section class="font-picker"><div class="lt-font-grid"><label><span class="section-label">字体</span><select id="fontFamily"><option value="inter" selected>Inter</option><option value="space">Space Grotesk</option><option value="manrope">Manrope</option><option value="poppins">Poppins</option><option value="noto">Noto Sans SC · 中文</option></select></label><label><span class="section-label">字重</span><select id="fontWeight"><option value="400">Regular · 400</option><option value="500" selected>Medium · 500</option><option value="600">Semibold · 600</option><option value="700">Bold · 700</option><option value="800">Extra Bold · 800</option></select></label></div></section>
-    <section><div class="section-heading"><p class="section-label">材质时间线</p><small class="section-note">四段都可独立控制</small></div><div class="motion-map lt-motion-map"><span>普通字</span><i>→</i><span>泡沫</span><i>→</i><span>蓝胶</span><i>→</i><span>红雾</span></div><div class="controls-grid quick-grid">
-      <label>整体速度 <output id="speedOut">1.00×</output><input id="speed" type="range" min="0.25" max="4" step="0.05" value="1"></label>
-      <label>普通字停留 <output id="cleanHoldOut">0.38秒</output><input id="cleanHold" type="range" min="0" max="5000" step="10" value="380"></label>
-      <label>泡沫凝结 <output id="foamDurationOut">0.75秒</output><input id="foamDuration" type="range" min="100" max="5000" step="10" value="750"></label>
-      <label>蓝胶生成 <output id="liquidInOut">0.32秒</output><input id="liquidIn" type="range" min="80" max="3000" step="10" value="320"></label>
-      <label>蓝胶停留 <output id="liquidHoldOut">1.38秒</output><input id="liquidHold" type="range" min="0" max="8000" step="10" value="1380"></label>
-      <label>转红烟雾 <output id="smokeDurationOut">0.57秒</output><input id="smokeDuration" type="range" min="100" max="5000" step="10" value="570"></label>
-      <label>红雾停留 <output id="smokeHoldOut">0.55秒</output><input id="smokeHold" type="range" min="0" max="8000" step="10" value="550"></label>
-      <label>凝结节奏 <select id="rhythm"><option value="burst" selected>迅速凝结</option><option value="smooth">柔和融化</option><option value="pulse">脉冲凝结</option><option value="wave">从左到右</option></select></label>
-    </div></section>
-    <section><div class="section-heading"><p class="section-label">液体与颗粒</p><small class="section-note">控制水滴密度和材质感</small></div><div class="controls-grid">
-      <label>颗粒密度 <output id="densityOut">72%</output><input id="density" type="range" min="10" max="100" value="72"></label><label>水滴大小 <output id="dropSizeOut">7px</output><input id="dropSize" type="range" min="1" max="28" value="7"></label>
-      <label>喷发范围 <output id="spreadOut">82px</output><input id="spread" type="range" min="0" max="260" value="82"></label><label>水滴浮动 <output id="driftOut">38px</output><input id="drift" type="range" min="0" max="180" value="38"></label>
-      <label>软胶圆润 <output id="roundnessOut">10px</output><input id="roundness" type="range" min="0" max="32" value="10"></label><label>高光强度 <output id="glossOut">78%</output><input id="gloss" type="range" min="0" max="140" value="78"></label>
-      <label>烟雾宽度 <output id="smokeWidthOut">120%</output><input id="smokeWidth" type="range" min="20" max="220" value="120"></label><label>烟雾柔度 <output id="smokeBlurOut">32px</output><input id="smokeBlur" type="range" min="0" max="80" value="32"></label>
-    </div></section>
-    <section><div class="section-heading"><p class="section-label">排版</p><small class="section-note">始终以完整字组居中</small></div><div class="controls-grid">
-      <label>字号 <output id="fontSizeOut">112px</output><input id="fontSize" type="range" min="24" max="280" value="112"></label><label>字距 <output id="trackingOut">-3px</output><input id="tracking" type="range" min="-18" max="46" value="-3"></label>
-      <label>水平位置 <output id="textXOut">50%</output><input id="textX" type="range" min="5" max="95" value="50"></label><label>垂直位置 <output id="textYOut">50%</output><input id="textY" type="range" min="5" max="95" value="50"></label>
-    </div></section>
-    <section class="color-row lt-colors"><label>背景<input id="backgroundColor" type="color" value="#000000"></label><label>普通字<input id="cleanColor" type="color" value="#ffffff"></label><label>液体<input id="liquidColor" type="color" value="#60cfff"></label><label>烟雾<input id="smokeColor" type="color" value="#8f3c36"></label></section>
-    <section class="transport"><button id="restartButton" type="button">重播</button><button id="pauseButton" type="button">暂停</button><button id="backButton" type="button">−1 帧</button><button id="forwardButton" type="button">+1 帧</button></section>
-    <section class="export-panel"><label class="section-label" for="exportPreset">导出尺寸</label><select id="exportPreset"><option value="current">当前画板</option><option value="1080x1080">1:1 · 1080 × 1080</option><option value="1080x1350">4:5 · 1080 × 1350</option><option value="1080x1920">9:16 · 1080 × 1920</option><option value="1920x1080">16:9 · 1920 × 1080</option><option value="custom">自定义尺寸</option></select><div class="custom-size" id="customSize" hidden><label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label><span>×</span><label>高<input id="exportHeight" type="number" min="240" max="3840" value="1920"></label></div><div class="export-timing-grid"><label>导出时长<select id="exportDuration"><option value="cycle" selected>完整一轮</option><option value="1">1 秒</option><option value="3">3 秒</option><option value="5">5 秒</option><option value="10">10 秒</option><option value="custom">自定义</option></select></label><label>导出帧率<select id="exportFps"><option value="15">15 FPS</option><option value="24">24 FPS</option><option value="30" selected>30 FPS</option><option value="60">60 FPS</option></select></label></div><label class="custom-duration" id="customDurationWrap" hidden>自定义秒数<input id="customDuration" type="number" min="0.5" max="30" step="0.1" value="5"></label><div class="export-actions"><button id="exportPng" type="button">PNG 图片</button><button id="exportGif" type="button">GIF 动图</button><button id="exportVideo" type="button">视频</button><button class="export-hd-video" id="exportVerticalVideo" type="button">导出 9:16 高清视频 · 1080 × 1920</button></div><p class="export-status" id="exportStatus" aria-live="polite">文字蒙版、液体和水滴共用确定性时间线。</p></section>
-    <p class="formula">文字蒙版 × 泡沫采样 × 蓝胶高光 × 红色烟雾<br>粒子数量固定，不随预览帧率累积</p>
-  </div></details>
-  <script src="js/continuation-gif.js"></script><script src="CCapture.all.min.js"></script><script src="liquidtype.js?v=20260824-fonts1"></script><script src="me-motion-editor.js"></script><script src="stg-cn.js?v=20260824-fonts1"></script>
-</body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="散：文字依次经过花粒、蓝胶、水滴与横向红尘散开。">
+  <title>散 Scatter | ME Motion Studio</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="continuation.css?v=20260824-scatter1">
+  <link rel="stylesheet" href="currentwall.css?v=20260824-scatter1">
+  <link rel="stylesheet" href="focuswheel.css?v=20260824-scatter1">
+  <link rel="stylesheet" href="me-motion-editor.css?v=20260824-scatter1">
+  <link rel="stylesheet" href="liquidtype.css?v=20260824-scatter1">
+  <link rel="stylesheet" href="stg-cn.css?v=20260824-scatter1">
+</head>
+<body class="me-motion-editor">
+  <main class="current-stage liquid-type-stage" aria-label="散动效画布">
+    <canvas id="liquidCanvas"></canvas>
+    <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+    <div class="me-stage-controls" aria-label="画布播放控制">
+      <button id="stagePauseButton" type="button" aria-pressed="false"><span id="stagePauseIcon">Ⅱ</span> <span id="stagePauseLabel">暂停</span></button>
+      <button id="stageRestartButton" type="button">↻ 重播</button>
+    </div>
+  </main>
+
+  <details class="control-panel current-panel liquid-type-panel" id="controlPanel" open>
+    <summary><span><b>散</b><small>SCATTER / 19</small></span><i aria-hidden="true">参数</i></summary>
+    <div class="panel-scroll">
+      <section class="lt-block scheme-section">
+        <p class="section-label">方案</p>
+        <div class="me-scheme-actions">
+          <button id="saveButton" type="button">保存方案</button>
+          <label class="me-scheme-import">导入方案<input id="importFile" type="file" accept="application/json,.json"></label>
+          <button id="resetButton" type="button">恢复默认</button>
+          <button id="clearButton" type="button">清理重做</button>
+        </div>
+        <p class="hint" id="schemeStatus" aria-live="polite">文字、材质、散开节奏和每段时间都会随方案保存。</p>
+      </section>
+
+      <section class="lt-block lt-text-card">
+        <div class="section-heading"><p class="section-label">文字</p><small class="section-note">内容 · 字体 · 颜色</small></div>
+        <label class="lt-wide-label">动效文字<input id="copyText" type="text" value="Prompt it."></label>
+        <div class="preset-actions">
+          <button id="englishPreset" type="button">英文示例</button>
+          <button id="chinesePreset" type="button">中文示例</button>
+          <button id="restartTop" type="button">从头播放</button>
+        </div>
+        <div class="lt-font-grid">
+          <label>字体<select id="fontFamily"><option value="inter" selected>Inter</option></select></label>
+          <label>字重<select id="fontWeight"><option value="400">Regular · 400</option><option value="500" selected>Medium · 500</option><option value="600">Semibold · 600</option><option value="700">Bold · 700</option><option value="800">Extra Bold · 800</option><option value="900">Black · 900</option></select></label>
+        </div>
+        <div class="controls-grid quick-grid">
+          <label>字号 <output id="fontSizeOut">112px</output><input id="fontSize" type="range" min="24" max="320" value="112"></label>
+          <label>字距 <output id="trackingOut">-3px</output><input id="tracking" type="range" min="-24" max="64" value="-3"></label>
+          <label>水平位置 <output id="textXOut">50%</output><input id="textX" type="range" min="5" max="95" value="50"></label>
+          <label>垂直位置 <output id="textYOut">50%</output><input id="textY" type="range" min="5" max="95" value="50"></label>
+        </div>
+        <div class="color-row lt-colors">
+          <label>背景<input id="backgroundColor" type="color" value="#000000"></label>
+          <label>普通字<input id="cleanColor" type="color" value="#ffffff"></label>
+          <label>花粒<input id="bloomColor" type="color" value="#f0eee4"></label>
+          <label>蓝胶<input id="liquidColor" type="color" value="#62cfff"></label>
+          <label>散尘<input id="smokeColor" type="color" value="#8f463f"></label>
+        </div>
+      </section>
+
+      <section class="lt-block motion-quick">
+        <div class="section-heading"><p class="section-label">动效时间轴</p><small class="section-note">点一段可跳到该阶段</small></div>
+        <div class="me-choreo-track" id="scatterTimeline" aria-label="散动效时间轴">
+          <div class="me-choreo-scroll"><div class="me-choreo-bar" id="scatterTimelineTrack"></div></div>
+          <ol class="me-choreo-legend" id="scatterTimelineList"></ol>
+        </div>
+        <div class="controls-grid quick-grid lt-timing-grid">
+          <label>整体速度 <small class="stage-tag">整轮</small><output id="speedOut">1.00×</output><input id="speed" type="range" min="0.25" max="4" step="0.05" value="1"></label>
+          <label>白字停留 <small class="stage-tag">普通字</small><output id="cleanHoldOut">0.38秒</output><input id="cleanHold" type="range" min="0" max="5000" step="10" value="380"></label>
+          <label>花粒侵入 <small class="stage-tag">快速切入</small><output id="bloomInOut">0.12秒</output><input id="bloomIn" type="range" min="40" max="3000" step="10" value="120"></label>
+          <label>花粒停留 <small class="stage-tag">纹理轻颤</small><output id="bloomHoldOut">0.58秒</output><input id="bloomHold" type="range" min="0" max="6000" step="10" value="580"></label>
+          <label>蓝胶凝结 <small class="stage-tag">材质切换</small><output id="liquidInOut">0.14秒</output><input id="liquidIn" type="range" min="40" max="3000" step="10" value="140"></label>
+          <label>蓝胶停留 <small class="stage-tag">水滴浮动</small><output id="liquidHoldOut">1.18秒</output><input id="liquidHold" type="range" min="0" max="8000" step="10" value="1180"></label>
+          <label>横向散开 <small class="stage-tag">红尘扩散</small><output id="scatterDurationOut">0.50秒</output><input id="scatterDuration" type="range" min="80" max="5000" step="10" value="500"></label>
+          <label>余尘停留 <small class="stage-tag">收尾</small><output id="scatterHoldOut">0.49秒</output><input id="scatterHold" type="range" min="0" max="8000" step="10" value="490"></label>
+        </div>
+      </section>
+
+      <section class="lt-block">
+        <div class="section-heading"><p class="section-label">散开编排</p><small class="section-note">顺序 · 节奏 · 错峰</small></div>
+        <div class="controls-grid quick-grid">
+          <label>散开方向<select id="scatterDirection"><option value="center" selected>从中心向两边</option><option value="left">从左到右</option><option value="right">从右到左</option><option value="random">随机散开</option></select></label>
+          <label>散开节奏<select id="rhythm"><option value="burst" selected>瞬发回弹</option><option value="smooth">顺滑展开</option><option value="pulse">脉冲散开</option><option value="wave">水波推进</option></select></label>
+          <label>散开错峰 <output id="scatterStaggerOut">40ms</output><input id="scatterStagger" type="range" min="0" max="600" step="10" value="40"></label>
+          <label>横向冲程 <output id="scatterDistanceOut">118px</output><input id="scatterDistance" type="range" min="0" max="360" value="118"></label>
+        </div>
+      </section>
+
+      <section class="lt-block">
+        <div class="section-heading"><p class="section-label">材质与颗粒</p><small class="section-note">花粒 · 水滴 · 红尘</small></div>
+        <div class="controls-grid">
+          <label>颗粒密度 <output id="densityOut">72%</output><input id="density" type="range" min="10" max="100" value="72"></label>
+          <label>颗粒大小 <output id="particleSizeOut">7px</output><input id="particleSize" type="range" min="1" max="28" value="7"></label>
+          <label>花瓣数量 <output id="petalCountOut">5</output><input id="petalCount" type="range" min="3" max="9" value="5"></label>
+          <label>花粒浮动 <output id="bloomDriftOut">8px</output><input id="bloomDrift" type="range" min="0" max="60" value="8"></label>
+          <label>水滴喷发 <output id="spreadOut">82px</output><input id="spread" type="range" min="0" max="260" value="82"></label>
+          <label>水滴浮动 <output id="driftOut">38px</output><input id="drift" type="range" min="0" max="180" value="38"></label>
+          <label>软胶圆润 <output id="roundnessOut">10px</output><input id="roundness" type="range" min="0" max="32" value="10"></label>
+          <label>高光强度 <output id="glossOut">78%</output><input id="gloss" type="range" min="0" max="140" value="78"></label>
+          <label>烟雾宽度 <output id="smokeWidthOut">120%</output><input id="smokeWidth" type="range" min="20" max="260" value="120"></label>
+          <label>烟雾柔度 <output id="smokeBlurOut">32px</output><input id="smokeBlur" type="range" min="0" max="90" value="32"></label>
+        </div>
+      </section>
+
+      <section class="transport" aria-label="时间轴控制"><button id="restartButton" type="button">重播</button><button id="pauseButton" type="button">暂停</button><button id="backButton" type="button">−1 帧</button><button id="forwardButton" type="button">+1 帧</button></section>
+
+      <section class="export-panel">
+        <label class="section-label" for="exportPreset">导出尺寸</label>
+        <select id="exportPreset"><option value="current">当前画板</option><option value="1080x1080">1:1 · 1080 × 1080</option><option value="1080x1350">4:5 · 1080 × 1350</option><option value="1080x1920" selected>9:16 · 1080 × 1920</option><option value="1920x1080">16:9 · 1920 × 1080</option><option value="custom">自定义尺寸</option></select>
+        <div class="custom-size" id="customSize" hidden><label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label><span>×</span><label>高<input id="exportHeight" type="number" min="240" max="3840" value="1920"></label></div>
+        <div class="export-timing-grid"><label>导出时长<select id="exportDuration"><option value="cycle" selected>完整一轮</option><option value="1">1 秒</option><option value="3">3 秒</option><option value="5">5 秒</option><option value="10">10 秒</option><option value="custom">自定义</option></select></label><label>导出帧率<select id="exportFps"><option value="15">15 FPS</option><option value="24">24 FPS</option><option value="30" selected>30 FPS</option><option value="60">60 FPS</option></select></label></div>
+        <label class="custom-duration" id="customDurationWrap" hidden>自定义秒数<input id="customDuration" type="number" min="0.5" max="30" step="0.1" value="5"></label>
+        <div class="export-actions"><button id="exportPng" type="button">PNG 图片</button><button id="exportGif" type="button">GIF 动图</button><button id="exportVideo" type="button">导出 MP4</button><button class="export-hd-video" id="exportVerticalVideo" type="button">导出 9:16 MP4 · 1080 × 1920</button></div>
+        <p class="export-status" id="exportStatus" aria-live="polite">预览、PNG、GIF 与 MP4 共用同一条确定性时间线。</p>
+      </section>
+      <p class="formula">字形采样 × 花粒侵入 × 蓝胶高光 × 水滴喷发 × 横向散尘</p>
+    </div>
+  </details>
+
+  <script src="shared-font-library.js?v=20260824-2"></script>
+  <script src="js/continuation-gif.js"></script>
+  <script src="js/h264-mp4-encoder.web.js"></script>
+  <script src="liquidtype.js?v=20260824-scatter2"></script>
+  <script src="me-motion-editor.js?v=20260824-scatter2"></script>
+  <script src="stg-cn.js?v=20260824-scatter2"></script>
+</body>
+</html>

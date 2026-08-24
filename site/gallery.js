@@ -17,7 +17,7 @@ const effects = [
   ["rapidsequence", "速序轮播", "Rapid Sequence", "flow", "逐行滚入与快速文字轮播"],
   ["citystack", "城市字塔", "City Stack", "type", "港版黑体中英文字逐项点亮叠满"],
   ["colorcanvas", "彩幕组句", "Color Canvas", "type", "逐行弹出与彩色弧面"],
-  ["liquidtype", "液字凝结", "Liquid Type", "type", "泡沫凝结与液态材质"],
+  ["liquidtype", "散", "Scatter", "type", "花粒 · 蓝胶 · 横向散尘"],
   ["scrapbin", "揉纸入篓", "Scrap Bin", "physics", "文字揉皱与重力入篓"],
   ["terminalbrand", "终端署名", "Terminal Brand", "type", "输入回删与图标签名"],
   ["slotstories", "字位剧场", "Slot Stories", "graphic", "字位图标与角色表演"],
@@ -99,7 +99,7 @@ function render() {
   grid.innerHTML = visible.map(([slug, zh, en, , categoryName]) => {
     const index = effects.findIndex((effect) => effect[0] === slug) + 1;
     const imageName = slug === "crashclock" ? "final_crashclock.png" : ["iconburst", "focuswheel", "gradienttype", "glyphrelay", "wordgather", "focusportal", "rapidsequence", "citystack", "colorcanvas", "liquidtype", "scrapbin", "terminalbrand", "slotstories", "mediacascade", "colorrecompose", "phrasebuild", "switchdrop", "searchtyping", "beforeafter", "assemble", "verbcue", "tighten", "titlecard", "lockup", "promptcue", "pullback", "textswell", "wordflip", "textbuild", "textswap", "textreveal", "phoneframe", "laptopframe", "orbitgallery", "followerrush", "logoassemble", "moodboard"].includes(slug) ? `final_${slug}.svg` : `final_${slug}.png`;
-    const target = slug === "flash" ? "flash-scenes.html" : slug === "iconburst" ? "iconburst.html?from=gallery&v=20260824-37" : slug === "currentwall" ? "currentwall.html?from=gallery&v=20260824-ui10" : slug === "beforeafter" ? "beforeafter.html?from=gallery&v=20260824-slider8" : `${slug}.html`;
+    const target = slug === "flash" ? "flash-scenes.html" : slug === "iconburst" ? "iconburst.html?from=gallery&v=20260824-37" : slug === "currentwall" ? "currentwall.html?from=gallery&v=20260824-ui10" : slug === "beforeafter" ? "beforeafter.html?from=gallery&v=20260824-slider8" : slug === "liquidtype" ? "liquidtype.html?from=gallery&v=20260824-scatter2" : `${slug}.html`;
     const detail = slug === "flash" ? "13 个独立子风格" : categoryName;
     const preview = slug === "iconburst"
       ? `<video class="effect-loop" src="assets/previews/iconburst-card.mp4?v=20260824-1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
