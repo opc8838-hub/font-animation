@@ -866,7 +866,10 @@
   function glyphPlaybackConfig() {
     const glyphAssets = state.assets.filter((asset) => asset.role === "glyph").sort((a, b) => Number(a.sequence) - Number(b.sequence));
     const requestedCount = $("ibReplaceCount").value === "all" ? glyphAssets.length : Number($("ibReplaceCount").value);
-    const count = contentMode() === "replace-one" ? 1 : Math.min(Math.max(1, requestedCount), Math.max(1, glyphAssets.length));
+    const usableLetterCount = Math.max(1, Array.from($("ibText").value || "GOOD JOB").filter((character) => character.trim()).length);
+    // More simultaneous icons than visible letters can only overlap. Spill
+    // excess assets into the next playback group instead of stacking them.
+    const count = contentMode() === "replace-one" ? 1 : Math.min(Math.max(1, requestedCount), Math.max(1, glyphAssets.length), usableLetterCount);
     const globalSpeed = Number($("ibReplaceSpeed").value);
     const minimumGroupMs = Number($("ibBeat").value);
     const groups = [];
@@ -1088,6 +1091,7 @@
     state.assets = Array.isArray(scheme.assets)
       ? scheme.assets.map(migrateAsset).filter((asset) => asset.type !== "shape" || !["square", "triangle", "heart", "circle"].includes(asset.shape))
       : builtinAssets();
+    normalizeGlyphSequence();
     setBackgroundMedia(scheme.backgroundMedia || null);
     state.assets.forEach(hydrateAssetImage);
     state.activeAssetId = null;
@@ -1123,6 +1127,49 @@
     }, 250);
   }
 
+  function resolveReplacementTargets(timings, usableTargets, groupIndex) {
+    if (!usableTargets.length) return timings.map(() => 0);
+    const usableIndices = new Set(usableTargets.map((item) => item.index));
+    const resolved = Array(timings.length).fill(null);
+    const reserved = new Set();
+    const automatic = [];
+
+    timings.forEach((timing, index) => {
+      const requested = Number(timing.asset.target);
+      if (requested >= 0 && usableIndices.has(requested)) {
+        resolved[index] = requested;
+        reserved.add(requested);
+      } else {
+        automatic.push(index);
+      }
+    });
+    const hasExplicitTargets = reserved.size > 0;
+
+    automatic.forEach((timingIndex, automaticIndex) => {
+      const available = usableTargets.filter((item) => !reserved.has(item.index));
+      let chosen;
+      if (!available.length) {
+        chosen = usableTargets[(groupIndex + automaticIndex) % usableTargets.length];
+      } else if (!hasExplicitTargets) {
+        const desiredPosition = automatic.length === 1
+          ? groupIndex % usableTargets.length
+          : Math.round(automaticIndex * (usableTargets.length - 1) / Math.max(1, automatic.length - 1));
+        const desiredIndex = usableTargets[desiredPosition].index;
+        chosen = available.reduce((best, item) => Math.abs(item.index - desiredIndex) < Math.abs(best.index - desiredIndex) ? item : best, available[0]);
+      } else {
+        chosen = available.reduce((best, item) => {
+          const clearance = Math.min(...Array.from(reserved, (target) => Math.abs(item.index - target)));
+          const bestClearance = Math.min(...Array.from(reserved, (target) => Math.abs(best.index - target)));
+          return clearance > bestClearance ? item : best;
+        }, available[0]);
+      }
+      resolved[timingIndex] = chosen.index;
+      reserved.add(chosen.index);
+    });
+
+    return resolved;
+  }
+
   function replacementState(contentTime, enabled, playback) {
     const letters = Array.from(word.children);
     if (!enabled || !replacementEnabled() || !playback.groups.length || !letters.length) return new Map();
@@ -1140,21 +1187,13 @@
     const groupTime = Math.max(0, contentTime - groupStartTime);
     const usableTargets = letters.map((letter, index) => ({ letter, index })).filter((item) => item.letter.textContent.trim());
     const replacements = new Map();
-    const used = new Set();
+    const resolvedTargets = resolveReplacementTargets(group.timings, usableTargets, groupIndex);
     group.timings.forEach((timing, offset) => {
       const { asset, transitionMs, holdMs } = timing;
       const enter = easeOut(clamp(groupTime / transitionMs, 0, 1));
       const exit = easeInOut(clamp((groupTime - transitionMs - holdMs) / transitionMs, 0, 1));
       const envelope = clamp(enter * (1 - exit), 0, 1);
-      let target = asset.target;
-      if (target < 0 || !letters[target] || !letters[target].textContent.trim()) {
-        const candidate = usableTargets[(groupIndex * group.timings.length + offset) % Math.max(1, usableTargets.length)];
-        target = candidate ? candidate.index : 0;
-      }
-      if (asset.target < 0) {
-        while (used.has(target) && usableTargets.length > used.size) target = (target + 1) % letters.length;
-      }
-      used.add(target);
+      const target = resolvedTargets[offset];
       // Use a true matched cut: the source glyph and its replacement are
       // mutually exclusive, so an icon can never sit on top of a live letter.
       const swap = envelope >= .5;
@@ -2490,6 +2529,7 @@
       const sequenceStart = state.assets.filter((asset) => asset.role === "glyph").length;
       const added = files.map((file, index) => defaultAsset({ id: `upload-${Date.now()}-${index}`, type: "image", role, name: file.name, status: "等待处理…", sequence: role === "glyph" ? sequenceStart + index : 0 }));
       state.assets.push(...added);
+      if (role === "glyph") normalizeGlyphSequence();
       if (added.length) state.activeAssetId = added[added.length - 1].id;
       renderAssets(); renderIcons();
       added.forEach((asset, index) => assignFileToAsset(asset, files[index]));
@@ -2503,6 +2543,7 @@
       const sequence = role === "glyph" ? state.assets.filter((asset) => asset.role === "glyph").length : 0;
       const asset = defaultAsset({ role, shape, color, color2: $("ibColorC").value, name: `内置${shapeLabels[shape]}`, target: -1, sequence });
       state.assets.push(asset);
+      if (role === "glyph") normalizeGlyphSequence();
       state.activeAssetId = asset.id;
       renderAssets(); renderIcons();
     });
@@ -2534,6 +2575,7 @@
         sequence
       });
       state.assets.push(asset);
+      if (role === "glyph") normalizeGlyphSequence();
       state.activeAssetId = asset.id;
       renderAssets();
       renderIcons();
