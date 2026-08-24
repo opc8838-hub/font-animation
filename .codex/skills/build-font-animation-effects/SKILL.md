@@ -22,6 +22,8 @@ If the task includes a reference video, use the available video-analysis workflo
 - Use the project-wide `site/shared-font-library.js` and `site/shared-fonts.css` catalog for every font selector and renderer. New effects must not maintain a private reduced font list.
 - Support arbitrary user text and asset counts. Rebuild dependent controls, timelines, and replacement targets when content changes.
 - Give every effect editor a real visual choreography timeline. It must reflect the current durations, show a moving playhead, and seek when the user selects a beat.
+- Use Icon Burst as the canonical editor UI and interaction language across effects. Reuse the `me-scheme-actions`, `me-scheme-import`, `me-scheme-history`, and `me-stage-controls` classes from `site/me-motion-editor.css`; do not invent a different panel, scheme card, button hierarchy, or playback interaction for each effect.
+- Put a compact Pause/Play and Replay control group at the horizontal center near the bottom of the live stage, matching Icon Burst. Keep editor-panel playback controls synchronized when both are present.
 - Keep the canvas centered and responsive. The right-side stage is the actual composition, not a decorative 9:16 mockup.
 - Drive preview and export from the same deterministic timeline and geometry functions. Never maintain a visually similar second renderer with independent constants.
 - Use transform/opacity-based motion and `requestAnimationFrame`; avoid per-frame DOM reconstruction and layout reads.
@@ -36,6 +38,7 @@ Before handing off an effect:
 - Test at least one Latin, Chinese, Japanese, and Korean font from the shared catalog in preview and export.
 - Check that timeline blocks, durations, active beat, playhead, and click-to-seek all stay synchronized after timing edits.
 - Test save, reload, JSON export/import, reset, clear, undo, and redo when those controls are present.
+- Check that the scheme card follows the shared two-column Icon Burst pattern and that stage Pause/Play and Replay work without desynchronizing the timeline.
 - Export and inspect at least one real GIF and one real video, not only the live preview.
 - Check one square or portrait size in addition to 16:9 when the effect claims multi-size export.
 - Confirm the gallery card uses the approved preview. Prefer an approved exported MP4 loop when an iframe would produce a different responsive composition.

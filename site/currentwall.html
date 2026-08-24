@@ -7,14 +7,18 @@
   <title>水流 Water Flow | ME Motion Studio</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="continuation.css">
-  <link rel="stylesheet" href="currentwall.css?v=20260824-3">
-  <link rel="stylesheet" href="me-motion-editor.css">
+  <link rel="stylesheet" href="currentwall.css?v=20260824-4">
+  <link rel="stylesheet" href="me-motion-editor.css?v=20260824-2">
   <link rel="stylesheet" href="stg-cn.css">
 </head>
 <body class="me-motion-editor">
   <main class="current-stage" aria-label="水流动效画布">
     <canvas id="flowCanvas"></canvas>
     <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+    <div class="water-stage-controls me-stage-controls" aria-label="画布播放控制">
+      <button id="stagePauseButton" type="button" aria-pressed="false"><span id="stagePauseIcon">Ⅱ</span><span id="stagePauseLabel">暂停</span></button>
+      <button id="stageRestartButton" type="button">↻ 重播</button>
+    </div>
   </main>
 
   <details class="control-panel current-panel" id="controlPanel" open>
@@ -25,11 +29,13 @@
     <div class="panel-scroll">
       <section class="scheme-section">
         <div class="section-heading"><p class="section-label">方案</p><small class="section-note">自动保存</small></div>
-        <div class="scheme-actions">
+        <div class="scheme-actions me-scheme-actions">
           <button id="saveScheme" type="button">保存方案</button>
-          <label class="scheme-import">导入方案<input id="importScheme" type="file" accept="application/json,.json"></label>
+          <label class="scheme-import me-scheme-import">导入方案<input id="importScheme" type="file" accept="application/json,.json"></label>
           <button id="resetScheme" type="button">恢复默认</button>
           <button id="clearScheme" type="button">清理重做</button>
+        </div>
+        <div class="scheme-history me-scheme-history" aria-label="方案历史">
           <button id="undoScheme" type="button">撤销</button>
           <button id="redoScheme" type="button">重做</button>
         </div>
@@ -287,7 +293,7 @@ everything</textarea>
   <script src="js/h264-mp4-encoder.web.js"></script>
   <script src="token-asset-tools.js"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
-  <script src="currentwall.js?v=20260824-fonts1"></script>
+  <script src="currentwall.js?v=20260824-ui1"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
 </body>

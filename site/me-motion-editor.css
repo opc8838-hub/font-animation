@@ -167,6 +167,60 @@ body.me-motion-editor :is(.frame-index, .frame-time, .canvas-mark, .prism-status
 body.me-motion-editor .prism-panel__footer { padding: 14px 18px 90px !important; border: 0 !important; background: var(--me-panel) !important; color: var(--me-muted) !important; }
 body.me-motion-editor .prism-signal { background: var(--me-blue) !important; box-shadow: none !important; }
 
+/* Canonical editor actions, shared with the Icon Burst interaction language. */
+body.me-motion-editor .me-scheme-actions,
+body.me-motion-editor .me-scheme-history {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+body.me-motion-editor .me-scheme-actions :is(button, .me-scheme-import) {
+  min-height: 44px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: #edf5fd !important;
+  color: #0763ae !important;
+  font: 650 12px/1 inherit !important;
+}
+body.me-motion-editor .me-scheme-actions button:last-child { background: #f2f2f4 !important; color: #6e6e73 !important; }
+body.me-motion-editor .me-scheme-import {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+body.me-motion-editor .me-scheme-import input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+body.me-motion-editor .me-scheme-history button { min-height: 34px !important; background: #f2f2f4 !important; color: #6e6e73 !important; }
+
+body.me-motion-editor .me-stage-controls {
+  position: absolute;
+  z-index: 8;
+  left: 50%;
+  bottom: 24px;
+  display: flex;
+  gap: 4px;
+  padding: 5px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 15px;
+  background: rgba(28,28,30,.76);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+body.me-motion-editor .me-stage-controls button {
+  min-height: 38px !important;
+  padding: 0 14px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  color: #fff !important;
+  font: 600 12px/1 inherit !important;
+  cursor: pointer;
+}
+body.me-motion-editor .me-stage-controls button:hover { background: rgba(255,255,255,.12) !important; }
+body.me-motion-editor.is-preview .me-stage-controls { display: none; }
+
 @media (max-width: 720px) {
   :root { --me-panel-width: 100vw; }
   body.me-motion-editor :is(.stage-shell, .current-stage, #prism-canvas) { inset: 0 0 42dvh !important; width: 100% !important; height: 58dvh !important; }
@@ -175,4 +229,5 @@ body.me-motion-editor .prism-signal { background: var(--me-blue) !important; box
   body.me-motion-editor .control-panel > summary,
   body.me-motion-editor .prism-panel__header { min-height: 66px !important; padding: 10px 14px !important; }
   body.me-motion-editor .me-editor-back { width: 32px; height: 32px; flex-basis: 32px; }
+  body.me-motion-editor .me-stage-controls { bottom: 16px; }
 }

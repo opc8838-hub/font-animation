@@ -670,20 +670,37 @@
     animationStart = performance.now() - pausedAt * 1000;
   }
 
-  $("#restartButton").addEventListener("click", () => setTime(0));
-  $("#pauseButton").addEventListener("click", (event) => {
+  function syncPlaybackControls() {
+    const label = paused ? "播放" : "暂停";
+    $("#pauseButton").textContent = paused ? "继续" : "暂停";
+    $("#stagePauseIcon").textContent = paused ? "▶" : "Ⅱ";
+    $("#stagePauseLabel").textContent = label;
+    $("#stagePauseButton").setAttribute("aria-pressed", String(paused));
+  }
+
+  function restartPlayback() {
+    paused = false;
+    setTime(0);
+    syncPlaybackControls();
+  }
+
+  function togglePlayback() {
     if (paused) {
       animationStart = performance.now() - pausedAt * 1000;
       paused = false;
-      event.currentTarget.textContent = "暂停";
     } else {
       pausedAt = currentTime();
       paused = true;
-      event.currentTarget.textContent = "继续";
     }
-  });
-  $("#backButton").addEventListener("click", () => { paused = true; setTime(currentTime() - 1 / fps); $("#pauseButton").textContent = "继续"; });
-  $("#forwardButton").addEventListener("click", () => { paused = true; setTime(currentTime() + 1 / fps); $("#pauseButton").textContent = "继续"; });
+    syncPlaybackControls();
+  }
+
+  $("#restartButton").addEventListener("click", restartPlayback);
+  $("#stageRestartButton").addEventListener("click", restartPlayback);
+  $("#pauseButton").addEventListener("click", togglePlayback);
+  $("#stagePauseButton").addEventListener("click", togglePlayback);
+  $("#backButton").addEventListener("click", () => { paused = true; setTime(currentTime() - 1 / fps); syncPlaybackControls(); });
+  $("#forwardButton").addEventListener("click", () => { paused = true; setTime(currentTime() + 1 / fps); syncPlaybackControls(); });
 
   function updateOutputs() {
     const timing = choreographyTiming();
@@ -801,7 +818,7 @@
     snapshotHistory();
     scheduleSchemePersist();
     updateOutputs();
-    setTime(0);
+    restartPlayback();
     applyingScheme = false;
     $("#schemeStatus").textContent = message;
   }
@@ -1026,6 +1043,7 @@
   syncAssetTuner();
   syncRowSettings();
   updateOutputs();
+  syncPlaybackControls();
   defaultSchemeSnapshot = collectScheme();
   try {
     const storedScheme = JSON.parse(localStorage.getItem(SCHEME_STORAGE_KEY) || "null");

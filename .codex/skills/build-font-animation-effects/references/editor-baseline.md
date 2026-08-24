@@ -4,7 +4,8 @@ Apply this baseline to new effect pages unless the user explicitly removes a cap
 
 ## Canvas and content
 
-- Use the latest project editor visual language: scrollable left editor, large right canvas, centered composition, play/pause/replay, and frame stepping where useful.
+- Use the Icon Burst editor as the canonical project visual and interaction language: scrollable light-gray left editor, sticky header, rounded white section cards, consistent fields/buttons, and a large right stage. Reuse `me-scheme-actions`, `me-scheme-import`, `me-scheme-history`, and `me-stage-controls` from `site/me-motion-editor.css`; do not give each effect an unrelated editor shell.
+- Put Pause/Play and Replay in the stage itself, horizontally centered near the bottom with the same compact dark translucent control used by Icon Burst. Any duplicate controls in the editor must share one playback state and stay synchronized.
 - Text must accept Chinese and Latin content and remain centered by default. Expose alignment or X/Y positioning when the choreography benefits from it.
 - Populate every font selector from `site/shared-font-library.js` and load faces from `site/shared-fonts.css`. The catalog consolidates the project fonts and provides Latin, Chinese, Japanese, and Korean choices; do not copy a reduced option list or a private font map into a new effect.
 - Resolve selected values through `STGFontLibrary.preset()` or `STGFontLibrary.family()` so Canvas, DOM preview, GIF, and video use the same face, weight, and style.
@@ -41,6 +42,7 @@ Each effect needs a unique, versioned scheme key and a serializable state model.
 
 Required actions:
 
+- Present Save, Import, Restore Default, and Clear/Rebuild as the same two-column large-button scheme card used by Icon Burst; keep status copy directly below it.
 - Save the current scheme to local storage and download JSON.
 - Import JSON and rebuild dynamic rows, assets, targets, and timeline beats.
 - Automatically persist meaningful edits after a short debounce.
