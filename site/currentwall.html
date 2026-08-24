@@ -182,7 +182,7 @@ everything</textarea>
           <label>逐行消失 <small class="stage-tag">阶段 4</small><output id="exitDurationOut">1.1秒</output>
             <input id="exitDuration" type="range" min="500" max="3500" step="50" value="1100">
           </label>
-          <label>消失逐行间隔 <small class="stage-tag">阶段 4</small><output id="exitStaggerOut">50ms</output>
+          <label>上下成对消失间隔 <small class="stage-tag">阶段 4</small><output id="exitStaggerOut">50ms</output>
             <input id="exitStagger" type="range" min="0" max="220" step="5" value="50">
           </label>
           <label>单行收尾 <small class="stage-tag">阶段 5</small><output id="finalDurationOut">2.60秒</output>
@@ -192,7 +192,7 @@ everything</textarea>
             <input id="swapInterval" type="range" min="100" max="2500" step="20" value="520">
           </label>
         </div>
-        <p class="hint">铺屏从中间向上下逐行展开；消失从最上方开始逐行向下推进，并始终保留中间一行。逐行间隔越大，接力感越明显；总时长控制整段快慢。</p>
+        <p class="hint">铺屏从中间向上下逐行展开；消失从画面最上、最下两行同时开始，上下成对向中间递减，并始终保留中间一行。成对间隔越大，接力感越明显；总时长控制整段快慢。</p>
         <p class="hint timing-live" id="timingReadout" aria-live="polite">当前：准备预览</p>
       </section>
 
@@ -311,7 +311,7 @@ everything</textarea>
   <script src="js/h264-mp4-encoder.web.js"></script>
   <script src="token-asset-tools.js"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
-  <script src="currentwall.js?v=20260824-ui6"></script>
+  <script src="currentwall.js?v=20260824-ui7"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
 </body>

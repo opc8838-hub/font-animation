@@ -654,11 +654,14 @@
       : 0;
     const exitDuration = Math.max(.001, timing.exitEnd - timing.fullEnd);
     const exitElapsed = Math.max(0, localTime - timing.fullEnd);
-    const exitRowCount = Math.max(1, halfLanes * 2);
+    // The outer top/bottom rows leave as a pair, followed by the next pair,
+    // until only the centre row remains. One stagger step therefore
+    // represents a symmetric pair rather than an individual row.
+    const exitPairCount = Math.max(1, halfLanes);
     const exitStaggerRequested = Number(inputs.exitStagger.value) / 1000;
     const exitFade = Math.max(.09, Math.min(exitDuration * .34, Math.max(.12, exitStaggerRequested * 2.25)));
-    const exitStagger = exitRowCount > 1
-      ? Math.min(exitStaggerRequested, Math.max(0, exitDuration - exitFade) / (exitRowCount - 1))
+    const exitStagger = exitPairCount > 1
+      ? Math.min(exitStaggerRequested, Math.max(0, exitDuration - exitFade) / (exitPairCount - 1))
       : 0;
 
     for (let laneIndex = -halfLanes; laneIndex <= halfLanes; laneIndex += 1) {
@@ -685,8 +688,8 @@
         rowAlpha *= rowFormationProgress > .035 ? 1 : 0;
       }
       if (choreography && localTime >= timing.fullEnd && localTime < timing.exitEnd && laneIndex !== 0) {
-        const topToBottomOrder = laneIndex < 0 ? laneIndex + halfLanes : halfLanes - 1 + laneIndex;
-        const disappearStart = topToBottomOrder * exitStagger;
+        const outerToCentreOrder = halfLanes - Math.abs(laneIndex);
+        const disappearStart = outerToCentreOrder * exitStagger;
         const rowExitProgress = smoother(rangeProgress(exitElapsed, disappearStart, disappearStart + exitFade));
         // Row-by-row removal should be crisp. Partial opacity made departing
         // rows look like retained shadows over the live wall.
