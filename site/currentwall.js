@@ -51,7 +51,6 @@
   let rafId = 0;
   let activeTokenInput = inputs.rows;
   let selectedAssetId = "music";
-  let animalLibraryOpen = false;
 
   const svg = (body, background = "#ffffff") => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="${background}"/>${body}</svg>`
@@ -150,13 +149,10 @@
   function renderAssetGrid() {
     const grid = $("#assetGrid");
     grid.replaceChildren();
-    let animalIndex = 0;
     assets.forEach((asset) => {
       const card = document.createElement("div");
       card.className = "asset-card";
       card.classList.toggle("is-selected", asset.id === selectedAssetId);
-      const isAnimal = asset.id.startsWith("animal");
-      if (isAnimal && animalIndex++ >= 8 && !animalLibraryOpen) card.classList.add("is-library-hidden");
       const insert = document.createElement("button");
       insert.type = "button";
       insert.className = "asset-insert me-asset-choice";
@@ -173,6 +169,7 @@
         selectedAssetId = asset.id;
         syncAssetTuner();
         renderAssetGrid();
+        renderSelectedAssets();
         $("#assetProcessStatus").textContent = `已选择“${asset.label}”。调整后点“插入到光标”才会添加。`;
       });
       card.append(insert);
@@ -187,12 +184,94 @@
       }
       grid.append(card);
     });
-    const divider = document.createElement("div");
-    divider.className = "asset-library-divider";
-    divider.innerHTML = `<span>透明动物素材 · 31 张</span><button type="button">${animalLibraryOpen ? "收起" : "查看全部"}</button>`;
-    divider.querySelector("button").addEventListener("click", () => { animalLibraryOpen = !animalLibraryOpen; renderAssetGrid(); });
-    grid.insertBefore(divider, grid.children[4] || null);
   }
+
+  function usedAssetEntries() {
+    const counts = new Map();
+    const order = [];
+    [inputs.rows.value, inputs.introWord.value, inputs.finalLine.value].forEach((value) => {
+      for (const match of value.matchAll(/\{\{([^{}]+)\}\}/g)) {
+        if (!assets.has(match[1])) continue;
+        if (!counts.has(match[1])) order.push(match[1]);
+        counts.set(match[1], (counts.get(match[1]) || 0) + 1);
+      }
+    });
+    return order.map((id) => ({ asset: assets.get(id), count: counts.get(id) }));
+  }
+
+  function openAssetEditor(assetId) {
+    if (!assets.has(assetId)) return;
+    selectedAssetId = assetId;
+    syncAssetTuner();
+    renderSelectedAssets();
+    const editorWidth = $("#controlPanel")?.getBoundingClientRect().width || 420;
+    const drawer = $("#assetEditorDrawer");
+    drawer.style.setProperty("--asset-drawer-left", `${editorWidth}px`);
+    drawer.hidden = false;
+  }
+
+  function removeUsedAsset(assetId) {
+    [inputs.rows, inputs.introWord, inputs.finalLine].forEach((field) => {
+      field.value = field.value.split(`{{${assetId}}}`).join("");
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    renderSelectedAssets();
+    snapshotHistory();
+    scheduleSchemePersist();
+  }
+
+  function renderSelectedAssets() {
+    const entries = usedAssetEntries();
+    $("#selectedAssetCount").textContent = String(entries.length);
+    const list = $("#selectedAssetList");
+    list.replaceChildren();
+    if (!entries.length) {
+      const empty = document.createElement("p");
+      empty.className = "selected-asset-empty";
+      empty.textContent = "文字内容里还没有图片或图标。请先从素材库选择，再点“插入到光标”。";
+      list.append(empty);
+      return;
+    }
+    entries.forEach(({ asset, count }) => {
+      const row = document.createElement("article");
+      row.className = "selected-asset-row";
+      row.classList.toggle("is-active", asset.id === selectedAssetId);
+      row.dataset.assetId = asset.id;
+      row.innerHTML = `<img alt=""><span><b></b><small></small></span><button class="edit-used-asset" type="button">单独编辑</button><button class="remove-used-asset" type="button" aria-label="从文字中移除">×</button>`;
+      row.querySelector("img").src = asset.src;
+      row.querySelector("b").textContent = asset.label;
+      row.querySelector("small").textContent = `内容中使用 ${count} 次`;
+      row.querySelector(".edit-used-asset").addEventListener("click", () => openAssetEditor(asset.id));
+      row.querySelector(".remove-used-asset").addEventListener("click", () => removeUsedAsset(asset.id));
+      list.append(row);
+    });
+  }
+
+  function setAssetManager(expanded) {
+    const manager = $("#assetManager");
+    manager.classList.toggle("is-list-expanded", expanded);
+    const toggle = $("#toggleAssetManager");
+    toggle.textContent = expanded ? "收起" : "展开已选";
+    toggle.setAttribute("aria-expanded", String(expanded));
+    document.body.classList.toggle("asset-manager-open", expanded);
+    if (!expanded) $("#assetEditorDrawer").hidden = true;
+    else manager.scrollTop = 0;
+  }
+
+  $("#toggleAssetManager").addEventListener("click", () => {
+    setAssetManager(!$("#assetManager").classList.contains("is-list-expanded"));
+  });
+  $("#closeAssetEditor").addEventListener("click", () => { $("#assetEditorDrawer").hidden = true; });
+  window.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    if (!$("#assetEditorDrawer").hidden) $("#assetEditorDrawer").hidden = true;
+    else if ($("#assetManager").classList.contains("is-list-expanded")) setAssetManager(false);
+  });
+  window.addEventListener("resize", () => {
+    if ($("#assetEditorDrawer").hidden) return;
+    const editorWidth = $("#controlPanel")?.getBoundingClientRect().width || 420;
+    $("#assetEditorDrawer").style.setProperty("--asset-drawer-left", `${editorWidth}px`);
+  }, { passive: true });
 
   function syncAssetTuner() {
     const asset = assets.get(selectedAssetId) || assets.values().next().value;
@@ -200,6 +279,7 @@
     selectedAssetId = asset.id;
     $("#selectedAssetName").textContent = asset.label;
     $("#selectedAssetPreview").src = asset.src;
+    $("#currentAssetEditorName").textContent = asset.label;
     inputs.assetItemScale.value = String(Math.round(asset.scale * 100));
     inputs.assetOffsetX.value = String(Math.round(asset.offsetX));
     inputs.assetOffsetY.value = String(Math.round(asset.offsetY));
@@ -245,6 +325,7 @@
 
   [inputs.rows, inputs.introWord, inputs.finalLine].forEach((field) => {
     field.addEventListener("focus", () => { activeTokenInput = field; });
+    field.addEventListener("input", renderSelectedAssets);
   });
 
   function removeAsset(id) {
@@ -259,6 +340,7 @@
     });
     syncRowSettings();
     renderAssetGrid();
+    renderSelectedAssets();
     syncAssetTuner();
   }
 
@@ -752,7 +834,11 @@
     setTime(choreographyTiming().popEnd);
   });
   [inputs.assetItemScale, inputs.assetOffsetX, inputs.assetOffsetY, inputs.assetGapBefore, inputs.assetGapAfter].forEach((input) => {
-    input.addEventListener("input", updateSelectedAsset);
+    input.addEventListener("input", () => {
+      updateSelectedAsset();
+      scheduleSchemePersist();
+    });
+    input.addEventListener("change", snapshotHistory);
   });
   inputs.rows.addEventListener("input", syncRowSettings);
   inputs.motionMode.addEventListener("change", () => setTime(0));
@@ -823,6 +909,7 @@
     layoutCache.clear();
     syncRowSettings();
     renderAssetGrid();
+    renderSelectedAssets();
     syncAssetTuner();
     snapshotHistory();
     scheduleSchemePersist();
@@ -1049,6 +1136,7 @@
   window.addEventListener("beforeunload", () => cancelAnimationFrame(rafId));
   if (window.innerWidth <= 720) $("#controlPanel").removeAttribute("open");
   renderAssetGrid();
+  renderSelectedAssets();
   syncAssetTuner();
   syncRowSettings();
   updateOutputs();

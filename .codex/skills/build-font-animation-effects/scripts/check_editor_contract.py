@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+"""Check the shared editor contract for one effect page.
+
+Usage: python check_editor_contract.py <html> <javascript>
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+
+def fail(message: str) -> None:
+    print(f"FAIL: {message}")
+
+
+def main() -> int:
+    if len(sys.argv) != 3:
+        print("Usage: check_editor_contract.py <html> <javascript>")
+        return 2
+
+    html_path, js_path = map(Path, sys.argv[1:])
+    if not html_path.is_file() or not js_path.is_file():
+        print("FAIL: both HTML and JavaScript files must exist")
+        return 2
+
+    html = html_path.read_text(encoding="utf-8")
+    js = js_path.read_text(encoding="utf-8")
+    errors: list[str] = []
+
+    required_html = {
+        "scheme Save": "保存方案",
+        "scheme Import": "导入方案",
+        "scheme Restore Default": "恢复默认",
+        "scheme Clear/Rebuild": "清理重做",
+        "colored choreography": "me-choreo-track",
+        "stage playback": "me-stage-controls",
+        "selected asset panel": "me-layer-panel",
+        "selected asset toggle": "me-layer-toggle",
+        "selected asset list": "me-layer-items",
+        "asset editor drawer": "me-asset-drawer",
+        "asset library": "me-asset-library",
+        "selection-first card": "me-asset-choice",
+        "explicit commit": "me-asset-commit",
+        "single asset editor": "me-asset-editor",
+    }
+    source = html + "\n" + js
+    for label, token in required_html.items():
+        if token not in source:
+            errors.append(f"missing {label}: {token}")
+
+    background = html.find('id="backgroundColor"')
+    text_color = html.find('id="textColor"')
+    asset_panel = html.find("me-layer-panel")
+    if min(background, text_color, asset_panel) < 0 or not (background < asset_panel and text_color < asset_panel):
+        errors.append("background/text color controls must be inside the text area before the asset panel")
+
+    for label, alternatives in {
+        "expanded state": ("is-list-expanded",),
+        "manager state transition": ("setAssetManager", "setLayerManager"),
+        "selected list rebuild": ("renderSelectedAssets", "renderAssets"),
+    }.items():
+        if not any(token in js for token in alternatives):
+            errors.append(f"missing {label}: one of {', '.join(alternatives)}")
+
+    if errors:
+        for error in errors:
+            fail(error)
+        return 1
+    print(f"PASS: {html_path.name} follows the shared editor structure; browser interaction checks are still required.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

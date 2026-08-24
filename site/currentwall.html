@@ -7,7 +7,7 @@
   <title>水流 Water Flow | ME Motion Studio</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="continuation.css">
-  <link rel="stylesheet" href="currentwall.css?v=20260824-5">
+  <link rel="stylesheet" href="currentwall.css?v=20260824-6">
   <link rel="stylesheet" href="me-motion-editor.css?v=20260824-3">
   <link rel="stylesheet" href="stg-cn.css">
 </head>
@@ -44,6 +44,10 @@
 everything  {{play}} everything
 every{{cloud}}thing  everything
 everything  every{{watch}}thing</textarea>
+        <div class="color-row text-color-row">
+          <label>背景<input id="backgroundColor" type="color" value="#f4f3ef"></label>
+          <label>文字<input id="textColor" type="color" value="#090909"></label>
+        </div>
         <p class="hint">每个换行是一种独立行；内容会自动重复填满画板。把素材标记插在任意字位，例如 every{{music}}thing。</p>
       </section>
 
@@ -73,7 +77,11 @@ everything</textarea>
         <p class="hint">收尾剩下一行后基本停止横移，并按行依次切换。删除某个字母、在同一位置插入 {{图标}}，即可让任意字位在文字、图片和图标之间跳转。</p>
       </section>
 
-      <section class="asset-section">
+      <section class="asset-section me-layer-panel" id="assetManager">
+        <div class="asset-manager-title">
+          <span><strong>已选图片与图标</strong><small><b id="selectedAssetCount">0</b> 项 · 展开后逐项编辑</small></span>
+          <button id="toggleAssetManager" class="me-layer-toggle" type="button" aria-expanded="false">展开已选</button>
+        </div>
         <div class="section-heading">
           <p class="section-label">图片与图标</p>
           <label class="upload-button">添加图片<input id="assetUpload" type="file" accept="image/*" multiple></label>
@@ -84,10 +92,18 @@ everything</textarea>
           <div class="asset-selected-copy"><img id="selectedAssetPreview" alt=""><span><small>当前选择</small><b id="selectedAssetName">音乐</b></span></div>
           <button id="insertSelectedAsset" class="me-asset-commit" type="button">插入到光标</button>
         </div>
-        <div class="asset-library-heading"><strong>素材库</strong><span>点击只选择，不会直接添加</span></div>
-        <div class="asset-grid me-asset-library" id="assetGrid"></div>
+        <details class="asset-library-panel">
+          <summary><strong>＋ 添加内置图标与图片</strong><span>点击只选择，不会直接添加</span></summary>
+          <div class="asset-grid me-asset-library" id="assetGrid"></div>
+        </details>
+        <div class="selected-asset-list me-layer-items" id="selectedAssetList" aria-live="polite"></div>
+        <p class="hint">先在文字框中放好光标，选择素材并完成编辑，再点“插入到光标”。同一素材可以插入一处或多处。</p>
+      </section>
+
+      <aside class="asset-editor-drawer me-asset-drawer" id="assetEditorDrawer" aria-label="当前素材编辑面板" hidden>
         <div class="asset-tuner me-asset-editor" id="assetTuner">
-          <div class="asset-tuner-head"><span>单独编辑</span><b>大小、位置与间距</b></div>
+          <div class="asset-drawer-heading"><span>正在单独编辑</span><button id="closeAssetEditor" type="button">关闭</button></div>
+          <div class="asset-tuner-head"><span>当前素材</span><b id="currentAssetEditorName">大小、位置与间距</b></div>
           <div class="asset-tuner-grid">
             <label>大小 <output id="assetItemScaleOut">100%</output>
               <input id="assetItemScale" type="range" min="40" max="200" value="100">
@@ -106,8 +122,7 @@ everything</textarea>
             </label>
           </div>
         </div>
-        <p class="hint">先在文字框中放好光标，选择素材并完成编辑，再点“插入到光标”。同一素材可以插入一处或多处。</p>
-      </section>
+      </aside>
 
       <details class="advanced-controls row-advanced">
         <summary><span>每行独立方向与速度</span><small>高级</small></summary>
@@ -230,11 +245,6 @@ everything</textarea>
         </div>
       </details>
 
-      <section class="color-row">
-        <label>背景<input id="backgroundColor" type="color" value="#f4f3ef"></label>
-        <label>文字<input id="textColor" type="color" value="#090909"></label>
-      </section>
-
       <section class="transport" aria-label="时间轴控制">
         <button id="restartButton" type="button">重播</button>
         <button id="pauseButton" type="button">暂停</button>
@@ -295,7 +305,7 @@ everything</textarea>
   <script src="js/h264-mp4-encoder.web.js"></script>
   <script src="token-asset-tools.js"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
-  <script src="currentwall.js?v=20260824-ui2"></script>
+  <script src="currentwall.js?v=20260824-ui3"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
 </body>
