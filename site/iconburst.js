@@ -2125,8 +2125,17 @@
     const seconds = ((realSeconds * speed) % baseCycleSeconds + baseCycleSeconds) % baseCycleSeconds;
     const timeline = masterTimeline(seconds / baseCycleSeconds, baseCycleSeconds, playback.total);
     const family = fontMap[$("ibFont").value] || "IBSpace";
-    const fontPx = clamp(Math.min(width * .09, height * .16), 36, Math.min(width, height) * .24) * Number($("ibFontSize").value) / 100;
     const screenScale = stage.clientWidth ? width / stage.clientWidth : 1;
+    // Export from the same measured composition as the live preview. The old
+    // renderer invented a second responsive layout (82% x 62%), so GIF/MP4
+    // frames made the icon cluster smaller and the title gap wider than the
+    // editor at the very same timestamp.
+    const liveFontPx = parseFloat(getComputedStyle(word).fontSize) || 100;
+    const fontPx = liveFontPx * screenScale;
+    const liveIconPx = parseFloat(getComputedStyle(state.iconElements[0] || orbitLayer).width) || liveFontPx * .64;
+    const exportIconPx = liveIconPx * screenScale;
+    const compositionWidth = Math.max(1, composition.clientWidth * screenScale);
+    const compositionHeight = Math.max(1, composition.clientHeight * screenScale);
     const tracking = Number($("ibTracking").value) * clamp(screenScale, .5, 4);
     ctx.font = `${$("ibWeight").value} ${fontPx}px "${family}"`;
     const text = $("ibText").value || "GOOD JOB";
@@ -2151,8 +2160,7 @@
       const leftLayout = trackedLayout(ctx, leftText, tracking);
       const rightLayout = trackedLayout(ctx, rightText, tracking);
       const closedGap = state.naturalGap ? fontPx * .18 : 0;
-      const openGap = closedGap + width * .22 * Number($("ibCollapse").value) / 100;
-      const gap = closedGap + (openGap - closedGap) * (1 - timeline.gapClose);
+      const openGap = closedGap + clamp(stage.clientWidth * .22, 120, 260) * screenScale * Number($("ibCollapse").value) / 100;
       const sideShift = (openGap - closedGap) / 2;
       const orbitArc = Math.sin(Math.PI * timeline.incomingOrbit);
       const orbitShift = (1 - timeline.incomingOrbit) * clamp(width * .46, 120, width * .46) - orbitArc * width * .015 * Number($("ibCurve").value) / 100;
@@ -2180,8 +2188,11 @@
           ctx.restore();
         });
       };
-      drawSide(leftLetters, leftLayout, -1, width / 2 - gap / 2 - leftLayout.total / 2);
-      drawSide(rightLetters, rightLayout, 1, width / 2 + gap / 2 + rightLayout.total / 2);
+      // The live grid always starts both halves at the natural/closed gap;
+      // per-letter transforms create and close the temporary slot. Starting
+      // at the animated gap here counted that slot twice in exported media.
+      drawSide(leftLetters, leftLayout, -1, width / 2 - closedGap / 2 - leftLayout.total / 2);
+      drawSide(rightLetters, rightLayout, 1, width / 2 + closedGap / 2 + rightLayout.total / 2);
       ctx.restore();
     }
 
@@ -2201,8 +2212,6 @@
       ctx.globalAlpha = 1;
     }
 
-    const compositionWidth = width * .82;
-    const compositionHeight = height * .62;
     const range = Number($("ibRange").value) / 100;
     const iconSize = Number($("ibSize").value) / 100;
     const orbitSpeed = clamp(Number($("ibOrbitSpeed").value) / 100, .5, 2);
@@ -2243,14 +2252,15 @@
       const depthScale = clamp(1 + projectedZ * .22, .76, 1.24);
       const startScale = 1.12 + (orbitIndex % 4) * .09;
       const gatherScale = startScale + (1 - startScale) * timeline.iconGather;
-      return { asset, depth: projectedZ, x: width / 2 + x + clusterOffsetX + asset.x / 100 * compositionWidth * .28, y: height / 2 + y + asset.y / 100 * compositionHeight * .28, size: Math.min(width, height) * .085 * iconSize * asset.size * gatherScale * collapseScale * depthScale, alpha: timeline.iconPresence * asset.opacity * collapseScale, rotation: asset.rotation + 10 * Math.sin(Math.PI * clamp(timeline.iconGather, 0, 1)) };
+      return { asset, depth: projectedZ, x: width / 2 + x + clusterOffsetX + asset.x / 100 * compositionWidth * .28, y: height / 2 + y + asset.y / 100 * compositionHeight * .28, size: exportIconPx * iconSize * asset.size * gatherScale * collapseScale * depthScale, alpha: timeline.iconPresence * asset.opacity * collapseScale, rotation: asset.rotation + 10 * Math.sin(Math.PI * clamp(timeline.iconGather, 0, 1)) };
     }).sort((a, b) => a.depth - b.depth);
     poses.forEach((pose) => drawAssetToCanvas(ctx, pose.asset, pose.x, pose.y, pose.size, pose.rotation, pose.alpha));
 
     glyphsToDraw.forEach(({ asset, replacement }) => {
-      const x = width / 2 + (layout.centers[replacement.target] || 0) * finalScale + asset.x / 100 * width * .08;
-      const y = baseline - fontPx * .38 + asset.y / 100 * height * .08;
-      drawAssetToCanvas(ctx, asset, x, y, fontPx * .92 * asset.size * finalScale, asset.rotation, asset.opacity * replacement.envelope);
+      const x = width / 2 + (layout.centers[replacement.target] || 0) * finalScale + asset.x / 100 * compositionWidth * .28;
+      const y = baseline - fontPx * .38 + asset.y / 100 * compositionHeight * .28;
+      const replacementScale = .98 + easeOut(replacement.envelope) * .02;
+      drawAssetToCanvas(ctx, asset, x, y, exportIconPx * iconSize * asset.size * replacementScale, asset.rotation, asset.opacity * replacement.envelope);
     });
   }
 
