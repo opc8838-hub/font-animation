@@ -139,6 +139,8 @@
             <label>爆发范围 <output id="ibRangeValue">72%</output><input id="ibRange" type="range" min="25" max="110" value="72"></label>
             <label>图标大小 <output id="ibSizeValue">100%</output><input id="ibSize" type="range" min="40" max="180" value="100"></label>
           </div>
+          <label>左右文字与图标间距 <output id="ibCollapseValue">62%</output><input id="ibCollapse" type="range" min="20" max="160" value="62"></label>
+          <p class="ib-help">控制开场时左、右两组文字与中间图标区域之间的距离；数值越大，文字离图标越远。</p>
         </div>
       </section>
 
@@ -147,7 +149,6 @@
         <div id="ibReplacementTiming" class="ib-two"><label id="ibReplaceCountField">同时替换数量<select id="ibReplaceCount"><option value="1" selected>1 个 · 依次播放</option><option value="2">2 个 · 两两播放</option><option value="3">3 个</option><option value="4">4 个</option><option value="all">全部同时</option></select></label><label>每组最短时长 <output id="ibBeatValue">0.08 秒</output><input id="ibBeat" type="range" min="60" max="1200" value="80" step="20"></label><label>全局切换速度 <output id="ibReplaceSpeedValue">4.0×</output><input id="ibReplaceSpeed" type="range" min="0.5" max="8" value="4" step="0.1"></label></div>
         <p id="ibSequenceHelp" class="ib-help">每个字体图标可单独设置字位、顺序、速度和停留时间；停留变长时，循环会自动延长，不会截断图标。</p>
         <div id="ibMotionTiming" class="ib-two">
-          <label>中间图标槽宽 <output id="ibCollapseValue">62%</output><input id="ibCollapse" type="range" min="20" max="100" value="62"></label>
           <label>滞空时长 <output id="ibHangValue">0.80 秒</output><input id="ibHang" type="range" min="20" max="140" value="80" step="5"></label>
           <label>慢动作速度 <output id="ibDriftValue">28%</output><input id="ibDrift" type="range" min="15" max="60" value="28"></label>
           <label>终点前转幅度 <output id="ibOvershootValue">58%</output><input id="ibOvershoot" type="range" min="0" max="100" value="58"></label>
