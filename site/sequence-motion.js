@@ -50,9 +50,9 @@
     </section>`;
   const cityFont = `
     <section>
-      <div class="section-heading"><p class="section-label">字体</p><small class="section-note">参考版分层使用香港现代黑体：主字中等、英文常规、副标题加粗</small></div>
+      <div class="section-heading"><p class="section-label">字体</p><small class="section-note">主字、英文与副标题可使用统一多语言字体库</small></div>
       <div class="sequence-font-grid">
-        <label><span class="section-label">字体家族</span><select id="fontFamily"><option value="noto-hk" selected>Noto Sans HK · 香港版参考</option><option value="noto">Noto Sans SC</option><option value="city-black">Noto Sans SC Black</option><option value="inter">Inter</option><option value="space">Space Grotesk</option><option value="manrope">Manrope</option><option value="poppins">Poppins</option></select></label>
+        <label><span class="section-label">字体家族</span><select id="fontFamily"><option value="noto-hk" selected>Noto Sans HK</option><option value="noto">Noto Sans SC</option><option value="city-black">Noto Sans SC Black</option><option value="inter">Inter</option><option value="space">Space Grotesk</option><option value="manrope">Manrope</option><option value="poppins">Poppins</option></select></label>
         <label><span class="section-label">主中文字重</span><select id="cityHanWeight"><option value="300">Light</option><option value="400">Regular</option><option value="500" selected>Medium</option><option value="600">Semibold</option><option value="700">Bold</option><option value="800">Extra Bold</option></select></label>
         <label><span class="section-label">英文字重</span><select id="cityEnglishWeight"><option value="300">Light</option><option value="400">Regular</option><option value="500" selected>Medium</option><option value="600">Semibold</option><option value="700">Bold</option></select></label>
         <label><span class="section-label">副标题字重</span><select id="citySubtitleWeight"><option value="400">Regular</option><option value="500">Medium</option><option value="600">Semibold</option><option value="700" selected>Bold</option><option value="800">Extra Bold</option></select></label>
@@ -252,7 +252,7 @@
       </section>
       ${cityFont}
       <section>
-        <div class="section-heading"><p class="section-label">核心节奏</p><small class="section-note">原片为单字亮起、熄灭、再点亮，正常速度清晰可见</small></div>
+        <div class="section-heading"><p class="section-label">核心节奏</p><small class="section-note">单字依次亮起、熄灭，再进入下一次点亮</small></div>
         <div class="motion-map"><span>${config.map[0]}</span><i>→</i><span>${config.map[1]}</span><i>→</i><span>${config.map[2]}</span></div>
         <div class="controls-grid">
           ${slider("整体速度", "playbackSpeed", .25, 3, .05, 1, "speed")}
@@ -364,11 +364,11 @@
     context.restore();
   }
   function setFont(context, size) {
-    context.font = `${number("fontWeight", 500)} ${size}px ${fontMap[value("fontFamily", "inter")] || fontMap.inter}`;
+    context.font = `${number("fontWeight", 500)} ${size}px ${window.STGFontLibrary?.family(value("fontFamily", "inter")) || fontMap[value("fontFamily", "inter")] || fontMap.inter}`;
     context.textBaseline = "middle"; context.textAlign = "left";
   }
   function setCityFont(context, size, weightId, fallbackWeight) {
-    context.font = `${number(weightId, fallbackWeight)} ${size}px ${fontMap[value("fontFamily", "noto-hk")] || fontMap["noto-hk"]}`;
+    context.font = `${number(weightId, fallbackWeight)} ${size}px ${window.STGFontLibrary?.family(value("fontFamily", "noto-hk")) || fontMap[value("fontFamily", "noto-hk")] || fontMap["noto-hk"]}`;
     context.textBaseline = "middle"; context.textAlign = "left";
   }
   function logicalScale(width, height) { return Math.max(.22, Math.min(width / 1280, height / 720)); }
@@ -731,7 +731,7 @@
     if (uniformLineWidth) drawCityUniformLine(context, subtitleText, subtitleLetterGap, targetLineWidth, centerX, subtitleY, "split", 1, paintSubtitle); else { const bounds = cityInkBounds(context, subtitleText, subtitleLetterGap); paintSubtitle(context, centerX - bounds.center, subtitleY); } context.restore();
     const footerStart = t.cityMode === "pulse" ? t.leadIn : t.footerStart;
     if (phase >= footerStart && footer) {
-      const reveal = smoother((phase - footerStart) / Math.max(.001, t.footerFade)); context.save(); context.globalAlpha = reveal; context.fillStyle = value("textColor", "#d5d5d5"); context.font = `600 ${footerSize}px ${fontMap[value("fontFamily", "noto-hk")] || fontMap["noto-hk"]}`; context.textAlign = "center"; context.textBaseline = "middle"; context.translate(centerX, subtitleY + subtitleSize / 2 + footerGap); fillCityText(context, footer, footerLetterGap); context.restore();
+      const reveal = smoother((phase - footerStart) / Math.max(.001, t.footerFade)); context.save(); context.globalAlpha = reveal; context.fillStyle = value("textColor", "#d5d5d5"); context.font = `600 ${footerSize}px ${window.STGFontLibrary?.family(value("fontFamily", "noto-hk")) || fontMap[value("fontFamily", "noto-hk")] || fontMap["noto-hk"]}`; context.textAlign = "center"; context.textBaseline = "middle"; context.translate(centerX, subtitleY + subtitleSize / 2 + footerGap); fillCityText(context, footer, footerLetterGap); context.restore();
     }
   }
 

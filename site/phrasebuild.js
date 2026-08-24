@@ -275,7 +275,7 @@
   }
 
   function fontSpec(fontPx) {
-    const preset = fontPresets[inputs.font.value] || fontPresets["snap-inter-medium"];
+    const preset = window.STGFontLibrary?.preset(inputs.font.value) || fontPresets[inputs.font.value] || fontPresets["snap-inter-medium"];
     const weight = Number(inputs.weight.value) || preset.weight;
     return { preset, weight, css: `${preset.style} ${weight} ${fontPx}px "${preset.family}", "Continuation SC", sans-serif` };
   }

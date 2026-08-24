@@ -6,7 +6,9 @@ Apply this baseline to new effect pages unless the user explicitly removes a cap
 
 - Use the latest project editor visual language: scrollable left editor, large right canvas, centered composition, play/pause/replay, and frame stepping where useful.
 - Text must accept Chinese and Latin content and remain centered by default. Expose alignment or X/Y positioning when the choreography benefits from it.
-- Provide the shared font collection already bundled under `site/assets/` and `site/assets/fonts/`; do not fetch fonts at runtime.
+- Populate every font selector from `site/shared-font-library.js` and load faces from `site/shared-fonts.css`. The catalog consolidates the project fonts and provides Latin, Chinese, Japanese, and Korean choices; do not copy a reduced option list or a private font map into a new effect.
+- Resolve selected values through `STGFontLibrary.preset()` or `STGFontLibrary.family()` so Canvas, DOM preview, GIF, and video use the same face, weight, and style.
+- Font labels show only the font name and useful language coverage. Do not expose “原片”, “视频字体”, “参考”, “复刻”, or “近似” in font options or help text.
 - Provide text color, background color, and background upload for image, GIF, and video where backgrounds are editable.
 - Recompute layout from actual text metrics. Do not assume a fixed word, equal left/right character counts, or a fixed number of lines.
 
@@ -50,11 +52,13 @@ Uploaded project media must survive scheme export/import when browser storage li
 
 ## Timeline and motion controls
 
-- Show a readable visual timeline for multi-phase choreography. Each beat should display its name and start/end or duration.
-- Clicking a beat should seek to that part when feasible.
+- Every effect editor includes a readable visual choreography timeline by default; do not replace it with a static arrow diagram or a paragraph of phase names.
+- Each beat displays its name and start/end or duration, and the track includes a moving playhead driven by the same clock as the preview.
+- Clicking a beat seeks to that part. Timing edits rebuild the beat widths, labels, total duration, active state, and seek points immediately.
 - Expose master playback speed plus the phase-specific durations, delays, stagger, rhythm/easing, hold, and direction that materially change the reference motion.
 - Use plain Chinese labels. Prefer “图标大小” over implementation terms such as “图标比例”.
 - Keep advanced controls grouped or collapsible so the basic editor remains understandable.
+- Describe the product motion directly, for example “铺满画面”, “向左水流”, and “逐行回收”. Never show “参考视频”, “参考编舞”, “原片复刻”, or analysis provenance in the end-user interface.
 
 ## Export
 
@@ -71,4 +75,3 @@ Offer these controls when the page claims full export support:
 The renderer must accept `(time, width, height)` or an equivalent deterministic frame state. Preview, PNG, GIF, and video must call the same timeline and layout calculations. Scale measured preview typography, composition bounds, icons, and uploaded media together. A successful encoder is not sufficient: inspect actual exported frames for layout parity.
 
 Use the bundled encoders already present in `site/js/` rather than adding a network dependency.
-

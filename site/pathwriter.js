@@ -81,7 +81,7 @@
   }
 
   function fontString(size) {
-    const preset = fontPresets[inputs.font.value] || fontPresets["snap-inter-medium"];
+    const preset = window.STGFontLibrary?.preset(inputs.font.value) || fontPresets[inputs.font.value] || fontPresets["snap-inter-medium"];
     return `${preset.style} ${preset.weight} ${size}px "${preset.family}", "Arial", sans-serif`;
   }
 

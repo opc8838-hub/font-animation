@@ -373,7 +373,7 @@
     context.fillRect(0, 0, w, h);
 
     const rows = parseRows();
-    const preset = fontPresets[inputs.font.value] || fontPresets["snap-inter-medium"];
+    const preset = window.STGFontLibrary?.preset(inputs.font.value) || fontPresets[inputs.font.value] || fontPresets["snap-inter-medium"];
     const scale = h / 900;
     const introFontPx = Math.max(8, Number(inputs.fontSize.value) * scale);
     const wallFontPx = Math.max(8, Number(inputs.wallFontSize.value) * scale);

@@ -105,7 +105,7 @@
   }
 
   function applyFont(context, fontPx) {
-    const preset = fontPresets[inputs.font.value] || fontPresets["snap-inter-medium"];
+    const preset = window.STGFontLibrary?.preset(inputs.font.value) || fontPresets[inputs.font.value] || fontPresets["snap-inter-medium"];
     const weight = Number(inputs.fontWeight.value) || preset.weight;
     context.font = `${weight} ${fontPx}px "${preset.family}", "Continuation SC", "Noto Sans SC", sans-serif`;
     context.textAlign = "left";

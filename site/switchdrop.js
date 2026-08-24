@@ -268,7 +268,7 @@
     context.shadowBlur = allowGenericShadow ? size * shadow * .16 : 0;
     context.shadowOffsetY = allowGenericShadow ? size * shadow * .05 : 0;
     if (inputs.subjectMode.value === "text") {
-      const preset = fontPresets[inputs.font.value] || fontPresets["fs-satoshi"];
+      const preset = window.STGFontLibrary?.preset(inputs.font.value) || fontPresets[inputs.font.value] || fontPresets["fs-satoshi"];
       context.font = `900 ${size * .58}px "${preset.family}", "Continuation SC Black", sans-serif`;
       context.textAlign = "center";
       context.textBaseline = "middle";
@@ -313,7 +313,7 @@
     const titleSize = Math.max(14, Number(inputs.titleSize.value) * layoutScale);
     const tracking = Number(inputs.titleTracking.value) * layoutScale;
     const gap = Number(inputs.titleGap.value) * layoutScale;
-    const preset = fontPresets[inputs.font.value] || fontPresets["fs-satoshi"];
+    const preset = window.STGFontLibrary?.preset(inputs.font.value) || fontPresets[inputs.font.value] || fontPresets["fs-satoshi"];
     const fontWeight = Number(inputs.fontWeight.value) || preset.weight;
     context.font = `${fontWeight} ${titleSize}px "${preset.family}", "Continuation SC Black", sans-serif`;
     context.textBaseline = "middle";

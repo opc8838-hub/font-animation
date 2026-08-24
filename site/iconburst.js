@@ -53,10 +53,10 @@
   const shapeLabels = { ring: "圆环", "rainbow-ring": "彩虹圆环", star: "星形" };
   const iconSvg = (body, background) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="${background}"/>${body}</svg>`)}`;
   const flowIconImages = [
-    { name: "流墙音乐", url: iconSvg('<g transform="translate(-4 0)"><path d="M44 24v37c-3-2-7-2-11-1-7 2-11 8-9 13s9 7 16 5c6-2 10-7 10-12V39l24-7v24c-3-2-7-2-11-1-7 2-11 8-9 13s9 7 16 5c6-2 10-7 10-12V19z" fill="white"/></g>', "#fa264f") },
-    { name: "流墙播放", url: iconSvg('<circle cx="50" cy="50" r="34" fill="none" stroke="white" stroke-width="6"/><path d="M41 30 70 50 41 70z" fill="white"/>', "#111111") },
-    { name: "流墙云", url: iconSvg('<circle cx="34" cy="56" r="15" fill="white"/><circle cx="51" cy="45" r="22" fill="white"/><circle cx="70" cy="56" r="16" fill="white"/><rect x="19" y="54" width="67" height="21" rx="10" fill="white"/>', "#1389ff") },
-    { name: "流墙手表", url: iconSvg('<rect x="28" y="19" width="44" height="62" rx="15" fill="#111"/><rect x="35" y="28" width="30" height="44" rx="9" fill="#d7ff2f"/><circle cx="50" cy="50" r="3" fill="#111"/>', "#d8d8d8") }
+    { name: "水流音乐", url: iconSvg('<g transform="translate(-4 0)"><path d="M44 24v37c-3-2-7-2-11-1-7 2-11 8-9 13s9 7 16 5c6-2 10-7 10-12V39l24-7v24c-3-2-7-2-11-1-7 2-11 8-9 13s9 7 16 5c6-2 10-7 10-12V19z" fill="white"/></g>', "#fa264f") },
+    { name: "水流播放", url: iconSvg('<circle cx="50" cy="50" r="34" fill="none" stroke="white" stroke-width="6"/><path d="M41 30 70 50 41 70z" fill="white"/>', "#111111") },
+    { name: "水流云", url: iconSvg('<circle cx="34" cy="56" r="15" fill="white"/><circle cx="51" cy="45" r="22" fill="white"/><circle cx="70" cy="56" r="16" fill="white"/><rect x="19" y="54" width="67" height="21" rx="10" fill="white"/>', "#1389ff") },
+    { name: "水流手表", url: iconSvg('<rect x="28" y="19" width="44" height="62" rx="15" fill="#111"/><rect x="35" y="28" width="30" height="44" rx="9" fill="#d7ff2f"/><circle cx="50" cy="50" r="3" fill="#111"/>', "#d8d8d8") }
   ];
   const transparentAnimalImages = Array.from({ length: 31 }, (_, index) => ({
     name: index === 4 ? "鲸鱼" : `透明动物 ${String(index + 1).padStart(2, "0")}`,
@@ -770,7 +770,7 @@
 
   function updateTypography() {
     invalidateLetterAnchors();
-    const family = fontMap[$("ibFont").value] || "IBSpace";
+    const family = window.STGFontLibrary?.family($("ibFont").value) || fontMap[$("ibFont").value] || "IBSpace";
     const base = clamp(stage.clientWidth * .09, 52, 154);
     [word, introWord, incomingWord, colorWord, whiteWord].forEach((element) => {
       element.style.fontFamily = family;
@@ -2124,7 +2124,7 @@
     const baseCycleSeconds = state.duration / 1000;
     const seconds = ((realSeconds * speed) % baseCycleSeconds + baseCycleSeconds) % baseCycleSeconds;
     const timeline = masterTimeline(seconds / baseCycleSeconds, baseCycleSeconds, playback.total);
-    const family = fontMap[$("ibFont").value] || "IBSpace";
+    const family = window.STGFontLibrary?.family($("ibFont").value) || fontMap[$("ibFont").value] || "IBSpace";
     const screenScale = stage.clientWidth ? width / stage.clientWidth : 1;
     // Export from the same measured composition as the live preview. The old
     // renderer invented a second responsive layout (82% x 62%), so GIF/MP4

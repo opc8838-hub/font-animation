@@ -8,7 +8,7 @@
   const fps = 30;
   const inputs = {
     rows: $("#rowsInput"), font: $("#fontFamily"), fontSize: $("#fontSize"),
-    lineGap: $("#lineGap"), speed: $("#speed"), assetScale: $("#assetScale"), wallRowsMode: $("#wallRowsMode"), wallRows: $("#wallRows"),
+    lineGap: $("#lineGap"), speed: $("#speed"), assetScale: $("#assetScale"), assetGap: $("#assetGap"), wallRowsMode: $("#wallRowsMode"), wallRows: $("#wallRows"),
     wave: $("#wave"), waveRate: $("#waveRate"), vertical: $("#vertical"),
     repeatGap: $("#repeatGap"), background: $("#backgroundColor"), foreground: $("#textColor"),
     motionMode: $("#motionMode"), introWord: $("#introWord"),
@@ -16,7 +16,8 @@
     introLeft: $("#introLeft"), introReturn: $("#introReturn"), popDuration: $("#popDuration"),
     fullDuration: $("#fullDuration"), exitDuration: $("#exitDuration"), finalDuration: $("#finalDuration"),
     retreatDuration: $("#retreatDuration"), swapMoment: $("#swapMoment"), swapInterval: $("#swapInterval"), assetItemScale: $("#assetItemScale"),
-    assetOffsetX: $("#assetOffsetX"), assetOffsetY: $("#assetOffsetY")
+    assetOffsetX: $("#assetOffsetX"), assetOffsetY: $("#assetOffsetY"),
+    assetGapBefore: $("#assetGapBefore"), assetGapAfter: $("#assetGapAfter")
   };
 
   const fontPresets = {
@@ -65,7 +66,7 @@
 
   function addAsset(id, label, src, removable = false) {
     const image = new Image();
-    const asset = { id, label, src, image, ratio: 1, ready: false, removable, scale: 1, offsetX: 0, offsetY: 0 };
+    const asset = { id, label, src, image, ratio: 1, ready: false, removable, scale: 1, offsetX: 0, offsetY: 0, gapBefore: 0, gapAfter: 0 };
     image.onload = () => {
       asset.ratio = Math.max(.2, Math.min(5, image.naturalWidth / Math.max(1, image.naturalHeight)));
       asset.ready = true;
@@ -80,6 +81,13 @@
 
   builtIns.forEach(([id, label, src]) => addAsset(id, label, src));
   window.TokenAssetTools.animalAssets().forEach(({ id, label, src }) => addAsset(id, label, src));
+  [
+    "bloub-capsule-colere-brun.gif", "bloub-cercle-attentif-violet.gif", "bloub-cercle-curieux-encre.gif",
+    "bloub-galet-blase-orange.gif", "bloub-galet-somnolent-rouge.gif", "bloub-goutte-curieux-turquoise.gif",
+    "bloub-hexagone-surpris-gris.gif", "bloub-nuage-mefiant-rouge.gif", "bloub-nuage-neutre-bleu.gif",
+    "bloub-squircle-effraye-orange.gif", "bloub-triangle-mefiant-ambre.gif"
+  ].forEach((filename, index) => addAsset(`bot${index + 1}`, `Bot ${String(index + 1).padStart(2, "0")}`, `assets/bot-series/${filename}`));
+  addAsset("rainbow", "彩虹圆环", `data:image/svg+xml;charset=utf-8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff3b30"/><stop offset=".2" stop-color="#ffcc00"/><stop offset=".4" stop-color="#34c759"/><stop offset=".6" stop-color="#00c7ff"/><stop offset=".8" stop-color="#5856d6"/><stop offset="1" stop-color="#ff2d95"/></linearGradient></defs><circle cx="50" cy="50" r="32" fill="none" stroke="url(#g)" stroke-width="15"/></svg>')}`);
 
   function parseRows() {
     const rows = inputs.rows.value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
@@ -194,9 +202,13 @@
     inputs.assetItemScale.value = String(Math.round(asset.scale * 100));
     inputs.assetOffsetX.value = String(Math.round(asset.offsetX));
     inputs.assetOffsetY.value = String(Math.round(asset.offsetY));
+    inputs.assetGapBefore.value = String(Math.round(asset.gapBefore));
+    inputs.assetGapAfter.value = String(Math.round(asset.gapAfter));
     $("#assetItemScaleOut").textContent = `${Math.round(asset.scale * 100)}%`;
     $("#assetOffsetXOut").textContent = `${Math.round(asset.offsetX)}%`;
     $("#assetOffsetYOut").textContent = `${Math.round(asset.offsetY)}%`;
+    $("#assetGapBeforeOut").textContent = String(Math.round(asset.gapBefore));
+    $("#assetGapAfterOut").textContent = String(Math.round(asset.gapAfter));
   }
 
   function updateSelectedAsset() {
@@ -205,6 +217,8 @@
     asset.scale = Number(inputs.assetItemScale.value) / 100;
     asset.offsetX = Number(inputs.assetOffsetX.value);
     asset.offsetY = Number(inputs.assetOffsetY.value);
+    asset.gapBefore = Number(inputs.assetGapBefore.value);
+    asset.gapAfter = Number(inputs.assetGapAfter.value);
     assetRevision += 1;
     layoutCache.clear();
     syncAssetTuner();
@@ -218,6 +232,7 @@
     textarea.setRangeText(token, start, end, "end");
     textarea.focus();
     textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    snapshotHistory();
   }
 
   [inputs.rows, inputs.introWord, inputs.finalLine].forEach((field) => {
@@ -252,6 +267,8 @@
         syncAssetTuner();
         insertToken(id);
         $("#assetProcessStatus").textContent = `${file.name} · ${result.status} · 可独立调大小与位置。`;
+        snapshotHistory();
+        scheduleSchemePersist();
       } catch (error) {
         $("#assetProcessStatus").textContent = `${file.name} 处理失败，请换用 PNG、JPG、WebP、SVG 或 GIF。`;
       }
@@ -287,15 +304,18 @@
   const easeOut = (value) => 1 - Math.pow(1 - clamp01(value), 3);
   const rangeProgress = (value, from, to) => clamp01((value - from) / (to - from));
 
-  function layoutTokens(context, line, fontPx, assetHeight, repeatGap) {
-    const cacheKey = [line, context.font, fontPx.toFixed(3), assetHeight.toFixed(3), repeatGap.toFixed(3), assetRevision].join("|");
+  function layoutTokens(context, line, fontPx, assetHeight, repeatGap, assetGap) {
+    const cacheKey = [line, context.font, fontPx.toFixed(3), assetHeight.toFixed(3), repeatGap.toFixed(3), assetGap.toFixed(3), assetRevision].join("|");
     const cached = layoutCache.get(cacheKey);
     if (cached) return cached;
     const items = tokensFor(line).map((token) => {
       if (token.type === "text") return { ...token, width: context.measureText(token.value).width };
       const asset = assets.get(token.id);
       const tunedHeight = assetHeight * (asset?.scale || 1);
-      return { ...token, asset, width: tunedHeight * (asset?.ratio || 1), height: tunedHeight };
+      const drawWidth = tunedHeight * (asset?.ratio || 1);
+      const beforeGap = assetGap + (asset?.gapBefore || 0) * fontPx / 100;
+      const afterGap = assetGap + (asset?.gapAfter || 0) * fontPx / 100;
+      return { ...token, asset, drawWidth, beforeGap, afterGap, width: drawWidth + beforeGap + afterGap, height: tunedHeight };
     });
     const layout = { items, width: Math.max(fontPx, items.reduce((sum, item) => sum + item.width, 0) + repeatGap) };
     if (layoutCache.size > 240) layoutCache.clear();
@@ -310,22 +330,23 @@
       if (item.type === "text") {
         context.fillText(item.value, cursor, y);
       } else if (item.asset?.ready) {
-        const drawX = cursor + item.height * item.asset.offsetX / 100;
+        const contentX = cursor + item.beforeGap;
+        const drawX = contentX + item.height * item.asset.offsetX / 100;
         const drawY = y + item.height * item.asset.offsetY / 100;
         if (assetRotation) {
           context.save();
-          context.translate(drawX + item.width / 2, drawY);
+          context.translate(drawX + item.drawWidth / 2, drawY);
           context.rotate(assetRotation);
-          context.drawImage(item.asset.image, -item.width / 2, -item.height / 2, item.width, item.height);
+          context.drawImage(item.asset.image, -item.drawWidth / 2, -item.height / 2, item.drawWidth, item.height);
           context.restore();
         } else {
-          context.drawImage(item.asset.image, drawX, drawY - item.height / 2, item.width, item.height);
+          context.drawImage(item.asset.image, drawX, drawY - item.height / 2, item.drawWidth, item.height);
         }
       } else {
         context.save();
         context.strokeStyle = color;
         context.lineWidth = Math.max(1, item.height * .045);
-        context.strokeRect(cursor + 1, y - item.height / 2, Math.max(2, item.width - 2), item.height);
+        context.strokeRect(cursor + item.beforeGap + 1, y - item.height / 2, Math.max(2, item.drawWidth - 2), item.height);
         context.restore();
       }
       cursor += item.width;
@@ -368,14 +389,59 @@
   }
 
   function choreographyPhase(timing, localTime) {
-    const phases = [
-      ["开场", 0, timing.leftEnd],
-      ["铺满画面", timing.leftEnd, timing.popEnd],
-      ["满屏向左流动", timing.popEnd, timing.fullEnd],
-      ["向右带动 / 逐行消失", timing.fullEnd, timing.exitEnd],
-      ["单行收尾", timing.exitEnd, timing.finalEnd]
-    ];
+    const phases = timelineBeats(timing).map((beat) => [beat.name, beat.start, beat.end]);
     return phases.find(([, start, end]) => localTime >= start && localTime < end) || phases[phases.length - 1];
+  }
+
+  function timelineBeats(timing = choreographyTiming()) {
+    return [
+      { name: "开场向左", start: 0, end: timing.leftEnd },
+      { name: "切入并铺满", start: timing.leftEnd, end: timing.popEnd },
+      { name: "满屏向左水流", start: timing.popEnd, end: timing.fullEnd },
+      { name: "向右带动并回收", start: timing.fullEnd, end: timing.exitEnd },
+      { name: "单行切换收尾", start: timing.exitEnd, end: timing.finalEnd }
+    ].map((beat, index) => ({ ...beat, index, duration: Math.max(0, beat.end - beat.start) }));
+  }
+
+  function renderTimeline() {
+    const track = $("#flowTimelineTrack");
+    const list = $("#flowTimelineList");
+    if (!track || !list) return;
+    const timing = choreographyTiming();
+    const beats = timelineBeats(timing);
+    track.replaceChildren();
+    list.replaceChildren();
+    beats.forEach((beat) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "flow-timeline-beat";
+      button.style.setProperty("--beat-width", String(Math.max(.035, beat.duration / Math.max(.001, timing.cycle))));
+      button.dataset.beatIndex = String(beat.index);
+      button.innerHTML = `<strong>${beat.index + 1}</strong><span>${beat.name}</span><small>${beat.duration.toFixed(2)}秒</small>`;
+      button.addEventListener("click", () => setTime(beat.start + .001));
+      track.append(button);
+
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = "flow-timeline-row";
+      row.dataset.beatIndex = String(beat.index);
+      row.innerHTML = `<i>${beat.index + 1}</i><span>${beat.name}</span><small>${beat.start.toFixed(2)} → ${beat.end.toFixed(2)}秒</small>`;
+      row.addEventListener("click", () => setTime(beat.start + .001));
+      list.append(row);
+    });
+    $("#flowTimeline").classList.toggle("is-continuous", inputs.motionMode.value !== "choreography");
+  }
+
+  function updateTimelinePlayhead(time, timing) {
+    const playhead = $("#flowTimelinePlayhead");
+    if (!playhead) return;
+    const progress = inputs.motionMode.value === "choreography" ? clamp01(time / Math.max(.001, timing.cycle)) : 0;
+    const trackWidth = $("#flowTimelineTrack")?.scrollWidth || $("#flowTimeline")?.clientWidth || 0;
+    playhead.style.left = `${(progress * trackWidth).toFixed(2)}px`;
+    const active = timelineBeats(timing).find((beat) => time >= beat.start && time < beat.end)?.index ?? 0;
+    document.querySelectorAll("[data-beat-index]").forEach((element) => {
+      element.classList.toggle("is-active", Number(element.dataset.beatIndex) === active);
+    });
   }
 
   function renderFrame(target, time, width, height, pixelRatio = 1) {
@@ -394,6 +460,7 @@
     const lineHeight = Math.max(fontPx * .66, fontPx + Number(inputs.lineGap.value) * scale);
     const assetHeight = fontPx * Number(inputs.assetScale.value) / 100;
     const repeatGap = Number(inputs.repeatGap.value) * scale;
+    const assetGap = Number(inputs.assetGap.value) * scale;
     const masterSpeed = Number(inputs.speed.value) / 100;
     const waveAmp = Number(inputs.wave.value) * scale;
     const waveRate = Number(inputs.waveRate.value) / 100;
@@ -419,7 +486,10 @@
     const localTime = choreography ? mod(time, timing.cycle) : time;
     const verticalOffset = Math.sin(localTime * .34) * verticalSpeed * 1.8;
 
-    context.font = `${preset.style} ${preset.weight} ${fontPx}px "${preset.family}", "Continuation SC", sans-serif`;
+    const sharedPreset = window.STGFontLibrary?.preset(inputs.font.value);
+    const activePreset = sharedPreset || preset;
+    const activeFamily = window.STGFontLibrary?.family(inputs.font.value) || `"${activePreset.family}", "Continuation SC", sans-serif`;
+    context.font = `${activePreset.style || "normal"} ${activePreset.weight} ${fontPx}px ${activeFamily}`;
     context.textAlign = "left";
     context.textBaseline = "middle";
     context.imageSmoothingEnabled = true;
@@ -427,15 +497,15 @@
     if (choreography && localTime < timing.leftEnd) {
       const introFontPx = fontPx * 1.12;
       const introAssetHeight = assetHeight * 1.12;
-      context.font = `${preset.style} ${preset.weight} ${introFontPx}px "${preset.family}", "Continuation SC", sans-serif`;
-      const introLayout = layoutTokens(context, inputs.introWord.value.trim() || "for", introFontPx, introAssetHeight, 0);
+      context.font = `${activePreset.style || "normal"} ${activePreset.weight} ${introFontPx}px ${activeFamily}`;
+      const introLayout = layoutTokens(context, inputs.introWord.value.trim() || "for", introFontPx, introAssetHeight, 0, assetGap);
       const introPhase = rangeProgress(localTime, 0, timing.leftEnd);
       const drift = lerp(0, -fontPx * .72, smooth(introPhase));
       context.save();
       context.translate(w / 2 + drift, h / 2);
       drawSequence(context, introLayout, -introLayout.width / 2, 0, inputs.foreground.value);
       context.restore();
-      context.font = `${preset.style} ${preset.weight} ${fontPx}px "${preset.family}", "Continuation SC", sans-serif`;
+      context.font = `${activePreset.style || "normal"} ${activePreset.weight} ${fontPx}px ${activeFamily}`;
     }
 
     const burstStrength = Number(inputs.burst.value) / 100;
@@ -492,7 +562,7 @@
       const swapElapsed = Math.max(0, localTime - timing.exitEnd - timing.duration[5] * swapStart) * 1000;
       const swapIndex = swapActive ? Math.floor(swapElapsed / Math.max(80, Number(inputs.swapInterval.value))) % finalStates.length : 0;
       const line = finalStage ? (swapActive ? finalStates[swapIndex] : rows[0]) : rows[sourceIndex];
-      const layout = layoutTokens(context, line, fontPx, assetHeight, repeatGap);
+      const layout = layoutTokens(context, line, fontPx, assetHeight, repeatGap, assetGap);
       const laneDistance = Math.abs(laneIndex);
       let rowAlpha = laneDistance <= revealLimit ? 1 : 0;
       if (choreography && localTime >= timing.fullEnd && localTime < timing.exitEnd && laneIndex !== 0) {
@@ -584,11 +654,13 @@
       canvas.dataset.phaseDuration = phaseDuration.toFixed(3);
       const status = `当前：${phaseName} · 本段 ${phaseDuration.toFixed(2)} 秒 · 一轮 ${timing.cycle.toFixed(2)} 秒`;
       if ($("#timingReadout").textContent !== status) $("#timingReadout").textContent = status;
+      updateTimelinePlayhead(displayTime, timing);
     } else {
       canvas.dataset.motionPhase = "持续满屏水流";
       delete canvas.dataset.phaseDuration;
       const status = "当前：持续满屏水流 · 不进入下一阶段";
       if ($("#timingReadout").textContent !== status) $("#timingReadout").textContent = status;
+      updateTimelinePlayhead(0, timing);
     }
     rafId = requestAnimationFrame(previewLoop);
   }
@@ -621,6 +693,7 @@
       lineGapOut: inputs.lineGap.value,
       speedOut: `${(Number(inputs.speed.value) / 100).toFixed(2)}×`,
       assetScaleOut: `${inputs.assetScale.value}%`,
+      assetGapOut: inputs.assetGap.value,
       wallRowsOut: inputs.wallRowsMode.value === "auto" ? "自动铺满" : `${inputs.wallRows.value}行`,
       waveOut: inputs.wave.value,
       waveRateOut: (Number(inputs.waveRate.value) / 100).toFixed(2),
@@ -642,6 +715,7 @@
     Object.entries(values).forEach(([id, value]) => { $(`#${id}`).textContent = value; });
     inputs.wallRows.disabled = inputs.wallRowsMode.value === "auto";
     document.documentElement.style.setProperty("--text-color", inputs.foreground.value);
+    renderTimeline();
   }
 
   Object.values(inputs).forEach((input) => input.addEventListener("input", updateOutputs));
@@ -651,11 +725,172 @@
     // so short values such as 0.20 s can be judged without waiting a full loop.
     setTime(choreographyTiming().popEnd);
   });
-  [inputs.assetItemScale, inputs.assetOffsetX, inputs.assetOffsetY].forEach((input) => {
+  [inputs.assetItemScale, inputs.assetOffsetX, inputs.assetOffsetY, inputs.assetGapBefore, inputs.assetGapAfter].forEach((input) => {
     input.addEventListener("input", updateSelectedAsset);
   });
   inputs.rows.addEventListener("input", syncRowSettings);
   inputs.motionMode.addEventListener("change", () => setTime(0));
+
+  const SCHEME_STORAGE_KEY = "me-water-flow-scheme-v2";
+  const SCHEME_VERSION = 2;
+  let defaultSchemeSnapshot = null;
+  let applyingScheme = false;
+  let persistTimer = 0;
+  let historyIndex = -1;
+  const schemeHistory = [];
+  const schemeControlIds = [...new Set([
+    ...Object.values(inputs).filter(Boolean).map((input) => input.id),
+    "assetRemoveBackground", "exportPreset", "exportWidth", "exportHeight", "exportDuration", "exportFps", "customDuration"
+  ])];
+
+  function collectScheme() {
+    const controls = {};
+    schemeControlIds.forEach((id) => {
+      const field = document.getElementById(id);
+      if (!field) return;
+      controls[id] = field.type === "checkbox" ? field.checked : field.value;
+    });
+    return {
+      type: "me-water-flow",
+      version: SCHEME_VERSION,
+      controls,
+      selectedAssetId,
+      rowSettings: rowSettings.map((setting) => ({ ...setting })),
+      assets: [...assets.values()].map((asset) => ({
+        id: asset.id, label: asset.label, src: asset.src, removable: asset.removable,
+        scale: asset.scale, offsetX: asset.offsetX, offsetY: asset.offsetY,
+        gapBefore: asset.gapBefore, gapAfter: asset.gapAfter
+      }))
+    };
+  }
+
+  function cloneScheme(scheme) { return JSON.parse(JSON.stringify(scheme)); }
+
+  function restoreSchemeAssets(items) {
+    assets.clear();
+    (items || []).forEach((item) => {
+      addAsset(item.id, item.label, item.src, Boolean(item.removable));
+      const asset = assets.get(item.id);
+      Object.assign(asset, {
+        scale: Number(item.scale) || 1,
+        offsetX: Number(item.offsetX) || 0,
+        offsetY: Number(item.offsetY) || 0,
+        gapBefore: Number(item.gapBefore) || 0,
+        gapAfter: Number(item.gapAfter) || 0
+      });
+    });
+    uploadSerial = Math.max(0, ...[...assets.keys()].map((id) => Number(String(id).replace(/^img/, "")) || 0));
+  }
+
+  function applyScheme(scheme, message = "方案已载入。") {
+    if (!scheme || !scheme.controls) throw new Error("方案内容不完整");
+    applyingScheme = true;
+    schemeControlIds.forEach((id) => {
+      const field = document.getElementById(id);
+      if (!field || !(id in scheme.controls)) return;
+      if (field.type === "checkbox") field.checked = Boolean(scheme.controls[id]);
+      else field.value = String(scheme.controls[id]);
+    });
+    if (Array.isArray(scheme.assets) && scheme.assets.length) restoreSchemeAssets(scheme.assets);
+    rowSettings = Array.isArray(scheme.rowSettings) ? scheme.rowSettings.map((setting) => ({ ...setting })) : [];
+    selectedAssetId = assets.has(scheme.selectedAssetId) ? scheme.selectedAssetId : assets.keys().next().value;
+    layoutCache.clear();
+    syncRowSettings();
+    renderAssetGrid();
+    syncAssetTuner();
+    snapshotHistory();
+    scheduleSchemePersist();
+    updateOutputs();
+    setTime(0);
+    applyingScheme = false;
+    $("#schemeStatus").textContent = message;
+  }
+
+  function updateHistoryButtons() {
+    $("#undoScheme").disabled = historyIndex <= 0;
+    $("#redoScheme").disabled = historyIndex >= schemeHistory.length - 1;
+  }
+
+  function snapshotHistory() {
+    if (applyingScheme) return;
+    const serialized = JSON.stringify(collectScheme());
+    if (schemeHistory[historyIndex] === serialized) return;
+    schemeHistory.splice(historyIndex + 1);
+    schemeHistory.push(serialized);
+    if (schemeHistory.length > 30) schemeHistory.shift();
+    historyIndex = schemeHistory.length - 1;
+    updateHistoryButtons();
+  }
+
+  function scheduleSchemePersist() {
+    if (applyingScheme) return;
+    window.clearTimeout(persistTimer);
+    persistTimer = window.setTimeout(() => {
+      try {
+        localStorage.setItem(SCHEME_STORAGE_KEY, JSON.stringify(collectScheme()));
+        $("#schemeStatus").textContent = "已自动保存当前方案。";
+      } catch (error) {
+        $("#schemeStatus").textContent = `自动保存失败：${error.message || "浏览器存储空间不足"}`;
+      }
+    }, 320);
+  }
+
+  $("#controlPanel").addEventListener("input", (event) => {
+    if (event.target.type === "file" || event.target.closest(".transport")) return;
+    scheduleSchemePersist();
+  });
+  $("#controlPanel").addEventListener("change", (event) => {
+    if (event.target.type === "file") return;
+    snapshotHistory();
+  });
+  $("#saveScheme").addEventListener("click", () => {
+    const scheme = collectScheme();
+    try { localStorage.setItem(SCHEME_STORAGE_KEY, JSON.stringify(scheme)); } catch (_) {}
+    downloadBlob(new Blob([JSON.stringify(scheme, null, 2)], { type: "application/json" }), "water-flow-scheme.json");
+    $("#schemeStatus").textContent = "方案已保存到本机，并下载了 JSON。";
+    snapshotHistory();
+  });
+  $("#importScheme").addEventListener("change", async (event) => {
+    const file = event.currentTarget.files[0];
+    event.currentTarget.value = "";
+    if (!file) return;
+    try {
+      applyScheme(JSON.parse(await file.text()), "方案已导入，文字、素材和时间轴均已重建。");
+      localStorage.setItem(SCHEME_STORAGE_KEY, JSON.stringify(collectScheme()));
+      snapshotHistory();
+    } catch (error) {
+      $("#schemeStatus").textContent = `导入失败：${error.message}`;
+    }
+  });
+  $("#resetScheme").addEventListener("click", () => {
+    applyScheme(cloneScheme(defaultSchemeSnapshot), "已恢复水流默认示例。" );
+    localStorage.removeItem(SCHEME_STORAGE_KEY);
+    snapshotHistory();
+  });
+  $("#clearScheme").addEventListener("click", () => {
+    const blank = cloneScheme(defaultSchemeSnapshot);
+    blank.controls.rowsInput = "everything";
+    blank.controls.introWord = "for";
+    blank.controls.finalLine = "everything";
+    blank.assets = blank.assets.filter((asset) => !asset.removable);
+    applyScheme(blank, "已清理文字和上传素材，可从空白内容重新编辑。" );
+    snapshotHistory();
+    scheduleSchemePersist();
+  });
+  $("#undoScheme").addEventListener("click", () => {
+    if (historyIndex <= 0) return;
+    historyIndex -= 1;
+    applyScheme(JSON.parse(schemeHistory[historyIndex]), "已撤销上一步编辑。" );
+    updateHistoryButtons();
+    scheduleSchemePersist();
+  });
+  $("#redoScheme").addEventListener("click", () => {
+    if (historyIndex >= schemeHistory.length - 1) return;
+    historyIndex += 1;
+    applyScheme(JSON.parse(schemeHistory[historyIndex]), "已重做下一步编辑。" );
+    updateHistoryButtons();
+    scheduleSchemePersist();
+  });
 
   function exportDimensions() {
     const preset = $("#exportPreset").value;
@@ -690,13 +925,23 @@
   $("#exportPreset").addEventListener("change", (event) => {
     $("#customSize").hidden = event.currentTarget.value !== "custom";
   });
+  $("#exportDuration").addEventListener("change", (event) => {
+    $("#customDurationWrap").hidden = event.currentTarget.value !== "custom";
+  });
+
+  function selectedExportDuration() {
+    const value = $("#exportDuration").value;
+    if (value === "cycle") return inputs.motionMode.value === "choreography" ? choreographyTiming().cycle : 4;
+    if (value === "custom") return Math.max(.5, Math.min(30, Number($("#customDuration").value) || 4));
+    return Number(value) || 4;
+  }
 
   $("#exportPng").addEventListener("click", () => {
     const output = makeExportCanvas();
     renderFrame(output, currentTime(), output.width, output.height, 1);
     output.toBlob((blob) => {
       if (!blob) return;
-      downloadBlob(blob, `current-wall-${output.width}x${output.height}.png`);
+      downloadBlob(blob, `water-flow-${output.width}x${output.height}.png`);
       exportStatus.textContent = `PNG 已生成 · ${output.width} × ${output.height}`;
     }, "image/png");
   });
@@ -707,9 +952,9 @@
       return;
     }
     const output = makeExportCanvas();
-    const gifFps = 12;
-    const duration = inputs.motionMode.value === "choreography" ? choreographyTiming().cycle : 4;
-    const frameTotal = gifFps * duration;
+    const gifFps = Math.min(30, Number($("#exportFps").value) || 15);
+    const duration = selectedExportDuration();
+    const frameTotal = Math.max(1, Math.ceil(gifFps * duration));
     setExportBusy(true, `正在准备 GIF · 0 / ${frameTotal} 帧`);
     try {
       const gif = new GIF({
@@ -722,7 +967,7 @@
       }
       gif.on("progress", (progress) => { exportStatus.textContent = `正在编码 GIF · ${Math.round(progress * 100)}%`; });
       gif.on("finished", (blob) => {
-        downloadBlob(blob, `current-wall-${output.width}x${output.height}.gif`);
+        downloadBlob(blob, `water-flow-${output.width}x${output.height}.gif`);
         setExportBusy(false, `GIF 已生成 · ${output.width} × ${output.height}`);
       });
       gif.render();
@@ -733,43 +978,46 @@
   });
 
   $("#exportVideo").addEventListener("click", async () => {
-    const output = makeExportCanvas();
-    if (!output.captureStream || !window.MediaRecorder) {
-      exportStatus.textContent = "当前浏览器不支持视频录制，请使用最新版 Chrome / Edge。";
+    if (!window.HME || typeof HME.createH264MP4Encoder !== "function") {
+      exportStatus.textContent = "MP4 编码器未加载，请刷新页面后重试。";
       return;
     }
-    const candidates = ["video/mp4;codecs=avc1.42E01E", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
-    const mimeType = candidates.find((type) => MediaRecorder.isTypeSupported(type)) || "";
-    const stream = output.captureStream(fps);
-    const recorder = new MediaRecorder(stream, mimeType ? { mimeType, videoBitsPerSecond: 12_000_000 } : undefined);
-    const chunks = [];
-    recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
-    const finished = new Promise((resolve) => {
-      recorder.onstop = () => {
-        const type = recorder.mimeType || mimeType || "video/webm";
-        const extension = type.includes("mp4") ? "mp4" : "webm";
-        downloadBlob(new Blob(chunks, { type }), `current-wall-${output.width}x${output.height}.${extension}`);
-        resolve(extension.toUpperCase());
-      };
-    });
-    const duration = inputs.motionMode.value === "choreography" ? choreographyTiming().cycle : 4;
-    setExportBusy(true, "正在录制视频 · 0%");
-    recorder.start();
-    const started = performance.now();
-    await new Promise((resolve) => {
-      function draw(now) {
-        const elapsed = (now - started) / 1000;
-        renderFrame(output, elapsed, output.width, output.height, 1);
-        exportStatus.textContent = `正在录制视频 · ${Math.min(100, Math.round(elapsed / duration * 100))}%`;
-        if (elapsed < duration) requestAnimationFrame(draw);
-        else resolve();
+    const output = makeExportCanvas();
+    output.width = Math.round(output.width / 2) * 2;
+    output.height = Math.round(output.height / 2) * 2;
+    const context = output.getContext("2d", { willReadFrequently: true });
+    const videoFps = Number($("#exportFps").value) || 30;
+    const duration = selectedExportDuration();
+    const frameTotal = Math.max(1, Math.ceil(videoFps * duration));
+    let encoder;
+    setExportBusy(true, `正在导出 MP4 · 0 / ${frameTotal} 帧`);
+    try {
+      encoder = await HME.createH264MP4Encoder();
+      encoder.outputFilename = `water-flow-${output.width}x${output.height}.mp4`;
+      encoder.width = output.width;
+      encoder.height = output.height;
+      encoder.frameRate = videoFps;
+      encoder.kbps = 18000;
+      encoder.groupOfPictures = 15;
+      encoder.initialize();
+      for (let frame = 0; frame < frameTotal; frame += 1) {
+        renderFrame(output, frame / videoFps, output.width, output.height, 1);
+        encoder.addFrameRgba(context.getImageData(0, 0, output.width, output.height).data);
+        if (frame % 2 === 0) {
+          exportStatus.textContent = `正在导出 MP4 · ${Math.round((frame + 1) / frameTotal * 100)}%`;
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
       }
-      requestAnimationFrame(draw);
-    });
-    recorder.stop();
-    const extension = await finished;
-    stream.getTracks().forEach((track) => track.stop());
-    setExportBusy(false, `${extension} 视频已生成 · ${output.width} × ${output.height}`);
+      encoder.finalize();
+      const bytes = encoder.FS.readFile(encoder.outputFilename);
+      downloadBlob(new Blob([bytes], { type: "video/mp4" }), encoder.outputFilename);
+      setExportBusy(false, `MP4 已生成 · ${output.width} × ${output.height} · ${(bytes.length / 1024 / 1024).toFixed(1)} MB`);
+    } catch (error) {
+      console.error(error);
+      setExportBusy(false, `MP4 导出失败：${error.message || "编码器异常"}`);
+    } finally {
+      try { encoder?.delete(); } catch (_) {}
+    }
   });
 
   window.addEventListener("beforeunload", () => cancelAnimationFrame(rafId));
@@ -778,5 +1026,13 @@
   syncAssetTuner();
   syncRowSettings();
   updateOutputs();
+  defaultSchemeSnapshot = collectScheme();
+  try {
+    const storedScheme = JSON.parse(localStorage.getItem(SCHEME_STORAGE_KEY) || "null");
+    if (storedScheme?.controls) applyScheme(storedScheme, "已恢复上次自动保存的水流方案。" );
+  } catch (_) {
+    $("#schemeStatus").textContent = "本机方案读取失败，已使用默认示例。";
+  }
+  snapshotHistory();
   document.fonts.ready.finally(previewLoop);
 })();

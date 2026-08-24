@@ -65,9 +65,10 @@
     "ib-kr-black": { family: "CRKRBlack", weight: 900 }
   };
   function applyFont(ctx, key, px, weight) {
-    const preset = FONTS[key] || FONTS["cn-noto-regular"];
+    const preset = window.STGFontLibrary?.preset(key) || FONTS[key] || FONTS["cn-noto-regular"];
     const w = weight || preset.weight;
-    ctx.font = `${w} ${px}px "${preset.family}", "Continuation SC", "Noto Sans SC", sans-serif`;
+    const family = window.STGFontLibrary?.family(key) || `"${preset.family}", "Continuation SC", "Noto Sans SC", sans-serif`;
+    ctx.font = `${preset.style || "normal"} ${w} ${px}px ${family}`;
     return preset;
   }
   function loadImages(urls) {

@@ -3,27 +3,39 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="流墙：可将图片与图标嵌入文字的多行水流跑马灯动效。">
-  <title>流墙 Current Wall | STG 中文版</title>
+  <meta name="description" content="水流：可将图片与图标嵌入文字的多行水流动效。">
+  <title>水流 Water Flow | ME Motion Studio</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;f[]=general-sans@400,500,600&amp;f[]=clash-display@500,600&amp;f[]=cabinet-grotesk@500,700&amp;display=swap">
   <link rel="stylesheet" href="continuation.css">
-  <link rel="stylesheet" href="currentwall.css">
+  <link rel="stylesheet" href="currentwall.css?v=20260824-3">
   <link rel="stylesheet" href="me-motion-editor.css">
   <link rel="stylesheet" href="stg-cn.css">
 </head>
 <body class="me-motion-editor">
-  <main class="current-stage" aria-label="流墙动效画布">
+  <main class="current-stage" aria-label="水流动效画布">
     <canvas id="flowCanvas"></canvas>
     <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
   </main>
 
   <details class="control-panel current-panel" id="controlPanel" open>
     <summary>
-      <span><b>流墙</b><small>CURRENT WALL / 25</small></span>
+      <span><b>水流</b><small>WATER FLOW / 25</small></span>
       <i aria-hidden="true">参数</i>
     </summary>
     <div class="panel-scroll">
+      <section class="scheme-section">
+        <div class="section-heading"><p class="section-label">方案</p><small class="section-note">自动保存</small></div>
+        <div class="scheme-actions">
+          <button id="saveScheme" type="button">保存方案</button>
+          <label class="scheme-import">导入方案<input id="importScheme" type="file" accept="application/json,.json"></label>
+          <button id="resetScheme" type="button">恢复默认</button>
+          <button id="clearScheme" type="button">清理重做</button>
+          <button id="undoScheme" type="button">撤销</button>
+          <button id="redoScheme" type="button">重做</button>
+        </div>
+        <p class="hint" id="schemeStatus" aria-live="polite">文字、图标、节奏与颜色都会随方案保存。</p>
+      </section>
+
       <section>
         <label class="section-label" for="rowsInput">文字行 · 每行独立流动</label>
         <textarea id="rowsInput" rows="7" spellcheck="false">every{{music}}thing  everything
@@ -36,7 +48,7 @@ everything  every{{watch}}thing</textarea>
       <section class="scene-grid">
         <label>动效模式
           <select id="motionMode">
-            <option value="choreography" selected>参考视频编舞</option>
+            <option value="choreography" selected>完整水流</option>
             <option value="continuous">持续满屏水流</option>
           </select>
         </label>
@@ -79,6 +91,12 @@ everything</textarea>
             <label>上下 <output id="assetOffsetYOut">0%</output>
               <input id="assetOffsetY" type="range" min="-60" max="60" value="0">
             </label>
+            <label>左间距 <output id="assetGapBeforeOut">0</output>
+              <input id="assetGapBefore" type="range" min="-20" max="100" value="0">
+            </label>
+            <label>右间距 <output id="assetGapAfterOut">0</output>
+              <input id="assetGapAfter" type="range" min="-20" max="100" value="0">
+            </label>
           </div>
         </div>
         <p class="hint">先在文字框中放好光标，再点素材即可插入；同一素材可以出现在一处或多处。支持 PNG、JPG、WEBP、SVG。</p>
@@ -95,43 +113,15 @@ everything</textarea>
       <section class="font-picker">
         <label class="section-label" for="fontFamily">字体</label>
         <select id="fontFamily">
-          <optgroup label="Snap 动效字体">
-            <option value="snap-inter-medium" selected>Inter Medium</option>
-            <option value="snap-inter-black">Inter Black</option>
-            <option value="snap-ibm-plex">IBM Plex Mono Bold Italic</option>
-            <option value="snap-space-mono">Space Mono Bold</option>
-            <option value="snap-space-grotesk">Space Grotesk Bold</option>
-          </optgroup>
-          <optgroup label="Free Faces · OFL">
-            <option value="ff-space-grotesk">Space Grotesk</option>
-            <option value="ff-martian-mono">Martian Mono</option>
-            <option value="ff-oi">Oi Display</option>
-            <option value="ff-barriecito">Barriecito</option>
-          </optgroup>
-          <optgroup label="UNCUT · OFL">
-            <option value="uncut-berlin">Berlin Grotesk</option>
-            <option value="uncut-berlin-bold">Berlin Grotesk Bold</option>
-          </optgroup>
-          <optgroup label="Fontshare · 官方 API">
-            <option value="fs-satoshi">Satoshi</option>
-            <option value="fs-general-sans">General Sans</option>
-            <option value="fs-clash-display">Clash Display</option>
-            <option value="fs-cabinet">Cabinet Grotesk</option>
-          </optgroup>
-          <optgroup label="中文字体">
-            <option value="cn-noto-regular">Noto Sans SC</option>
-            <option value="cn-noto-black">Noto Sans SC Black</option>
-          </optgroup>
+          <option value="stg:inter" selected>Inter</option>
         </select>
+        <p class="hint">统一字体库包含拉丁、中文、日文与韩文字体；所有导出格式使用同一字体。</p>
       </section>
 
       <section class="motion-quick">
         <div class="section-heading">
           <p class="section-label">常用调节</p>
           <small class="section-note">先调这 10 项</small>
-        </div>
-        <div class="motion-map" aria-label="动效阶段">
-          <span>中间→满屏</span><i>→</i><span>满屏左流</span><i>→</i><span>中间向右</span><i>→</i><span>逐行消失</span><i>→</i><span>单行收尾</span>
         </div>
         <div class="controls-grid quick-grid">
         <label>字号 <small class="stage-tag">画面</small><output id="fontSizeOut">62</output>
@@ -142,6 +132,9 @@ everything</textarea>
         </label>
         <label>图标大小 <small class="stage-tag">画面</small><output id="assetScaleOut">100%</output>
           <input id="assetScale" type="range" min="45" max="180" value="100">
+        </label>
+        <label>图标左右间距 <small class="stage-tag">画面</small><output id="assetGapOut">12</output>
+          <input id="assetGap" type="range" min="-20" max="120" value="12">
         </label>
         <label>行数方式 <small class="stage-tag">画面</small>
           <select id="wallRowsMode">
@@ -172,10 +165,19 @@ everything</textarea>
         <p class="hint timing-live" id="timingReadout" aria-live="polite">当前：准备预览</p>
       </section>
 
+      <section class="timeline-section">
+        <div class="section-heading"><p class="section-label">动效时间轴</p><small class="section-note">点一段可跳到该阶段</small></div>
+        <div class="flow-timeline" id="flowTimeline" aria-label="水流动效时间轴">
+          <div class="flow-timeline-track" id="flowTimelineTrack"></div>
+          <i class="flow-timeline-playhead" id="flowTimelinePlayhead" aria-hidden="true"></i>
+        </div>
+        <div class="flow-timeline-list" id="flowTimelineList"></div>
+      </section>
+
       <details class="advanced-controls motion-advanced">
         <summary><span>高级动效参数</span><small>精调时打开</small></summary>
         <div class="advanced-body">
-          <p class="hint advanced-hint">这些参数用于复刻特殊节奏；不确定时保留默认值。</p>
+          <p class="hint advanced-hint">这些参数用于细调特殊节奏；不确定时保留默认值。</p>
           <section class="controls-grid">
             <label>满屏左流速度 <output id="speedOut">1.00×</output>
               <input id="speed" type="range" min="20" max="220" value="100">
@@ -248,21 +250,45 @@ everything</textarea>
           <span>×</span>
           <label>高<input id="exportHeight" type="number" min="240" max="3840" value="1080"></label>
         </div>
+        <div class="export-options">
+          <label>导出时长
+            <select id="exportDuration">
+              <option value="cycle" selected>完整一轮</option>
+              <option value="3">3 秒</option>
+              <option value="5">5 秒</option>
+              <option value="10">10 秒</option>
+              <option value="custom">自定义</option>
+            </select>
+          </label>
+          <label>帧率
+            <select id="exportFps">
+              <option value="15">15 FPS</option>
+              <option value="24">24 FPS</option>
+              <option value="30" selected>30 FPS</option>
+              <option value="60">60 FPS</option>
+            </select>
+          </label>
+        </div>
+        <label class="custom-duration" id="customDurationWrap" hidden>自定义秒数
+          <input id="customDuration" type="number" min="0.5" max="30" step="0.1" value="4">
+        </label>
         <div class="export-actions">
           <button id="exportPng" type="button">PNG 图片</button>
           <button id="exportGif" type="button">GIF 动图</button>
           <button id="exportVideo" type="button">视频</button>
         </div>
-        <p class="export-status" id="exportStatus" aria-live="polite">PNG 导出当前帧；GIF / 视频导出一遍完整编舞。</p>
+        <p class="export-status" id="exportStatus" aria-live="polite">PNG 导出当前帧；GIF / MP4 与画布使用同一条水流时间轴。</p>
       </section>
-      <p class="formula">复用 Layers 的取模回卷原理<br>行位置 = 相位 + 时间 × 行速度 + 正弦水波</p>
+      <p class="formula">水流位置 = 行相位 + 时间 × 行速度 + 正弦波动</p>
     </div>
   </details>
 
   <script src="js/continuation-gif.js"></script>
+  <script src="js/h264-mp4-encoder.web.js"></script>
   <script src="token-asset-tools.js"></script>
-  <script src="currentwall.js"></script>
+  <script src="shared-font-library.js?v=20260824-2"></script>
+  <script src="currentwall.js?v=20260824-fonts1"></script>
   <script src="me-motion-editor.js"></script>
-  <script src="stg-cn.js"></script>
+  <script src="stg-cn.js?v=20260824-fonts1"></script>
 </body>
 </html>

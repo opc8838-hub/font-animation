@@ -19,10 +19,13 @@ If the task includes a reference video, use the available video-analysis workflo
 
 - Separate the unique choreography from the reusable editor shell.
 - Reuse shared fonts and icon/media assets by path; do not duplicate them into each effect.
+- Use the project-wide `site/shared-font-library.js` and `site/shared-fonts.css` catalog for every font selector and renderer. New effects must not maintain a private reduced font list.
 - Support arbitrary user text and asset counts. Rebuild dependent controls, timelines, and replacement targets when content changes.
+- Give every effect editor a real visual choreography timeline. It must reflect the current durations, show a moving playhead, and seek when the user selects a beat.
 - Keep the canvas centered and responsive. The right-side stage is the actual composition, not a decorative 9:16 mockup.
 - Drive preview and export from the same deterministic timeline and geometry functions. Never maintain a visually similar second renderer with independent constants.
 - Use transform/opacity-based motion and `requestAnimationFrame`; avoid per-frame DOM reconstruction and layout reads.
+- Keep analysis provenance internal. Product UI must name the motion itself and must not expose labels such as “参考视频”, “参考编舞”, “原片复刻”, or similar implementation notes.
 - Preserve project attribution and existing licenses.
 
 ## Completion gate
@@ -30,9 +33,10 @@ If the task includes a reference video, use the available video-analysis workflo
 Before handing off an effect:
 
 - Test editing with different text lengths and more/fewer icons.
+- Test at least one Latin, Chinese, Japanese, and Korean font from the shared catalog in preview and export.
+- Check that timeline blocks, durations, active beat, playhead, and click-to-seek all stay synchronized after timing edits.
 - Test save, reload, JSON export/import, reset, clear, undo, and redo when those controls are present.
 - Export and inspect at least one real GIF and one real video, not only the live preview.
 - Check one square or portrait size in addition to 16:9 when the effect claims multi-size export.
 - Confirm the gallery card uses the approved preview. Prefer an approved exported MP4 loop when an iframe would produce a different responsive composition.
 - Run syntax checks and `git diff --check`, bump cache versions, and avoid staging unrelated files.
-

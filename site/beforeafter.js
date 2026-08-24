@@ -82,8 +82,8 @@
     return {
       beforeLabel: inputs.beforeLabel.value,
       afterLabel: inputs.afterLabel.value,
-      beforeFont: fontMap[inputs.beforeFont.value] || "IBSpace",
-      afterFont: fontMap[inputs.afterFont.value] || "IBSpace",
+      beforeFont: window.STGFontLibrary?.preset(inputs.beforeFont.value)?.family || fontMap[inputs.beforeFont.value] || "IBSpace",
+      afterFont: window.STGFontLibrary?.preset(inputs.afterFont.value)?.family || fontMap[inputs.afterFont.value] || "IBSpace",
       labelSize: Number(inputs.labelSize.value) / 100,
       labelTracking: Number(inputs.labelTracking.value),
       labelPad: Number(inputs.labelPad.value),

@@ -161,7 +161,7 @@
   }
 
   function fontFamily() {
-    return fontPresets[inputs.font.value] || fontPresets.inter;
+    return window.STGFontLibrary?.family(inputs.font.value) || fontPresets[inputs.font.value] || fontPresets.inter;
   }
 
   function curveExponent() {

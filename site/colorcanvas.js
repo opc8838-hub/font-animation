@@ -111,7 +111,7 @@
     const baseSize = Number(inputs.fontSize.value) * scale;
     const tracking = Number(inputs.tracking.value) * scale;
     const lineStep = baseSize * Number(inputs.lineGap.value);
-    const family = fontMap[inputs.font.value] || fontMap.inter;
+    const family = window.STGFontLibrary?.family(inputs.font.value) || fontMap[inputs.font.value] || fontMap.inter;
     const maxWidth = width * Number(inputs.textWidth.value) / 100;
     const centerX = width * Number(inputs.textX.value) / 100;
     const centerY = height * Number(inputs.textY.value) / 100;

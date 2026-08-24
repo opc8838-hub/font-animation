@@ -236,7 +236,7 @@
     const state = sceneAt(time);
     if (state.text) {
       const scale = visualScale(width, height);
-      const family = fontFamilies[inputs.font.value] || fontFamilies.inter;
+      const family = window.STGFontLibrary?.family(inputs.font.value) || fontFamilies[inputs.font.value] || fontFamilies.inter;
       const fontWeight = Number(inputs.fontWeight.value);
       const baseSize = Number(inputs.fontSize.value) * scale;
       const tracking = Number(inputs.tracking.value) * scale;

@@ -6,7 +6,7 @@ const effects = [
   ["clutter", "杂散", "Clutter", "space", "立体空间"],
   ["coil", "线圈", "Coil", "flow", "波形流动"],
   ["continuation", "续句", "Continuation", "type", "匹配切换"],
-  ["currentwall", "流墙", "Current Wall", "flow", "水流字墙"],
+  ["currentwall", "水流", "Water Flow", "flow", "多行水流"],
   ["verticalwall", "纵跃", "Vertical Rise", "flow", "纵向弹出"],
   ["creatorstudio", "汇聚", "Creator Merge", "type", "字位重组"],
   ["focuswheel", "焦轮", "Focus Wheel", "flow", "纵向焦点滚轮"],

@@ -186,7 +186,7 @@
   }
   function style(ctx, w, h) {
     const scale = Math.max(0.24, Math.min(w / 1000, h / 900)),
-      family = fonts[inputs.font.value] || fonts.inter,
+      family = window.STGFontLibrary?.family(inputs.font.value) || fonts[inputs.font.value] || fonts.inter,
       tracking = +inputs.tracking.value * scale;
     let size = +inputs.fontSize.value * scale;
     ctx.font = `${inputs.weight.value} ${size}px ${family}`;

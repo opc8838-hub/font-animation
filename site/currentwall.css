@@ -33,6 +33,24 @@
   scrollbar-gutter: stable;
 }
 
+.scheme-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+.scheme-actions button,
+.scheme-import { min-height: 38px; }
+.scheme-import {
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--me-soft, #e8e8ed);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.scheme-import input { position: fixed; opacity: 0; pointer-events: none; }
+
 .section-heading {
   display: flex;
   align-items: center;
@@ -48,28 +66,6 @@
   font: 700 8px/1 "Courier New", monospace;
   letter-spacing: .04em;
 }
-
-.motion-map {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin: 0 0 12px;
-  padding: 8px;
-  overflow-x: auto;
-  border: 1px solid #111;
-  background: #fff;
-  white-space: nowrap;
-  scrollbar-width: none;
-}
-
-.motion-map::-webkit-scrollbar { display: none; }
-.motion-map span {
-  padding: 4px 5px;
-  background: #e7e6df;
-  font: 700 8px/1 "Courier New", monospace;
-}
-.motion-map span:nth-of-type(3) { background: #c1ff1a; }
-.motion-map i { color: #77776f; font: 400 9px/1 sans-serif; }
 
 .quick-grid label {
   padding: 7px 8px 8px;
@@ -263,10 +259,10 @@
   font: 700 9px/1 "Courier New", monospace;
 }
 
-.asset-tuner-grid { display: grid; gap: 7px; }
+.asset-tuner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 12px; }
 .asset-tuner-grid label {
   display: grid;
-  grid-template-columns: 34px 1fr 34px;
+  grid-template-columns: 42px 1fr 34px;
   align-items: center;
   gap: 6px;
   font-size: 8px;
@@ -298,7 +294,97 @@
 .row-sliders input { width: 100%; }
 .row-sliders output { text-align: right; font: 8px/1 "Courier New", monospace; }
 
+.timeline-section { overflow: hidden; }
+.flow-timeline {
+  position: relative;
+  padding: 3px 0 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.flow-timeline-track {
+  min-width: 540px;
+  height: 94px;
+  display: flex;
+  gap: 4px;
+}
+.flow-timeline-beat {
+  position: relative;
+  flex: var(--beat-width) 1 0;
+  min-width: 76px;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 5px;
+  padding: 10px !important;
+  overflow: hidden;
+  border-radius: 11px !important;
+  background: #e8e8ed !important;
+  text-align: left;
+}
+.flow-timeline-beat strong { font-size: 18px; line-height: 1; }
+.flow-timeline-beat span { font-size: 10px; font-weight: 700; white-space: nowrap; }
+.flow-timeline-beat small { color: #6e6e73; font-size: 9px; font-variant-numeric: tabular-nums; }
+.flow-timeline-beat.is-active { background: #0071e3 !important; color: #fff !important; }
+.flow-timeline-beat.is-active small { color: rgba(255,255,255,.78); }
+.flow-timeline-playhead {
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  bottom: 5px;
+  width: 2px;
+  border-radius: 2px;
+  background: #ff375f;
+  pointer-events: none;
+  transform: translateX(-1px);
+}
+.flow-timeline-playhead::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: inherit;
+  transform: translate(-50%, -2px);
+}
+.flow-timeline.is-continuous { opacity: .45; }
+.flow-timeline-list { display: grid; gap: 4px; margin-top: 7px; }
+.flow-timeline-row {
+  min-height: 34px !important;
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 8px !important;
+  text-align: left;
+}
+.flow-timeline-row i {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #d2d2d7;
+  font-size: 9px;
+  font-style: normal;
+}
+.flow-timeline-row span { font-size: 11px; font-weight: 650; }
+.flow-timeline-row small { color: #6e6e73; font-size: 9px; font-variant-numeric: tabular-nums; }
+.flow-timeline-row.is-active i { background: #0071e3; color: #fff; }
+
+.export-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 9px;
+}
+.export-options label,
+.custom-duration { display: grid; gap: 5px; font-size: 10px; font-weight: 650; }
+.custom-duration { margin-top: 8px; }
+
 @media (max-width: 720px) {
   .current-panel { --panel-width: min(340px, calc(100vw - 20px)); }
   .canvas-mark { right: 8px; bottom: 8px; }
+  .scheme-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

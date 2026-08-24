@@ -6,6 +6,10 @@ Choose the closest source by capability and copy only the relevant pattern.
 
 Use `site/workspace-editor.css`, `site/me-motion-editor.css`, `site/me-motion-editor.js`, `site/media-layer.css`, and `site/media-layer.js` for the current shared editor layout and media model. New effects should extend this product language instead of reviving the old STG panel.
 
+## Shared font catalog
+
+Use `site/shared-font-library.js` for the single project-wide font list and value resolution, and `site/shared-fonts.css` for the local font faces. `site/stg-cn.js` loads the catalog for project pages. Effect renderers must resolve the selected `stg:*` value through the shared library instead of falling back to a private default.
+
 ## Rich icon editor and scheme model
 
 Use `site/iconburst.html`, `site/iconburst.css`, `site/iconburst-overrides.css`, and `site/iconburst.js` for:

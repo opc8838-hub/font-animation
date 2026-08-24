@@ -96,7 +96,7 @@
     const scale = scaleFor(width, height);
     let fontSize = Number(fontSizeInput.value) * scale;
     let tracking = Number(inputs.tracking.value) * scale;
-    const family = fontMap[inputs.font.value] || fontMap.inter;
+    const family = window.STGFontLibrary?.family(inputs.font.value) || fontMap[inputs.font.value] || fontMap.inter;
     renderContext.font = `${inputs.weight.value} ${fontSize}px ${family}`;
     const characters = Array.from(text || " ");
     const replacementSet = new Set(replacements || []);

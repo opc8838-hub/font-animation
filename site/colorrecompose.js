@@ -111,7 +111,7 @@
     context.fillStyle = inputs.background.value;
     context.fillRect(0, 0, w, h);
 
-    const preset = fontPresets[inputs.font.value] || fontPresets["snap-inter-black"];
+    const preset = window.STGFontLibrary?.preset(inputs.font.value) || fontPresets[inputs.font.value] || fontPresets["snap-inter-black"];
     const scale = h / 900;
     const fontPx = Math.max(12, Number(inputs.fontSize.value) * scale);
     const tracking = Number(inputs.tracking.value) * scale;

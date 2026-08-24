@@ -207,7 +207,7 @@
   }
 
   function applyFontPreset() {
-    const preset = fontPresets[inputs.font.value] || fontPresets["snap-inter-medium"];
+    const preset = window.STGFontLibrary?.preset(inputs.font.value) || fontPresets[inputs.font.value] || fontPresets["snap-inter-medium"];
     document.documentElement.style.setProperty("--phrase-font", `"${preset.family}"`);
     document.documentElement.style.setProperty("--phrase-style", preset.style);
     return preset;
@@ -419,7 +419,7 @@
     const [leadText, suffixText] = pairs[pairIndex];
     const anchorPercent = rowPositions[pairIndex] ?? 50;
     const anchorX = canvas.width * anchorPercent / 100;
-    const preset = fontPresets[inputs.font.value] || fontPresets["snap-inter-medium"];
+    const preset = window.STGFontLibrary?.preset(inputs.font.value) || fontPresets[inputs.font.value] || fontPresets["snap-inter-medium"];
     const previewShort = Math.max(1, Math.min(designFrame.clientWidth, designFrame.clientHeight));
     const scaleToOutput = Math.min(canvas.width, canvas.height) / previewShort;
     const leadFontSize = Number(inputs.leadFontSize.value) * scaleToOutput;

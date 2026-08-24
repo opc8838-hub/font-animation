@@ -1,0 +1,49 @@
+@font-face{font-family:"STG Inter";src:url("continuation_fonts/Inter-Variable.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"STG Space Grotesk";src:url("continuation_fonts/SpaceGrotesk-Variable.ttf") format("truetype");font-weight:300 700;font-display:swap}
+@font-face{font-family:"STG IBM Plex Mono";src:url("assets/IBMPlexMono-Regular.otf") format("opentype");font-weight:400;font-display:swap}
+@font-face{font-family:"STG IBM Plex Mono";src:url("continuation_fonts/IBMPlexMono-BoldItalic.ttf") format("truetype");font-weight:700;font-style:italic;font-display:swap}
+@font-face{font-family:"STG Space Mono";src:url("assets/SpaceMono-Bold.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"STG Martian Mono";src:url("assets/fonts/MartianMono-Variable.ttf") format("truetype");font-weight:100 800;font-display:swap}
+@font-face{font-family:"STG Berlin Grotesk";src:url("continuation_fonts/BerlinGrotesk-Regular.otf") format("opentype");font-weight:400;font-display:swap}
+@font-face{font-family:"STG Berlin Grotesk";src:url("continuation_fonts/BerlinGrotesk-Bold.otf") format("opentype");font-weight:700;font-display:swap}
+@font-face{font-family:"STG Oi";src:url("continuation_fonts/Oi-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"STG Barriecito";src:url("continuation_fonts/Barriecito-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"STG Archivo Black";src:url("assets/ArchivoBlack-Regular.ttf") format("truetype");font-weight:900;font-display:swap}
+@font-face{font-family:"STG Roboto Condensed";src:url("assets/RobotoCondensed-Bold.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"STG Roboto";src:url("assets/Roboto-Thin.ttf") format("truetype");font-weight:100;font-display:swap}
+@font-face{font-family:"STG Roboto";src:url("assets/Roboto-BlackItalic.ttf") format("truetype");font-weight:900;font-style:italic;font-display:swap}
+@font-face{font-family:"STG Work Sans";src:url("assets/WorkSans-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"STG Vollkorn";src:url("assets/Vollkorn-BoldItalic.ttf") format("truetype");font-weight:700;font-style:italic;font-display:swap}
+@font-face{font-family:"STG Proxima Nova";src:url("assets/ProximaNova-Thin.otf") format("opentype");font-weight:100;font-display:swap}
+@font-face{font-family:"STG Proxima Nova";src:url("assets/ProximaNova-Black.otf") format("opentype");font-weight:900;font-display:swap}
+@font-face{font-family:"STG Plaid XL";src:url("assets/Plaid-XL.otf") format("opentype");font-weight:400;font-display:swap}
+@font-face{font-family:"STG Origin Super Condensed";src:url("assets/Origin-Super-Condensed-Regular.otf") format("opentype");font-weight:400;font-display:swap}
+@font-face{font-family:"STG Kepler";src:url("assets/KeplerStd-Medium.otf") format("opentype");font-weight:500;font-display:swap}
+@font-face{font-family:"STG Aguafina";src:url("assets/AguafinaScript-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"STG Cairo";src:url("assets/Cairo-Bold.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"STG Fraunces";src:url("assets/fonts/Fraunces-Variable.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"STG Fenix";src:url("assets/fonts/Fenix-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"STG Cinzel";src:url("assets/fonts/Cinzel-Variable.ttf") format("truetype");font-weight:400 900;font-display:swap}
+@font-face{font-family:"STG Bebas Neue";src:url("assets/fonts/BebasNeue-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"STG League Spartan";src:url("assets/fonts/LeagueSpartan-Variable.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"STG Khand";src:url("assets/fonts/Khand-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"STG Instrument Serif";src:url("assets/fonts/InstrumentSerif-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"STG Lora";src:url("assets/fonts/Lora-Variable.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"STG Teko";src:url("assets/fonts/Teko-Variable.ttf") format("truetype");font-weight:300 700;font-display:swap}
+@font-face{font-family:"STG Rajdhani";src:url("assets/fonts/Rajdhani-Bold.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"STG Manrope";src:url("assets/fonts/Manrope-Variable.ttf") format("truetype");font-weight:200 800;font-display:swap}
+@font-face{font-family:"STG Poppins";src:url("assets/fonts/Poppins-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"STG Noto Sans SC";src:url("assets/NotoSansSC-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"STG Noto Sans SC";src:url("assets/NotoSansSC-Black.ttf") format("truetype");font-weight:900;font-display:swap}
+@font-face{font-family:"STG Noto Sans SC";src:url("resources/NotoSansSC-Thin.otf") format("opentype");font-weight:200;font-display:swap}
+@font-face{font-family:"STG Noto Sans HK";src:url("assets/fonts/NotoSansHK-Variable.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"STG Noto Sans JP";src:url("assets/NotoSansJP-Thin.otf") format("opentype");font-weight:200;font-display:swap}
+@font-face{font-family:"STG Noto Sans JP";src:url("resources/NotoSansJP-Black.otf") format("opentype");font-weight:900;font-display:swap}
+@font-face{font-family:"STG Noto Sans KR";src:url("resources/NotoSansKR-Black.otf") format("opentype");font-weight:900;font-display:swap}
+@font-face{font-family:"STG Do Hyeon";src:url("assets/DoHyeon-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"STG Neue World Condensed";src:url("resources/NeueWorld-CondensedRegular.otf") format("opentype");font-weight:400;font-display:swap}
+@font-face{font-family:"STG Formula Condensed";src:url("resources/FormulaCondensed-Bold.otf") format("opentype");font-weight:700;font-display:swap}
+@font-face{font-family:"STG Editorial New";src:url("resources/EditorialNew-Thin.otf") format("opentype");font-weight:100;font-display:swap}
+@font-face{font-family:"STG Nimbus Sans Condensed";src:url("resources/nimbus-sans-l_regular-condensed.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"STG Tratto";src:url("assets/Tratto-Trial-LeggeroCorsivo.otf") format("opentype");font-weight:300;font-style:italic;font-display:swap}
+
