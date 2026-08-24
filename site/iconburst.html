@@ -139,8 +139,11 @@
             <label>爆发范围 <output id="ibRangeValue">72%</output><input id="ibRange" type="range" min="25" max="110" value="72"></label>
             <label>图标大小 <output id="ibSizeValue">100%</output><input id="ibSize" type="range" min="40" max="180" value="100"></label>
           </div>
-          <label>左右文字与图标间距 <output id="ibCollapseValue">62%</output><input id="ibCollapse" type="range" min="20" max="160" value="62"></label>
-          <p class="ib-help">控制开场时左、右两组文字与中间图标区域之间的距离；数值越大，文字离图标越远。</p>
+          <div class="ib-two">
+            <label>左右文字与图标间距 <output id="ibCollapseValue">62%</output><input id="ibCollapse" type="range" min="20" max="160" value="62"></label>
+            <label>聚拢图标整体水平位置 <output id="ibClusterXValue">0%</output><input id="ibClusterX" type="range" min="-100" max="100" value="0"></label>
+          </div>
+          <p class="ib-help">间距控制左右文字离图标多远；整体水平位置用负值向左、正值向右移动聚拢后的整组图标。</p>
         </div>
       </section>
 
@@ -206,7 +209,7 @@
   </main>
   <script src="js/continuation-gif.js"></script>
   <script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="iconburst.js?v=20260824-25"></script>
+  <script src="iconburst.js?v=20260824-27"></script>
   <script src="stg-cn.js"></script>
 </body>
 </html>

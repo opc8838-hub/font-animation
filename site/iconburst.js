@@ -1127,7 +1127,7 @@
   const schemeControlIds = [
     "ibText", "ibFont", "ibWeight", "ibFontSize", "ibTracking",
     "ibColorMode", "ibColorCount", "ibBaseColor", "ibColorA", "ibColorB", "ibColorC", "ibColorD", "ibBackground", "ibColorSpeed", "ibSoftness",
-    "ibContentMode", "ibRange", "ibSize", "ibReplaceCount", "ibBeat", "ibReplaceSpeed", "ibCollapse", "ibHang", "ibDrift", "ibOvershoot",
+    "ibContentMode", "ibRange", "ibSize", "ibReplaceCount", "ibBeat", "ibReplaceSpeed", "ibCollapse", "ibClusterX", "ibHang", "ibDrift", "ibOvershoot",
     "ibSync", "ibCollisionSpeed", "ibCollisionDuration", "ibPairStagger", "ibOrbitSpeed", "ibWordReturn", "ibDensity", "ibCurve", "ibFinalScale", "ibFinalScaleDuration", "ibSpeed"
   ];
   const defaultControlValues = Object.fromEntries(schemeControlIds.map((id) => [id, $(id).value]));
@@ -1154,6 +1154,7 @@
     ibBeat: "80",
     ibReplaceSpeed: "4.5",
     ibCollapse: "87",
+    ibClusterX: "0",
     ibHang: "20",
     ibDrift: "22",
     ibOvershoot: "58",
@@ -1669,6 +1670,7 @@
     const burst = 1 - clamp(timeline.pathProgress, 0, 1);
     const curveStrength = Number($("ibCurve").value) / 100;
     const orbitSpeed = clamp(Number($("ibOrbitSpeed").value) / 100, .5, 2);
+    const clusterOffsetX = Number($("ibClusterX").value) / 100 * rect.width * .35 * easeInOut(clamp(timeline.iconGather / .85, 0, 1));
     const orbitAssets = state.assets.filter((asset) => asset.role === "orbit");
     const orbitIndexById = new Map(orbitAssets.map((asset, index) => [asset.id, index]));
     state.iconElements.forEach((element, index) => {
@@ -1781,7 +1783,7 @@
         if (localCollapse >= 1) introVisible = 0;
       }
       const reveal = Math.max(introVisible, swap ? 1 : 0);
-      const translateX = replacement ? anchorX + customX + motionX : scatterX + customX + motionX;
+      const translateX = replacement ? anchorX + customX + motionX : scatterX + customX + motionX + (asset.role === "orbit" ? clusterOffsetX : 0);
       const translateY = replacement ? anchorY + customY + motionY : scatterY + customY + motionY;
       const startScale = 1.12 + (orbitIndex % 4) * .09;
       const introScale = (startScale + (1 - startScale) * gather) * collapseScale * depthScale;
@@ -1822,7 +1824,7 @@
       openingSync: timeline.openingSync,
       gapClose: timeline.gapClose, contactProgress: timeline.contactProgress,
       contactStart: timeline.contactStartSeconds, contactEnd: timeline.contactSeconds,
-      wordGap, openGap, closedGap,
+      wordGap, openGap, closedGap, clusterOffsetX,
       colorActive, replacementActive, contentTime: colorTime, velocityZone: timeline.velocityZone,
       replacementExpansion, replacementScaleProgress,
       replaceStart: timeline.replaceStart,
@@ -2150,6 +2152,7 @@
     const iconSize = Number($("ibSize").value) / 100;
     const orbitSpeed = clamp(Number($("ibOrbitSpeed").value) / 100, .5, 2);
     const curveStrength = Number($("ibCurve").value) / 100;
+    const clusterOffsetX = Number($("ibClusterX").value) / 100 * compositionWidth * .35 * easeInOut(clamp(timeline.iconGather / .85, 0, 1));
     const orbitAssets = state.assets.filter((asset) => asset.role === "orbit");
     const poses = orbitAssets.map((asset, orbitIndex) => {
       const seed = seeds[orbitIndex % seeds.length];
@@ -2185,7 +2188,7 @@
       const depthScale = clamp(1 + projectedZ * .22, .76, 1.24);
       const startScale = 1.12 + (orbitIndex % 4) * .09;
       const gatherScale = startScale + (1 - startScale) * timeline.iconGather;
-      return { asset, depth: projectedZ, x: width / 2 + x + asset.x / 100 * compositionWidth * .28, y: height / 2 + y + asset.y / 100 * compositionHeight * .28, size: Math.min(width, height) * .085 * iconSize * asset.size * gatherScale * collapseScale * depthScale, alpha: timeline.iconPresence * asset.opacity * collapseScale, rotation: asset.rotation + 10 * Math.sin(Math.PI * clamp(timeline.iconGather, 0, 1)) };
+      return { asset, depth: projectedZ, x: width / 2 + x + clusterOffsetX + asset.x / 100 * compositionWidth * .28, y: height / 2 + y + asset.y / 100 * compositionHeight * .28, size: Math.min(width, height) * .085 * iconSize * asset.size * gatherScale * collapseScale * depthScale, alpha: timeline.iconPresence * asset.opacity * collapseScale, rotation: asset.rotation + 10 * Math.sin(Math.PI * clamp(timeline.iconGather, 0, 1)) };
     }).sort((a, b) => a.depth - b.depth);
     poses.forEach((pose) => drawAssetToCanvas(ctx, pose.asset, pose.x, pose.y, pose.size, pose.rotation, pose.alpha));
 
@@ -2442,6 +2445,7 @@
     ["ibBeat", "ibBeatValue", (value) => `${(Number(value) / 1000).toFixed(2).replace(/0$/, "")} 秒`],
     ["ibReplaceSpeed", "ibReplaceSpeedValue", (value) => `${Number(value).toFixed(1)}×`],
     ["ibCollapse", "ibCollapseValue", (value) => `${value}%`],
+    ["ibClusterX", "ibClusterXValue", (value) => `${Number(value) > 0 ? "+" : ""}${value}%`],
     ["ibHang", "ibHangValue", (value) => `${(Number(value) / 100).toFixed(2)} 秒`],
     ["ibDrift", "ibDriftValue", (value) => `${value}%`],
     ["ibSync", "ibSyncValue", (value) => `${(Number(value) / 100).toFixed(2)}×`],
