@@ -2306,6 +2306,10 @@
       renderAssets(); renderIcons();
       return;
     }
+    // Native select menus dispatch a bubbling click before the user has made
+    // a choice. Re-rendering the whole row here destroyed the open menu, which
+    // made playback order (and the other quick controls) impossible to edit.
+    if (event.target.closest("select, input, textarea, label, a")) return;
     selectAsset(asset.id);
   });
 
