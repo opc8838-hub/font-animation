@@ -784,20 +784,25 @@
     const collapseStartSeconds = holdEndSeconds;
     const iconsGoneSeconds = collapseStartSeconds + .20;
     const pairCount = incomingPairCount();
-    const pairStaggerSeconds = clamp(Number($("ibPairStagger").value) / 1000, .01, .16);
+    const pairStaggerSeconds = clamp(Number($("ibPairStagger").value) / 1000, .04, .26);
     const collisionDurationSeconds = clamp(Number($("ibCollisionDuration").value) / 1000, .08, .80);
     // The centre pair starts while the icon cloud is still suspended. Each
     // following pair joins in rank order, so arbitrary text lengths generate
     // their own collision choreography instead of collapsing all at once.
-    const contactStartSeconds = Math.max(settleEnd, collapseStartSeconds - .12);
+    const contactStartSeconds = collapseStartSeconds + .03;
     const contactSeconds = Math.max(iconsGoneSeconds, contactStartSeconds + collisionDurationSeconds + (pairCount - 1) * pairStaggerSeconds);
-    const lettersMoveStart = contactSeconds;
+    // Color begins with the centre pair, not after every pair has already
+    // arrived. This overlap is the visual hand-off between collision and color.
+    const lettersMoveStart = contactStartSeconds;
     const colorSpeed = clamp(Number($("ibColorSpeed").value), .5, 6);
     const colorHold = clamp(Number($("ibSoftness").value), 8, 70);
     const colorDuration = clamp(.11 * (5 / colorSpeed), .085, .55);
     const colorHoldDuration = clamp(.02 + (colorHold - 28) / 42 * .16, .01, .18);
     const whiteDuration = clamp(.08 * (5 / colorSpeed), .06, .40);
-    const colorFullSeconds = lettersMoveStart + colorDuration;
+    // The color wave starts with pair one, but it is not allowed to finish
+    // before the final outer pair arrives. This keeps collision and color on
+    // one continuous beat instead of racing into the reset chapter.
+    const colorFullSeconds = Math.max(lettersMoveStart + colorDuration, contactSeconds);
     const whiteStartSeconds = colorFullSeconds + colorHoldDuration;
     const whiteFullSeconds = whiteStartSeconds + whiteDuration;
     const replaceStartSeconds = whiteFullSeconds + .04;
@@ -843,8 +848,8 @@
       { id: "intro", kind: "intro", label: "中央标题与图标起步", start: 0, end: markers.wordsEnterStart },
       { id: "orbit", kind: "orbit", label: "文字接入 · 图标聚拢", start: markers.wordsEnterStart, end: markers.settleEnd },
       { id: "hold", kind: "hold", label: "图标滞空继续流动", start: markers.settleEnd, end: markers.contactStartSeconds },
-      { id: "contact", kind: "contact", label: `${markers.pairCount} 对字体逐对碰撞`, start: markers.contactStartSeconds, end: markers.contactSeconds },
-      { id: "color", kind: "color", label: "碰合换色", start: markers.contactSeconds, end: markers.replaceStartSeconds },
+      { id: "contact", kind: "contact", label: `${markers.pairCount} 对字体逐对靠拢并同步换色`, start: markers.contactStartSeconds, end: markers.contactSeconds },
+      { id: "color", kind: "color", label: "换色完成与复位", start: markers.contactSeconds, end: markers.replaceStartSeconds },
       { id: "replace", kind: "replace", label: replacementEnabled() ? "文字切换图标 / 图片" : "紧凑标题停留", start: markers.replaceStartSeconds, end: total }
     ].filter((beat) => beat.end > beat.start + .001);
   }
@@ -926,7 +931,7 @@
 
   function collectScheme() {
     return {
-      version: 2,
+      version: 3,
       controls: Object.fromEntries(schemeControlIds.map((id) => [id, $(id).value])),
       assets: state.assets.map(serializableAsset),
       backgroundMedia: state.backgroundMedia ? {
@@ -957,7 +962,9 @@
 
   function applyScheme(scheme, options = {}) {
     if (!scheme || typeof scheme !== "object") return;
-    Object.entries(scheme.controls || {}).forEach(([id, value]) => { if ($(id) && value != null) $(id).value = String(value); });
+    const controls = { ...(scheme.controls || {}) };
+    if (Number(scheme.version || 0) < 3 && Number(controls.ibPairStagger || 0) <= 50) controls.ibPairStagger = 95;
+    Object.entries(controls).forEach(([id, value]) => { if ($(id) && value != null) $(id).value = String(value); });
     state.assets = Array.isArray(scheme.assets)
       ? scheme.assets.map(migrateAsset).filter((asset) => asset.type !== "shape" || !["square", "triangle", "heart", "circle", "star"].includes(asset.shape))
       : builtinAssets();
@@ -975,7 +982,7 @@
   }
 
   function defaultScheme(includeAssets = true) {
-    return { version: 2, controls: { ...defaultControlValues }, assets: includeAssets ? builtinAssets().map(serializableAsset) : [], backgroundMedia: null };
+    return { version: 3, controls: { ...defaultControlValues }, assets: includeAssets ? builtinAssets().map(serializableAsset) : [], backgroundMedia: null };
   }
 
   function downloadBlob(blob, filename) {
@@ -1163,8 +1170,8 @@
     else if (seconds >= wordsEnterStart && seconds < settleEnd) { velocityZone = "orbital-title-takes-over"; label = "03 · 文字水平接入 · 图标向右绕转并聚拢"; }
     else if (seconds >= settleEnd && seconds < collapseStartSeconds) { velocityZone = "inertial-float"; label = "04 · 图文沿原方向减速滞空 · 从未定住"; }
     else if (seconds >= collapseStartSeconds && seconds < iconsGoneSeconds) { velocityZone = "shared-accelerated-close"; label = "05 · 共同加速 · 图标沿弧线缩没"; }
-    else if (seconds >= iconsGoneSeconds && seconds < contactSeconds) { velocityZone = "title-contact"; label = "06 · 图标消失 · 左右文字瞬间碰合"; }
-    else if (seconds >= contactSeconds && seconds < whiteStartSeconds) { velocityZone = "contact-color-expands"; label = "07 · 文字碰合瞬间 · 颜色从中心亮起"; }
+    else if (seconds >= contactStartSeconds && seconds < contactSeconds) { velocityZone = "title-contact"; label = "06 · 中心第一对开始 · 逐对靠拢并同步换色"; }
+    else if (seconds >= contactSeconds && seconds < whiteStartSeconds) { velocityZone = "contact-color-expands"; label = "07 · 逐对碰合完成 · 颜色继续展开"; }
     else if (seconds >= whiteStartSeconds && seconds < whiteFullSeconds) { velocityZone = "white-reset-expands"; label = "07 · 白色由中心向两侧复位"; }
     else if (seconds >= whiteFullSeconds && seconds < replaceStartSeconds) { velocityZone = "compact-title-hold"; label = "08 · 紧凑白色标题"; }
     else if (seconds >= replaceStartSeconds) { velocityZone = "glyph-replacement"; label = "09 · 可选文字切换图标 / 图片"; }
@@ -1300,6 +1307,8 @@
     colorWord.style.setProperty("--word-gap", `${closedGap.toFixed(2)}px`);
     whiteWord.style.setProperty("--word-gap", `${closedGap.toFixed(2)}px`);
     const sideShift = (openGap - closedGap) / 2;
+    const collisionColors = [$("ibColorA").value, $("ibColorC").value, $("ibColorB").value, $("ibColorD").value];
+    const collisionBaseColor = $("ibBaseColor").value;
     [
       { element: incomingLeft, direction: -1 },
       { element: incomingRight, direction: 1 }
@@ -1314,10 +1323,11 @@
         const inwardOrder = rank;
         const letterStart = timeline.contactStartSeconds + inwardOrder * timeline.pairStaggerSeconds;
         const localProgress = clamp((timeline.seconds - letterStart) / timeline.collisionDurationSeconds, 0, 1);
-        const close = easeOutExpo(localProgress);
+        const close = easeOut(localProgress);
         const rankRatio = maxRank > 0 ? rank / maxRank : 0;
         const openDistance = sideShift * (.88 + .12 * rankRatio);
         letter.style.setProperty("--incoming-letter-x", `${(direction * openDistance * (1 - close)).toFixed(2)}px`);
+        letter.style.setProperty("--incoming-letter-color", mixHex(collisionBaseColor, collisionColors[inwardOrder % collisionColors.length], easeOut(localProgress)));
       });
     });
 
@@ -1797,11 +1807,13 @@
         letters.forEach((letter, index) => {
           const rank = Number(letter.dataset.rank || 0);
           const letterStart = timeline.contactStartSeconds + rank * timeline.pairStaggerSeconds;
-          const close = easeOutExpo(clamp((timeline.seconds - letterStart) / timeline.collisionDurationSeconds, 0, 1));
+          const localProgress = clamp((timeline.seconds - letterStart) / timeline.collisionDurationSeconds, 0, 1);
+          const close = easeOut(localProgress);
           const rankRatio = maxRank > 0 ? rank / maxRank : 0;
           const openDistance = sideShift * (.88 + .12 * rankRatio);
           const x = startX + sideLayout.centers[index] + direction * openDistance * (1 - close) + direction * orbitShift;
-          ctx.fillStyle = $("ibBaseColor").value;
+          const pairColors = [$("ibColorA").value, $("ibColorC").value, $("ibColorB").value, $("ibColorD").value];
+          ctx.fillStyle = mixHex($("ibBaseColor").value, pairColors[rank % pairColors.length], easeOut(localProgress));
           ctx.textAlign = "center";
           ctx.textBaseline = "alphabetic";
           ctx.fillText(letter.textContent, x, baseline);
