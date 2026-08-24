@@ -191,6 +191,38 @@ main { overflow: hidden; }
   min-height: 360px;
 }
 
+.effect-card.has-live-preview[data-effect="beforeafter"] {
+  grid-column: span 2;
+  aspect-ratio: auto;
+  min-height: 0;
+}
+
+.effect-card.has-live-preview[data-effect="beforeafter"] .effect-link {
+  display: flex;
+  height: auto;
+}
+
+.effect-card.has-live-preview[data-effect="beforeafter"] .effect-preview {
+  position: relative;
+  inset: auto;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  background: #f5f5f5;
+}
+
+.effect-card.has-live-preview[data-effect="beforeafter"] .effect-preview video.effect-loop-portrait {
+  object-fit: contain;
+  object-position: center;
+}
+
+.effect-card.has-live-preview[data-effect="beforeafter"] .effect-body {
+  position: relative;
+  inset: auto;
+  min-height: 112px;
+  padding: 19px 20px 21px;
+  background: #fff;
+}
+
 .effect-card.has-live-preview[data-effect="textswell"] .effect-body {
   padding-top: 32px;
   background: linear-gradient(180deg, transparent 0 58%, rgba(255, 255, 255, .94) 86%);
@@ -240,6 +272,12 @@ footer p { max-width: 420px; margin: 0; text-align: right; }
     grid-column: span 1;
     aspect-ratio: 16 / 9;
     min-height: 280px;
+  }
+  .effect-card.has-live-preview[data-effect="beforeafter"] {
+    grid-column: span 1;
+  }
+  .effect-card.has-live-preview[data-effect="beforeafter"] .effect-preview {
+    aspect-ratio: 9 / 16;
   }
   footer { min-height: 260px; padding: 50px 22px; align-items: flex-start; flex-direction: column; }
   footer p { text-align: left; }

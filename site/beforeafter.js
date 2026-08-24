@@ -647,7 +647,7 @@
     setTime(0);
   }
   const defaultPhotos = { before: "assets/beforeafter-before.jpg", after: "assets/beforeafter-after.jpg" };
-  const DEFAULT_PRESET_URL = "assets/presets/beforeafter-default.json?v=20260824-1";
+  const DEFAULT_PRESET_URL = "assets/presets/beforeafter-default.json?v=20260824-2";
   let approvedDefaultPreset = null;
 
   $("#beforeFile").addEventListener("change", (event) => onUpload("before", event.target.files[0]));
