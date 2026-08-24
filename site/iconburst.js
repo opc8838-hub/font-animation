@@ -450,6 +450,45 @@
     renderAssets();
   }
 
+  function setLayerManager(panel, expanded) {
+    if (!panel) return;
+    document.querySelectorAll(".ib-layer-panel.is-list-expanded").forEach((item) => {
+      if (item !== panel) {
+        item.classList.remove("is-list-expanded");
+        const otherToggle = item.querySelector("[data-layer-toggle]");
+        if (otherToggle) {
+          otherToggle.textContent = "展开管理";
+          otherToggle.setAttribute("aria-expanded", "false");
+        }
+      }
+    });
+    panel.classList.toggle("is-list-expanded", expanded);
+    const toggle = panel.querySelector("[data-layer-toggle]");
+    if (toggle) {
+      toggle.textContent = expanded ? "收起" : "展开管理";
+      toggle.setAttribute("aria-expanded", String(expanded));
+    }
+    document.body.classList.toggle("ib-list-manager-open", Boolean(document.querySelector(".ib-layer-panel.is-list-expanded")));
+    if (expanded) panel.scrollTop = 0;
+  }
+
+  function openLayerManager(role) {
+    setLayerManager($(role === "glyph" ? "ibGlyphPanel" : "ibOrbitPanel"), true);
+  }
+
+  $("ibAssets").addEventListener("click", (event) => {
+    const toggle = event.target.closest("[data-layer-toggle]");
+    if (!toggle) return;
+    const panel = toggle.closest(".ib-layer-panel");
+    setLayerManager(panel, !panel.classList.contains("is-list-expanded"));
+  });
+
+  window.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    const panel = document.querySelector(".ib-layer-panel.is-list-expanded");
+    if (panel) setLayerManager(panel, false);
+  });
+
   let assetDrag = null;
   let suppressAssetClickUntil = 0;
 
@@ -484,22 +523,27 @@
       assetDrag.handle?.setAttribute("aria-grabbed", "true");
     }
     const { row, list } = assetDrag;
-    const editor = document.querySelector(".ib-editor");
-    const editorRect = editor?.getBoundingClientRect();
-    if (editor && editorRect) {
+    const scrollSurface = list.closest(".ib-layer-panel.is-list-expanded") || document.querySelector(".ib-editor");
+    const editorRect = scrollSurface?.getBoundingClientRect();
+    if (scrollSurface && editorRect) {
       const edge = 72;
       let scrollDelta = 0;
       if (event.clientY < editorRect.top + edge) scrollDelta = -18;
       else if (event.clientY > editorRect.bottom - edge) scrollDelta = 18;
       if (scrollDelta) {
-        const editorStyle = getComputedStyle(editor);
-        if (editorStyle.overflowY === "auto" || editorStyle.overflowY === "scroll") editor.scrollTop += scrollDelta;
+        const editorStyle = getComputedStyle(scrollSurface);
+        if (editorStyle.overflowY === "auto" || editorStyle.overflowY === "scroll") scrollSurface.scrollTop += scrollDelta;
         else window.scrollBy(0, scrollDelta);
       }
     }
     const target = document.elementFromPoint(event.clientX, event.clientY)?.closest(".ib-asset");
     if (!target || target === row || target.parentElement !== list) return;
-    const before = event.clientY < target.getBoundingClientRect().top + target.offsetHeight / 2;
+    const targetRect = target.getBoundingClientRect();
+    const pointerInsideRow = event.clientY >= targetRect.top && event.clientY <= targetRect.bottom;
+    const multiColumn = getComputedStyle(list).gridTemplateColumns.split(" ").length > 1;
+    const before = multiColumn && pointerInsideRow
+      ? event.clientX < targetRect.left + targetRect.width / 2
+      : event.clientY < targetRect.top + targetRect.height / 2;
     const reference = before ? target : target.nextElementSibling;
     if (reference !== row && (!reference || reference.previousElementSibling !== row)) {
       list.insertBefore(row, reference);
@@ -2417,6 +2461,7 @@
       const added = files.map((file, index) => defaultAsset({ id: `upload-${Date.now()}-${index}`, type: "image", role, name: file.name, status: "等待处理…", sequence: role === "glyph" ? sequenceStart + index : 0 }));
       state.assets.push(...added);
       if (added.length) state.activeAssetId = added[added.length - 1].id;
+      if (added.length) openLayerManager(role);
       renderAssets(); renderIcons();
       added.forEach((asset, index) => assignFileToAsset(asset, files[index]));
     });
@@ -2430,6 +2475,7 @@
       const asset = defaultAsset({ role, shape, color, color2: $("ibColorC").value, name: `内置${shapeLabels[shape]}`, target: -1, sequence });
       state.assets.push(asset);
       state.activeAssetId = asset.id;
+      openLayerManager(role);
       renderAssets(); renderIcons();
     });
   }
@@ -2461,6 +2507,7 @@
       });
       state.assets.push(asset);
       state.activeAssetId = asset.id;
+      openLayerManager(role);
       renderAssets();
       renderIcons();
       loadImage(image.url).then((loadedImage) => { asset.originalImage = loadedImage; }).catch(() => {
