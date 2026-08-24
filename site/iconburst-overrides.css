@@ -629,6 +629,39 @@ body .ib-asset-actions .ib-remove {
   background: #edf5fd;
 }
 
+/* Compact, non-interactive player used by the gallery card. */
+body.ib-card-preview {
+  min-width: 0;
+  overflow: hidden;
+  background: var(--stage-bg, #fff);
+}
+
+body.ib-card-preview .ib-app {
+  display: block;
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
+}
+
+body.ib-card-preview .ib-editor,
+body.ib-card-preview .ib-safe-area,
+body.ib-card-preview .ib-stage-meta,
+body.ib-card-preview .ib-controls,
+body.ib-card-preview > .stg-cn-toolbar {
+  display: none !important;
+}
+
+body.ib-card-preview .ib-stage {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+body.ib-card-preview .ib-composition {
+  width: 100%;
+  height: 100%;
+}
+
 .ib-asset-drawer {
   position: fixed;
   top: 0;

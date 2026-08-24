@@ -2,6 +2,8 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
+  const previewMode = new URLSearchParams(window.location.search).get("preview") === "1";
+  document.body.classList.toggle("ib-card-preview", previewMode);
   const stage = $("ibStage");
   const composition = $("ibComposition");
   const word = $("ibWord");
@@ -138,6 +140,26 @@
   function easeInOut(value) {
     const t = clamp(value, 0, 1);
     return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  function botAsset(index, role, overrides) {
+    const image = botSeriesImages[index % botSeriesImages.length];
+    return defaultAsset(Object.assign({
+      id: `${role}-bot-${index}`,
+      builtin: true,
+      type: "image",
+      role,
+      name: image.name,
+      url: image.url,
+      originalDataUrl: image.url,
+      fileType: image.fileType,
+      libraryImage: true,
+      removeBackground: false,
+      autoBackground: false,
+      processedWidth: image.width,
+      processedHeight: image.height,
+      status: "内置 Bot 动态 GIF；保留原动画，可独立缩放、移动、旋转或替换。"
+    }, overrides || {}));
   }
   function collisionColorProgress(value) {
     const colorSpeed = clamp(Number($("ibColorSpeed").value), .5, 6);
@@ -324,35 +346,53 @@
   }
 
   function builtinAssets() {
-    // Default matches the scheme saved in the editor on 2026-08-24.
+    // Default matches “最最最1.json”, saved from the editor on 2026-08-24.
     const orbitAssets = [
-      animalAsset(0, "orbit", { size: .88, rotation: -7 }),
-      flowIconAsset(0, "orbit", { size: .9, rotation: 5 }),
-      animalAsset(7, "orbit", { size: .82, rotation: 8 }),
-      flowIconAsset(1, "orbit", { size: .84, rotation: -4 }),
-      animalAsset(14, "orbit", { size: .92, rotation: -5 }),
-      flowIconAsset(2, "orbit", { size: .91, rotation: 7 }),
-      animalAsset(22, "orbit", { size: .86, rotation: 6 }),
-      flowIconAsset(3, "orbit", { size: .83, rotation: -6 }),
+      animalAsset(7, "orbit", { size: 1.25, x: -5, y: 39, rotation: 8 }),
+      flowIconAsset(0, "orbit", { size: .66, y: -2, rotation: -34 }),
+      flowIconAsset(2, "orbit", { size: .47, x: 24, y: 22, rotation: 7 }),
+      animalAsset(14, "orbit", { size: .92, x: -5, y: 28, rotation: -5 }),
+      botAsset(4, "orbit", { id: "orbit-bot-4", size: 1.17, x: 12, y: 2 }),
+      botAsset(8, "orbit", { id: "orbit-bot-8", x: -2, y: -15 }),
+      animalAsset(16, "orbit", { size: 1.88, x: -5 }),
+      animalAsset(0, "orbit", { size: 1.39, x: 23, y: -5, rotation: -7 }),
+      animalAsset(22, "orbit", { size: .86, x: -33, rotation: 6 }),
+      botAsset(9, "orbit", { id: "orbit-bot-9", x: 27, y: 80 }),
       defaultAsset({
         id: "builtin-2",
         builtin: true,
         role: "orbit",
-        name: "内置星形",
-        shape: "star",
-        color: iconColors[2][0],
-        color2: iconColors[2][1],
-        size: 1.02,
+        name: "内置彩虹圆环",
+        shape: "rainbow-ring",
+        color: "#c35088",
+        color2: "#c35088",
+        size: .47,
+        x: 20,
         rotation: -8
-      })
+      }),
+      botAsset(5, "orbit", { id: "orbit-bot-5", y: -37 }),
+      botAsset(0, "orbit", { id: "orbit-bot-0", size: 1.27 }),
+      animalAsset(1, "orbit", { size: 1.71, x: -3, y: -29, rotation: 8, motion: "float" }),
+      animalAsset(28, "orbit", { x: -12 }),
+      animalAsset(30, "orbit", { x: 16, y: -12 }),
+      flowIconAsset(1, "orbit", { size: .5, x: 30, y: 100, rotation: -4 })
     ];
     const glyphAssets = [
       animalAsset(4, "glyph", {
         id: "glyph-animal-default",
-        size: .96,
+        size: 1.08,
+        x: 3,
         target: 3,
         sequence: 0,
-        replaceSpeed: .75
+        replaceSpeed: .75,
+        holdMs: 240
+      }),
+      animalAsset(20, "glyph", {
+        id: "glyph-animal-20",
+        size: 1.28,
+        target: 1,
+        sequence: 1,
+        holdMs: 400
       }),
       defaultAsset({
         id: "glyph-3",
@@ -365,8 +405,16 @@
         size: 1.08,
         motion: "replace",
         target: 7,
-        sequence: 1,
+        sequence: 2,
         replaceSpeed: 1.8
+      }),
+      botAsset(10, "glyph", {
+        id: "glyph-bot-10",
+        size: .71,
+        x: -3,
+        target: -1,
+        sequence: 3,
+        holdMs: 600
       })
     ];
     return orbitAssets.concat(glyphAssets);
@@ -1083,6 +1131,44 @@
     "ibSync", "ibCollisionSpeed", "ibCollisionDuration", "ibPairStagger", "ibOrbitSpeed", "ibWordReturn", "ibDensity", "ibCurve", "ibFinalScale", "ibFinalScaleDuration", "ibSpeed"
   ];
   const defaultControlValues = Object.fromEntries(schemeControlIds.map((id) => [id, $(id).value]));
+  const latestDefaultControls = {
+    ibText: "GOOD JOB",
+    ibFont: "archivoBlack",
+    ibWeight: "800",
+    ibFontSize: "88",
+    ibTracking: "-2",
+    ibColorMode: "sweep",
+    ibColorCount: "3",
+    ibBaseColor: "#000000",
+    ibColorA: "#6a37f6",
+    ibColorB: "#b84dff",
+    ibColorC: "#d589f0",
+    ibColorD: "#bf73e7",
+    ibBackground: "#ffffff",
+    ibColorSpeed: "5.9",
+    ibSoftness: "8",
+    ibContentMode: "replace-multi",
+    ibRange: "98",
+    ibSize: "100",
+    ibReplaceCount: "all",
+    ibBeat: "80",
+    ibReplaceSpeed: "4.5",
+    ibCollapse: "87",
+    ibHang: "20",
+    ibDrift: "22",
+    ibOvershoot: "58",
+    ibSync: "140",
+    ibCollisionSpeed: "1.5",
+    ibCollisionDuration: "260",
+    ibPairStagger: "95",
+    ibOrbitSpeed: "155",
+    ibWordReturn: "360",
+    ibDensity: "41",
+    ibCurve: "72",
+    ibFinalScale: "6.5",
+    ibFinalScaleDuration: "520",
+    ibSpeed: "1"
+  };
 
   function serializableAsset(asset) {
     const copy = {};
@@ -1152,7 +1238,7 @@
   }
 
   function defaultScheme(includeAssets = true) {
-    return { version: 3, controls: { ...defaultControlValues }, assets: includeAssets ? builtinAssets().map(serializableAsset) : [], backgroundMedia: null };
+    return { version: 3, controls: { ...defaultControlValues, ...latestDefaultControls }, assets: includeAssets ? builtinAssets().map(serializableAsset) : [], backgroundMedia: null };
   }
 
   function downloadBlob(blob, filename) {
@@ -1166,6 +1252,7 @@
 
   let schemePersistTimer = 0;
   function scheduleSchemePersist() {
+    if (previewMode) return;
     clearTimeout(schemePersistTimer);
     schemePersistTimer = setTimeout(() => {
       try { localStorage.setItem(SCHEME_STORAGE_KEY, JSON.stringify(collectScheme())); } catch (_) {}
@@ -2685,14 +2772,13 @@
   // layer card only after the user chooses an individual asset.
   state.activeAssetId = null;
   let storedScheme = null;
-  try { storedScheme = JSON.parse(localStorage.getItem(SCHEME_STORAGE_KEY) || "null"); } catch (_) {}
-  if (storedScheme && Number(storedScheme.version) >= 2) {
+  if (!previewMode) {
+    try { storedScheme = JSON.parse(localStorage.getItem(SCHEME_STORAGE_KEY) || "null"); } catch (_) {}
+  }
+  if (!previewMode && storedScheme && Number(storedScheme.version) >= 2) {
     applyScheme(storedScheme, { status: "已恢复上次自动保存的方案。" });
   } else {
-    updateWord();
-    updateContentModeUI();
-    renderIcons();
-    renderChoreoTrack();
+    applyScheme(defaultScheme(true), previewMode ? {} : { status: "已载入最新默认示例。" });
   }
   updateColorCountUI();
   requestAnimationFrame(animate);
