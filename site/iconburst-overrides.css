@@ -123,10 +123,39 @@ body .ib-word.is-gradient > span {
 }
 
 body .ib-asset {
-  grid-template-columns: 38px minmax(0, 1fr) auto;
+  grid-template-columns: 16px 38px minmax(0, 1fr) auto;
   cursor: pointer;
   transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
 }
+
+.ib-drag-handle {
+  width: 16px;
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+  color: #8e8e93;
+  font-size: 13px;
+  letter-spacing: -4px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.ib-drag-handle:focus-visible {
+  border-radius: 5px;
+  outline: 2px solid #0071e3;
+  outline-offset: 1px;
+}
+
+body .ib-asset.is-dragging {
+  z-index: 4;
+  border-color: #0071e3;
+  background: #eef7ff;
+  box-shadow: 0 8px 24px rgba(0, 113, 227, .2);
+  opacity: .92;
+}
+
+body .ib-asset.is-dragging .ib-drag-handle { cursor: grabbing; }
 
 body .ib-asset.is-active {
   border-color: #0071e3;

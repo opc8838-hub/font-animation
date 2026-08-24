@@ -364,6 +364,7 @@
         : "";
       const sourceLabel = asset.type === "shape" ? "内置图形" : asset.libraryImage ? "内置透明图片" : "上传图片";
       return `<div class="ib-asset${asset.id === state.activeAssetId ? " is-active" : ""}" data-id="${asset.id}">
+        <span class="ib-drag-handle" role="button" tabindex="0" aria-label="上下拖动${safe(asset.name)}调整位置" title="按住上下拖动">⋮⋮</span>
         <span class="ib-asset-preview">${assetPreview(asset)}</span>
         <span class="ib-asset-copy"><strong>${safe(asset.name)}</strong><small>${sourceLabel}${dimensions} · ${Math.round(asset.size * 100)}% · ${purpose}${asset.role === "glyph" ? ` · 顺序 ${Number(asset.sequence) + 1} · ${Number(asset.replaceSpeed).toFixed(2).replace(/0+$/, "").replace(/\.$/, "")}× · 停留 ${Number(asset.holdMs || 160)}ms` : ""}</small>${quickTarget}</span>
         <span class="ib-asset-actions"><button type="button" data-action="edit">${asset.id === state.activeAssetId ? "正在编辑" : "单独编辑"}</button><button class="ib-remove" type="button" data-action="remove" aria-label="删除">×</button></span>
@@ -411,6 +412,81 @@
     state.assets.filter((asset) => asset.role === "glyph").sort((a, b) => Number(a.sequence) - Number(b.sequence)).forEach((asset, index) => { asset.sequence = index; });
   }
 
+  function commitAssetOrder(list) {
+    const glyphList = list.id === "ibGlyphItems";
+    const orderedIds = Array.from(list.querySelectorAll(".ib-asset"), (row) => row.dataset.id);
+    const orderedAssets = orderedIds.map((id) => state.assets.find((asset) => asset.id === id)).filter(Boolean);
+    if (glyphList) orderedAssets.forEach((asset, index) => { asset.sequence = index; });
+    let cursor = 0;
+    state.assets = state.assets.map((asset) => {
+      const belongsToList = glyphList ? asset.role === "glyph" : asset.role !== "glyph";
+      return belongsToList ? orderedAssets[cursor++] : asset;
+    });
+    renderIcons();
+    renderAssets();
+  }
+
+  let assetDrag = null;
+  let suppressAssetClick = false;
+
+  $("ibAssets").addEventListener("pointerdown", (event) => {
+    const handle = event.target.closest(".ib-drag-handle");
+    const row = handle?.closest(".ib-asset");
+    const list = row?.closest(".ib-layer-items");
+    if (!handle || !row || !list) return;
+    event.preventDefault();
+    handle.setPointerCapture?.(event.pointerId);
+    row.classList.add("is-dragging");
+    handle.setAttribute("aria-grabbed", "true");
+    assetDrag = { handle, row, list, pointerId: event.pointerId, startY: event.clientY, moved: false };
+  });
+
+  window.addEventListener("pointermove", (event) => {
+    if (!assetDrag || event.pointerId !== assetDrag.pointerId) return;
+    event.preventDefault();
+    const { row, list } = assetDrag;
+    const listRect = list.getBoundingClientRect();
+    if (event.clientY < listRect.top + 30) list.scrollTop -= 12;
+    if (event.clientY > listRect.bottom - 30) list.scrollTop += 12;
+    const target = document.elementFromPoint(event.clientX, event.clientY)?.closest(".ib-asset");
+    if (!target || target === row || target.parentElement !== list) return;
+    const before = event.clientY < target.getBoundingClientRect().top + target.offsetHeight / 2;
+    const reference = before ? target : target.nextElementSibling;
+    if (reference !== row && (!reference || reference.previousElementSibling !== row)) {
+      list.insertBefore(row, reference);
+      assetDrag.moved = true;
+    }
+  }, { passive: false });
+
+  function finishAssetDrag(event) {
+    if (!assetDrag || (event.pointerId != null && event.pointerId !== assetDrag.pointerId)) return;
+    const { handle, row, list, pointerId, moved, startY } = assetDrag;
+    handle.releasePointerCapture?.(pointerId);
+    handle.removeAttribute("aria-grabbed");
+    row.classList.remove("is-dragging");
+    suppressAssetClick = moved || Math.abs((event.clientY ?? startY) - startY) > 4;
+    if (suppressAssetClick) setTimeout(() => { suppressAssetClick = false; }, 0);
+    assetDrag = null;
+    if (moved) commitAssetOrder(list);
+  }
+
+  window.addEventListener("pointerup", finishAssetDrag);
+  window.addEventListener("pointercancel", finishAssetDrag);
+
+  $("ibAssets").addEventListener("keydown", (event) => {
+    const handle = event.target.closest(".ib-drag-handle");
+    if (!handle || !["ArrowUp", "ArrowDown"].includes(event.key)) return;
+    event.preventDefault();
+    const row = handle.closest(".ib-asset");
+    const list = row.closest(".ib-layer-items");
+    const sibling = event.key === "ArrowUp" ? row.previousElementSibling : row.nextElementSibling;
+    if (!sibling) return;
+    if (event.key === "ArrowUp") list.insertBefore(row, sibling);
+    else list.insertBefore(sibling, row);
+    commitAssetOrder(list);
+    list.querySelector(`[data-id="${row.dataset.id}"] .ib-drag-handle`)?.focus();
+  });
+
   function renderAssetEditor() {
     const editor = $("ibAssetEditor");
     const asset = activeAsset();
@@ -423,7 +499,7 @@
     $("ibAssetSource").value = asset.type;
     $("ibAssetShapeFields").hidden = asset.type !== "shape";
     $("ibAssetImageFields").hidden = asset.type !== "image";
-    $("ibAssetShape").value = asset.shape || "square";
+    $("ibAssetShape").value = asset.shape || "ring";
     $("ibAssetColor").value = asset.color || "#ffcc00";
     $("ibAssetTarget").innerHTML = targetOptions(asset);
     $("ibAssetTarget").value = String(asset.target);
@@ -1902,6 +1978,7 @@
   });
 
   $("ibAssets").addEventListener("click", (event) => {
+    if (suppressAssetClick) { suppressAssetClick = false; return; }
     const row = event.target.closest(".ib-asset");
     if (!row) return;
     const asset = state.assets.find((item) => item.id === row.dataset.id);
