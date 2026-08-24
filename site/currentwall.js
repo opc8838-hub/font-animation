@@ -669,7 +669,7 @@
       const swapStart = Number(inputs.swapMoment.value) / 100;
       const swapActive = finalStage && inputs.finalSwap.value === "on" && finalProgress >= swapStart && finalStates.length;
       const swapElapsed = Math.max(0, localTime - timing.exitEnd - timing.duration[5] * swapStart) * 1000;
-      const swapIndex = swapActive ? Math.floor(swapElapsed / Math.max(80, Number(inputs.swapInterval.value))) % finalStates.length : 0;
+      const swapIndex = swapActive ? Math.floor(swapElapsed / Math.max(100, Number(inputs.swapInterval.value))) % finalStates.length : 0;
       const line = finalStage ? (swapActive ? finalStates[swapIndex] : rows[0]) : rows[sourceIndex];
       const layout = layoutTokens(context, line, fontPx, assetHeight, repeatGap, assetGap);
       const laneDistance = Math.abs(laneIndex);
@@ -846,7 +846,7 @@
       exitStaggerOut: `${inputs.exitStagger.value}ms`,
       finalDurationOut: formatSeconds(timing.duration[5]),
       swapMomentOut: `${inputs.swapMoment.value}%`,
-      swapIntervalOut: `${inputs.swapInterval.value}ms`
+      swapIntervalOut: `${(Number(inputs.swapInterval.value) / 1000).toFixed(2)}秒`
     };
     Object.entries(values).forEach(([id, value]) => { $(`#${id}`).textContent = value; });
     inputs.wallRows.disabled = inputs.wallRowsMode.value === "auto";
@@ -871,6 +871,14 @@
       if (inputs.motionMode.value === "choreography") setTime(choreographyTiming().fullEnd + .02);
     });
   });
+  [inputs.finalDuration, inputs.swapInterval].forEach((input) => {
+    input.addEventListener("input", () => {
+      if (inputs.motionMode.value !== "choreography") return;
+      const timing = choreographyTiming();
+      const swapStart = Number(inputs.swapMoment.value) / 100;
+      setTime(timing.exitEnd + timing.duration[5] * swapStart + .02);
+    });
+  });
   [inputs.assetItemScale, inputs.assetOffsetX, inputs.assetOffsetY, inputs.assetGapBefore, inputs.assetGapAfter].forEach((input) => {
     input.addEventListener("input", () => {
       updateSelectedAsset();
@@ -882,7 +890,7 @@
   inputs.motionMode.addEventListener("change", () => setTime(0));
 
   const SCHEME_STORAGE_KEY = "me-water-flow-scheme-v2";
-  const SCHEME_VERSION = 2;
+  const SCHEME_VERSION = 3;
   let defaultSchemeSnapshot = null;
   let applyingScheme = false;
   let persistTimer = 0;
@@ -935,11 +943,16 @@
   function applyScheme(scheme, message = "方案已载入。") {
     if (!scheme || !scheme.controls) throw new Error("方案内容不完整");
     applyingScheme = true;
+    const migratedControls = { ...scheme.controls };
+    if (Number(scheme.version || 0) < 3) {
+      if (Number(migratedControls.swapInterval) === 200) migratedControls.swapInterval = 520;
+      if (Number(migratedControls.finalDuration) === 1100) migratedControls.finalDuration = 2600;
+    }
     schemeControlIds.forEach((id) => {
       const field = document.getElementById(id);
-      if (!field || !(id in scheme.controls)) return;
-      if (field.type === "checkbox") field.checked = Boolean(scheme.controls[id]);
-      else field.value = String(scheme.controls[id]);
+      if (!field || !(id in migratedControls)) return;
+      if (field.type === "checkbox") field.checked = Boolean(migratedControls[id]);
+      else field.value = String(migratedControls[id]);
     });
     if (Array.isArray(scheme.assets) && scheme.assets.length) restoreSchemeAssets(scheme.assets);
     rowSettings = Array.isArray(scheme.rowSettings) ? scheme.rowSettings.map((setting) => ({ ...setting })) : [];
