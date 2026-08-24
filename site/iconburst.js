@@ -2,7 +2,9 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id);
-  const previewMode = new URLSearchParams(window.location.search).get("preview") === "1";
+  const pageParams = new URLSearchParams(window.location.search);
+  const previewMode = pageParams.get("preview") === "1";
+  const galleryDefaultMode = pageParams.get("from") === "gallery";
   document.body.classList.toggle("ib-card-preview", previewMode);
   const stage = $("ibStage");
   const composition = $("ibComposition");
@@ -2829,10 +2831,16 @@
   // layer card only after the user chooses an individual asset.
   state.activeAssetId = null;
   let storedScheme = null;
-  if (!previewMode) {
+  if (!previewMode && !galleryDefaultMode) {
     try { storedScheme = JSON.parse(localStorage.getItem(SCHEME_STORAGE_KEY) || "null"); } catch (_) {}
   }
-  if (!previewMode && storedScheme && Number(storedScheme.version) >= 2) {
+  if (!previewMode && galleryDefaultMode) {
+    applyScheme(defaultScheme(true), { status: "已从首页卡片载入同一套最新示例。" });
+    try { localStorage.setItem(SCHEME_STORAGE_KEY, JSON.stringify(collectScheme())); } catch (_) {}
+    const cleanUrl = new URL(window.location.href);
+    cleanUrl.searchParams.delete("from");
+    history.replaceState({}, "", cleanUrl);
+  } else if (!previewMode && storedScheme && Number(storedScheme.version) >= 2) {
     applyScheme(storedScheme, { status: "已恢复上次自动保存的方案。" });
   } else {
     applyScheme(defaultScheme(true), previewMode ? {} : { status: "已载入最新默认示例。" });
