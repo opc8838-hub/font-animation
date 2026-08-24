@@ -42,7 +42,7 @@
     [-.038, -.018], [.050, .012], [-.052, .082], [.042, .112]
   ];
   const iconColors = [["#ffcc00", "#ff6b00"], ["#7b61ff", "#28c8ff"], ["#ff4fa3", "#7b61ff"], ["#35d07f", "#00a7ff"], ["#ff5f57", "#ffd60a"]];
-  const shapeLabels = { circle: "圆形", ring: "圆环", "rainbow-ring": "彩虹圆环", star: "星形" };
+  const shapeLabels = { ring: "圆环", "rainbow-ring": "彩虹圆环" };
   const iconSvg = (body, background) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="${background}"/>${body}</svg>`)}`;
   const flowIconImages = [
     { name: "流墙音乐", url: iconSvg('<g transform="translate(-4 0)"><path d="M44 24v37c-3-2-7-2-11-1-7 2-11 8-9 13s9 7 16 5c6-2 10-7 10-12V39l24-7v24c-3-2-7-2-11-1-7 2-11 8-9 13s9 7 16 5c6-2 10-7 10-12V19z" fill="white"/></g>', "#fa264f") },
@@ -229,7 +229,7 @@
       type: "shape",
       role: "orbit",
       name: "内置图形",
-      shape: "circle",
+      shape: "ring",
       color: "#ffcc00",
       color2: "#ff6b00",
       size: 1,
@@ -261,8 +261,8 @@
   function builtinAssets() {
     // Twelve readable defaults are enough to establish the cloud without
     // turning every frame into visual noise. Users can still add any number.
-    const names = ["圆形", "圆环", "彩虹圆环", "星形"];
-    const shapes = ["circle", "ring", "rainbow-ring", "star"];
+    const names = ["圆环", "彩虹圆环"];
+    const shapes = ["ring", "rainbow-ring"];
     const orbitAssets = names.map((name, index) => defaultAsset({
       id: `builtin-${index}`,
       builtin: true,
@@ -286,12 +286,12 @@
     );
     const defaultGlyphTargets = [1, 3, 5, 7];
     const defaultGlyphSpeeds = [1, .75, 1.5, 1.8];
-    const glyphAssets = ["圆形", "圆环", "彩虹圆环", "星形"].map((name, index) => defaultAsset({
+    const glyphAssets = ["圆环", "彩虹圆环"].map((name, index) => defaultAsset({
       id: `glyph-${index}`,
       builtin: true,
       role: "glyph",
       name: `替字${name}`,
-      shape: ["circle", "ring", "rainbow-ring", "star"][index],
+      shape: ["ring", "rainbow-ring"][index],
       color: iconColors[(index + 1) % iconColors.length][0],
       color2: iconColors[(index + 1) % iconColors.length][1],
       size: .9 + index * .06,
@@ -300,7 +300,7 @@
       sequence: index,
       replaceSpeed: defaultGlyphSpeeds[index]
     }));
-    glyphAssets.splice(1, 1, animalAsset(4, "glyph", {
+    glyphAssets.splice(1, 0, animalAsset(4, "glyph", {
       id: "glyph-animal-default",
       size: .96,
       target: defaultGlyphTargets[1],
@@ -314,7 +314,7 @@
   function contentMode() { return $("ibContentMode").value; }
   function replacementEnabled() { return contentMode() === "replace-one" || contentMode() === "replace-multi"; }
   function shapeMarkup(asset) {
-    return `<span class="ib-geom ${asset.shape || "circle"}" style="--c1:${asset.color};--c2:${asset.color2 || asset.color}"></span>`;
+    return `<span class="ib-geom ${asset.shape || "ring"}" style="--c1:${asset.color};--c2:${asset.color2 || asset.color}"></span>`;
   }
   function assetPreview(asset) {
     if (asset.type === "image") return asset.url ? `<img src="${asset.url}" alt="">` : '<span class="ib-image-empty">＋</span>';
@@ -874,7 +874,7 @@
     if (!scheme || typeof scheme !== "object") return;
     Object.entries(scheme.controls || {}).forEach(([id, value]) => { if ($(id) && value != null) $(id).value = String(value); });
     state.assets = Array.isArray(scheme.assets)
-      ? scheme.assets.map(migrateAsset).filter((asset) => asset.type !== "shape" || !["square", "triangle", "heart"].includes(asset.shape))
+      ? scheme.assets.map(migrateAsset).filter((asset) => asset.type !== "shape" || !["square", "triangle", "heart", "circle", "star"].includes(asset.shape))
       : builtinAssets();
     state.assets.forEach(hydrateAssetImage);
     state.activeAssetId = null;
@@ -2088,7 +2088,7 @@
     if (!asset) return;
     if ($("ibAssetSource").value === "shape") {
       asset.type = "shape";
-      asset.name = `内置${shapeLabels[asset.shape || "circle"]}`;
+      asset.name = `内置${shapeLabels[asset.shape || "ring"]}`;
       asset.status = "已将这一项切换为内置图形；其他资源不受影响。";
       renderIcons(); renderAssets();
     } else if (asset.originalDataUrl) {
