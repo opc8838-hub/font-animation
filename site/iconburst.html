@@ -6,8 +6,8 @@
   <title>图标爆发 Icon Burst | ME Motion Studio</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="stg-cn.css">
-  <link rel="stylesheet" href="iconburst.css?v=20260824-8">
-  <link rel="stylesheet" href="iconburst-overrides.css?v=20260824-8">
+  <link rel="stylesheet" href="iconburst.css?v=20260824-9">
+  <link rel="stylesheet" href="iconburst-overrides.css?v=20260824-9">
 </head>
 <body>
   <main class="ib-app">
@@ -25,7 +25,7 @@
           <button id="ibResetScheme" type="button">恢复默认</button>
           <button id="ibClearScheme" type="button">清理重做</button>
         </div>
-        <p id="ibSchemeStatus" class="ib-help" aria-live="polite">文字、节奏、颜色与全部图片/图标都会随方案保存。</p>
+        <p id="ibSchemeStatus" class="ib-help" aria-live="polite">文字、节奏、颜色、背景素材与全部图片/图标都会随方案保存。</p>
       </section>
 
       <section class="ib-section">
@@ -41,18 +41,19 @@
         </div>
         <p class="ib-help">共 27 款真实本地字体：已完整同步 SNAP 的 26 款，并新增 Archivo Black 粗黑近似字体。</p>
         <div class="ib-two"><label>文字大小 <output id="ibFontSizeValue">100%</output><input id="ibFontSize" type="range" min="45" max="180" value="100"></label><label>文字间距 <output id="ibTrackingValue">-4 px</output><input id="ibTracking" type="range" min="-14" max="36" value="-4"></label></div>
+        <div class="ib-two"><label>文字颜色<input id="ibBaseColor" type="color" value="#ffffff"></label><label>背景颜色<input id="ibBackground" type="color" value="#050506"></label></div>
+        <label class="ib-upload ib-background-upload">上传背景图片 / GIF / 视频<input id="ibBackgroundFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime,image/*,video/*"></label>
+        <div class="ib-background-file"><span id="ibBackgroundStatus">当前使用纯色背景</span><button id="ibClearBackground" type="button" disabled>清除背景素材</button></div>
       </section>
 
       <section class="ib-section">
         <p class="ib-kicker">连续换色</p>
         <label>颜色动效<select id="ibColorMode"><option value="sweep">柔光扫过 · Color Sweep</option><option value="flash">全体同时亮 · Full Flash</option><option value="chase">逐字轮流亮 · Color Chase</option><option value="unfold" selected>中心向两侧亮 · Center Out</option><option value="relay">逐字接力 · Letter Relay</option><option value="aurora">流体渐变 · Aurora Flow</option><option value="pulse">色彩呼吸 · Color Pulse</option><option value="cut">节奏硬切 · Beat Cut</option></select></label>
         <div class="ib-colors">
-          <label>初始色<input id="ibBaseColor" type="color" value="#ffffff"></label>
           <label>颜色 A<input id="ibColorA" type="color" value="#7747ff"></label>
           <label>颜色 B<input id="ibColorB" type="color" value="#ff4fa3"></label>
           <label>颜色 C<input id="ibColorC" type="color" value="#32c5ff"></label>
           <label>颜色 D<input id="ibColorD" type="color" value="#ffd60a"></label>
-          <label>背景<input id="ibBackground" type="color" value="#050506"></label>
         </div>
         <div class="ib-two"><label>换色速度 <output id="ibColorSpeedValue">5.0×</output><input id="ibColorSpeed" type="range" min="0.5" max="6" value="5" step="0.1"></label><label>颜色停留 <output id="ibSoftnessValue">28%</output><input id="ibSoftness" type="range" min="8" max="70" value="28"></label></div>
         <p class="ib-help">颜色直接替换字面颜色，不使用外发光。默认速度会在几帧内完成整句换色。</p>
@@ -167,11 +168,12 @@
         <div class="ib-two"><label>导出时长<select id="ibExportDuration"><option value="cycle" selected>完整一轮</option><option value="3">3 秒</option><option value="5">5 秒</option><option value="10">10 秒</option><option value="custom">自定义</option></select></label><label>帧率<select id="ibExportFps"><option value="15">15 FPS</option><option value="24">24 FPS</option><option value="30" selected>30 FPS</option><option value="60">60 FPS</option></select></label></div>
         <label id="ibCustomDurationWrap" hidden>自定义秒数<input id="ibCustomDuration" type="number" min="0.5" max="30" step="0.1" value="4"></label>
         <div class="ib-export-actions"><button id="ibExportPng" type="button">PNG 图片</button><button id="ibExportGif" type="button">GIF 动图</button><button id="ibExportVideo" type="button">MP4 视频</button><button id="ibExportVerticalVideo" type="button">9:16 MP4</button></div>
-        <p id="ibExportStatus" class="ib-help" aria-live="polite">导出使用与预览相同的文字、图标素材和确定性时间轴。</p>
+        <p id="ibExportStatus" class="ib-help" aria-live="polite">导出使用与预览相同的文字、背景、图标素材和确定性时间轴。</p>
       </section>
     </aside>
 
     <section id="ibStage" class="ib-stage" aria-label="动画效果画布">
+      <div id="ibBackgroundMedia" class="ib-background-media" aria-hidden="true"><img id="ibBackgroundImage" alt=""><video id="ibBackgroundVideo" muted loop playsinline preload="auto"></video></div>
       <div class="ib-safe-area" aria-hidden="true"></div>
       <div id="ibComposition" class="ib-composition">
         <div id="ibOrbitLayer" class="ib-icon-layer ib-orbit-layer" aria-hidden="true"></div>
@@ -191,7 +193,7 @@
   </main>
   <script src="js/continuation-gif.js"></script>
   <script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="iconburst.js?v=20260824-8"></script>
+  <script src="iconburst.js?v=20260824-9"></script>
   <script src="stg-cn.js"></script>
 </body>
 </html>

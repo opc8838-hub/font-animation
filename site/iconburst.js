@@ -14,6 +14,9 @@
   const orbitLayer = $("ibOrbitLayer");
   const glyphLayer = $("ibGlyphLayer");
   const phaseLabel = $("ibPhase");
+  const backgroundMediaLayer = $("ibBackgroundMedia");
+  const backgroundImage = $("ibBackgroundImage");
+  const backgroundVideo = $("ibBackgroundVideo");
   const state = {
     playing: true,
     start: performance.now(),
@@ -24,7 +27,8 @@
     duration: 2400,
     backgroundTimer: 0,
     naturalGap: false,
-    letterAnchors: null
+    letterAnchors: null,
+    backgroundMedia: null
   };
   window.ibMotionState = state;
 
@@ -924,7 +928,12 @@
     return {
       version: 2,
       controls: Object.fromEntries(schemeControlIds.map((id) => [id, $(id).value])),
-      assets: state.assets.map(serializableAsset)
+      assets: state.assets.map(serializableAsset),
+      backgroundMedia: state.backgroundMedia ? {
+        name: state.backgroundMedia.name,
+        type: state.backgroundMedia.type,
+        dataUrl: state.backgroundMedia.dataUrl
+      } : null
     };
   }
 
@@ -952,6 +961,7 @@
     state.assets = Array.isArray(scheme.assets)
       ? scheme.assets.map(migrateAsset).filter((asset) => asset.type !== "shape" || !["square", "triangle", "heart", "circle", "star"].includes(asset.shape))
       : builtinAssets();
+    setBackgroundMedia(scheme.backgroundMedia || null);
     state.assets.forEach(hydrateAssetImage);
     state.activeAssetId = null;
     updateWord();
@@ -965,7 +975,7 @@
   }
 
   function defaultScheme(includeAssets = true) {
-    return { version: 2, controls: { ...defaultControlValues }, assets: includeAssets ? builtinAssets().map(serializableAsset) : [] };
+    return { version: 2, controls: { ...defaultControlValues }, assets: includeAssets ? builtinAssets().map(serializableAsset) : [], backgroundMedia: null };
   }
 
   function downloadBlob(blob, filename) {
@@ -1542,6 +1552,83 @@
     });
   }
 
+  function setBackgroundMedia(media) {
+    backgroundVideo.pause();
+    backgroundVideo.removeAttribute("src");
+    backgroundVideo.load();
+    backgroundImage.removeAttribute("src");
+    backgroundImage.classList.remove("is-active");
+    backgroundVideo.classList.remove("is-active");
+    const valid = media && media.dataUrl && /^(image|video)\//i.test(media.type || "");
+    state.backgroundMedia = valid ? { name: media.name || "背景素材", type: media.type, dataUrl: media.dataUrl } : null;
+    backgroundMediaLayer.hidden = !state.backgroundMedia;
+    $("ibClearBackground").disabled = !state.backgroundMedia;
+    if (!state.backgroundMedia) {
+      $("ibBackgroundStatus").textContent = "当前使用纯色背景";
+      return;
+    }
+    const isVideo = /^video\//i.test(state.backgroundMedia.type);
+    const element = isVideo ? backgroundVideo : backgroundImage;
+    element.classList.add("is-active");
+    element.src = state.backgroundMedia.dataUrl;
+    $("ibBackgroundStatus").textContent = `${isVideo ? "视频" : /gif/i.test(state.backgroundMedia.type) ? "GIF" : "图片"}背景 · ${state.backgroundMedia.name}`;
+    if (isVideo) {
+      backgroundVideo.currentTime = 0;
+      backgroundVideo.play().catch(() => {});
+    }
+  }
+
+  function drawCover(ctx, media, width, height) {
+    const sourceWidth = media.videoWidth || media.naturalWidth || media.width;
+    const sourceHeight = media.videoHeight || media.naturalHeight || media.height;
+    if (!sourceWidth || !sourceHeight) return;
+    const scale = Math.max(width / sourceWidth, height / sourceHeight);
+    const drawWidth = sourceWidth * scale;
+    const drawHeight = sourceHeight * scale;
+    ctx.drawImage(media, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
+  }
+
+  function drawBackgroundToCanvas(ctx, width, height) {
+    ctx.fillStyle = $("ibBackground").value;
+    ctx.fillRect(0, 0, width, height);
+    if (!state.backgroundMedia) return;
+    if (/^video\//i.test(state.backgroundMedia.type)) {
+      if (backgroundVideo.readyState >= 2) drawCover(ctx, backgroundVideo, width, height);
+    } else if (backgroundImage.complete && backgroundImage.naturalWidth) {
+      drawCover(ctx, backgroundImage, width, height);
+    }
+  }
+
+  function waitForMedia(element, eventName, timeout = 1200) {
+    return new Promise((resolve) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        element.removeEventListener(eventName, finish);
+        resolve();
+      };
+      element.addEventListener(eventName, finish, { once: true });
+      setTimeout(finish, timeout);
+    });
+  }
+
+  async function prepareBackgroundFrame(realSeconds) {
+    if (!state.backgroundMedia) return;
+    if (!/^video\//i.test(state.backgroundMedia.type)) {
+      if (!backgroundImage.complete) await waitForMedia(backgroundImage, "load");
+      return;
+    }
+    if (backgroundVideo.readyState < 2) await waitForMedia(backgroundVideo, "loadeddata", 2400);
+    const duration = backgroundVideo.duration;
+    if (!Number.isFinite(duration) || duration <= 0) return;
+    const target = ((realSeconds % duration) + duration) % duration;
+    if (Math.abs(backgroundVideo.currentTime - target) < .004) return;
+    const seeked = waitForMedia(backgroundVideo, "seeked", 900);
+    backgroundVideo.currentTime = target;
+    await seeked;
+  }
+
   function exportDimensions(verticalHD = false) {
     if (verticalHD) return [1080, 1920];
     const preset = $("ibExportPreset").value;
@@ -1666,8 +1753,7 @@
   function renderExportFrame(canvas, realSeconds) {
     const ctx = canvas.getContext("2d", { alpha: false, willReadFrequently: true });
     const width = canvas.width, height = canvas.height;
-    ctx.fillStyle = $("ibBackground").value;
-    ctx.fillRect(0, 0, width, height);
+    drawBackgroundToCanvas(ctx, width, height);
     const playback = glyphPlaybackConfig();
     state.duration = animationDuration(playback);
     const speed = Math.max(.01, Number($("ibSpeed").value));
@@ -1994,6 +2080,29 @@
     selectAsset(asset.id);
   });
 
+  $("ibBackgroundFile").addEventListener("change", async (event) => {
+    const file = event.target.files && event.target.files[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!/^(image|video)\//i.test(file.type || "")) {
+      $("ibBackgroundStatus").textContent = "不支持该格式，请选择图片、GIF、MP4、WebM 或 MOV。";
+      return;
+    }
+    $("ibBackgroundStatus").textContent = `正在读取背景 · ${file.name}`;
+    try {
+      const dataUrl = await readFile(file);
+      setBackgroundMedia({ name: file.name, type: file.type, dataUrl });
+      scheduleSchemePersist();
+    } catch (_) {
+      $("ibBackgroundStatus").textContent = "背景素材读取失败，请重新选择文件。";
+    }
+  });
+
+  $("ibClearBackground").addEventListener("click", () => {
+    setBackgroundMedia(null);
+    scheduleSchemePersist();
+  });
+
   ["ibText", "ibFont", "ibWeight", "ibFontSize", "ibTracking", "ibBaseColor", "ibColorA", "ibColorB", "ibColorC", "ibColorD", "ibBackground"].forEach((id) => {
     $(id).addEventListener("input", id === "ibText" ? updateWord : updateTypography);
   });
@@ -2073,7 +2182,9 @@
     try {
       await preloadExportAssets();
       const output = makeExportCanvas(false);
-      renderExportFrame(output, currentRealSeconds());
+      const exportSecond = currentRealSeconds();
+      await prepareBackgroundFrame(exportSecond);
+      renderExportFrame(output, exportSecond);
       output.toBlob((blob) => {
         if (blob) downloadBlob(blob, `icon-burst-${output.width}x${output.height}.png`);
         setExportBusy(false, blob ? `PNG 已生成 · ${output.width} × ${output.height}` : "PNG 生成失败");
@@ -2092,7 +2203,9 @@
       const frames = Math.max(1, Math.ceil(duration * fps));
       const gif = new GIF({ workers: 2, quality: 10, width: output.width, height: output.height, workerScript: "js/continuation-gif.worker.js" });
       for (let frame = 0; frame < frames; frame += 1) {
-        renderExportFrame(output, frame / fps);
+        const frameSecond = frame / fps;
+        await prepareBackgroundFrame(frameSecond);
+        renderExportFrame(output, frameSecond);
         gif.addFrame(output, { copy: true, delay: 1000 / fps });
         if (frame % 4 === 0) $("ibExportStatus").textContent = `正在准备 GIF · ${frame + 1} / ${frames} 帧`;
       }
@@ -2122,7 +2235,9 @@
       encoder.groupOfPictures = 15;
       encoder.initialize();
       for (let frame = 0; frame < frameCount; frame += 1) {
-        renderExportFrame(output, frame / fps);
+        const frameSecond = frame / fps;
+        await prepareBackgroundFrame(frameSecond);
+        renderExportFrame(output, frameSecond);
         encoder.addFrameRgba(context.getImageData(0, 0, output.width, output.height).data);
         if (frame % 2 === 0) {
           $("ibExportStatus").textContent = `正在导出 MP4 ${output.width} × ${output.height} · ${Math.round((frame + 1) / frameCount * 100)}%`;

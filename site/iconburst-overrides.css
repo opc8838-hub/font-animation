@@ -157,6 +157,75 @@ body .ib-asset.is-dragging {
 
 body .ib-asset.is-dragging .ib-drag-handle { cursor: grabbing; }
 
+.ib-background-upload { margin-top: 2px; }
+
+.ib-section > .ib-two > label > input[type="color"] {
+  width: 100%;
+  height: 38px;
+  padding: 3px;
+  border: 1px solid #d2d2d7;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.ib-background-file {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #6e6e73;
+  font-size: 10px;
+}
+
+.ib-background-file span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ib-background-file button {
+  flex: 0 0 auto;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid #d2d2d7;
+  border-radius: 8px;
+  background: #fff;
+  color: #47474b;
+  font: 600 10px inherit;
+  cursor: pointer;
+}
+
+.ib-background-file button:disabled { opacity: .42; cursor: default; }
+
+.ib-background-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ib-background-media[hidden] { display: none; }
+
+.ib-background-media img,
+.ib-background-media video {
+  width: 100%;
+  height: 100%;
+  display: none;
+  object-fit: cover;
+}
+
+.ib-background-media img.is-active,
+.ib-background-media video.is-active { display: block; }
+
+.ib-stage::before { z-index: 1; }
+.ib-safe-area,
+.ib-stage-meta,
+.ib-controls { z-index: 4; }
+.ib-composition { z-index: 2; }
+
 body .ib-asset.is-active {
   border-color: #0071e3;
   background: #f4f9ff;
