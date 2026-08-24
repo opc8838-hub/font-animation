@@ -2,7 +2,7 @@
   "use strict";
 
   const PREVIEW = new URLSearchParams(location.search).has("preview");
-  const DEFAULT_SCHEME_URL = "assets/presets/water-flow-default.json?v=20260824-1";
+  const DEFAULT_SCHEME_URL = "assets/presets/water-flow-default.json?v=20260824-2";
   if (PREVIEW) {
     document.documentElement.classList.add("is-preview");
     document.body.classList.add("is-preview");
