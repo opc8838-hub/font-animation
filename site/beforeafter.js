@@ -317,30 +317,28 @@
     if (photos.after) drawCover(context, photos.after, box.x, box.y, box.w, box.h, radius, options.afterPanX, options.afterPanY);
   }
 
-  function drawSliderChip(context, text, x, y, align, size, family) {
-    context.save();
-    context.font = `650 ${size}px "${family}", "IBSCRegular", sans-serif`;
-    const width = context.measureText(text).width + size * 1.15;
-    const height = size * 1.65;
-    const left = align === "right" ? x - width : x;
-    context.fillStyle = "rgba(20,20,22,.58)";
-    roundRect(context, left, y - height, width, height, height * .34);
-    context.fill();
-    context.fillStyle = "#ffffff";
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText(text, left + width / 2, y - height / 2 + 1);
-    context.restore();
-  }
-
   function drawSliderCompare(context, w, h, options, position) {
-    const box = uploadLayout(w, h).box;
+    const layout = uploadLayout(w, h);
+    const box = layout.box;
     const radius = Math.min(w, h) * 0.035;
-    const split = box.x + box.w * clamp01(position);
+    const sliderPosition = clamp01(position);
+    const split = box.x + box.w * sliderPosition;
+    const showingBefore = sliderPosition < 0.5;
     context.fillStyle = options.compareBg;
     context.fillRect(0, 0, w, h);
+    const labelPx = Math.max(16, h * 0.028) * options.labelSize;
+    drawLabel(
+      context,
+      showingBefore ? options.beforeLabel : options.afterLabel,
+      w / 2,
+      layout.labelY,
+      showingBefore ? options.beforeColor : options.afterColor,
+      labelPx,
+      showingBefore ? options.beforeFont : options.afterFont,
+      options.labelTracking
+    );
 
-    if (photos.before) drawCover(context, photos.before, box.x, box.y, box.w, box.h, radius, options.beforePanX, options.beforePanY);
+    if (photos.after) drawCover(context, photos.after, box.x, box.y, box.w, box.h, radius, options.afterPanX, options.afterPanY);
     else drawEmpty(context, box.x, box.y, box.w, box.h, radius, "#8d8d92");
 
     context.save();
@@ -349,7 +347,7 @@
     context.beginPath();
     context.rect(split, box.y, Math.max(0, box.x + box.w - split), box.h);
     context.clip();
-    if (photos.after) drawCover(context, photos.after, box.x, box.y, box.w, box.h, radius, options.afterPanX, options.afterPanY);
+    if (photos.before) drawCover(context, photos.before, box.x, box.y, box.w, box.h, radius, options.beforePanX, options.beforePanY);
     context.restore();
 
     const lineWidth = Math.max(2, Math.min(w, h) * .004);
@@ -383,10 +381,6 @@
     context.stroke();
     context.restore();
 
-    const chipSize = Math.max(12, h * .021) * options.labelSize;
-    const chipY = box.y + box.h - Math.max(10, h * .012);
-    drawSliderChip(context, options.beforeLabel, box.x + Math.max(10, box.w * .035), chipY, "left", chipSize, options.beforeFont);
-    drawSliderChip(context, options.afterLabel, box.x + box.w - Math.max(10, box.w * .035), chipY, "right", chipSize, options.afterFont);
     return box;
   }
 
