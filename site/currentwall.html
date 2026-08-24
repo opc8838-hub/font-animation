@@ -7,8 +7,8 @@
   <title>水流 Water Flow | ME Motion Studio</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="continuation.css">
-  <link rel="stylesheet" href="currentwall.css?v=20260824-4">
-  <link rel="stylesheet" href="me-motion-editor.css?v=20260824-2">
+  <link rel="stylesheet" href="currentwall.css?v=20260824-5">
+  <link rel="stylesheet" href="me-motion-editor.css?v=20260824-3">
   <link rel="stylesheet" href="stg-cn.css">
 </head>
 <body class="me-motion-editor">
@@ -28,16 +28,12 @@
     </summary>
     <div class="panel-scroll">
       <section class="scheme-section">
-        <div class="section-heading"><p class="section-label">方案</p><small class="section-note">自动保存</small></div>
+        <p class="section-label">方案</p>
         <div class="scheme-actions me-scheme-actions">
           <button id="saveScheme" type="button">保存方案</button>
           <label class="scheme-import me-scheme-import">导入方案<input id="importScheme" type="file" accept="application/json,.json"></label>
           <button id="resetScheme" type="button">恢复默认</button>
           <button id="clearScheme" type="button">清理重做</button>
-        </div>
-        <div class="scheme-history me-scheme-history" aria-label="方案历史">
-          <button id="undoScheme" type="button">撤销</button>
-          <button id="redoScheme" type="button">重做</button>
         </div>
         <p class="hint" id="schemeStatus" aria-live="polite">文字、图标、节奏与颜色都会随方案保存。</p>
       </section>
@@ -79,14 +75,19 @@ everything</textarea>
 
       <section class="asset-section">
         <div class="section-heading">
-          <p class="section-label">图片 / 图标字位</p>
+          <p class="section-label">图片与图标</p>
           <label class="upload-button">添加图片<input id="assetUpload" type="file" accept="image/*" multiple></label>
         </div>
         <label class="asset-background-toggle"><input id="assetRemoveBackground" type="checkbox" checked> 上传时自动去背景并裁掉透明空白</label>
         <p class="asset-process-status" id="assetProcessStatus" aria-live="polite">内置透明动物可直接使用；上传图片在浏览器本地高清处理。</p>
-        <div class="asset-grid" id="assetGrid"></div>
-        <div class="asset-tuner" id="assetTuner">
-          <div class="asset-tuner-head"><span>当前素材精调</span><b id="selectedAssetName">音乐</b></div>
+        <div class="asset-selected-summary me-asset-selected-summary">
+          <div class="asset-selected-copy"><img id="selectedAssetPreview" alt=""><span><small>当前选择</small><b id="selectedAssetName">音乐</b></span></div>
+          <button id="insertSelectedAsset" class="me-asset-commit" type="button">插入到光标</button>
+        </div>
+        <div class="asset-library-heading"><strong>素材库</strong><span>点击只选择，不会直接添加</span></div>
+        <div class="asset-grid me-asset-library" id="assetGrid"></div>
+        <div class="asset-tuner me-asset-editor" id="assetTuner">
+          <div class="asset-tuner-head"><span>单独编辑</span><b>大小、位置与间距</b></div>
           <div class="asset-tuner-grid">
             <label>大小 <output id="assetItemScaleOut">100%</output>
               <input id="assetItemScale" type="range" min="40" max="200" value="100">
@@ -105,7 +106,7 @@ everything</textarea>
             </label>
           </div>
         </div>
-        <p class="hint">先在文字框中放好光标，再点素材即可插入；同一素材可以出现在一处或多处。支持 PNG、JPG、WEBP、SVG。</p>
+        <p class="hint">先在文字框中放好光标，选择素材并完成编辑，再点“插入到光标”。同一素材可以插入一处或多处。</p>
       </section>
 
       <details class="advanced-controls row-advanced">
@@ -173,11 +174,12 @@ everything</textarea>
 
       <section class="timeline-section">
         <div class="section-heading"><p class="section-label">动效时间轴</p><small class="section-note">点一段可跳到该阶段</small></div>
-        <div class="flow-timeline" id="flowTimeline" aria-label="水流动效时间轴">
-          <div class="flow-timeline-track" id="flowTimelineTrack"></div>
-          <i class="flow-timeline-playhead" id="flowTimelinePlayhead" aria-hidden="true"></i>
+        <div class="flow-timeline me-choreo-track" id="flowTimeline" aria-label="水流动效时间轴">
+          <div class="me-choreo-scroll">
+            <div class="flow-timeline-track me-choreo-bar" id="flowTimelineTrack"></div>
+          </div>
+          <ol class="flow-timeline-list me-choreo-legend" id="flowTimelineList"></ol>
         </div>
-        <div class="flow-timeline-list" id="flowTimelineList"></div>
       </section>
 
       <details class="advanced-controls motion-advanced">
@@ -293,7 +295,7 @@ everything</textarea>
   <script src="js/h264-mp4-encoder.web.js"></script>
   <script src="token-asset-tools.js"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
-  <script src="currentwall.js?v=20260824-ui1"></script>
+  <script src="currentwall.js?v=20260824-ui2"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
 </body>

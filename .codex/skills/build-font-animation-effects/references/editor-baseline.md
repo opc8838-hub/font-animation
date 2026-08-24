@@ -4,7 +4,7 @@ Apply this baseline to new effect pages unless the user explicitly removes a cap
 
 ## Canvas and content
 
-- Use the Icon Burst editor as the canonical project visual and interaction language: scrollable light-gray left editor, sticky header, rounded white section cards, consistent fields/buttons, and a large right stage. Reuse `me-scheme-actions`, `me-scheme-import`, `me-scheme-history`, and `me-stage-controls` from `site/me-motion-editor.css`; do not give each effect an unrelated editor shell.
+- Use the Icon Burst editor as the canonical project visual and interaction language: scrollable light-gray left editor, sticky header, rounded white section cards, consistent fields/buttons, and a large right stage. Reuse the shared `me-*` scheme, choreography, asset, and stage-control classes from `site/me-motion-editor.css`; do not give each effect an unrelated editor shell.
 - Put Pause/Play and Replay in the stage itself, horizontally centered near the bottom with the same compact dark translucent control used by Icon Burst. Any duplicate controls in the editor must share one playback state and stay synchronized.
 - Text must accept Chinese and Latin content and remain centered by default. Expose alignment or X/Y positioning when the choreography benefits from it.
 - Populate every font selector from `site/shared-font-library.js` and load faces from `site/shared-fonts.css`. The catalog consolidates the project fonts and provides Latin, Chinese, Japanese, and Korean choices; do not copy a reduced option list or a private font map into a new effect.
@@ -26,6 +26,7 @@ Do not reintroduce the removed square, triangle, heart, circle, or star choices 
 
 For icon-rich effects, support:
 
+- Separate library selection from composition mutation. A library-card click only selects an item for editing; an explicit Add/Insert button commits it to the text, glyph slot, orbit list, or composition.
 - Add/remove assets and arbitrary asset counts.
 - Drag to reorder selected assets; expanded management should use the full editor width without shrinking the stage.
 - Roles such as opening/orbit and glyph replacement when relevant.
@@ -42,19 +43,19 @@ Each effect needs a unique, versioned scheme key and a serializable state model.
 
 Required actions:
 
-- Present Save, Import, Restore Default, and Clear/Rebuild as the same two-column large-button scheme card used by Icon Burst; keep status copy directly below it.
+- Present exactly Save, Import, Restore Default, and Clear/Rebuild as the same two-column large-button scheme card used by Icon Burst; keep status copy directly below it and do not append Undo/Redo or effect-specific actions inside this card.
 - Save the current scheme to local storage and download JSON.
 - Import JSON and rebuild dynamic rows, assets, targets, and timeline beats.
 - Automatically persist meaningful edits after a short debounce.
 - Restore the approved default example.
 - Clear user content/assets without damaging shared built-ins.
-- Undo and redo meaningful editor changes with bounded scheme snapshots; do not snapshot every animation frame.
+- Undo/redo may remain available through a shared history surface or shortcuts, but must not change the canonical four-action scheme card.
 
 Uploaded project media must survive scheme export/import when browser storage limits allow it. Strip runtime-only objects such as `Image`, canvas contexts, functions, and processing flags before serialization. Include a scheme version and migrate older shapes or fields instead of silently breaking saved files.
 
 ## Timeline and motion controls
 
-- Every effect editor includes a readable visual choreography timeline by default; do not replace it with a static arrow diagram or a paragraph of phase names.
+- Every effect editor includes the same colored Icon Burst choreography blocks and legend by default; do not substitute gray pill rows, a static arrow diagram, or a paragraph of phase names.
 - Each beat displays its name and start/end or duration, and the track includes a moving playhead driven by the same clock as the preview.
 - Clicking a beat seeks to that part. Timing edits rebuild the beat widths, labels, total duration, active state, and seek points immediately.
 - Expose master playback speed plus the phase-specific durations, delays, stagger, rhythm/easing, hold, and direction that materially change the reference motion.

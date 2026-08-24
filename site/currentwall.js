@@ -159,8 +159,8 @@
       if (isAnimal && animalIndex++ >= 8 && !animalLibraryOpen) card.classList.add("is-library-hidden");
       const insert = document.createElement("button");
       insert.type = "button";
-      insert.className = "asset-insert";
-      insert.title = `插入 {{${asset.id}}}`;
+      insert.className = "asset-insert me-asset-choice";
+      insert.title = `选择并编辑 ${asset.label}`;
       const preview = document.createElement("img");
       preview.src = asset.src;
       preview.alt = "";
@@ -173,7 +173,7 @@
         selectedAssetId = asset.id;
         syncAssetTuner();
         renderAssetGrid();
-        insertToken(asset.id);
+        $("#assetProcessStatus").textContent = `已选择“${asset.label}”。调整后点“插入到光标”才会添加。`;
       });
       card.append(insert);
       if (asset.removable) {
@@ -199,6 +199,7 @@
     if (!asset) return;
     selectedAssetId = asset.id;
     $("#selectedAssetName").textContent = asset.label;
+    $("#selectedAssetPreview").src = asset.src;
     inputs.assetItemScale.value = String(Math.round(asset.scale * 100));
     inputs.assetOffsetX.value = String(Math.round(asset.offsetX));
     inputs.assetOffsetY.value = String(Math.round(asset.offsetY));
@@ -235,6 +236,13 @@
     snapshotHistory();
   }
 
+  $("#insertSelectedAsset").addEventListener("click", () => {
+    const asset = assets.get(selectedAssetId);
+    if (!asset) return;
+    insertToken(asset.id);
+    $("#assetProcessStatus").textContent = `已把“${asset.label}”插入到当前光标位置。`;
+  });
+
   [inputs.rows, inputs.introWord, inputs.finalLine].forEach((field) => {
     field.addEventListener("focus", () => { activeTokenInput = field; });
   });
@@ -265,8 +273,7 @@
         selectedAssetId = id;
         renderAssetGrid();
         syncAssetTuner();
-        insertToken(id);
-        $("#assetProcessStatus").textContent = `${file.name} · ${result.status} · 可独立调大小与位置。`;
+        $("#assetProcessStatus").textContent = `${file.name} · ${result.status} · 已选中但尚未插入，可先单独编辑。`;
         snapshotHistory();
         scheduleSchemePersist();
       } catch (error) {
@@ -395,11 +402,11 @@
 
   function timelineBeats(timing = choreographyTiming()) {
     return [
-      { name: "开场向左", start: 0, end: timing.leftEnd },
-      { name: "切入并铺满", start: timing.leftEnd, end: timing.popEnd },
-      { name: "满屏向左水流", start: timing.popEnd, end: timing.fullEnd },
-      { name: "向右带动并回收", start: timing.fullEnd, end: timing.exitEnd },
-      { name: "单行切换收尾", start: timing.exitEnd, end: timing.finalEnd }
+      { kind: "intro", name: "开场向左", start: 0, end: timing.leftEnd },
+      { kind: "orbit", name: "切入并铺满", start: timing.leftEnd, end: timing.popEnd },
+      { kind: "hold", name: "满屏向左水流", start: timing.popEnd, end: timing.fullEnd },
+      { kind: "contact", name: "向右带动并回收", start: timing.fullEnd, end: timing.exitEnd },
+      { kind: "replace", name: "单行切换收尾", start: timing.exitEnd, end: timing.finalEnd }
     ].map((beat, index) => ({ ...beat, index, duration: Math.max(0, beat.end - beat.start) }));
   }
 
@@ -414,21 +421,24 @@
     beats.forEach((beat) => {
       const button = document.createElement("button");
       button.type = "button";
-      button.className = "flow-timeline-beat";
+      button.className = `flow-timeline-beat me-choreo-block is-${beat.kind}`;
       button.style.setProperty("--beat-width", String(Math.max(.035, beat.duration / Math.max(.001, timing.cycle))));
+      button.style.flex = `${Math.max(.08, beat.duration)} 1 0`;
       button.dataset.beatIndex = String(beat.index);
-      button.innerHTML = `<strong>${beat.index + 1}</strong><span>${beat.name}</span><small>${beat.duration.toFixed(2)}秒</small>`;
+      button.innerHTML = `<em>${beat.index + 1}</em><strong>${beat.name}</strong><small>${beat.duration.toFixed(2)}秒</small>`;
       button.addEventListener("click", () => setTime(beat.start + .001));
       track.append(button);
 
-      const row = document.createElement("button");
-      row.type = "button";
+      const row = document.createElement("li");
       row.className = "flow-timeline-row";
-      row.dataset.beatIndex = String(beat.index);
-      row.innerHTML = `<i>${beat.index + 1}</i><span>${beat.name}</span><small>${beat.start.toFixed(2)} → ${beat.end.toFixed(2)}秒</small>`;
-      row.addEventListener("click", () => setTime(beat.start + .001));
+      row.innerHTML = `<i class="is-${beat.kind}"></i><b>${beat.index + 1}. ${beat.name}</b><span>${beat.start.toFixed(2)}s → ${beat.end.toFixed(2)}s</span>`;
       list.append(row);
     });
+    const playhead = document.createElement("i");
+    playhead.className = "flow-timeline-playhead me-choreo-playhead";
+    playhead.id = "flowTimelinePlayhead";
+    playhead.setAttribute("aria-hidden", "true");
+    track.append(playhead);
     $("#flowTimeline").classList.toggle("is-continuous", inputs.motionMode.value !== "choreography");
   }
 
@@ -436,8 +446,7 @@
     const playhead = $("#flowTimelinePlayhead");
     if (!playhead) return;
     const progress = inputs.motionMode.value === "choreography" ? clamp01(time / Math.max(.001, timing.cycle)) : 0;
-    const trackWidth = $("#flowTimelineTrack")?.scrollWidth || $("#flowTimeline")?.clientWidth || 0;
-    playhead.style.left = `${(progress * trackWidth).toFixed(2)}px`;
+    playhead.style.left = `${(progress * 100).toFixed(3)}%`;
     const active = timelineBeats(timing).find((beat) => time >= beat.start && time < beat.end)?.index ?? 0;
     document.querySelectorAll("[data-beat-index]").forEach((element) => {
       element.classList.toggle("is-active", Number(element.dataset.beatIndex) === active);
@@ -824,8 +833,8 @@
   }
 
   function updateHistoryButtons() {
-    $("#undoScheme").disabled = historyIndex <= 0;
-    $("#redoScheme").disabled = historyIndex >= schemeHistory.length - 1;
+    if ($("#undoScheme")) $("#undoScheme").disabled = historyIndex <= 0;
+    if ($("#redoScheme")) $("#redoScheme").disabled = historyIndex >= schemeHistory.length - 1;
   }
 
   function snapshotHistory() {
@@ -894,14 +903,14 @@
     snapshotHistory();
     scheduleSchemePersist();
   });
-  $("#undoScheme").addEventListener("click", () => {
+  $("#undoScheme")?.addEventListener("click", () => {
     if (historyIndex <= 0) return;
     historyIndex -= 1;
     applyScheme(JSON.parse(schemeHistory[historyIndex]), "已撤销上一步编辑。" );
     updateHistoryButtons();
     scheduleSchemePersist();
   });
-  $("#redoScheme").addEventListener("click", () => {
+  $("#redoScheme")?.addEventListener("click", () => {
     if (historyIndex >= schemeHistory.length - 1) return;
     historyIndex += 1;
     applyScheme(JSON.parse(schemeHistory[historyIndex]), "已重做下一步编辑。" );

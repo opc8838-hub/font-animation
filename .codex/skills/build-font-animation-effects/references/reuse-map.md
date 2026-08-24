@@ -14,7 +14,7 @@ Use `site/shared-font-library.js` for the single project-wide font list and valu
 
 Use `site/iconburst.html`, `site/iconburst.css`, `site/iconburst-overrides.css`, and `site/iconburst.js` for:
 
-- The canonical left-editor section cards, two-column scheme actions, status messaging, and bottom-center stage Pause/Play + Replay controls. The reusable class implementations are in `site/me-motion-editor.css` as `me-scheme-*` and `me-stage-controls`.
+- The canonical left-editor section cards, exact four-button two-column scheme actions, colored choreography blocks/legend, selection-first asset editor, status messaging, and bottom-center stage Pause/Play + Replay controls. Reuse the `me-scheme-*`, `me-choreo-*`, `me-asset-*`, and `me-stage-controls` implementations in `site/me-motion-editor.css`.
 - Shared animal, Bot, and flow-icon libraries.
 - Expandable selected-asset lists, drag reorder, and per-asset drawer editing.
 - Dynamic glyph replacement target/order/speed/hold controls.

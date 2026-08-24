@@ -158,10 +158,30 @@
 .asset-background-toggle input { width: 15px; height: 15px; }
 .asset-process-status { margin: 0 0 8px; color: #62615c; font: 8px/1.45 "Courier New", monospace; }
 
+.asset-selected-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid #c9ddf0;
+  border-radius: 12px;
+  background: #edf5fd;
+}
+.asset-selected-copy { min-width: 0; display: flex; align-items: center; gap: 9px; }
+.asset-selected-copy img { width: 44px; height: 44px; flex: 0 0 44px; object-fit: contain; border-radius: 9px; background: #fff; }
+.asset-selected-copy span { min-width: 0; display: grid; gap: 3px; }
+.asset-selected-copy small { color: #6e6e73; font-size: 9px; }
+.asset-selected-copy b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+body.me-motion-editor #insertSelectedAsset { min-height: 40px; padding: 0 12px; background: #0071e3 !important; color: #fff !important; white-space: nowrap; }
+.asset-library-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 11px; }
+.asset-library-heading strong { font-size: 11px; }
+.asset-library-heading span { color: #6e6e73; font-size: 9px; }
+
 .asset-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .asset-library-divider {
@@ -170,9 +190,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 7px 8px;
-  border: 1px solid #c9c8c1;
-  background: #f4f3ef;
-  font: 700 8px/1 "Courier New", monospace;
+  border: 1px solid #dedee3;
+  border-radius: 10px;
+  background: #f5f5f7;
+  font: 650 10px/1 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
 }
 
 .asset-library-divider button {
@@ -191,27 +212,30 @@
 }
 
 .asset-card.is-selected .asset-insert {
-  outline: 3px solid #2864ff;
-  outline-offset: -3px;
+  border-color: #0071e3 !important;
+  background: #f4f9ff !important;
+  box-shadow: 0 0 0 3px rgba(0,113,227,.1);
 }
 
 .asset-insert {
   width: 100%;
-  min-height: 56px;
+  min-height: 58px;
   display: grid;
-  grid-template-rows: 32px auto;
-  place-items: center;
-  gap: 3px;
-  padding: 5px 3px;
-  border: 1px solid #111;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 7px;
+  border: 1px solid #dedee3 !important;
+  border-radius: 11px !important;
   background: #fff;
-  color: #111;
-  font: 700 8px/1 sans-serif;
+  color: #1d1d1f;
+  font: 650 10px/1.2 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
   overflow: hidden;
+  text-align: left;
 }
 
-.asset-insert:hover { background: #c1ff1a; }
-.asset-insert img { width: 30px; height: 30px; object-fit: contain; }
+.asset-insert:hover { background: #f5f5f7 !important; }
+.asset-insert img { width: 42px; height: 42px; object-fit: contain; border-radius: 8px; background: #ececef; }
 .asset-insert span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .asset-remove {
   position: absolute;
@@ -228,10 +252,11 @@
 }
 
 .asset-tuner {
-  margin-top: 8px;
-  padding: 9px;
-  border: 1px solid #111;
-  background: #fff;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid #c9ddf0;
+  border-radius: 12px;
+  background: #edf5fd;
 }
 
 .asset-tuner-head {
@@ -277,83 +302,6 @@
 .row-sliders output { text-align: right; font: 8px/1 "Courier New", monospace; }
 
 .timeline-section { overflow: hidden; }
-.flow-timeline {
-  position: relative;
-  padding: 3px 0 8px;
-  overflow-x: auto;
-  scrollbar-width: thin;
-}
-.flow-timeline-track {
-  min-width: 540px;
-  height: 94px;
-  display: flex;
-  gap: 4px;
-}
-.flow-timeline-beat {
-  position: relative;
-  flex: var(--beat-width) 1 0;
-  min-width: 76px;
-  display: grid;
-  align-content: center;
-  justify-items: start;
-  gap: 5px;
-  padding: 10px !important;
-  overflow: hidden;
-  border-radius: 11px !important;
-  background: #e8e8ed !important;
-  text-align: left;
-}
-.flow-timeline-beat strong { font-size: 18px; line-height: 1; }
-.flow-timeline-beat span { font-size: 10px; font-weight: 700; white-space: nowrap; }
-.flow-timeline-beat small { color: #6e6e73; font-size: 9px; font-variant-numeric: tabular-nums; }
-.flow-timeline-beat.is-active { background: #0071e3 !important; color: #fff !important; }
-.flow-timeline-beat.is-active small { color: rgba(255,255,255,.78); }
-.flow-timeline-playhead {
-  position: absolute;
-  z-index: 4;
-  top: 0;
-  bottom: 5px;
-  width: 2px;
-  border-radius: 2px;
-  background: #ff375f;
-  pointer-events: none;
-  transform: translateX(-1px);
-}
-.flow-timeline-playhead::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: inherit;
-  transform: translate(-50%, -2px);
-}
-.flow-timeline.is-continuous { opacity: .45; }
-.flow-timeline-list { display: grid; gap: 4px; margin-top: 7px; }
-.flow-timeline-row {
-  min-height: 34px !important;
-  display: grid;
-  grid-template-columns: 24px 1fr auto;
-  align-items: center;
-  gap: 7px;
-  padding: 5px 8px !important;
-  text-align: left;
-}
-.flow-timeline-row i {
-  width: 22px;
-  height: 22px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: #d2d2d7;
-  font-size: 9px;
-  font-style: normal;
-}
-.flow-timeline-row span { font-size: 11px; font-weight: 650; }
-.flow-timeline-row small { color: #6e6e73; font-size: 9px; font-variant-numeric: tabular-nums; }
-.flow-timeline-row.is-active i { background: #0071e3; color: #fff; }
 
 .export-options {
   display: grid;

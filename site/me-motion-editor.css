@@ -221,6 +221,53 @@ body.me-motion-editor .me-stage-controls button {
 body.me-motion-editor .me-stage-controls button:hover { background: rgba(255,255,255,.12) !important; }
 body.me-motion-editor.is-preview .me-stage-controls { display: none; }
 
+body.me-motion-editor .me-choreo-track { display: grid; gap: 10px; }
+body.me-motion-editor .me-choreo-scroll { overflow-x: auto; padding-bottom: 4px; }
+body.me-motion-editor .me-choreo-bar { position: relative; min-width: 620px; min-height: 92px; display: flex; gap: 5px; }
+body.me-motion-editor .me-choreo-block {
+  min-width: 76px !important;
+  min-height: 92px !important;
+  padding: 8px !important;
+  border: 1px solid #1d1d1f !important;
+  border-radius: 0 !important;
+  display: grid;
+  align-content: space-between;
+  justify-items: start;
+  gap: 4px;
+  color: #111 !important;
+  text-align: left;
+  cursor: pointer;
+}
+body.me-motion-editor .me-choreo-block em { font-size: 18px; line-height: 1; font-style: normal; font-weight: 800; }
+body.me-motion-editor .me-choreo-block strong { font-size: 11px; line-height: 1.2; }
+body.me-motion-editor .me-choreo-block small { color: #111 !important; font-size: 9px; }
+body.me-motion-editor .me-choreo-block.is-intro { background: #d7ff2f !important; }
+body.me-motion-editor .me-choreo-block.is-orbit { background: #8ec8ff !important; }
+body.me-motion-editor .me-choreo-block.is-hold { background: #e7e7ea !important; }
+body.me-motion-editor .me-choreo-block.is-contact { background: #ffc4d6 !important; }
+body.me-motion-editor .me-choreo-block.is-color { background: #d4b8ff !important; }
+body.me-motion-editor .me-choreo-block.is-replace { background: #ffd27d !important; }
+body.me-motion-editor .me-choreo-block.is-active { outline: 3px solid #0071e3; outline-offset: -3px; }
+body.me-motion-editor .me-choreo-playhead { position: absolute; z-index: 3; top: 0; bottom: 0; width: 2px; background: #ff375f; pointer-events: none; }
+body.me-motion-editor .me-choreo-legend { margin: 0; padding: 0; display: grid; gap: 6px; list-style: none; }
+body.me-motion-editor .me-choreo-legend li { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; align-items: center; gap: 8px; font-size: 10px; }
+body.me-motion-editor .me-choreo-legend i { width: 12px; height: 12px; border: 1px solid #111; }
+body.me-motion-editor .me-choreo-legend i.is-intro { background: #d7ff2f; }
+body.me-motion-editor .me-choreo-legend i.is-orbit { background: #8ec8ff; }
+body.me-motion-editor .me-choreo-legend i.is-hold { background: #e7e7ea; }
+body.me-motion-editor .me-choreo-legend i.is-contact { background: #ffc4d6; }
+body.me-motion-editor .me-choreo-legend i.is-color { background: #d4b8ff; }
+body.me-motion-editor .me-choreo-legend i.is-replace { background: #ffd27d; }
+body.me-motion-editor .me-choreo-legend span { color: #6e6e73; font-variant-numeric: tabular-nums; }
+body.me-motion-editor .me-choreo-track.is-continuous { opacity: .45; }
+
+body.me-motion-editor .me-asset-selected-summary { border: 1px solid #c9ddf0; border-radius: 12px; background: #edf5fd; }
+body.me-motion-editor .me-asset-commit { min-height: 40px !important; background: #0071e3 !important; color: #fff !important; }
+body.me-motion-editor .me-asset-library { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+body.me-motion-editor .me-asset-choice { border: 1px solid #dedee3 !important; border-radius: 11px !important; background: #fff !important; }
+body.me-motion-editor .me-asset-choice:hover { background: #f5f5f7 !important; }
+body.me-motion-editor .me-asset-editor { border: 1px solid #c9ddf0; border-radius: 12px; background: #edf5fd; }
+
 @media (max-width: 720px) {
   :root { --me-panel-width: 100vw; }
   body.me-motion-editor :is(.stage-shell, .current-stage, #prism-canvas) { inset: 0 0 42dvh !important; width: 100% !important; height: 58dvh !important; }
