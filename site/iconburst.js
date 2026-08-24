@@ -224,12 +224,27 @@
     const a = hexToRgb(from), b = hexToRgb(to), t = clamp(amount, 0, 1);
     return `rgb(${a.map((channel, index) => Math.round(channel + (b[index] - channel) * t)).join(",")})`;
   }
-  function palette() { return [$("ibBaseColor").value, $("ibColorA").value, $("ibColorC").value, $("ibColorB").value, $("ibColorD").value]; }
-  function samplePalette(progress) {
-    const colors = palette();
+  function activeEffectColors() {
+    const count = clamp(Number($("ibColorCount").value) || 1, 1, 4);
+    return [$("ibColorA").value, $("ibColorB").value, $("ibColorC").value, $("ibColorD").value].slice(0, count);
+  }
+  function finalEffectColor() {
+    const colors = activeEffectColors();
+    return colors[colors.length - 1] || $("ibColorA").value;
+  }
+  function sampleColorList(colors, progress) {
+    if (!colors.length) return $("ibBaseColor").value;
+    if (colors.length === 1) return colors[0];
     const scaled = clamp(progress, 0, .9999) * (colors.length - 1);
     const index = Math.floor(scaled);
     return mixHex(colors[index], colors[index + 1], scaled - index);
+  }
+  function colorUniformProgress(colorReveal) {
+    return smoothstep(clamp((colorReveal - .68) / .32, 0, 1));
+  }
+  function palette() { return [$("ibBaseColor").value].concat(activeEffectColors()); }
+  function samplePalette(progress) {
+    return sampleColorList(palette(), progress);
   }
 
   function defaultAsset(overrides) {
@@ -579,14 +594,20 @@
       element.style.setProperty("--color-d", $("ibColorD").value);
     });
     const overlayLetters = Array.from(colorWord.children).filter((letter) => letter.textContent.trim());
-    const overlayColors = [$("ibColorA").value, $("ibColorC").value, $("ibColorB").value, $("ibColorD").value];
+    const overlayColors = activeEffectColors();
     overlayLetters.forEach((letter, index) => {
       const progress = overlayLetters.length > 1 ? index / (overlayLetters.length - 1) : 0;
-      const scaled = Math.min(.9999, progress) * (overlayColors.length - 1);
-      const colorIndex = Math.floor(scaled);
-      letter.style.setProperty("--overlay-color", mixHex(overlayColors[colorIndex], overlayColors[colorIndex + 1], scaled - colorIndex));
+      const effectColor = sampleColorList(overlayColors, progress);
+      letter.dataset.effectColor = effectColor;
+      letter.style.setProperty("--overlay-color", effectColor);
     });
     stage.style.setProperty("--stage-bg", $("ibBackground").value);
+  }
+
+  function updateColorCountUI() {
+    const count = clamp(Number($("ibColorCount").value) || 1, 1, 4);
+    document.querySelectorAll("[data-color-slot]").forEach((label) => { label.hidden = Number(label.dataset.colorSlot) > count; });
+    document.querySelector(".ib-colors")?.style.setProperty("--active-colors", String(count));
   }
 
   function updateWord() {
@@ -689,12 +710,12 @@
     const speed = Number($("ibColorSpeed").value);
     const hold = Number($("ibSoftness").value) / 100;
     const time = Math.max(0, contentTime * speed);
-    const colors = palette();
+    const effectColors = activeEffectColors();
     if (mode === "flash") {
       const cycle = 560 + hold * 420;
       const local = oneShot ? time : time % cycle;
       const intensity = local < cycle * .62 ? 1 : 0;
-      letters.forEach((letter, index) => lightLetter(letter, colors[1 + index % 4], intensity));
+      letters.forEach((letter, index) => lightLetter(letter, effectColors[index % effectColors.length], intensity));
       return "全体瞬时换色";
     }
     if (mode === "chase" || mode === "relay") {
@@ -704,7 +725,7 @@
       letters.forEach((letter, index) => {
         const letterTime = local - index * stagger;
         const intensity = letterTime >= 0 && letterTime < 210 + hold * 180 ? 1 : 0;
-        lightLetter(letter, colors[1 + index % 4], intensity);
+        lightLetter(letter, effectColors[index % effectColors.length], intensity);
       });
       return mode === "chase" ? "逐字瞬时换色" : "逐字高速接力换色";
     }
@@ -717,7 +738,7 @@
         const distance = Math.abs(index - center);
         const letterTime = local - distance * stagger;
         const intensity = letterTime >= 0 && letterTime < 220 + hold * 160 ? 1 : 0;
-        lightLetter(letter, colors[1 + index % 4], intensity);
+        lightLetter(letter, effectColors[index % effectColors.length], intensity);
       });
       return "从中心向两侧瞬时换色";
     }
@@ -741,12 +762,12 @@
     }
     if (mode === "pulse") {
       const on = oneShot ? true : (time % 520) < 280;
-      letters.forEach((letter, index) => lightLetter(letter, colors[1 + index % 4], on ? 1 : 0));
+      letters.forEach((letter, index) => lightLetter(letter, effectColors[index % effectColors.length], on ? 1 : 0));
       return "整体颜色闪切";
     }
     if (mode === "cut") {
       const beat = Math.floor(time / 150);
-      letters.forEach((letter, index) => lightLetter(letter, colors[1 + (beat + index) % 4], 1));
+      letters.forEach((letter, index) => lightLetter(letter, effectColors[(beat + index) % effectColors.length], 1));
       return "高速节拍硬切";
     }
     return "保持初始色";
@@ -919,7 +940,7 @@
   const SCHEME_STORAGE_KEY = "iconburst-scheme-v2";
   const schemeControlIds = [
     "ibText", "ibFont", "ibWeight", "ibFontSize", "ibTracking",
-    "ibColorMode", "ibBaseColor", "ibColorA", "ibColorB", "ibColorC", "ibColorD", "ibBackground", "ibColorSpeed", "ibSoftness",
+    "ibColorMode", "ibColorCount", "ibBaseColor", "ibColorA", "ibColorB", "ibColorC", "ibColorD", "ibBackground", "ibColorSpeed", "ibSoftness",
     "ibContentMode", "ibRange", "ibSize", "ibReplaceCount", "ibBeat", "ibReplaceSpeed", "ibCollapse", "ibHang", "ibDrift", "ibOvershoot",
     "ibSync", "ibCollisionSpeed", "ibCollisionDuration", "ibPairStagger", "ibOrbitSpeed", "ibWordReturn", "ibDensity", "ibCurve", "ibFinalScale", "ibFinalScaleDuration", "ibSpeed"
   ];
@@ -978,6 +999,7 @@
     state.assets.forEach(hydrateAssetImage);
     state.activeAssetId = null;
     updateWord();
+    updateColorCountUI();
     updateContentModeUI();
     renderIcons();
     renderAssets();
@@ -1276,6 +1298,9 @@
     const replacements = replacementState(replacementTime, replacementActive, playback);
     const colorMode = $("ibColorMode").value;
     if (colorActive && colorMode !== "unfold") animateColor(colorTime, true);
+    if (colorMode !== "unfold" && timeline.colorReveal >= .999 && timeline.seconds < timeline.whiteStartSeconds) {
+      Array.from(word.children).forEach((letter) => { if (letter.textContent.trim()) letter.style.setProperty("--letter-color", finalEffectColor()); });
+    }
     if (replacementActive) label = "11 · 按资源顺序 · 使用各自速度与停留时间";
     phaseLabel.textContent = label;
     updateChoreoPlayhead(timeline.seconds);
@@ -1313,7 +1338,7 @@
     colorWord.style.setProperty("--word-gap", `${closedGap.toFixed(2)}px`);
     whiteWord.style.setProperty("--word-gap", `${closedGap.toFixed(2)}px`);
     const sideShift = (openGap - closedGap) / 2;
-    const collisionColors = [$("ibColorA").value, $("ibColorC").value, $("ibColorB").value, $("ibColorD").value];
+    const collisionColors = activeEffectColors();
     const collisionBaseColor = $("ibBaseColor").value;
     [
       { element: incomingLeft, direction: -1 },
@@ -1358,6 +1383,14 @@
         const offset = letterOffsets.get(Number(letter.dataset.letter)) || 0;
         letter.style.setProperty("--letter-x", `${offset.toFixed(2)}px`);
       });
+    });
+
+    const uniformColorProgress = colorUniformProgress(timeline.colorReveal);
+    const uniformColor = finalEffectColor();
+    Array.from(colorWord.children).forEach((letter) => {
+      if (!letter.textContent.trim()) return;
+      const transitionColor = letter.dataset.effectColor || uniformColor;
+      letter.style.setProperty("--overlay-color", mixHex(transitionColor, uniformColor, uniformColorProgress));
     });
 
     const overlayActive = colorMode === "unfold" && timeline.seconds >= timeline.contactSeconds && timeline.seconds < timeline.replaceStartSeconds;
@@ -1745,7 +1778,9 @@
   function exportTextColor(index, count, timeline) {
     const base = $("ibBaseColor").value;
     const mode = $("ibColorMode").value;
-    if (timeline.seconds < timeline.contactSeconds || mode === "flash") return base;
+    if (timeline.seconds < timeline.contactSeconds) return base;
+    if (timeline.colorReveal >= .999 && timeline.seconds < timeline.whiteStartSeconds) return finalEffectColor();
+    if (mode === "flash") return base;
     const midpoint = (count - 1) / 2;
     const distance = Math.abs(index - midpoint) / Math.max(1, midpoint);
     if (mode === "unfold") {
@@ -1754,11 +1789,10 @@
         if (distance <= whiteThreshold) return base;
       }
       if (distance <= timeline.colorReveal) {
-        const colors = [$("ibColorA").value, $("ibColorC").value, $("ibColorB").value, $("ibColorD").value];
+        const colors = activeEffectColors();
         const progress = count > 1 ? index / (count - 1) : 0;
-        const scaled = Math.min(.9999, progress) * (colors.length - 1);
-        const colorIndex = Math.floor(scaled);
-        return mixHex(colors[colorIndex], colors[colorIndex + 1], scaled - colorIndex);
+        const transitionColor = sampleColorList(colors, progress);
+        return mixHex(transitionColor, finalEffectColor(), colorUniformProgress(timeline.colorReveal));
       }
       return base;
     }
@@ -1818,7 +1852,7 @@
           const rankRatio = maxRank > 0 ? rank / maxRank : 0;
           const openDistance = sideShift * (.88 + .12 * rankRatio);
           const x = startX + sideLayout.centers[index] + direction * openDistance * (1 - close) + direction * orbitShift;
-          const pairColors = [$("ibColorA").value, $("ibColorC").value, $("ibColorB").value, $("ibColorD").value];
+          const pairColors = activeEffectColors();
           ctx.fillStyle = mixHex($("ibBaseColor").value, pairColors[rank % pairColors.length], collisionColorProgress(localProgress));
           ctx.textAlign = "center";
           ctx.textBaseline = "alphabetic";
@@ -2121,8 +2155,14 @@
     scheduleSchemePersist();
   });
 
-  ["ibText", "ibFont", "ibWeight", "ibFontSize", "ibTracking", "ibBaseColor", "ibColorA", "ibColorB", "ibColorC", "ibColorD", "ibBackground"].forEach((id) => {
-    $(id).addEventListener("input", id === "ibText" ? updateWord : updateTypography);
+  ["ibText", "ibFont", "ibWeight", "ibFontSize", "ibTracking", "ibColorCount", "ibBaseColor", "ibColorA", "ibColorB", "ibColorC", "ibColorD", "ibBackground"].forEach((id) => {
+    $(id).addEventListener("input", () => {
+      if (id === "ibText") updateWord();
+      else {
+        if (id === "ibColorCount") updateColorCountUI();
+        updateTypography();
+      }
+    });
   });
   const readouts = [
     ["ibFontSize", "ibFontSizeValue", (value) => `${value}%`],
@@ -2463,5 +2503,6 @@
     renderIcons();
     renderChoreoTrack();
   }
+  updateColorCountUI();
   requestAnimationFrame(animate);
 })();

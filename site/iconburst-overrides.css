@@ -160,6 +160,8 @@ body .ib-asset.is-dragging .ib-drag-handle { cursor: grabbing; }
 
 .ib-background-upload { margin-top: 2px; }
 
+.ib-colors { grid-template-columns: repeat(var(--active-colors, 4), minmax(0, 1fr)); }
+
 .ib-section > .ib-two > label > input[type="color"] {
   width: 100%;
   height: 38px;
