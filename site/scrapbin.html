@@ -1,18 +1,113 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="揉纸入篓：文字变成纸张、被揉成纸团并旋转落入垃圾桶。"><title>揉纸入篓 Scrap Bin | ME Motion Studio</title><link rel="icon" href="data:,"><link rel="stylesheet" href="continuation.css"><link rel="stylesheet" href="currentwall.css"><link rel="stylesheet" href="focuswheel.css"><link rel="stylesheet" href="me-motion-editor.css"><link rel="stylesheet" href="scrapbin.css?v=20260815-1"><link rel="stylesheet" href="stg-cn.css"></head><body class="me-motion-editor">
-<main class="current-stage scrap-bin-stage" aria-label="文字揉成纸团落入垃圾桶画布"><canvas id="scrapCanvas"></canvas><div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div></main>
-<details class="control-panel current-panel scrap-bin-panel" open><summary><span><b>揉纸入篓</b><small>SCRAP BIN / 39</small></span><i aria-hidden="true">参数</i></summary><div class="panel-scroll">
-<section><div class="section-heading"><p class="section-label">文字</p><small class="section-note">整句变成一张可揉皱的纸</small></div><input id="copyText" type="text" value="Scrap it."><div class="preset-actions"><button id="referencePreset" type="button">参考文案</button><button id="chinesePreset" type="button">中文示例</button><button id="restartTop" type="button">从头播放</button></div><p class="hint">已删除参考片里的短视频平台界面，只保留“文字 → 纸张 → 纸团 → 入篓”的核心动效。</p></section>
-<section class="font-picker"><div class="sb-font-grid"><label><span class="section-label">字体</span><select id="fontFamily"><option value="inter" selected>Inter</option><option value="space">Space Grotesk</option><option value="manrope">Manrope</option><option value="poppins">Poppins</option><option value="noto">Noto Sans SC · 中文</option></select></label><label><span class="section-label">字重</span><select id="fontWeight"><option value="400" selected>Regular · 400</option><option value="500">Medium · 500</option><option value="600">Semibold · 600</option><option value="700">Bold · 700</option></select></label></div></section>
-<section><div class="section-heading"><p class="section-label">动作时间线</p><small class="section-note">出现、揉皱、坠落分别编辑</small></div><div class="motion-map sb-motion-map"><span>文字与桶</span><i>→</i><span>揉成纸团</span><i>→</i><span>旋转入篓</span></div><div class="controls-grid quick-grid">
-<label>整体速度 <output id="speedOut">1.00×</output><input id="speed" type="range" min="0.25" max="4" step="0.05" value="1"></label><label>文字停留 <output id="textHoldOut">1.40秒</output><input id="textHold" type="range" min="0" max="8000" step="20" value="1400"></label>
-<label>垃圾桶出现 <output id="binInOut">0.70秒</output><input id="binIn" type="range" min="80" max="4000" step="10" value="700"></label><label>出现后停留 <output id="readyHoldOut">1.10秒</output><input id="readyHold" type="range" min="0" max="8000" step="20" value="1100"></label>
-<label>揉纸时长 <output id="crumpleOut">0.65秒</output><input id="crumple" type="range" min="100" max="4000" step="10" value="650"></label><label>下落时长 <output id="fallOut">1.15秒</output><input id="fall" type="range" min="150" max="5000" step="10" value="1150"></label>
-<label>废纸弹出 <output id="fillInOut">0.28秒</output><input id="fillIn" type="range" min="60" max="2000" step="10" value="280"></label><label>结果停留 <output id="resultHoldOut">2.20秒</output><input id="resultHold" type="range" min="0" max="10000" step="20" value="2200"></label>
-<label>下落节奏 <select id="fallRhythm"><option value="gravity" selected>重力加速</option><option value="smooth">柔和落下</option><option value="bounce">入桶轻弹</option><option value="snap">快速丢入</option></select></label><label>旋转圈数 <output id="spinOut">1.35圈</output><input id="spin" type="range" min="-4" max="4" step="0.05" value="1.35"></label>
-</div></section>
-<section><div class="section-heading"><p class="section-label">纸团与垃圾桶</p><small class="section-note">位置、尺寸、皱褶和内容都可调</small></div><div class="controls-grid"><label>纸张宽度 <output id="paperWidthOut">125%</output><input id="paperWidth" type="range" min="70" max="220" value="125"></label><label>揉皱强度 <output id="wrinkleOut">72%</output><input id="wrinkle" type="range" min="0" max="100" value="72"></label><label>水平摆动 <output id="swayOut">35px</output><input id="sway" type="range" min="0" max="180" value="35"></label><label>垃圾桶大小 <output id="binSizeOut">120px</output><input id="binSize" type="range" min="50" max="260" value="120"></label><label>桶与文字间距 <output id="binGapOut">110px</output><input id="binGap" type="range" min="40" max="350" value="110"></label><label>桶透明度 <output id="binOpacityOut">64%</output><input id="binOpacity" type="range" min="10" max="100" value="64"></label><label>桶内废纸数量 <output id="scrapCountOut">9</output><input id="scrapCount" type="range" min="1" max="24" value="9"></label><label>废纸弹跳 <output id="scrapBounceOut">22px</output><input id="scrapBounce" type="range" min="0" max="90" value="22"></label></div></section>
-<section><div class="section-heading"><p class="section-label">排版</p><small class="section-note">字组整体居中</small></div><div class="controls-grid"><label>字号 <output id="fontSizeOut">112px</output><input id="fontSize" type="range" min="24" max="280" value="112"></label><label>字距 <output id="trackingOut">-3px</output><input id="tracking" type="range" min="-18" max="46" value="-3"></label><label>水平位置 <output id="textXOut">50%</output><input id="textX" type="range" min="5" max="95" value="50"></label><label>垂直位置 <output id="textYOut">40%</output><input id="textY" type="range" min="10" max="80" value="40"></label></div></section>
-<section class="color-row sb-colors"><label>背景<input id="backgroundColor" type="color" value="#000000"></label><label>文字<input id="textColor" type="color" value="#ffffff"></label><label>纸张<input id="paperColor" type="color" value="#f4f1eb"></label><label>垃圾桶<input id="binColor" type="color" value="#cfd1d5"></label></section>
-<section class="transport"><button id="restartButton" type="button">重播</button><button id="pauseButton" type="button">暂停</button><button id="backButton" type="button">−1 帧</button><button id="forwardButton" type="button">+1 帧</button></section>
-<section class="export-panel"><label class="section-label" for="exportPreset">导出尺寸</label><select id="exportPreset"><option value="current">当前画板</option><option value="1080x1080">1:1 · 1080 × 1080</option><option value="1080x1350">4:5 · 1080 × 1350</option><option value="1080x1920">9:16 · 1080 × 1920</option><option value="1920x1080">16:9 · 1920 × 1080</option><option value="custom">自定义尺寸</option></select><div class="custom-size" id="customSize" hidden><label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label><span>×</span><label>高<input id="exportHeight" type="number" min="240" max="3840" value="1920"></label></div><div class="export-timing-grid"><label>导出时长<select id="exportDuration"><option value="cycle" selected>完整一轮</option><option value="3">3 秒</option><option value="5">5 秒</option><option value="10">10 秒</option><option value="custom">自定义</option></select></label><label>导出帧率<select id="exportFps"><option value="15">15 FPS</option><option value="24">24 FPS</option><option value="30" selected>30 FPS</option><option value="60">60 FPS</option></select></label></div><label class="custom-duration" id="customDurationWrap" hidden>自定义秒数<input id="customDuration" type="number" min="0.5" max="30" step="0.1" value="8"></label><div class="export-actions"><button id="exportPng" type="button">PNG 图片</button><button id="exportGif" type="button">GIF 动图</button><button id="exportVideo" type="button">视频</button><button class="export-hd-video" id="exportVerticalVideo" type="button">导出 9:16 高清视频 · 1080 × 1920</button></div><p class="export-status" id="exportStatus" aria-live="polite">纸张变形与重力下落使用确定性时间线。</p></section><p class="formula">文字成纸 × 多边形揉皱 × 重力旋转 × 入篓弹跳<br>不使用外部物理库，导出结果与预览一致</p>
-</div></details><script src="js/continuation-gif.js"></script><script src="CCapture.all.min.js"></script><script src="scrapbin.js?v=20260824-fonts1"></script><script src="me-motion-editor.js"></script><script src="stg-cn.js?v=20260824-fonts1"></script></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Delete 删除：文字变成真实纸张，连续揉皱并投入磨砂垃圾桶。">
+  <title>Delete 删除 | ME Motion Studio</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="continuation.css">
+  <link rel="stylesheet" href="currentwall.css">
+  <link rel="stylesheet" href="me-motion-editor.css">
+  <link rel="stylesheet" href="scrapbin.css?v=20260826-delete11">
+  <link rel="stylesheet" href="stg-cn.css">
+</head>
+<body class="me-motion-editor">
+  <main class="current-stage delete-stage" aria-label="Delete 删除动效画布">
+    <canvas id="scrapCanvas"></canvas>
+    <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+    <div class="me-stage-controls" aria-label="画面播放控制"><button id="stagePauseButton" type="button">暂停</button><button id="stageReplayButton" type="button">重播</button></div>
+  </main>
+
+  <details class="control-panel current-panel delete-panel" id="controlPanel" open>
+    <summary><span><b>Delete 删除</b><small>DELETE / 39</small></span><i aria-hidden="true">编辑</i></summary>
+    <div class="panel-scroll">
+      <section class="me-scheme-card">
+        <p class="section-label">方案</p>
+        <div class="me-scheme-actions"><button id="saveScheme" type="button">保存方案</button><label class="me-scheme-import">导入方案<input id="importScheme" type="file" accept="application/json,.json"></label><button id="resetScheme" type="button">恢复默认</button><button id="clearRedo" type="button">清理重做</button></div>
+        <p id="schemeStatus" class="hint">自动保存当前编辑内容。</p>
+      </section>
+
+      <section class="delete-text-card">
+        <label class="section-label" for="copyText">文字</label>
+        <input id="copyText" type="text" value="No Prompt">
+        <label class="section-label" for="fontFamily">字体</label>
+        <select id="fontFamily"><option value="stg:inter">Inter</option></select>
+        <label class="section-label" for="fontWeight">字重</label>
+        <select id="fontWeight"><option value="400" selected>Regular · 400</option><option value="500">Medium · 500</option><option value="600">Semibold · 600</option><option value="700">Bold · 700</option><option value="900">Black · 900</option></select>
+        <div class="color-row delete-colors"><label>背景<input id="backgroundColor" type="color" value="#fcfcfc"></label><label>出现文字<input id="textColor" type="color" value="#080808"></label><label>纸面文字<input id="paperTextColor" type="color" value="#3c39c6"></label><label>纸张<input id="paperColor" type="color" value="#dfe141"></label></div>
+        <div class="section-heading delete-bg-heading"><p class="section-label">背景素材</p><small class="section-note">图片 / GIF / 视频</small></div>
+        <label class="delete-upload">上传背景<input id="backgroundUpload" type="file" accept="image/*,video/*,.gif"></label>
+        <button id="clearBackground" class="delete-secondary" type="button">清除背景素材</button>
+      </section>
+
+      <section class="delete-choreo-card">
+        <div class="section-heading"><p class="section-label">动效时间轴</p><output id="cycleDurationOut">4.00 秒</output></div>
+        <div id="deleteChoreoTrack" class="me-choreo-track">
+          <div class="me-choreo-scroll"><div id="deleteChoreoBar" class="me-choreo-bar"><i id="timelinePlayhead" class="me-choreo-playhead"></i></div></div>
+          <ol id="deleteChoreoLegend" class="me-choreo-legend"></ol>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-heading"><p class="section-label">动作节奏</p><small class="section-note">文字 → 垃圾桶 → 揉纸 → 入桶</small></div>
+        <div class="controls-grid quick-grid">
+          <label>整体速度 <output id="speedOut">1.35×</output><input id="speed" type="range" min="0.25" max="3" step="0.05" value="1.35"></label>
+          <label>文字柔现 <output id="titleRevealOut">0.26秒</output><input id="titleReveal" type="range" min="120" max="3000" step="20" value="260"></label>
+          <label>文字停留 <output id="titleHoldOut">0.66秒</output><input id="titleHold" type="range" min="0" max="3000" step="20" value="660"></label>
+          <label>垃圾桶出现 <output id="binRevealOut">0.22秒</output><input id="binReveal" type="range" min="100" max="3000" step="20" value="220"></label>
+          <label>准备停留 <output id="readyHoldOut">0.56秒</output><input id="readyHold" type="range" min="0" max="3000" step="20" value="560"></label>
+          <label>纸面形成 <output id="sheetOut">0.26秒</output><input id="sheet" type="range" min="80" max="1200" step="10" value="260"></label>
+          <label>揉纸时长 <output id="crumpleOut">0.39秒</output><input id="crumple" type="range" min="180" max="1800" step="10" value="390"></label>
+          <label>落入时长 <output id="throwOut">0.33秒</output><input id="throw" type="range" min="240" max="2000" step="10" value="330"></label>
+          <label>入桶停留 <output id="resultHoldOut">0.62秒</output><input id="resultHold" type="range" min="0" max="5000" step="20" value="620"></label>
+          <label>落入节奏<select id="throwRhythm"><option value="gravity" selected>自然重力</option><option value="smooth">柔和滑入</option><option value="snap">快速落入</option></select></label>
+          <label>纸团旋转 <output id="spinOut">0.38圈</output><input id="spin" type="range" min="-1" max="1" step="0.02" value="0.38"></label>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-heading"><p class="section-label">纸张与垃圾桶</p><small class="section-note">真实材质与空间位置</small></div>
+        <div class="controls-grid">
+          <label>纸张宽度 <output id="paperWidthOut">131%</output><input id="paperWidth" type="range" min="80" max="180" value="131"></label>
+          <label>纸张高度 <output id="paperHeightOut">150%</output><input id="paperHeight" type="range" min="70" max="200" value="150"></label>
+          <label>揉皱强度 <output id="wrinkleOut">87%</output><input id="wrinkle" type="range" min="0" max="100" value="87"></label>
+          <label>纸张纹理 <output id="paperTextureOut">80%</output><input id="paperTexture" type="range" min="0" max="100" value="80"></label>
+          <label>入桶弧度 <output id="arcHeightOut">46px</output><input id="arcHeight" type="range" min="0" max="80" value="46"></label>
+          <label>落点偏移 <output id="swayOut">29px</output><input id="sway" type="range" min="-80" max="80" value="29"></label>
+          <label>垃圾桶大小 <output id="binSizeOut">184px</output><input id="binSize" type="range" min="60" max="300" value="184"></label>
+          <label>桶与文字间距 <output id="binGapOut">119px</output><input id="binGap" type="range" min="40" max="360" value="119"></label>
+          <label>垃圾桶透明度 <output id="binOpacityOut">71%</output><input id="binOpacity" type="range" min="15" max="100" value="71"></label>
+        </div>
+      </section>
+
+      <details class="advanced-controls"><summary><span>排版与位置</span><small>字号、字距与中心点</small></summary><div class="advanced-body controls-grid">
+        <label>字号 <output id="fontSizeOut">96px</output><input id="fontSize" type="range" min="24" max="240" value="96"></label>
+        <label>字距 <output id="trackingOut">-2px</output><input id="tracking" type="range" min="-18" max="46" value="-2"></label>
+        <label>水平位置 <output id="textXOut">50%</output><input id="textX" type="range" min="5" max="95" value="50"></label>
+        <label>垂直位置 <output id="textYOut">42%</output><input id="textY" type="range" min="10" max="80" value="42"></label>
+      </div></details>
+
+      <section class="transport" aria-label="时间轴控制"><button id="restartButton" type="button">重播</button><button id="pauseButton" type="button">暂停</button><button id="backButton" type="button">−1 帧</button><button id="forwardButton" type="button">+1 帧</button></section>
+
+      <section class="export-panel">
+        <div class="export-config-grid">
+          <label><span class="section-label">导出尺寸</span><select id="exportPreset"><option value="current">当前画板</option><option value="1080x1080">1:1 · 1080 × 1080</option><option value="1080x1350">4:5 · 1080 × 1350</option><option value="1080x1920">9:16 · 1080 × 1920</option><option value="1920x1080">16:9 · 1920 × 1080</option><option value="custom">自定义尺寸</option></select></label>
+          <label><span class="section-label">GIF / 视频时长</span><select id="exportDuration"><option value="cycle">完整循环</option><option value="3">3 秒</option><option value="5">5 秒</option><option value="10">10 秒</option><option value="custom">自定义秒数</option></select></label>
+          <label><span class="section-label">导出帧率</span><select id="exportFps"><option value="15">15 FPS</option><option value="24">24 FPS</option><option value="30" selected>30 FPS</option><option value="60">60 FPS</option></select></label>
+        </div>
+        <div class="custom-size" id="customSize" hidden><label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label><span>×</span><label>高<input id="exportHeight" type="number" min="240" max="3840" value="1920"></label></div>
+        <label class="custom-duration" id="customDurationWrap" hidden>自定义秒数<input id="customDuration" type="number" min="0.5" max="20" step="0.1" value="4"></label>
+        <div class="export-actions"><button id="exportPng" type="button">PNG 图片</button><button id="exportGif" type="button">GIF 动图</button><button id="exportVideo" type="button">MP4 视频</button></div>
+        <p id="exportStatus" class="export-status" aria-live="polite">预览、PNG、GIF 与视频使用同一套纸张网格形变。</p>
+      </section>
+    </div>
+  </details>
+
+  <script src="js/continuation-gif.js"></script>
+  <script src="shared-font-library.js?v=20260824-2"></script>
+  <script src="scrapbin.js?v=20260826-delete11"></script>
+  <script src="me-motion-editor.js"></script>
+  <script src="stg-cn.js?v=20260824-fonts1"></script>
+</body>
+</html>

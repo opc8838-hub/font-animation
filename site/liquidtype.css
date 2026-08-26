@@ -102,3 +102,52 @@
     grid-column: auto;
   }
 }
+.lt-stage-copy-list {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.lt-stage-copy-row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 8px;
+  align-items: end;
+  padding: 10px;
+  border: 1px solid #dfe4ec;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.lt-stage-copy-row label {
+  min-width: 0;
+  font-size: 12px;
+}
+
+.lt-stage-copy-row input,
+.lt-stage-copy-row select {
+  width: 100%;
+  margin-top: 5px;
+}
+
+.lt-stage-number {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-bottom: 4px;
+  border-radius: 9px;
+  background: #111827;
+  color: #fff;
+  font: 700 13px/1 system-ui, sans-serif;
+}
+
+@media (max-width: 520px) {
+  .lt-stage-copy-row {
+    grid-template-columns: 32px minmax(0, 1fr);
+  }
+
+  .lt-stage-copy-row label:last-child {
+    grid-column: 2;
+  }
+}

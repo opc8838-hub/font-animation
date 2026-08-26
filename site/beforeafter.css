@@ -170,6 +170,12 @@ body.me-motion-editor .beforeafter-panel .formula {
 .ba-slider-colors { grid-template-columns: 1fr; margin-top: 7px; }
 .ba-slider-section.is-disabled #sliderControls,
 .ba-slider-section.is-disabled .ba-slider-colors { opacity: .42; pointer-events: none; }
+.ba-tv-off-section.is-disabled .controls-grid,
+.ba-tv-off-section.is-disabled .ba-slider-colors { opacity: .42; pointer-events: none; }
+.ba-tv-off-section:not(.is-custom-theme) .ba-tv-color-fields { opacity: .42; pointer-events: none; }
+.ba-speed-presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-top: 10px; }
+.ba-speed-presets button { min-height: 38px; border: 1px solid #d8e1ec; border-radius: 11px; color: #0766cf; background: #edf6ff; }
+.ba-speed-presets button:hover { border-color: #1682f5; background: #e3f1ff; }
 
 .beforeafter-panel .me-choreo-bar { min-width: 780px; }
 .beforeafter-panel .me-choreo-legend b { font-size: 10px; }

@@ -1,9 +1,4 @@
 const effects = [
-  ["badge", "徽章", "Badge", "graphic", "图形系统"],
-  ["boost", "助推", "Boost", "type", "排版实验"],
-  ["boxsquad", "方块小队", "BoxSquad", "graphic", "图形系统"],
-  ["cascade", "瀑布", "Cascade", "flow", "波形流动"],
-  ["clutter", "杂散", "Clutter", "space", "立体空间"],
   ["coil", "线圈", "Coil", "flow", "波形流动"],
   ["continuation", "续句", "Continuation", "type", "匹配切换"],
   ["currentwall", "水流", "Water Flow", "flow", "多行水流"],
@@ -18,7 +13,7 @@ const effects = [
   ["citystack", "城市字塔", "City Stack", "type", "港版黑体中英文字逐项点亮叠满"],
   ["colorcanvas", "彩幕组句", "Color Canvas", "type", "逐行弹出与彩色弧面"],
   ["liquidtype", "散", "Scatter", "type", "花粒 · 蓝胶 · 横向散尘"],
-  ["scrapbin", "揉纸入篓", "Scrap Bin", "physics", "文字揉皱与重力入篓"],
+  ["scrapbin", "Delete 删除", "Delete", "physics", "真实揉纸与重力入桶"],
   ["terminalbrand", "终端署名", "Terminal Brand", "type", "输入回删与图标签名"],
   ["slotstories", "字位剧场", "Slot Stories", "graphic", "字位图标与角色表演"],
   ["mediacascade", "镜头铺展", "Media Cascade", "space", "媒体复制与全屏展开"],
@@ -27,12 +22,10 @@ const effects = [
   ["switchdrop", "降临", "Switch Drop", "graphic", "主体降临 × 明暗开关"],
   ["searchtyping", "搜写", "Search Typing", "type", "搜索框逐字打入"],
   ["beforeafter", "图片对比", "Before After", "type", "原图对比 · 生成切成片"],
-  ["assemble", "拼字", "Assemble", "type", "碎片飞入拼成字标"],
   ["verbcue", "动令", "Verb Cue", "type", "短句打散 · 像素扫清"],
   ["tighten", "收距", "Tighten", "type", "词距先松后紧"],
   ["titlecard", "标卡", "Title Card", "type", "主副标题再切标志"],
   ["lockup", "夹图", "Lockup", "type", "左右字夹中间物"],
-  ["promptcue", "点令", "Prompt Cue", "type", "融化落格点选"],
   ["pullback", "退远", "Pullback", "type", "标题缓慢退远"],
   ["textswell", "胀句", "Text Swell", "type", "首词推近 · 后词顶入"],
   ["wordflip", "翻词", "Word Flip", "type", "打字后立体翻词"],
@@ -51,7 +44,6 @@ const effects = [
   ["crashclock", "碰撞时钟", "Crash Clock", "physics", "物理粒子"],
   ["danger", "警示", "Danger", "type", "排版实验"],
   ["field", "场域", "Field", "flow", "波形流动"],
-  ["flag", "旗帜", "Flag", "flow", "波形流动"],
   ["iconburst", "图标爆发", "Icon Burst", "graphic", "文字 × 图标 × 硬切换色"],
   ["flash", "闪光", "Flash", "type", "排版实验"],
   ["index", "圆柱", "Cylinder", "space", "立体空间"],
@@ -63,7 +55,6 @@ const effects = [
   ["shine", "闪耀", "Shine", "graphic", "图形系统"],
   ["snap", "吸附", "Snap", "physics", "物理粒子"],
   ["string", "琴弦", "String", "flow", "波形流动"],
-  ["stripes", "条纹", "Stripes", "graphic", "图形系统"],
   ["vessel", "器皿", "Vessel", "space", "立体空间"],
 ];
 
@@ -74,7 +65,7 @@ const emptyState = document.querySelector("#emptyState");
 const filterButtons = [...document.querySelectorAll(".filter")];
 let activeFilter = "all";
 const livePreviews = new Set(["textswell"]);
-const featuredPreviews = new Set(["textswell", "currentwall", "iconburst", "beforeafter"]);
+const featuredPreviews = new Set(["textswell", "currentwall", "iconburst", "beforeafter", "pathwriter", "scrapbin"]);
 const liveObserver = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
     const frame = entry.target;
@@ -99,14 +90,18 @@ function render() {
   grid.innerHTML = visible.map(([slug, zh, en, , categoryName]) => {
     const index = effects.findIndex((effect) => effect[0] === slug) + 1;
     const imageName = slug === "crashclock" ? "final_crashclock.png" : ["iconburst", "focuswheel", "gradienttype", "glyphrelay", "wordgather", "focusportal", "rapidsequence", "citystack", "colorcanvas", "liquidtype", "scrapbin", "terminalbrand", "slotstories", "mediacascade", "colorrecompose", "phrasebuild", "switchdrop", "searchtyping", "beforeafter", "assemble", "verbcue", "tighten", "titlecard", "lockup", "promptcue", "pullback", "textswell", "wordflip", "textbuild", "textswap", "textreveal", "phoneframe", "laptopframe", "orbitgallery", "followerrush", "logoassemble", "moodboard"].includes(slug) ? `final_${slug}.svg` : `final_${slug}.png`;
-    const target = slug === "flash" ? "flash-scenes.html" : slug === "iconburst" ? "iconburst.html?from=gallery&v=20260824-37" : slug === "currentwall" ? "currentwall.html?from=gallery&v=20260824-ui10" : slug === "beforeafter" ? "beforeafter.html?from=gallery&v=20260824-slider8" : slug === "liquidtype" ? "liquidtype.html?from=gallery&v=20260824-scatter2" : `${slug}.html`;
+    const target = slug === "flash" ? "flash-scenes.html" : slug === "iconburst" ? "iconburst.html?from=gallery&v=20260824-37" : slug === "currentwall" ? "currentwall.html?from=gallery&v=20260824-ui10" : slug === "beforeafter" ? "beforeafter.html?from=gallery&v=20260825-latest1" : slug === "pathwriter" ? "pathwriter.html?from=gallery&v=20260825-default1" : slug === "scrapbin" ? "scrapbin.html?from=gallery&v=20260826-delete11" : slug === "liquidtype" ? "liquidtype.html?from=gallery&v=20260824-scatter3" : `${slug}.html`;
     const detail = slug === "flash" ? "13 个独立子风格" : categoryName;
     const preview = slug === "iconburst"
       ? `<video class="effect-loop" src="assets/previews/iconburst-card.mp4?v=20260824-1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
       : slug === "currentwall"
         ? `<video class="effect-loop" src="assets/previews/water-flow-card.mp4?v=20260824-2" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
       : slug === "beforeafter"
-        ? `<video class="effect-loop effect-loop-portrait" src="assets/previews/beforeafter-card.mp4?v=20260824-1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
+        ? `<video class="effect-loop effect-loop-portrait" src="assets/previews/beforeafter-card.mp4?v=20260825-latest1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
+      : slug === "pathwriter"
+        ? `<video class="effect-loop" src="assets/previews/pathwriter-card.mp4?v=20260825-1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
+      : slug === "scrapbin"
+        ? `<video class="effect-loop" src="assets/previews/delete-card.mp4?v=20260826-3" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
       : livePreviews.has(slug)
         ? `<iframe class="effect-live" title="${zh}实时预览" data-src="${slug}.html?preview=1&amp;v=${slug === "currentwall" ? "20260824-ui10" : "20260824-37"}" loading="lazy" tabindex="-1"></iframe>`
         : `<img src="${imageName}" alt="${zh}动态字体效果预览" ${index > 8 ? 'loading="lazy"' : ""}>`;

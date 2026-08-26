@@ -56,6 +56,8 @@ For a new effect, use a live iframe only when it preserves the same composition 
 - Fonts: `site/assets/` and `site/assets/fonts/`.
 - Transparent animals: `site/assets/transparent-animals/`.
 - Bot GIFs: `site/assets/bot-series/`.
+- Collision GIFs: `site/crash_resources/images/0.gif` for the animated hand and `site/crash_resources/images/1.gif` for animated sky.
+- Construct vector recipes: `site/construct/g_cloud.js`, `site/construct/g_scribble.js`, `site/construct/g_zigzag.js`, and `site/construct/g_gradient.js`. Reuse their geometry as resolution-independent Canvas drawing, with static SVG previews only for the asset picker.
 - GIF encoder: `site/js/continuation-gif.js` and `site/js/continuation-gif.worker.js`.
 - H.264 MP4 encoder: `site/js/h264-mp4-encoder.web.js`.
 - Existing WebM support: `site/WebMWriter.js` where already used.

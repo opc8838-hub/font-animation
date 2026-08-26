@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;f[]=general-sans@400,500,600&amp;f[]=clash-display@500,600&amp;f[]=cabinet-grotesk@500,700&amp;display=swap">
   <link rel="stylesheet" href="continuation.css">
   <link rel="stylesheet" href="currentwall.css">
-  <link rel="stylesheet" href="pathwriter.css?v=1">
+  <link rel="stylesheet" href="pathwriter.css?v=20260826-sync1">
   <link rel="stylesheet" href="me-motion-editor.css">
   <link rel="stylesheet" href="stg-cn.css">
 </head>
@@ -17,19 +17,23 @@
   <main class="current-stage writer-stage" aria-label="轨书动效画布">
     <canvas id="flowCanvas"></canvas>
     <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+    <div class="writer-stage-actions me-stage-controls" aria-label="画面播放控制"><button id="stagePauseButton" type="button">暂停</button><button id="stageReplayButton" type="button">重播</button></div>
   </main>
 
   <details class="control-panel current-panel writer-panel" id="controlPanel" open>
     <summary><span><b>轨书</b><small>PATH WRITER / 28</small></span><i aria-hidden="true">参数</i></summary>
     <div class="panel-scroll">
-      <section>
+      <section class="writer-scheme me-scheme-card">
+        <p class="section-label">方案</p>
+        <div class="writer-scheme-grid me-scheme-actions"><button id="saveScheme" type="button">保存方案</button><label class="button-like me-scheme-import">导入方案<input id="importScheme" type="file" accept="application/json,.json"></label><button id="resetScheme" type="button">恢复默认</button><button id="clearRedo" type="button">清理重做</button></div>
+        <p class="hint" id="schemeStatus">自动保存当前编辑内容。</p>
+      </section>
+
+      <section class="writer-text-card">
         <label class="section-label" for="phrasesInput">句子 · 每行一句</label>
         <textarea id="phrasesInput" rows="5" spellcheck="false">Write it.
 Scrap it.</textarea>
-        <p class="hint">每句话依次完成：逐字写入 → 直线弯曲 → 沿轨迹滑行 → 淡出并切换下一句。支持中英文。</p>
-      </section>
-
-      <section class="font-picker">
+        <p class="hint">输入过程中轨道同步长出，文字随即贴轨并开始滑行。支持中文、英文、日文与韩文。</p>
         <label class="section-label" for="fontFamily">字体</label>
         <select id="fontFamily">
           <optgroup label="Snap 动效字体">
@@ -60,33 +64,66 @@ Scrap it.</textarea>
             <option value="cn-noto-black">Noto Sans SC Black</option>
           </optgroup>
         </select>
+        <div class="color-row color-trio writer-text-colors">
+          <label>背景<input id="backgroundColor" type="color" value="#000000"></label>
+          <label>文字<input id="textColor" type="color" value="#ffffff"></label>
+          <label>线条<input id="lineColor" type="color" value="#b18a00"></label>
+          <label>输入高亮<input id="accentColor" type="color" value="#ffc400"></label>
+        </div>
+        <div class="section-heading writer-background-heading"><p class="section-label">背景素材</p><small class="section-note">图片 / GIF / 视频</small></div>
+        <label class="writer-upload">上传背景<input id="backgroundUpload" type="file" accept="image/*,video/*,.gif"></label>
+        <button class="writer-secondary" id="clearBackground" type="button">清除背景素材</button>
       </section>
 
       <section class="motion-quick">
-        <div class="section-heading"><p class="section-label">画面与路径</p><small class="section-note">参考视频约 4.2 秒</small></div>
+        <div class="section-heading"><p class="section-label">文字与路径</p><small class="section-note">文字始终贴在线条上方</small></div>
         <div class="motion-map writer-motion-map" aria-label="动效阶段">
-          <span>输入</span><i>→</i><span>弯曲</span><i>→</i><span>贴轨</span><i>→</i><span>滑出</span>
+          <span>输入＋出轨</span><i>→</i><span>贴轨</span><i>→</i><span>滑行</span><i>→</i><span>切换</span>
         </div>
         <div class="controls-grid quick-grid">
           <label>字号 <output id="fontSizeOut">76</output><input id="fontSize" type="range" min="24" max="180" value="76"></label>
-          <label>字间距 <output id="letterSpacingOut">1</output><input id="letterSpacing" type="range" min="-8" max="30" step="0.5" value="1"></label>
+          <label>输入字间距 <output id="letterSpacingOut">1</output><input id="letterSpacing" type="range" min="-8" max="30" step="0.5" value="1"></label>
+          <label>贴轨字间距 <output id="curveSpacingOut">8</output><input id="curveSpacing" type="range" min="-12" max="80" step="0.5" value="8"></label>
+          <label>字轨距离 <output id="pathOffsetOut">0</output><input id="pathOffset" type="range" min="-30" max="80" step="1" value="0"></label>
+          <label>滑走距离 <output id="rideDistanceOut">82%</output><input id="rideDistance" type="range" min="20" max="160" step="1" value="82"></label>
+          <label>滑行节奏<select id="rideRhythm"><option value="smooth" selected>柔和加减速</option><option value="linear">匀速滑行</option><option value="fastStart">快速启动</option><option value="fastFinish">慢启快出</option></select></label>
           <label>波浪高度 <output id="amplitudeOut">92</output><input id="amplitude" type="range" min="0" max="260" value="92"></label>
           <label>波浪数量 <output id="wavesOut">1.35</output><input id="waves" type="range" min="0.5" max="3" step="0.05" value="1.35"></label>
-          <label>轨迹宽度 <output id="pathWidthOut">76%</output><input id="pathWidth" type="range" min="45" max="130" value="76"></label>
+          <label>轨道长度 <output id="pathWidthOut">76%</output><input id="pathWidth" type="range" min="20" max="140" value="76"></label>
           <label>整体倾斜 <output id="tiltOut">-12°</output><input id="tilt" type="range" min="-45" max="45" value="-12"></label>
           <label>轨迹粗细 <output id="lineWidthOut">1.2</output><input id="lineWidth" type="range" min="0.4" max="6" step="0.1" value="1.2"></label>
           <label>发光强度 <output id="glowOut">72%</output><input id="glow" type="range" min="0" max="150" value="72"></label>
         </div>
       </section>
 
-      <section class="timing-editor">
+      <section class="writer-assets">
+        <div class="section-heading"><p class="section-label">图案与图标</p><small class="section-note">资源库默认收起</small></div>
+        <div class="writer-library-groups" aria-label="图标资源库">
+          <details class="writer-library-group"><summary>经典图标 <span>4</span></summary><div id="flowAssetLibrary" class="writer-asset-library me-asset-library"></div></details>
+          <details class="writer-library-group"><summary>透明动物 <span>31</span></summary><div id="animalAssetLibrary" class="writer-asset-library me-asset-library"></div></details>
+          <details class="writer-library-group"><summary>Bot 动态表情 <span>11</span></summary><div id="botAssetLibrary" class="writer-asset-library me-asset-library"></div></details>
+          <details class="writer-library-group"><summary>图案 <span>1</span></summary><div id="shapeAssetLibrary" class="writer-asset-library me-asset-library"></div></details>
+          <details id="customAssetGroup" class="writer-library-group" hidden><summary>我的上传 <span id="customAssetCount">0</span></summary><div id="customAssetLibrary" class="writer-asset-library me-asset-library"></div></details>
+        </div>
+        <button id="addSelectedAsset" class="writer-asset-commit me-asset-commit" type="button" disabled>选择一个图标后添加</button>
+        <label class="writer-upload">上传图片 / GIF<input id="assetUpload" type="file" accept="image/*,.gif" multiple></label>
+        <button id="openSelectedAssets" class="writer-selected-toggle me-layer-toggle" type="button">展开已选图标 <span id="selectedAssetCount">0</span></button>
+        <p class="hint">点击资源只会选中；确认添加后才进入画面。已选资源可展开拖拽排序与单独编辑。</p>
+      </section>
+
+      <section class="timing-editor me-choreo-section">
         <div class="section-heading"><p class="section-label">动效时间</p><output id="cycleDurationOut">4.20 秒</output></div>
-        <div class="timeline-strip" aria-hidden="true"><span data-phase="type"></span><span data-phase="bend"></span><span data-phase="hold"></span><span data-phase="ride"></span><span data-phase="fade"></span><i id="timelinePlayhead"></i></div>
+        <div id="pathwriterChoreoTrack" class="me-choreo-track">
+          <div class="me-choreo-scroll"><div id="pathwriterChoreoBar" class="me-choreo-bar"><i id="timelinePlayhead" class="me-choreo-playhead"></i></div></div>
+          <ol id="pathwriterChoreoLegend" class="me-choreo-legend"></ol>
+        </div>
         <div class="controls-grid timing-grid">
-          <label>逐字输入 <output id="typeDurationOut">1.40秒</output><input id="typeDuration" type="range" min="300" max="4000" step="50" value="1400"></label>
-          <label>弯曲成形 <output id="bendDurationOut">0.80秒</output><input id="bendDuration" type="range" min="200" max="3000" step="50" value="800"></label>
+          <label>输入与轨道同步 <output id="typeDurationOut">1.40秒</output><input id="typeDuration" type="range" min="300" max="4000" step="50" value="1400"></label>
+          <label>轨道跟随时机 <output id="trackSyncOut">42%</output><input id="trackSync" type="range" min="0" max="85" step="1" value="42"></label>
+          <label>输入阶段滑行 <output id="syncSlideOut">18%</output><input id="syncSlide" type="range" min="0" max="60" step="1" value="18"></label>
+          <label>贴轨完成 <output id="bendDurationOut">0.80秒</output><input id="bendDuration" type="range" min="200" max="3000" step="50" value="800"></label>
           <label>贴轨停留 <output id="holdDurationOut">0.30秒</output><input id="holdDuration" type="range" min="0" max="3000" step="50" value="300"></label>
-          <label>沿轨滑行 <output id="rideDurationOut">1.20秒</output><input id="rideDuration" type="range" min="300" max="5000" step="50" value="1200"></label>
+          <label>沿轨滑行时间 <output id="rideDurationOut">1.20秒</output><input id="rideDuration" type="range" min="300" max="5000" step="50" value="1200"></label>
           <label>淡出切换 <output id="fadeDurationOut">0.50秒</output><input id="fadeDuration" type="range" min="150" max="2500" step="50" value="500"></label>
         </div>
       </section>
@@ -100,12 +137,6 @@ Scrap it.</textarea>
           <label>轨迹透明度 <output id="pathOpacityOut">46%</output><input id="pathOpacity" type="range" min="0" max="100" value="46"></label>
         </div>
       </details>
-
-      <section class="color-row color-trio">
-        <label>背景<input id="backgroundColor" type="color" value="#000000"></label>
-        <label>文字<input id="textColor" type="color" value="#ffffff"></label>
-        <label>笔尖<input id="accentColor" type="color" value="#ffc400"></label>
-      </section>
 
       <section class="transport" aria-label="时间轴控制">
         <button id="restartButton" type="button">重播</button><button id="pauseButton" type="button">暂停</button><button id="backButton" type="button">−1 帧</button><button id="forwardButton" type="button">+1 帧</button>
@@ -129,8 +160,27 @@ Scrap it.</textarea>
     </div>
   </details>
 
+  <aside id="selectedAssetsOverlay" class="writer-selected-overlay me-layer-panel" hidden aria-label="已选图标管理">
+    <header><div><b>已选图标</b><small>拖拽或使用箭头调整顺序</small></div><button id="closeSelectedAssets" type="button" aria-label="收起已选图标">收起</button></header>
+    <div id="selectedAssets" class="writer-selected-list me-layer-items"></div>
+  </aside>
+
+  <aside id="assetDrawer" class="writer-asset-drawer me-asset-drawer" hidden aria-label="单项图标编辑">
+    <header><div><b id="assetDrawerTitle">编辑图标</b><small>位置、大小与间距</small></div><button id="closeAssetDrawer" type="button" aria-label="关闭单项编辑">关闭</button></header>
+    <div class="writer-drawer-body me-asset-editor">
+      <div class="writer-drawer-preview"><img id="assetDrawerPreview" alt=""></div>
+      <label>插入位置<select id="assetDrawerSlot"></select></label>
+      <label>图标大小 <output id="assetDrawerSizeOut">100%</output><input id="assetDrawerSize" type="range" min="30" max="300" value="100"></label>
+      <label>独立透明度 <output id="assetDrawerOpacityOut">100%</output><input id="assetDrawerOpacity" type="range" min="0" max="100" value="100"></label>
+      <label>左右偏移 <output id="assetDrawerXOut">0</output><input id="assetDrawerX" type="range" min="-180" max="180" value="0"></label>
+      <label>上下偏移 <output id="assetDrawerYOut">0</output><input id="assetDrawerY" type="range" min="-180" max="180" value="0"></label>
+      <label>独立旋转 <output id="assetDrawerRotationOut">0°</output><input id="assetDrawerRotation" type="range" min="-180" max="180" value="0"></label>
+    </div>
+  </aside>
+
   <script src="js/continuation-gif.js"></script>
-  <script src="pathwriter.js?v=20260824-fonts1"></script>
+  <script src="shared-font-library.js?v=20260824-2"></script>
+  <script src="pathwriter.js?v=20260826-sync1"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
 </body>

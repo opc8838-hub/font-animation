@@ -191,6 +191,12 @@ main { overflow: hidden; }
   min-height: 360px;
 }
 
+.effect-card.has-live-preview[data-effect="pathwriter"] {
+  grid-column: span 2;
+  aspect-ratio: 16 / 9;
+  min-height: 360px;
+}
+
 .effect-card.has-live-preview[data-effect="beforeafter"] {
   grid-column: span 2;
   aspect-ratio: auto;
@@ -269,6 +275,11 @@ footer p { max-width: 420px; margin: 0; text-align: right; }
     min-height: 280px;
   }
   .effect-card.has-live-preview[data-effect="iconburst"] {
+    grid-column: span 1;
+    aspect-ratio: 16 / 9;
+    min-height: 280px;
+  }
+  .effect-card.has-live-preview[data-effect="pathwriter"] {
     grid-column: span 1;
     aspect-ratio: 16 / 9;
     min-height: 280px;

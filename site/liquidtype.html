@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="currentwall.css?v=20260824-scatter1">
   <link rel="stylesheet" href="focuswheel.css?v=20260824-scatter1">
   <link rel="stylesheet" href="me-motion-editor.css?v=20260824-scatter1">
-  <link rel="stylesheet" href="liquidtype.css?v=20260824-scatter1">
+  <link rel="stylesheet" href="liquidtype.css?v=20260825-scatter4">
   <link rel="stylesheet" href="stg-cn.css?v=20260824-scatter1">
 </head>
 <body class="me-motion-editor">
@@ -34,20 +34,40 @@
           <button id="resetButton" type="button">恢复默认</button>
           <button id="clearButton" type="button">清理重做</button>
         </div>
-        <p class="hint" id="schemeStatus" aria-live="polite">文字、材质、散开节奏和每段时间都会随方案保存。</p>
+        <p class="hint" id="schemeStatus" aria-live="polite">四段文字、各自字体、材质、散开节奏和每段时间都会随方案保存。</p>
       </section>
 
       <section class="lt-block lt-text-card">
         <div class="section-heading"><p class="section-label">文字</p><small class="section-note">内容 · 字体 · 颜色</small></div>
-        <label class="lt-wide-label">动效文字<input id="copyText" type="text" value="Prompt it."></label>
+        <div class="lt-stage-copy-list" aria-label="四段动效文字与字体">
+          <div class="lt-stage-copy-row">
+            <span class="lt-stage-number">1</span>
+            <label>普通字内容<input id="cleanText" type="text" value="Prompt it."></label>
+            <label>普通字字体<select id="cleanFontFamily"><option value="stg:inter" selected>Inter</option></select></label>
+          </div>
+          <div class="lt-stage-copy-row">
+            <span class="lt-stage-number">2</span>
+            <label>花粒字内容<input id="bloomText" type="text" value="Prompt it."></label>
+            <label>花粒字字体<select id="bloomFontFamily"><option value="stg:inter" selected>Inter</option></select></label>
+          </div>
+          <div class="lt-stage-copy-row">
+            <span class="lt-stage-number">3</span>
+            <label>蓝胶字内容<input id="liquidText" type="text" value="Prompt it."></label>
+            <label>蓝胶字字体<select id="liquidFontFamily"><option value="stg:inter" selected>Inter</option></select></label>
+          </div>
+          <div class="lt-stage-copy-row">
+            <span class="lt-stage-number">4</span>
+            <label>散尘字内容<input id="scatterText" type="text" value="Prompt it."></label>
+            <label>散尘字字体<select id="scatterFontFamily"><option value="stg:inter" selected>Inter</option></select></label>
+          </div>
+        </div>
         <div class="preset-actions">
           <button id="englishPreset" type="button">英文示例</button>
           <button id="chinesePreset" type="button">中文示例</button>
           <button id="restartTop" type="button">从头播放</button>
         </div>
         <div class="lt-font-grid">
-          <label>字体<select id="fontFamily"><option value="inter" selected>Inter</option></select></label>
-          <label>字重<select id="fontWeight"><option value="400">Regular · 400</option><option value="500" selected>Medium · 500</option><option value="600">Semibold · 600</option><option value="700">Bold · 700</option><option value="800">Extra Bold · 800</option><option value="900">Black · 900</option></select></label>
+          <label>统一字重<select id="fontWeight"><option value="400">Regular · 400</option><option value="500">Medium · 500</option><option value="600">Semibold · 600</option><option value="700" selected>Bold · 700</option><option value="800">Extra Bold · 800</option><option value="900">Black · 900</option></select></label>
         </div>
         <div class="controls-grid quick-grid">
           <label>字号 <output id="fontSizeOut">112px</output><input id="fontSize" type="range" min="24" max="320" value="112"></label>
@@ -126,8 +146,8 @@
   <script src="shared-font-library.js?v=20260824-2"></script>
   <script src="js/continuation-gif.js"></script>
   <script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="liquidtype.js?v=20260824-scatter2"></script>
-  <script src="me-motion-editor.js?v=20260824-scatter2"></script>
-  <script src="stg-cn.js?v=20260824-scatter2"></script>
+  <script src="liquidtype.js?v=20260825-scatter10"></script>
+  <script src="me-motion-editor.js?v=20260825-scatter9"></script>
+  <script src="stg-cn.js?v=20260825-scatter9"></script>
 </body>
 </html>

@@ -29,6 +29,8 @@
     hundredHold: $("#hundredHold"),
     resultHold: $("#resultHold"),
     speed: $("#speed"),
+    stagePopDuration: $("#stagePopDuration"),
+    stagePopStrength: $("#stagePopStrength"),
     pageSwitch: $("#pageSwitch"),
     uploadHold: $("#uploadHold"),
     dropDuration: $("#dropDuration"),
@@ -51,7 +53,14 @@
     sliderHold: $("#sliderHold"),
     sliderMode: $("#sliderMode"),
     sliderHandleSize: $("#sliderHandleSize"),
-    sliderLineColor: $("#sliderLineColor")
+    sliderLineColor: $("#sliderLineColor"),
+    tvOffEnabled: $("#tvOffEnabled"),
+    tvOffTheme: $("#tvOffTheme"),
+    tvOffDuration: $("#tvOffDuration"),
+    tvOffHold: $("#tvOffHold"),
+    tvOffGlow: $("#tvOffGlow"),
+    tvOffBgColor: $("#tvOffBgColor"),
+    tvOffColor: $("#tvOffColor")
   };
 
   const fontMap = {
@@ -71,6 +80,7 @@
   let sliderOverride = null;
   let dragPointerId = null;
   let autoSaveTimer = 0;
+  const tvOffBuffer = document.createElement("canvas");
 
   const clamp01 = (value) => Math.max(0, Math.min(1, value));
   const lerp = (a, b, t) => a + (b - a) * t;
@@ -91,6 +101,24 @@
   };
   const mod = (value, divisor) => ((value % divisor) + divisor) % divisor;
 
+  function drawWithStagePop(context, w, h, elapsed, options, draw) {
+    const progress = clamp01(elapsed / Math.max(.001, options.stagePopDuration));
+    const strength = options.stagePopStrength;
+    let scale;
+    if (progress < .58) {
+      scale = lerp(1 - strength, 1 + strength * .38, easeOutCubic(progress / .58));
+    } else {
+      scale = lerp(1 + strength * .38, 1, easeInOutCubic((progress - .58) / .42));
+    }
+    context.save();
+    context.translate(w / 2, h / 2);
+    context.scale(scale, scale);
+    context.translate(-w / 2, -h / 2);
+    context.globalAlpha = lerp(.82, 1, easeOutCubic(progress));
+    draw();
+    context.restore();
+  }
+
   function settings() {
     return {
       beforeLabel: inputs.beforeLabel.value,
@@ -108,6 +136,8 @@
       hundredHold: Number(inputs.hundredHold.value) / 1000,
       resultHold: Number(inputs.resultHold.value) / 1000,
       speed: Number(inputs.speed.value) / 100,
+      stagePopDuration: Number(inputs.stagePopDuration && inputs.stagePopDuration.value || 280) / 1000,
+      stagePopStrength: Number(inputs.stagePopStrength && inputs.stagePopStrength.value || 6) / 100,
       pageSwitch: Number(inputs.pageSwitch.value) / 1000,
       uploadHold: Number(inputs.uploadHold.value) / 1000,
       dropDuration: Number(inputs.dropDuration.value) / 1000,
@@ -130,7 +160,14 @@
       sliderHold: Number(inputs.sliderHold && inputs.sliderHold.value || 1000) / 1000,
       sliderMode: inputs.sliderMode && inputs.sliderMode.value || "roundTrip",
       sliderHandleSize: Number(inputs.sliderHandleSize && inputs.sliderHandleSize.value || 44),
-      sliderLineColor: colorValue("sliderLineColor", "#ffffff")
+      sliderLineColor: colorValue("sliderLineColor", "#ffffff"),
+      tvOffEnabled: Boolean(inputs.tvOffEnabled && inputs.tvOffEnabled.checked),
+      tvOffTheme: inputs.tvOffTheme && inputs.tvOffTheme.value || "dark",
+      tvOffDuration: Number(inputs.tvOffDuration && inputs.tvOffDuration.value || 550) / 1000,
+      tvOffHold: Number(inputs.tvOffHold && inputs.tvOffHold.value || 0) / 1000,
+      tvOffGlow: Number(inputs.tvOffGlow && inputs.tvOffGlow.value || 72) / 100,
+      tvOffBgColor: inputs.tvOffTheme && inputs.tvOffTheme.value === "light" ? "#ffffff" : inputs.tvOffTheme && inputs.tvOffTheme.value === "custom" ? colorValue("tvOffBgColor", "#000000") : "#000000",
+      tvOffColor: inputs.tvOffTheme && inputs.tvOffTheme.value === "light" ? "#111111" : inputs.tvOffTheme && inputs.tvOffTheme.value === "custom" ? colorValue("tvOffColor", "#ffffff") : "#ffffff"
     };
   }
 
@@ -145,8 +182,11 @@
     const sliderTravel = options.sliderEnabled ? options.sliderDuration * (options.sliderMode === "roundTrip" ? 2 : 1) : 0;
     const sliderMoveEnd = resultEnd + sliderTravel;
     const sliderEnd = sliderMoveEnd + (options.sliderEnabled ? options.sliderHold : 0);
-    const cycleEnd = options.sliderEnabled ? sliderEnd : resultEnd;
-    return { compareEnd, switchEnd, uploadEnd, dropEnd, generateEnd, hundredHoldEnd, resultEnd, sliderMoveEnd, sliderEnd, cycleEnd };
+    const contentEnd = options.sliderEnabled ? sliderEnd : resultEnd;
+    const tvOffEnd = contentEnd + (options.tvOffEnabled ? options.tvOffDuration : 0);
+    const tvOffHoldEnd = tvOffEnd + (options.tvOffEnabled ? options.tvOffHold : 0);
+    const cycleEnd = options.tvOffEnabled ? tvOffHoldEnd : contentEnd;
+    return { compareEnd, switchEnd, uploadEnd, dropEnd, generateEnd, hundredHoldEnd, resultEnd, sliderMoveEnd, sliderEnd, contentEnd, tvOffEnd, tvOffHoldEnd, cycleEnd };
   }
 
   function loadImage(src) {
@@ -384,6 +424,52 @@
     return box;
   }
 
+  function drawTvShutdown(context, target, w, h, pixelRatio, progress, options) {
+    const p = clamp01(progress);
+    if (tvOffBuffer.width !== target.width || tvOffBuffer.height !== target.height) {
+      tvOffBuffer.width = target.width;
+      tvOffBuffer.height = target.height;
+    }
+    const bufferContext = tvOffBuffer.getContext("2d");
+    bufferContext.setTransform(1, 0, 0, 1, 0, 0);
+    bufferContext.clearRect(0, 0, tvOffBuffer.width, tvOffBuffer.height);
+    bufferContext.drawImage(target, 0, 0);
+
+    context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    context.clearRect(0, 0, w, h);
+    context.fillStyle = options.tvOffBgColor;
+    context.fillRect(0, 0, w, h);
+
+    const verticalEnd = .64;
+    const vertical = clamp01(p / verticalEnd);
+    const horizontal = clamp01((p - verticalEnd) / (1 - verticalEnd));
+    const verticalEase = easeInOutCubic(vertical);
+    const horizontalEase = easeOutCubic(horizontal);
+    const widthScale = p < verticalEnd ? lerp(1, .96, verticalEase) : lerp(.96, 0, horizontalEase);
+    const heightScale = p < verticalEnd ? lerp(1, .009, verticalEase) : lerp(.009, .003, horizontalEase);
+    const drawWidth = Math.max(2, w * widthScale);
+    const drawHeight = Math.max(1.5, h * heightScale);
+    const centerX = w / 2;
+    const centerY = h / 2;
+
+    context.save();
+    context.globalAlpha = p < verticalEnd ? 1 : 1 - horizontalEase * .72;
+    context.drawImage(tvOffBuffer, 0, 0, tvOffBuffer.width, tvOffBuffer.height, centerX - drawWidth / 2, centerY - drawHeight / 2, drawWidth, drawHeight);
+    context.restore();
+
+    const glowAlpha = p < verticalEnd ? verticalEase * .82 : (1 - horizontalEase) * .92;
+    if (glowAlpha > .001 && options.tvOffGlow > 0) {
+      context.save();
+      context.globalCompositeOperation = options.tvOffTheme === "light" ? "multiply" : options.tvOffTheme === "dark" ? "screen" : "source-over";
+      context.globalAlpha = glowAlpha * options.tvOffGlow;
+      context.fillStyle = options.tvOffColor;
+      context.shadowColor = options.tvOffColor;
+      context.shadowBlur = Math.max(8, Math.min(w, h) * .035 * options.tvOffGlow);
+      context.fillRect(centerX - drawWidth / 2, centerY - Math.max(1, drawHeight * .16), drawWidth, Math.max(1.5, drawHeight * .32));
+      context.restore();
+    }
+  }
+
   function drawUploadPage(context, w, h, options, drop, progress) {
     const layout = uploadLayout(w, h);
     const radius = Math.min(w, h) * 0.035;
@@ -424,7 +510,14 @@
     let progress = 0;
     let reveal = 0;
     let sliderPosition = options.sliderStart;
-    if (options.sliderEnabled && clock >= line.resultEnd) {
+    let tvOffProgress = 0;
+    if (options.tvOffEnabled && clock >= line.tvOffEnd) {
+      phase = "tvOffHold";
+    } else if (options.tvOffEnabled && clock >= line.contentEnd) {
+      phase = "tvOff";
+      tvOffProgress = clamp01((clock - line.contentEnd) / Math.max(.001, options.tvOffDuration));
+      sliderPosition = options.sliderEnabled ? (options.sliderMode === "roundTrip" ? options.sliderStart : options.sliderEnd) : options.sliderStart;
+    } else if (options.sliderEnabled && clock >= line.resultEnd) {
       phase = "slider";
       const elapsed = Math.max(0, clock - line.resultEnd);
       const leg = Math.max(.001, options.sliderDuration);
@@ -469,8 +562,17 @@
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = "high";
 
-    if (phase === "slider") {
-      drawSliderCompare(context, w, h, options, sliderPosition);
+    if (phase === "tvOffHold") {
+      context.fillStyle = options.tvOffBgColor;
+      context.fillRect(0, 0, w, h);
+    } else if (phase === "tvOff") {
+      if (options.sliderEnabled) drawSliderCompare(context, w, h, options, sliderPosition);
+      else drawResultPage(context, w, h, options);
+      drawTvShutdown(context, target, w, h, pixelRatio, tvOffProgress, options);
+    } else if (phase === "slider") {
+      context.fillStyle = options.compareBg;
+      context.fillRect(0, 0, w, h);
+      drawWithStagePop(context, w, h, clock - line.resultEnd, options, () => drawSliderCompare(context, w, h, options, sliderPosition));
     } else if (phase === "result") {
       if (reveal < 1) {
         drawUploadPage(context, w, h, options, 1, 1);
@@ -480,6 +582,10 @@
       } else {
         drawResultPage(context, w, h, options);
       }
+    } else if (phase === "compare") {
+      context.fillStyle = options.compareBg;
+      context.fillRect(0, 0, w, h);
+      drawWithStagePop(context, w, h, clock, options, () => drawComparePage(context, w, h, options, radius));
     } else {
       context.save();
       context.translate(-w * switchT, 0);
@@ -529,6 +635,8 @@
       { kind: "replace", name: "效果图成片", start: line.hundredHoldEnd, end: line.resultEnd }
     ];
     if (options.sliderEnabled) beats.push({ kind: "contact", name: "滑动对比", start: line.resultEnd, end: line.sliderEnd });
+    if (options.tvOffEnabled) beats.push({ kind: "fade", name: "电视熄屏", start: line.contentEnd, end: line.tvOffEnd });
+    if (options.tvOffEnabled && options.tvOffHold > 0) beats.push({ kind: "hold", name: "熄屏停留", start: line.tvOffEnd, end: line.tvOffHoldEnd });
     return beats.map((beat, index) => ({ ...beat, index, duration: Math.max(0, beat.end - beat.start) }));
   }
 
@@ -597,6 +705,8 @@
     $("#hundredHoldOut").textContent = formatSeconds(options.hundredHold);
     $("#resultHoldOut").textContent = formatSeconds(options.resultHold);
     $("#speedOut").textContent = `${options.speed.toFixed(2)}×`;
+    $("#stagePopDurationOut").textContent = formatSeconds(options.stagePopDuration);
+    $("#stagePopStrengthOut").textContent = `${Math.round(options.stagePopStrength * 100)}%`;
     $("#pageSwitchOut").textContent = formatSeconds(options.pageSwitch);
     $("#uploadHoldOut").textContent = formatSeconds(options.uploadHold);
     $("#dropDurationOut").textContent = formatSeconds(options.dropDuration);
@@ -619,7 +729,12 @@
     $("#sliderDurationOut").textContent = formatSeconds(options.sliderDuration);
     $("#sliderHoldOut").textContent = formatSeconds(options.sliderHold);
     $("#sliderHandleSizeOut").textContent = String(Math.round(options.sliderHandleSize));
+    $("#tvOffDurationOut").textContent = formatSeconds(options.tvOffDuration);
+    $("#tvOffHoldOut").textContent = formatSeconds(options.tvOffHold);
+    $("#tvOffGlowOut").textContent = `${Math.round(options.tvOffGlow * 100)}%`;
     $(".ba-slider-section")?.classList.toggle("is-disabled", !options.sliderEnabled);
+    $(".ba-tv-off-section")?.classList.toggle("is-disabled", !options.tvOffEnabled);
+    $(".ba-tv-off-section")?.classList.toggle("is-custom-theme", options.tvOffTheme === "custom");
     $("#previewSliderButton").disabled = !options.sliderEnabled;
     const percentOut = $("#percentColorOut");
     if (percentOut) percentOut.textContent = options.percentColor;
@@ -647,7 +762,7 @@
     setTime(0);
   }
   const defaultPhotos = { before: "assets/beforeafter-before.jpg", after: "assets/beforeafter-after.jpg" };
-  const DEFAULT_PRESET_URL = "assets/presets/beforeafter-default.json?v=20260824-2";
+  const DEFAULT_PRESET_URL = "assets/presets/beforeafter-default.json?v=20260825-latest1";
   let approvedDefaultPreset = null;
 
   $("#beforeFile").addEventListener("change", (event) => onUpload("before", event.target.files[0]));
@@ -675,11 +790,13 @@
       ["beforePanX", "0"], ["beforePanY", "0"], ["afterPanX", "0"], ["afterPanY", "0"],
       ["ringColor", "#ff6b9a"], ["percentColor", "#111111"],
       ["compareHold", "1400"], ["generateDuration", "900"], ["hundredHold", "800"], ["resultHold", "1600"], ["speed", "100"],
+      ["stagePopDuration", "280"], ["stagePopStrength", "6"],
       ["pageSwitch", "400"], ["uploadHold", "350"], ["dropDuration", "550"], ["cutSoft", "180"],
       ["radius", "22"], ["pagePad", "7"],
       ["compareBg", "#ffffff"], ["beforeColor", "#111111"], ["afterColor", "#111111"],
       ["sliderStart", "18"], ["sliderEnd", "82"], ["sliderDuration", "1800"], ["sliderHold", "1000"],
-      ["sliderMode", "roundTrip"], ["sliderHandleSize", "44"], ["sliderLineColor", "#ffffff"]
+      ["sliderMode", "roundTrip"], ["sliderHandleSize", "44"], ["sliderLineColor", "#ffffff"],
+      ["tvOffTheme", "dark"], ["tvOffDuration", "550"], ["tvOffHold", "400"], ["tvOffGlow", "72"], ["tvOffBgColor", "#000000"], ["tvOffColor", "#ffffff"]
     ];
     formIds.forEach(([id, value]) => {
       const field = document.getElementById(id);
@@ -695,6 +812,7 @@
       photos.after = after;
     } catch (_) {}
     inputs.sliderEnabled.checked = true;
+    inputs.tvOffEnabled.checked = true;
     sliderOverride = null;
     updateOutputs();
     setTime(0);
@@ -714,6 +832,7 @@
     inputs.beforeLabel.value = "Before";
     inputs.afterLabel.value = "After";
     inputs.sliderEnabled.checked = false;
+    inputs.tvOffEnabled.checked = false;
     sliderOverride = null;
     localStorage.removeItem(SAVE_KEY);
     updateOutputs();
@@ -761,6 +880,10 @@
     setTime(currentTime() + 1 / fps);
     syncPauseButtons();
   });
+  document.querySelectorAll("[data-speed-value]").forEach((button) => button.addEventListener("click", () => {
+    inputs.speed.value = button.dataset.speedValue;
+    inputs.speed.dispatchEvent(new Event("input", { bubbles: true }));
+  }));
 
   $("#previewSliderButton").addEventListener("click", () => {
     if (!inputs.sliderEnabled.checked) return;
@@ -918,6 +1041,15 @@
       sliderMode: "roundTrip",
       sliderHandleSize: "44",
       sliderLineColor: "#ffffff",
+      tvOffEnabled: true,
+      tvOffTheme: "dark",
+      tvOffDuration: "550",
+      tvOffHold: "400",
+      tvOffGlow: "72",
+      tvOffBgColor: "#000000",
+      tvOffColor: "#ffffff",
+      stagePopDuration: "280",
+      stagePopStrength: "6",
       ...preset.fields
     };
     Object.entries(fields).forEach(([id, value]) => {

@@ -1,427 +1,186 @@
 (() => {
   "use strict";
-
-  const $ = (selector) => document.querySelector(selector);
-  const canvas = $("#flowCanvas");
-  const frameCounter = $("#frameCounter");
-  const exportStatus = $("#exportStatus");
-  const fps = 30;
-  const inputs = {
-    title: $("#titleText"), source: $("#sourceText"), font: $("#fontFamily"), fontWeight: $("#fontWeight"),
-    fontSize: $("#fontSize"), tracking: $("#tracking"), intro: $("#introDuration"),
-    recompose: $("#recomposeDuration"), fragmentRate: $("#fragmentRate"), hold: $("#holdDuration"),
-    fragmentStrength: $("#fragmentStrength"), fragmentJitter: $("#fragmentJitter"), fragmentWidth: $("#fragmentWidth"),
-    baseTextOpacity: $("#baseTextOpacity"),
-    background: $("#backgroundColor"), foreground: $("#textColor"),
-    punctuationEnabled: $("#punctuationEnabled"), punctuation: $("#punctuationColor")
+  const $ = (id) => document.getElementById(id);
+  const canvas = $("flowCanvas");
+  const FPS = 30, STORAGE_KEY = "stg-color-recompose-scheme-v4";
+  const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+  const mix = (a, b, t) => a + (b - a) * t;
+  const smooth = (v) => { const t = clamp(v); return t * t * (3 - 2 * t); };
+  const mod = (v, d) => ((v % d) + d) % d;
+  const seeded = (n) => { const v = Math.sin(n * 12.9898 + 78.233) * 43758.5453; return v - Math.floor(v); };
+  const split = (value) => typeof Intl.Segmenter === "function" ? Array.from(new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(value), (p) => p.segment) : Array.from(value);
+  const svgIcon = (body, background) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="${background}"/>${body}</svg>`)}`;
+  const vectorPreview = (body) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100"><rect width="160" height="100" rx="16" fill="#0b0b0d"/>${body}</svg>`)}`;
+  const libraries = {
+    flow: [
+      ["流墙音乐", svgIcon('<g transform="translate(-4 0)"><path d="M44 24v37c-3-2-7-2-11-1-7 2-11 8-9 13s9 7 16 5c6-2 10-7 10-12V39l24-7v24c-3-2-7-2-11-1-7 2-11 8-9 13s9 7 16 5c6-2 10-7 10-12V19z" fill="white"/></g>', "#fa264f")],
+      ["流墙播放", svgIcon('<circle cx="50" cy="50" r="34" fill="none" stroke="white" stroke-width="6"/><path d="M41 30 70 50 41 70z" fill="white"/>', "#111111")],
+      ["流墙云", svgIcon('<circle cx="34" cy="56" r="15" fill="white"/><circle cx="51" cy="45" r="22" fill="white"/><circle cx="70" cy="56" r="16" fill="white"/><rect x="19" y="54" width="67" height="21" rx="10" fill="white"/>', "#1389ff")],
+      ["流墙手表", svgIcon('<rect x="28" y="19" width="44" height="62" rx="15" fill="#111"/><rect x="35" y="28" width="30" height="44" rx="9" fill="#d7ff2f"/><circle cx="50" cy="50" r="3" fill="#111"/>', "#d8d8d8")]
+    ].map(([name, url], index) => ({ id: `flow-${index}`, name, url, type: "image/svg+xml" })),
+    collision: [
+      { id: "collision-hand", name: "动态手掌", url: "crash_resources/images/0.gif", type: "image/gif" },
+      { id: "collision-sky", name: "动态天空", url: "crash_resources/images/1.gif", type: "image/gif" }
+    ],
+    construct: [
+      { id: "construct-cloud", name: "动态线云", kind: "vector", vectorType: "cloud", url: vectorPreview('<path d="M28 65c-18-22 10-43 28-28 8-26 44-27 54-3 22-12 40 13 22 30z" fill="none" stroke="#fff" stroke-width="3"/>') },
+      { id: "construct-loop", name: "环绕线条", kind: "vector", vectorType: "loop", url: vectorPreview('<g fill="none" stroke="#fff" stroke-width="2"><ellipse cx="80" cy="50" rx="55" ry="24" transform="rotate(-10 80 50)"/><ellipse cx="80" cy="50" rx="55" ry="24" transform="rotate(10 80 50)"/></g>') },
+      { id: "construct-stroke", name: "彩色粗线", kind: "vector", vectorType: "stroke", url: vectorPreview('<path d="M20 63C42 12 69 91 91 45S128 78 143 27" fill="none" stroke="url(#g)" stroke-width="13" stroke-linecap="round"/><defs><linearGradient id="g"><stop stop-color="#36df7a"/><stop offset=".5" stop-color="#ffb000"/><stop offset="1" stop-color="#1479ff"/></linearGradient></defs>') },
+      { id: "construct-bar", name: "渐变粗条", kind: "vector", vectorType: "bar", url: vectorPreview('<defs><linearGradient id="b" x2="0" y2="1"><stop stop-color="#24ef82"/><stop offset="1" stop-color="#24ef82" stop-opacity="0"/></linearGradient></defs><rect x="18" y="30" width="124" height="40" rx="8" fill="url(#b)"/>') }
+    ],
+    animal: Array.from({ length: 31 }, (_, index) => ({ id: `animal-${index + 1}`, name: index === 4 ? "鲸鱼" : `透明动物 ${String(index + 1).padStart(2, "0")}`, url: `assets/transparent-animals/animal-${String(index + 1).padStart(2, "0")}.png`, type: "image/png" })),
+    bot: ["bloub-capsule-colere-brun.gif", "bloub-cercle-attentif-violet.gif", "bloub-cercle-curieux-encre.gif", "bloub-galet-blase-orange.gif", "bloub-galet-somnolent-rouge.gif", "bloub-goutte-curieux-turquoise.gif", "bloub-hexagone-surpris-gris.gif", "bloub-nuage-mefiant-rouge.gif", "bloub-nuage-neutre-bleu.gif", "bloub-squircle-effraye-orange.gif", "bloub-triangle-mefiant-ambre.gif"].map((file, index) => ({ id: `bot-${index + 1}`, name: `Bot 动态表情 ${String(index + 1).padStart(2, "0")}`, url: `assets/bot-series/${file}`, type: "image/gif" }))
   };
+  const allLibrary = [...libraries.flow, ...libraries.collision, ...libraries.construct, ...libraries.animal, ...libraries.bot];
+  const controlIds = ["titleText", "sourceText", "effectMode", "fontFamily", "fontWeight", "textAlign", "backgroundColor", "textColor", "punctuationColor", "punctuationEnabled", "speed", "introDuration", "recomposeDuration", "resolveDuration", "holdDuration", "fragmentRate", "letterRotation", "rotationSpeed", "shrinkAmount", "fragmentStrength", "fontSize", "tracking", "textX", "textY", "iconDensity", "iconSize", "iconSwitchRate", "iconSpin", "iconGap", "iconY"];
+  const controls = Object.fromEntries(controlIds.map((id) => [id, $(id)]));
   const paletteInputs = [...document.querySelectorAll(".palette-color")];
-  const fontPresets = {
-    "snap-inter-medium": { family: "Continuation Inter", weight: 500, style: "normal" },
-    "snap-inter-black": { family: "Continuation Inter", weight: 900, style: "normal" },
-    "snap-ibm-plex": { family: "Continuation IBM Plex Mono", weight: 700, style: "italic" },
-    "snap-space-mono": { family: "Continuation Space Mono", weight: 700, style: "normal" },
-    "snap-space-grotesk": { family: "Continuation Space Grotesk", weight: 700, style: "normal" },
-    "ff-space-grotesk": { family: "Continuation Space Grotesk", weight: 400, style: "normal" },
-    "ff-martian-mono": { family: "Continuation Martian Mono", weight: 400, style: "normal" },
-    "ff-oi": { family: "Continuation Oi", weight: 400, style: "normal" },
-    "ff-barriecito": { family: "Continuation Barriecito", weight: 400, style: "normal" },
-    "fs-satoshi": { family: "Satoshi", weight: 500, style: "normal" },
-    "fs-general-sans": { family: "General Sans", weight: 500, style: "normal" },
-    "fs-clash-display": { family: "Clash Display", weight: 500, style: "normal" },
-    "fs-cabinet": { family: "Cabinet Grotesk", weight: 700, style: "normal" },
-    "cn-noto-regular": { family: "Continuation SC", weight: 400, style: "normal" },
-    "cn-noto-black": { family: "Continuation SC Black", weight: 900, style: "normal" },
-    "ib-archivo": { family: "CRArchivo", weight: 900, style: "normal" },
-    "ib-roboto-condensed": { family: "CRRobotoCondensed", weight: 700, style: "normal" },
-    "ib-work": { family: "CRWork", weight: 400, style: "normal" },
-    "ib-lora": { family: "CRLora", weight: 400, style: "normal" },
-    "ib-fenix": { family: "CRFenix", weight: 400, style: "normal" },
-    "ib-vollkorn": { family: "CRVollkorn", weight: 700, style: "italic" },
-    "ib-cairo": { family: "CRCairo", weight: 700, style: "normal" },
-    "ib-aguafina": { family: "CRAguafina", weight: 400, style: "normal" },
-    "ib-manrope": { family: "CRManrope", weight: 500, style: "normal" },
-    "ib-spartan": { family: "CRSpartan", weight: 500, style: "normal" },
-    "ib-cinzel": { family: "CRCinzel", weight: 500, style: "normal" },
-    "ib-instrument": { family: "CRInstrument", weight: 400, style: "normal" },
-    "ib-bebas": { family: "CRBebas", weight: 400, style: "normal" },
-    "ib-poppins": { family: "CRPoppins", weight: 400, style: "normal" },
-    "ib-rajdhani": { family: "CRRajdhani", weight: 700, style: "normal" },
-    "ib-teko": { family: "CRTeko", weight: 500, style: "normal" },
-    "ib-khand": { family: "CRKhand", weight: 400, style: "normal" },
-    "ib-fraunces": { family: "CRFraunces", weight: 500, style: "normal" },
-    "ib-sc-thin": { family: "CRSCThin", weight: 200, style: "normal" },
-    "ib-jp-thin": { family: "CRJPThin", weight: 200, style: "normal" },
-    "ib-jp-black": { family: "CRJPBlack", weight: 900, style: "normal" },
-    "ib-kr-black": { family: "CRKRBlack", weight: 900, style: "normal" }
-  };
+  const imageCache = new Map();
+  const state = { playing: true, start: performance.now(), pausedAt: 0, assets: [], selectedLibraryId: libraries.flow[0].id, activeAssetId: null, background: null, backgroundElement: null, autosaveTimer: 0, dragId: null };
 
-  let animationStart = performance.now();
-  let pausedAt = 0;
-  let paused = false;
-  const clamp01 = (value) => Math.max(0, Math.min(1, value));
-  const lerp = (from, to, progress) => from + (to - from) * progress;
-  const smoother = (value) => {
-    const x = clamp01(value);
-    return x * x * x * (x * (x * 6 - 15) + 10);
-  };
-  const easeOut = (value) => 1 - Math.pow(1 - clamp01(value), 3);
-  const mod = (value, divisor) => ((value % divisor) + divisor) % divisor;
-  const rangeProgress = (value, from, to) => clamp01((value - from) / Math.max(.0001, to - from));
-  const seeded = (seed) => {
-    const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
-    return value - Math.floor(value);
-  };
-  const graphemes = (value) => typeof Intl.Segmenter === "function"
-    ? Array.from(new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(value), (part) => part.segment)
-    : Array.from(value);
-  const isPunctuation = (glyph) => {
-    try { return /\p{P}/u.test(glyph); }
-    catch (_) { return /[!-/:-@[-`{-~，。！？；：、（）【】《》〈〉「」『』“”‘’—…·]/.test(glyph); }
-  };
-  const titleColorFor = (glyph) => inputs.punctuationEnabled.checked && isPunctuation(glyph)
-    ? inputs.punctuation.value
-    : inputs.foreground.value;
-  function colorLuminance(hex) {
-    const value = hex.replace("#", "");
-    const channels = [0, 2, 4].map((offset) => parseInt(value.slice(offset, offset + 2), 16) / 255)
-      .map((channel) => channel <= .04045 ? channel / 12.92 : Math.pow((channel + .055) / 1.055, 2.4));
-    return .2126 * channels[0] + .7152 * channels[1] + .0722 * channels[2];
+  function defaultAsset(item, index = 0) { return { id: `${item.id}-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 6)}`, libraryId: item.id, name: item.name, url: item.url, type: item.type || "image/png", kind: item.kind || "image", vectorType: item.vectorType || "", size: 100, opacity: 100, x: 0, y: 0, rotation: 0, spin: 1 }; }
+  function resetAssets() { state.assets = [libraries.flow[0], libraries.flow[2], libraries.animal[4], libraries.bot[5]].map(defaultAsset); }
+  function loadImage(url) {
+    if (!url) return Promise.resolve(null);
+    if (imageCache.has(url)) return imageCache.get(url);
+    const promise = new Promise((resolve, reject) => { const img = new Image(); img.onload = () => { promise.image = img; resolve(img); }; img.onerror = reject; img.src = url; });
+    imageCache.set(url, promise); return promise;
   }
-  function fragmentBlendMode() {
-    const luminance = colorLuminance(inputs.background.value);
-    if (luminance >= .62) return { mode: "multiply", alpha: 1, label: "light-background" };
-    if (luminance <= .18) return { mode: "screen", alpha: 1, label: "dark-background" };
-    return { mode: "source-over", alpha: 1, label: "mid-background" };
+  function hydrateImages() { [...state.assets, ...allLibrary].filter((asset) => asset.kind !== "vector").forEach((asset) => loadImage(asset.url).catch(() => null)); }
+  function activeAsset() { return state.assets.find((asset) => asset.id === state.activeAssetId) || null; }
+  function timings() {
+    const speed = Number(controls.speed.value) || 1, intro = Number(controls.introDuration.value) / 1000 / speed, active = Number(controls.recomposeDuration.value) / 1000 / speed, resolve = Number(controls.resolveDuration.value) / 1000 / speed, hold = Number(controls.holdDuration.value) / 1000 / speed;
+    return { intro, active, resolve, hold, activeEnd: intro + active, resolveEnd: intro + active + resolve, cycle: Math.max(.1, intro + active + resolve + hold) };
   }
-
-  function timing() {
-    const intro = Number(inputs.intro.value) / 1000;
-    const recompose = Number(inputs.recompose.value) / 1000;
-    const hold = Number(inputs.hold.value) / 1000;
-    return { intro, recompose, hold, recomposeEnd: intro + recompose, cycle: intro + recompose + hold };
+  function currentTime() { return state.playing ? (performance.now() - state.start) / 1000 : state.pausedAt; }
+  function seek(time, pause = false) { state.pausedAt = Math.max(0, time); state.start = performance.now() - state.pausedAt * 1000; if (pause) setPlaying(false); }
+  function setPlaying(value) { if (state.playing === value) return; if (value) state.start = performance.now() - state.pausedAt * 1000; else state.pausedAt = currentTime(); state.playing = value; [$("pauseButton"), $("stagePauseButton")].forEach((button) => { if (button) button.textContent = value ? "暂停" : "继续"; }); }
+  function restart() { state.pausedAt = 0; state.start = performance.now(); if (!state.playing) { state.playing = true; [$("pauseButton"), $("stagePauseButton")].forEach((button) => button.textContent = "暂停"); } }
+  function colorToRgb(value) { const hex = value.replace("#", ""); return [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16)); }
+  function mixColor(a, b, t) { const x = colorToRgb(a), y = colorToRgb(b); return `rgb(${x.map((v, i) => Math.round(mix(v, y[i], t))).join(",")})`; }
+  function punctuation(glyph) { try { return /\p{P}/u.test(glyph); } catch (_) { return /[!-/:-@[-`{-~，。！？；：、（）【】《》]/.test(glyph); } }
+  function finalColor(glyph) { return controls.punctuationEnabled.checked && punctuation(glyph) ? controls.punctuationColor.value : controls.textColor.value; }
+  function fontPreset() { return window.STGFontLibrary?.preset(controls.fontFamily.value) || { family: "STG Inter", weight: 500, style: "normal" }; }
+  function drawCover(context, media, w, h) { if (!media || !(media.videoWidth || media.naturalWidth)) return; const mw = media.videoWidth || media.naturalWidth, mh = media.videoHeight || media.naturalHeight, scale = Math.max(w / mw, h / mh), dw = mw * scale, dh = mh * scale; context.drawImage(media, (w - dw) / 2, (h - dh) / 2, dw, dh); }
+  function measureLayout(context, glyphs, w, h) {
+    const preset = fontPreset(), basePx = Number(controls.fontSize.value) * (h / 900), tracking = Number(controls.tracking.value) * (h / 900), weight = Number(controls.fontWeight.value) || preset.weight;
+    context.font = `${preset.style} ${weight} ${basePx}px "${preset.family}",${window.STGFontLibrary?.fallbackStack || "sans-serif"}`;
+    const widths = glyphs.map((glyph) => context.measureText(glyph).width), natural = widths.reduce((sum, v) => sum + v, 0) + tracking * Math.max(0, glyphs.length - 1), fit = Math.min(1, w * .86 / Math.max(1, natural));
+    return { basePx, tracking, widths, natural, fit };
   }
-
-  function renderFrame(target, time, width, height, pixelRatio = 1) {
-    const context = target.getContext("2d");
-    const w = width ?? target.width / pixelRatio;
-    const h = height ?? target.height / pixelRatio;
-    context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-    context.clearRect(0, 0, w, h);
-    context.fillStyle = inputs.background.value;
-    context.fillRect(0, 0, w, h);
-
-    const preset = window.STGFontLibrary?.preset(inputs.font.value) || fontPresets[inputs.font.value] || fontPresets["snap-inter-black"];
-    const scale = h / 900;
-    const fontPx = Math.max(12, Number(inputs.fontSize.value) * scale);
-    const tracking = Number(inputs.tracking.value) * scale;
-    const title = inputs.title.value.trim() || "MAKE IT VIVID";
-    const glyphs = graphemes(title);
-    const palette = paletteInputs.map((input) => input.value);
-    const sourceLines = inputs.source.value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-    const sourceGlyphs = graphemes(sourceLines.join("")).filter((glyph) => !/\s/.test(glyph));
-    const currentTiming = timing();
-    const localTime = mod(time, currentTiming.cycle);
-    const recomposeElapsed = Math.max(0, localTime - currentTiming.intro);
-    const safeWidth = w * .84;
-
-    const selectedWeight = Number(inputs.fontWeight.value) || preset.weight;
-    context.font = `${preset.style} ${selectedWeight} ${fontPx}px "${preset.family}", "Continuation SC", sans-serif`;
-    context.textAlign = "left";
-    context.textBaseline = "middle";
-    context.imageSmoothingEnabled = true;
-    const widths = glyphs.map((glyph) => context.measureText(glyph).width);
-    const totalWidth = widths.reduce((sum, value) => sum + value, 0) + tracking * Math.max(0, glyphs.length - 1);
-    const fit = Math.min(1, safeWidth / Math.max(1, totalWidth));
-    const strength = Number(inputs.fragmentStrength.value) / 100;
-    const progress = rangeProgress(recomposeElapsed, 0, currentTiming.recompose);
-    const attack = smoother(rangeProgress(progress, 0, .13));
-    const resolve = smoother(rangeProgress(progress, .48, 1));
-    const fragmentActivity = localTime < currentTiming.intro || localTime >= currentTiming.recomposeEnd ? 0 : attack * (1 - resolve);
-    const chaos = fragmentActivity * strength;
-    const jitter = Number(inputs.fragmentJitter.value) * scale * chaos;
-    const fragmentWidthFactor = Number(inputs.fragmentWidth.value) / 100;
-    const fragmentSpread = lerp(1, fragmentWidthFactor, fragmentActivity);
-    const baseTextOpacity = Number(inputs.baseTextOpacity.value) / 100;
-    const baseTextAlpha = lerp(1, baseTextOpacity, fragmentActivity);
-    const bucket = Math.floor(localTime * Number(inputs.fragmentRate.value));
-    const blend = fragmentBlendMode();
-
-    context.save();
-    context.translate(w / 2, h / 2);
-    context.scale(fit, fit);
-    context.save();
-    context.globalAlpha = baseTextAlpha;
-    let baseCursor = -totalWidth / 2;
-    glyphs.forEach((glyph, index) => {
-      context.fillStyle = titleColorFor(glyph);
-      context.fillText(glyph, baseCursor, 0);
-      baseCursor += widths[index] + tracking;
-    });
-    context.restore();
-
-    let cursor = -totalWidth / 2;
-    let lockedCount = 0;
-    glyphs.forEach((glyph, index) => {
-      const width = widths[index];
-      const punctuation = isPunctuation(glyph);
-      const locked = chaos < .015 || /\s/.test(glyph) || punctuation || seeded(index * 37 + bucket * 3.1) < resolve;
-      if (locked) {
-        lockedCount += /\s/.test(glyph) ? 0 : 1;
-        context.fillStyle = titleColorFor(glyph);
-        context.fillText(glyph, cursor, 0);
-      } else {
-        const sourceGlyph = sourceGlyphs[Math.floor(seeded(index * 53 + bucket * 1.7) * Math.max(1, sourceGlyphs.length))] || glyph;
-        const color = palette[Math.floor(seeded(index * 19 + bucket * 2.3) * palette.length) % palette.length];
-        context.save();
-        context.globalCompositeOperation = blend.mode;
-        context.globalAlpha = (.78 + chaos * .22) * blend.alpha;
-        context.fillStyle = color;
-        const fragmentCenterX = (cursor + width / 2) * fragmentSpread;
-        context.translate(fragmentCenterX + (seeded(index * 23 + bucket) - .5) * jitter, (seeded(index * 31 - bucket) - .5) * jitter);
-        context.scale(lerp(.78, 1.22, seeded(index * 41 + bucket)), 1);
-        const sourceWidth = context.measureText(sourceGlyph).width;
-        context.fillText(sourceGlyph, -sourceWidth / 2, 0);
-        if (chaos > .3) {
-          context.globalAlpha = .18 * chaos;
-          context.fillRect(-width * .42, -fontPx * .48, width * .84, Math.max(1, fontPx * .06));
-          context.fillRect(-width * .3, fontPx * .22, width * .6, Math.max(1, fontPx * .035));
-        }
-        context.restore();
-      }
-      cursor += width + tracking;
-    });
-    context.restore();
-
-    if (target === canvas) {
-      canvas.dataset.motionPhase = localTime < currentTiming.intro ? "mono-title" : localTime < currentTiming.recomposeEnd ? "fragment-recompose" : "final-lock";
-      canvas.dataset.chaos = chaos.toFixed(4);
-      canvas.dataset.lockedGlyphs = String(lockedCount);
-      canvas.dataset.punctuationCount = String(glyphs.filter(isPunctuation).length);
-      canvas.dataset.punctuationIndependent = String(inputs.punctuationEnabled.checked);
-      canvas.dataset.punctuationColor = inputs.punctuationEnabled.checked ? inputs.punctuation.value : inputs.foreground.value;
-      canvas.dataset.fontFamily = preset.family;
-      canvas.dataset.fontWeight = String(selectedWeight);
-      canvas.dataset.fragmentBlend = blend.label;
-      canvas.dataset.fragmentWidth = inputs.fragmentWidth.value;
-      canvas.dataset.fragmentSpread = fragmentSpread.toFixed(4);
-      canvas.dataset.baseTextOpacity = inputs.baseTextOpacity.value;
-      canvas.dataset.baseTextAlpha = baseTextAlpha.toFixed(4);
+  function itemFor(slot, bucket, totalSlots, sourceGlyphs, palette, allowIcons) {
+    const seed = slot * 71 + bucket * 19;
+    const iconCount = Math.min(state.assets.length, Math.round(totalSlots * Number(controls.iconDensity.value) / 100));
+    const rank = mod(slot + bucket * 3, Math.max(1, totalSlots));
+    if (allowIcons && iconCount > 0 && rank < iconCount) {
+      const assetIndex = mod(rank + bucket, state.assets.length);
+      return { kind: "icon", asset: state.assets[assetIndex] };
     }
+    return { kind: "glyph", glyph: sourceGlyphs[Math.floor(seeded(seed + 9) * sourceGlyphs.length) % sourceGlyphs.length], color: palette[Math.floor(seeded(seed + 11) * palette.length) % palette.length] };
   }
-
-  function resizeCanvas() {
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const width = Math.max(1, canvas.clientWidth || window.innerWidth);
-    const height = Math.max(1, canvas.clientHeight || window.innerHeight);
-    if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) {
-      canvas.width = Math.round(width * dpr);
-      canvas.height = Math.round(height * dpr);
-      canvas.dataset.ratio = String(dpr);
-    }
-  }
-
-  function currentTime() { return paused ? pausedAt : (performance.now() - animationStart) / 1000; }
-  function setTime(time) {
-    pausedAt = Math.max(0, time);
-    animationStart = performance.now() - pausedAt * 1000;
-  }
-
-  function previewLoop() {
-    resizeCanvas();
-    const ratio = Number(canvas.dataset.ratio || 1);
-    const time = currentTime();
-    renderFrame(canvas, time, canvas.width / ratio, canvas.height / ratio, ratio);
-    frameCounter.textContent = `F ${String(Math.round(mod(time, timing().cycle) * fps)).padStart(4, "0")}`;
-    requestAnimationFrame(previewLoop);
-  }
-
-  function updateOutputs() {
-    const currentTiming = timing();
-    const formatSeconds = (seconds) => `${seconds < 1 ? seconds.toFixed(2) : seconds.toFixed(1)}秒`;
-    const values = {
-      fontSizeOut: inputs.fontSize.value,
-      trackingOut: `${inputs.tracking.value}px`,
-      introDurationOut: formatSeconds(currentTiming.intro),
-      recomposeDurationOut: formatSeconds(currentTiming.recompose),
-      fragmentRateOut: `${inputs.fragmentRate.value} FPS`,
-      holdDurationOut: formatSeconds(currentTiming.hold),
-      fragmentStrengthOut: `${inputs.fragmentStrength.value}%`,
-      fragmentJitterOut: `${inputs.fragmentJitter.value}px`,
-      fragmentWidthOut: `${inputs.fragmentWidth.value}%`,
-      baseTextOpacityOut: `${inputs.baseTextOpacity.value}%`
-    };
-    Object.entries(values).forEach(([id, value]) => { $(`#${id}`).textContent = value; });
-  }
-
-  Object.values(inputs).forEach((input) => input.addEventListener("input", updateOutputs));
-  paletteInputs.forEach((input) => input.addEventListener("input", updateOutputs));
-  [inputs.intro, inputs.recompose, inputs.hold].forEach((input) => input.addEventListener("input", () => setTime(0)));
-  $("#restartButton").addEventListener("click", () => setTime(0));
-  $("#pauseButton").addEventListener("click", (event) => {
-    if (paused) {
-      animationStart = performance.now() - pausedAt * 1000;
-      paused = false;
-      event.currentTarget.textContent = "暂停";
+  function drawVector(context, asset, size, time) {
+    const pulse = 1 + Math.sin(time * 4.2 + asset.rotation) * .045;
+    context.save(); context.scale(pulse, pulse); context.lineCap = "round"; context.lineJoin = "round";
+    if (asset.vectorType === "cloud") {
+      context.strokeStyle = "#f5f5f7"; context.lineWidth = Math.max(2, size * .045); context.beginPath();
+      context.moveTo(-size * .42, size * .16); context.bezierCurveTo(-size * .56, -size * .08, -size * .31, -size * .34, -size * .13, -size * .2); context.bezierCurveTo(-size * .02, -size * .48, size * .33, -size * .42, size * .34, -size * .12); context.bezierCurveTo(size * .58, -size * .2, size * .63, size * .2, size * .35, size * .22); context.lineTo(-size * .42, size * .16); context.stroke();
+    } else if (asset.vectorType === "loop") {
+      context.strokeStyle = "#f5f5f7"; context.lineWidth = Math.max(1.5, size * .025); for (let index = 0; index < 3; index += 1) { context.save(); context.rotate(time * .32 * (index % 2 ? -1 : 1) + index * .3); context.scale(1, .42); context.beginPath(); context.arc(0, 0, size * .48, 0, Math.PI * 2); context.stroke(); context.restore(); }
+    } else if (asset.vectorType === "stroke") {
+      const gradient = context.createLinearGradient(-size / 2, 0, size / 2, 0); gradient.addColorStop(0, "#31df78"); gradient.addColorStop(.48, "#ffad00"); gradient.addColorStop(1, "#1479ff"); context.strokeStyle = gradient; context.lineWidth = size * .15; context.beginPath(); context.moveTo(-size * .48, size * .12); context.bezierCurveTo(-size * .28, -size * .38, -size * .04, size * .43, size * .17, -.05 * size); context.bezierCurveTo(size * .3, -size * .34, size * .38, size * .28, size * .49, -size * .2); context.stroke();
     } else {
-      pausedAt = currentTime();
-      paused = true;
-      event.currentTarget.textContent = "继续";
+      const gradient = context.createLinearGradient(0, -size / 2, 0, size / 2); gradient.addColorStop(0, "#22e783"); gradient.addColorStop(1, "rgba(34,231,131,0)"); context.fillStyle = gradient; context.fillRect(-size * .52, -size * .21, size * 1.04, size * .42);
     }
-  });
-  $("#backButton").addEventListener("click", () => { paused = true; setTime(currentTime() - 1 / fps); $("#pauseButton").textContent = "继续"; });
-  $("#forwardButton").addEventListener("click", () => { paused = true; setTime(currentTime() + 1 / fps); $("#pauseButton").textContent = "继续"; });
-
-  function exportDimensions() {
-    const preset = $("#exportPreset").value;
-    if (preset === "current") return [Math.round(canvas.clientWidth), Math.round(canvas.clientHeight)];
-    if (preset === "custom") return [Number($("#exportWidth").value), Number($("#exportHeight").value)];
-    return preset.split("x").map(Number);
+    context.restore();
   }
-  function makeExportCanvas() {
-    const [width, height] = exportDimensions();
-    const result = document.createElement("canvas");
-    result.width = Math.max(240, Math.min(3840, width));
-    result.height = Math.max(240, Math.min(3840, height));
-    return result;
-  }
-  function downloadBlob(blob, filename) {
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.href = url;
-    link.download = filename;
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1500);
-  }
-  const exportButtons = [$("#exportPng"), $("#exportGif"), $("#exportVideo"), $("#exportVerticalVideo")];
-  function setExportBusy(busy, message) {
-    exportButtons.forEach((button) => { button.disabled = busy; });
-    exportStatus.textContent = message;
-  }
-  $("#exportPreset").addEventListener("change", (event) => { $("#customSize").hidden = event.currentTarget.value !== "custom"; });
-  $("#exportPng").addEventListener("click", () => {
-    const output = makeExportCanvas();
-    renderFrame(output, currentTime(), output.width, output.height, 1);
-    output.toBlob((blob) => {
-      if (!blob) return;
-      downloadBlob(blob, `color-recompose-${output.width}x${output.height}.png`);
-      exportStatus.textContent = `PNG 已生成 · ${output.width} × ${output.height}`;
-    }, "image/png");
-  });
-  $("#exportGif").addEventListener("click", () => {
-    if (!window.GIF) { exportStatus.textContent = "GIF 编码器未加载，请刷新后重试。"; return; }
-    const output = makeExportCanvas();
-    const gifFps = 15;
-    const duration = timing().cycle;
-    const frameTotal = Math.ceil(duration * gifFps);
-    setExportBusy(true, `正在准备 GIF · 0 / ${frameTotal} 帧`);
-    const gif = new GIF({ workers: 2, quality: 10, width: output.width, height: output.height, workerScript: "js/continuation-gif.worker.js" });
-    for (let frame = 0; frame < frameTotal; frame += 1) {
-      renderFrame(output, frame / gifFps, output.width, output.height, 1);
-      gif.addFrame(output, { copy: true, delay: 1000 / gifFps });
+  function drawSlot(context, item, x, y, fontPx, alpha, rotation, scale, time) {
+    if (alpha <= .002) return;
+    context.save(); context.globalAlpha = alpha; context.translate(x, y); context.rotate(rotation); context.scale(scale, scale);
+    if (item.kind === "glyph") { context.fillStyle = item.color; context.textAlign = "center"; context.textBaseline = "middle"; context.fillText(item.glyph, 0, 0); }
+    else {
+      const asset = item.asset, promise = imageCache.get(asset.url), image = promise?.image;
+      const base = fontPx * Number(controls.iconSize.value) / 100 * (asset.size || 100) / 100; context.globalAlpha *= (asset.opacity || 100) / 100; context.translate((asset.x || 0) + Number(controls.iconGap.value), (asset.y || 0) + Number(controls.iconY.value)); context.rotate((asset.rotation || 0) * Math.PI / 180 + time * Number(controls.iconSpin.value) * (asset.spin ?? 1) * Math.PI * 2);
+      if (asset.kind === "vector") drawVector(context, asset, base, time);
+      else if (image) { const ratio = image.naturalWidth && image.naturalHeight ? image.naturalWidth / image.naturalHeight : 1, dw = ratio >= 1 ? base : base * ratio, dh = ratio >= 1 ? base / ratio : base; context.drawImage(image, -dw / 2, -dh / 2, dw, dh); }
     }
-    gif.on("progress", (progress) => { exportStatus.textContent = `正在编码 GIF · ${Math.round(progress * 100)}%`; });
-    gif.on("finished", (blob) => { downloadBlob(blob, `color-recompose-${output.width}x${output.height}.gif`); setExportBusy(false, "GIF 已生成"); });
-    gif.render();
-  });
-  function supportedVideoType() {
-    const candidates = [
-      "video/mp4;codecs=h264", "video/mp4;codecs=avc1.42E01E", "video/mp4",
-      "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"
-    ];
-    return candidates.find((type) => MediaRecorder.isTypeSupported(type)) || "";
+    context.restore();
   }
-  async function exportWebMFrames(output, duration) {
-    if (typeof window.WebMWriter !== "function") throw new Error("逐帧视频编码器未加载");
-    const writer = new WebMWriter({ quality: .94, frameRate: fps });
-    const frameCount = Math.max(1, Math.ceil(duration * fps));
-    for (let frame = 0; frame < frameCount; frame += 1) {
-      renderFrame(output, frame / fps, output.width, output.height, 1);
-      writer.addFrame(output);
-      if (frame % 2 === 0) {
-        exportStatus.textContent = `正在逐帧生成 ${output.width} × ${output.height} 高清视频 · ${Math.round((frame + 1) / frameCount * 100)}%`;
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      }
-    }
-    exportStatus.textContent = "正在封装视频文件…";
-    const blob = await writer.complete();
-    if (!blob || !blob.size) throw new Error("视频文件为空");
-    downloadBlob(blob, `color-recompose-${output.width}x${output.height}-hd.webm`);
-    return { extension: "WEBM", size: blob.size };
-  }
-  async function exportVideo(verticalHD = false) {
-    const output = verticalHD ? document.createElement("canvas") : makeExportCanvas();
-    if (verticalHD) { output.width = 1080; output.height = 1920; }
-    const duration = timing().cycle;
-    if (!output.captureStream || typeof MediaRecorder === "undefined") {
-      setExportBusy(true, `正在逐帧生成 ${output.width} × ${output.height} 高清视频 · 0%`);
-      try {
-        const result = await exportWebMFrames(output, duration);
-        setExportBusy(false, `${result.extension} 视频已生成 · ${output.width} × ${output.height} · ${(result.size / 1024 / 1024).toFixed(1)} MB`);
-      } catch (error) {
-        console.error(error);
-        setExportBusy(false, `视频导出失败：${error.message || "编码器异常"}`);
-      }
-      return;
-    }
-    const stream = output.captureStream(fps);
-    const mimeType = supportedVideoType();
-    let recorder;
-    try {
-      recorder = new MediaRecorder(stream, mimeType ? { mimeType, videoBitsPerSecond: verticalHD ? 20_000_000 : 12_000_000 } : undefined);
-    } catch (error) {
-      stream.getTracks().forEach((track) => track.stop());
-      setExportBusy(true, `正在逐帧生成 ${output.width} × ${output.height} 高清视频 · 0%`);
-      try {
-        const result = await exportWebMFrames(output, duration);
-        setExportBusy(false, `${result.extension} 视频已生成 · ${output.width} × ${output.height} · ${(result.size / 1024 / 1024).toFixed(1)} MB`);
-      } catch (fallbackError) {
-        console.error(fallbackError);
-        setExportBusy(false, `视频导出失败：${fallbackError.message || "编码器异常"}`);
-      }
-      return;
-    }
-    const chunks = [];
-    recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
-    const finished = new Promise((resolve, reject) => {
-      recorder.onerror = (event) => reject(event.error || new Error("视频编码失败"));
-      recorder.onstop = () => {
-        const type = recorder.mimeType || mimeType || "video/webm";
-        const extension = type.includes("mp4") ? "mp4" : "webm";
-        const blob = new Blob(chunks, { type });
-        if (!blob.size) { reject(new Error("视频文件为空")); return; }
-        downloadBlob(blob, `color-recompose-${output.width}x${output.height}-hd.${extension}`);
-        resolve({ extension: extension.toUpperCase(), size: blob.size });
-      };
+  function renderFrame(target, rawTime, width, height, ratio = 1) {
+    const context = target.getContext("2d"); context.setTransform(ratio, 0, 0, ratio, 0, 0); context.clearRect(0, 0, width, height); context.fillStyle = controls.backgroundColor.value; context.fillRect(0, 0, width, height); if (state.backgroundElement) drawCover(context, state.backgroundElement, width, height);
+    const timing = timings(), time = mod(rawTime, timing.cycle), glyphs = split(controls.titleText.value || "Creator Studio"), sourceGlyphs = split(controls.sourceText.value || controls.titleText.value || "COLOR").filter((g) => !/\s/.test(g)), palette = paletteInputs.map((input) => input.value), layout = measureLayout(context, glyphs, width, height), centerX = width * Number(controls.textX.value) / 100, centerY = height * Number(controls.textY.value) / 100;
+    let phase = "intro", resolveProgress = 0; if (time >= timing.intro && time < timing.activeEnd) phase = "active"; else if (time >= timing.activeEnd && time < timing.resolveEnd) { phase = "resolve"; resolveProgress = smooth((time - timing.activeEnd) / Math.max(.001, timing.resolve)); } else if (time >= timing.resolveEnd) phase = "hold";
+    const shrink = 1 - Number(controls.shrinkAmount.value) / 100 * (phase === "resolve" ? resolveProgress : phase === "hold" ? 1 : 0);
+    context.save(); context.translate(centerX, centerY); context.scale(layout.fit * shrink, layout.fit * shrink);
+    let cursor = controls.textAlign.value === "left" ? -width * .37 / layout.fit : controls.textAlign.value === "right" ? width * .37 / layout.fit - layout.natural : -layout.natural / 2;
+    const colorRate = Number(controls.fragmentRate.value), iconRate = Number(controls.iconSwitchRate.value), rate = controls.effectMode.value === "icons" ? Math.max(colorRate, iconRate) : colorRate, activeClock = Math.max(0, time - timing.intro), bucketFloat = activeClock * rate, bucket = Math.floor(bucketFloat), blend = smooth(bucketFloat - bucket);
+    glyphs.forEach((glyph, index) => {
+      const w = layout.widths[index], x = cursor + w / 2; if (/\s/.test(glyph)) { cursor += w + layout.tracking; return; }
+      if (phase === "active") {
+        const allowIcons = controls.effectMode.value === "icons" && !punctuation(glyph), oldItem = itemFor(index, bucket, glyphs.length, sourceGlyphs, palette, allowIcons), newItem = itemFor(index, bucket + 1, glyphs.length, sourceGlyphs, palette, allowIcons), maxRot = Number(controls.letterRotation.value) * Math.PI / 180, spin = Number(controls.rotationSpeed.value), oldRot = (seeded(index * 13 + bucket) - .5) * maxRot + activeClock * spin * .12, newRot = (seeded(index * 13 + bucket + 1) - .5) * maxRot + activeClock * spin * .12, strength = Number(controls.fragmentStrength.value) / 100;
+        if (oldItem.kind === "icon" || newItem.kind === "icon") {
+          if (blend < .5) drawSlot(context, oldItem, x, 0, layout.basePx, (1 - blend * 2) * strength, oldRot, 1 - .18 * blend * 2, activeClock);
+          else drawSlot(context, newItem, x, 0, layout.basePx, (blend * 2 - 1) * strength, newRot, .82 + .18 * (blend * 2 - 1), activeClock);
+        } else {
+          drawSlot(context, oldItem, x, 0, layout.basePx, (1 - blend) * strength, oldRot, 1 - .12 * blend, activeClock); drawSlot(context, newItem, x, 0, layout.basePx, blend * strength, newRot, .88 + .12 * blend, activeClock);
+        }
+      } else if (phase === "resolve") {
+        const lastItem = itemFor(index, Math.floor(timing.active * rate), glyphs.length, sourceGlyphs, palette, controls.effectMode.value === "icons" && !punctuation(glyph)), stagger = clamp(resolveProgress * 1.22 - index / Math.max(1, glyphs.length) * .22);
+        drawSlot(context, lastItem, x, 0, layout.basePx, 1 - stagger, (1 - stagger) * .16, 1 - .08 * stagger, activeClock); context.globalAlpha = stagger; context.fillStyle = lastItem.kind === "glyph" ? mixColor(lastItem.color, finalColor(glyph), stagger) : finalColor(glyph); context.textAlign = "center"; context.textBaseline = "middle"; context.fillText(glyph, x, 0); context.globalAlpha = 1;
+      } else { context.fillStyle = finalColor(glyph); context.textAlign = "center"; context.textBaseline = "middle"; context.fillText(glyph, x, 0); }
+      cursor += w + layout.tracking;
     });
-    setExportBusy(true, `正在录制 ${output.width} × ${output.height} 高清视频 · 0%`);
-    recorder.start(250);
-    const start = performance.now();
-    try {
-      await new Promise((resolve) => {
-        const step = (now) => {
-          const elapsed = Math.min(duration, (now - start) / 1000);
-          renderFrame(output, elapsed, output.width, output.height, 1);
-          exportStatus.textContent = `正在录制 ${output.width} × ${output.height} 高清视频 · ${Math.min(100, Math.round(elapsed / duration * 100))}%`;
-          if (elapsed < duration) requestAnimationFrame(step); else resolve();
-        };
-        requestAnimationFrame(step);
-      });
-      recorder.stop();
-      const result = await finished;
-      setExportBusy(false, `${result.extension} 视频已生成 · ${output.width} × ${output.height} · ${(result.size / 1024 / 1024).toFixed(1)} MB`);
-    } catch (error) {
-      console.error(error);
-      if (recorder.state !== "inactive") recorder.stop();
-      setExportBusy(false, `视频导出失败：${error.message || "编码器异常"}`);
-    } finally {
-      stream.getTracks().forEach((track) => track.stop());
-    }
+    context.restore(); if (target === canvas) { canvas.dataset.motionPhase = phase; canvas.dataset.effectMode = controls.effectMode.value; $("timelinePlayhead").style.left = `${time / timing.cycle * 100}%`; const activeIndex = phase === "intro" ? 0 : phase === "active" ? 1 : phase === "resolve" ? 2 : 3; document.querySelectorAll(".me-choreo-block[data-beat]").forEach((block) => block.classList.toggle("is-active", Number(block.dataset.beat) === activeIndex)); }
   }
-  $("#exportVideo").addEventListener("click", () => exportVideo(false));
-  $("#exportVerticalVideo").addEventListener("click", () => exportVideo(true));
 
-  document.fonts.ready.then(() => setTime(0));
-  updateOutputs();
-  previewLoop();
+  function resizeCanvas() { const ratio = Math.min(2, window.devicePixelRatio || 1), width = canvas.clientWidth || innerWidth, height = canvas.clientHeight || innerHeight; if (canvas.width !== Math.round(width * ratio) || canvas.height !== Math.round(height * ratio)) { canvas.width = Math.round(width * ratio); canvas.height = Math.round(height * ratio); canvas.dataset.ratio = ratio; } }
+  function loop() { resizeCanvas(); const ratio = Number(canvas.dataset.ratio || 1), time = currentTime(); renderFrame(canvas, time, canvas.width / ratio, canvas.height / ratio, ratio); $("frameCounter").textContent = `F ${String(Math.round(mod(time, timings().cycle) * FPS)).padStart(4, "0")}`; requestAnimationFrame(loop); }
+  const readouts = { speed: (v) => `${Number(v).toFixed(2)}×`, introDuration: (v) => `${(v / 1000).toFixed(2)}秒`, recomposeDuration: (v) => `${(v / 1000).toFixed(2)}秒`, resolveDuration: (v) => `${(v / 1000).toFixed(2)}秒`, holdDuration: (v) => `${(v / 1000).toFixed(2)}秒`, fragmentRate: (v) => `${v} 次/秒`, letterRotation: (v) => `${v}°`, rotationSpeed: (v) => `${Number(v).toFixed(2)}×`, shrinkAmount: (v) => `${v}%`, fragmentStrength: (v) => `${v}%`, fontSize: (v) => `${v}px`, tracking: (v) => `${v}px`, textX: (v) => `${v}%`, textY: (v) => `${v}%`, iconDensity: (v) => `${v}%`, iconSize: (v) => `${v}%`, iconSwitchRate: (v) => `${v} 次/秒`, iconSpin: (v) => `${Number(v).toFixed(2)}圈/秒`, iconGap: (v) => `${v}px`, iconY: (v) => `${v}px` };
+  function updateOutputs() { Object.entries(readouts).forEach(([id, format]) => { const output = $(`${id}Out`); if (output) output.textContent = format(Number(controls[id].value)); }); $("cycleDurationOut").textContent = `${timings().cycle.toFixed(2)} 秒`; $("iconMotionControls").hidden = controls.effectMode.value !== "icons"; renderTimeline(); scheduleSave(); }
+  function renderTimeline() {
+    const t = timings(), phases = [["原色开场", t.intro, "intro"], [controls.effectMode.value === "icons" ? "彩字＋图标轮转" : "纯彩字轮转", t.active, "color"], ["恢复原色并收缩", t.resolve, "replace"], ["定稿停留", t.hold, "hold"]], bar = $("crChoreoBar"); bar.querySelectorAll("button").forEach((item) => item.remove()); $("crChoreoLegend").replaceChildren(); let elapsed = 0;
+    phases.forEach(([name, duration, kind], index) => { const start = elapsed, button = document.createElement("button"); button.type = "button"; button.className = `me-choreo-block is-${kind}`; button.dataset.beat = index; button.style.flex = `${Math.max(.12, duration / t.cycle)} 0 0`; button.innerHTML = `<em>${index + 1}</em><strong>${name}</strong><small>${duration.toFixed(2)}秒</small>`; button.addEventListener("click", () => seek(start, true)); bar.insertBefore(button, $("timelinePlayhead")); const row = document.createElement("li"); row.innerHTML = `<i class="is-${kind}"></i><b>${index + 1}. ${name}</b><span>${start.toFixed(2)}s → ${(start + duration).toFixed(2)}s</span>`; row.addEventListener("click", () => seek(start, true)); $("crChoreoLegend").append(row); elapsed += duration; });
+  }
+  function renderLibrary(rootId, items) { const root = $(rootId); root.replaceChildren(); items.forEach((item) => { const button = document.createElement("button"); button.type = "button"; button.className = `me-asset-choice${state.selectedLibraryId === item.id ? " is-selected" : ""}`; button.innerHTML = `<img src="${item.url}" alt=""><span>${item.name}</span>`; button.addEventListener("click", () => { state.selectedLibraryId = item.id; $("librarySelectionName").textContent = `已选择：${item.name}`; renderLibraries(); }); root.append(button); }); }
+  function renderLibraries() { renderLibrary("flowLibrary", libraries.flow); renderLibrary("collisionLibrary", libraries.collision); renderLibrary("constructLibrary", libraries.construct); renderLibrary("animalLibrary", libraries.animal); renderLibrary("botLibrary", libraries.bot); }
+  function moveSelectedAsset(assetId, direction) { const from = state.assets.findIndex((asset) => asset.id === assetId), to = clamp(from + direction, 0, state.assets.length - 1); if (from < 0 || from === to) return; const [moved] = state.assets.splice(from, 1); state.assets.splice(to, 0, moved); renderSelectedAssets(); scheduleSave(); }
+  function renderSelectedAssets() {
+    $("selectedAssetCount").textContent = state.assets.length; const root = $("crLayerItems"); root.replaceChildren();
+    state.assets.forEach((asset, index) => { const row = document.createElement("article"); row.className = "me-layer-item"; row.draggable = true; row.tabIndex = 0; row.setAttribute("aria-label", `${asset.name}，第 ${index + 1} 个轮转；Alt 加上下方向键可调整顺序`); row.innerHTML = `<span class="me-layer-grip">⋮⋮</span><img src="${asset.url}" alt=""><span class="me-layer-name"><b>${asset.name}</b><small>第 ${index + 1} 个轮转 · ${asset.size}%</small></span><button type="button" data-edit>单独编辑</button><button type="button" data-remove aria-label="删除">×</button>`; row.addEventListener("keydown", (event) => { if (!event.altKey || !["ArrowUp", "ArrowDown"].includes(event.key)) return; event.preventDefault(); moveSelectedAsset(asset.id, event.key === "ArrowUp" ? -1 : 1); }); row.addEventListener("dragstart", () => { state.dragId = asset.id; }); row.addEventListener("dragover", (e) => e.preventDefault()); row.addEventListener("drop", (e) => { e.preventDefault(); const from = state.assets.findIndex((a) => a.id === state.dragId), to = state.assets.findIndex((a) => a.id === asset.id); if (from >= 0 && to >= 0 && from !== to) { const [moved] = state.assets.splice(from, 1); state.assets.splice(to, 0, moved); renderSelectedAssets(); scheduleSave(); } }); row.querySelector("[data-edit]").addEventListener("click", () => openAsset(asset.id)); row.querySelector("[data-remove]").addEventListener("click", () => { state.assets = state.assets.filter((a) => a.id !== asset.id); if (state.activeAssetId === asset.id) closeAsset(); renderSelectedAssets(); scheduleSave(); }); root.append(row); });
+  }
+  function openAsset(id) { state.activeAssetId = id; const asset = activeAsset(); if (!asset) return; $("crAssetDrawer").hidden = false; $("assetEditorPreview").innerHTML = `<img src="${asset.url}" alt="${asset.name}"><b>${asset.name}</b>`; [["assetSize", "size"], ["assetOpacity", "opacity"], ["assetOffsetX", "x"], ["assetOffsetY", "y"], ["assetRotation", "rotation"], ["assetSpin", "spin"]].forEach(([inputId, key]) => { $(inputId).value = asset[key]; }); updateAssetOutputs(); }
+  function closeAsset() { state.activeAssetId = null; $("crAssetDrawer").hidden = true; }
+  function updateAssetOutputs() { const asset = activeAsset(); if (!asset) return; const values = { assetSizeOut: `${asset.size}%`, assetOpacityOut: `${asset.opacity}%`, assetOffsetXOut: `${asset.x}px`, assetOffsetYOut: `${asset.y}px`, assetRotationOut: `${asset.rotation}°`, assetSpinOut: `${Number(asset.spin).toFixed(2)}×` }; Object.entries(values).forEach(([id, value]) => { $(id).textContent = value; }); }
+
+  function collectScheme() { return { version: 4, controls: Object.fromEntries(controlIds.map((id) => [id, controls[id].type === "checkbox" ? controls[id].checked : controls[id].value])), palette: paletteInputs.map((input) => input.value), assets: state.assets, background: state.background }; }
+  function applyScheme(scheme, status) { if (!scheme?.controls) return; Object.entries(scheme.controls).forEach(([id, value]) => { if (!controls[id]) return; if (controls[id].type === "checkbox") controls[id].checked = Boolean(value); else controls[id].value = value; }); (scheme.palette || []).forEach((value, index) => { if (paletteInputs[index]) paletteInputs[index].value = value; }); const seen = new Set(); state.assets = (Array.isArray(scheme.assets) ? scheme.assets : []).filter((asset) => { const key = asset.libraryId || asset.url || asset.name; if (seen.has(key)) return false; seen.add(key); return true; }); state.background = scheme.background || null; applyBackground(); hydrateImages(); renderSelectedAssets(); updateOutputs(); restart(); if (status) $("schemeStatus").textContent = status; }
+  function scheduleSave() { clearTimeout(state.autosaveTimer); state.autosaveTimer = setTimeout(() => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(collectScheme())); $("schemeStatus").textContent = "已自动保存当前彩组方案。"; } catch (_) { $("schemeStatus").textContent = "方案包含较大素材，请使用“保存方案”下载。"; } }, 300); }
+  function download(blob, name) { const url = URL.createObjectURL(blob), link = document.createElement("a"); link.href = url; link.download = name; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1500); }
+  function fileData(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); }); }
+  function applyBackground() { state.backgroundElement = null; if (!state.background?.dataUrl) return; if ((state.background.type || "").startsWith("video/")) { const video = document.createElement("video"); video.src = state.background.dataUrl; video.loop = true; video.muted = true; video.playsInline = true; video.play().catch(() => {}); state.backgroundElement = video; } else { const image = new Image(); image.src = state.background.dataUrl; state.backgroundElement = image; } }
+  function exportSize() { const preset = $("exportPreset").value; if (preset === "current") return [Math.round(canvas.clientWidth), Math.round(canvas.clientHeight)]; if (preset === "custom") return [Number($("exportWidth").value), Number($("exportHeight").value)]; return preset.split("x").map(Number); }
+  function exportSeconds() { const value = $("exportDuration").value; return value === "cycle" ? timings().cycle : value === "custom" ? Number($("customDuration").value) : Number(value); }
+  function exportCanvas() { const [w, h] = exportSize(), output = document.createElement("canvas"); output.width = clamp(w, 240, 3840); output.height = clamp(h, 240, 3840); return output; }
+  function busy(value, message) { [$("exportPng"), $("exportGif"), $("exportVideo")].forEach((button) => button.disabled = value); $("exportStatus").textContent = message; }
+  async function preloadAssets() { await Promise.all(state.assets.map((asset) => loadImage(asset.url).catch(() => null))); }
+
+  Object.values(controls).forEach((input) => { input.addEventListener("input", updateOutputs); input.addEventListener("change", updateOutputs); }); paletteInputs.forEach((input) => input.addEventListener("input", updateOutputs));
+  [["restartButton", restart], ["stageReplayButton", restart]].forEach(([id, handler]) => $(id).addEventListener("click", handler)); ["pauseButton", "stagePauseButton"].forEach((id) => $(id).addEventListener("click", () => setPlaying(!state.playing)));
+  $("backButton").addEventListener("click", () => seek(currentTime() - 1 / FPS, true)); $("forwardButton").addEventListener("click", () => seek(currentTime() + 1 / FPS, true));
+  function setAssetManager(open) { $("crLayerItems").hidden = !open; $("crLayerPanel").classList.toggle("is-list-expanded", open); $("crLayerToggle").textContent = open ? "收起已选" : "展开已选"; }
+  $("crLayerToggle").addEventListener("click", () => setAssetManager($("crLayerItems").hidden));
+  $("addSelectedAsset").addEventListener("click", () => { const item = allLibrary.find((entry) => entry.id === state.selectedLibraryId); if (!item) return; if (state.assets.some((asset) => asset.libraryId === item.id)) { $("librarySelectionName").textContent = `已在轮转中：${item.name}`; return; } state.assets.push(defaultAsset(item, state.assets.length)); hydrateImages(); renderSelectedAssets(); scheduleSave(); $("librarySelectionName").textContent = `已添加：${item.name}`; });
+  $("assetUpload").addEventListener("change", async (event) => { const files = [...event.target.files]; event.target.value = ""; for (const file of files) { if (state.assets.some((asset) => asset.name === file.name)) continue; const url = await fileData(file); state.assets.push(defaultAsset({ id: `upload-${Date.now()}`, name: file.name, url, type: file.type }, state.assets.length)); } hydrateImages(); renderSelectedAssets(); scheduleSave(); });
+  $("backgroundUpload").addEventListener("change", async (event) => { const file = event.target.files[0]; event.target.value = ""; if (!file) return; state.background = { name: file.name, type: file.type, dataUrl: await fileData(file) }; applyBackground(); scheduleSave(); }); $("clearBackground").addEventListener("click", () => { state.background = null; applyBackground(); scheduleSave(); });
+  $("closeAssetDrawer").addEventListener("click", closeAsset); document.addEventListener("keydown", (event) => { if (event.key !== "Escape") return; if (!$("crAssetDrawer").hidden) closeAsset(); else if (!$("crLayerItems").hidden) setAssetManager(false); });
+  [["assetSize", "size"], ["assetOpacity", "opacity"], ["assetOffsetX", "x"], ["assetOffsetY", "y"], ["assetRotation", "rotation"], ["assetSpin", "spin"]].forEach(([id, key]) => $(id).addEventListener("input", () => { const asset = activeAsset(); if (!asset) return; asset[key] = Number($(id).value); updateAssetOutputs(); renderSelectedAssets(); scheduleSave(); }));
+  $("saveScheme").addEventListener("click", () => { const scheme = collectScheme(); localStorage.setItem(STORAGE_KEY, JSON.stringify(scheme)); download(new Blob([JSON.stringify(scheme, null, 2)], { type: "application/json" }), "color-recompose-scheme.json"); $("schemeStatus").textContent = "方案已保存并下载 JSON。"; });
+  $("importScheme").addEventListener("change", async (event) => { const file = event.target.files[0]; event.target.value = ""; if (!file) return; try { applyScheme(JSON.parse(await file.text()), "方案已导入。" ); } catch (error) { $("schemeStatus").textContent = `导入失败：${error.message}`; } });
+  $("resetScheme").addEventListener("click", () => { localStorage.removeItem(STORAGE_KEY); resetAssets(); applyScheme(defaultScheme(), "已恢复默认示例。" ); });
+  $("clearRedo").addEventListener("click", () => { const blank = defaultScheme(); blank.assets = []; blank.controls.titleText = "Creator Studio"; applyScheme(blank, "已清理素材，可重新编辑。" ); });
+  $("exportPreset").addEventListener("change", () => { $("customSize").hidden = $("exportPreset").value !== "custom"; }); $("exportDuration").addEventListener("change", () => { $("customDurationWrap").hidden = $("exportDuration").value !== "custom"; });
+  $("exportPng").addEventListener("click", async () => { busy(true, "正在准备 PNG…"); await preloadAssets(); const output = exportCanvas(); renderFrame(output, currentTime(), output.width, output.height, 1); output.toBlob((blob) => { if (blob) download(blob, `color-recompose-${output.width}x${output.height}.png`); busy(false, blob ? "PNG 已生成" : "PNG 生成失败"); }, "image/png"); });
+  $("exportGif").addEventListener("click", async () => { if (!window.GIF) { $("exportStatus").textContent = "GIF 编码器未加载。"; return; } busy(true, "正在准备 GIF…"); await preloadAssets(); const output = exportCanvas(), fps = Math.min(30, Number($("exportFps").value)), seconds = exportSeconds(), total = Math.ceil(seconds * fps), gif = new GIF({ workers: 2, quality: 10, width: output.width, height: output.height, workerScript: "js/continuation-gif.worker.js" }); for (let i = 0; i < total; i++) { renderFrame(output, i / fps, output.width, output.height, 1); gif.addFrame(output, { copy: true, delay: 1000 / fps }); } gif.on("progress", (p) => $("exportStatus").textContent = `正在编码 GIF · ${Math.round(p * 100)}%`); gif.on("finished", (blob) => { download(blob, `color-recompose-${output.width}x${output.height}.gif`); busy(false, "GIF 已生成"); }); gif.render(); });
+  $("exportVideo").addEventListener("click", async () => { const output = exportCanvas(), fps = Number($("exportFps").value), seconds = exportSeconds(); if (!output.captureStream || !window.MediaRecorder) { $("exportStatus").textContent = "当前浏览器不支持视频编码。"; return; } busy(true, "正在录制视频…"); await preloadAssets(); const stream = output.captureStream(fps), type = ["video/mp4;codecs=h264", "video/webm;codecs=vp9", "video/webm"].find((item) => MediaRecorder.isTypeSupported(item)) || "", recorder = new MediaRecorder(stream, type ? { mimeType: type, videoBitsPerSecond: 14000000 } : undefined), chunks = []; recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); }; recorder.onstop = () => { const mime = recorder.mimeType || type || "video/webm", ext = mime.includes("mp4") ? "mp4" : "webm"; download(new Blob(chunks, { type: mime }), `color-recompose-${output.width}x${output.height}.${ext}`); stream.getTracks().forEach((track) => track.stop()); busy(false, "视频已生成"); }; recorder.start(); const started = performance.now(); await new Promise((resolve) => { const frame = (now) => { const elapsed = Math.min(seconds, (now - started) / 1000); renderFrame(output, elapsed, output.width, output.height, 1); $("exportStatus").textContent = `正在录制视频 · ${Math.round(elapsed / seconds * 100)}%`; if (elapsed < seconds) requestAnimationFrame(frame); else resolve(); }; requestAnimationFrame(frame); }); recorder.stop(); });
+  function defaultScheme() { const snapshot = collectScheme(); snapshot.controls.effectMode = "icons"; snapshot.controls.titleText = "Creator Studio"; snapshot.controls.sourceText = "MOTION\nVISION\nCREATE"; snapshot.assets = state.assets; return snapshot; }
+  resetAssets(); renderLibraries(); renderSelectedAssets(); hydrateImages(); let stored = null; try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch (_) {} if (stored?.version >= 4) applyScheme(stored, "已恢复上次自动保存的方案。" ); else applyScheme(defaultScheme(), "已载入彩字＋图标默认示例；可切换为纯彩字。" ); document.fonts?.ready.then(restart); updateOutputs(); loop();
 })();

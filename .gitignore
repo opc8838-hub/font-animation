@@ -4,3 +4,11 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
+# Local reference-video analysis and browser/export scratch data
+.codex-watch-*/
+.codex-*-analysis/
+.codex-*-detail/
+.codex-*-hd/
+.playwright-cli/
+output/
+

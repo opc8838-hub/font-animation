@@ -12,9 +12,10 @@ Create the effect-specific motion while reusing the site's established editing a
 1. For any editor UI or interaction work, read [references/editor-interaction-contract.md](references/editor-interaction-contract.md). It defines observable compatibility with Icon Burst; matching only colors or card shapes does not satisfy it.
 2. Read [references/editor-baseline.md](references/editor-baseline.md) before creating or substantially upgrading an effect page.
 3. Read [references/reuse-map.md](references/reuse-map.md) to choose the closest existing implementation instead of rebuilding common systems.
-4. Preserve the user's unrelated work and commit only the effect or shared baseline files placed in scope.
+4. When the user supplies a reference video, read [references/video-analysis-workflow.md](references/video-analysis-workflow.md) before implementing motion. It defines the Watch + FFmpeg evidence workflow and the boundary for optional Oil Motion use.
+5. Preserve the user's unrelated work and commit only the effect or shared baseline files placed in scope.
 
-If the task includes a reference video, use the available video-analysis workflow to inspect both normal-speed rhythm and slowed detail before choosing motion phases. Treat the user's video as visual evidence, not as permission to copy unrelated scene framing.
+If the task includes a reference video, use the available video-analysis workflow to inspect both normal-speed rhythm and slowed detail before choosing motion phases. Treat the user's video as visual evidence, not as permission to copy unrelated scene framing. Do not invoke `oil-motion` by default: ordinary kinetic typography, path following, color, icon, layout, Canvas, SVG, CSS, or GSAP work should stay in this skill unless the decision boundary in the video-analysis reference is actually met.
 
 ## Working rules
 

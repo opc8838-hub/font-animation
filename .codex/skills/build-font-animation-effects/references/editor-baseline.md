@@ -22,6 +22,14 @@ Use the current shared sources from `site/iconburst.js`:
 - `botSeriesImages`: animated Bot GIFs under `site/assets/bot-series/`.
 - Built-in rainbow ring where a simple graphic insert is useful.
 
+Also expose these reusable motion assets when an effect benefits from animated inserts:
+
+- Collision hand: `site/crash_resources/images/0.gif`.
+- Collision sky: `site/crash_resources/images/1.gif`.
+- Construct-style vector motion: cloud outline, orbit loops, multicolor thick stroke, and gradient bar. Port the drawing behavior from `site/construct/g_cloud.js`, `site/construct/g_scribble.js`, `site/construct/g_zigzag.js`, and `site/construct/g_gradient.js` into the consuming deterministic Canvas renderer; do not rasterize screenshots of these shapes.
+
+Built-in candidates have stable `libraryId` values. Unless the effect explicitly calls for clones, reject duplicate selected `libraryId` values and schedule visible icons without replacement so the same icon does not appear multiple times in one frame. Do not create several independently moving copies merely to make an effect look busier.
+
 Do not reintroduce the removed square, triangle, heart, circle, or star choices into Icon Burst.
 
 For icon-rich effects, support:

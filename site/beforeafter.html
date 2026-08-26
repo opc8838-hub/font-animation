@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;f[]=general-sans@400,500,600&amp;display=swap">
   <link rel="stylesheet" href="continuation.css?v=20260824-ba1">
   <link rel="stylesheet" href="currentwall.css?v=20260824-ba1">
-  <link rel="stylesheet" href="beforeafter.css?v=20260824-slider7">
+  <link rel="stylesheet" href="beforeafter.css?v=20260825-hold1">
   <link rel="stylesheet" href="me-motion-editor.css?v=20260824-ba1">
   <link rel="stylesheet" href="stg-cn.css?v=20260824-ba1">
 </head>
@@ -229,6 +229,33 @@
         <p class="hint">播放和导出会按起点、终点与时间自动滑动；进入该阶段后，也可直接在画面上左右拖动。</p>
       </section>
 
+      <section class="ba-block ba-tv-off-section">
+        <div class="section-heading">
+          <p class="section-label">结尾熄屏</p>
+          <small class="section-note">电视关机式收束</small>
+        </div>
+        <label class="ba-check"><input id="tvOffEnabled" type="checkbox" checked><span>结束时添加熄屏效果</span></label>
+        <div class="controls-grid ba-dense">
+          <label>熄屏配色
+            <select id="tvOffTheme"><option value="dark" selected>黑底白线</option><option value="light">白底黑线</option><option value="custom">自定义</option></select>
+          </label>
+          <label>熄屏时间 <output id="tvOffDurationOut">0.55秒</output>
+            <input id="tvOffDuration" type="range" min="180" max="1600" step="20" value="550">
+          </label>
+          <label>熄屏后停留 <output id="tvOffHoldOut">0.40秒</output>
+            <input id="tvOffHold" type="range" min="0" max="3000" step="50" value="400">
+          </label>
+          <label>亮线强度 <output id="tvOffGlowOut">72%</output>
+            <input id="tvOffGlow" type="range" min="0" max="100" step="1" value="72">
+          </label>
+        </div>
+        <div class="color-row ba-slider-colors ba-tv-color-fields">
+          <label>熄屏底色<input id="tvOffBgColor" type="color" value="#000000"></label>
+          <label>熄屏亮线<input id="tvOffColor" type="color" value="#ffffff"></label>
+        </div>
+        <p class="hint">画面先压成一条亮线，再缩成亮点并完全熄灭；预览、GIF 与视频使用同一收尾。</p>
+      </section>
+
       <section class="motion-quick">
         <div class="section-heading"><p class="section-label">动效时间轴</p><small class="section-note">点一段可跳到该阶段</small></div>
         <div class="me-choreo-track" id="beforeAfterTimeline" aria-label="图片对比动效时间轴">
@@ -250,10 +277,17 @@
           <label>成片停留 <small class="stage-tag">切完</small><output id="resultHoldOut">1.60秒</output>
             <input id="resultHold" type="range" min="400" max="5000" step="50" value="1600">
           </label>
-          <label>全局速度 <small class="stage-tag">整段</small><output id="speedOut">1.00×</output>
-            <input id="speed" type="range" min="40" max="200" step="5" value="100">
+          <label>整段速度 <small class="stage-tag">预览与导出</small><output id="speedOut">1.00×</output>
+            <input id="speed" type="range" min="25" max="400" step="5" value="100">
+          </label>
+          <label>画面弹出 <small class="stage-tag">第一、第二阶段</small><output id="stagePopDurationOut">0.28秒</output>
+            <input id="stagePopDuration" type="range" min="120" max="900" step="20" value="280">
+          </label>
+          <label>弹出幅度 <small class="stage-tag">轻微过冲</small><output id="stagePopStrengthOut">6%</output>
+            <input id="stagePopStrength" type="range" min="0" max="18" step="1" value="6">
           </label>
         </div>
+        <div class="ba-speed-presets" aria-label="整段速度快捷选择"><button type="button" data-speed-value="50">0.5×</button><button type="button" data-speed-value="100">1×</button><button type="button" data-speed-value="150">1.5×</button><button type="button" data-speed-value="200">2×</button></div>
       </section>
 
       <section class="advanced-controls">
@@ -318,7 +352,7 @@
 
   <script src="js/continuation-gif.js"></script>
   <script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="beforeafter.js?v=20260824-slider8"></script>
+  <script src="beforeafter.js?v=20260825-latest1"></script>
   <script src="me-motion-editor.js?v=20260824-ba1"></script>
   <script src="stg-cn.js?v=20260824-ba1"></script>
 </body>
