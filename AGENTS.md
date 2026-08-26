@@ -8,6 +8,7 @@ These rules apply to the whole repository and are intended for both human contri
 2. Inspect the video with `ffprobe` and FFmpeg-assisted frame extraction before writing animation code. Do not conclude FFmpeg is unavailable only because it is missing from `PATH`; check bundled workspace runtimes and known dependency directories first.
 3. Record the observed phases, timestamps, geometry, easing, visibility changes, and uncertain details in a short analysis note. Use [`docs/analyses/TEMPLATE.md`](docs/analyses/TEMPLATE.md).
 4. Treat normal-speed footage as the source of rhythm and slow-motion footage as evidence for ordering, paths, and overlap.
+5. Use Watch + FFmpeg + the existing Canvas/SVG/CSS/GSAP runtime by default. Do **not** load `oil-motion` merely because a reference video exists; use it only for generated/pre-rendered semantic motion such as realistic material deformation, articulated bodies, changing topology/occlusion, or a user-requested video/atlas pipeline. The exact boundary is in [`.codex/skills/build-font-animation-effects/references/video-analysis-workflow.md`](.codex/skills/build-font-animation-effects/references/video-analysis-workflow.md).
 
 ## UI and rendering baseline
 
