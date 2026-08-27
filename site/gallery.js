@@ -105,6 +105,8 @@ function render() {
         ? `<video class="effect-loop" src="assets/previews/pathwriter-card.mp4?v=20260827-default2" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
       : slug === "scrapbin"
         ? `<video class="effect-loop" src="assets/previews/delete-card.mp4?v=20260826-3" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
+      : slug === "colorrecompose"
+        ? `<video class="effect-loop" src="assets/previews/color-recompose-card.mp4?v=20260827-1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
       : livePreviews.has(slug)
         ? `<iframe class="effect-live" title="${zh}实时预览" data-src="${slug}.html?preview=1&amp;v=${slug === "currentwall" ? "20260824-ui10" : "20260824-37"}" loading="lazy" tabindex="-1"></iframe>`
         : `<img src="${imageName}" alt="${zh}动态字体效果预览" ${index > 8 ? 'loading="lazy"' : ""}>`;
