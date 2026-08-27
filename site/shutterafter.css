@@ -1,0 +1,247 @@
+.shutterafter-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f2f2f4;
+}
+
+.sa-phone {
+  --sa-aspect: 9 / 16;
+  --sa-ratio: 0.5625;
+  position: relative;
+  z-index: 1;
+  aspect-ratio: var(--sa-aspect);
+  width: min(calc(100% - 36px), calc(min(94dvh, 100%) * var(--sa-ratio)));
+  height: auto;
+  max-width: calc(100% - 36px);
+  max-height: min(94dvh, 100%);
+  overflow: hidden;
+  border-radius: 28px;
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+}
+
+.sa-phone #flowCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+@media (max-width: 760px) {
+  .sa-phone {
+    width: min(calc(100% - 20px), calc(54dvh * 16 / 9));
+    max-height: 54dvh;
+    border-radius: 18px;
+  }
+}
+
+body.me-motion-editor .shutterafter-panel .panel-scroll {
+  padding: 8px 10px 18px !important;
+}
+
+body.me-motion-editor .shutterafter-panel .panel-scroll > section {
+  margin: 6px 0 0 !important;
+  padding: 10px !important;
+  border-radius: 12px !important;
+}
+
+body.me-motion-editor .shutterafter-panel :is(input[type="text"], select) {
+  min-height: 32px !important;
+  padding: 5px 8px !important;
+  font-size: 12px !important;
+}
+
+body.me-motion-editor .shutterafter-panel .hint {
+  margin: 8px 0 0;
+  color: #6e6e73;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.shutterafter-panel .search-row,
+.shutterafter-panel .sa-dense {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.shutterafter-panel .sa-dense label {
+  display: grid;
+  gap: 4px;
+}
+
+.shutterafter-panel .sa-dense output {
+  float: right;
+  color: #6e6e73;
+  font-variant-numeric: tabular-nums;
+}
+
+.shutterafter-panel .me-choreo-bar { min-width: 860px; }
+.shutterafter-panel .me-choreo-legend b { font-size: 10px; }
+
+.sa-pair-list {
+  display: grid;
+  gap: 8px;
+}
+
+.sa-pair-card {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #d2d2d7;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.sa-pair-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sa-pair-head strong {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.sa-drag {
+  color: #8e8e93;
+  font-style: normal;
+  letter-spacing: -2px;
+  cursor: grab;
+}
+
+.sa-pair-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sa-pair-tools button {
+  min-height: 28px !important;
+  padding: 0 8px !important;
+  font-size: 11px !important;
+}
+
+.sa-pair-card.is-dragging {
+  opacity: 0.55;
+}
+
+.sa-pair-card.is-drop {
+  border-color: #1682f5;
+  box-shadow: 0 0 0 3px rgba(22, 130, 245, 0.16);
+}
+
+.sa-pair-card .sa-uploads {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.sa-upload {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.sa-upload span {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  color: #3a3a3c;
+}
+
+.sa-thumb {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+  border: 1px dashed #c8c8cd;
+  border-radius: 12px;
+  background: #f4f4f6;
+}
+
+.sa-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.sa-thumb i {
+  color: #8e8e93;
+  font-size: 12px;
+  font-style: normal;
+  text-align: center;
+  padding: 0 8px;
+}
+
+.sa-upload:hover .sa-thumb {
+  border-color: #1682f5;
+  background: #f3f8ff;
+}
+
+.sa-upload small {
+  color: #6e6e73;
+  font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sa-upload input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.sa-pair-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.sa-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  font-size: 12px;
+}
+
+.sa-speed-presets {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.sa-speed-presets button {
+  min-height: 28px !important;
+  padding: 0 10px !important;
+}
+
+.sa-tv-off-section.is-disabled .ba-dense,
+.sa-tv-off-section.is-disabled .color-row { opacity: .45; pointer-events: none; }
+
+.sa-tv-color-fields { display: none; }
+.sa-tv-off-section.is-custom-theme .sa-tv-color-fields { display: flex; }
+
+.formula {
+  margin: 12px 4px 0;
+  color: #6e6e73;
+  font-size: 11px;
+}
+
+@media (max-width: 760px) {
+  .shutterafter-panel .search-row,
+  .shutterafter-panel .sa-dense,
+  .sa-pair-card .sa-uploads {
+    grid-template-columns: 1fr;
+  }
+}

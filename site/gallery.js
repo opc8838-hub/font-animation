@@ -22,6 +22,7 @@ const effects = [
   ["switchdrop", "降临", "Switch Drop", "graphic", "主体降临 × 明暗开关"],
   ["searchtyping", "搜写", "Search Typing", "type", "搜索框逐字打入"],
   ["beforeafter", "图片对比", "Before After", "type", "原图对比 · 生成切成片"],
+  ["shutterafter", "快门对比", "Shutter After", "type", "原图快门 · 划过成片"],
   ["verbcue", "动令", "Verb Cue", "type", "短句打散 · 像素扫清"],
   ["tighten", "收距", "Tighten", "type", "词距先松后紧"],
   ["titlecard", "标卡", "Title Card", "type", "主副标题再切标志"],
@@ -65,7 +66,7 @@ const emptyState = document.querySelector("#emptyState");
 const filterButtons = [...document.querySelectorAll(".filter")];
 let activeFilter = "all";
 const livePreviews = new Set(["textswell"]);
-const featuredPreviews = new Set(["textswell", "currentwall", "iconburst", "beforeafter", "pathwriter", "scrapbin"]);
+const featuredPreviews = new Set(["textswell", "currentwall", "iconburst", "beforeafter", "shutterafter", "pathwriter", "scrapbin"]);
 const liveObserver = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
     const frame = entry.target;
@@ -89,8 +90,8 @@ function render() {
 
   grid.innerHTML = visible.map(([slug, zh, en, , categoryName]) => {
     const index = effects.findIndex((effect) => effect[0] === slug) + 1;
-    const imageName = slug === "crashclock" ? "final_crashclock.png" : ["iconburst", "focuswheel", "gradienttype", "glyphrelay", "wordgather", "focusportal", "rapidsequence", "citystack", "colorcanvas", "liquidtype", "scrapbin", "terminalbrand", "slotstories", "mediacascade", "colorrecompose", "phrasebuild", "switchdrop", "searchtyping", "beforeafter", "assemble", "verbcue", "tighten", "titlecard", "lockup", "promptcue", "pullback", "textswell", "wordflip", "textbuild", "textswap", "textreveal", "phoneframe", "laptopframe", "orbitgallery", "followerrush", "logoassemble", "moodboard"].includes(slug) ? `final_${slug}.svg` : `final_${slug}.png`;
-    const target = slug === "flash" ? "flash-scenes.html" : slug === "iconburst" ? "iconburst.html?from=gallery&v=20260824-37" : slug === "currentwall" ? "currentwall.html?from=gallery&v=20260824-ui10" : slug === "beforeafter" ? "beforeafter.html?from=gallery&v=20260825-latest1" : slug === "pathwriter" ? "pathwriter.html?from=gallery&v=20260825-default1" : slug === "scrapbin" ? "scrapbin.html?from=gallery&v=20260826-delete11" : slug === "liquidtype" ? "liquidtype.html?from=gallery&v=20260824-scatter3" : `${slug}.html`;
+    const imageName = slug === "crashclock" ? "final_crashclock.png" : ["iconburst", "focuswheel", "gradienttype", "glyphrelay", "wordgather", "focusportal", "rapidsequence", "citystack", "colorcanvas", "liquidtype", "scrapbin", "terminalbrand", "slotstories", "mediacascade", "colorrecompose", "phrasebuild", "switchdrop", "searchtyping", "beforeafter", "shutterafter", "assemble", "verbcue", "tighten", "titlecard", "lockup", "promptcue", "pullback", "textswell", "wordflip", "textbuild", "textswap", "textreveal", "phoneframe", "laptopframe", "orbitgallery", "followerrush", "logoassemble", "moodboard"].includes(slug) ? `final_${slug}.svg` : `final_${slug}.png`;
+    const target = slug === "flash" ? "flash-scenes.html" : slug === "iconburst" ? "iconburst.html?from=gallery&v=20260824-37" : slug === "currentwall" ? "currentwall.html?from=gallery&v=20260824-ui10" : slug === "beforeafter" ? "beforeafter.html?from=gallery&v=20260825-latest1" : slug === "shutterafter" ? "shutterafter.html?from=gallery&v=20260827-1" : slug === "pathwriter" ? "pathwriter.html?from=gallery&v=20260825-default1" : slug === "scrapbin" ? "scrapbin.html?from=gallery&v=20260826-delete11" : slug === "liquidtype" ? "liquidtype.html?from=gallery&v=20260824-scatter3" : `${slug}.html`;
     const detail = slug === "flash" ? "13 个独立子风格" : categoryName;
     const preview = slug === "iconburst"
       ? `<video class="effect-loop" src="assets/previews/iconburst-card.mp4?v=20260824-1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
@@ -98,6 +99,8 @@ function render() {
         ? `<video class="effect-loop" src="assets/previews/water-flow-card.mp4?v=20260824-2" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
       : slug === "beforeafter"
         ? `<video class="effect-loop effect-loop-portrait" src="assets/previews/beforeafter-card.mp4?v=20260825-latest1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
+      : slug === "shutterafter"
+        ? `<video class="effect-loop effect-loop-portrait" src="assets/previews/shutterafter-card.mp4?v=20260827-1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
       : slug === "pathwriter"
         ? `<video class="effect-loop" src="assets/previews/pathwriter-card.mp4?v=20260825-1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
       : slug === "scrapbin"
