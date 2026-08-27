@@ -1,8 +1,31 @@
 .writer-stage { background: #000; isolation: isolate; }
 .writer-stage::after { position: fixed; inset: 0; z-index: 1; pointer-events: none; content: ""; opacity: .2; background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.04), transparent 42%); }
+.writer-stage.is-sized-preview { background: #202124; }
+.writer-stage.is-sized-preview::after { opacity: 0; }
+.writer-stage.is-sized-preview #flowCanvas { outline: 1px solid rgba(255,255,255,.18); box-shadow: 0 18px 72px rgba(0,0,0,.36); }
+.writer-preview-size { position: fixed; z-index: 5; top: 18px; left: 50%; padding: 7px 11px; border: 1px solid rgba(255,255,255,.22); border-radius: 999px; color: rgba(255,255,255,.86); background: rgba(18,18,18,.72); box-shadow: 0 6px 24px rgba(0,0,0,.18); font: 600 11px/1.2 Arial, sans-serif; letter-spacing: .04em; pointer-events: none; transform: translateX(-50%); backdrop-filter: blur(12px); }
 .writer-panel { --panel-width: 420px; }
 .writer-panel .quick-grid label,
 .writer-panel .timing-grid label { min-height: 58px; }
+.writer-curve-editor { margin-top: 12px; padding: 12px; border: 1px solid #dce3ec; border-radius: 16px; background: #f7f9fc; }
+.writer-curve-editor .section-heading { margin-bottom: 8px; }
+.writer-curve-editor .section-heading button { min-height: 30px; padding: 5px 9px; border: 1px solid #d9e4f1; border-radius: 9px; color: #0766cf; background: #fff; }
+.writer-curve-actions { display: flex; align-items: center; justify-content: flex-end; gap: 5px; }
+.writer-curve-actions output { min-width: 36px; color: #4f5b69; font: 700 10px/1 "Continuation IBM Plex Mono", monospace; text-align: center; }
+.writer-curve-actions button:disabled { color: #aab2bd; background: #f0f2f5; cursor: not-allowed; }
+#curveEditorSvg { display: block; width: 100%; height: auto; color: #18202a; border: 1px solid #d9e1eb; border-radius: 14px; background: #fff; touch-action: none; user-select: none; }
+.writer-curve-grid { pointer-events: none; }
+.writer-curve-path { fill: none; stroke: #1778f2; stroke-width: 4; stroke-linecap: round; }
+.writer-curve-guide { stroke: #7d8a99; stroke-width: 1.5; stroke-dasharray: 5 5; opacity: .55; pointer-events: none; }
+.writer-curve-handle { fill: #fff; stroke: #1778f2; stroke-width: 3; cursor: grab; }
+.writer-curve-handle.is-anchor { fill: #1778f2; stroke: #fff; }
+.writer-curve-handle.is-peak { fill: #fff; }
+.writer-curve-handle:active,
+.writer-curve-position:active { cursor: grabbing; }
+.writer-curve-position { color: #111; cursor: move; }
+.writer-curve-position circle { fill: #d7ff2f; stroke: #111; stroke-width: 2; }
+.writer-curve-position path { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; pointer-events: none; }
+.writer-curve-editor .hint { margin: 8px 2px 0; }
 .writer-motion-map { grid-template-columns: auto 12px auto 12px auto 12px auto; }
 .writer-motion-map span:first-child { background: #ffc400; }
 .writer-motion-map span:nth-of-type(2) { background: #e7e6df; }

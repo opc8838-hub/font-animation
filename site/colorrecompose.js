@@ -2,7 +2,7 @@
   "use strict";
   const $ = (id) => document.getElementById(id);
   const canvas = $("flowCanvas");
-  const FPS = 30, STORAGE_KEY = "stg-color-recompose-scheme-v4";
+  const FPS = 30, STORAGE_KEY = "stg-color-recompose-scheme-v5";
   const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
   const mix = (a, b, t) => a + (b - a) * t;
   const smooth = (v) => { const t = clamp(v); return t * t * (3 - 2 * t); };
@@ -18,21 +18,23 @@
       ["流墙云", svgIcon('<circle cx="34" cy="56" r="15" fill="white"/><circle cx="51" cy="45" r="22" fill="white"/><circle cx="70" cy="56" r="16" fill="white"/><rect x="19" y="54" width="67" height="21" rx="10" fill="white"/>', "#1389ff")],
       ["流墙手表", svgIcon('<rect x="28" y="19" width="44" height="62" rx="15" fill="#111"/><rect x="35" y="28" width="30" height="44" rx="9" fill="#d7ff2f"/><circle cx="50" cy="50" r="3" fill="#111"/>', "#d8d8d8")]
     ].map(([name, url], index) => ({ id: `flow-${index}`, name, url, type: "image/svg+xml" })),
-    collision: [
+    gifMotion: [
       { id: "collision-hand", name: "动态手掌", url: "crash_resources/images/0.gif", type: "image/gif" },
-      { id: "collision-sky", name: "动态天空", url: "crash_resources/images/1.gif", type: "image/gif" }
-    ],
-    construct: [
+      { id: "collision-sky", name: "动态天空", url: "crash_resources/images/1.gif", type: "image/gif" },
       { id: "construct-cloud", name: "动态线云", kind: "vector", vectorType: "cloud", url: vectorPreview('<path d="M28 65c-18-22 10-43 28-28 8-26 44-27 54-3 22-12 40 13 22 30z" fill="none" stroke="#fff" stroke-width="3"/>') },
       { id: "construct-loop", name: "环绕线条", kind: "vector", vectorType: "loop", url: vectorPreview('<g fill="none" stroke="#fff" stroke-width="2"><ellipse cx="80" cy="50" rx="55" ry="24" transform="rotate(-10 80 50)"/><ellipse cx="80" cy="50" rx="55" ry="24" transform="rotate(10 80 50)"/></g>') },
       { id: "construct-stroke", name: "彩色粗线", kind: "vector", vectorType: "stroke", url: vectorPreview('<path d="M20 63C42 12 69 91 91 45S128 78 143 27" fill="none" stroke="url(#g)" stroke-width="13" stroke-linecap="round"/><defs><linearGradient id="g"><stop stop-color="#36df7a"/><stop offset=".5" stop-color="#ffb000"/><stop offset="1" stop-color="#1479ff"/></linearGradient></defs>') },
-      { id: "construct-bar", name: "渐变粗条", kind: "vector", vectorType: "bar", url: vectorPreview('<defs><linearGradient id="b" x2="0" y2="1"><stop stop-color="#24ef82"/><stop offset="1" stop-color="#24ef82" stop-opacity="0"/></linearGradient></defs><rect x="18" y="30" width="124" height="40" rx="8" fill="url(#b)"/>') }
+      { id: "construct-bar", name: "渐变粗条", kind: "vector", vectorType: "bar", url: vectorPreview('<defs><linearGradient id="b" x2="0" y2="1"><stop stop-color="#24ef82"/><stop offset="1" stop-color="#24ef82" stop-opacity="0"/></linearGradient></defs><rect x="18" y="30" width="124" height="40" rx="8" fill="url(#b)"/>') },
+      { id: "construct-wave", name: "流光波线", kind: "vector", vectorType: "wave", url: vectorPreview('<path d="M12 54C34 17 53 86 78 47s45 35 70-8" fill="none" stroke="#d8ff2f" stroke-width="5" stroke-linecap="round"/>') },
+      { id: "construct-ribbon", name: "双层飘带", kind: "vector", vectorType: "ribbon", url: vectorPreview('<g fill="none" stroke-linecap="round"><path d="M12 38C42 76 65 18 96 57s38-20 54-9" stroke="#ff315f" stroke-width="9"/><path d="M12 57C40 22 72 82 103 38s33 20 47 5" stroke="#38cfff" stroke-width="5"/></g>') },
+      { id: "construct-coil", name: "旋转线圈", kind: "vector", vectorType: "coil", url: vectorPreview('<g fill="none" stroke="#fff" stroke-width="2"><ellipse cx="80" cy="50" rx="60" ry="18"/><ellipse cx="80" cy="50" rx="42" ry="28" transform="rotate(28 80 50)"/><ellipse cx="80" cy="50" rx="24" ry="38" transform="rotate(-28 80 50)"/></g>') },
+      { id: "construct-pulse", name: "脉冲线束", kind: "vector", vectorType: "pulse", url: vectorPreview('<g fill="none" stroke="#ffcf20" stroke-width="4" stroke-linecap="round"><path d="M14 50h28l8-23 15 49 13-38 11 24 10-12h47"/><path d="M14 67h132" stroke="#985cff" stroke-width="2"/></g>') }
     ],
     animal: Array.from({ length: 31 }, (_, index) => ({ id: `animal-${index + 1}`, name: index === 4 ? "鲸鱼" : `透明动物 ${String(index + 1).padStart(2, "0")}`, url: `assets/transparent-animals/animal-${String(index + 1).padStart(2, "0")}.png`, type: "image/png" })),
     bot: ["bloub-capsule-colere-brun.gif", "bloub-cercle-attentif-violet.gif", "bloub-cercle-curieux-encre.gif", "bloub-galet-blase-orange.gif", "bloub-galet-somnolent-rouge.gif", "bloub-goutte-curieux-turquoise.gif", "bloub-hexagone-surpris-gris.gif", "bloub-nuage-mefiant-rouge.gif", "bloub-nuage-neutre-bleu.gif", "bloub-squircle-effraye-orange.gif", "bloub-triangle-mefiant-ambre.gif"].map((file, index) => ({ id: `bot-${index + 1}`, name: `Bot 动态表情 ${String(index + 1).padStart(2, "0")}`, url: `assets/bot-series/${file}`, type: "image/gif" }))
   };
-  const allLibrary = [...libraries.flow, ...libraries.collision, ...libraries.construct, ...libraries.animal, ...libraries.bot];
-  const controlIds = ["titleText", "sourceText", "effectMode", "fontFamily", "fontWeight", "textAlign", "backgroundColor", "textColor", "punctuationColor", "punctuationEnabled", "speed", "introDuration", "recomposeDuration", "resolveDuration", "holdDuration", "fragmentRate", "letterRotation", "rotationSpeed", "shrinkAmount", "fragmentStrength", "fontSize", "tracking", "textX", "textY", "iconDensity", "iconSize", "iconSwitchRate", "iconSpin", "iconGap", "iconY"];
+  const allLibrary = [...libraries.flow, ...libraries.gifMotion, ...libraries.animal, ...libraries.bot];
+  const controlIds = ["titleText", "sourceText", "effectMode", "fontFamily", "fontWeight", "textAlign", "backgroundColor", "textColor", "punctuationColor", "punctuationEnabled", "speed", "introDuration", "recomposeDuration", "resolveDuration", "holdDuration", "fragmentRate", "letterRotation", "rotationSpeed", "shrinkAmount", "fragmentStrength", "fontSize", "tracking", "textX", "textY", "iconDensity", "iconCountCycles", "iconSize", "iconSwitchRate", "iconSpin", "iconGap", "iconY"];
   const controls = Object.fromEntries(controlIds.map((id) => [id, $(id)]));
   const paletteInputs = [...document.querySelectorAll(".palette-color")];
   const imageCache = new Map();
@@ -68,12 +70,23 @@
     const widths = glyphs.map((glyph) => context.measureText(glyph).width), natural = widths.reduce((sum, v) => sum + v, 0) + tracking * Math.max(0, glyphs.length - 1), fit = Math.min(1, w * .86 / Math.max(1, natural));
     return { basePx, tracking, widths, natural, fit };
   }
-  function itemFor(slot, bucket, totalSlots, sourceGlyphs, palette, allowIcons) {
+  function centeredOrder(total) {
+    const center = (total - 1) / 2;
+    return Array.from({ length: total }, (_, index) => index).sort((a, b) => Math.abs(a - center) - Math.abs(b - center) || a - b);
+  }
+  function iconCountFor(progress, totalSlots) {
+    if (!state.assets.length || !totalSlots) return 0;
+    const maxCount = Math.min(totalSlots, Math.max(1, Math.round(state.assets.length * Number(controls.iconDensity.value) / 100)));
+    const cycles = Math.max(1, Number(controls.iconCountCycles.value) || 1);
+    const local = mod(clamp(progress) * cycles, 1);
+    const wave = Math.sin(Math.PI * local);
+    return Math.round(mix(1, maxCount, smooth(wave)));
+  }
+  function itemFor(slot, bucket, totalSlots, sourceGlyphs, palette, allowIcons, iconCount = 0) {
     const seed = slot * 71 + bucket * 19;
-    const iconCount = Math.min(state.assets.length, Math.round(totalSlots * Number(controls.iconDensity.value) / 100));
-    const rank = mod(slot + bucket * 3, Math.max(1, totalSlots));
-    if (allowIcons && iconCount > 0 && rank < iconCount) {
-      const assetIndex = mod(rank + bucket, state.assets.length);
+    const order = centeredOrder(totalSlots), iconRank = order.indexOf(slot);
+    if (allowIcons && iconCount > 0 && iconRank >= 0 && iconRank < iconCount) {
+      const assetIndex = mod(iconRank + bucket, state.assets.length);
       return { kind: "icon", asset: state.assets[assetIndex] };
     }
     return { kind: "glyph", glyph: sourceGlyphs[Math.floor(seeded(seed + 9) * sourceGlyphs.length) % sourceGlyphs.length], color: palette[Math.floor(seeded(seed + 11) * palette.length) % palette.length] };
@@ -82,20 +95,26 @@
     const pulse = 1 + Math.sin(time * 4.2 + asset.rotation) * .045;
     context.save(); context.scale(pulse, pulse); context.lineCap = "round"; context.lineJoin = "round";
     if (asset.vectorType === "cloud") {
-      context.strokeStyle = "#f5f5f7"; context.lineWidth = Math.max(2, size * .045); context.beginPath();
+      context.translate(Math.sin(time * 1.8) * size * .04, Math.cos(time * 2.1) * size * .025); context.strokeStyle = "#f5f5f7"; context.lineWidth = Math.max(2, size * .045); context.setLineDash([size * .16, size * .05]); context.lineDashOffset = -time * size * .22; context.beginPath();
       context.moveTo(-size * .42, size * .16); context.bezierCurveTo(-size * .56, -size * .08, -size * .31, -size * .34, -size * .13, -size * .2); context.bezierCurveTo(-size * .02, -size * .48, size * .33, -size * .42, size * .34, -size * .12); context.bezierCurveTo(size * .58, -size * .2, size * .63, size * .2, size * .35, size * .22); context.lineTo(-size * .42, size * .16); context.stroke();
     } else if (asset.vectorType === "loop") {
       context.strokeStyle = "#f5f5f7"; context.lineWidth = Math.max(1.5, size * .025); for (let index = 0; index < 3; index += 1) { context.save(); context.rotate(time * .32 * (index % 2 ? -1 : 1) + index * .3); context.scale(1, .42); context.beginPath(); context.arc(0, 0, size * .48, 0, Math.PI * 2); context.stroke(); context.restore(); }
     } else if (asset.vectorType === "stroke") {
       const gradient = context.createLinearGradient(-size / 2, 0, size / 2, 0); gradient.addColorStop(0, "#31df78"); gradient.addColorStop(.48, "#ffad00"); gradient.addColorStop(1, "#1479ff"); context.strokeStyle = gradient; context.lineWidth = size * .15; context.beginPath(); context.moveTo(-size * .48, size * .12); context.bezierCurveTo(-size * .28, -size * .38, -size * .04, size * .43, size * .17, -.05 * size); context.bezierCurveTo(size * .3, -size * .34, size * .38, size * .28, size * .49, -size * .2); context.stroke();
-    } else {
-      const gradient = context.createLinearGradient(0, -size / 2, 0, size / 2); gradient.addColorStop(0, "#22e783"); gradient.addColorStop(1, "rgba(34,231,131,0)"); context.fillStyle = gradient; context.fillRect(-size * .52, -size * .21, size * 1.04, size * .42);
+    } else if (asset.vectorType === "bar") {
+      const gradient = context.createLinearGradient(0, -size / 2, 0, size / 2); gradient.addColorStop(0, "#22e783"); gradient.addColorStop(1, "rgba(34,231,131,0)"); context.fillStyle = gradient; const sweep = .72 + .28 * Math.sin(time * 3.2) ** 2; context.fillRect(-size * .52, -size * .21, size * 1.04 * sweep, size * .42);
+    } else if (asset.vectorType === "wave" || asset.vectorType === "ribbon") {
+      const ribbon = asset.vectorType === "ribbon", gradient = context.createLinearGradient(-size / 2, 0, size / 2, 0); gradient.addColorStop(0, ribbon ? "#ff315f" : "#d8ff2f"); gradient.addColorStop(.52, ribbon ? "#ffcf20" : "#38cfff"); gradient.addColorStop(1, ribbon ? "#38cfff" : "#985cff"); context.strokeStyle = gradient; context.lineWidth = size * (ribbon ? .11 : .06); context.setLineDash([size * .22, size * .055]); context.lineDashOffset = -time * size * .55; context.beginPath(); context.moveTo(-size * .54, size * .08); context.bezierCurveTo(-size * .3, -size * .42, -size * .08, size * .43, size * .14, -.06 * size); context.bezierCurveTo(size * .29, -size * .39, size * .42, size * .31, size * .55, -size * .17); context.stroke(); if (ribbon) { context.strokeStyle = "rgba(255,255,255,.72)"; context.lineWidth = size * .025; context.lineDashOffset *= -1; context.translate(0, size * .13); context.stroke(); }
+    } else if (asset.vectorType === "coil") {
+      context.strokeStyle = "#f5f5f7"; context.lineWidth = Math.max(1.5, size * .022); for (let index = 0; index < 4; index += 1) { context.save(); context.rotate(time * .7 * (index % 2 ? -1 : 1) + index * .44); context.scale(1, .28 + index * .08); context.beginPath(); context.arc(0, 0, size * (.5 - index * .055), 0, Math.PI * 2); context.stroke(); context.restore(); }
+    } else if (asset.vectorType === "pulse") {
+      context.strokeStyle = "#ffcf20"; context.lineWidth = size * .045; context.setLineDash([size * .18, size * .045]); context.lineDashOffset = -time * size * .65; context.beginPath(); context.moveTo(-size * .52, 0); context.lineTo(-size * .28, 0); context.lineTo(-size * .2, -size * .28); context.lineTo(-size * .08, size * .3); context.lineTo(size * .05, -size * .21); context.lineTo(size * .18, size * .14); context.lineTo(size * .28, 0); context.lineTo(size * .52, 0); context.stroke();
     }
     context.restore();
   }
-  function drawSlot(context, item, x, y, fontPx, alpha, rotation, scale, time) {
+  function drawSlot(context, item, x, y, fontPx, alpha, rotation, scale, time, flipX = 1) {
     if (alpha <= .002) return;
-    context.save(); context.globalAlpha = alpha; context.translate(x, y); context.rotate(rotation); context.scale(scale, scale);
+    context.save(); context.globalAlpha = alpha; context.translate(x, y); context.rotate(rotation); context.scale(scale * flipX, scale);
     if (item.kind === "glyph") { context.fillStyle = item.color; context.textAlign = "center"; context.textBaseline = "middle"; context.fillText(item.glyph, 0, 0); }
     else {
       const asset = item.asset, promise = imageCache.get(asset.url), image = promise?.image;
@@ -108,40 +127,41 @@
   function renderFrame(target, rawTime, width, height, ratio = 1) {
     const context = target.getContext("2d"); context.setTransform(ratio, 0, 0, ratio, 0, 0); context.clearRect(0, 0, width, height); context.fillStyle = controls.backgroundColor.value; context.fillRect(0, 0, width, height); if (state.backgroundElement) drawCover(context, state.backgroundElement, width, height);
     const timing = timings(), time = mod(rawTime, timing.cycle), glyphs = split(controls.titleText.value || "Creator Studio"), sourceGlyphs = split(controls.sourceText.value || controls.titleText.value || "COLOR").filter((g) => !/\s/.test(g)), palette = paletteInputs.map((input) => input.value), layout = measureLayout(context, glyphs, width, height), centerX = width * Number(controls.textX.value) / 100, centerY = height * Number(controls.textY.value) / 100;
+    const eligibleGlyphIndices = glyphs.map((glyph, index) => (!/\s/.test(glyph) && !punctuation(glyph) ? index : -1)).filter((index) => index >= 0), eligibleRank = new Map(eligibleGlyphIndices.map((index, rank) => [index, rank]));
     let phase = "intro", resolveProgress = 0; if (time >= timing.intro && time < timing.activeEnd) phase = "active"; else if (time >= timing.activeEnd && time < timing.resolveEnd) { phase = "resolve"; resolveProgress = smooth((time - timing.activeEnd) / Math.max(.001, timing.resolve)); } else if (time >= timing.resolveEnd) phase = "hold";
     const shrink = 1 - Number(controls.shrinkAmount.value) / 100 * (phase === "resolve" ? resolveProgress : phase === "hold" ? 1 : 0);
     context.save(); context.translate(centerX, centerY); context.scale(layout.fit * shrink, layout.fit * shrink);
     let cursor = controls.textAlign.value === "left" ? -width * .37 / layout.fit : controls.textAlign.value === "right" ? width * .37 / layout.fit - layout.natural : -layout.natural / 2;
-    const colorRate = Number(controls.fragmentRate.value), iconRate = Number(controls.iconSwitchRate.value), rate = controls.effectMode.value === "icons" ? Math.max(colorRate, iconRate) : colorRate, activeClock = Math.max(0, time - timing.intro), bucketFloat = activeClock * rate, bucket = Math.floor(bucketFloat), blend = smooth(bucketFloat - bucket);
+    const colorRate = Number(controls.fragmentRate.value), iconRate = Number(controls.iconSwitchRate.value), rate = controls.effectMode.value === "icons" ? Math.max(colorRate, iconRate) : colorRate, activeClock = Math.max(0, time - timing.intro), bucketFloat = activeClock * rate, bucket = Math.floor(bucketFloat), blend = smooth(bucketFloat - bucket), activeBuckets = Math.max(1, timing.active * rate), oldIconCount = iconCountFor(bucket / activeBuckets, eligibleGlyphIndices.length), newIconCount = iconCountFor((bucket + 1) / activeBuckets, eligibleGlyphIndices.length);
     glyphs.forEach((glyph, index) => {
       const w = layout.widths[index], x = cursor + w / 2; if (/\s/.test(glyph)) { cursor += w + layout.tracking; return; }
       if (phase === "active") {
-        const allowIcons = controls.effectMode.value === "icons" && !punctuation(glyph), oldItem = itemFor(index, bucket, glyphs.length, sourceGlyphs, palette, allowIcons), newItem = itemFor(index, bucket + 1, glyphs.length, sourceGlyphs, palette, allowIcons), maxRot = Number(controls.letterRotation.value) * Math.PI / 180, spin = Number(controls.rotationSpeed.value), oldRot = (seeded(index * 13 + bucket) - .5) * maxRot + activeClock * spin * .12, newRot = (seeded(index * 13 + bucket + 1) - .5) * maxRot + activeClock * spin * .12, strength = Number(controls.fragmentStrength.value) / 100;
+        const rank = eligibleRank.get(index) ?? -1, allowIcons = controls.effectMode.value === "icons" && rank >= 0, oldItem = itemFor(rank, bucket, eligibleGlyphIndices.length, sourceGlyphs, palette, allowIcons, oldIconCount), newItem = itemFor(rank, bucket + 1, eligibleGlyphIndices.length, sourceGlyphs, palette, allowIcons, newIconCount), maxRot = Number(controls.letterRotation.value) * Math.PI / 180, spin = Number(controls.rotationSpeed.value), oldRot = (seeded(index * 13 + bucket) - .5) * maxRot + activeClock * spin * .12, newRot = (seeded(index * 13 + bucket + 1) - .5) * maxRot + activeClock * spin * .12, strength = Number(controls.fragmentStrength.value) / 100;
         if (oldItem.kind === "icon" || newItem.kind === "icon") {
-          if (blend < .5) drawSlot(context, oldItem, x, 0, layout.basePx, (1 - blend * 2) * strength, oldRot, 1 - .18 * blend * 2, activeClock);
-          else drawSlot(context, newItem, x, 0, layout.basePx, (blend * 2 - 1) * strength, newRot, .82 + .18 * (blend * 2 - 1), activeClock);
+          if (blend < .5) drawSlot(context, oldItem, x, 0, layout.basePx, strength, oldRot, 1 - .08 * blend * 2, activeClock, Math.max(.035, 1 - blend * 2));
+          else drawSlot(context, newItem, x, 0, layout.basePx, strength, newRot, .92 + .08 * (blend * 2 - 1), activeClock, Math.max(.035, blend * 2 - 1));
         } else {
           drawSlot(context, oldItem, x, 0, layout.basePx, (1 - blend) * strength, oldRot, 1 - .12 * blend, activeClock); drawSlot(context, newItem, x, 0, layout.basePx, blend * strength, newRot, .88 + .12 * blend, activeClock);
         }
       } else if (phase === "resolve") {
-        const lastItem = itemFor(index, Math.floor(timing.active * rate), glyphs.length, sourceGlyphs, palette, controls.effectMode.value === "icons" && !punctuation(glyph)), stagger = clamp(resolveProgress * 1.22 - index / Math.max(1, glyphs.length) * .22);
+        const rank = eligibleRank.get(index) ?? -1, lastItem = itemFor(rank, Math.floor(timing.active * rate), eligibleGlyphIndices.length, sourceGlyphs, palette, controls.effectMode.value === "icons" && rank >= 0, iconCountFor(1, eligibleGlyphIndices.length)), stagger = clamp(resolveProgress * 1.22 - index / Math.max(1, glyphs.length) * .22);
         drawSlot(context, lastItem, x, 0, layout.basePx, 1 - stagger, (1 - stagger) * .16, 1 - .08 * stagger, activeClock); context.globalAlpha = stagger; context.fillStyle = lastItem.kind === "glyph" ? mixColor(lastItem.color, finalColor(glyph), stagger) : finalColor(glyph); context.textAlign = "center"; context.textBaseline = "middle"; context.fillText(glyph, x, 0); context.globalAlpha = 1;
       } else { context.fillStyle = finalColor(glyph); context.textAlign = "center"; context.textBaseline = "middle"; context.fillText(glyph, x, 0); }
       cursor += w + layout.tracking;
     });
-    context.restore(); if (target === canvas) { canvas.dataset.motionPhase = phase; canvas.dataset.effectMode = controls.effectMode.value; $("timelinePlayhead").style.left = `${time / timing.cycle * 100}%`; const activeIndex = phase === "intro" ? 0 : phase === "active" ? 1 : phase === "resolve" ? 2 : 3; document.querySelectorAll(".me-choreo-block[data-beat]").forEach((block) => block.classList.toggle("is-active", Number(block.dataset.beat) === activeIndex)); }
+    context.restore(); if (target === canvas) { canvas.dataset.motionPhase = phase; canvas.dataset.effectMode = controls.effectMode.value; canvas.dataset.visibleIconCount = String(phase === "active" ? Math.round(mix(oldIconCount, newIconCount, blend)) : phase === "resolve" ? iconCountFor(1, eligibleGlyphIndices.length) : 0); $("timelinePlayhead").style.left = `${time / timing.cycle * 100}%`; const activeIndex = phase === "intro" ? 0 : phase === "active" ? 1 : phase === "resolve" ? 2 : 3; document.querySelectorAll(".me-choreo-block[data-beat]").forEach((block) => block.classList.toggle("is-active", Number(block.dataset.beat) === activeIndex)); }
   }
 
   function resizeCanvas() { const ratio = Math.min(2, window.devicePixelRatio || 1), width = canvas.clientWidth || innerWidth, height = canvas.clientHeight || innerHeight; if (canvas.width !== Math.round(width * ratio) || canvas.height !== Math.round(height * ratio)) { canvas.width = Math.round(width * ratio); canvas.height = Math.round(height * ratio); canvas.dataset.ratio = ratio; } }
   function loop() { resizeCanvas(); const ratio = Number(canvas.dataset.ratio || 1), time = currentTime(); renderFrame(canvas, time, canvas.width / ratio, canvas.height / ratio, ratio); $("frameCounter").textContent = `F ${String(Math.round(mod(time, timings().cycle) * FPS)).padStart(4, "0")}`; requestAnimationFrame(loop); }
-  const readouts = { speed: (v) => `${Number(v).toFixed(2)}×`, introDuration: (v) => `${(v / 1000).toFixed(2)}秒`, recomposeDuration: (v) => `${(v / 1000).toFixed(2)}秒`, resolveDuration: (v) => `${(v / 1000).toFixed(2)}秒`, holdDuration: (v) => `${(v / 1000).toFixed(2)}秒`, fragmentRate: (v) => `${v} 次/秒`, letterRotation: (v) => `${v}°`, rotationSpeed: (v) => `${Number(v).toFixed(2)}×`, shrinkAmount: (v) => `${v}%`, fragmentStrength: (v) => `${v}%`, fontSize: (v) => `${v}px`, tracking: (v) => `${v}px`, textX: (v) => `${v}%`, textY: (v) => `${v}%`, iconDensity: (v) => `${v}%`, iconSize: (v) => `${v}%`, iconSwitchRate: (v) => `${v} 次/秒`, iconSpin: (v) => `${Number(v).toFixed(2)}圈/秒`, iconGap: (v) => `${v}px`, iconY: (v) => `${v}px` };
+  const readouts = { speed: (v) => `${Number(v).toFixed(2)}×`, introDuration: (v) => `${(v / 1000).toFixed(2)}秒`, recomposeDuration: (v) => `${(v / 1000).toFixed(2)}秒`, resolveDuration: (v) => `${(v / 1000).toFixed(2)}秒`, holdDuration: (v) => `${(v / 1000).toFixed(2)}秒`, fragmentRate: (v) => `${v} 次/秒`, letterRotation: (v) => `${v}°`, rotationSpeed: (v) => `${Number(v).toFixed(2)}×`, shrinkAmount: (v) => `${v}%`, fragmentStrength: (v) => `${v}%`, fontSize: (v) => `${v}px`, tracking: (v) => `${v}px`, textX: (v) => `${v}%`, textY: (v) => `${v}%`, iconDensity: (v) => `${v}%`, iconCountCycles: (v) => `${v} 次`, iconSize: (v) => `${v}%`, iconSwitchRate: (v) => `${v} 次/秒`, iconSpin: (v) => `${Number(v).toFixed(2)}圈/秒`, iconGap: (v) => `${v}px`, iconY: (v) => `${v}px` };
   function updateOutputs() { Object.entries(readouts).forEach(([id, format]) => { const output = $(`${id}Out`); if (output) output.textContent = format(Number(controls[id].value)); }); $("cycleDurationOut").textContent = `${timings().cycle.toFixed(2)} 秒`; $("iconMotionControls").hidden = controls.effectMode.value !== "icons"; renderTimeline(); scheduleSave(); }
   function renderTimeline() {
     const t = timings(), phases = [["原色开场", t.intro, "intro"], [controls.effectMode.value === "icons" ? "彩字＋图标轮转" : "纯彩字轮转", t.active, "color"], ["恢复原色并收缩", t.resolve, "replace"], ["定稿停留", t.hold, "hold"]], bar = $("crChoreoBar"); bar.querySelectorAll("button").forEach((item) => item.remove()); $("crChoreoLegend").replaceChildren(); let elapsed = 0;
     phases.forEach(([name, duration, kind], index) => { const start = elapsed, button = document.createElement("button"); button.type = "button"; button.className = `me-choreo-block is-${kind}`; button.dataset.beat = index; button.style.flex = `${Math.max(.12, duration / t.cycle)} 0 0`; button.innerHTML = `<em>${index + 1}</em><strong>${name}</strong><small>${duration.toFixed(2)}秒</small>`; button.addEventListener("click", () => seek(start, true)); bar.insertBefore(button, $("timelinePlayhead")); const row = document.createElement("li"); row.innerHTML = `<i class="is-${kind}"></i><b>${index + 1}. ${name}</b><span>${start.toFixed(2)}s → ${(start + duration).toFixed(2)}s</span>`; row.addEventListener("click", () => seek(start, true)); $("crChoreoLegend").append(row); elapsed += duration; });
   }
   function renderLibrary(rootId, items) { const root = $(rootId); root.replaceChildren(); items.forEach((item) => { const button = document.createElement("button"); button.type = "button"; button.className = `me-asset-choice${state.selectedLibraryId === item.id ? " is-selected" : ""}`; button.innerHTML = `<img src="${item.url}" alt=""><span>${item.name}</span>`; button.addEventListener("click", () => { state.selectedLibraryId = item.id; $("librarySelectionName").textContent = `已选择：${item.name}`; renderLibraries(); }); root.append(button); }); }
-  function renderLibraries() { renderLibrary("flowLibrary", libraries.flow); renderLibrary("collisionLibrary", libraries.collision); renderLibrary("constructLibrary", libraries.construct); renderLibrary("animalLibrary", libraries.animal); renderLibrary("botLibrary", libraries.bot); }
+  function renderLibraries() { renderLibrary("flowLibrary", libraries.flow); renderLibrary("gifMotionLibrary", libraries.gifMotion); renderLibrary("animalLibrary", libraries.animal); renderLibrary("botLibrary", libraries.bot); }
   function moveSelectedAsset(assetId, direction) { const from = state.assets.findIndex((asset) => asset.id === assetId), to = clamp(from + direction, 0, state.assets.length - 1); if (from < 0 || from === to) return; const [moved] = state.assets.splice(from, 1); state.assets.splice(to, 0, moved); renderSelectedAssets(); scheduleSave(); }
   function renderSelectedAssets() {
     $("selectedAssetCount").textContent = state.assets.length; const root = $("crLayerItems"); root.replaceChildren();
@@ -151,7 +171,7 @@
   function closeAsset() { state.activeAssetId = null; $("crAssetDrawer").hidden = true; }
   function updateAssetOutputs() { const asset = activeAsset(); if (!asset) return; const values = { assetSizeOut: `${asset.size}%`, assetOpacityOut: `${asset.opacity}%`, assetOffsetXOut: `${asset.x}px`, assetOffsetYOut: `${asset.y}px`, assetRotationOut: `${asset.rotation}°`, assetSpinOut: `${Number(asset.spin).toFixed(2)}×` }; Object.entries(values).forEach(([id, value]) => { $(id).textContent = value; }); }
 
-  function collectScheme() { return { version: 4, controls: Object.fromEntries(controlIds.map((id) => [id, controls[id].type === "checkbox" ? controls[id].checked : controls[id].value])), palette: paletteInputs.map((input) => input.value), assets: state.assets, background: state.background }; }
+  function collectScheme() { return { version: 5, controls: Object.fromEntries(controlIds.map((id) => [id, controls[id].type === "checkbox" ? controls[id].checked : controls[id].value])), palette: paletteInputs.map((input) => input.value), assets: state.assets, background: state.background }; }
   function applyScheme(scheme, status) { if (!scheme?.controls) return; Object.entries(scheme.controls).forEach(([id, value]) => { if (!controls[id]) return; if (controls[id].type === "checkbox") controls[id].checked = Boolean(value); else controls[id].value = value; }); (scheme.palette || []).forEach((value, index) => { if (paletteInputs[index]) paletteInputs[index].value = value; }); const seen = new Set(); state.assets = (Array.isArray(scheme.assets) ? scheme.assets : []).filter((asset) => { const key = asset.libraryId || asset.url || asset.name; if (seen.has(key)) return false; seen.add(key); return true; }); state.background = scheme.background || null; applyBackground(); hydrateImages(); renderSelectedAssets(); updateOutputs(); restart(); if (status) $("schemeStatus").textContent = status; }
   function scheduleSave() { clearTimeout(state.autosaveTimer); state.autosaveTimer = setTimeout(() => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(collectScheme())); $("schemeStatus").textContent = "已自动保存当前彩组方案。"; } catch (_) { $("schemeStatus").textContent = "方案包含较大素材，请使用“保存方案”下载。"; } }, 300); }
   function download(blob, name) { const url = URL.createObjectURL(blob), link = document.createElement("a"); link.href = url; link.download = name; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1500); }
@@ -181,6 +201,6 @@
   $("exportPng").addEventListener("click", async () => { busy(true, "正在准备 PNG…"); await preloadAssets(); const output = exportCanvas(); renderFrame(output, currentTime(), output.width, output.height, 1); output.toBlob((blob) => { if (blob) download(blob, `color-recompose-${output.width}x${output.height}.png`); busy(false, blob ? "PNG 已生成" : "PNG 生成失败"); }, "image/png"); });
   $("exportGif").addEventListener("click", async () => { if (!window.GIF) { $("exportStatus").textContent = "GIF 编码器未加载。"; return; } busy(true, "正在准备 GIF…"); await preloadAssets(); const output = exportCanvas(), fps = Math.min(30, Number($("exportFps").value)), seconds = exportSeconds(), total = Math.ceil(seconds * fps), gif = new GIF({ workers: 2, quality: 10, width: output.width, height: output.height, workerScript: "js/continuation-gif.worker.js" }); for (let i = 0; i < total; i++) { renderFrame(output, i / fps, output.width, output.height, 1); gif.addFrame(output, { copy: true, delay: 1000 / fps }); } gif.on("progress", (p) => $("exportStatus").textContent = `正在编码 GIF · ${Math.round(p * 100)}%`); gif.on("finished", (blob) => { download(blob, `color-recompose-${output.width}x${output.height}.gif`); busy(false, "GIF 已生成"); }); gif.render(); });
   $("exportVideo").addEventListener("click", async () => { const output = exportCanvas(), fps = Number($("exportFps").value), seconds = exportSeconds(); if (!output.captureStream || !window.MediaRecorder) { $("exportStatus").textContent = "当前浏览器不支持视频编码。"; return; } busy(true, "正在录制视频…"); await preloadAssets(); const stream = output.captureStream(fps), type = ["video/mp4;codecs=h264", "video/webm;codecs=vp9", "video/webm"].find((item) => MediaRecorder.isTypeSupported(item)) || "", recorder = new MediaRecorder(stream, type ? { mimeType: type, videoBitsPerSecond: 14000000 } : undefined), chunks = []; recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); }; recorder.onstop = () => { const mime = recorder.mimeType || type || "video/webm", ext = mime.includes("mp4") ? "mp4" : "webm"; download(new Blob(chunks, { type: mime }), `color-recompose-${output.width}x${output.height}.${ext}`); stream.getTracks().forEach((track) => track.stop()); busy(false, "视频已生成"); }; recorder.start(); const started = performance.now(); await new Promise((resolve) => { const frame = (now) => { const elapsed = Math.min(seconds, (now - started) / 1000); renderFrame(output, elapsed, output.width, output.height, 1); $("exportStatus").textContent = `正在录制视频 · ${Math.round(elapsed / seconds * 100)}%`; if (elapsed < seconds) requestAnimationFrame(frame); else resolve(); }; requestAnimationFrame(frame); }); recorder.stop(); });
-  function defaultScheme() { const snapshot = collectScheme(); snapshot.controls.effectMode = "icons"; snapshot.controls.titleText = "Creator Studio"; snapshot.controls.sourceText = "MOTION\nVISION\nCREATE"; snapshot.assets = state.assets; return snapshot; }
-  resetAssets(); renderLibraries(); renderSelectedAssets(); hydrateImages(); let stored = null; try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch (_) {} if (stored?.version >= 4) applyScheme(stored, "已恢复上次自动保存的方案。" ); else applyScheme(defaultScheme(), "已载入彩字＋图标默认示例；可切换为纯彩字。" ); document.fonts?.ready.then(restart); updateOutputs(); loop();
+  function defaultScheme() { const snapshot = collectScheme(); snapshot.controls.effectMode = "icons"; snapshot.controls.titleText = "Creator Studio"; snapshot.controls.sourceText = "MOTION\nVISION\nCREATE"; snapshot.controls.iconDensity = "100"; snapshot.controls.iconCountCycles = "1"; snapshot.assets = state.assets; return snapshot; }
+  resetAssets(); renderLibraries(); renderSelectedAssets(); hydrateImages(); let stored = null; try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch (_) {} if (stored?.version >= 5) applyScheme(stored, "已恢复上次自动保存的方案。" ); else applyScheme(defaultScheme(), "已载入彩字＋图标默认示例；可切换为纯彩字。" ); document.fonts?.ready.then(restart); updateOutputs(); loop();
 })();

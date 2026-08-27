@@ -18,6 +18,7 @@
     "crumple": "390",
     "throw": "330",
     "resultHold": "620",
+    "exitDuration": "160",
     "throwRhythm": "gravity",
     "spin": "0.38",
     "paperWidth": "131",

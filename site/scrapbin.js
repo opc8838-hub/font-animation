@@ -10,7 +10,7 @@
     copy: $("#copyText"), font: $("#fontFamily"), weight: $("#fontWeight"),
     background: $("#backgroundColor"), textColor: $("#textColor"), paperTextColor: $("#paperTextColor"), paperColor: $("#paperColor"),
     speed: $("#speed"), titleReveal: $("#titleReveal"), titleHold: $("#titleHold"), binReveal: $("#binReveal"), readyHold: $("#readyHold"),
-    sheet: $("#sheet"), crumple: $("#crumple"), throw: $("#throw"), resultHold: $("#resultHold"),
+    sheet: $("#sheet"), crumple: $("#crumple"), throw: $("#throw"), resultHold: $("#resultHold"), exitDuration: $("#exitDuration"), loopHold: $("#loopHold"),
     throwRhythm: $("#throwRhythm"), spin: $("#spin"), paperWidth: $("#paperWidth"), paperHeight: $("#paperHeight"),
     wrinkle: $("#wrinkle"), paperTexture: $("#paperTexture"), arcHeight: $("#arcHeight"), sway: $("#sway"),
     binSize: $("#binSize"), binGap: $("#binGap"), binOpacity: $("#binOpacity"),
@@ -50,7 +50,9 @@
       sheet: Number(inputs.sheet.value) / 1000 / speed,
       crumple: Number(inputs.crumple.value) / 1000 / speed,
       throw: Number(inputs.throw.value) / 1000 / speed,
-      result: Number(inputs.resultHold.value) / 1000 / speed
+      result: Number(inputs.resultHold.value) / 1000 / speed,
+      exit: Number(inputs.exitDuration.value) / 1000 / speed,
+      blank: Number(inputs.loopHold.value) / 1000 / speed
     };
     result.cycle = Object.values(result).reduce((sum, value) => sum + value, 0);
     return result;
@@ -62,7 +64,8 @@
       ["文字柔现", "intro", "titleReveal", span.titleReveal], ["文字停留", "hold", "title", span.title],
       ["垃圾桶渐显", "contact", "bin", span.bin], ["准备停留", "hold", "ready", span.ready],
       ["纸面形成", "replace", "sheet", span.sheet], ["连续揉皱", "color", "crumple", span.crumple],
-      ["自然落入", "orbit", "throw", span.throw], ["空桶停留", "hold", "result", span.result]
+      ["自然落入", "orbit", "throw", span.throw], ["空桶停留", "hold", "result", span.result],
+      ["快速消失", "replace", "exit", span.exit], ["消失后停留", "hold", "blank", span.blank]
     ].map(([label, kind, phase, duration], index) => {
       const beat = { index, label, kind, phase, duration, start: cursor, end: cursor + duration };
       cursor = beat.end;
@@ -347,7 +350,7 @@
     ctx.translate(geometry.x, geometry.y + mix(st.binSize * .13, 0, progress));
     ctx.scale(mix(.9, 1, progress), mix(.52, 1, progress));
     ctx.translate(-geometry.x, -geometry.y);
-    ctx.globalAlpha = progress;
+    ctx.globalAlpha *= progress;
     draw(geometry, progress);
     ctx.restore();
   }
@@ -434,6 +437,16 @@
     ctx.textBaseline = "middle";
     ctx.fillStyle = inputs.textColor.value;
 
+    const exitProgress = phase.name === "exit" ? smooth(phase.progress) : phase.name === "blank" ? 1 : 0;
+    ctx.save();
+    if (exitProgress > 0) {
+      const exitScale = mix(1, .965, easeIn(phase.progress));
+      ctx.globalAlpha = 1 - exitProgress;
+      ctx.translate(st.x, st.binY);
+      ctx.scale(exitScale, exitScale);
+      ctx.translate(-st.x, -st.binY);
+    }
+
     const binVisible = phase.name === "titleReveal" || phase.name === "title" ? 0 : phase.name === "bin" ? phase.progress : 1;
     if (binVisible > 0) drawBinBack(ctx, st, binVisible);
 
@@ -474,6 +487,7 @@
     }
 
     if (binVisible > 0) drawBinFront(ctx, st, binVisible);
+    ctx.restore();
     if (target === canvas) {
       frameCounter.textContent = `F ${String(Math.floor(rawTime * fps) % 10000).padStart(4, "0")}`;
       updateChoreography(phase);
@@ -535,7 +549,7 @@
     speed: (value) => `${Number(value).toFixed(2)}×`,
     titleReveal: (value) => `${(value / 1000).toFixed(2)}秒`, titleHold: (value) => `${(value / 1000).toFixed(2)}秒`, binReveal: (value) => `${(value / 1000).toFixed(2)}秒`,
     readyHold: (value) => `${(value / 1000).toFixed(2)}秒`, sheet: (value) => `${(value / 1000).toFixed(2)}秒`,
-    crumple: (value) => `${(value / 1000).toFixed(2)}秒`, throw: (value) => `${(value / 1000).toFixed(2)}秒`, resultHold: (value) => `${(value / 1000).toFixed(2)}秒`,
+    crumple: (value) => `${(value / 1000).toFixed(2)}秒`, throw: (value) => `${(value / 1000).toFixed(2)}秒`, resultHold: (value) => `${(value / 1000).toFixed(2)}秒`, exitDuration: (value) => `${(value / 1000).toFixed(2)}秒`, loopHold: (value) => `${(value / 1000).toFixed(2)}秒`,
     spin: (value) => `${Number(value).toFixed(2)}圈`, paperWidth: (value) => `${value}%`, paperHeight: (value) => `${value}%`,
     wrinkle: (value) => `${value}%`, paperTexture: (value) => `${value}%`, arcHeight: (value) => `${value}px`, sway: (value) => `${value}px`,
     binSize: (value) => `${value}px`, binGap: (value) => `${value}px`, binOpacity: (value) => `${value}%`,

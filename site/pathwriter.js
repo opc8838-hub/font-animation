@@ -3,16 +3,19 @@
 
   const $ = (selector) => document.querySelector(selector);
   const canvas = $("#flowCanvas");
+  const stage = document.querySelector(".writer-stage");
+  const stageActions = document.querySelector(".writer-stage-actions");
   const frameCounter = $("#frameCounter");
   const exportStatus = $("#exportStatus");
-  const fps = 30;
+  const previewFps = 30;
   const inputs = {
     phrases: $("#phrasesInput"), font: $("#fontFamily"), fontSize: $("#fontSize"),
-    letterSpacing: $("#letterSpacing"), curveSpacing: $("#curveSpacing"), pathOffset: $("#pathOffset"), rideDistance: $("#rideDistance"), rideRhythm: $("#rideRhythm"), amplitude: $("#amplitude"), waves: $("#waves"),
-    pathWidth: $("#pathWidth"), tilt: $("#tilt"), lineWidth: $("#lineWidth"), glow: $("#glow"),
-    typeDuration: $("#typeDuration"), trackSync: $("#trackSync"), syncSlide: $("#syncSlide"), bendDuration: $("#bendDuration"), holdDuration: $("#holdDuration"),
+    letterSpacing: $("#letterSpacing"), curveSpacing: $("#curveSpacing"), pathOffset: $("#pathOffset"), rideDistance: $("#rideDistance"), rideRhythm: $("#rideRhythm"), exitMode: $("#exitMode"), pathStyle: $("#pathStyle"), amplitude: $("#amplitude"), waves: $("#waves"), curvePhase: $("#curvePhase"),
+    curvePoints: $("#curvePoints"), curveStartX: $("#curveStartX"), curveStartY: $("#curveStartY"), curveControl1X: $("#curveControl1X"), curveControl1Y: $("#curveControl1Y"), curveControl2X: $("#curveControl2X"), curveControl2Y: $("#curveControl2Y"), curveEndX: $("#curveEndX"), curveEndY: $("#curveEndY"),
+    pathWidth: $("#pathWidth"), pathLeft: $("#pathLeft"), pathRight: $("#pathRight"), tilt: $("#tilt"), lineWidth: $("#lineWidth"), glow: $("#glow"),
+    caretLead: $("#caretLead"), typingInterval: $("#typingInterval"), typeDuration: $("#typeDuration"), trackSync: $("#trackSync"), syncSlide: $("#syncSlide"), bendDuration: $("#bendDuration"), holdDuration: $("#holdDuration"),
     rideDuration: $("#rideDuration"), fadeDuration: $("#fadeDuration"), direction: $("#direction"),
-    verticalPosition: $("#verticalPosition"), bendEase: $("#bendEase"), pathOpacity: $("#pathOpacity"),
+    horizontalPosition: $("#horizontalPosition"), verticalPosition: $("#verticalPosition"), bendEase: $("#bendEase"), pathOpacity: $("#pathOpacity"),
     background: $("#backgroundColor"), foreground: $("#textColor"), lineColor: $("#lineColor"), accent: $("#accentColor")
   };
 
@@ -34,8 +37,8 @@
   const shapeAssets = [{ name: "彩虹圆环", url: `data:image/svg+xml;charset=utf-8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff365d"/><stop offset=".28" stop-color="#ffc400"/><stop offset=".52" stop-color="#35d07f"/><stop offset=".76" stop-color="#248bff"/><stop offset="1" stop-color="#9347ff"/></linearGradient></defs><circle cx="50" cy="50" r="31" fill="none" stroke="url(#g)" stroke-width="16"/></svg>')}` }];
   const mediaCache = new Map();
   const state = { assets: [], customLibrary: [], background: null, autosaveTimer: 0, librarySelection: null, activeAssetId: null };
-  const DEFAULT_SCHEME_URL = "assets/presets/pathwriter-default.json?v=20260825-1";
-  const DEFAULT_SCHEME_REVISION = "20260825-1";
+  const DEFAULT_SCHEME_URL = "assets/presets/pathwriter-default.json?v=20260827-default2";
+  const DEFAULT_SCHEME_REVISION = "20260827-default2";
 
   const fontPresets = {
     "snap-inter-medium": { family: "Continuation Inter Medium", weight: 500, style: "normal" },
@@ -61,9 +64,87 @@
   let pausedAt = 0;
   let paused = false;
   let rafId = 0;
+  let livePreviewSpec = null;
 
   const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
   const mix = (a, b, amount) => a + (b - a) * amount;
+  function makeWavePoints(rawCount) {
+    const count = clamp(Math.round(Number(rawCount) || 1), 1, 8);
+    const interiorCount = count * 2;
+    return Array.from({ length: interiorCount + 2 }, (_, index) => ({
+      x: Number((index / (interiorCount + 1) * 100).toFixed(2)),
+      y: index === 0 || index === interiorCount + 1 ? 50 : (index % 2 ? 18 : 82)
+    }));
+  }
+
+  function readCurvePoints() {
+    try {
+      const parsed = JSON.parse(inputs.curvePoints.value || "[]");
+      if (!Array.isArray(parsed) || parsed.length < 4) throw new Error("invalid curve points");
+      return parsed.map((point) => ({ x: clamp(Number(point.x) || 0, 0, 100), y: clamp(Number(point.y) || 0, 0, 100) }));
+    } catch (_) {
+      const points = makeWavePoints(inputs.waves.value);
+      inputs.curvePoints.value = JSON.stringify(points);
+      return points;
+    }
+  }
+
+  function writeCurvePoints(points) {
+    inputs.curvePoints.value = JSON.stringify(points.map((point) => ({
+      x: Number(point.x.toFixed(2)), y: Number(point.y.toFixed(2))
+    })));
+  }
+
+  function curveWaveCount(points = readCurvePoints()) {
+    return clamp(Math.round((points.length - 2) / 2), 1, 8);
+  }
+
+  function splinePoint(points, amount) {
+    const degree = Math.min(3, points.length - 1);
+    const last = points.length - 1;
+    const knots = Array.from({ length: points.length + degree + 1 }, (_, index) => {
+      if (index <= degree) return 0;
+      if (index >= last + 1) return 1;
+      return (index - degree) / (last - degree + 1);
+    });
+    const value = clamp(amount);
+    let span = last;
+    if (value < 1) {
+      for (let index = degree; index <= last; index += 1) {
+        if (value >= knots[index] && value < knots[index + 1]) { span = index; break; }
+      }
+    }
+    const work = Array.from({ length: degree + 1 }, (_, index) => ({ ...points[span - degree + index] }));
+    for (let level = 1; level <= degree; level += 1) {
+      for (let index = degree; index >= level; index -= 1) {
+        const knotIndex = span - degree + index;
+        const denominator = knots[knotIndex + degree - level + 1] - knots[knotIndex];
+        const weight = denominator > .000001 ? (value - knots[knotIndex]) / denominator : 0;
+        work[index] = {
+          x: mix(work[index - 1].x, work[index].x, weight),
+          y: mix(work[index - 1].y, work[index].y, weight)
+        };
+      }
+    }
+    return work[degree];
+  }
+
+  function sampleCurve(points, amount) {
+    const value = clamp(amount);
+    const point = splinePoint(points, value);
+    const epsilon = .0005;
+    const beforeAmount = Math.max(0, value - epsilon);
+    const afterAmount = Math.min(1, value + epsilon);
+    const before = splinePoint(points, beforeAmount);
+    const after = splinePoint(points, afterAmount);
+    const span = Math.max(.000001, afterAmount - beforeAmount);
+    return {
+      x: point.x,
+      y: point.y,
+      dx: (after.x - before.x) / span,
+      dy: (after.y - before.y) / span
+    };
+  }
   const easeInOut = (value) => value < .5 ? 4 * value * value * value : 1 - Math.pow(-2 * value + 2, 3) / 2;
   const easeOut = (value) => 1 - Math.pow(1 - value, 3);
   const easeIn = (value) => value * value * value;
@@ -76,20 +157,34 @@
     return easeInOut(progress);
   }
 
+  function exitEase(value) {
+    const progress = clamp(value);
+    if (inputs.rideRhythm.value === "linear") return progress;
+    if (inputs.rideRhythm.value === "fastStart") return easeOut(progress);
+    if (inputs.rideRhythm.value === "fastFinish") return easeIn(progress);
+    // Keep a non-zero launch velocity so the preceding glide does not appear
+    // to stop for one beat before the final exit.
+    const incomingSlope = .72;
+    return (progress * progress * progress - 2 * progress * progress + progress) * incomingSlope
+      + (-2 * progress * progress * progress + 3 * progress * progress);
+  }
+
   function phrases() {
     const rows = inputs.phrases.value.split(/\r?\n/).map((row) => row.trim()).filter(Boolean);
     return rows.length ? rows : ["Write it."];
   }
 
   function timing() {
+    const longestTypingDuration = Math.max(...phrases().map((phrase) => typingDurationFor(phrase)));
     const result = {
-      type: Number(inputs.typeDuration.value) / 1000,
+      lead: Number(inputs.caretLead.value) / 1000,
+      type: Math.max(Number(inputs.typeDuration.value) / 1000, longestTypingDuration),
       bend: Number(inputs.bendDuration.value) / 1000,
       hold: Number(inputs.holdDuration.value) / 1000,
       ride: Number(inputs.rideDuration.value) / 1000,
       fade: Number(inputs.fadeDuration.value) / 1000
     };
-    result.phrase = result.type + result.bend + result.hold + result.ride + result.fade;
+    result.phrase = result.lead + result.type + result.bend + result.hold + result.ride + result.fade;
     result.cycle = result.phrase * phrases().length;
     return result;
   }
@@ -102,7 +197,7 @@
     const safe = Math.max(0, seconds);
     if (paused) pausedAt = safe;
     else animationStart = performance.now() - safe * 1000;
-    renderFrame(canvas, safe, canvas.clientWidth || innerWidth, canvas.clientHeight || innerHeight, window.devicePixelRatio || 1);
+    renderPreviewFrame(safe);
   }
 
   function fontScale(width, height) {
@@ -164,6 +259,10 @@
     return result;
   }
 
+  function typingDurationFor(phrase) {
+    return Math.max(.001, phraseElements(phrase).length * Number(inputs.typingInterval.value) / 1000);
+  }
+
   function measureElements(ctx, phrase, desiredSize, maxWidth, spacing) {
     const source = phraseElements(phrase);
     let size = desiredSize;
@@ -187,14 +286,44 @@
   }
 
   function pathPoint(progress, options) {
-    const { centerX, centerY, pathSpan, amplitude, waves, tilt, phase, direction } = options;
+    const { centerX, centerY, pathSpan, amplitude, waves, tilt, phase, direction, style } = options;
     const s = direction < 0 ? 1 - progress : progress;
-    const angle = (s * waves + phase) * Math.PI * 2;
     const tiltSlope = Math.tan(tilt * Math.PI / 180);
-    const x = centerX + (s - .5) * pathSpan;
-    const y = centerY + Math.sin(angle) * amplitude + (s - .5) * pathSpan * tiltSlope;
-    const dy = Math.cos(angle) * amplitude * waves * Math.PI * 2 / pathSpan + tiltSlope;
-    const tangent = Math.atan2(dy, 1) * (direction < 0 ? -1 : 1);
+    let x = centerX + (s - .5) * pathSpan;
+    let curveY = 0;
+    let curveSlope = 0;
+    const shifted = s + phase;
+    if (style === "custom") {
+      const sampled = sampleCurve(options.customPoints, s);
+      const normalizedX = sampled.x / 100;
+      const normalizedY = sampled.y / 100;
+      const derivativeX = sampled.dx / 100 * pathSpan;
+      const derivativeY = sampled.dy / 100 * amplitude * 2;
+      x = centerX + (normalizedX - .5) * pathSpan;
+      const localX = (normalizedX - .5) * pathSpan;
+      const y = centerY + (normalizedY - .5) * amplitude * 2 + localX * tiltSlope;
+      const orientedX = derivativeX * (direction < 0 ? -1 : 1);
+      const orientedY = (derivativeY + derivativeX * tiltSlope) * (direction < 0 ? -1 : 1);
+      return { x, y, tangent: Math.atan2(orientedY, orientedX) };
+    } else if (style === "archUp" || style === "archDown") {
+      const u = shifted - .5;
+      const sign = style === "archUp" ? 1 : -1;
+      curveY = sign * amplitude * (4 * u * u - 1);
+      curveSlope = sign * 8 * amplitude * u / pathSpan;
+    } else if (style === "rise" || style === "fall") {
+      const sign = style === "rise" ? -1 : 1;
+      const angle = (shifted - .5) * Math.PI / 2;
+      curveY = sign * amplitude * Math.sin(angle);
+      curveSlope = sign * amplitude * Math.cos(angle) * Math.PI / 2 / pathSpan;
+    } else if (style !== "straight") {
+      const angle = (s * waves + phase) * Math.PI * 2;
+      curveY = Math.sin(angle) * amplitude;
+      curveSlope = Math.cos(angle) * amplitude * waves * Math.PI * 2 / pathSpan;
+    }
+    const y = centerY + curveY + (s - .5) * pathSpan * tiltSlope;
+    const dy = curveSlope + tiltSlope;
+    const orientation = direction < 0 ? -1 : 1;
+    const tangent = Math.atan2(dy * orientation, orientation);
     return { x, y, tangent };
   }
 
@@ -203,7 +332,9 @@
     let length = 0;
     let previous = null;
     for (let index = 0; index <= 900; index += 1) {
-      const progress = mix(-.28, 1.28, index / 900);
+      // The authored curve is finite. pointAtPathDistance() extends both ends
+      // along their last tangent instead of inventing another wave off-screen.
+      const progress = index / 900;
       const point = pathPoint(progress, options);
       if (previous) length += Math.hypot(point.x - previous.x, point.y - previous.y);
       points.push({ progress, point, length });
@@ -216,8 +347,16 @@
   function pointAtPathDistance(table, distance) {
     const target = table.centerLength + distance;
     const points = table.points;
-    if (target <= points[0].length) return points[0].point;
-    if (target >= points[points.length - 1].length) return points[points.length - 1].point;
+    if (target <= points[0].length) {
+      const a = points[0];
+      const travel = target - a.length;
+      return { x: a.point.x + Math.cos(a.point.tangent) * travel, y: a.point.y + Math.sin(a.point.tangent) * travel, tangent: a.point.tangent };
+    }
+    if (target >= points[points.length - 1].length) {
+      const b = points[points.length - 1];
+      const travel = target - b.length;
+      return { x: b.point.x + Math.cos(b.point.tangent) * travel, y: b.point.y + Math.sin(b.point.tangent) * travel, tangent: b.point.tangent };
+    }
     let low = 0;
     let high = points.length - 1;
     while (high - low > 1) {
@@ -227,7 +366,8 @@
     const a = points[low];
     const b = points[high];
     const amount = (target - a.length) / Math.max(.0001, b.length - a.length);
-    return { x: mix(a.point.x, b.point.x, amount), y: mix(a.point.y, b.point.y, amount), tangent: mix(a.point.tangent, b.point.tangent, amount) };
+    const angleDelta = Math.atan2(Math.sin(b.point.tangent - a.point.tangent), Math.cos(b.point.tangent - a.point.tangent));
+    return { x: mix(a.point.x, b.point.x, amount), y: mix(a.point.y, b.point.y, amount), tangent: a.point.tangent + angleDelta * amount };
   }
 
   function drawElement(ctx, element, x, y, angle, size, alpha, color, glowAmount) {
@@ -242,36 +382,11 @@
     } else {
       ctx.font = fontString(size);
       ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
+      ctx.textBaseline = "alphabetic";
       ctx.fillStyle = color;
       if (glowAmount > 0) { ctx.shadowColor = color; ctx.shadowBlur = glowAmount * 18; }
       ctx.fillText(element.character, 0, 0);
     }
-    ctx.restore();
-  }
-
-  function drawPath(ctx, options, reveal, alpha, lineWidth, color, anchor = .5) {
-    if (reveal <= 0 || alpha <= 0) return;
-    const safeReveal = clamp(reveal);
-    const safeAnchor = clamp(anchor, 0, 1);
-    const forwardEnd = mix(safeAnchor, 1, easeOut(safeReveal));
-    const backwardReveal = clamp((safeReveal - .18) / .82);
-    const start = mix(safeAnchor, 0, easeInOut(backwardReveal));
-    const end = Math.max(start + .001, forwardEnd);
-    const steps = Math.max(12, Math.round((end - start) * 160));
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = lineWidth;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.beginPath();
-    for (let index = 0; index <= steps; index += 1) {
-      const point = pathPoint(mix(start, end, index / steps), options);
-      if (index === 0) ctx.moveTo(point.x, point.y);
-      else ctx.lineTo(point.x, point.y);
-    }
-    ctx.stroke();
     ctx.restore();
   }
 
@@ -284,6 +399,26 @@
     ctx.shadowColor = color;
     ctx.shadowBlur = 5 + glowAmount * 22;
     ctx.fillText(text, x, y);
+    ctx.restore();
+  }
+
+  function drawPathBetweenDistances(ctx, table, startDistance, endDistance, alpha, lineWidth, color) {
+    if (alpha <= 0 || endDistance <= startDistance) return;
+    const distance = endDistance - startDistance;
+    const steps = Math.max(12, Math.round(distance / 7));
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    for (let index = 0; index <= steps; index += 1) {
+      const point = pointAtPathDistance(table, mix(startDistance, endDistance, index / steps));
+      if (index === 0) ctx.moveTo(point.x, point.y);
+      else ctx.lineTo(point.x, point.y);
+    }
+    ctx.stroke();
     ctx.restore();
   }
 
@@ -320,6 +455,7 @@
     const phraseIndex = Math.min(rows.length - 1, Math.floor(cycleTime / span.phrase));
     const local = cycleTime - phraseIndex * span.phrase;
     const phrase = rows[phraseIndex];
+    const phraseTypingDuration = typingDurationFor(phrase);
     const scale = fontScale(displayWidth, displayHeight);
     const desiredSize = Number(inputs.fontSize.value) * scale;
     const spacing = Number(inputs.letterSpacing.value) * scale;
@@ -327,14 +463,16 @@
     const pathSpan = displayWidth * Number(inputs.pathWidth.value) / 100;
     const fit = measureElements(ctx, phrase, desiredSize, Math.min(displayWidth * .72, pathSpan * .78), spacing);
     const curvedFit = measureElements(ctx, phrase, fit.size, pathSpan * .94, curveSpacing);
-    const centerX = displayWidth / 2;
+    const centerX = displayWidth * Number(inputs.horizontalPosition.value) / 100;
     const centerY = displayHeight * Number(inputs.verticalPosition.value) / 100;
     const direction = inputs.direction.value === "left" ? -1 : 1;
     const pathOptions = {
       centerX, centerY, pathSpan,
       amplitude: Number(inputs.amplitude.value) * scale,
       waves: Number(inputs.waves.value), tilt: Number(inputs.tilt.value),
-      phase: -.08, direction
+      phase: Number(inputs.curvePhase.value) / 100, direction,
+      style: inputs.pathStyle.value,
+      customPoints: readCurvePoints()
     };
     const pathAlpha = Number(inputs.pathOpacity.value) / 100;
     const lineWidth = Number(inputs.lineWidth.value) * scale;
@@ -344,138 +482,476 @@
     const lineColor = inputs.lineColor.value;
     const syncStart = Number(inputs.trackSync.value) / 100;
     const syncSlideShare = Number(inputs.syncSlide.value) / 100;
-    const earlyCurveAmount = .72;
-    let phase = "type";
-    let progress = clamp(local / Math.max(.001, span.type));
-    if (local >= span.type) {
+    // The rail reaches its final height during typing. Later phases may extend
+    // and slide along it, but must not lift the whole composition again.
+    const earlyCurveAmount = 1;
+    const motionLocal = local - span.lead;
+    let phase = "lead";
+    let progress = span.lead > 0 ? clamp(local / span.lead) : 1;
+    if (motionLocal >= 0) {
+      phase = "type";
+      progress = clamp(motionLocal / Math.max(.001, span.type));
+    }
+    if (motionLocal >= span.type) {
       phase = "bend";
-      progress = clamp((local - span.type) / Math.max(.001, span.bend));
+      progress = clamp((motionLocal - span.type) / Math.max(.001, span.bend));
     }
-    if (local >= span.type + span.bend) {
+    if (motionLocal >= span.type + span.bend) {
       phase = "hold";
-      progress = clamp((local - span.type - span.bend) / Math.max(.001, span.hold));
+      progress = clamp((motionLocal - span.type - span.bend) / Math.max(.001, span.hold));
     }
-    if (local >= span.type + span.bend + span.hold) {
+    if (motionLocal >= span.type + span.bend + span.hold) {
       phase = "ride";
-      progress = clamp((local - span.type - span.bend - span.hold) / Math.max(.001, span.ride));
+      progress = clamp((motionLocal - span.type - span.bend - span.hold) / Math.max(.001, span.ride));
     }
-    if (local >= span.type + span.bend + span.hold + span.ride) {
+    if (motionLocal >= span.type + span.bend + span.hold + span.ride) {
       phase = "fade";
-      progress = clamp((local - span.type - span.bend - span.hold - span.ride) / Math.max(.001, span.fade));
+      progress = clamp((motionLocal - span.type - span.bend - span.hold - span.ride) / Math.max(.001, span.fade));
     }
 
-    const table = pathTable(pathOptions);
-    const textLineOffset = fit.size * .5 + Number(inputs.pathOffset.value) * scale;
+    const userPathOffset = Number(inputs.pathOffset.value) * scale;
+    ctx.font = fontString(fit.size);
+    const textMetrics = fit.elements
+      .filter((element) => element.type === "text")
+      .map((element) => ctx.measureText(element.character));
+    const maxTextAscent = Math.max(fit.size * .68, ...textMetrics.map((metrics) => metrics.actualBoundingBoxAscent || 0));
+    const maxTextDescent = Math.max(fit.size * .12, ...textMetrics.map((metrics) => metrics.actualBoundingBoxDescent || 0));
+    const straightTextBaselineY = centerY + (maxTextAscent - maxTextDescent) / 2;
+    const textTrackOffset = maxTextDescent + lineWidth / 2 + 2 * scale + userPathOffset;
+    const pathNormalOffset = (element) => element.type === "asset"
+      ? fit.size * .48 + userPathOffset
+      : textTrackOffset;
     const rideSpan = Number(inputs.rideDistance.value) / 100 * pathSpan * direction;
-    const trackAnchor = clamp(.5 + direction * curvedFit.total / Math.max(1, pathSpan) / 2, 0, 1);
+    const leftTrackLength = pathSpan * .5 * Number(inputs.pathLeft.value) / 100;
+    const rightTrackLength = pathSpan * .5 * Number(inputs.pathRight.value) / 100;
+    const userTrackStart = direction > 0 ? -leftTrackLength : -rightTrackLength;
+    const userTrackEnd = direction > 0 ? rightTrackLength : leftTrackLength;
+    const straightTrackY = straightTextBaselineY + textTrackOffset;
+    const pathAtBend = (amount) => ({
+      ...pathOptions,
+      centerY: mix(straightTrackY, centerY, amount),
+      amplitude: pathOptions.amplitude * amount,
+      tilt: pathOptions.tilt * amount
+    });
+    const normalOffsetAtBend = (element, amount) => {
+      const straightY = element.type === "asset" ? centerY : straightTextBaselineY;
+      const straightOffset = straightTrackY - straightY;
+      return mix(straightOffset, pathNormalOffset(element), amount);
+    };
+    const trackStartTime = span.lead + phraseTypingDuration * syncStart;
+    const continuousRideClock = clamp((local - trackStartTime) / Math.max(.001, span.phrase - trackStartTime));
+    const typeEndClock = clamp((span.lead + phraseTypingDuration - trackStartTime) / Math.max(.001, span.phrase - trackStartTime), .01, .99);
+    const rideAtTypeEnd = clamp(syncSlideShare, .005, .95);
+    const rideExponent = Math.max(.08, Math.log(rideAtTypeEnd) / Math.log(typeEndClock));
+    const continuousRideProgress = Math.pow(continuousRideClock, rideExponent);
+    const continuousRideDistance = rideEase(continuousRideProgress) * rideSpan;
 
-    if (phase === "type") {
-      const typingProgress = progress;
-      const trackProgress = clamp((typingProgress - syncStart) / Math.max(.01, 1 - syncStart));
-      const bendProgress = easeOut(trackProgress) * earlyCurveAmount;
-      const rideDistance = easeInOut(trackProgress) * syncSlideShare * rideSpan;
-      drawPath(ctx, pathOptions, trackProgress, pathAlpha * easeOut(trackProgress), lineWidth, lineColor, trackAnchor);
-
-      const typed = typingProgress * fit.elements.length;
-      const visibleCount = Math.min(fit.elements.length, Math.ceil(typed));
-      const visible = fit.elements.slice(0, visibleCount);
-      const visibleWidth = visible.reduce((sum, glyph) => sum + glyph.width, 0) + Math.max(0, visible.length - 1) * spacing;
-      let cursor = centerX - fit.total / 2;
-      visible.forEach((element, index) => {
-        const curvedElement = curvedFit.elements[index] || element;
-        const point = pointAtPathDistance(table, curvedElement.center + rideDistance);
-        const liftedX = point.x + Math.sin(point.tangent) * textLineOffset;
-        const liftedY = point.y - Math.cos(point.tangent) * textLineOffset;
-        const straightX = cursor + element.width / 2;
-        const isActive = index === visible.length - 1 && visibleCount < fit.elements.length + 1;
-        const fraction = typed >= fit.elements.length ? 1 : typed - Math.floor(typed);
-        const alpha = index === visible.length - 1 ? clamp(fraction * 1.8, .35, 1) : 1;
-        drawElement(
-          ctx,
-          element,
-          mix(straightX, liftedX, bendProgress),
-          mix(centerY, liftedY, bendProgress),
-          point.tangent * bendProgress,
-          fit.size,
-          alpha,
-          isActive ? accent : foreground,
-          isActive ? glowAmount : 0
-        );
-        cursor += element.width + spacing;
-      });
-
-      const straightCaretX = centerX - fit.total / 2 + visibleWidth + Math.max(3, fit.size * .06);
-      const lastCurved = curvedFit.elements[Math.max(0, visibleCount - 1)];
-      const caretDistance = lastCurved ? lastCurved.center + lastCurved.width / 2 + curveSpacing * .45 + rideDistance : -curvedFit.total / 2 + rideDistance;
-      const caretPoint = pointAtPathDistance(table, caretDistance);
-      const curvedCaretX = caretPoint.x + Math.sin(caretPoint.tangent) * textLineOffset;
-      const curvedCaretY = caretPoint.y - Math.cos(caretPoint.tangent) * textLineOffset;
-      const caretX = mix(straightCaretX, curvedCaretX, bendProgress);
-      const caretY = mix(centerY, curvedCaretY, bendProgress);
-      const blink = .45 + .55 * Math.abs(Math.sin(rawTime * Math.PI * 3.5));
+    if (phase === "lead") {
+      const caretX = centerX;
+      const blink = .72 + .28 * Math.abs(Math.sin(rawTime * Math.PI * 3.5));
       ctx.save();
-      ctx.translate(caretX, caretY);
-      ctx.rotate(caretPoint.tangent * bendProgress);
+      ctx.translate(caretX, straightTextBaselineY);
       ctx.globalAlpha = blink;
       ctx.strokeStyle = accent;
       ctx.lineWidth = Math.max(1.2, fit.size * .022);
       ctx.shadowColor = accent;
       ctx.shadowBlur = 8 + glowAmount * 18;
       ctx.beginPath();
-      ctx.moveTo(0, -fit.size * .55);
-      ctx.lineTo(0, fit.size * .55);
+      ctx.moveTo(0, -fit.size * .82);
+      ctx.lineTo(0, fit.size * .18);
+      ctx.stroke();
+      ctx.restore();
+    } else if (phase === "type") {
+      const typingProgress = clamp(motionLocal / phraseTypingDuration);
+      const trackProgress = clamp((typingProgress - syncStart) / Math.max(.01, 1 - syncStart));
+      const bendProgress = easeOut(trackProgress) * earlyCurveAmount;
+      const rideDistance = continuousRideDistance;
+      const activePathOptions = pathAtBend(bendProgress);
+      const activeTable = pathTable(activePathOptions);
+
+      const typed = typingProgress * fit.elements.length;
+      const completedCount = Math.min(fit.elements.length, Math.floor(typed + 1e-6));
+      const fraction = completedCount >= fit.elements.length ? 1 : clamp(typed - completedCount);
+      const reveal = completedCount >= fit.elements.length ? 1 : easeOut(fraction);
+      const visibleCount = Math.min(
+        fit.elements.length,
+        completedCount + (completedCount < fit.elements.length && fraction > 1e-6 ? 1 : 0)
+      );
+      const visible = fit.elements.slice(0, visibleCount);
+      const typingLayout = (elements, gap) => {
+        const centersFor = (count) => {
+          const slice = elements.slice(0, count);
+          const total = slice.reduce((sum, glyph) => sum + glyph.width, 0) + Math.max(0, count - 1) * gap;
+          let cursor = -total / 2;
+          return {
+            total,
+            centers: slice.map((glyph) => {
+              const center = cursor + glyph.width / 2;
+              cursor += glyph.width + gap;
+              return center;
+            })
+          };
+        };
+        const before = centersFor(completedCount);
+        const after = centersFor(visibleCount);
+        return {
+          total: mix(before.total, after.total, reveal),
+          centers: after.centers.map((center, index) => index < before.centers.length ? mix(before.centers[index], center, reveal) : center)
+        };
+      };
+      const straightTypingLayout = typingLayout(fit.elements, spacing);
+      const curvedTypingLayout = typingLayout(curvedFit.elements, curveSpacing);
+      if (visibleCount > 0) {
+        const firstStraight = fit.elements[0];
+        const firstCurved = curvedFit.elements[0] || firstStraight;
+        const lastIndex = visibleCount - 1;
+        const lastStraightInPhrase = fit.elements[lastIndex];
+        const lastCurvedInPhrase = curvedFit.elements[lastIndex] || lastStraightInPhrase;
+        const textStartDistance = mix(
+          straightTypingLayout.centers[0] - firstStraight.width / 2 - spacing * .18,
+          curvedTypingLayout.centers[0] - firstCurved.width / 2 - curveSpacing * .18,
+          bendProgress
+        ) + rideDistance;
+        const textEndDistance = mix(
+          straightTypingLayout.centers[lastIndex] + lastStraightInPhrase.width / 2 + spacing * .18,
+          curvedTypingLayout.centers[lastIndex] + lastCurvedInPhrase.width / 2 + curveSpacing * .18,
+          bendProgress
+        ) + rideDistance;
+        const trackFill = easeInOut(trackProgress);
+        const growingTrackStart = mix(textStartDistance, userTrackStart + rideDistance, trackFill);
+        const growingTrackEnd = mix(textStartDistance, userTrackEnd + rideDistance, trackFill);
+        drawPathBetweenDistances(
+          ctx,
+          activeTable,
+          growingTrackStart,
+          growingTrackEnd,
+          pathAlpha * easeOut(trackProgress),
+          lineWidth,
+          lineColor
+        );
+      }
+      const typingPulse = .72 + .28 * Math.abs(Math.sin((motionLocal / Math.max(.03, Number(inputs.typingInterval.value) / 1000)) * Math.PI * 2.2));
+      visible.forEach((element, index) => {
+        const curvedElement = curvedFit.elements[index] || element;
+        const pathDistance = mix(straightTypingLayout.centers[index], curvedTypingLayout.centers[index], bendProgress) + rideDistance;
+        const point = pointAtPathDistance(activeTable, pathDistance);
+        const normalOffset = normalOffsetAtBend(element, bendProgress);
+        const liftedX = point.x + Math.sin(point.tangent) * normalOffset;
+        const liftedY = point.y - Math.cos(point.tangent) * normalOffset;
+        const straightX = centerX + straightTypingLayout.centers[index];
+        const straightY = element.type === "asset" ? centerY : straightTextBaselineY;
+        const attachedToTrack = trackProgress > .0001;
+        const isActive = index === visible.length - 1;
+        const alpha = isActive ? clamp((.38 + reveal * .62) * typingPulse, .32, 1) : 1;
+        drawElement(
+          ctx,
+          element,
+          attachedToTrack ? liftedX : straightX,
+          attachedToTrack ? liftedY : straightY,
+          attachedToTrack ? point.tangent : 0,
+          fit.size,
+          alpha,
+          isActive ? accent : foreground,
+          isActive ? glowAmount * (.75 + typingPulse * .45) : 0
+        );
+      });
+
+      const straightCaretX = centerX + straightTypingLayout.total / 2 + Math.max(3, fit.size * .06);
+      const curvedCaretDistance = curvedTypingLayout.total / 2 + curveSpacing * .45;
+      const straightCaretDistance = straightTypingLayout.total / 2 + spacing * .45;
+      const caretDistance = mix(straightCaretDistance, curvedCaretDistance, bendProgress) + rideDistance;
+      const caretPoint = pointAtPathDistance(activeTable, caretDistance);
+      const caretNormalOffset = normalOffsetAtBend({ type: "text" }, bendProgress);
+      const curvedCaretX = caretPoint.x + Math.sin(caretPoint.tangent) * caretNormalOffset;
+      const curvedCaretY = caretPoint.y - Math.cos(caretPoint.tangent) * caretNormalOffset;
+      const attachedToTrack = trackProgress > .0001;
+      const caretX = attachedToTrack ? curvedCaretX : straightCaretX;
+      const caretY = attachedToTrack ? curvedCaretY : straightTextBaselineY;
+      const blink = .45 + .55 * Math.abs(Math.sin(rawTime * Math.PI * 3.5));
+      ctx.save();
+      ctx.translate(caretX, caretY);
+      ctx.rotate(attachedToTrack ? caretPoint.tangent : 0);
+      ctx.globalAlpha = blink;
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = Math.max(1.2, fit.size * .022);
+      ctx.shadowColor = accent;
+      ctx.shadowBlur = 8 + glowAmount * 18;
+      ctx.beginPath();
+      ctx.moveTo(0, -fit.size * .82);
+      ctx.lineTo(0, fit.size * .18);
       ctx.stroke();
       ctx.restore();
     } else {
       const elastic = Number(inputs.bendEase.value) / 100;
       const bendFinish = clamp(easeOut(progress) + Math.sin(progress * Math.PI) * .06 * elastic);
       const bendProgress = phase === "bend" ? mix(earlyCurveAmount, 1, bendFinish) : 1;
-      const rideProgress = phase === "ride" ? mix(syncSlideShare, 1, rideEase(progress)) : phase === "fade" ? 1 + easeIn(progress) * .28 : syncSlideShare;
       const fadeAlpha = phase === "fade" ? 1 - easeIn(progress) : 1;
-      drawPath(ctx, pathOptions, 1, pathAlpha * fadeAlpha, lineWidth, lineColor, trackAnchor);
-      const rideDistance = rideProgress * rideSpan;
-      curvedFit.elements.forEach((element, index) => {
-        const point = pointAtPathDistance(table, element.center + rideDistance);
-        const straightElement = fit.elements[index] || element;
-        const straightX = centerX + straightElement.center;
-        const liftedX = point.x + Math.sin(point.tangent) * textLineOffset;
-        const liftedY = point.y - Math.cos(point.tangent) * textLineOffset;
-        const x = mix(straightX, liftedX, bendProgress);
-        const y = mix(centerY, liftedY, bendProgress);
-        const angle = point.tangent * bendProgress;
-        const remainingBend = clamp((bendProgress - earlyCurveAmount) / Math.max(.001, 1 - earlyCurveAmount));
-        const activeIndex = Math.min(curvedFit.elements.length - 1, Math.floor(remainingBend * curvedFit.elements.length));
-        const isActive = phase === "bend" && index === activeIndex;
-        const elementAlpha = fadeAlpha;
-        drawElement(ctx, element, x, y, angle, fit.size, elementAlpha, isActive ? accent : foreground, isActive ? glowAmount : 0);
-      });
-      if (phase === "bend") {
-        const tip = pathPoint(mix(trackAnchor, 1, easeOut(progress)), pathOptions);
-        glowText(ctx, "·", tip.x, tip.y, Math.max(12, fit.size * .42), accent, glowAmount);
+      const activePathOptions = pathAtBend(bendProgress);
+      const activeTable = pathTable(activePathOptions);
+      const rideStartTime = span.lead + span.type + span.bend + span.hold;
+      const rideStartClock = clamp((rideStartTime - trackStartTime) / Math.max(.001, span.phrase - trackStartTime));
+      const rideStartDistance = rideEase(Math.pow(rideStartClock, rideExponent)) * rideSpan;
+      const pathExitSign = Math.sign(rideSpan || direction || 1);
+      const firstCurvedElement = curvedFit.elements[0];
+      const lastCurvedElement = curvedFit.elements[curvedFit.elements.length - 1];
+      const textTrackStart = firstCurvedElement ? firstCurvedElement.center - firstCurvedElement.width / 2 - curveSpacing * .5 : 0;
+      const textTrackEnd = lastCurvedElement ? lastCurvedElement.center + lastCurvedElement.width / 2 + curveSpacing * .5 : 0;
+      const trailingDistance = pathExitSign > 0
+        ? Math.min(userTrackStart, textTrackStart)
+        : Math.max(userTrackEnd, textTrackEnd);
+      const exitMargin = Math.max(displayWidth * .04, fit.size * .75);
+      const exitStep = Math.max(12 * scale, Math.min(displayWidth, displayHeight) / 100);
+      const maxExitTravel = Math.max(Math.hypot(displayWidth, displayHeight) * 3, pathSpan * 4);
+      let exitTravelLength = 0;
+      while (exitTravelLength < maxExitTravel) {
+        const trailingPoint = pointAtPathDistance(
+          activeTable,
+          trailingDistance + rideStartDistance + exitTravelLength * pathExitSign
+        );
+        const outside = pathExitSign > 0
+          ? trailingPoint.x > displayWidth + exitMargin || trailingPoint.y < -exitMargin || trailingPoint.y > displayHeight + exitMargin
+          : trailingPoint.x < -exitMargin || trailingPoint.y < -exitMargin || trailingPoint.y > displayHeight + exitMargin;
+        if (outside) break;
+        exitTravelLength += exitStep;
       }
+      const exitProgress = phase === "ride" ? exitEase(progress) : phase === "fade" ? 1 : 0;
+      const exitTravel = exitTravelLength * pathExitSign * exitProgress;
+      const textRideDistance = phase === "ride" || phase === "fade"
+        ? rideStartDistance + exitTravel
+        : continuousRideDistance;
+      const railRideDistance = inputs.exitMode.value === "textOnly" && (phase === "ride" || phase === "fade")
+        ? rideStartDistance
+        : textRideDistance;
+      drawPathBetweenDistances(
+        ctx,
+        activeTable,
+        userTrackStart + railRideDistance,
+        userTrackEnd + railRideDistance,
+        pathAlpha * fadeAlpha,
+        lineWidth,
+        lineColor
+      );
+      curvedFit.elements.forEach((element, index) => {
+        const straightElement = fit.elements[index] || element;
+        const pathDistance = mix(straightElement.center, element.center, bendProgress) + textRideDistance;
+        const point = pointAtPathDistance(activeTable, pathDistance);
+        const normalOffset = normalOffsetAtBend(element, bendProgress);
+        const liftedX = point.x + Math.sin(point.tangent) * normalOffset;
+        const liftedY = point.y - Math.cos(point.tangent) * normalOffset;
+        const elementAlpha = fadeAlpha;
+        drawElement(ctx, element, liftedX, liftedY, point.tangent, fit.size, elementAlpha, foreground, 0);
+      });
     }
 
     updateChoreography(local, span);
-    if (target === canvas) frameCounter.textContent = `F ${String(Math.floor(rawTime * fps) % 10000).padStart(4, "0")}`;
+    if (target === canvas) frameCounter.textContent = `F ${String(Math.floor(rawTime * previewFps) % 10000).padStart(4, "0")}`;
+  }
+
+  function selectedPreviewDimensions() {
+    if ($("#exportPreset").value === "current") return null;
+    const [width, height] = exportDimensions();
+    return [clamp(Math.round(width) || 1080, 240, 3840), clamp(Math.round(height) || 1920, 240, 3840)];
+  }
+
+  function renderPreviewFrame(time = currentTime()) {
+    const spec = livePreviewSpec || {
+      width: Math.max(1, window.innerWidth),
+      height: Math.max(1, window.innerHeight),
+      pixelRatio: Math.min(2, window.devicePixelRatio || 1)
+    };
+    renderFrame(canvas, time, spec.width, spec.height, spec.pixelRatio);
+  }
+
+  function updatePreviewLayout() {
+    const selected = selectedPreviewDimensions();
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (!selected) {
+      stage.classList.remove("is-sized-preview");
+      canvas.style.removeProperty("position");
+      canvas.style.removeProperty("left");
+      canvas.style.removeProperty("top");
+      canvas.style.removeProperty("width");
+      canvas.style.removeProperty("height");
+      stageActions.style.removeProperty("left");
+      stageActions.style.removeProperty("bottom");
+      $("#previewSizeBadge").textContent = `当前画板 · ${window.innerWidth} × ${window.innerHeight}`;
+      $("#previewSizeBadge").style.removeProperty("left");
+      livePreviewSpec = { width: Math.max(1, window.innerWidth), height: Math.max(1, window.innerHeight), pixelRatio: dpr };
+      renderPreviewFrame();
+      return;
+    }
+
+    const [logicalWidth, logicalHeight] = selected;
+    const panelRect = document.querySelector(".writer-panel")?.getBoundingClientRect();
+    const leftEdge = window.innerWidth > 720 ? Math.max(0, panelRect?.right || 0) : 0;
+    const availableWidth = Math.max(240, window.innerWidth - leftEdge);
+    const availableHeight = Math.max(240, window.innerHeight);
+    const gutter = Math.min(28, Math.max(12, availableWidth * .025));
+    const fit = Math.max(.05, Math.min(
+      (availableWidth - gutter * 2) / logicalWidth,
+      (availableHeight - gutter * 2) / logicalHeight
+    ));
+    const cssWidth = logicalWidth * fit;
+    const cssHeight = logicalHeight * fit;
+    const left = leftEdge + (availableWidth - cssWidth) / 2;
+    const top = (availableHeight - cssHeight) / 2;
+
+    stage.classList.add("is-sized-preview");
+    Object.assign(canvas.style, {
+      position: "fixed",
+      left: `${left}px`,
+      top: `${top}px`,
+      width: `${cssWidth}px`,
+      height: `${cssHeight}px`
+    });
+    stageActions.style.left = `${left + cssWidth / 2}px`;
+    stageActions.style.bottom = `${Math.max(12, window.innerHeight - top - cssHeight + 18)}px`;
+    $("#previewSizeBadge").textContent = `${logicalWidth} × ${logicalHeight} · 实际导出构图`;
+    $("#previewSizeBadge").style.left = `${left + cssWidth / 2}px`;
+    livePreviewSpec = {
+      width: logicalWidth,
+      height: logicalHeight,
+      pixelRatio: Math.min(2, Math.max(.05, fit * dpr))
+    };
+    renderPreviewFrame();
   }
 
   function resizeCanvas() {
-    const ratio = Math.min(2, window.devicePixelRatio || 1);
-    renderFrame(canvas, currentTime(), canvas.clientWidth || window.innerWidth, canvas.clientHeight || window.innerHeight, ratio);
+    updatePreviewLayout();
   }
 
   function previewLoop() {
-    renderFrame(canvas, currentTime(), canvas.clientWidth || window.innerWidth, canvas.clientHeight || window.innerHeight, Math.min(2, window.devicePixelRatio || 1));
+    renderPreviewFrame();
     rafId = requestAnimationFrame(previewLoop);
   }
 
+  function curveEditorPath(points) {
+    if (points.length < 2) return "";
+    const steps = Math.max(120, points.length * 28);
+    const start = splinePoint(points, 0);
+    let path = `M ${start.x * 3.2} ${start.y * 1.6}`;
+    for (let index = 1; index <= steps; index += 1) {
+      const point = splinePoint(points, index / steps);
+      path += ` L ${point.x * 3.2} ${point.y * 1.6}`;
+    }
+    return path;
+  }
+
+  function updateCurveEditor() {
+    const points = readCurvePoints();
+    const count = curveWaveCount(points);
+    inputs.waves.value = count;
+    $("#wavesOut").textContent = String(count);
+    $("#curveWaveCount").textContent = `${count} 段`;
+    $("#curveAddWave").disabled = count >= 8;
+    $("#curveRemoveWave").disabled = count <= 1;
+    $("#curveControlGuide").setAttribute("d", points.map((point, index) => `${index ? "L" : "M"} ${point.x * 3.2} ${point.y * 1.6}`).join(" "));
+    $("#curveEditorPath").setAttribute("d", curveEditorPath(points));
+    const layer = $("#curvePointLayer");
+    layer.replaceChildren(...points.map((point, index) => {
+      const handle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      handle.setAttribute("class", `writer-curve-handle ${index === 0 || index === points.length - 1 ? "is-anchor" : "is-peak"}`);
+      handle.setAttribute("data-curve-index", index);
+      handle.setAttribute("cx", point.x * 3.2);
+      handle.setAttribute("cy", point.y * 1.6);
+      handle.setAttribute("r", index === 0 || index === points.length - 1 ? 7 : 8);
+      return handle;
+    }));
+    const position = $("#curvePositionHandle");
+    position.setAttribute("transform", `translate(${clamp(Number(inputs.horizontalPosition.value), 0, 100) * 3.2} ${clamp(Number(inputs.verticalPosition.value), 0, 100) * 1.6})`);
+    $("#curveEditor").classList.toggle("is-custom", inputs.pathStyle.value === "custom");
+  }
+
+  function setCurvePoint(index, rawX, rawY) {
+    const points = readCurvePoints();
+    if (!points[index]) return;
+    const minimumX = index === 0 ? 0 : points[index - 1].x + 1.5;
+    const maximumX = index === points.length - 1 ? 100 : points[index + 1].x - 1.5;
+    points[index] = { x: clamp(rawX, minimumX, maximumX), y: clamp(rawY, 0, 100) };
+    writeCurvePoints(points);
+  }
+
+  function setCurveWaveCount(rawCount) {
+    const target = clamp(Math.round(Number(rawCount) || 1), 1, 8);
+    const points = readCurvePoints();
+    let current = curveWaveCount(points);
+    while (current < target) {
+      const end = points.pop();
+      const lastY = points.at(-1)?.y ?? 50;
+      points.push({ x: 0, y: lastY < 50 ? 82 : 18 }, { x: 0, y: lastY < 50 ? 18 : 82 }, end);
+      current += 1;
+    }
+    while (current > target && points.length > 4) {
+      points.splice(points.length - 3, 2);
+      current -= 1;
+    }
+    points.forEach((point, index) => { point.x = index / (points.length - 1) * 100; });
+    writeCurvePoints(points);
+    inputs.waves.value = target;
+    inputs.pathStyle.value = "custom";
+    updateCurveEditor();
+    updateOutputs();
+    queueAutosave();
+  }
+
+  function resetCurveEditor() {
+    writeCurvePoints(makeWavePoints(inputs.waves.value));
+    inputs.pathStyle.value = "custom";
+    updateCurveEditor();
+    updateOutputs();
+    queueAutosave();
+  }
+
+  const curveEditorSvg = $("#curveEditorSvg");
+  let curveDrag = null;
+  curveEditorSvg.addEventListener("pointerdown", (event) => {
+    const handle = event.target.closest("[data-curve-index]");
+    const position = event.target.closest("#curvePositionHandle");
+    if (!handle && !position) return;
+    event.preventDefault();
+    curveDrag = {
+      pointerId: event.pointerId,
+      kind: position ? "position" : "point",
+      point: Number(handle?.dataset.curveIndex),
+      bounds: curveEditorSvg.getBoundingClientRect()
+    };
+    curveEditorSvg.setPointerCapture?.(event.pointerId);
+  });
+  curveEditorSvg.addEventListener("pointermove", (event) => {
+    if (!curveDrag || curveDrag.pointerId !== event.pointerId) return;
+    const x = clamp((event.clientX - curveDrag.bounds.left) / curveDrag.bounds.width * 100, 0, 100);
+    const y = clamp((event.clientY - curveDrag.bounds.top) / curveDrag.bounds.height * 100, 0, 100);
+    if (curveDrag.kind === "position") {
+      inputs.horizontalPosition.value = Number(x.toFixed(1));
+      inputs.verticalPosition.value = Number(y.toFixed(1));
+    } else {
+      setCurvePoint(curveDrag.point, x, y);
+      inputs.pathStyle.value = "custom";
+    }
+    updateCurveEditor();
+    updateOutputs();
+    queueAutosave();
+  });
+  const finishCurveDrag = (event) => {
+    if (!curveDrag || curveDrag.pointerId !== event.pointerId) return;
+    curveEditorSvg.releasePointerCapture?.(event.pointerId);
+    curveDrag = null;
+  };
+  curveEditorSvg.addEventListener("pointerup", finishCurveDrag);
+  curveEditorSvg.addEventListener("pointercancel", finishCurveDrag);
+  $("#curveReset").addEventListener("click", resetCurveEditor);
+  $("#curveAddWave").addEventListener("click", () => setCurveWaveCount(curveWaveCount() + 1));
+  $("#curveRemoveWave").addEventListener("click", () => setCurveWaveCount(curveWaveCount() - 1));
+  inputs.waves.addEventListener("input", () => setCurveWaveCount(inputs.waves.value));
+
   function choreographyBeats(span = timing()) {
     let cursor = 0;
+    const syncStart = Number(inputs.trackSync.value) / 100;
     return [
-      ["输入＋轨道跟随", "intro", span.type],
-      ["贴轨完成", "contact", span.bend],
-      ["贴轨停留", "hold", span.hold],
-      ["沿轨滑走", "orbit", span.ride],
+      ["光标预备", "intro", span.lead],
+      ["输入起步", "intro", span.type * syncStart],
+      ["输入＋轨道滑行", "contact", span.type * (1 - syncStart)],
+      ["连续贴轨滑出", "orbit", span.bend + span.hold + span.ride],
       ["淡出切换", "replace", span.fade]
     ].map(([label, kind, duration], index) => {
       const beat = { index, label, kind, duration, start: cursor, end: cursor + duration };
@@ -527,11 +1003,16 @@
       pathOffset: (value) => value,
       rideDistance: (value) => `${value}%`,
       amplitude: (value) => value,
-      waves: (value) => Number(value).toFixed(2),
+      waves: (value) => String(Math.round(Number(value))),
+      curvePhase: (value) => `${value}%`,
       pathWidth: (value) => `${value}%`,
+      pathLeft: (value) => `${value}%`,
+      pathRight: (value) => `${value}%`,
       tilt: (value) => `${value}°`,
       lineWidth: (value) => Number(value).toFixed(1),
       glow: (value) => `${value}%`,
+      caretLead: (value) => `${(value / 1000).toFixed(2)}秒`,
+      typingInterval: (value) => `${value}ms / 字`,
       typeDuration: (value) => `${(value / 1000).toFixed(2)}秒`,
       trackSync: (value) => `${value}%`,
       syncSlide: (value) => `${value}%`,
@@ -539,6 +1020,7 @@
       holdDuration: (value) => `${(value / 1000).toFixed(2)}秒`,
       rideDuration: (value) => `${(value / 1000).toFixed(2)}秒`,
       fadeDuration: (value) => `${(value / 1000).toFixed(2)}秒`,
+      horizontalPosition: (value) => `${value}%`,
       verticalPosition: (value) => `${value}%`,
       bendEase: (value) => `${value}%`,
       pathOpacity: (value) => `${value}%`
@@ -729,16 +1211,18 @@
   function schemeData() {
     const values = {};
     Object.entries(inputs).forEach(([key, input]) => { if (input) values[key] = input.value; });
-    return { version: 3, effect: "path-writer", values, assets: state.assets.map(({ id, name, url, slot, size, opacity, offsetX, offsetY, rotation }) => ({ id, name, url, slot, size, opacity, offsetX, offsetY, rotation })) };
+    return { version: 4, effect: "path-writer", values, assets: state.assets.map(({ id, name, url, slot, size, opacity, offsetX, offsetY, rotation }) => ({ id, name, url, slot, size, opacity, offsetX, offsetY, rotation })) };
   }
 
   function applyScheme(data) {
     if (!data || data.effect !== "path-writer") throw new Error("不是轨书方案");
     Object.entries(data.values || {}).forEach(([key, value]) => { if (inputs[key] && value != null) inputs[key].value = value; });
+    if (!data.values?.curvePoints) writeCurvePoints(makeWavePoints(inputs.waves.value));
     state.assets = Array.isArray(data.assets) ? data.assets.map((asset) => Object.assign({ id: `asset-${Math.random()}`, name: "图标", slot: 0, size: 100, opacity: 100, offsetX: 0, offsetY: 0, rotation: 0 }, asset)) : [];
     state.assets.forEach((asset) => cachedImage(asset.url));
     renderSelectedAssets();
     updateOutputs();
+    updateCurveEditor();
     setTime(0);
   }
 
@@ -796,8 +1280,8 @@
 
   Object.values(inputs).forEach((input) => {
     if (!input) return;
-    input.addEventListener("input", () => { updateOutputs(); queueAutosave(); });
-    input.addEventListener("change", () => { updateOutputs(); queueAutosave(); });
+    input.addEventListener("input", () => { updateOutputs(); updateCurveEditor(); queueAutosave(); });
+    input.addEventListener("change", () => { updateOutputs(); updateCurveEditor(); queueAutosave(); });
   });
   inputs.phrases.addEventListener("input", () => { setTime(0); renderSelectedAssets(); });
   inputs.font.addEventListener("change", () => setTime(0));
@@ -857,8 +1341,8 @@
     animationStart = performance.now();
     if (paused) { paused = false; $("#pauseButton").textContent = "暂停"; $("#stagePauseButton").textContent = "暂停"; }
   });
-  $("#backButton").addEventListener("click", () => { if (!paused) $("#pauseButton").click(); setTime(pausedAt - 1 / fps); });
-  $("#forwardButton").addEventListener("click", () => { if (!paused) $("#pauseButton").click(); setTime(pausedAt + 1 / fps); });
+  $("#backButton").addEventListener("click", () => { if (!paused) $("#pauseButton").click(); setTime(pausedAt - 1 / exportFrameRate()); });
+  $("#forwardButton").addEventListener("click", () => { if (!paused) $("#pauseButton").click(); setTime(pausedAt + 1 / exportFrameRate()); });
   window.addEventListener("resize", resizeCanvas);
 
   function exportDimensions() {
@@ -871,8 +1355,8 @@
   function makeExportCanvas() {
     const [width, height] = exportDimensions();
     const result = document.createElement("canvas");
-    result.width = clamp(Math.round(width), 240, 3840);
-    result.height = clamp(Math.round(height), 240, 3840);
+    result.width = clamp(Math.round(width / 2) * 2, 240, 3840);
+    result.height = clamp(Math.round(height / 2) * 2, 240, 3840);
     return result;
   }
 
@@ -881,6 +1365,10 @@
     if (selected === "full") return timing().cycle;
     if (selected === "custom") return clamp(Number($("#exportDurationCustom").value) || 4.2, .5, 15);
     return Math.max(.5, Number(selected) || 3);
+  }
+
+  function exportFrameRate() {
+    return clamp(Math.round(Number($("#exportFps").value) || 30), 15, 60);
   }
 
   function durationFileLabel(duration) {
@@ -902,7 +1390,11 @@
     exportStatus.textContent = message;
   }
 
-  $("#exportPreset").addEventListener("change", (event) => { $("#customSize").hidden = event.currentTarget.value !== "custom"; });
+  $("#exportPreset").addEventListener("change", (event) => {
+    $("#customSize").hidden = event.currentTarget.value !== "custom";
+    updatePreviewLayout();
+  });
+  [$("#exportWidth"), $("#exportHeight")].forEach((input) => input.addEventListener("input", updatePreviewLayout));
   $("#exportDuration").addEventListener("change", (event) => { $("#customDuration").hidden = event.currentTarget.value !== "custom"; });
 
   $("#exportPng").addEventListener("click", () => {
@@ -918,7 +1410,7 @@
   $("#exportGif").addEventListener("click", () => {
     if (!window.GIF) { exportStatus.textContent = "GIF 编码器未加载，请刷新页面后重试。"; return; }
     const output = makeExportCanvas();
-    const gifFps = 12;
+    const gifFps = exportFrameRate();
     const duration = exportDurationSeconds();
     const frameTotal = Math.max(1, Math.ceil(gifFps * duration));
     setExportBusy(true, `正在准备 GIF · 0 / ${frameTotal} 帧`);
@@ -930,8 +1422,8 @@
       }
       gif.on("progress", (value) => { exportStatus.textContent = `正在编码 GIF · ${Math.round(value * 100)}%`; });
       gif.on("finished", (blob) => {
-        downloadBlob(blob, `path-writer-${output.width}x${output.height}-${durationFileLabel(duration)}.gif`);
-        setExportBusy(false, `GIF 已生成 · ${output.width} × ${output.height} · ${duration.toFixed(1)}秒`);
+        downloadBlob(blob, `path-writer-${output.width}x${output.height}-${durationFileLabel(duration)}-${gifFps}fps.gif`);
+        setExportBusy(false, `GIF 已生成 · ${output.width} × ${output.height} · ${duration.toFixed(1)}秒 · ${gifFps} FPS`);
       });
       gif.render();
     } catch (error) {
@@ -941,39 +1433,47 @@
   });
 
   $("#exportVideo").addEventListener("click", async () => {
+    if (!window.HME || typeof HME.createH264MP4Encoder !== "function") {
+      exportStatus.textContent = "MP4 编码器未加载，请刷新页面后重试。";
+      return;
+    }
     const output = makeExportCanvas();
-    if (!output.captureStream || !window.MediaRecorder) { exportStatus.textContent = "当前浏览器不支持视频录制，请使用新版 Chrome / Edge。"; return; }
-    const candidates = ["video/mp4;codecs=avc1.42E01E", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
-    const mimeType = candidates.find((type) => MediaRecorder.isTypeSupported(type)) || "";
-    const stream = output.captureStream(fps);
-    const recorder = new MediaRecorder(stream, mimeType ? { mimeType, videoBitsPerSecond: 12_000_000 } : undefined);
-    const chunks = [];
-    recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
+    const context = output.getContext("2d", { willReadFrequently: true });
+    const videoFps = exportFrameRate();
     const duration = exportDurationSeconds();
-    const finished = new Promise((resolve) => {
-      recorder.onstop = () => {
-        const type = recorder.mimeType || mimeType || "video/webm";
-        const extension = type.includes("mp4") ? "mp4" : "webm";
-        downloadBlob(new Blob(chunks, { type }), `path-writer-${output.width}x${output.height}-${durationFileLabel(duration)}.${extension}`);
-        resolve(extension.toUpperCase());
-      };
-    });
-    setExportBusy(true, "正在录制视频 · 0%");
-    recorder.start();
-    const started = performance.now();
-    await new Promise((resolve) => {
-      function draw(now) {
-        const elapsed = (now - started) / 1000;
-        renderFrame(output, elapsed, output.width, output.height, 1);
-        exportStatus.textContent = `正在录制视频 · ${Math.min(100, Math.round(elapsed / duration * 100))}%`;
-        if (elapsed < duration) requestAnimationFrame(draw); else resolve();
+    const frameTotal = Math.max(1, Math.ceil(videoFps * duration));
+    const filename = `path-writer-${output.width}x${output.height}-${durationFileLabel(duration)}-${videoFps}fps.mp4`;
+    let encoder;
+    setExportBusy(true, `正在逐帧导出 MP4 · 0 / ${frameTotal} 帧`);
+    try {
+      encoder = await HME.createH264MP4Encoder();
+      encoder.outputFilename = filename;
+      encoder.width = output.width;
+      encoder.height = output.height;
+      encoder.frameRate = videoFps;
+      encoder.kbps = videoFps >= 60 ? 24000 : 18000;
+      encoder.groupOfPictures = Math.max(12, Math.round(videoFps / 2));
+      encoder.initialize();
+
+      for (let frame = 0; frame < frameTotal; frame += 1) {
+        renderFrame(output, frame / videoFps, output.width, output.height, 1);
+        encoder.addFrameRgba(context.getImageData(0, 0, output.width, output.height).data);
+        if (frame % 2 === 0 || frame === frameTotal - 1) {
+          exportStatus.textContent = `正在逐帧导出 MP4 · ${frame + 1} / ${frameTotal} 帧 · ${Math.round((frame + 1) / frameTotal * 100)}%`;
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
       }
-      requestAnimationFrame(draw);
-    });
-    recorder.stop();
-    const extension = await finished;
-    stream.getTracks().forEach((track) => track.stop());
-    setExportBusy(false, `${extension} 视频已生成 · ${output.width} × ${output.height} · ${duration.toFixed(1)}秒`);
+
+      encoder.finalize();
+      const bytes = encoder.FS.readFile(filename);
+      downloadBlob(new Blob([bytes], { type: "video/mp4" }), filename);
+      setExportBusy(false, `MP4 已生成 · ${frameTotal} 个独立帧 · ${output.width} × ${output.height} · ${duration.toFixed(1)}秒 · ${videoFps} FPS`);
+    } catch (error) {
+      console.error(error);
+      setExportBusy(false, `MP4 导出失败：${error.message || "编码器异常"}`);
+    } finally {
+      try { encoder?.delete(); } catch (_) {}
+    }
   });
 
   async function initializeApprovedDefault() {
@@ -1006,5 +1506,8 @@
 
   window.addEventListener("beforeunload", () => cancelAnimationFrame(rafId));
   if (window.innerWidth <= 720) $("#controlPanel").removeAttribute("open");
-  initializeApprovedDefault().finally(() => document.fonts.ready.finally(previewLoop));
+  initializeApprovedDefault().finally(() => document.fonts.ready.finally(() => {
+    updatePreviewLayout();
+    previewLoop();
+  }));
 })();
