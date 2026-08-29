@@ -9,13 +9,14 @@
   <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;f[]=general-sans@400,500,600&amp;f[]=clash-display@500,600&amp;f[]=cabinet-grotesk@500,700&amp;display=swap">
   <link rel="stylesheet" href="continuation.css">
   <link rel="stylesheet" href="currentwall.css">
-  <link rel="stylesheet" href="pathwriter.css?v=20260826-sync1">
+  <link rel="stylesheet" href="pathwriter.css?v=20260827-size2">
   <link rel="stylesheet" href="me-motion-editor.css">
   <link rel="stylesheet" href="stg-cn.css">
 </head>
 <body class="me-motion-editor">
   <main class="current-stage writer-stage" aria-label="轨书动效画布">
     <canvas id="flowCanvas"></canvas>
+    <div class="writer-preview-size" id="previewSizeBadge" aria-live="polite">当前画板</div>
     <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
     <div class="writer-stage-actions me-stage-controls" aria-label="画面播放控制"><button id="stagePauseButton" type="button">暂停</button><button id="stageReplayButton" type="button">重播</button></div>
   </main>
@@ -85,14 +86,39 @@ Scrap it.</textarea>
           <label>输入字间距 <output id="letterSpacingOut">1</output><input id="letterSpacing" type="range" min="-8" max="30" step="0.5" value="1"></label>
           <label>贴轨字间距 <output id="curveSpacingOut">8</output><input id="curveSpacing" type="range" min="-12" max="80" step="0.5" value="8"></label>
           <label>字轨距离 <output id="pathOffsetOut">0</output><input id="pathOffset" type="range" min="-30" max="80" step="1" value="0"></label>
+          <label>整体水平位置 <output id="horizontalPositionOut">50%</output><input id="horizontalPosition" type="range" min="-20" max="120" step="1" value="50"></label>
+          <label>整体垂直位置 <output id="verticalPositionOut">50%</output><input id="verticalPosition" type="range" min="-20" max="120" step="1" value="50"></label>
           <label>滑走距离 <output id="rideDistanceOut">82%</output><input id="rideDistance" type="range" min="20" max="160" step="1" value="82"></label>
+          <label>最后滑出时长 <output id="rideDurationOut">0.30秒</output><input id="rideDuration" type="range" min="80" max="2000" step="20" value="300"></label>
           <label>滑行节奏<select id="rideRhythm"><option value="smooth" selected>柔和加减速</option><option value="linear">匀速滑行</option><option value="fastStart">快速启动</option><option value="fastFinish">慢启快出</option></select></label>
-          <label>波浪高度 <output id="amplitudeOut">92</output><input id="amplitude" type="range" min="0" max="260" value="92"></label>
-          <label>波浪数量 <output id="wavesOut">1.35</output><input id="waves" type="range" min="0.5" max="3" step="0.05" value="1.35"></label>
-          <label>轨道长度 <output id="pathWidthOut">76%</output><input id="pathWidth" type="range" min="20" max="140" value="76"></label>
-          <label>整体倾斜 <output id="tiltOut">-12°</output><input id="tilt" type="range" min="-45" max="45" value="-12"></label>
+          <label>滑出方式<select id="exitMode"><option value="together" selected>文字＋轨道一起滑出</option><option value="textOnly">仅文字滑出，轨道保留</option></select></label>
+          <label>轨道样式<select id="pathStyle"><option value="custom">自由曲线</option><option value="wave" selected>柔和波浪</option><option value="archUp">向上拱起</option><option value="archDown">向下凹陷</option><option value="rise">单向上扬</option><option value="fall">单向下落</option><option value="straight">直线</option></select></label>
+          <label>弯曲幅度 <output id="amplitudeOut">92</output><input id="amplitude" type="range" min="0" max="520" value="92"></label>
+          <label>波浪数量 <output id="wavesOut">1</output><input id="waves" type="range" min="1" max="8" step="1" value="1"></label>
+          <label>波峰位置 <output id="curvePhaseOut">-8%</output><input id="curvePhase" type="range" min="-100" max="100" step="1" value="-8"></label>
+          <label>轨道长度 <output id="pathWidthOut">76%</output><input id="pathWidth" type="range" min="10" max="220" value="76"></label>
+          <label>整体坡度 <output id="tiltOut">-12°</output><input id="tilt" type="range" min="-80" max="80" value="-12"></label>
           <label>轨迹粗细 <output id="lineWidthOut">1.2</output><input id="lineWidth" type="range" min="0.4" max="6" step="0.1" value="1.2"></label>
           <label>发光强度 <output id="glowOut">72%</output><input id="glow" type="range" min="0" max="150" value="72"></label>
+        </div>
+        <div class="writer-curve-editor" id="curveEditor">
+          <div class="section-heading"><p class="section-label">可视化轨道</p><div class="writer-curve-actions"><button id="curveRemoveWave" type="button" aria-label="减少一段波浪">− 波浪</button><output id="curveWaveCount">1 段</output><button id="curveAddWave" type="button" aria-label="增加一段波浪">＋ 波浪</button><button id="curveReset" type="button">重置</button></div></div>
+          <svg id="curveEditorSvg" viewBox="0 0 320 160" role="img" aria-label="拖动控制点编辑轨道形状">
+            <defs><pattern id="curveGrid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" stroke-opacity=".08" stroke-width="1"/></pattern></defs>
+            <rect class="writer-curve-grid" width="320" height="160" rx="14" fill="url(#curveGrid)"></rect>
+            <path id="curveControlGuide" class="writer-curve-guide"></path>
+            <path id="curveEditorPath" class="writer-curve-path"></path>
+            <g id="curvePointLayer"></g>
+            <g id="curvePositionHandle" class="writer-curve-position" aria-label="拖动整体位置">
+              <circle r="11"></circle><path d="M-7 0H7M-7 0l3-3M-7 0l3 3M7 0l-3-3M7 0l-3 3M0-7V7M0-7l-3 3M0-7l3 3M0 7l-3-3M0 7l3-3"></path>
+            </g>
+          </svg>
+          <p class="hint">点击“＋波浪”继续增加形状控制点；虚线连接控制点，蓝线始终保持连续平滑。绿色四向手柄用于移动整组文字与轨道。</p>
+          <input id="curvePoints" type="hidden" value='[{"x":0,"y":50},{"x":33.33,"y":18},{"x":66.67,"y":82},{"x":100,"y":50}]'>
+          <input id="curveStartX" type="hidden" value="0"><input id="curveStartY" type="hidden" value="50">
+          <input id="curveControl1X" type="hidden" value="28"><input id="curveControl1Y" type="hidden" value="12.5">
+          <input id="curveControl2X" type="hidden" value="72"><input id="curveControl2Y" type="hidden" value="87.5">
+          <input id="curveEndX" type="hidden" value="100"><input id="curveEndY" type="hidden" value="50">
         </div>
       </section>
 
@@ -118,13 +144,14 @@ Scrap it.</textarea>
           <ol id="pathwriterChoreoLegend" class="me-choreo-legend"></ol>
         </div>
         <div class="controls-grid timing-grid">
-          <label>输入与轨道同步 <output id="typeDurationOut">1.40秒</output><input id="typeDuration" type="range" min="300" max="4000" step="50" value="1400"></label>
-          <label>轨道跟随时机 <output id="trackSyncOut">42%</output><input id="trackSync" type="range" min="0" max="85" step="1" value="42"></label>
-          <label>输入阶段滑行 <output id="syncSlideOut">18%</output><input id="syncSlide" type="range" min="0" max="60" step="1" value="18"></label>
-          <label>贴轨完成 <output id="bendDurationOut">0.80秒</output><input id="bendDuration" type="range" min="200" max="3000" step="50" value="800"></label>
-          <label>贴轨停留 <output id="holdDurationOut">0.30秒</output><input id="holdDuration" type="range" min="0" max="3000" step="50" value="300"></label>
-          <label>沿轨滑行时间 <output id="rideDurationOut">1.20秒</output><input id="rideDuration" type="range" min="300" max="5000" step="50" value="1200"></label>
-          <label>淡出切换 <output id="fadeDurationOut">0.50秒</output><input id="fadeDuration" type="range" min="150" max="2500" step="50" value="500"></label>
+          <label>光标预备 <output id="caretLeadOut">0.08秒</output><input id="caretLead" type="range" min="0" max="1000" step="20" value="80"></label>
+          <label>打字速度（单字间隔） <output id="typingIntervalOut">140ms / 字</output><input id="typingInterval" type="range" min="30" max="500" step="5" value="140"></label>
+          <label>输入阶段最短时长 <output id="typeDurationOut">0.70秒</output><input id="typeDuration" type="range" min="300" max="4000" step="50" value="700"></label>
+          <label>轨道跟随时机 <output id="trackSyncOut">50%</output><input id="trackSync" type="range" min="0" max="85" step="1" value="50"></label>
+          <label>输入阶段滑行 <output id="syncSlideOut">30%</output><input id="syncSlide" type="range" min="0" max="60" step="1" value="30"></label>
+          <label>贴轨完成 <output id="bendDurationOut">0.20秒</output><input id="bendDuration" type="range" min="200" max="3000" step="50" value="200"></label>
+          <label>滑行动作延展 <output id="holdDurationOut">0.00秒</output><input id="holdDuration" type="range" min="0" max="3000" step="50" value="0"></label>
+          <label>淡出切换 <output id="fadeDurationOut">0.15秒</output><input id="fadeDuration" type="range" min="150" max="2500" step="50" value="150"></label>
         </div>
       </section>
 
@@ -132,7 +159,8 @@ Scrap it.</textarea>
         <summary><span>高级动效参数</span><small>方向、中心与轨迹</small></summary>
         <div class="advanced-body controls-grid">
           <label>运动方向 <select id="direction"><option value="right" selected>向右滑出</option><option value="left">向左滑出</option></select></label>
-          <label>纵向位置 <output id="verticalPositionOut">50%</output><input id="verticalPosition" type="range" min="15" max="85" value="50"></label>
+          <label>轨道左端长度 <output id="pathLeftOut">100%</output><input id="pathLeft" type="range" min="0" max="200" step="1" value="100"></label>
+          <label>轨道右端长度 <output id="pathRightOut">100%</output><input id="pathRight" type="range" min="0" max="200" step="1" value="100"></label>
           <label>弯曲弹性 <output id="bendEaseOut">68%</output><input id="bendEase" type="range" min="0" max="100" value="68"></label>
           <label>轨迹透明度 <output id="pathOpacityOut">46%</output><input id="pathOpacity" type="range" min="0" max="100" value="46"></label>
         </div>
@@ -150,13 +178,16 @@ Scrap it.</textarea>
           <label><span class="section-label">GIF / 视频时长</span><select id="exportDuration">
             <option value="full">完整循环</option><option value="1">1 秒</option><option value="2">2 秒</option><option value="3">3 秒</option><option value="5">5 秒</option><option value="10">10 秒</option><option value="custom">自定义秒数</option>
           </select></label>
+          <label><span class="section-label">导出帧率</span><select id="exportFps">
+            <option value="15">15 FPS · 轻量</option><option value="24">24 FPS · 电影感</option><option value="30" selected>30 FPS · 标准</option><option value="60">60 FPS · 更丝滑</option>
+          </select></label>
         </div>
         <div class="custom-size" id="customSize" hidden><label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label><span>×</span><label>高<input id="exportHeight" type="number" min="240" max="3840" value="1920"></label></div>
         <div class="custom-duration" id="customDuration" hidden><label>自定义时长<input id="exportDurationCustom" type="number" min="0.5" max="15" step="0.1" value="4.2"></label><span>秒</span></div>
         <div class="export-actions"><button id="exportPng" type="button">PNG 图片</button><button id="exportGif" type="button">GIF 动图</button><button id="exportVideo" type="button">视频</button></div>
-        <p class="export-status" id="exportStatus" aria-live="polite">画面始终以输出中心重新计算；GIF 与视频按所选秒数导出。</p>
+        <p class="export-status" id="exportStatus" aria-live="polite">画面始终以输出中心重新计算；60 FPS 更丝滑，同时导出更慢、文件更大。</p>
       </section>
-      <p class="formula">轨迹 = 正弦波 × 倾斜角<br>字形旋转 = 当前路径切线角度</p>
+      <p class="formula">轨迹 = 样式 × 弯曲幅度 × 整体坡度<br>离场方向 = 离轨瞬间的切线方向</p>
     </div>
   </details>
 
@@ -179,8 +210,9 @@ Scrap it.</textarea>
   </aside>
 
   <script src="js/continuation-gif.js"></script>
+  <script src="js/h264-mp4-encoder.web.js"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
-  <script src="pathwriter.js?v=20260826-sync1"></script>
+  <script src="pathwriter.js?v=20260827-sync42"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
 </body>

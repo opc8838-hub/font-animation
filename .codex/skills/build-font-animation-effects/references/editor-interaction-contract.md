@@ -31,6 +31,30 @@ Required interaction:
 - Choreography uses the shared colored `me-choreo-*` blocks, legend, playhead, and click-to-seek behavior. Phase labels and widths derive from the same timing model as preview/export.
 - The stage contains synchronized Pause/Play and Replay controls using `me-stage-controls`.
 
+## Page-owned sequence editing
+
+- A sequence page uses a stable id. Its order, hold, typography, colors, spacing, motion settings, assigned icons, and background/media stay attached to that id through add, delete, reorder, save, import, and reload.
+- Put page-specific controls inside the corresponding page row, using compact disclosures for advanced timing or media. Do not collect the same controls in a detached global list that forces the user to map settings back to rows.
+- If fonts, sizes, colors, punctuation colors, letter spacing, segment gaps, reveal styles, or phase timing are editable, each page can override them independently. A global value may remain an explicit inherited default.
+- Page order is selected or edited in the row itself. Rebuild available positions immediately when the page count changes.
+- Assign assets to explicit pages. Inline icons may be inserted at valid character boundaries and expose a text-to-icon gap; adding an icon must not clone it into every page.
+
+## Canvas size and preview parity
+
+- Canvas size is the first card in the scrollable inspector, before text, assets, motion, scheme, and export controls.
+- Preset or custom size changes immediately refit the framed right-side stage to the selected aspect ratio without resizing or shifting the inspector.
+- The live renderer receives the selected logical width and height (or an exactly proportional preview surface). Text metrics, icon geometry, spacing, and placement therefore use the same normalized composition as PNG, GIF, and video export.
+- The lower export card contains duration, FPS, format actions, progress, and status. Do not duplicate canvas size there.
+
+## Per-page background and media
+
+- Put page-specific background controls inside that page's editor row or its collapsible advanced section. Background edits must not target a different page through a detached global selector.
+- Each page can independently use a solid color or uploaded image, GIF, or video. Reorder, insert, duplicate, and delete operations keep the background attached to the same stable page id.
+- Video pages expose a visible filmstrip timeline with draggable trim handles plus precise start/end inputs. Preview and export use the same clamped interval.
+- Offer direct switching and a softened crossfade with an editable duration. Direct means truly immediate; crossfade blends the outgoing and incoming page backgrounds without a blank frame.
+- Do not render debug indices, corner labels, timestamps, watermarks, or other editor-only marks into the composition unless the effect explicitly requires them.
+- Keep decoded image/video objects and seek flags outside serialized scheme data. Uploaded media, trim values, opacity/tint, and transition settings must survive save, import, restore, and reload.
+
 ## Acceptance checks
 
 Test these observable behaviors in a real browser:
@@ -41,5 +65,13 @@ Test these observable behaviors in a real browser:
 4. Expand shows every selected item; collapse restores the normal editor without changing stage bounds.
 5. `单独编辑` opens one drawer only; sliders change that exact asset and export geometry.
 6. Close and `Escape` follow the drawer-first order.
+7. Switching 16:9 → 9:16 → 1:1 visibly changes the live frame to each exact aspect ratio while inspector bounds remain stable.
+8. A real export at the selected size has the same normalized typography, icons, spacing, and positions as the live frame.
+9. Editing one page's typography, timing, icon assignment, or hold leaves every other page unchanged.
+10. Adding or deleting a page rebuilds order choices and asset targets without losing existing page ownership.
+11. Changing one page's background color or media leaves every other page unchanged.
+12. Reordering pages keeps typography, timing, icons, background, video trim, and transition attached to the original page content.
+13. A trimmed video page previews and exports the same source interval without flashing between seeks.
+14. Direct switching has no inserted fade; crossfade has no blank or uninitialized frame.
 
 Run `scripts/check_editor_contract.py` for a fast structural check, then perform the browser checks above. Static success does not replace interaction testing.

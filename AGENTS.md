@@ -49,3 +49,7 @@ These rules apply to the whole repository and are intended for both human contri
 When creating a new motion effect or adding shared editor/export capabilities in this repository, use the project skill at [`.codex/skills/build-font-animation-effects/SKILL.md`](.codex/skills/build-font-animation-effects/SKILL.md). Read its referenced baseline or reuse map only when the current task needs that detail.
 
 The skill supplies the default requirements for the shared icon library, asset sizing/spacing, scheme save/import/reset/clear/undo/redo, timeline controls, responsive canvas, and PNG/GIF/video export. The user should not need to repeat those requirements for each effect.
+
+## Low-token continuation
+
+For a fresh chat or another computer, follow [`docs/CONTINUE_EFFECT_DEVELOPMENT.md`](docs/CONTINUE_EFFECT_DEVELOPMENT.md). Do not scan the full repository, README history, or old conversations by default. Start from the requested effect's HTML/CSS/JS and load only the conditional references named in that document.

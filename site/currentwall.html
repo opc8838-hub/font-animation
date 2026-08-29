@@ -8,14 +8,14 @@
   <title>水流 Water Flow | ME Motion Studio</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="continuation.css">
-  <link rel="stylesheet" href="currentwall.css?v=20260824-8">
+  <link rel="stylesheet" href="currentwall.css?v=20260830-9">
   <link rel="stylesheet" href="me-motion-editor.css?v=20260824-3">
   <link rel="stylesheet" href="stg-cn.css">
 </head>
 <body class="me-motion-editor">
-  <main class="current-stage" aria-label="水流动效画布">
+  <main class="current-stage" id="currentStage" aria-label="水流动效画布">
     <canvas id="flowCanvas"></canvas>
-    <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+    <span id="frameCounter" hidden>F 0000</span>
     <div class="water-stage-controls me-stage-controls" aria-label="画布播放控制">
       <button id="stagePauseButton" type="button" aria-pressed="false"><span id="stagePauseIcon">Ⅱ</span><span id="stagePauseLabel">暂停</span></button>
       <button id="stageRestartButton" type="button">↻ 重播</button>
@@ -28,6 +28,27 @@
       <i aria-hidden="true">参数</i>
     </summary>
     <div class="panel-scroll">
+      <section class="canvas-size-section">
+        <div class="section-heading">
+          <p class="section-label">画板尺寸</p>
+          <small class="section-note" id="canvasSizeReadout">实时预览与导出一致</small>
+        </div>
+        <select id="exportPreset">
+          <option value="1920x1080" selected>16:9 · 1920 × 1080</option>
+          <option value="1080x1920">9:16 · 1080 × 1920</option>
+          <option value="1080x1080">1:1 · 1080 × 1080</option>
+          <option value="1080x1350">4:5 · 1080 × 1350</option>
+          <option value="1200x628">横幅 · 1200 × 628</option>
+          <option value="custom">自定义尺寸</option>
+        </select>
+        <div class="custom-size" id="customSize" hidden>
+          <label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label>
+          <span>×</span>
+          <label>高<input id="exportHeight" type="number" min="240" max="3840" value="1080"></label>
+        </div>
+        <p class="hint">选择比例后，右侧画布立即按该尺寸缩放；画面构图与最终导出使用同一套坐标。</p>
+      </section>
+
       <section class="scheme-section">
         <p class="section-label">方案</p>
         <div class="scheme-actions me-scheme-actions">
@@ -62,20 +83,51 @@ everything  every{{watch}}thing</textarea>
         <label>开场单词
           <input id="introWord" type="text" value="for" spellcheck="false">
         </label>
-        <label>收尾内容切换
-          <select id="finalSwap">
-            <option value="on" selected>启用文字 → 图标</option>
-            <option value="off">保持原文字</option>
+        <label>开场形式
+          <select id="introStyle">
+            <option value="gentle-left" selected>轻微向左弹</option>
+            <option value="jump-left">向左跳入</option>
           </select>
         </label>
-        <label class="final-line-field">收尾切换序列 · 每行一个状态
-          <textarea id="finalLine" rows="5" spellcheck="false">everything
-ever{{music}}thing
-every{{cloud}}hing
-everyt{{play}}ing
-everything</textarea>
+        <label>开场停留 <output id="introHoldOut">0.16秒</output>
+          <input id="introHold" type="range" min="0" max="2000" step="20" value="160">
         </label>
-        <p class="hint">收尾剩下一行后基本停止横移，并按行依次切换。删除某个字母、在同一位置插入 {{图标}}，即可让任意字位在文字、图片和图标之间跳转。</p>
+        <label>收尾扫字
+          <select id="finalSwap">
+            <option value="on" selected>图标从左到右变回字母</option>
+            <option value="off">直接显示完整文字</option>
+          </select>
+        </label>
+        <label class="final-line-field">最后一行文字
+          <input id="finalLine" type="text" value="everything" spellcheck="false">
+        </label>
+        <div class="final-slot-editor" id="finalSlotEditor" aria-label="收尾字符图标映射"></div>
+        <div class="final-slot-picker">
+          <img id="finalSlotAssetPreview" alt="当前准备添加的图标">
+          <label><span>给选中的字选择图标或表情</span>
+            <select id="finalSlotAssetSelect" aria-label="给选中的字选择图标或表情"></select>
+          </label>
+        </div>
+        <div class="final-slot-actions">
+          <p id="finalSlotStatus">先点击一个字符，再从下方素材库选择图标。</p>
+          <button id="assignFinalAsset" type="button">添加/替换图标</button>
+          <button id="removeFinalAsset" type="button">删除图标，恢复文字</button>
+        </div>
+        <div class="final-slot-tuner" id="finalSlotTuner" hidden>
+          <strong id="finalSlotTunerTitle">当前字图标</strong>
+          <div class="controls-grid quick-grid">
+            <label>这个图标大小 <output id="finalSlotScaleOut">100%</output><input id="finalSlotScale" type="range" min="40" max="240" step="5" value="100"></label>
+            <label>与左侧文字间距 <output id="finalSlotGapBeforeOut">0</output><input id="finalSlotGapBefore" type="range" min="-40" max="120" step="1" value="0"></label>
+            <label>与右侧文字间距 <output id="finalSlotGapAfterOut">0</output><input id="finalSlotGapAfter" type="range" min="-40" max="120" step="1" value="0"></label>
+            <label>水平位置 <output id="finalSlotOffsetXOut">0</output><input id="finalSlotOffsetX" type="range" min="-120" max="120" step="1" value="0"></label>
+            <label>垂直位置 <output id="finalSlotOffsetYOut">0</output><input id="finalSlotOffsetY" type="range" min="-120" max="120" step="1" value="0"></label>
+          </div>
+        </div>
+        <div class="controls-grid quick-grid final-scan-controls">
+          <label>全局切换速度 <output id="finalScanSpeedOut">4.0×</output><input id="finalScanSpeed" type="range" min="0.5" max="8" step="0.1" value="4"></label>
+          <label>全图标停留 <output id="iconHoldDurationOut">160ms</output><input id="iconHoldDuration" type="range" min="40" max="1200" step="20" value="160"></label>
+        </div>
+        <p class="hint">第一遍从左到右逐字变成图标，短暂停留后，第二遍从左到右恢复原字母；宽图标经过时，左右文字会短促弹开再合回。</p>
       </section>
 
       <section class="asset-section me-layer-panel" id="assetManager">
@@ -115,10 +167,10 @@ everything</textarea>
             <label>上下 <output id="assetOffsetYOut">0%</output>
               <input id="assetOffsetY" type="range" min="-60" max="60" value="0">
             </label>
-            <label>左间距 <output id="assetGapBeforeOut">0</output>
+            <label>与前文字间距 <output id="assetGapBeforeOut">0</output>
               <input id="assetGapBefore" type="range" min="-20" max="100" value="0">
             </label>
-            <label>右间距 <output id="assetGapAfterOut">0</output>
+            <label>与后文字间距 <output id="assetGapAfterOut">0</output>
               <input id="assetGapAfter" type="range" min="-20" max="100" value="0">
             </label>
           </div>
@@ -146,54 +198,57 @@ everything</textarea>
           <p class="section-label">常用调节</p>
           <small class="section-note">画面与逐行节奏</small>
         </div>
-        <div class="controls-grid quick-grid">
-        <label>字号 <small class="stage-tag">画面</small><output id="fontSizeOut">62</output>
-          <input id="fontSize" type="range" min="24" max="140" value="62">
-        </label>
-        <label>行距 <small class="stage-tag">画面</small><output id="lineGapOut">-5</output>
-          <input id="lineGap" type="range" min="-25" max="80" value="-5">
-        </label>
-        <label>图标大小 <small class="stage-tag">画面</small><output id="assetScaleOut">100%</output>
-          <input id="assetScale" type="range" min="45" max="180" value="100">
-        </label>
-        <label>图标左右间距 <small class="stage-tag">画面</small><output id="assetGapOut">12</output>
-          <input id="assetGap" type="range" min="-20" max="120" value="12">
-        </label>
-        <label>行数方式 <small class="stage-tag">画面</small>
-          <select id="wallRowsMode">
-            <option value="auto" selected>自动铺满画布</option>
-            <option value="custom">自定义行数</option>
-          </select>
-        </label>
-        <label>满屏行数 <small class="stage-tag">画面</small><output id="wallRowsOut">自动铺满</output>
-          <input id="wallRows" type="range" min="3" max="25" step="2" value="9" disabled>
-        </label>
-        <label>中间→满屏 <small class="stage-tag">阶段 1</small><output id="popDurationOut">0.60秒</output>
-          <input id="popDuration" type="range" min="150" max="1800" step="10" value="450">
-        </label>
-        <label>铺屏逐行间隔 <small class="stage-tag">阶段 1</small><output id="revealStaggerOut">45ms</output>
-          <input id="revealStagger" type="range" min="0" max="180" step="5" value="45">
-        </label>
-        <label>满屏向左流动时长 <small class="stage-tag">阶段 2</small><output id="fullDurationOut">1.10秒</output>
-            <input id="fullDuration" type="range" min="0" max="8000" step="50" value="1100">
-          </label>
-          <label>向右带动 <small class="stage-tag">阶段 3</small><output id="retreatDurationOut">0.80秒</output>
-            <input id="retreatDuration" type="range" min="200" max="2500" step="50" value="800">
-          </label>
-          <label>逐行消失 <small class="stage-tag">阶段 4</small><output id="exitDurationOut">1.1秒</output>
-            <input id="exitDuration" type="range" min="500" max="3500" step="50" value="1100">
-          </label>
-          <label>上下成对消失间隔 <small class="stage-tag">阶段 4</small><output id="exitStaggerOut">50ms</output>
-            <input id="exitStagger" type="range" min="0" max="220" step="5" value="50">
-          </label>
-          <label>单行收尾 <small class="stage-tag">阶段 5</small><output id="finalDurationOut">2.60秒</output>
-            <input id="finalDuration" type="range" min="600" max="8000" step="50" value="2600">
-          </label>
-          <label>收尾每行停留 <small class="stage-tag">阶段 5</small><output id="swapIntervalOut">0.52秒</output>
-            <input id="swapInterval" type="range" min="100" max="2500" step="20" value="520">
-          </label>
+        <div class="motion-control-stack">
+          <div class="motion-control-group">
+            <div class="motion-control-group-head"><b>画面</b><span>字体、图标与铺屏密度</span></div>
+            <div class="controls-grid quick-grid">
+              <label>字号 <output id="fontSizeOut">62</output><input id="fontSize" type="range" min="24" max="140" value="62"></label>
+              <label>行距 <output id="lineGapOut">-5</output><input id="lineGap" type="range" min="-25" max="80" value="-5"></label>
+              <label>图标大小 <output id="assetScaleOut">100%</output><input id="assetScale" type="range" min="45" max="180" value="100"></label>
+              <label>图标与文字间距 <output id="assetGapOut">12</output><input id="assetGap" type="range" min="-20" max="120" value="12"></label>
+              <label>行数方式<select id="wallRowsMode"><option value="auto" selected>自动铺满画布</option><option value="custom">自定义行数</option></select></label>
+              <label>满屏行数 <output id="wallRowsOut">自动铺满</output><input id="wallRows" type="range" min="3" max="25" step="2" value="9" disabled></label>
+            </div>
+          </div>
+
+          <div class="motion-control-group">
+            <div class="motion-control-group-head"><b><em>01</em> 铺满画面</b><span>从中间向上下展开</span></div>
+            <div class="controls-grid quick-grid">
+              <label>铺满用时 <output id="popDurationOut">0.35秒</output><input id="popDuration" type="range" min="150" max="1800" step="10" value="280"></label>
+              <label>每行启动间隔 <output id="revealStaggerOut">30ms</output><input id="revealStagger" type="range" min="0" max="180" step="5" value="30"></label>
+            </div>
+          </div>
+
+          <div class="motion-control-group">
+            <div class="motion-control-group-head"><b><em>02</em> 满屏向左</b><span>先决定流多久，再决定流多快</span></div>
+            <div class="controls-grid quick-grid">
+              <label>铺满后继续向左 <output id="fullDurationOut">0.35秒</output><input id="fullDuration" type="range" min="50" max="8000" step="10" value="350"></label>
+              <label>向左流动速度 <output id="speedOut">1.00×</output><input id="speed" type="range" min="20" max="500" step="5" value="100"></label>
+            </div>
+          </div>
+
+          <div class="motion-control-group is-primary">
+            <div class="motion-control-group-head"><b><em>03</em> 惯性转向与逐行回收</b><span>所有行一起向右，外层上下逐对弹走</span></div>
+            <div class="motion-control-note">觉得弹走太快：先把“每对弹走时间”往右拉；想让上下接力更明显，再增加“下一对启动间隔”。</div>
+            <div class="controls-grid quick-grid">
+              <label>左→右惯性衔接 <output id="reversalDurationOut">0.09秒</output><input id="reversalDuration" type="range" min="40" max="1000" step="10" value="90"></label>
+              <label>向右推动时间 <output id="retreatDurationOut">0.32秒</output><input id="retreatDuration" type="range" min="120" max="2500" step="10" value="320"></label>
+              <label>向右推动速度 <output id="reversePullOut">1.30×</output><input id="reversePull" type="range" min="30" max="400" step="5" value="130"></label>
+              <label>每对弹走时间 <output id="rowExitDurationOut">0.18秒</output><input id="rowExitDuration" type="range" min="80" max="1500" step="10" value="180"></label>
+              <label>下一对启动间隔 <output id="exitStaggerOut">45ms</output><input id="exitStagger" type="range" min="0" max="300" step="5" value="45"></label>
+              <label>整段向右弹走时间 <output id="exitDurationOut">0.45秒</output><input id="exitDuration" type="range" min="250" max="3500" step="10" value="450"></label>
+            </div>
+          </div>
+
+          <div class="motion-control-group">
+            <div class="motion-control-group-head"><b><em>04</em> 收尾换字</b><span>可与逐行回收重叠</span></div>
+            <div class="controls-grid quick-grid">
+              <label>收尾提前插入 <output id="swapMomentOut">消失 68%</output><input id="swapMoment" type="range" min="0" max="100" step="1" value="68"></label>
+              <label>扫过每个字的间隔 <output id="swapIntervalOut">0.08秒</output><input id="swapInterval" type="range" min="60" max="1200" step="20" value="80"></label>
+              <label>恢复后停留 <output id="finalDurationOut">0.14秒</output><input id="finalDuration" type="range" min="0" max="8000" step="20" value="140"></label>
+            </div>
+          </div>
         </div>
-        <p class="hint">铺屏从中间向上下逐行展开；消失从画面最上、最下两行同时开始，上下成对向中间递减，并始终保留中间一行。成对间隔越大，接力感越明显；总时长控制整段快慢。</p>
         <p class="hint timing-live" id="timingReadout" aria-live="polite">当前：准备预览</p>
       </section>
 
@@ -212,9 +267,6 @@ everything</textarea>
         <div class="advanced-body">
           <p class="hint advanced-hint">这些参数用于细调特殊节奏；不确定时保留默认值。</p>
           <section class="controls-grid">
-            <label>满屏左流速度 <output id="speedOut">1.00×</output>
-              <input id="speed" type="range" min="20" max="220" value="100">
-            </label>
             <label>水波频率 <output id="waveRateOut">0.70</output>
               <input id="waveRate" type="range" min="10" max="200" value="70">
             </label>
@@ -227,9 +279,6 @@ everything</textarea>
             <label>字间填充 <output id="repeatGapOut">24</output>
               <input id="repeatGap" type="range" min="0" max="160" value="24">
             </label>
-            <label>向右推动力度 <output id="reversePullOut">70%</output>
-              <input id="reversePull" type="range" min="0" max="180" value="70">
-            </label>
             <label>弹屏力度 <output id="burstOut">100%</output>
               <input id="burst" type="range" min="50" max="180" value="100">
             </label>
@@ -237,15 +286,12 @@ everything</textarea>
           <section>
             <p class="section-label">阶段细节 · 毫秒</p>
             <div class="controls-grid timing-grid">
-              <label>向左预备 <output id="introLeftOut">480</output>
-                <input id="introLeft" type="range" min="200" max="1800" step="10" value="480">
+              <label>开场弹入用时 <output id="introLeftOut">260</output>
+                <input id="introLeft" type="range" min="80" max="1800" step="10" value="260">
               </label>
-              <label>向右替换 <output id="introReturnOut">150</output>
-                <input id="introReturn" type="range" min="80" max="900" step="10" value="150">
+              <label>向右替换 <output id="introReturnOut">70</output>
+                <input id="introReturn" type="range" min="40" max="900" step="10" value="70">
               </label>
-          <label>开始切换 <output id="swapMomentOut">8%</output>
-            <input id="swapMoment" type="range" min="0" max="80" step="1" value="8">
-          </label>
             </div>
           </section>
           <p class="hint">每个阶段使用独立真实时间；调整其中一段不会压缩其它阶段。当前一轮约 <strong id="cycleDurationOut">4.4秒</strong>。</p>
@@ -260,21 +306,7 @@ everything</textarea>
       </section>
 
       <section class="export-panel">
-        <label class="section-label" for="exportPreset">导出尺寸</label>
-        <select id="exportPreset">
-          <option value="current">当前画板</option>
-          <option value="1080x1080">1:1 · 1080 × 1080</option>
-          <option value="1080x1350">4:5 · 1080 × 1350</option>
-          <option value="1080x1920">9:16 · 1080 × 1920</option>
-          <option value="1920x1080">16:9 · 1920 × 1080</option>
-          <option value="1200x628">横幅 · 1200 × 628</option>
-          <option value="custom">自定义尺寸</option>
-        </select>
-        <div class="custom-size" id="customSize" hidden>
-          <label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label>
-          <span>×</span>
-          <label>高<input id="exportHeight" type="number" min="240" max="3840" value="1080"></label>
-        </div>
+        <p class="section-label">导出</p>
         <div class="export-options">
           <label>导出时长
             <select id="exportDuration">
@@ -311,8 +343,9 @@ everything</textarea>
   <script src="js/continuation-gif.js"></script>
   <script src="js/h264-mp4-encoder.web.js"></script>
   <script src="token-asset-tools.js"></script>
+  <script src="shared-icon-library.js?v=20260830-3"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
-  <script src="currentwall.js?v=20260824-ui10"></script>
+  <script src="currentwall.js?v=20260830-28"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
 </body>

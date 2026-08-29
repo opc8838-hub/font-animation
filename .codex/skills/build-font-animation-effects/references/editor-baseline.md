@@ -6,27 +6,38 @@ Apply this baseline to new effect pages unless the user explicitly removes a cap
 
 - Use the Icon Burst editor as the canonical project visual and interaction language: scrollable light-gray left editor, sticky header, rounded white section cards, consistent fields/buttons, and a large right stage. Reuse the shared `me-*` scheme, choreography, asset, and stage-control classes from `site/me-motion-editor.css`; do not give each effect an unrelated editor shell.
 - Put Pause/Play and Replay in the stage itself, horizontally centered near the bottom with the same compact dark translucent control used by Icon Burst. Any duplicate controls in the editor must share one playback state and stay synchronized.
+- Put the canvas-size card first in the scrollable editor. Offer 1:1 1080×1080, 4:5 1080×1350, 9:16 1080×1920, 16:9 1920×1080, and custom dimensions there so the user chooses the composition before editing.
+- Refit the right-side stage immediately when size changes. Preserve the selected output aspect ratio inside the available workspace and derive preview layout from the same logical width/height used by export; never wait until export to reveal portrait or landscape composition changes.
 - Text must accept Chinese and Latin content and remain centered by default. Expose alignment or X/Y positioning when the choreography benefits from it.
 - Populate every font selector from `site/shared-font-library.js` and load faces from `site/shared-fonts.css`. The catalog consolidates the project fonts and provides Latin, Chinese, Japanese, and Korean choices; do not copy a reduced option list or a private font map into a new effect.
 - Resolve selected values through `STGFontLibrary.preset()` or `STGFontLibrary.family()` so Canvas, DOM preview, GIF, and video use the same face, weight, and style.
 - Font labels show only the font name and useful language coverage. Do not expose “原片”, “视频字体”, “参考”, “复刻”, or “近似” in font options or help text.
-- Provide text color, background color, and background upload for image, GIF, and video where backgrounds are editable.
+- Provide text color, background color, and background upload for image, GIF, and video where backgrounds are editable. When a sequence contains independent rows or pages, follow [per-page-backgrounds.md](per-page-backgrounds.md): each page owns its media, trim, and transition instead of sharing one detached global background control.
 - Recompute layout from actual text metrics. Do not assume a fixed word, equal left/right character counts, or a fixed number of lines.
+- For row/page sequences, use stable page ids and keep page-specific controls inside the corresponding row. When the effect exposes them, font family, font sizes, text/punctuation colors, letter/segment spacing, reveal style, phase durations, page hold, order, and assigned assets are independent per page.
+- Rebuild order options and all dependent page/asset controls after add or delete. Reordering moves the complete page state rather than copying visible text into a different page object.
+- When inline icons are supported, let the user insert each icon at a meaningful character boundary and edit its text-to-icon gap; do not automatically add the same icon to every page.
 
 ## Shared icon and media library
 
-Use the current shared sources from `site/iconburst.js`:
+Load the current shared sources from `site/shared-icon-library.js`:
 
-- `flowIconImages`: music, play, cloud, and watch icons.
-- `transparentAnimalImages`: transparent animals under `site/assets/transparent-animals/`.
-- `botSeriesImages`: animated Bot GIFs under `site/assets/bot-series/`.
-- Built-in rainbow ring where a simple graphic insert is useful.
+- `groups.flow`: music, play, cloud, watch, and rainbow-ring icons.
+- `groups.animals`: transparent animals under `site/assets/transparent-animals/`.
+- `groups.bots`: animated Bot GIFs under `site/assets/bot-series/`.
+- `groups.gifMotion`: collision GIFs and the complete construct-motion set.
+- `drawVector(context, asset, size, time)`: the deterministic Canvas renderer for vector candidates.
 
-Also expose these reusable motion assets when an effect benefits from animated inserts:
+The shared `GIF 动图` group includes:
 
 - Collision hand: `site/crash_resources/images/0.gif`.
 - Collision sky: `site/crash_resources/images/1.gif`.
-- Construct-style vector motion: cloud outline, orbit loops, multicolor thick stroke, and gradient bar. Port the drawing behavior from `site/construct/g_cloud.js`, `site/construct/g_scribble.js`, `site/construct/g_zigzag.js`, and `site/construct/g_gradient.js` into the consuming deterministic Canvas renderer; do not rasterize screenshots of these shapes.
+- Construct motion: dynamic cloud, orbit loops, multicolor stroke, gradient bar, light wave, ribbon, rotating coil, and pulse lines.
+- Transparent black-line variants: `construct-cloud-paper`, `construct-loop-paper`, and `construct-coil-paper`.
+
+Present the complete group as `GIF 动图`. Keep real GIF/WebP/APNG candidates animated in the live preview instead of snapshotting their first frame; call the shared vector renderer with the consuming effect's deterministic timeline so preview and export share the same motion. Do not rasterize vector screenshots or recreate a reduced private list.
+
+When icon quantity is part of the choreography, treat the selected list as a candidate pool. Adding a candidate raises the possible peak count; it must not force every selected asset into one permanently wider row. Compute a centered count envelope such as few → many → few, reveal outward and recover inward, keep visible assets flipping throughout the phase, and schedule without replacement inside each frame.
 
 Built-in candidates have stable `libraryId` values. Unless the effect explicitly calls for clones, reject duplicate selected `libraryId` values and schedule visible icons without replacement so the same icon does not appear multiple times in one frame. Do not create several independently moving copies merely to make an effect look busier.
 
@@ -78,7 +89,7 @@ Offer these controls when the page claims full export support:
 - PNG current frame.
 - GIF animation.
 - MP4 video; use WebM only when clearly labeled as WebM.
-- Current canvas, 1:1 1080×1080, 4:5 1080×1350, 9:16 1080×1920, 16:9 1920×1080, and custom dimensions.
+- Canvas dimensions are selected in the first editor card; the lower export card keeps full-cycle/fixed/custom duration, FPS, format actions, progress, and status without repeating the size control.
 - Full cycle, common fixed durations, and custom duration.
 - 15, 24, 30, and 60 FPS where encoder performance permits.
 - Progress, busy/disabled states, and clear success/failure messages.

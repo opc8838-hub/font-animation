@@ -1,0 +1,243 @@
+{
+  "version": 6,
+  "controls": {
+    "titleText": "Creator Studio",
+    "sourceText": "CELL MOTION\n",
+    "effectMode": "icons",
+    "fontFamily": "stg:inter",
+    "fontWeight": "400",
+    "textAlign": "center",
+    "backgroundColor": "#030303",
+    "textColor": "#fcfcfc",
+    "punctuationColor": "#ffffff",
+    "punctuationEnabled": false,
+    "speed": "1.1",
+    "introDuration": "250",
+    "recomposeSeconds": "1",
+    "resolveInsertSeconds": "0.7",
+    "resolveDuration": "830",
+    "holdDuration": "200",
+    "fragmentRate": "60",
+    "letterRotation": "10",
+    "rotationSpeed": "1.95",
+    "shrinkAmount": "12",
+    "fragmentStrength": "72",
+    "fontSize": "114",
+    "tracking": "1",
+    "textX": "50",
+    "textY": "50",
+    "iconDensity": "100",
+    "iconCountCycles": "1",
+    "iconSize": "105",
+    "iconOpacity": "100",
+    "iconSwitchRate": "4",
+    "iconSpin": "0",
+    "iconGap": "0",
+    "iconY": "0"
+  },
+  "palette": [
+    "#ff2d55",
+    "#ffcc00",
+    "#30d158",
+    "#64d2ff",
+    "#5e5ce6",
+    "#bf5af2"
+  ],
+  "assets": [
+    {
+      "id": "animal-5-1787839767479-2-gtcj",
+      "libraryId": "animal-5",
+      "name": "鲸鱼",
+      "url": "assets/transparent-animals/animal-05.png",
+      "type": "image/png",
+      "kind": "image",
+      "vectorType": "",
+      "size": 100,
+      "opacity": 100,
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "spin": 1
+    },
+    {
+      "id": "bot-6-1787839767479-3-2mzo",
+      "libraryId": "bot-6",
+      "name": "Bot 动态表情 06",
+      "url": "assets/bot-series/bloub-goutte-curieux-turquoise.gif",
+      "type": "image/gif",
+      "kind": "image",
+      "vectorType": "",
+      "size": 100,
+      "opacity": 46,
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "spin": 1
+    },
+    {
+      "id": "collision-hand-1787839992042-2-d2b2",
+      "libraryId": "collision-hand",
+      "name": "动态手掌",
+      "url": "crash_resources/images/0.gif",
+      "type": "image/gif",
+      "kind": "image",
+      "vectorType": "",
+      "size": 100,
+      "opacity": 100,
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "spin": 1
+    },
+    {
+      "id": "construct-wave-1787839994236-3-dzkc",
+      "libraryId": "construct-wave",
+      "name": "流光波线",
+      "url": "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20160%20100%22%3E%3Crect%20width%3D%22160%22%20height%3D%22100%22%20rx%3D%2216%22%20fill%3D%22%230b0b0d%22%2F%3E%3Cpath%20d%3D%22M12%2054C34%2017%2053%2086%2078%2047s45%2035%2070-8%22%20fill%3D%22none%22%20stroke%3D%22%23d8ff2f%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E",
+      "type": "image/png",
+      "kind": "vector",
+      "vectorType": "wave",
+      "size": 100,
+      "opacity": 100,
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "spin": 1
+    },
+    {
+      "id": "construct-coil-1787839995338-4-gvyq",
+      "libraryId": "construct-coil",
+      "name": "旋转线圈",
+      "url": "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20160%20100%22%3E%3Crect%20width%3D%22160%22%20height%3D%22100%22%20rx%3D%2216%22%20fill%3D%22%230b0b0d%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222%22%3E%3Cellipse%20cx%3D%2280%22%20cy%3D%2250%22%20rx%3D%2260%22%20ry%3D%2218%22%2F%3E%3Cellipse%20cx%3D%2280%22%20cy%3D%2250%22%20rx%3D%2242%22%20ry%3D%2228%22%20transform%3D%22rotate(28%2080%2050)%22%2F%3E%3Cellipse%20cx%3D%2280%22%20cy%3D%2250%22%20rx%3D%2224%22%20ry%3D%2238%22%20transform%3D%22rotate(-28%2080%2050)%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E",
+      "type": "image/png",
+      "kind": "vector",
+      "vectorType": "coil",
+      "size": 100,
+      "opacity": 100,
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "spin": 1
+    },
+    {
+      "id": "construct-loop-1787839996818-5-0qwj",
+      "libraryId": "construct-loop",
+      "name": "环绕线条",
+      "url": "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20160%20100%22%3E%3Crect%20width%3D%22160%22%20height%3D%22100%22%20rx%3D%2216%22%20fill%3D%22%230b0b0d%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222%22%3E%3Cellipse%20cx%3D%2280%22%20cy%3D%2250%22%20rx%3D%2255%22%20ry%3D%2224%22%20transform%3D%22rotate(-10%2080%2050)%22%2F%3E%3Cellipse%20cx%3D%2280%22%20cy%3D%2250%22%20rx%3D%2255%22%20ry%3D%2224%22%20transform%3D%22rotate(10%2080%2050)%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E",
+      "type": "image/png",
+      "kind": "vector",
+      "vectorType": "loop",
+      "size": 100,
+      "opacity": 100,
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "spin": 1
+    },
+    {
+      "id": "bot-9-1787842154047-6-bbz9",
+      "libraryId": "bot-9",
+      "name": "Bot 动态表情 09",
+      "url": "assets/bot-series/bloub-nuage-neutre-bleu.gif",
+      "type": "image/gif",
+      "kind": "image",
+      "vectorType": "",
+      "size": 100,
+      "opacity": 100,
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "spin": 1
+    },
+    {
+      "id": "flow-3-1787842203122-7-0yo3",
+      "libraryId": "flow-3",
+      "name": "流墙手表",
+      "url": "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2222%22%20fill%3D%22%23d8d8d8%22%2F%3E%3Crect%20x%3D%2228%22%20y%3D%2219%22%20width%3D%2244%22%20height%3D%2262%22%20rx%3D%2215%22%20fill%3D%22%23111%22%2F%3E%3Crect%20x%3D%2235%22%20y%3D%2228%22%20width%3D%2230%22%20height%3D%2244%22%20rx%3D%229%22%20fill%3D%22%23d7ff2f%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%223%22%20fill%3D%22%23111%22%2F%3E%3C%2Fsvg%3E",
+      "type": "image/svg+xml",
+      "kind": "image",
+      "vectorType": "",
+      "size": 53,
+      "opacity": 34,
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "spin": 1
+    }
+  ],
+  "background": null,
+  "rotationLayout": {
+    "glyph-0": {
+      "x": 2.289835026800752,
+      "y": 0
+    },
+    "glyph-1": {
+      "x": -1.0031236093431117,
+      "y": 0
+    },
+    "glyph-2": {
+      "x": -3.19,
+      "y": 0
+    },
+    "glyph-3": {
+      "x": -2.61,
+      "y": 0
+    },
+    "glyph-4": {
+      "x": 0.04933420411031901,
+      "y": 0
+    },
+    "glyph-5": {
+      "x": 2.835651185489887,
+      "y": 0
+    },
+    "glyph-6": {
+      "x": -0.8699999999999999,
+      "y": 0
+    },
+    "glyph-7": {
+      "x": 1.4401328381667882,
+      "y": 0
+    },
+    "glyph-8": {
+      "x": -0.5036395605296199,
+      "y": 0
+    },
+    "glyph-9": {
+      "x": -2.0664646446558015,
+      "y": 0
+    },
+    "icon-animal-5-1787839767479-2-gtcj": {
+      "x": -1.9309028392418888,
+      "y": 0
+    },
+    "icon-bot-6-1787839767479-3-2mzo": {
+      "x": 1.7442905313098565,
+      "y": 0
+    },
+    "icon-collision-hand-1787839992042-2-d2b2": {
+      "x": -3.472337984317874,
+      "y": 0
+    },
+    "icon-construct-wave-1787839994236-3-dzkc": {
+      "x": 0.5392438067968193,
+      "y": 0
+    },
+    "icon-construct-coil-1787839995338-4-gvyq": {
+      "x": -1.6267461633363438,
+      "y": 0
+    },
+    "icon-construct-loop-1787839996818-5-0qwj": {
+      "x": -2.538787438515504,
+      "y": 0
+    },
+    "icon-bot-9-1787842154047-6-bbz9": {
+      "x": 3.2181304461179248,
+      "y": 0
+    },
+    "icon-flow-3-1787842203122-7-0yo3": {
+      "x": 3.5465613942072918,
+      "y": 0
+    }
+  }
+}
