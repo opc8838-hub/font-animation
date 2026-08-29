@@ -136,6 +136,11 @@ main { overflow: hidden; }
   object-fit: contain;
   background: #f5f5f5;
 }
+.effect-card[data-effect="continuation"] video.effect-loop {
+  object-fit: cover;
+  object-position: center;
+  transform: scale(1.14);
+}
 
 .effect-card.has-live-preview {
   position: relative;
@@ -185,7 +190,8 @@ main { overflow: hidden; }
   min-height: 360px;
 }
 
-.effect-card.has-live-preview[data-effect="iconburst"] {
+.effect-card.has-live-preview[data-effect="iconburst"],
+.effect-card.has-live-preview[data-effect="continuation"] {
   grid-column: span 2;
   aspect-ratio: 16 / 9;
   min-height: 360px;
@@ -283,6 +289,11 @@ footer p { max-width: 420px; margin: 0; text-align: right; }
     grid-column: span 1;
     aspect-ratio: 16 / 9;
     min-height: 280px;
+  }
+  .effect-card.has-live-preview[data-effect="continuation"] {
+    grid-column: span 1;
+    aspect-ratio: 16 / 9;
+    min-height: 0;
   }
   .effect-card.has-live-preview[data-effect="pathwriter"] {
     grid-column: span 1;

@@ -3,221 +3,83 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="续句：基于双词块拼接、预备位移和匹配切换的动态字体效果。">
+  <meta name="description" content="续句：前半句预备位移后接入后半句，支持逐字扫入与图标续接。">
   <title>续句 Continuation | ME Motion Studio</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;f[]=general-sans@400,500,600&amp;f[]=clash-display@500,600&amp;f[]=cabinet-grotesk@500,700&amp;display=swap">
-  <link rel="stylesheet" href="continuation.css?v=20260813-hdvideo">
-  <link rel="stylesheet" href="me-motion-editor.css">
-  <link rel="stylesheet" href="stg-cn.css">
+  <link rel="stylesheet" href="me-motion-editor.css?v=20260828-1">
+  <link rel="stylesheet" href="continuation.css?v=20260829-editor24">
+  <link rel="stylesheet" href="stg-cn.css?v=20260828-1">
 </head>
 <body class="me-motion-editor">
-  <main class="stage-shell" aria-label="动态字体预览">
+  <main class="stage-shell" aria-label="续句动效预览">
     <div class="design-frame" id="designFrame">
-      <div class="frame-index" aria-hidden="true"><span>24</span><span>CONTINUATION</span></div>
-      <div class="phrase-stage" id="phraseStage" aria-hidden="true"></div>
+      <canvas id="previewCanvas" aria-label="续句实时画面"></canvas>
+      <div class="me-stage-controls" aria-label="画面播放控制">
+        <button id="stagePauseButton" type="button">暂停</button><button id="stageReplayButton" type="button">重播</button>
+      </div>
       <p class="sr-only" id="livePhrase" aria-live="polite"></p>
-      <div class="frame-time" aria-hidden="true"><span id="frameCounter">F 000</span><span>30 FPS</span></div>
     </div>
   </main>
 
   <details class="control-panel" id="controlPanel" open>
-    <summary>
-      <span><b>续句</b><small>CONTINUATION / 24</small></span>
-      <i aria-hidden="true">参数</i>
-    </summary>
+    <summary><span><b>续句</b><small>CONTINUATION / 24</small></span><i aria-hidden="true">编辑</i></summary>
     <div class="panel-scroll">
-      <section class="pair-editor-section">
-        <div class="section-heading">
-          <div>
-            <p class="section-label">句组编辑</p>
-            <p class="section-kicker">固定前半句 <span aria-hidden="true">→</span> 接入后半句</p>
-          </div>
-          <button class="add-pair-button" id="addPairButton" type="button">＋ 新增</button>
-        </div>
-        <div class="pair-editor-head" aria-hidden="true">
-          <span>前半句</span><i>接入</i><span>后半句</span>
-        </div>
-        <div class="pair-editor" id="pairEditor"></div>
-        <p class="hint">不再需要输入分隔符。左右分别填写，最多 8 组；每一组都会独立播放。</p>
+      <section class="canvas-size-section">
+        <p class="section-label">画板尺寸</p>
+        <label class="full-field">编辑与预览尺寸<select id="exportPreset"><option value="1080x1080">1:1 · 1080 × 1080</option><option value="1080x1350">4:5 · 1080 × 1350</option><option value="1080x1920">9:16 · 1080 × 1920</option><option value="1920x1080" selected>16:9 · 1920 × 1080</option><option value="custom">自定义尺寸</option></select></label>
+        <div class="custom-size" id="customSize" hidden><label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label><span>×</span><label>高<input id="exportHeight" type="number" min="240" max="3840" value="1920"></label></div>
+        <p class="hint">右侧画布会立即按所选比例显示；这里看到的字体、图标和位置就是导出构图。</p>
       </section>
 
-      <section class="row-position-section">
-        <p class="section-label">每行动效位置</p>
-        <div class="row-position-list" id="rowPositionList"></div>
-        <p class="hint">每一行都是独立动效。左 / 中 / 右可快速定位，滑杆可继续精调。</p>
+      <section class="pair-editor-section">
+        <div class="section-heading"><div><p class="section-label">句组编辑</p><p class="section-kicker">固定前半句 <span aria-hidden="true">→</span> 接入后半句</p></div><button class="add-pair-button" id="addPairButton" type="button">＋ 新增</button></div>
+        <div class="pair-editor-head" aria-hidden="true"><span>排序</span><span>前半句</span><i>接入</i><span>后半句</span></div>
+        <div class="pair-editor" id="pairEditor"></div>
+        <div class="continuation-colors"><label><span>新增行默认文字色</span><input id="textColor" type="color" value="#ffffff"></label><label><span>全部行背景色</span><input id="backgroundColor" type="color" value="#000000"></label></div>
       </section>
 
       <section class="font-picker">
-        <label class="section-label" for="fontFamily">字体</label>
-        <select id="fontFamily">
-          <optgroup label="Snap 动效字体">
-            <option value="snap-inter-medium" selected>Inter Medium</option>
-            <option value="snap-inter-black">Inter Black</option>
-            <option value="snap-ibm-plex">IBM Plex Mono Bold Italic</option>
-            <option value="snap-space-mono">Space Mono Bold</option>
-            <option value="snap-space-grotesk">Space Grotesk Bold</option>
-          </optgroup>
-          <optgroup label="Free Faces · OFL">
-            <option value="ff-space-grotesk">Space Grotesk</option>
-            <option value="ff-martian-mono">Martian Mono</option>
-            <option value="ff-oi">Oi Display</option>
-            <option value="ff-barriecito">Barriecito</option>
-          </optgroup>
-          <optgroup label="UNCUT · OFL">
-            <option value="uncut-berlin">Berlin Grotesk</option>
-            <option value="uncut-berlin-bold">Berlin Grotesk Bold</option>
-          </optgroup>
-          <optgroup label="Fontshare · 官方 API">
-            <option value="fs-satoshi">Satoshi</option>
-            <option value="fs-general-sans">General Sans</option>
-            <option value="fs-clash-display">Clash Display</option>
-            <option value="fs-cabinet">Cabinet Grotesk</option>
-          </optgroup>
-          <optgroup label="中文字体">
-            <option value="cn-noto-regular">Noto Sans SC</option>
-            <option value="cn-noto-black">Noto Sans SC Black</option>
-          </optgroup>
-        </select>
-        <p class="hint">本地字体均为可再分发的 OFL；Fontshare 字体由其官方 API 提供。</p>
-      </section>
-
-      <section class="split-type-section">
-        <p class="section-label">前后字体独立</p>
+        <label class="section-label" for="fontFamily">字体</label><select id="fontFamily"><option value="stg:inter">Inter</option></select>
         <div class="split-type-grid">
-          <div class="type-side-card">
-            <b>前半句</b>
-            <label>字号 <output id="leadFontSizeOut">48</output>
-              <input id="leadFontSize" type="range" min="18" max="140" value="48">
-            </label>
-            <label>粗细
-              <select id="leadFontWeight">
-                <option value="200">纤细 · 200</option>
-                <option value="300">细体 · 300</option>
-                <option value="400">常规 · 400</option>
-                <option value="500" selected>中等 · 500</option>
-                <option value="600">半粗 · 600</option>
-                <option value="700">粗体 · 700</option>
-                <option value="800">特粗 · 800</option>
-                <option value="900">黑体 · 900</option>
-              </select>
-            </label>
-          </div>
-          <div class="type-side-card">
-            <b>后半句</b>
-            <label>字号 <output id="suffixFontSizeOut">48</output>
-              <input id="suffixFontSize" type="range" min="18" max="140" value="48">
-            </label>
-            <label>粗细
-              <select id="suffixFontWeight">
-                <option value="200">纤细 · 200</option>
-                <option value="300">细体 · 300</option>
-                <option value="400">常规 · 400</option>
-                <option value="500" selected>中等 · 500</option>
-                <option value="600">半粗 · 600</option>
-                <option value="700">粗体 · 700</option>
-                <option value="800">特粗 · 800</option>
-                <option value="900">黑体 · 900</option>
-              </select>
-            </label>
-          </div>
-        </div>
-        <p class="hint">可分别控制分隔前后的字号与粗细；固定字重字体会自动使用最接近的可用字重。</p>
-      </section>
-
-      <section class="controls-grid">
-        <label>预备比例 <output id="anticipationOut">25%</output>
-          <input id="anticipation" type="range" min="10" max="45" value="25">
-        </label>
-        <label>词间距 <output id="wordGapOut">8</output>
-          <input id="wordGap" type="range" min="0" max="32" value="8">
-        </label>
-        <label>收束起点 <output id="settleScaleOut">110%</output>
-          <input id="settleScale" type="range" min="100" max="125" value="110">
-        </label>
-        <label>入场距离 <output id="introDistanceOut">31</output>
-          <input id="introDistance" type="range" min="0" max="100" value="31">
-        </label>
-        <label>播放速度 <output id="speedOut">1.00×</output>
-          <input id="speed" type="range" min="50" max="160" value="100">
-        </label>
-      </section>
-
-      <section>
-        <p class="section-label">动效节奏 · 毫秒</p>
-        <div class="controls-grid timing-grid">
-          <label>主词入场 <output id="introDurationOut">267</output>
-            <input id="introDuration" type="range" min="50" max="1000" step="1" value="267">
-          </label>
-          <label>主词停顿 <output id="rootHoldOut">100</output>
-            <input id="rootHold" type="range" min="0" max="1500" step="10" value="100">
-          </label>
-          <label>预备左移 <output id="anticipationDurationOut">100</output>
-            <input id="anticipationDuration" type="range" min="30" max="800" step="10" value="100">
-          </label>
-          <label>后词显现 <output id="suffixRevealDurationOut">0</output>
-            <input id="suffixRevealDuration" type="range" min="0" max="600" step="10" value="0">
-          </label>
-          <label>组合收束 <output id="settleDurationOut">500</output>
-            <input id="settleDuration" type="range" min="100" max="1500" step="10" value="500">
-          </label>
-          <label>整组停留 <output id="phraseHoldOut">0</output>
-            <input id="phraseHold" type="range" min="0" max="2000" step="10" value="0">
-          </label>
+          <div class="type-side-card"><b>前半句统一设置</b><label>统一字号 <output id="leadFontSizeOut">48</output><input id="leadFontSize" type="range" min="18" max="180" value="48"></label><label>粗细<select id="leadFontWeight"><option>200</option><option>300</option><option>400</option><option selected>500</option><option>600</option><option>700</option><option>800</option><option>900</option></select></label></div>
+          <div class="type-side-card"><b>后半句统一设置</b><label>统一字号 <output id="suffixFontSizeOut">48</output><input id="suffixFontSize" type="range" min="18" max="180" value="48"></label><label>粗细<select id="suffixFontWeight"><option>200</option><option>300</option><option>400</option><option selected>500</option><option>600</option><option>700</option><option>800</option><option>900</option></select></label></div>
         </div>
       </section>
 
-      <section class="color-row continuation-colors">
-        <label><span>背景</span><input id="backgroundColor" type="color" value="#000000" aria-label="背景颜色"></label>
-        <label><span>文字</span><input id="textColor" type="color" value="#ffffff" aria-label="文字颜色"></label>
-        <div class="color-presets" aria-label="快速颜色">
-          <button type="button" data-color-target="backgroundColor" data-color="#000000"><i style="--swatch:#000000"></i>黑色背景</button>
-          <button type="button" data-color-target="backgroundColor" data-color="#ffffff"><i style="--swatch:#ffffff"></i>纯白背景</button>
-          <button type="button" data-color-target="textColor" data-color="#000000"><i style="--swatch:#000000"></i>黑色文字</button>
-          <button type="button" data-color-target="textColor" data-color="#ffffff"><i style="--swatch:#ffffff"></i>纯白文字</button>
+      <section class="motion-section">
+        <p class="section-label">整体动效</p>
+        <div class="controls-grid">
+          <label>预备比例 <output id="anticipationOut">25%</output><input id="anticipation" type="range" min="10" max="45" value="25"></label><label>统一前后句间距 <output id="wordGapOut">8</output><input id="wordGap" type="range" min="0" max="48" value="8"></label>
+          <label>收束起点 <output id="settleScaleOut">110%</output><input id="settleScale" type="range" min="100" max="125" value="110"></label>
+          <label>播放速度 <output id="speedOut">1.00×</output><input id="speed" type="range" min="50" max="160" value="100"></label>
         </div>
       </section>
 
-      <section class="transport" aria-label="时间轴控制">
-        <button id="restartButton" type="button">重播</button>
-        <button id="pauseButton" type="button">暂停</button>
-        <button id="backButton" type="button" aria-label="后退一帧">−1 帧</button>
-        <button id="forwardButton" type="button" aria-label="前进一帧">+1 帧</button>
+      <section class="icon-section">
+        <p class="section-label">行内图标</p>
+        <label class="asset-target-field">图标要加入哪一行<select id="assetTargetRow"></select></label>
+        <div id="continuationLayerPanel" class="me-layer-panel"><div class="me-asset-selected-summary"><span><strong>已选图标</strong><small><b id="assetCount">0</b> 项 · 可插入任意字符位置</small></span><button class="me-layer-toggle" id="assetListToggle" type="button" aria-expanded="false">展开已选</button></div><div class="me-layer-items" id="selectedAssetList"></div></div>
+        <div class="asset-library-toolbar"><span id="candidateName">先在图库选择一个图标</span><button class="me-asset-commit" id="addCandidateButton" type="button" disabled>添加到第 1 行</button></div>
+        <div class="me-asset-library" aria-label="图标素材库"><details open><summary>流墙图标</summary><div class="asset-choice-grid" id="flowIconLibrary"></div></details><details><summary>GIF 动图</summary><div class="asset-choice-grid" id="gifMotionLibrary"></div></details><details><summary>透明动物</summary><div class="asset-choice-grid" id="animalIconLibrary"></div></details><details><summary>Bot 动态图标</summary><div class="asset-choice-grid" id="botIconLibrary"></div></details></div>
+        <label class="upload-button"><span id="assetUploadText">上传图片到第 1 行</span><input id="assetUpload" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" multiple></label>
+        <p class="hint">先选目标行并添加图标；展开已选后点“单独编辑”，可指定句首、任意字符后或句末。</p>
       </section>
+
+      <section class="choreo-section"><p class="section-label">编舞时间轴</p><div class="me-choreo-track" id="choreoTrack"><div class="me-choreo-scroll"><div class="me-choreo-bar" id="choreoBar"><i class="me-choreo-playhead" id="choreoPlayhead"></i></div></div><ul class="me-choreo-legend" id="choreoLegend"></ul></div></section>
+
+      <section class="scheme-section"><p class="section-label">方案</p><div class="me-scheme-actions"><button id="saveScheme" type="button">保存方案</button><label class="me-scheme-import">导入方案<input id="importScheme" type="file" accept="application/json,.json"></label><button id="restoreScheme" type="button">恢复默认</button><button id="clearScheme" type="button">清理重做</button></div><p class="hint" id="schemeStatus" aria-live="polite">文字、图标、逐行背景、位置与完整编舞都会保存。</p></section>
 
       <section class="export-panel">
-        <label class="section-label" for="exportPreset">导出尺寸</label>
-        <select id="exportPreset">
-          <option value="current">当前画板</option>
-          <option value="1080x1080">1:1 · 1080 × 1080</option>
-          <option value="1080x1350">4:5 · 1080 × 1350</option>
-          <option value="1080x1920">9:16 · 1080 × 1920</option>
-          <option value="1920x1080">16:9 · 1920 × 1080</option>
-          <option value="1200x628">横版 · 1200 × 628</option>
-          <option value="custom">自定义尺寸</option>
-        </select>
-        <div class="custom-size" id="customSize" hidden>
-          <label>宽 <input id="exportWidth" type="number" min="240" max="3840" value="1080"></label>
-          <span>×</span>
-          <label>高 <input id="exportHeight" type="number" min="240" max="3840" value="1080"></label>
-        </div>
-        <div class="export-actions">
-          <button id="exportPng" type="button">PNG 图片</button>
-          <button id="exportGif" type="button">GIF 动图</button>
-          <button id="exportVideo" type="button">视频</button>
-          <button class="export-hd-video" id="exportVerticalVideo" type="button">导出 9:16 高清视频 · 1080 × 1920</button>
-        </div>
-        <p class="export-status" id="exportStatus" aria-live="polite">9:16 高清视频会导出完整循环；Safari 会自动逐帧生成视频。</p>
+        <p class="section-label">真实导出</p>
+        <div class="export-grid"><label>时长<select id="exportDuration"><option value="full">完整循环</option><option value="2">2 秒</option><option value="3">3 秒</option><option value="5">5 秒</option><option value="custom">自定义</option></select></label><label>帧率<select id="exportFps"><option>15</option><option>24</option><option selected>30</option><option>60</option></select></label></div>
+        <label id="customDurationWrap" hidden>自定义秒数<input id="customDuration" type="number" min="0.1" max="30" step="0.1" value="3"></label>
+        <div class="export-actions"><button id="exportPng" type="button">PNG 图片</button><button id="exportGif" type="button">GIF 动图</button><button id="exportVideo" type="button">MP4 视频</button></div><p class="export-status" id="exportStatus" aria-live="polite">预览、GIF 和 MP4 使用同一套逐帧编舞。</p>
       </section>
-      <p class="formula">位移 = 后词宽度 × 预备比例<br>每一项节奏均参与预览与导出的确定性逐帧计算</p>
     </div>
   </details>
 
-  <script src="js/gsap-3.13.0.min.js"></script>
-  <script src="js/continuation-gif.js"></script>
-  <script src="CCapture.all.min.js"></script>
-  <script src="continuation.js?v=20260824-fonts1"></script>
-  <script src="me-motion-editor.js"></script>
-  <script src="stg-cn.js?v=20260824-fonts1"></script>
+  <aside class="me-asset-drawer" id="assetDrawer" hidden aria-label="单个图标编辑器"><header><div><small>单独编辑</small><strong id="drawerAssetName">图标</strong></div><button id="closeAssetDrawer" type="button" aria-label="关闭">×</button></header><div class="me-asset-editor"><label>所属行<select id="assetRowAssignment"></select></label><label>插入位置<select id="assetInsertionPoint"></select></label><label>图文间距 <output id="assetSpacingOut">6</output><input id="assetSpacing" type="range" min="0" max="96" step="1" value="6"></label><label>大小 <output id="assetSizeOut">100%</output><input id="assetSize" type="range" min="25" max="250" value="100"></label><label>透明度 <output id="assetOpacityOut">100%</output><input id="assetOpacity" type="range" min="0" max="100" value="100"></label><label>水平偏移 <output id="assetXOut">0</output><input id="assetX" type="range" min="-160" max="160" value="0"></label><label>垂直偏移 <output id="assetYOut">0</output><input id="assetY" type="range" min="-160" max="160" value="0"></label><label>旋转 <output id="assetRotationOut">0°</output><input id="assetRotation" type="range" min="-180" max="180" value="0"></label></div></aside>
+
+  <script src="shared-font-library.js?v=20260824-2"></script><script src="shared-icon-library.js?v=20260828-1"></script><script src="js/continuation-gif.js"></script><script src="js/h264-mp4-encoder.web.js"></script><script src="continuation.js?v=20260829-editor25"></script><script src="me-motion-editor.js?v=20260828-1"></script><script src="stg-cn.js?v=20260828-1"></script>
 </body>
 </html>

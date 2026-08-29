@@ -12,6 +12,8 @@ Use `site/shared-font-library.js` for the single project-wide font list and valu
 
 ## Rich icon editor and scheme model
 
+Use `site/shared-icon-library.js` for the canonical flow, `GIF 动图`, transparent-animal, and Bot candidate groups. Its stable `libraryId` values and `drawVector()` function keep newly added line-motion variants available to every consuming effect without copying arrays or Canvas recipes.
+
 Use `site/iconburst.html`, `site/iconburst.css`, `site/iconburst-overrides.css`, and `site/iconburst.js` for:
 
 - The canonical left-editor section cards, exact four-button two-column scheme actions, colored choreography blocks/legend, selection-first asset editor, status messaging, and bottom-center stage Pause/Play + Replay controls. Reuse the `me-scheme-*`, `me-choreo-*`, `me-asset-*`, and `me-stage-controls` implementations in `site/me-motion-editor.css`.
@@ -31,11 +33,15 @@ Use `site/sequence-motion.js` and `site/sequence-motion.css` for:
 
 - A shared canvas renderer across multiple effect modes.
 - Common font/color/playback controls.
-- Current, square, portrait, vertical, landscape, and custom export sizes.
+- First-card square, portrait, vertical, landscape, and custom canvas sizes with a live stage that refits to the selected ratio; lower export controls reuse that same size state.
 - Full-cycle/custom duration, FPS, PNG, GIF, and video controls.
 - Deterministic `renderFrame(target, time, width, height)` structure.
 
 Do not copy its small fixed `iconOptions` when the task needs the full current library; connect the Icon Burst asset sources instead.
+
+## Per-page background and video editing
+
+Use `site/continuation.html`, `site/continuation.css`, and `site/continuation.js` for row-scoped background color, image/GIF/video upload, video filmstrip trimming, direct/crossfade transitions, stable row-id assignment, serialized media state, and deterministic preview/export seeking. Apply the behavioral requirements in [per-page-backgrounds.md](per-page-backgrounds.md); copy only the media pattern, not Continuation's typography choreography.
 
 ## Visual timeline and scheme UX
 
@@ -56,6 +62,7 @@ For a new effect, use a live iframe only when it preserves the same composition 
 - Fonts: `site/assets/` and `site/assets/fonts/`.
 - Transparent animals: `site/assets/transparent-animals/`.
 - Bot GIFs: `site/assets/bot-series/`.
+- Shared icon/expression catalog and deterministic vector renderer: `site/shared-icon-library.js`.
 - Collision GIFs: `site/crash_resources/images/0.gif` for the animated hand and `site/crash_resources/images/1.gif` for animated sky.
 - Construct vector recipes: `site/construct/g_cloud.js`, `site/construct/g_scribble.js`, `site/construct/g_zigzag.js`, and `site/construct/g_gradient.js`. Reuse their geometry as resolution-independent Canvas drawing, with static SVG previews only for the asset picker.
 - GIF encoder: `site/js/continuation-gif.js` and `site/js/continuation-gif.worker.js`.

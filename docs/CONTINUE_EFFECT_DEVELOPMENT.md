@@ -24,7 +24,7 @@ This is the short entry point for continuing ME Motion Studio work in a fresh ch
 - Shared effect skill: `.codex/skills/build-font-animation-effects/`.
 - Shared fonts: `site/shared-font-library.js` and `site/shared-fonts.css`.
 - Shared editor baseline: `site/me-motion-editor.js`, `site/me-motion-editor.css`, `site/workspace-editor.css`.
-- Shared assets/media: `site/media-layer.js`, `site/media-layer.css`, and the icon paths documented by the project skill.
+- Shared assets/media: `site/shared-icon-library.js`, `site/media-layer.js`, `site/media-layer.css`, and the icon paths documented by the project skill.
 - Path Writer (`轨书`): `site/pathwriter.html`, `site/pathwriter.css`, `site/pathwriter.js`; default preset `site/assets/presets/pathwriter-default.json`; gallery video `site/assets/previews/pathwriter-card.mp4`.
 
 ## Minimal verification before handoff
