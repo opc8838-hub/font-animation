@@ -1012,7 +1012,7 @@
     const exit = Number(inputs.exitDuration.value) / 1000;
     const duration = [launch, spread, collapse, scan, finalHold, exit];
     const introEnd = launch;
-    const spreadStart = launch;
+    const spreadStart = launch * .48;
     const spreadEnd = spreadStart + spread;
     const collapseEnd = spreadEnd + collapse;
     const scanEnd = collapseEnd + scan;
@@ -1194,10 +1194,8 @@
     const centerStableScale = introFontPx / Math.max(1, wallFontPx * wallZoom);
     const centerFilledZoom = 1 / Math.max(.001, centerStableScale);
     const spreadProgress = rangeProgress(localTime, timing.spreadStart, timing.spreadEnd);
-    const centerFillProgress = smoother(rangeProgress(spreadProgress, 0, .28));
-    const centerDisplayScale = localTime < timing.spreadStart
-      ? launchJump.scaleX
-      : lerp(1, centerFilledZoom, centerFillProgress);
+    const centerFillProgress = smoother(rangeProgress(localTime, timing.spreadStart, timing.introEnd));
+    const centerDisplayScale = launchJump.scaleX * lerp(1, centerFilledZoom, centerFillProgress);
     const collapseProgress = rangeProgress(localTime, timing.spreadEnd, timing.collapseEnd);
 
     if (localTime < timing.spreadEnd) {
@@ -1221,7 +1219,7 @@
           ? centerStableScale * centerDisplayScale
           : lerp(.76, 1, appear);
         const centerAxisScaleY = distance === 0
-          ? (localTime < timing.spreadStart ? launchJump.scaleY / Math.max(.001, launchJump.scaleX) : 1)
+          ? (localTime < timing.introEnd ? launchJump.scaleY / Math.max(.001, launchJump.scaleX) : 1)
           : 1;
         if (distance === 0) {
           drawCentered(centerWallLine, y, horizontalPhase, alpha, rowScale,
@@ -1233,8 +1231,10 @@
       const phase = localTime < timing.spreadStart ? "center-launch" : "wall-spread";
       markPhase(phase, { rows: localTime < timing.spreadStart ? 1 : rowCount,
         centerJumpScaleX: centerDisplayScale,
-        centerJumpScaleY: localTime < timing.spreadStart ? launchJump.scaleY : centerDisplayScale,
-        centerJumpY: localTime < timing.spreadStart ? launchJump.y : 0,
+        centerJumpScaleY: localTime < timing.introEnd
+          ? centerDisplayScale * launchJump.scaleY / Math.max(.001, launchJump.scaleX)
+          : centerDisplayScale,
+        centerJumpY: localTime < timing.introEnd ? launchJump.y : 0,
         centerWallRowScale: centerStableScale * centerDisplayScale });
       return;
     }
@@ -1283,7 +1283,7 @@
 
   function timelineBeats(timing = choreographyTiming()) {
     return [
-      { kind: "intro", name: "中心跳出", start: 0, end: timing.spreadStart },
+      { kind: "intro", name: "中心跳出", start: 0, end: timing.introEnd },
       { kind: "orbit", name: "跳出并连续弹满", start: timing.spreadStart, end: timing.spreadEnd },
       { kind: "replace", name: "立即收束", start: timing.spreadEnd, end: timing.collapseEnd },
       { kind: "contact", name: "字母图标扫变", start: timing.collapseEnd, end: timing.scanEnd },
