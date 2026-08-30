@@ -20,6 +20,27 @@ Read this only when a user supplies a video or asks for close motion matching. T
 - Expose user-facing parameters that match visible decisions: duration, start/overlap timing, stagger, hold, distance, direction, spacing, size, color, and rhythm. Avoid anonymous coefficients.
 - Compare normal speed, then pause at phase boundaries and one or more overlap frames. Test changed text length and at least one CJK input.
 
+## Reconstruct fast continuous choreography
+
+Use these checks when a reference completes several visible phases within a few seconds, especially flowing text, repeated rows, rebounds, and ordered exits.
+
+- Track at least one stable glyph or icon across consecutive dense frames. Record its position delta, scale, and visibility instead of inferring motion from the changing silhouette of the whole frame.
+- Treat filling, drifting, reversing, and exiting as motion channels that may overlap. If rows are still entering while already drifting, begin drift per row at reveal time rather than after a global fill phase.
+- Do not insert a zero-velocity hold merely because one named phase ends. At a fluid reversal, carry the incoming velocity into a short deceleration and acceleration curve, or use a deliberate impulse; verify that no middle row freezes while staggered rows change direction.
+- Distinguish disappearance mechanisms from dense frames. Translation plus scale/opacity is not a wipe; clipping is not a row being pulled away. Match the observed glyph edges, spacing, and residual motion rather than choosing the easiest concealment.
+- When entrance and exit share a visual gesture, model them from the same motion family with direction, order, and timing changed. Preserve per-row ordering while keeping every active row moving.
+- Keep inline icons in the same token layout and motion field as text. They must inherit row drift, reversal, scale, and exit unless the evidence shows an independent path. Recompute adjacent text positions when icon size or gap changes so assets do not vanish, overlap accidentally, or leave uneven row endings.
+- For a character-to-icon scan, preserve the character slot identity: character → icon → original character before advancing, unless concurrent replacements are visible in the reference. Animate the neighboring advances created by a wider icon, then restore the original spacing. Expose scan interval/hold plus per-slot icon scale and before/after gap when those decisions are visible.
+- At responsive sizes, compare normalized row edges and exit envelopes. A crop may hide different content, but it must not create accidental short rows, missing icons, or inconsistent pull-away boundaries.
+
+## Reference-to-export comparison loop
+
+1. Align the reference and implementation at an observable event such as first reveal, full occupancy, reversal onset, or final restoration; do not align only by total duration.
+2. Inspect both at normal speed for rhythm and at slowed speed for ordering. A slow-motion match that feels stalled at 1× is not accepted.
+3. Extract matching dense frames around every phase boundary and at least one overlap. Compare position deltas between frames to detect accidental zero velocity, direction spikes, and rows that stop while others continue.
+4. Compare the real exported video, not only the live stage. Use the same canvas ratio and inspect text/icon spacing, row edges, visibility, and phase timing at the aligned frames.
+5. Change one timing control at a time during diagnosis. Confirm that its label changes the named interval or overlap directly; remove or rename controls whose effect cannot be explained from the visible timeline.
+
 ## Oil Motion decision boundary
 
 `oil-motion` is optional and should not be loaded merely because a video exists.
