@@ -63,6 +63,7 @@
   let finalSlotMap = { 4: "animal01", 9: "animal08", 11: "cloud" };
   let finalSlotSettings = {};
   let rowAssetGaps = [];
+  let rowAssetGapsAfter = [];
   let rowAssetScales = [];
   let rowAssetOffsetsX = [];
 
@@ -356,6 +357,29 @@
     if (focus) field.focus();
   }
 
+  function firstRowAssetParts(line) {
+    const match = /\{\{([^{}]+)\}\}/.exec(line);
+    if (!match || !assets.has(match[1])) return { left: line, assetId: "", right: "" };
+    return {
+      left: line.slice(0, match.index),
+      assetId: match[1],
+      right: line.slice(match.index + match[0].length)
+    };
+  }
+
+  function updateVisibleRow(index, value) {
+    const lines = inputs.rows.value.split(/\r?\n/);
+    const visibleIndices = lines.map((line, rawIndex) => line.trim() ? rawIndex : -1).filter((rawIndex) => rawIndex >= 0);
+    const rawIndex = visibleIndices[index] ?? lines.length;
+    if (rawIndex === lines.length) lines.push(value);
+    else lines[rawIndex] = value;
+    inputs.rows.value = lines.join("\n");
+    layoutCache.clear();
+    renderSelectedAssets();
+    renderRowOverview(currentTime());
+    setTime(choreographyTiming().spreadStart + choreographyTiming().duration[1] * .8);
+  }
+
   [inputs.rows, inputs.introWord].forEach((field) => {
     field.addEventListener("focus", () => { setTokenTarget(field); });
     field.addEventListener("input", renderSelectedAssets);
@@ -541,6 +565,7 @@
     const globalScale = Number($("#globalRowAssetScale").value) || 92;
     const globalOffsetX = Number($("#globalRowAssetOffsetX").value) || 0;
     rowAssetGaps = rows.map((_, index) => Number(rowAssetGaps[index]) || 0);
+    rowAssetGapsAfter = rows.map((_, index) => Number.isFinite(Number(rowAssetGapsAfter[index])) ? Number(rowAssetGapsAfter[index]) : rowAssetGaps[index]);
     rowAssetScales = rows.map((_, index) => Number.isFinite(Number(rowAssetScales[index])) ? Number(rowAssetScales[index]) : globalScale);
     rowAssetOffsetsX = rows.map((_, index) => Number.isFinite(Number(rowAssetOffsetsX[index])) ? Number(rowAssetOffsetsX[index]) : globalOffsetX);
     $("#globalRowAssetScaleOut").textContent = `${globalScale}%`;
@@ -551,18 +576,42 @@
       const item = document.createElement("div");
       item.className = "vertical-row-gap-item";
       item.setAttribute("aria-label", `编辑第 ${index + 1} 行图标排版`);
-      item.innerHTML = `<span></span><div class="vertical-row-controls">
-        <label><b>图文间距</b><input data-key="gap" type="range" min="-20" max="120" step="1"><output></output></label>
+      item.innerHTML = `<span></span><div class="vertical-row-compose">
+        <label><b>左侧文字</b><input data-part="left" type="text"></label>
+        <label><b>这一行图标</b><select data-part="asset"></select></label>
+        <label><b>右侧文字</b><input data-part="right" type="text"></label>
+      </div><div class="vertical-row-controls">
+        <label><b>左侧间距</b><input data-key="gap" type="range" min="-20" max="120" step="1"><output></output></label>
+        <label><b>右侧间距</b><input data-key="gapAfter" type="range" min="-20" max="120" step="1"><output></output></label>
         <label><b>图标大小</b><input data-key="scale" type="range" min="35" max="220" step="1"><output></output></label>
-        <label><b>左右位置</b><input data-key="offsetX" type="range" min="-120" max="120" step="1"><output></output></label>
+        <label><b>图标列位置</b><input data-key="offsetX" type="range" min="-120" max="120" step="1"><output></output></label>
       </div>`;
       item.querySelector("span").textContent = `第 ${index + 1} 行 · ${line.replace(/\{\{[^{}]+\}\}/g, "[图标]")}`;
+      const parts = firstRowAssetParts(line);
+      const leftInput = item.querySelector('[data-part="left"]');
+      const rightInput = item.querySelector('[data-part="right"]');
+      const assetSelect = item.querySelector('[data-part="asset"]');
+      leftInput.value = parts.left;
+      rightInput.value = parts.right;
+      assetSelect.append(new Option("无图标", ""));
+      [...assets.values()].forEach((asset) => assetSelect.append(new Option(asset.label, asset.id)));
+      assetSelect.value = parts.assetId;
+      const updateComposition = () => {
+        const assetToken = assetSelect.value ? `{{${assetSelect.value}}}` : "";
+        const nextLine = `${leftInput.value}${assetToken}${rightInput.value}`;
+        item.querySelector("span").textContent = `第 ${index + 1} 行 · ${nextLine.replace(/\{\{[^{}]+\}\}/g, "[图标]")}`;
+        updateVisibleRow(index, nextLine);
+      };
+      leftInput.addEventListener("input", updateComposition);
+      rightInput.addEventListener("input", updateComposition);
+      assetSelect.addEventListener("change", updateComposition);
       const controls = {
         gap: { values: rowAssetGaps, suffix: "px" },
+        gapAfter: { values: rowAssetGapsAfter, suffix: "px" },
         scale: { values: rowAssetScales, suffix: "%" },
         offsetX: { values: rowAssetOffsetsX, suffix: "px" }
       };
-      item.querySelectorAll("input").forEach((slider) => {
+      item.querySelectorAll(".vertical-row-controls input").forEach((slider) => {
         const control = controls[slider.dataset.key];
         const output = slider.parentElement.querySelector("output");
         slider.value = String(control.values[index]);
@@ -577,7 +626,7 @@
       });
       list.append(item);
     });
-    $("#rowSettingsCount").textContent = `${rows.length} 行 · 间距 / 大小 / 左右位置`;
+    $("#rowSettingsCount").textContent = `${rows.length} 行 · 左文 / 图标 / 右文 / 独立微调`;
     renderRowOverview(currentTime());
   }
 
@@ -624,6 +673,7 @@
         renderAssetGrid();
         syncAssetTuner();
         renderSelectedAssets();
+        syncRowAssetGaps();
         $("#assetProcessStatus").textContent = `${file.name} · ${result.status} · 已选中但尚未插入，可先单独编辑。`;
       } catch (error) {
         $("#assetProcessStatus").textContent = `${file.name} 处理失败，请换用 PNG、JPG、WebP、SVG 或 GIF。`;
@@ -687,6 +737,34 @@
     if (layoutCache.size > 240) layoutCache.clear();
     layoutCache.set(cacheKey, layout);
     return layout;
+  }
+
+  function layoutRowIconColumn(context, line, fontPx, assetHeight, textGap, gapBefore, gapAfter) {
+    const parts = firstRowAssetParts(line);
+    const asset = assets.get(parts.assetId);
+    if (!asset) return null;
+    const left = parts.left ? layoutTokens(context, parts.left, fontPx, assetHeight, textGap, textGap, false) : null;
+    const right = parts.right ? layoutTokens(context, parts.right, fontPx, assetHeight, textGap, textGap, false) : null;
+    const iconWidth = assetHeight * (asset.ratio || 1);
+    const iconLeft = -iconWidth / 2;
+    const iconRight = iconWidth / 2;
+    const minX = left ? iconLeft - gapBefore - left.width : iconLeft;
+    const maxX = right ? iconRight + gapAfter + right.width : iconRight;
+    return {
+      asset, assetId: parts.assetId, assetHeight, iconWidth, left, right,
+      leftX: left ? iconLeft - gapBefore - left.width : iconLeft,
+      rightX: iconRight + gapAfter,
+      minX, maxX, width: maxX - minX
+    };
+  }
+
+  function drawRowIconColumn(context, column, anchorX, y, color, time) {
+    if (column.left) drawSequence(context, column.left, anchorX + column.leftX, y, color, 0, time, 0, false);
+    drawItem(context, {
+      type: "asset", id: column.assetId, asset: column.asset,
+      width: column.iconWidth, height: column.assetHeight
+    }, anchorX - column.iconWidth / 2, y, color, { time, useAssetTuning: false });
+    if (column.right) drawSequence(context, column.right, anchorX + column.rightX, y, color, 0, time, 0, false);
   }
 
   function drawItem(context, item, x, y, color, options = {}) {
@@ -1003,6 +1081,10 @@
       context, line, wallStage.fontPx, wallStage.assetHeight * rowAssetScales[index] / 100, wallStage.textGap,
       wallStage.assetGap + (Number(rowAssetGaps[index]) || 0) * scale, false
     ));
+    const wallColumns = rows.map((line, index) => layoutRowIconColumn(
+      context, line, wallStage.fontPx, wallStage.assetHeight * rowAssetScales[index] / 100, wallStage.textGap,
+      (Number(rowAssetGaps[index]) || 0) * scale, (Number(rowAssetGapsAfter[index]) || 0) * scale
+    ));
     const wallZoom = Number(inputs.wallScale.value) / 100;
     const drawCentered = (line, y, xOffset = 0, alpha = 1, rowScale = 1, stage = introStage, rowIndex = 0, axisScaleX = 1, axisScaleY = 1) => {
       context.font = fontFor(stage);
@@ -1010,13 +1092,17 @@
       const layout = isWall
         ? (wallLayouts[rowIndex] || layoutTokens(context, line, stage.fontPx, stage.assetHeight, stage.textGap, stage.assetGap, false))
         : layoutTokens(context, line, stage.fontPx, stage.assetHeight, stage.textGap, stage.assetGap);
+      const column = isWall ? wallColumns[rowIndex] : null;
       context.save();
       context.globalAlpha *= clamp01(alpha);
       context.translate(w / 2 + xOffset, h / 2 + y);
       const compositionScale = rowScale * (isWall ? wallZoom : 1);
       context.scale(compositionScale * axisScaleX, compositionScale * axisScaleY);
-      drawSequence(context, layout, -layout.width / 2, 0, inputs.foreground.value, 0, localTime,
-        isWall ? (Number(rowAssetOffsetsX[rowIndex]) || 0) * scale : 0, !isWall);
+      if (column) {
+        drawRowIconColumn(context, column, (Number(rowAssetOffsetsX[rowIndex]) || 0) * scale, 0, inputs.foreground.value, localTime);
+      } else {
+        drawSequence(context, layout, -layout.width / 2, 0, inputs.foreground.value, 0, localTime, 0, !isWall);
+      }
       context.restore();
     };
     const markPhase = (phase, extras = {}) => {
@@ -1034,6 +1120,7 @@
       canvas.dataset.wallTextGap = inputs.wallTextGap.value;
       canvas.dataset.wallAssetGap = "per-row";
       canvas.dataset.rowAssetGaps = rowAssetGaps.join(",");
+      canvas.dataset.rowAssetGapsAfter = rowAssetGapsAfter.join(",");
       canvas.dataset.rowAssetScales = rowAssetScales.join(",");
       canvas.dataset.rowAssetOffsetsX = rowAssetOffsetsX.join(",");
       canvas.dataset.finalFontSize = inputs.finalFontSize.value;
@@ -1332,8 +1419,8 @@
   window.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !rowOverviewPanel.hidden && $("#assetEditorDrawer").hidden) closeRowOverview();
   });
-  const SCHEME_STORAGE_KEY = "me-vertical-rise-scheme-v6";
-  const LEGACY_SCHEME_STORAGE_KEYS = ["me-vertical-rise-scheme-v5", "me-vertical-rise-scheme-v4", "me-vertical-rise-scheme-v3", "me-vertical-rise-scheme-v2"];
+  const SCHEME_STORAGE_KEY = "me-vertical-rise-scheme-v7";
+  const LEGACY_SCHEME_STORAGE_KEYS = ["me-vertical-rise-scheme-v6", "me-vertical-rise-scheme-v5", "me-vertical-rise-scheme-v4", "me-vertical-rise-scheme-v3", "me-vertical-rise-scheme-v2"];
   let defaultSchemeSnapshot = null;
   let applyingScheme = false;
   let persistTimer = 0;
@@ -1350,8 +1437,9 @@
       if (field) controls[id] = field.type === "checkbox" ? field.checked : field.value;
     });
     return {
-      type: "me-vertical-rise", version: 6, controls, selectedAssetId,
-      rowAssetGaps: [...rowAssetGaps], rowAssetScales: [...rowAssetScales], rowAssetOffsetsX: [...rowAssetOffsetsX],
+      type: "me-vertical-rise", version: 7, controls, selectedAssetId,
+      rowAssetGaps: [...rowAssetGaps], rowAssetGapsAfter: [...rowAssetGapsAfter],
+      rowAssetScales: [...rowAssetScales], rowAssetOffsetsX: [...rowAssetOffsetsX],
       finalSlotMap: { ...finalSlotMap },
       finalSlotSettings: Object.fromEntries(Object.entries(finalSlotSettings).map(([index, setting]) => [index, normalizedFinalSlotSetting(index)])),
       assets: [...assets.values()].map((asset) => ({
@@ -1396,7 +1484,10 @@
       scheme.controls.globalRowAssetScale = String(Number(scheme.rowAssetScales?.[0]) || 92);
       scheme.controls.globalRowAssetOffsetX = String(Number(scheme.rowAssetOffsetsX?.[0]) || 0);
     }
-    scheme.version = 6;
+    if (Number(scheme.version) < 7) {
+      scheme.rowAssetGapsAfter = Array.isArray(scheme.rowAssetGaps) ? [...scheme.rowAssetGaps] : [];
+    }
+    scheme.version = 7;
     return scheme;
   }
 
@@ -1427,7 +1518,14 @@
     const layouts = rows.map((line, index) => layoutTokens(context, line, fontPx,
       fontPx * rowAssetScales[index] / 100, Number(inputs.wallTextGap.value) * unitScale,
       (Number(rowAssetGaps[index]) || 0) * unitScale, false));
-    const widest = Math.max(1, ...layouts.map((layout, index) => layout.width + Math.abs(Number(rowAssetOffsetsX[index]) || 0) * unitScale * 2));
+    const columns = rows.map((line, index) => layoutRowIconColumn(context, line, fontPx,
+      fontPx * rowAssetScales[index] / 100, Number(inputs.wallTextGap.value) * unitScale,
+      (Number(rowAssetGaps[index]) || 0) * unitScale, (Number(rowAssetGapsAfter[index]) || 0) * unitScale));
+    const widest = Math.max(1, ...layouts.map((layout, index) => {
+      const column = columns[index];
+      const offset = (Number(rowAssetOffsetsX[index]) || 0) * unitScale;
+      return column ? Math.max(Math.abs(column.minX + offset), Math.abs(column.maxX + offset)) * 2 : layout.width;
+    }));
     const tallestRow = Math.max(fontPx, ...rowAssetScales.map((value) => fontPx * value / 100));
     const allRowsHeight = Math.max(tallestRow, (rows.length - 1) * lineHeight + tallestRow);
     const fit = Math.min(1, (width - 48) / (widest * wallZoom), (height - 48) / (allRowsHeight * wallZoom));
@@ -1437,8 +1535,11 @@
       context.save();
       context.translate(width / 2, startY + index * renderedLineHeight);
       context.scale(wallZoom * fit, wallZoom * fit);
-      drawSequence(context, layout, -layout.width / 2, 0, inputs.foreground.value, 0, time,
-        (Number(rowAssetOffsetsX[index]) || 0) * unitScale, false);
+      if (columns[index]) {
+        drawRowIconColumn(context, columns[index], (Number(rowAssetOffsetsX[index]) || 0) * unitScale, 0, inputs.foreground.value, time);
+      } else {
+        drawSequence(context, layout, -layout.width / 2, 0, inputs.foreground.value, 0, time, 0, false);
+      }
       context.restore();
     });
     $("#rowOverviewStatus").textContent = `${rows.length} 行 · ${logicalWidth} × ${logicalHeight}`;
@@ -1468,6 +1569,7 @@
     });
     if (Array.isArray(scheme.assets) && scheme.assets.length) restoreSchemeAssets(scheme.assets);
     rowAssetGaps = Array.isArray(scheme.rowAssetGaps) ? scheme.rowAssetGaps.map(Number) : [];
+    rowAssetGapsAfter = Array.isArray(scheme.rowAssetGapsAfter) ? scheme.rowAssetGapsAfter.map(Number) : [];
     rowAssetScales = Array.isArray(scheme.rowAssetScales) ? scheme.rowAssetScales.map(Number) : [];
     rowAssetOffsetsX = Array.isArray(scheme.rowAssetOffsetsX) ? scheme.rowAssetOffsetsX.map(Number) : [];
     finalSlotMap = scheme.finalSlotMap && typeof scheme.finalSlotMap === "object" ? { ...scheme.finalSlotMap } : {};
