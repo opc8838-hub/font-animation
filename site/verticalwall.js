@@ -215,17 +215,13 @@
   function normalizedFinalSlotSetting(index) {
     const setting = finalSlotSettings[index] || {};
     const finiteOr = (value, fallback) => Number.isFinite(Number(value)) ? Number(value) : fallback;
-    const defaultThrowAngle = [330, 210, 90][Math.abs(Number(index) || 0) % 3];
-    const defaultTurn = Number(index) % 2 === 0 ? 32 : -32;
     return {
       scale: Math.max(40, Math.min(240, Number(setting.scale) || 100)),
       gapBefore: Math.max(-40, Math.min(120, Number(setting.gapBefore) || 0)),
       gapAfter: Math.max(-40, Math.min(120, Number(setting.gapAfter) || 0)),
       offsetX: Math.max(-120, Math.min(120, Number(setting.offsetX) || 0)),
       offsetY: Math.max(-120, Math.min(120, Number(setting.offsetY) || 0)),
-      throwAngle: Math.max(0, Math.min(360, finiteOr(setting.throwAngle, defaultThrowAngle))),
-      throwDistance: Math.max(0, Math.min(160, finiteOr(setting.throwDistance, 28))),
-      turn: Math.max(-360, Math.min(360, finiteOr(setting.turn, defaultTurn)))
+      rotation: Math.max(-360, Math.min(360, finiteOr(setting.rotation, 0)))
     };
   }
 
@@ -240,9 +236,7 @@
     [["finalSlotScale", "finalSlotScaleOut", setting.scale, "%"], ["finalSlotGapBefore", "finalSlotGapBeforeOut", setting.gapBefore, ""],
       ["finalSlotGapAfter", "finalSlotGapAfterOut", setting.gapAfter, ""], ["finalSlotOffsetX", "finalSlotOffsetXOut", setting.offsetX, ""],
       ["finalSlotOffsetY", "finalSlotOffsetYOut", setting.offsetY, ""],
-      ["finalSlotThrowAngle", "finalSlotThrowAngleOut", setting.throwAngle, "°"],
-      ["finalSlotThrowDistance", "finalSlotThrowDistanceOut", setting.throwDistance, ""],
-      ["finalSlotTurn", "finalSlotTurnOut", setting.turn, "°"]].forEach(([inputId, outputId, value, suffix]) => {
+      ["finalSlotRotation", "finalSlotRotationOut", setting.rotation, "°"]].forEach(([inputId, outputId, value, suffix]) => {
       $("#" + inputId).value = String(value);
       $("#" + outputId).textContent = `${value}${suffix}`;
     });
@@ -472,8 +466,7 @@
   });
   [["finalSlotScale", "scale", "finalSlotScaleOut", "%"], ["finalSlotGapBefore", "gapBefore", "finalSlotGapBeforeOut", ""],
     ["finalSlotGapAfter", "gapAfter", "finalSlotGapAfterOut", ""], ["finalSlotOffsetX", "offsetX", "finalSlotOffsetXOut", ""],
-    ["finalSlotOffsetY", "offsetY", "finalSlotOffsetYOut", ""], ["finalSlotThrowAngle", "throwAngle", "finalSlotThrowAngleOut", "°"],
-    ["finalSlotThrowDistance", "throwDistance", "finalSlotThrowDistanceOut", ""], ["finalSlotTurn", "turn", "finalSlotTurnOut", "°"]].forEach(([inputId, key, outputId, suffix]) => {
+    ["finalSlotOffsetY", "offsetY", "finalSlotOffsetYOut", ""], ["finalSlotRotation", "rotation", "finalSlotRotationOut", "°"]].forEach(([inputId, key, outputId, suffix]) => {
     $("#" + inputId).addEventListener("input", (event) => {
       if (!finalSlotMap[selectedFinalSlot]) return;
       const setting = normalizedFinalSlotSetting(selectedFinalSlot);
@@ -751,12 +744,10 @@
       const closeRaw = rangeProgress(sequenceElapsed, restoreStart + scanTiming.transition * .15, restoreStart + scanTiming.transition);
       const openProgress = Math.max(0, easeOutBack(enterRaw) * (1 - smooth(closeRaw)));
       activeReplacements.set(slot.index, {
-        asset, enterStart, enterRaw, exitRaw, swap: enterRaw >= .45 && exitRaw < .55,
+        asset, enterRaw, exitRaw, swap: enterRaw >= .45 && exitRaw < .55,
         requestedHeight, requestedWidth, requiredWidth, gapBefore,
         offsetX: setting.offsetX * unitScale, offsetY: setting.offsetY * unitScale,
-        throwAngle: setting.throwAngle * Math.PI / 180,
-        throwDistance: setting.throwDistance * unitScale,
-        turn: setting.turn * Math.PI / 180,
+        rotation: setting.rotation * Math.PI / 180,
         widthDelta: (requiredWidth - slot.width) * openProgress, openProgress
       });
     });
@@ -768,17 +759,14 @@
       const replacement = activeReplacements.get(slot.index);
       if (replacement?.swap) {
         const { asset, enterRaw, exitRaw, requestedHeight, requestedWidth, requiredWidth, gapBefore, offsetX, offsetY,
-          throwAngle, throwDistance, turn, openProgress } = replacement;
+          rotation, openProgress } = replacement;
         const iconEnter = rangeProgress(enterRaw, .45, 1);
         const iconExit = rangeProgress(exitRaw, 0, .55);
         const replacementScale = Math.min(1.08, .72 + easeOutBack(iconEnter) * .28) * (1 - smooth(iconExit) * .18);
         const fullCenterOffset = (dynamicSlotWidth - requiredWidth) / 2 + gapBefore + requestedWidth / 2;
-        const throwProgress = smoother(rangeProgress(iconEnter, .08, 1));
-        const throwX = Math.cos(throwAngle) * throwDistance * throwProgress;
-        const throwY = Math.sin(throwAngle) * throwDistance * throwProgress;
-        const drawCenterX = cursorX + lerp(slot.width / 2, fullCenterOffset, clamp01(openProgress)) + offsetX + throwX;
-        const drawCenterY = y - Math.sin(Math.PI * clamp01(iconEnter)) * requestedHeight * .055 + offsetY + throwY;
-        drawFinalAsset(context, asset, drawCenterX, drawCenterY, requestedWidth * replacementScale, requestedHeight * replacementScale, sequenceElapsed, turn * throwProgress);
+        const drawCenterX = cursorX + lerp(slot.width / 2, fullCenterOffset, clamp01(openProgress)) + offsetX;
+        const drawCenterY = y - Math.sin(Math.PI * clamp01(iconEnter)) * requestedHeight * .055 + offsetY;
+        drawFinalAsset(context, asset, drawCenterX, drawCenterY, requestedWidth * replacementScale, requestedHeight * replacementScale, sequenceElapsed, rotation);
       } else {
         let glyphScaleX = 1;
         let glyphScaleY = 1;
@@ -925,7 +913,7 @@
       canvas.dataset.finalAssetGap = "per-slot";
       canvas.dataset.swapMotion = extras.swapMotion || "idle";
       canvas.dataset.swapTargets = String(extras.swapTargets ?? 0);
-      canvas.dataset.iconThrowMotion = "per-slot-360";
+      canvas.dataset.iconRotationMotion = "per-slot-2d-fixed";
       canvas.dataset.renderTime = localTime.toFixed(4);
     };
 
@@ -956,24 +944,21 @@
         const appearStart = distance === 0 ? 0 : (distance - 1) / Math.max(1, halfRows) * staggerStrength * .84;
         const appearEnd = Math.min(1, appearStart + lerp(.42, .18, staggerStrength));
         const appear = distance === 0
-          ? popEase(launchProgress, .38 + bounceStrength * .25)
+          ? launchProgress
           : popEase(rangeProgress(spreadProgress, appearStart, appearEnd), bounceStrength);
         const alpha = (distance === 0
-          ? easeOut(rangeProgress(launchProgress, 0, .18))
+          ? 1
           : smoother(rangeProgress(spreadProgress, appearStart, Math.min(1, appearStart + .16))))
           * (1 - edgeFade * .7 * smoother(rangeProgress(distanceRatio, .66, 1)));
         if (alpha <= .002) continue;
         const spreadPosition = distance === 0 ? 1 : popEase(rangeProgress(spreadProgress, appearStart, appearEnd), bounceStrength);
-        const centerMomentum = distance === 0 && localTime >= timing.introEnd
-          ? 1 + Math.sin(spreadProgress * Math.PI) * (.035 + bounceStrength * .08)
-          : 1;
         const y = lane * lineHeight * wallZoom * spreadPosition
           + (distance === 0 ? Math.sin(spreadProgress * Math.PI * 2) * lineHeight * .025 : 0);
         const centerTargetScale = wallFontPx * wallZoom / Math.max(1, introFontPx);
         const rowScale = distance === 0
           ? (localTime < timing.introEnd
-            ? lerp(.12, 1, appear)
-            : lerp(1, centerTargetScale, spreadProgress) * centerMomentum)
+            ? lerp(.75, 1, appear)
+            : lerp(1, centerTargetScale, spreadProgress))
           : lerp(.76, 1, appear);
         drawCentered(distance === 0 ? openingLine : lineForLane(lane), y, horizontalPhase, alpha, rowScale,
           distance === 0 ? introStage : wallStage, indexForLane(lane));
@@ -1023,7 +1008,7 @@
     drawFinalLine(context, inputs.nextWord.value.trim() || "leveling up", 0, 0, inputs.foreground.value, finalStage.assetHeight, finalElapsed, scale);
     context.restore();
     const finalPhase = localTime < timing.scanEnd ? "final-sweep" : localTime < timing.holdEnd ? "final-hold" : "final-exit";
-    markPhase(finalPhase, { finalState: Math.min(1, finalElapsed / Math.max(.001, finalScanDuration())), swapTargets: Object.keys(finalSlotMap).length, swapMotion: "water-scan-one-shot-throw" });
+    markPhase(finalPhase, { finalState: Math.min(1, finalElapsed / Math.max(.001, finalScanDuration())), swapTargets: Object.keys(finalSlotMap).length, swapMotion: "water-scan-fixed-2d-rotation" });
   }
 
   function timelineBeats(timing = choreographyTiming()) {
@@ -1185,8 +1170,8 @@
   inputs.rows.addEventListener("input", syncRowAssetGaps);
   inputs.motionMode.addEventListener("change", () => setTime(0));
 
-  const SCHEME_STORAGE_KEY = "me-vertical-rise-scheme-v3";
-  const LEGACY_SCHEME_STORAGE_KEY = "me-vertical-rise-scheme-v2";
+  const SCHEME_STORAGE_KEY = "me-vertical-rise-scheme-v4";
+  const LEGACY_SCHEME_STORAGE_KEYS = ["me-vertical-rise-scheme-v3", "me-vertical-rise-scheme-v2"];
   let defaultSchemeSnapshot = null;
   let applyingScheme = false;
   let persistTimer = 0;
@@ -1202,7 +1187,7 @@
       if (field) controls[id] = field.type === "checkbox" ? field.checked : field.value;
     });
     return {
-      type: "me-vertical-rise", version: 3, controls, selectedAssetId,
+      type: "me-vertical-rise", version: 4, controls, selectedAssetId,
       rowAssetGaps: [...rowAssetGaps], finalSlotMap: { ...finalSlotMap },
       finalSlotSettings: Object.fromEntries(Object.entries(finalSlotSettings).map(([index, setting]) => [index, normalizedFinalSlotSetting(index)])),
       assets: [...assets.values()].map((asset) => ({
@@ -1227,7 +1212,16 @@
       delete scheme.controls.iconWobbleAngle;
       delete scheme.controls.iconWobbleSpeed;
     }
-    scheme.version = 3;
+    if (Number(scheme.version) < 4) {
+      if (Number(scheme.controls.introDuration) === 260) scheme.controls.introDuration = 300;
+      Object.values(scheme.finalSlotSettings || {}).forEach((setting) => {
+        delete setting.throwAngle;
+        delete setting.throwDistance;
+        delete setting.turn;
+        setting.rotation = 0;
+      });
+    }
+    scheme.version = 4;
     return scheme;
   }
 
@@ -1492,7 +1486,11 @@
     defaultSchemeSnapshot = collectScheme();
     let storedScheme = null;
     if (!PREVIEW) {
-      try { storedScheme = JSON.parse(localStorage.getItem(SCHEME_STORAGE_KEY) || localStorage.getItem(LEGACY_SCHEME_STORAGE_KEY) || "null"); }
+      try {
+        const storedValue = localStorage.getItem(SCHEME_STORAGE_KEY)
+          || LEGACY_SCHEME_STORAGE_KEYS.map((key) => localStorage.getItem(key)).find(Boolean);
+        storedScheme = JSON.parse(storedValue || "null");
+      }
       catch (_) { $("#schemeStatus").textContent = "本机方案读取失败，已使用默认示例。"; }
     }
     if (storedScheme?.controls) {
