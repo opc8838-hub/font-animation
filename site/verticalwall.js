@@ -1031,20 +1031,11 @@
 
   function openingJump(progress) {
     const x = clamp01(progress);
-    const riseEnd = .68;
-    if (x < riseEnd) {
-      const rise = easeOut(x / riseEnd);
-      return {
-        y: lerp(.48, -.12, rise),
-        scaleX: lerp(.68, 1.04, rise),
-        scaleY: lerp(.52, 1.12, rise)
-      };
-    }
-    const settle = smoother((x - riseEnd) / (1 - riseEnd));
+    const arrive = easeOut(x);
     return {
-      y: lerp(-.12, 0, settle),
-      scaleX: lerp(1.04, 1, settle),
-      scaleY: lerp(1.12, 1, settle)
+      y: lerp(.48, 0, arrive),
+      scaleX: lerp(.68, 1, arrive),
+      scaleY: lerp(.52, 1, arrive)
     };
   }
 
@@ -1178,6 +1169,7 @@
       canvas.dataset.centerHandoffMode = "fixed-center-row";
       canvas.dataset.centerJumpScaleX = String((extras.centerJumpScaleX ?? 1).toFixed(4));
       canvas.dataset.centerJumpScaleY = String((extras.centerJumpScaleY ?? 1).toFixed(4));
+      canvas.dataset.centerJumpY = String((extras.centerJumpY ?? 0).toFixed(4));
       canvas.dataset.renderTime = localTime.toFixed(4);
     };
 
@@ -1232,7 +1224,7 @@
       }
       const phase = localTime < timing.spreadStart ? "center-launch" : "wall-spread";
       markPhase(phase, { rows: localTime < timing.spreadStart ? 1 : rowCount,
-        centerJumpScaleX: launchJump.scaleX, centerJumpScaleY: launchJump.scaleY });
+        centerJumpScaleX: launchJump.scaleX, centerJumpScaleY: launchJump.scaleY, centerJumpY: launchJump.y });
       return;
     }
 
