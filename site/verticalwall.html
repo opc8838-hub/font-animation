@@ -317,19 +317,35 @@ leveling {{play}}p
 
   <aside class="vertical-row-overview" id="rowOverviewPanel" role="dialog" aria-modal="false" aria-labelledby="rowOverviewTitle" hidden>
     <header>
-      <div><strong id="rowOverviewTitle">满屏排版编辑</strong><small id="rowOverviewStatus">11 行</small></div>
+      <div><strong id="rowOverviewTitle">主行图标编辑</strong><small id="rowOverviewStatus">11 行</small></div>
       <button id="closeRowOverview" type="button" aria-label="关闭满屏排版编辑">×</button>
     </header>
-    <div class="vertical-row-overview-scroll">
-      <div class="vertical-row-overview-stage">
-        <canvas id="rowOverviewCanvas" width="720" height="720" aria-label="全部输入行的图标、位置与大小预览"></canvas>
-      </div>
-      <p>一次查看全部输入行；下方每一行都能独立调整图标间距、大小和左右位置。</p>
-      <div class="vertical-row-overview-heading">
-        <strong>主行图标参数</strong>
-        <span id="rowSettingsCount">11 行 · 间距 / 大小 / 左右位置</span>
-      </div>
-      <div class="vertical-row-gap-list" id="rowGapList" aria-label="每行图标的间距、大小与左右位置"></div>
+    <div class="vertical-row-overview-body">
+      <section class="vertical-row-parameter-pane" aria-label="主行图标参数">
+        <div class="vertical-row-global-controls">
+          <div>
+            <strong>全局对齐</strong>
+            <span>先统一，再逐行微调</span>
+          </div>
+          <div class="vertical-row-global-grid">
+            <label><b>全部图标大小</b><input id="globalRowAssetScale" type="range" min="35" max="220" step="1" value="92"><output id="globalRowAssetScaleOut">92%</output></label>
+            <label><b>全部左右位置</b><input id="globalRowAssetOffsetX" type="range" min="-120" max="120" step="1" value="0"><output id="globalRowAssetOffsetXOut">0px</output></label>
+          </div>
+        </div>
+        <div class="vertical-row-list-scroll">
+          <div class="vertical-row-overview-heading">
+            <strong>逐行微调</strong>
+            <span id="rowSettingsCount">11 行 · 间距 / 大小 / 左右位置</span>
+          </div>
+          <div class="vertical-row-gap-list" id="rowGapList" aria-label="每行图标的间距、大小与左右位置"></div>
+        </div>
+      </section>
+      <section class="vertical-row-preview-pane" aria-label="满屏排版预览">
+        <div class="vertical-row-overview-stage">
+          <canvas id="rowOverviewCanvas" width="720" height="720" aria-label="全部输入行的图标、位置与大小预览"></canvas>
+        </div>
+        <p>全貌预览固定在这里。调整全局参数或任意一行时都会立即更新。</p>
+      </section>
     </div>
   </aside>
 
@@ -338,7 +354,7 @@ leveling {{play}}p
   <script src="token-asset-tools.js"></script>
   <script src="shared-icon-library.js?v=20260830-3"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
-  <script src="verticalwall.js?v=20260830-8"></script>
+  <script src="verticalwall.js?v=20260830-9"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
 </body>

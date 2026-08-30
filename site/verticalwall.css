@@ -38,7 +38,7 @@
   z-index: 48;
   display: flex;
   flex-direction: column;
-  width: var(--panel-width, 420px);
+  width: 780px;
   height: 100vh;
   overflow: hidden;
   border-right: 1px solid #cfd3da;
@@ -52,11 +52,22 @@
 .vertical-row-overview header strong { font-size: 12px; }
 .vertical-row-overview header small { color: #667085; font-size: 9px; }
 .vertical-row-overview header button { width: 28px; height: 28px; padding: 0; border-radius: 50%; font-size: 18px; }
-.vertical-row-overview-scroll { min-height: 0; overflow-y: auto; padding: 12px 14px 22px; }
-.vertical-row-overview-stage { display: grid; place-items: center; overflow: hidden; max-height: 430px; border: 1px solid #e3e5e9; border-radius: 11px; background: #f7f6f2; }
-.vertical-row-overview canvas { display: block; width: auto; height: auto; max-width: 100%; max-height: 430px; }
-.vertical-row-overview p { margin: 8px 2px 14px; color: #667085; font-size: 9px; line-height: 1.45; }
-.vertical-row-overview-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding-top: 12px; border-top: 1px solid #d8d9dd; }
+.vertical-row-overview-body { display: grid; grid-template-columns: var(--row-overview-editor-width, 420px) minmax(0, 1fr); flex: 1 1 auto; min-height: 0; }
+.vertical-row-parameter-pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; border-right: 1px solid #cfd3da; }
+.vertical-row-global-controls { flex: 0 0 auto; padding: 12px 14px; border-bottom: 1px solid #d8d9dd; background: #fff; }
+.vertical-row-global-controls > div:first-child { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.vertical-row-global-controls strong { font-size: 11px; }
+.vertical-row-global-controls span { color: #77776f; font-size: 8px; }
+.vertical-row-global-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.vertical-row-global-grid label { display: grid; grid-template-columns: minmax(0, 1fr) 38px; align-items: center; gap: 5px; }
+.vertical-row-global-grid label b { grid-column: 1 / -1; color: #55565c; font-size: 9px; }
+.vertical-row-global-grid output { color: #6e6e73; font-size: 9px; text-align: right; }
+.vertical-row-list-scroll { min-height: 0; overflow-y: auto; padding: 12px 14px 22px; }
+.vertical-row-preview-pane { display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: 14px; background: #e9eaed; }
+.vertical-row-overview-stage { display: grid; place-items: center; overflow: hidden; max-height: calc(100vh - 150px); border: 1px solid #d6d8dd; border-radius: 11px; background: #f7f6f2; box-shadow: 0 10px 28px rgba(17, 24, 39, .12); }
+.vertical-row-overview canvas { display: block; width: auto; height: auto; max-width: 100%; max-height: calc(100vh - 150px); }
+.vertical-row-preview-pane p { margin: 10px 2px 0; color: #667085; font-size: 9px; line-height: 1.45; }
+.vertical-row-overview-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .vertical-row-overview-heading strong { font-size: 11px; }
 .vertical-row-overview-heading span { color: #77776f; font-size: 8px; text-align: right; }
 
@@ -84,6 +95,8 @@
 
 @media (max-width: 720px) {
   .vertical-row-controls { grid-template-columns: 1fr; }
+  .vertical-row-overview-body { grid-template-columns: minmax(0, 1fr); }
+  .vertical-row-preview-pane { display: none; }
 }
 .vertical-panel .stage-control-heading b { font: 750 11px/1.2 inherit; }
 .vertical-panel .stage-control-heading span { color: #77776f; font: 600 8px/1.2 "Courier New", monospace; }

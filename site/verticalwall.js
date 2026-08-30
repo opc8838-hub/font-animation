@@ -487,9 +487,13 @@
 
   function syncRowAssetGaps() {
     const rows = parseRows();
+    const globalScale = Number($("#globalRowAssetScale").value) || 92;
+    const globalOffsetX = Number($("#globalRowAssetOffsetX").value) || 0;
     rowAssetGaps = rows.map((_, index) => Number(rowAssetGaps[index]) || 0);
-    rowAssetScales = rows.map((_, index) => Number.isFinite(Number(rowAssetScales[index])) ? Number(rowAssetScales[index]) : 92);
-    rowAssetOffsetsX = rows.map((_, index) => Number(rowAssetOffsetsX[index]) || 0);
+    rowAssetScales = rows.map((_, index) => Number.isFinite(Number(rowAssetScales[index])) ? Number(rowAssetScales[index]) : globalScale);
+    rowAssetOffsetsX = rows.map((_, index) => Number.isFinite(Number(rowAssetOffsetsX[index])) ? Number(rowAssetOffsetsX[index]) : globalOffsetX);
+    $("#globalRowAssetScaleOut").textContent = `${globalScale}%`;
+    $("#globalRowAssetOffsetXOut").textContent = `${globalOffsetX}px`;
     const list = $("#rowGapList");
     list.replaceChildren();
     rows.forEach((line, index) => {
@@ -525,6 +529,18 @@
     $("#rowSettingsCount").textContent = `${rows.length} 行 · 间距 / 大小 / 左右位置`;
     renderRowOverview(currentTime());
   }
+
+  function applyGlobalRowControl(key, value) {
+    const count = parseRows().length;
+    if (key === "scale") rowAssetScales = Array(count).fill(value);
+    else rowAssetOffsetsX = Array(count).fill(value);
+    layoutCache.clear();
+    syncRowAssetGaps();
+    setTime(choreographyTiming().spreadStart + choreographyTiming().duration[1] * .8);
+  }
+
+  $("#globalRowAssetScale").addEventListener("input", (event) => applyGlobalRowControl("scale", Number(event.currentTarget.value)));
+  $("#globalRowAssetOffsetX").addEventListener("input", (event) => applyGlobalRowControl("offsetX", Number(event.currentTarget.value)));
 
   function removeAsset(id) {
     const asset = assets.get(id);
@@ -1241,10 +1257,12 @@
   function positionRowOverview() {
     if (rowOverviewPanel.hidden) return;
     const editor = $("#controlPanel").getBoundingClientRect();
+    const previewWidth = window.innerWidth > 720 ? Math.min(360, Math.max(0, window.innerWidth - editor.right)) : 0;
     rowOverviewPanel.style.left = `${Math.round(editor.left)}px`;
     rowOverviewPanel.style.top = `${Math.round(Math.max(0, editor.top))}px`;
-    rowOverviewPanel.style.width = `${Math.round(editor.width)}px`;
+    rowOverviewPanel.style.width = `${Math.round(editor.width + previewWidth)}px`;
     rowOverviewPanel.style.height = `${Math.round(Math.min(editor.height, window.innerHeight - Math.max(0, editor.top)))}px`;
+    rowOverviewPanel.style.setProperty("--row-overview-editor-width", `${Math.round(editor.width)}px`);
   }
 
   function openRowOverview() {
@@ -1269,14 +1287,15 @@
   window.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !rowOverviewPanel.hidden && $("#assetEditorDrawer").hidden) closeRowOverview();
   });
-  const SCHEME_STORAGE_KEY = "me-vertical-rise-scheme-v5";
-  const LEGACY_SCHEME_STORAGE_KEYS = ["me-vertical-rise-scheme-v4", "me-vertical-rise-scheme-v3", "me-vertical-rise-scheme-v2"];
+  const SCHEME_STORAGE_KEY = "me-vertical-rise-scheme-v6";
+  const LEGACY_SCHEME_STORAGE_KEYS = ["me-vertical-rise-scheme-v5", "me-vertical-rise-scheme-v4", "me-vertical-rise-scheme-v3", "me-vertical-rise-scheme-v2"];
   let defaultSchemeSnapshot = null;
   let applyingScheme = false;
   let persistTimer = 0;
   const schemeControlIds = [...new Set([
     ...Object.values(inputs).filter(Boolean).map((input) => input.id),
-    "assetRemoveBackground", "exportPreset", "exportWidth", "exportHeight", "exportDuration", "exportFps", "customDuration"
+    "assetRemoveBackground", "exportPreset", "exportWidth", "exportHeight", "exportDuration", "exportFps", "customDuration",
+    "globalRowAssetScale", "globalRowAssetOffsetX"
   ])];
 
   function collectScheme() {
@@ -1286,7 +1305,7 @@
       if (field) controls[id] = field.type === "checkbox" ? field.checked : field.value;
     });
     return {
-      type: "me-vertical-rise", version: 5, controls, selectedAssetId,
+      type: "me-vertical-rise", version: 6, controls, selectedAssetId,
       rowAssetGaps: [...rowAssetGaps], rowAssetScales: [...rowAssetScales], rowAssetOffsetsX: [...rowAssetOffsetsX],
       finalSlotMap: { ...finalSlotMap },
       finalSlotSettings: Object.fromEntries(Object.entries(finalSlotSettings).map(([index, setting]) => [index, normalizedFinalSlotSetting(index)])),
@@ -1328,7 +1347,11 @@
       if (!Array.isArray(scheme.rowAssetOffsetsX)) scheme.rowAssetOffsetsX = Array(rowCount).fill(0);
       delete scheme.controls.wallAssetScale;
     }
-    scheme.version = 5;
+    if (Number(scheme.version) < 6) {
+      scheme.controls.globalRowAssetScale = String(Number(scheme.rowAssetScales?.[0]) || 92);
+      scheme.controls.globalRowAssetOffsetX = String(Number(scheme.rowAssetOffsetsX?.[0]) || 0);
+    }
+    scheme.version = 6;
     return scheme;
   }
 
@@ -1436,6 +1459,7 @@
   $("#controlPanel").addEventListener("input", (event) => {
     if (event.target.type !== "file" && !event.target.closest(".transport")) scheduleSchemePersist();
   });
+  rowOverviewPanel.addEventListener("input", scheduleSchemePersist);
   $("#saveScheme").addEventListener("click", () => {
     const scheme = collectScheme();
     try { localStorage.setItem(SCHEME_STORAGE_KEY, JSON.stringify(scheme)); } catch (_) {}

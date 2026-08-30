@@ -69,8 +69,9 @@
 - [x] Canvas-size card is the first inspector card; 16:9, 9:16, 1:1, 4:5, and custom 700×500 refit to exact ratios while the 420px inspector remains fixed
 - [x] Per-slot 2D rotation remains independent (25° versus 0° tested) and survives auto-save/reload
 - [x] Per-row gap / icon size / horizontal position remain independent (row 1: 21px / 137% / −46px; row 2 stayed 0px / 92% / 0px) and survive auto-save/reload
-- [x] Full-wall overview and every row's icon controls share one overlay that exactly covers the left editor without changing live-stage bounds
-- [x] Overview renders exactly the input row count (11 rows and 3 rows tested), and updates immediately from the row-owned controls in the same scrollable panel
+- [x] The row editor opens as a two-part overlay: parameters occupy the original 420px inspector and a fixed full-wall preview sits immediately to its right without shifting the live stage
+- [x] Global icon size and horizontal position apply to every row, remain the defaults for newly added rows, and still allow independent row overrides
+- [x] Overview renders exactly the input row count (11 rows and 3 rows tested), stays visible while row controls scroll, and updates from both global and row-owned controls
 - [x] Single-asset scale / offset / gap edits do not stack onto the full-wall row geometry
 - [x] Opening enters the overlap phase before the 0.30s center launch completes
 - [x] Opening rhythm control is visible beside the opening word and updates the launch duration (0.30s and 0.62s tested)
