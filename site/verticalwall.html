@@ -89,10 +89,10 @@ leveling {{play}}p
           </select>
         </label>
         <label>开场主词
-          <input id="introWord" type="text" value="motivation" spellcheck="false">
+          <input id="introWord" type="text" value="leveling up" spellcheck="false">
         </label>
         <label class="final-line-field">收尾一行
-          <input id="nextWord" type="text" value="togetherness" spellcheck="false">
+          <input id="nextWord" type="text" value="leveling up" spellcheck="false">
         </label>
         <label>收回方向
           <select id="collapseDirection">
@@ -177,7 +177,7 @@ leveling {{play}}p
           <small class="section-note">开场 / 满屏 / 收尾独立</small>
         </div>
         <div class="motion-map vertical-motion-map" aria-label="动效阶段">
-          <span>开场轻弹</span><i>→</i><span>第二行弹出</span><i>→</i><span>铺满屏幕</span><i>→</i><span>满屏退场</span><i>→</i><span>收尾单行</span><i>→</i><span>字母图标双向扫变</span>
+          <span>中心跳出</span><i>→</i><span>连续弹满</span><i>→</i><span>立即收束</span><i>→</i><span>字母图标扫变</span><i>→</i><span>快速消失</span>
         </div>
         <div class="controls-grid quick-grid">
           <div class="stage-control-heading"><b>01 开场单行</b><span>文字与图标独立排版</span></div>
@@ -223,19 +223,13 @@ leveling {{play}}p
             <input id="finalTextGap" type="range" min="-12" max="60" value="0">
           </label>
           <div class="stage-control-heading"><b>04 时间与替换</b><span>控制节奏和局部图标切换</span></div>
-          <label>开场停留 <small class="stage-tag">阶段 1</small><output id="introDurationOut">0.30秒</output>
-            <input id="introDuration" type="range" min="100" max="2000" step="50" value="300">
+          <label>开场跳出快慢 <small class="stage-tag">阶段 1</small><output id="introDurationOut">0.26秒</output>
+            <input id="introDuration" type="range" min="100" max="1600" step="20" value="260">
           </label>
-          <label>新行弹出 <small class="stage-tag">阶段 2</small><output id="singleDurationOut">0.12秒</output>
-            <input id="singleDuration" type="range" min="80" max="1200" step="20" value="120">
-          </label>
-          <label>弹满屏用时 <small class="stage-tag">阶段 3</small><output id="spreadDurationOut">0.36秒</output>
+          <label>连续弹满用时 <small class="stage-tag">阶段 2</small><output id="spreadDurationOut">0.36秒</output>
             <input id="spreadDuration" type="range" min="80" max="2000" step="20" value="360">
           </label>
-          <label>满屏停留 <small class="stage-tag">阶段 4</small><output id="holdDurationOut">0.15秒</output>
-            <input id="holdDuration" type="range" min="0" max="8000" step="50" value="150">
-          </label>
-          <label>满屏退场 <small class="stage-tag">阶段 5</small><output id="collapseDurationOut">0.30秒</output>
+          <label>满屏立即收束 <small class="stage-tag">阶段 3</small><output id="collapseDurationOut">0.30秒</output>
             <input id="collapseDuration" type="range" min="150" max="4000" step="50" value="300">
           </label>
           <label>扫过每个字的间隔 <small class="stage-tag">收尾扫变</small><output id="swapIntervalOut">0.08秒</output>
@@ -247,11 +241,20 @@ leveling {{play}}p
           <label>全图标停留 <small class="stage-tag">收尾扫变</small><output id="iconHoldDurationOut">160ms</output>
             <input id="iconHoldDuration" type="range" min="40" max="1200" step="20" value="160">
           </label>
-          <label>恢复后停留 <small class="stage-tag">阶段 6</small><output id="finalDurationOut">0.14秒</output>
+          <label>图标左右摆角 <small class="stage-tag">收尾图标</small><output id="iconWobbleAngleOut">14°</output>
+            <input id="iconWobbleAngle" type="range" min="0" max="45" step="1" value="14">
+          </label>
+          <label>图标左右摆速 <small class="stage-tag">收尾图标</small><output id="iconWobbleSpeedOut">8.0次/秒</output>
+            <input id="iconWobbleSpeed" type="range" min="1" max="16" step="0.5" value="8">
+          </label>
+          <label>恢复后停留 <small class="stage-tag">阶段 5</small><output id="finalDurationOut">0.14秒</output>
             <input id="finalDuration" type="range" min="0" max="8000" step="20" value="140">
           </label>
+          <label>最后快速消失 <small class="stage-tag">阶段 6</small><output id="exitDurationOut">0.12秒</output>
+            <input id="exitDuration" type="range" min="60" max="800" step="20" value="120">
+          </label>
         </div>
-        <p class="hint">收尾按水流的同一套时间与几何执行：字母依次换成图标，全部停留，再依次恢复字母。</p>
+        <p class="hint">中心词跳出后持续带动各行弹满，不插入静止停留；收尾图标围绕自身中心快速左右摆动，恢复文字并短暂停留后快速消失。</p>
       </section>
 
       <section class="timeline-section">
@@ -324,7 +327,7 @@ leveling {{play}}p
   <script src="token-asset-tools.js"></script>
   <script src="shared-icon-library.js?v=20260830-3"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
-  <script src="verticalwall.js?v=20260830-1"></script>
+  <script src="verticalwall.js?v=20260830-2"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
 </body>

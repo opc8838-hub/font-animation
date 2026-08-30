@@ -17,11 +17,12 @@
     background: $("#backgroundColor"), foreground: $("#textColor"),
     motionMode: $("#motionMode"), introWord: $("#introWord"), nextWord: $("#nextWord"),
     collapseDirection: $("#collapseDirection"), introDuration: $("#introDuration"),
-    singleDuration: $("#singleDuration"), spreadDuration: $("#spreadDuration"),
-    holdDuration: $("#holdDuration"), collapseDuration: $("#collapseDuration"), finalDuration: $("#finalDuration"),
+    spreadDuration: $("#spreadDuration"), collapseDuration: $("#collapseDuration"),
+    finalDuration: $("#finalDuration"), exitDuration: $("#exitDuration"),
     bounce: $("#bounce"), stagger: $("#stagger"), edgeFade: $("#edgeFade"),
     verticalDrift: $("#verticalDrift"), horizontalPhase: $("#horizontalPhase"), nextOpacity: $("#nextOpacity"),
     swapInterval: $("#swapInterval"), finalScanSpeed: $("#finalScanSpeed"), iconHoldDuration: $("#iconHoldDuration"),
+    iconWobbleAngle: $("#iconWobbleAngle"), iconWobbleSpeed: $("#iconWobbleSpeed"),
     assetItemScale: $("#assetItemScale"),
     assetOffsetX: $("#assetOffsetX"), assetOffsetY: $("#assetOffsetY"),
     assetGapBefore: $("#assetGapBefore"), assetGapAfter: $("#assetGapAfter")
@@ -209,7 +210,7 @@
   }
 
   function finalCharacters() {
-    return graphemes(inputs.nextWord.value.replace(/\r?\n/g, " ") || "togetherness");
+    return graphemes(inputs.nextWord.value.replace(/\r?\n/g, " ") || "leveling up");
   }
 
   function normalizedFinalSlotSetting(index) {
@@ -674,7 +675,7 @@
   };
 
   function layoutFinalText(context, text, letterGap = 0) {
-    const characters = graphemes(text || "togetherness");
+    const characters = graphemes(text || "leveling up");
     let prefix = "";
     let previousWidth = 0;
     const slots = characters.map((character, index) => {
@@ -705,16 +706,17 @@
     return sweep * 2 + scan.hold;
   }
 
-  function drawFinalAsset(context, asset, centerX, centerY, width, height, time) {
+  function drawFinalAsset(context, asset, centerX, centerY, width, height, time, rotation = 0) {
+    context.save();
+    context.translate(centerX, centerY);
+    context.rotate(rotation);
     if (asset.kind === "vector" && window.STGIconLibrary?.drawVector) {
-      context.save();
-      context.translate(centerX, centerY);
       context.scale(width / Math.max(1, height), 1);
       window.STGIconLibrary.drawVector(context, asset, height, time);
-      context.restore();
-      return;
+    } else if (asset.ready) {
+      context.drawImage(asset.image, -width / 2, -height / 2, width, height);
     }
-    if (asset.ready) context.drawImage(asset.image, centerX - width / 2, centerY - height / 2, width, height);
+    context.restore();
   }
 
   function drawFinalLine(context, text, centerX, y, color, assetHeight, sequenceElapsed, unitScale) {
@@ -740,7 +742,7 @@
       const closeRaw = rangeProgress(sequenceElapsed, restoreStart + scanTiming.transition * .15, restoreStart + scanTiming.transition);
       const openProgress = Math.max(0, easeOutBack(enterRaw) * (1 - smooth(closeRaw)));
       activeReplacements.set(slot.index, {
-        asset, enterRaw, exitRaw, swap: enterRaw >= .45 && exitRaw < .55,
+        asset, enterStart, enterRaw, exitRaw, swap: enterRaw >= .45 && exitRaw < .55,
         requestedHeight, requestedWidth, requiredWidth, gapBefore,
         offsetX: setting.offsetX * unitScale, offsetY: setting.offsetY * unitScale,
         widthDelta: (requiredWidth - slot.width) * openProgress, openProgress
@@ -753,14 +755,18 @@
       const dynamicSlotWidth = dynamicWidths[slot.index];
       const replacement = activeReplacements.get(slot.index);
       if (replacement?.swap) {
-        const { asset, enterRaw, exitRaw, requestedHeight, requestedWidth, requiredWidth, gapBefore, offsetX, offsetY, openProgress } = replacement;
+        const { asset, enterStart, enterRaw, exitRaw, requestedHeight, requestedWidth, requiredWidth, gapBefore, offsetX, offsetY, openProgress } = replacement;
         const iconEnter = rangeProgress(enterRaw, .45, 1);
         const iconExit = rangeProgress(exitRaw, 0, .55);
         const replacementScale = Math.min(1.08, .72 + easeOutBack(iconEnter) * .28) * (1 - smooth(iconExit) * .18);
         const fullCenterOffset = (dynamicSlotWidth - requiredWidth) / 2 + gapBefore + requestedWidth / 2;
         const drawCenterX = cursorX + lerp(slot.width / 2, fullCenterOffset, clamp01(openProgress)) + offsetX;
         const drawCenterY = y - Math.sin(Math.PI * clamp01(iconEnter)) * requestedHeight * .055 + offsetY;
-        drawFinalAsset(context, asset, drawCenterX, drawCenterY, requestedWidth * replacementScale, requestedHeight * replacementScale, sequenceElapsed);
+        const wobbleAngle = Number(inputs.iconWobbleAngle.value) * Math.PI / 180;
+        const wobbleSpeed = Number(inputs.iconWobbleSpeed.value);
+        const wobbleEnvelope = smoother(rangeProgress(iconEnter, 0, .28)) * (1 - smoother(rangeProgress(iconExit, .05, .55)));
+        const wobble = Math.sin((sequenceElapsed - enterStart) * wobbleSpeed * Math.PI * 2) * wobbleAngle * wobbleEnvelope;
+        drawFinalAsset(context, asset, drawCenterX, drawCenterY, requestedWidth * replacementScale, requestedHeight * replacementScale, sequenceElapsed, wobble);
       } else {
         let glyphScaleX = 1;
         let glyphScaleY = 1;
@@ -784,19 +790,21 @@
   }
 
   function choreographyTiming() {
-    const duration = [inputs.introDuration, inputs.singleDuration, inputs.spreadDuration, inputs.holdDuration, inputs.collapseDuration]
-      .map((input) => Number(input.value) / 1000);
-    duration.push(finalScanDuration() + Number(inputs.finalDuration.value) / 1000);
-    const cycle = duration.reduce((sum, value) => sum + value, 0);
-    const end = [];
-    duration.reduce((sum, value, index) => {
-      end[index] = sum + value;
-      return end[index];
-    }, 0);
+    const launch = Number(inputs.introDuration.value) / 1000;
+    const spread = Number(inputs.spreadDuration.value) / 1000;
+    const collapse = Number(inputs.collapseDuration.value) / 1000;
+    const scan = finalScanDuration();
+    const finalHold = Number(inputs.finalDuration.value) / 1000;
+    const exit = Number(inputs.exitDuration.value) / 1000;
+    const duration = [launch, spread, collapse, scan, finalHold, exit];
+    const introEnd = launch;
+    const spreadEnd = introEnd + spread;
+    const collapseEnd = spreadEnd + collapse;
+    const scanEnd = collapseEnd + scan;
+    const holdEnd = scanEnd + finalHold;
+    const exitEnd = holdEnd + exit;
     return {
-      cycle, duration,
-      introEnd: end[0], singleEnd: end[1], spreadEnd: end[2],
-      holdEnd: end[3], collapseEnd: end[4], finalEnd: end[5]
+      cycle: exitEnd, duration, introEnd, spreadEnd, collapseEnd, scanEnd, holdEnd, exitEnd, finalEnd: exitEnd
     };
   }
 
@@ -905,6 +913,9 @@
       canvas.dataset.finalAssetGap = "per-slot";
       canvas.dataset.swapMotion = extras.swapMotion || "idle";
       canvas.dataset.swapTargets = String(extras.swapTargets ?? 0);
+      canvas.dataset.iconWobbleAngle = inputs.iconWobbleAngle.value;
+      canvas.dataset.iconWobbleSpeed = inputs.iconWobbleSpeed.value;
+      canvas.dataset.renderTime = localTime.toFixed(4);
     };
 
     if (!choreography) {
@@ -920,37 +931,45 @@
       return;
     }
 
-    if (localTime < timing.introEnd) {
-      const progress = rangeProgress(localTime, 0, timing.introEnd);
-      const entrance = popEase(rangeProgress(progress, 0, .42), .08);
-      const entranceAlpha = easeOut(rangeProgress(progress, 0, .16));
-      const breathingScale = lerp(.82, 1, entrance);
-      drawCentered(inputs.introWord.value.trim() || "motivation", 0, 0, entranceAlpha, breathingScale, introStage);
-      markPhase("intro-single");
-      return;
-    }
-
     const primaryLine = lineForLane(0);
     const primaryIndex = indexForLane(0);
-    if (localTime < timing.singleEnd) {
-      const progress = rangeProgress(localTime, timing.introEnd, timing.singleEnd);
-      const outgoing = 1 - easeOut(rangeProgress(progress, 0, .28));
-      if (outgoing > .002) {
-        drawCentered(inputs.introWord.value.trim() || "motivation", 0, 0, outgoing, lerp(1, .76, easeOut(progress)), introStage);
+    const launchProgress = rangeProgress(localTime, 0, timing.introEnd);
+    const spreadProgress = rangeProgress(localTime, timing.introEnd, timing.spreadEnd);
+    const collapseProgress = rangeProgress(localTime, timing.spreadEnd, timing.collapseEnd);
+
+    if (localTime < timing.spreadEnd) {
+      for (let lane = -halfRows; lane <= halfRows; lane += 1) {
+        const distance = Math.abs(lane);
+        if (distance > 0 && localTime < timing.introEnd) continue;
+        const distanceRatio = distance / Math.max(1, halfRows);
+        const appearStart = distance === 0 ? 0 : (distance - 1) / Math.max(1, halfRows) * staggerStrength * .84;
+        const appearEnd = Math.min(1, appearStart + lerp(.42, .18, staggerStrength));
+        const appear = distance === 0
+          ? popEase(launchProgress, Math.min(.24, bounceStrength))
+          : popEase(rangeProgress(spreadProgress, appearStart, appearEnd), bounceStrength);
+        const alpha = (distance === 0
+          ? easeOut(rangeProgress(launchProgress, 0, .18))
+          : smoother(rangeProgress(spreadProgress, appearStart, Math.min(1, appearStart + .16))))
+          * (1 - edgeFade * .7 * smoother(rangeProgress(distanceRatio, .66, 1)));
+        if (alpha <= .002) continue;
+        const spreadPosition = distance === 0 ? 1 : popEase(rangeProgress(spreadProgress, appearStart, appearEnd), bounceStrength);
+        const centerMomentum = distance === 0 && localTime >= timing.introEnd
+          ? 1 + Math.sin(spreadProgress * Math.PI) * (.035 + bounceStrength * .08)
+          : 1;
+        const y = lane * lineHeight * wallZoom * spreadPosition
+          + (distance === 0 ? Math.sin(spreadProgress * Math.PI * 2) * lineHeight * .025 : 0);
+        const rowScale = distance === 0
+          ? lerp(.58, 1.06, appear) * centerMomentum
+          : lerp(.76, 1, appear);
+        drawCentered(distance === 0 ? (inputs.introWord.value.trim() || primaryLine) : lineForLane(lane), y, horizontalPhase, alpha, rowScale, wallStage, indexForLane(lane));
       }
-      const arrival = popEase(rangeProgress(progress, .08, .82), Math.min(.28, bounceStrength));
-      const arrivalAlpha = easeOut(rangeProgress(progress, .08, .28));
-      drawCentered(primaryLine, 0, 0, arrivalAlpha, lerp(.72, 1, arrival), wallStage, primaryIndex);
-      markPhase("line-pop");
+      markPhase(localTime < timing.introEnd ? "center-launch" : "wall-spread", { rows: localTime < timing.introEnd ? 1 : rowCount });
       return;
     }
 
-    const spreadProgress = rangeProgress(localTime, timing.singleEnd, timing.spreadEnd);
-    const collapseProgress = rangeProgress(localTime, timing.holdEnd, timing.collapseEnd);
-    const afterSpread = Math.max(0, localTime - timing.spreadEnd);
-    let driftY = Math.min(afterSpread, timing.duration[3] + timing.duration[4]) * verticalSpeed;
+    let driftY = Math.min(Math.max(0, localTime - timing.spreadEnd), timing.duration[2]) * verticalSpeed;
     const direction = inputs.collapseDirection.value;
-    if (localTime >= timing.holdEnd && direction !== "center") {
+    if (direction !== "center") {
       driftY += (direction === "up" ? -1 : 1) * h * .32 * smoother(collapseProgress);
     }
 
@@ -958,52 +977,48 @@
       for (let lane = -halfRows; lane <= halfRows; lane += 1) {
         const distance = Math.abs(lane);
         const distanceRatio = distance / Math.max(1, halfRows);
-        const appearStart = distance === 0 ? 0 : (distance - 1) / Math.max(1, halfRows) * staggerStrength * .84;
-        const appearEnd = Math.min(1, appearStart + lerp(.42, .18, staggerStrength));
-        const appear = distance === 0 ? 1 : popEase(rangeProgress(spreadProgress, appearStart, appearEnd), bounceStrength);
-        const appearAlpha = distance === 0 ? 1 : smoother(rangeProgress(spreadProgress, appearStart, Math.min(1, appearStart + .16)));
         const edgeAlpha = 1 - edgeFade * .7 * smoother(rangeProgress(distanceRatio, .66, 1));
         const collapseOrder = (halfRows - distance) / Math.max(1, halfRows);
         const disappearStart = collapseOrder * .58;
-        const disappear = localTime < timing.holdEnd
-          ? 0
-          : smoother(rangeProgress(collapseProgress, disappearStart, Math.min(1, disappearStart + .30)));
-        const alpha = appearAlpha * edgeAlpha * (1 - disappear);
+        const disappear = smoother(rangeProgress(collapseProgress, disappearStart, Math.min(1, disappearStart + .30)));
+        const alpha = edgeAlpha * (1 - disappear);
         if (alpha <= .002) continue;
-        const spreadPosition = distance === 0 ? 1 : popEase(rangeProgress(spreadProgress, appearStart, appearEnd), bounceStrength);
         const exitScale = lerp(1, 1.10, easeOut(collapseProgress));
-        const y = lane * lineHeight * wallZoom * spreadPosition + driftY;
-        const rowScale = lerp(.76, 1, appear) * exitScale;
+        const y = lane * lineHeight * wallZoom + driftY;
+        const rowScale = exitScale;
         drawCentered(lineForLane(lane), y, horizontalPhase, alpha, rowScale, wallStage, indexForLane(lane));
       }
 
-      if (localTime >= timing.holdEnd) {
-        const nextReveal = smoother(rangeProgress(collapseProgress, .38, .92));
-        const nextAlpha = Number(inputs.nextOpacity.value) / 100 * nextReveal;
-        const nextY = lerp(lineHeight * .34, 0, easeOut(nextReveal));
-        drawCentered(inputs.nextWord.value.trim() || "togetherness", nextY, 0, nextAlpha, lerp(1.08, 1, easeOut(nextReveal)), finalStage);
-      }
-      markPhase(localTime < timing.spreadEnd ? "wall-spread" : localTime < timing.holdEnd ? "wall-full" : "wall-exit", { rows: rowCount });
+      const nextReveal = smoother(rangeProgress(collapseProgress, .38, .92));
+      const nextAlpha = Number(inputs.nextOpacity.value) / 100 * nextReveal;
+      const nextY = lerp(lineHeight * .34, 0, easeOut(nextReveal));
+      drawCentered(inputs.nextWord.value.trim() || "leveling up", nextY, 0, nextAlpha, lerp(1.08, 1, easeOut(nextReveal)), finalStage);
+      markPhase("wall-exit", { rows: rowCount });
       return;
     }
 
     const finalElapsed = Math.max(0, localTime - timing.collapseEnd);
+    const exitProgress = rangeProgress(localTime, timing.holdEnd, timing.exitEnd);
     context.font = fontFor(finalStage);
     context.save();
-    context.globalAlpha *= Number(inputs.nextOpacity.value) / 100;
-    drawFinalLine(context, inputs.nextWord.value.trim() || "togetherness", w / 2, h / 2, inputs.foreground.value, finalStage.assetHeight, finalElapsed, scale);
+    context.globalAlpha *= Number(inputs.nextOpacity.value) / 100 * (1 - smoother(exitProgress));
+    context.translate(w / 2, h / 2);
+    const finalExitScale = lerp(1, .82, easeOut(exitProgress));
+    context.scale(finalExitScale, finalExitScale);
+    drawFinalLine(context, inputs.nextWord.value.trim() || "leveling up", 0, 0, inputs.foreground.value, finalStage.assetHeight, finalElapsed, scale);
     context.restore();
-    markPhase("final-sweep", { finalState: Math.min(1, finalElapsed / Math.max(.001, finalScanDuration())), swapTargets: Object.keys(finalSlotMap).length, swapMotion: "letter-icon-letter" });
+    const finalPhase = localTime < timing.scanEnd ? "final-sweep" : localTime < timing.holdEnd ? "final-hold" : "final-exit";
+    markPhase(finalPhase, { finalState: Math.min(1, finalElapsed / Math.max(.001, finalScanDuration())), swapTargets: Object.keys(finalSlotMap).length, swapMotion: "letter-icon-letter-wobble" });
   }
 
   function timelineBeats(timing = choreographyTiming()) {
     return [
-      { kind: "intro", name: "开场轻弹", start: 0, end: timing.introEnd },
-      { kind: "orbit", name: "第二行弹出", start: timing.introEnd, end: timing.singleEnd },
-      { kind: "hold", name: "满屏弹开", start: timing.singleEnd, end: timing.spreadEnd },
-      { kind: "contact", name: "满屏停留", start: timing.spreadEnd, end: timing.holdEnd },
-      { kind: "replace", name: "逐行退场", start: timing.holdEnd, end: timing.collapseEnd },
-      { kind: "intro", name: "字母图标双向扫变", start: timing.collapseEnd, end: timing.finalEnd }
+      { kind: "intro", name: "中心跳出", start: 0, end: timing.introEnd },
+      { kind: "orbit", name: "连续弹满", start: timing.introEnd, end: timing.spreadEnd },
+      { kind: "replace", name: "立即收束", start: timing.spreadEnd, end: timing.collapseEnd },
+      { kind: "contact", name: "字母图标扫变", start: timing.collapseEnd, end: timing.scanEnd },
+      { kind: "hold", name: "恢复后停留", start: timing.scanEnd, end: timing.holdEnd },
+      { kind: "intro", name: "快速消失", start: timing.holdEnd, end: timing.exitEnd }
     ].map((beat, index) => ({ ...beat, index, duration: Math.max(0, beat.end - beat.start) }));
   }
 
@@ -1120,14 +1135,15 @@
       finalTextGapOut: `${inputs.finalTextGap.value}px`,
       cycleDurationOut: formatSeconds(timing.cycle),
       introDurationOut: formatSeconds(timing.duration[0]),
-      singleDurationOut: formatSeconds(timing.duration[1]),
-      spreadDurationOut: formatSeconds(timing.duration[2]),
-      holdDurationOut: formatSeconds(timing.duration[3]),
-      collapseDurationOut: formatSeconds(timing.duration[4]),
+      spreadDurationOut: formatSeconds(timing.duration[1]),
+      collapseDurationOut: formatSeconds(timing.duration[2]),
       finalDurationOut: formatSeconds(Number(inputs.finalDuration.value) / 1000),
+      exitDurationOut: formatSeconds(Number(inputs.exitDuration.value) / 1000),
       swapIntervalOut: `${(Number(inputs.swapInterval.value) / 1000).toFixed(2)}秒`,
       finalScanSpeedOut: `${Number(inputs.finalScanSpeed.value).toFixed(1)}×`,
       iconHoldDurationOut: `${inputs.iconHoldDuration.value}ms`,
+      iconWobbleAngleOut: `${inputs.iconWobbleAngle.value}°`,
+      iconWobbleSpeedOut: `${Number(inputs.iconWobbleSpeed.value).toFixed(1)}次/秒`,
       bounceOut: `${inputs.bounce.value}%`,
       staggerOut: `${inputs.stagger.value}%`,
       edgeFadeOut: `${inputs.edgeFade.value}%`,
@@ -1141,11 +1157,12 @@
   }
 
   Object.values(inputs).forEach((input) => input.addEventListener("input", updateOutputs));
-  [inputs.swapInterval, inputs.finalScanSpeed, inputs.iconHoldDuration, inputs.finalDuration, inputs.finalFontSize,
+  [inputs.swapInterval, inputs.finalScanSpeed, inputs.iconHoldDuration, inputs.iconWobbleAngle, inputs.iconWobbleSpeed,
+    inputs.finalDuration, inputs.exitDuration, inputs.finalFontSize,
     inputs.finalAssetScale, inputs.finalTextGap]
     .forEach((input) => input.addEventListener("input", () => setTime(choreographyTiming().collapseEnd + .025)));
   [inputs.wallScale, inputs.wallFontSize, inputs.wallAssetScale, inputs.wallTextGap, inputs.lineGap].forEach((input) => {
-    input.addEventListener("input", () => setTime(choreographyTiming().singleEnd + choreographyTiming().duration[2] * .8));
+    input.addEventListener("input", () => setTime(choreographyTiming().introEnd + choreographyTiming().duration[1] * .8));
   });
   [inputs.fontSize, inputs.assetScale, inputs.itemGap, inputs.introAssetGap].forEach((input) => {
     input.addEventListener("input", () => setTime(choreographyTiming().duration[0] * .5));
@@ -1156,7 +1173,7 @@
   inputs.rows.addEventListener("input", syncRowAssetGaps);
   inputs.motionMode.addEventListener("change", () => setTime(0));
 
-  const SCHEME_STORAGE_KEY = "me-vertical-rise-scheme-v1";
+  const SCHEME_STORAGE_KEY = "me-vertical-rise-scheme-v2";
   let defaultSchemeSnapshot = null;
   let applyingScheme = false;
   let persistTimer = 0;
@@ -1172,7 +1189,7 @@
       if (field) controls[id] = field.type === "checkbox" ? field.checked : field.value;
     });
     return {
-      type: "me-vertical-rise", version: 1, controls, selectedAssetId,
+      type: "me-vertical-rise", version: 2, controls, selectedAssetId,
       rowAssetGaps: [...rowAssetGaps], finalSlotMap: { ...finalSlotMap },
       finalSlotSettings: Object.fromEntries(Object.entries(finalSlotSettings).map(([index, setting]) => [index, normalizedFinalSlotSetting(index)])),
       assets: [...assets.values()].map((asset) => ({
@@ -1269,8 +1286,8 @@
   $("#clearScheme").addEventListener("click", () => {
     const blank = cloneScheme(defaultSchemeSnapshot);
     blank.controls.rowsInput = "纵跃";
-    blank.controls.introWord = "开始";
-    blank.controls.nextWord = "一起向上";
+    blank.controls.introWord = "leveling up";
+    blank.controls.nextWord = "leveling up";
     blank.finalSlotMap = {};
     blank.finalSlotSettings = {};
     blank.assets = blank.assets.filter((asset) => !asset.removable);
