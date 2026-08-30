@@ -78,7 +78,7 @@
 - [x] Single-asset scale / offset / gap edits do not stack onto the full-wall row geometry
 - [x] The center jump completes at a stable 100% before the upper and lower rows start opening; wall spread begins its separate smooth fill zoom from that exact value without a step or second bounce
 - [x] The opening jump is a single monotonic arrival: scale never exceeds 100%, vertical position never passes the final center, and there is no overshoot/settle motion after arrival
-- [x] The center row is excluded from the wall-exit 110% scale and vertical drift, and the incoming final line fades in at a fixed 100% scale and centered position instead of creating a second apparent jump
+- [x] Every wall row holds the same 100% scale through wall exit; only opacity and permitted lane drift change, while the incoming final line fades in at a fixed 100% scale and centered position
 - [x] During the opening part of wall spread, the center row eases from the opening size to the exact wall-row size; it reaches that size before the surrounding wall has filled, then holds the same rendered scale through wall exit without a step, overshoot, or rebound
 - [x] Wall spread starts during the latter half of the center jump, so the center is still moving and enlarging while the upper and lower rows begin filling; the two phases overlap instead of playing sequentially
 - [x] The live/export wall column and overview use the same stable anchor; changing the middle row's icon size, gaps, or X offset affects only that row and cannot shift or refit the entire column

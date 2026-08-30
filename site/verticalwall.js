@@ -1184,6 +1184,7 @@
       canvas.dataset.centerJumpScaleY = String((extras.centerJumpScaleY ?? 1).toFixed(4));
       canvas.dataset.centerJumpY = String((extras.centerJumpY ?? 0).toFixed(4));
       canvas.dataset.centerWallRowScale = String((extras.centerWallRowScale ?? 1).toFixed(4));
+      canvas.dataset.wallExitScaleMode = extras.wallExitScaleMode || "idle";
       canvas.dataset.finalRevealScale = String((extras.finalRevealScale ?? 1).toFixed(4));
       canvas.dataset.renderTime = localTime.toFixed(4);
     };
@@ -1265,17 +1266,15 @@
         const disappear = smoother(rangeProgress(collapseProgress, disappearStart, Math.min(1, disappearStart + .30)));
         const alpha = 1 - disappear;
         if (alpha <= .002) continue;
-        const exitScale = lerp(1, 1.10, easeOut(collapseProgress));
         const y = distance === 0 ? 0 : lane * lineHeight * wallZoom + driftY;
-        const rowScale = distance === 0 ? 1 : exitScale;
-        drawCentered(lineForLane(lane), y, horizontalPhase, alpha, rowScale, wallStage, indexForLane(lane));
+        drawCentered(lineForLane(lane), y, horizontalPhase, alpha, 1, wallStage, indexForLane(lane));
       }
 
       const nextReveal = smoother(rangeProgress(collapseProgress, .38, .92));
       const nextAlpha = Number(inputs.nextOpacity.value) / 100 * nextReveal;
       drawCentered(inputs.nextWord.value.trim() || "leveling up", 0, 0, nextAlpha, 1, finalStage);
       markPhase("wall-exit", { rows: rowCount, centerJumpScaleX: centerFilledZoom, centerJumpScaleY: centerFilledZoom,
-        centerJumpY: 0, centerWallRowScale: 1, finalRevealScale: 1 });
+        centerJumpY: 0, centerWallRowScale: 1, wallExitScaleMode: "uniform-1", finalRevealScale: 1 });
       return;
     }
 
