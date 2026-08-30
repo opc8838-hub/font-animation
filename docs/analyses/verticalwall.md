@@ -81,6 +81,7 @@
 - [x] Opening rhythm control is visible beside the opening word and updates the launch duration (0.30s and 0.62s tested)
 - [x] Opening icons have an explicit insertion target, visible used-icon list, opening-only size/gap controls, and single-asset size/X/Y/before/after editing
 - [x] Final icon shows an upright frame, turns to the configured angle, returns upright, then restores the letter
+- [x] Final-slot angle controls stay visible, with disabled guidance for unmapped characters and saved angles shown on every mapped slot
 - [x] Console clean
 - [x] PNG generated
 - [x] Full-cycle GIF generated (320×320, 25 frames)

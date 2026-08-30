@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;f[]=general-sans@400,500,600&amp;f[]=clash-display@500,600&amp;f[]=cabinet-grotesk@500,700&amp;display=swap">
   <link rel="stylesheet" href="continuation.css">
   <link rel="stylesheet" href="currentwall.css">
-  <link rel="stylesheet" href="verticalwall.css">
+  <link rel="stylesheet" href="verticalwall.css?v=20260830-15">
   <link rel="stylesheet" href="me-motion-editor.css">
   <link rel="stylesheet" href="stg-cn.css">
 </head>
@@ -131,8 +131,9 @@ leveling {{play}}p
           <button id="assignFinalAsset" type="button">添加/替换图标</button>
           <button id="removeFinalAsset" type="button">删除图标，恢复文字</button>
         </div>
-        <div class="final-slot-tuner" id="finalSlotTuner" hidden>
-          <strong id="finalSlotTunerTitle">当前字图标</strong>
+        <div class="final-slot-tuner is-disabled" id="finalSlotTuner">
+          <strong id="finalSlotTunerTitle">收尾图标角度与排版</strong>
+          <p class="final-slot-tuner-state" id="finalSlotTunerState">请先点击上方一个已经显示图标的字位。</p>
           <div class="controls-grid quick-grid">
             <label>这个图标大小 <output id="finalSlotScaleOut">100%</output><input id="finalSlotScale" type="range" min="40" max="240" step="5" value="100"></label>
             <label>与左侧文字间距 <output id="finalSlotGapBeforeOut">0</output><input id="finalSlotGapBefore" type="range" min="-40" max="120" step="1" value="0"></label>
@@ -365,7 +366,7 @@ leveling {{play}}p
   <script src="token-asset-tools.js"></script>
   <script src="shared-icon-library.js?v=20260830-3"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
-  <script src="verticalwall.js?v=20260830-14"></script>
+  <script src="verticalwall.js?v=20260830-15"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
 </body>

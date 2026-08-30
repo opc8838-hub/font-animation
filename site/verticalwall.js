@@ -233,16 +233,23 @@
   function syncFinalSlotTuner() {
     const tuner = $("#finalSlotTuner");
     const mappedAsset = assets.get(finalSlotMap[selectedFinalSlot]);
-    tuner.hidden = !mappedAsset;
-    if (!mappedAsset) return;
-    const setting = normalizedFinalSlotSetting(selectedFinalSlot);
-    finalSlotSettings[selectedFinalSlot] = setting;
-    $("#finalSlotTunerTitle").textContent = `第 ${selectedFinalSlot + 1} 个字 · ${finalCharacters()[selectedFinalSlot]} → ${mappedAsset.label}`;
-    [["finalSlotScale", "finalSlotScaleOut", setting.scale, "%"], ["finalSlotGapBefore", "finalSlotGapBeforeOut", setting.gapBefore, ""],
-      ["finalSlotGapAfter", "finalSlotGapAfterOut", setting.gapAfter, ""], ["finalSlotOffsetX", "finalSlotOffsetXOut", setting.offsetX, ""],
-      ["finalSlotOffsetY", "finalSlotOffsetYOut", setting.offsetY, ""],
-      ["finalSlotRotation", "finalSlotRotationOut", setting.rotation, "°"]].forEach(([inputId, outputId, value, suffix]) => {
-      $("#" + inputId).value = String(value);
+    const controls = [["finalSlotScale", "finalSlotScaleOut", "scale", "%"], ["finalSlotGapBefore", "finalSlotGapBeforeOut", "gapBefore", ""],
+      ["finalSlotGapAfter", "finalSlotGapAfterOut", "gapAfter", ""], ["finalSlotOffsetX", "finalSlotOffsetXOut", "offsetX", ""],
+      ["finalSlotOffsetY", "finalSlotOffsetYOut", "offsetY", ""], ["finalSlotRotation", "finalSlotRotationOut", "rotation", "°"]];
+    const setting = mappedAsset ? normalizedFinalSlotSetting(selectedFinalSlot) : { scale: 100, gapBefore: 0, gapAfter: 0, offsetX: 0, offsetY: 0, rotation: 0 };
+    tuner.classList.toggle("is-disabled", !mappedAsset);
+    $("#finalSlotTunerTitle").textContent = mappedAsset
+      ? `第 ${selectedFinalSlot + 1} 个字 · ${finalCharacters()[selectedFinalSlot]} → ${mappedAsset.label}`
+      : "收尾图标角度与排版";
+    $("#finalSlotTunerState").textContent = mappedAsset
+      ? "当前角度只影响这个字位；正数顺时针，负数逆时针。"
+      : `第 ${selectedFinalSlot + 1} 个字“${finalCharacters()[selectedFinalSlot]}”还没有图标；请先添加，或点击上方带图标的字位。`;
+    if (mappedAsset) finalSlotSettings[selectedFinalSlot] = setting;
+    controls.forEach(([inputId, outputId, key, suffix]) => {
+      const input = $("#" + inputId);
+      const value = setting[key];
+      input.disabled = !mappedAsset;
+      input.value = String(value);
       $("#" + outputId).textContent = `${value}${suffix}`;
     });
   }
@@ -279,6 +286,11 @@
         image.src = asset.src;
         image.alt = asset.label;
         button.append(image);
+        const angle = document.createElement("em");
+        angle.className = "final-slot-angle";
+        angle.textContent = `${normalizedFinalSlotSetting(index).rotation}°`;
+        button.append(angle);
+        button.title = `${asset.label} · 平面旋转 ${normalizedFinalSlotSetting(index).rotation}°`;
       } else {
         const glyph = document.createElement("span");
         glyph.textContent = /^\s$/.test(character) ? "·" : character;
@@ -552,6 +564,7 @@
       setting[key] = Number(event.currentTarget.value);
       finalSlotSettings[selectedFinalSlot] = setting;
       $("#" + outputId).textContent = `${event.currentTarget.value}${suffix}`;
+      if (key === "rotation") renderFinalSlotEditor();
     });
   });
   inputs.nextWord.addEventListener("input", () => {
