@@ -1102,14 +1102,22 @@
     context.imageSmoothingEnabled = true;
 
     const centerSource = Math.floor(rows.length / 2);
+    const primaryLine = rows[centerSource];
+    const openingLine = inputs.introWord.value.trim() || primaryLine;
+    const hasInlineAsset = (line) => [...line.matchAll(/\{\{([^{}]+)\}\}/g)].some((match) => assets.has(match[1]));
+    const visibleText = (line) => line.replace(/\{\{[^{}]+\}\}/g, "").trim();
+    const carryOpeningAssets = choreography && hasInlineAsset(openingLine) && !hasInlineAsset(primaryLine)
+      && visibleText(openingLine) === visibleText(primaryLine);
+    const centerWallLine = carryOpeningAssets ? openingLine : primaryLine;
+    const wallRows = rows.map((line, index) => index === centerSource ? centerWallLine : line);
     const indexForLane = (lane) => mod(centerSource + lane, rows.length);
-    const lineForLane = (lane) => rows[indexForLane(lane)];
+    const lineForLane = (lane) => wallRows[indexForLane(lane)];
     context.font = fontFor(wallStage);
-    const wallLayouts = rows.map((line, index) => layoutTokens(
+    const wallLayouts = wallRows.map((line, index) => layoutTokens(
       context, line, wallStage.fontPx, wallStage.assetHeight * rowAssetScales[index] / 100, wallStage.textGap,
       wallStage.assetGap + (Number(rowAssetGaps[index]) || 0) * scale, false
     ));
-    const wallSegments = rows.map((line, index) => layoutRowSegments(
+    const wallSegments = wallRows.map((line, index) => layoutRowSegments(
       context, line, wallStage.fontPx, wallStage.assetHeight * rowAssetScales[index] / 100, wallStage.textGap,
       (Number(rowAssetGaps[index]) || 0) * scale, (Number(rowAssetGapsAfter[index]) || 0) * scale
     ));
@@ -1166,6 +1174,9 @@
       canvas.dataset.iconRotationMotion = "upright-angle-return-2d-fixed";
       canvas.dataset.iconRotationDuration = inputs.iconRotationDuration.value;
       canvas.dataset.finalIconHoldDuration = inputs.iconHoldDuration.value;
+      canvas.dataset.centerLineSource = carryOpeningAssets ? "opening-assets" : "middle-row";
+      canvas.dataset.centerLineAssets = [...centerWallLine.matchAll(/\{\{([^{}]+)\}\}/g)]
+        .map((match) => match[1]).filter((id) => assets.has(id)).join(",");
       canvas.dataset.renderTime = localTime.toFixed(4);
     };
 
@@ -1182,8 +1193,6 @@
       return;
     }
 
-    const primaryLine = lineForLane(0);
-    const openingLine = inputs.introWord.value.trim() || primaryLine;
     const launchProgress = rangeProgress(localTime, 0, timing.introEnd);
     const launchJump = openingJump(launchProgress);
     const spreadProgress = rangeProgress(localTime, timing.spreadStart, timing.spreadEnd);
@@ -1221,7 +1230,7 @@
               introStage, indexForLane(lane), 1, centerAxisScaleY);
           }
           if (centerMainMix > .001) {
-            drawCentered(primaryLine, y, horizontalPhase, alpha * centerMainMix, lerp(.96, 1, centerMainMix),
+            drawCentered(centerWallLine, y, horizontalPhase, alpha * centerMainMix, lerp(.96, 1, centerMainMix),
               wallStage, indexForLane(lane));
           }
         } else {

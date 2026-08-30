@@ -83,6 +83,7 @@
 - [x] Final icon shows an upright frame, turns to the configured angle, returns upright, then restores the letter
 - [x] Final-slot angle controls stay visible, with disabled guidance for unmapped characters and saved angles shown on every mapped slot
 - [x] Main-row edits pause on the complete full-wall frame so a newly assigned middle-row icon remains inspectable instead of immediately advancing into collapse
+- [x] An opening-center inline icon carries continuously into the full-wall center row when that row has the same visible text and no independently assigned icon; an explicit middle-row icon still takes priority
 - [x] Final icon hold, 2D rotation round-trip duration, and restored-line hold are independently editable and included in the shared preview/export timeline
 - [x] Console clean
 - [x] PNG generated
