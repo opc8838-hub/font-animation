@@ -1170,6 +1170,7 @@
       canvas.dataset.centerJumpScaleX = String((extras.centerJumpScaleX ?? 1).toFixed(4));
       canvas.dataset.centerJumpScaleY = String((extras.centerJumpScaleY ?? 1).toFixed(4));
       canvas.dataset.centerJumpY = String((extras.centerJumpY ?? 0).toFixed(4));
+      canvas.dataset.finalRevealScale = String((extras.finalRevealScale ?? 1).toFixed(4));
       canvas.dataset.renderTime = localTime.toFixed(4);
     };
 
@@ -1188,6 +1189,7 @@
 
     const launchProgress = rangeProgress(localTime, 0, timing.introEnd);
     const launchJump = openingJump(launchProgress);
+    const centerStableScale = introFontPx / Math.max(1, wallFontPx * wallZoom);
     const spreadProgress = rangeProgress(localTime, timing.spreadStart, timing.spreadEnd);
     const collapseProgress = rangeProgress(localTime, timing.spreadEnd, timing.collapseEnd);
 
@@ -1208,7 +1210,6 @@
         const y = distance === 0
           ? launchJump.y * introFontPx
           : lane * lineHeight * wallZoom * spreadPosition;
-        const centerStableScale = introFontPx / Math.max(1, wallFontPx * wallZoom);
         const rowScale = distance === 0
           ? centerStableScale * launchJump.scaleX
           : lerp(.76, 1, appear);
@@ -1243,16 +1244,15 @@
         const alpha = 1 - disappear;
         if (alpha <= .002) continue;
         const exitScale = lerp(1, 1.10, easeOut(collapseProgress));
-        const y = lane * lineHeight * wallZoom + driftY;
-        const rowScale = exitScale;
+        const y = distance === 0 ? 0 : lane * lineHeight * wallZoom + driftY;
+        const rowScale = distance === 0 ? centerStableScale : exitScale;
         drawCentered(lineForLane(lane), y, horizontalPhase, alpha, rowScale, wallStage, indexForLane(lane));
       }
 
       const nextReveal = smoother(rangeProgress(collapseProgress, .38, .92));
       const nextAlpha = Number(inputs.nextOpacity.value) / 100 * nextReveal;
-      const nextY = lerp(lineHeight * .34, 0, easeOut(nextReveal));
-      drawCentered(inputs.nextWord.value.trim() || "leveling up", nextY, 0, nextAlpha, lerp(1.08, 1, easeOut(nextReveal)), finalStage);
-      markPhase("wall-exit", { rows: rowCount });
+      drawCentered(inputs.nextWord.value.trim() || "leveling up", 0, 0, nextAlpha, 1, finalStage);
+      markPhase("wall-exit", { rows: rowCount, centerJumpScaleX: 1, centerJumpScaleY: 1, centerJumpY: 0, finalRevealScale: 1 });
       return;
     }
 

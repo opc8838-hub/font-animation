@@ -78,6 +78,7 @@
 - [x] Single-asset scale / offset / gap edits do not stack onto the full-wall row geometry
 - [x] The center jump completes and reaches a stable 100% scale before the upper and lower rows start opening; the wall-spread phase never applies a second center-row bounce or scale change
 - [x] The opening jump is a single monotonic arrival: scale never exceeds 100%, vertical position never passes the final center, and there is no overshoot/settle motion after arrival
+- [x] The center row is excluded from the wall-exit 110% scale and vertical drift, and the incoming final line fades in at a fixed 100% scale and centered position instead of creating a second apparent jump
 - [x] The opening and real middle row share one fixed center layer, so middle-row editor changes remain visible without a spread-time handoff
 - [x] Opening rhythm control is visible beside the opening word and updates the launch duration (0.30s and 0.62s tested)
 - [x] Opening icons have an explicit insertion target, visible used-icon list, opening-only size/gap controls, and single-asset size/X/Y/before/after editing
