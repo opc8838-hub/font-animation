@@ -1012,7 +1012,7 @@
     const exit = Number(inputs.exitDuration.value) / 1000;
     const duration = [launch, spread, collapse, scan, finalHold, exit];
     const introEnd = launch;
-    const spreadStart = launch * .68;
+    const spreadStart = launch;
     const spreadEnd = spreadStart + spread;
     const collapseEnd = spreadEnd + collapse;
     const scanEnd = collapseEnd + scan;
@@ -1176,6 +1176,8 @@
         .map((match) => match[1]).filter((id) => assets.has(id)).join(",");
       canvas.dataset.centerLineOffset = (wallStartX + (centerWallBounds.minX + centerWallBounds.maxX) / 2).toFixed(4);
       canvas.dataset.centerHandoffMode = "fixed-center-row";
+      canvas.dataset.centerJumpScaleX = String((extras.centerJumpScaleX ?? 1).toFixed(4));
+      canvas.dataset.centerJumpScaleY = String((extras.centerJumpScaleY ?? 1).toFixed(4));
       canvas.dataset.renderTime = localTime.toFixed(4);
     };
 
@@ -1228,8 +1230,9 @@
           drawCentered(lineForLane(lane), y, horizontalPhase, alpha, rowScale, wallStage, indexForLane(lane));
         }
       }
-      const phase = localTime < timing.spreadStart ? "center-launch" : localTime < timing.introEnd ? "launch-spread-overlap" : "wall-spread";
-      markPhase(phase, { rows: localTime < timing.spreadStart ? 1 : rowCount });
+      const phase = localTime < timing.spreadStart ? "center-launch" : "wall-spread";
+      markPhase(phase, { rows: localTime < timing.spreadStart ? 1 : rowCount,
+        centerJumpScaleX: launchJump.scaleX, centerJumpScaleY: launchJump.scaleY });
       return;
     }
 
