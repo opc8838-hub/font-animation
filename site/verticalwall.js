@@ -1110,11 +1110,11 @@
       context, line, wallStage.fontPx, wallStage.assetHeight * rowAssetScales[index] / 100, wallStage.textGap,
       (Number(rowAssetGaps[index]) || 0) * scale, (Number(rowAssetGapsAfter[index]) || 0) * scale
     ));
-    const wallBounds = wallLayouts.map((layout, index) => rowSegmentBounds(
-      wallSegments[index], (Number(rowAssetOffsetsX[index]) || 0) * scale
-    ) || { minX: 0, maxX: layout.width });
-    const centerWallBounds = wallBounds[centerSource] || { minX: 0, maxX: wallLayouts[centerSource]?.width || 0 };
-    const wallStartX = -(centerWallBounds.maxX - centerWallBounds.minX) / 2 - centerWallBounds.minX;
+    const centerWallBounds = rowSegmentBounds(
+      wallSegments[centerSource], (Number(rowAssetOffsetsX[centerSource]) || 0) * scale
+    ) || { minX: 0, maxX: wallLayouts[centerSource]?.width || 0 };
+    const centerAnchorText = centerWallLine.replace(/\{\{[^{}]+\}\}/g, "") || " ";
+    const wallStartX = -context.measureText(centerAnchorText).width / 2;
     const wallZoom = Number(inputs.wallScale.value) / 100;
     const drawCentered = (line, y, xOffset = 0, alpha = 1, rowScale = 1, stage = introStage, rowIndex = 0, axisScaleX = 1, axisScaleY = 1) => {
       context.font = fontFor(stage);
@@ -1166,10 +1166,12 @@
       canvas.dataset.centerLineAssets = [...centerWallLine.matchAll(/\{\{([^{}]+)\}\}/g)]
         .map((match) => match[1]).filter((id) => assets.has(id)).join(",");
       canvas.dataset.centerLineOffset = (wallStartX + (centerWallBounds.minX + centerWallBounds.maxX) / 2).toFixed(4);
+      canvas.dataset.columnAnchorX = wallStartX.toFixed(4);
       canvas.dataset.centerHandoffMode = "fixed-center-row";
       canvas.dataset.centerJumpScaleX = String((extras.centerJumpScaleX ?? 1).toFixed(4));
       canvas.dataset.centerJumpScaleY = String((extras.centerJumpScaleY ?? 1).toFixed(4));
       canvas.dataset.centerJumpY = String((extras.centerJumpY ?? 0).toFixed(4));
+      canvas.dataset.centerWallRowScale = String((extras.centerWallRowScale ?? 1).toFixed(4));
       canvas.dataset.finalRevealScale = String((extras.finalRevealScale ?? 1).toFixed(4));
       canvas.dataset.renderTime = localTime.toFixed(4);
     };
@@ -1190,7 +1192,7 @@
     const launchProgress = rangeProgress(localTime, 0, timing.introEnd);
     const launchJump = openingJump(launchProgress);
     const centerStableScale = introFontPx / Math.max(1, wallFontPx * wallZoom);
-    const centerFilledZoom = 1.04;
+    const centerFilledZoom = 1 / Math.max(.001, centerStableScale);
     const spreadProgress = rangeProgress(localTime, timing.spreadStart, timing.spreadEnd);
     const centerDisplayScale = localTime < timing.spreadStart
       ? launchJump.scaleX
@@ -1231,7 +1233,8 @@
       markPhase(phase, { rows: localTime < timing.spreadStart ? 1 : rowCount,
         centerJumpScaleX: centerDisplayScale,
         centerJumpScaleY: localTime < timing.spreadStart ? launchJump.scaleY : centerDisplayScale,
-        centerJumpY: localTime < timing.spreadStart ? launchJump.y : 0 });
+        centerJumpY: localTime < timing.spreadStart ? launchJump.y : 0,
+        centerWallRowScale: centerStableScale * centerDisplayScale });
       return;
     }
 
@@ -1251,7 +1254,7 @@
         if (alpha <= .002) continue;
         const exitScale = lerp(1, 1.10, easeOut(collapseProgress));
         const y = distance === 0 ? 0 : lane * lineHeight * wallZoom + driftY;
-        const rowScale = distance === 0 ? centerStableScale * centerFilledZoom : exitScale;
+        const rowScale = distance === 0 ? 1 : exitScale;
         drawCentered(lineForLane(lane), y, horizontalPhase, alpha, rowScale, wallStage, indexForLane(lane));
       }
 
@@ -1259,7 +1262,7 @@
       const nextAlpha = Number(inputs.nextOpacity.value) / 100 * nextReveal;
       drawCentered(inputs.nextWord.value.trim() || "leveling up", 0, 0, nextAlpha, 1, finalStage);
       markPhase("wall-exit", { rows: rowCount, centerJumpScaleX: centerFilledZoom, centerJumpScaleY: centerFilledZoom,
-        centerJumpY: 0, finalRevealScale: 1 });
+        centerJumpY: 0, centerWallRowScale: 1, finalRevealScale: 1 });
       return;
     }
 
@@ -1574,15 +1577,11 @@
     const segments = rows.map((line, index) => layoutRowSegments(context, line, fontPx,
       fontPx * rowAssetScales[index] / 100, Number(inputs.wallTextGap.value) * unitScale,
       (Number(rowAssetGaps[index]) || 0) * unitScale, (Number(rowAssetGapsAfter[index]) || 0) * unitScale));
-    const bounds = layouts.map((layout, index) => rowSegmentBounds(
-      segments[index], (Number(rowAssetOffsetsX[index]) || 0) * unitScale
-    ) || { minX: 0, maxX: layout.width });
-    const minX = Math.min(...bounds.map((item) => item.minX));
-    const maxX = Math.max(...bounds.map((item) => item.maxX));
-    const widest = Math.max(1, maxX - minX);
-    const startX = -widest / 2 - minX;
-    const tallestRow = Math.max(fontPx, ...rowAssetScales.map((value) => fontPx * value / 100));
-    const allRowsHeight = Math.max(tallestRow, (rows.length - 1) * lineHeight + tallestRow);
+    const plainWidths = rows.map((line) => context.measureText(line.replace(/\{\{[^{}]+\}\}/g, "") || " ").width);
+    const centerIndex = Math.floor(rows.length / 2);
+    const widest = Math.max(1, ...plainWidths);
+    const startX = -(plainWidths[centerIndex] || widest) / 2;
+    const allRowsHeight = Math.max(fontPx, (rows.length - 1) * lineHeight + fontPx);
     const fit = Math.min(1, (width - 48) / (widest * wallZoom), (height - 48) / (allRowsHeight * wallZoom));
     const renderedLineHeight = lineHeight * wallZoom * fit;
     const startY = height / 2 - (rows.length - 1) * renderedLineHeight / 2;
@@ -1597,6 +1596,8 @@
       }
       context.restore();
     });
+    rowOverviewCanvas.dataset.columnAnchorX = startX.toFixed(4);
+    rowOverviewCanvas.dataset.layoutFit = fit.toFixed(6);
     $("#rowOverviewStatus").textContent = `${rows.length} 行 · ${logicalWidth} × ${logicalHeight}`;
   }
 
