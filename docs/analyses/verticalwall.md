@@ -79,7 +79,7 @@
 - [x] The center jump completes at a stable 100% before the upper and lower rows start opening; wall spread begins its separate smooth fill zoom from that exact value without a step or second bounce
 - [x] The opening jump is a single monotonic arrival: scale never exceeds 100%, vertical position never passes the final center, and there is no overshoot/settle motion after arrival
 - [x] The center row is excluded from the wall-exit 110% scale and vertical drift, and the incoming final line fades in at a fixed 100% scale and centered position instead of creating a second apparent jump
-- [x] During wall spread, the center row eases from the opening size to the exact wall-row size, then holds the same rendered scale as surrounding rows through wall exit without a step, overshoot, or rebound
+- [x] During the opening part of wall spread, the center row eases from the opening size to the exact wall-row size; it reaches that size before the surrounding wall has filled, then holds the same rendered scale through wall exit without a step, overshoot, or rebound
 - [x] The live/export wall column and overview use text-only anchors; changing the middle row's icon size, gaps, or X offset affects only that row and cannot shift or refit the entire column
 - [x] The opening and real middle row share one fixed center layer, so middle-row editor changes remain visible without a spread-time handoff
 - [x] Opening rhythm control is visible beside the opening word and updates the launch duration (0.30s and 0.62s tested)

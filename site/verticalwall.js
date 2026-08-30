@@ -1194,9 +1194,10 @@
     const centerStableScale = introFontPx / Math.max(1, wallFontPx * wallZoom);
     const centerFilledZoom = 1 / Math.max(.001, centerStableScale);
     const spreadProgress = rangeProgress(localTime, timing.spreadStart, timing.spreadEnd);
+    const centerFillProgress = smoother(rangeProgress(spreadProgress, 0, .28));
     const centerDisplayScale = localTime < timing.spreadStart
       ? launchJump.scaleX
-      : lerp(1, centerFilledZoom, smoother(spreadProgress));
+      : lerp(1, centerFilledZoom, centerFillProgress);
     const collapseProgress = rangeProgress(localTime, timing.spreadEnd, timing.collapseEnd);
 
     if (localTime < timing.spreadEnd) {
