@@ -78,11 +78,7 @@ leveling {{play}}p
           <label>文字<input id="textColor" type="color" value="#090909"></label>
         </div>
         <p class="hint">每个换行只生成一排，不会自动复制相同排。把素材标记插在任意字位，例如 level{{music}}ing up；支持中文、图片和图标。</p>
-        <button class="vertical-row-overview-open" id="openRowOverview" type="button">打开满屏排版预览</button>
-        <details class="vertical-row-settings">
-          <summary><b>逐行图标参数</b><span id="rowSettingsCount">11 行 · 间距 / 大小 / 左右位置</span></summary>
-          <div class="vertical-row-gap-list" id="rowGapList" aria-label="每行图标的间距、大小与左右位置"></div>
-        </details>
+        <button class="vertical-row-overview-open" id="openRowOverview" type="button">编辑满屏排版</button>
       </section>
 
       <section class="scene-grid vertical-scene-grid">
@@ -321,14 +317,20 @@ leveling {{play}}p
 
   <aside class="vertical-row-overview" id="rowOverviewPanel" role="dialog" aria-modal="false" aria-labelledby="rowOverviewTitle" hidden>
     <header>
-      <div><strong id="rowOverviewTitle">满屏排版预览</strong><small id="rowOverviewStatus">11 行</small></div>
-      <button id="closeRowOverview" type="button" aria-label="关闭满屏排版预览">×</button>
+      <div><strong id="rowOverviewTitle">满屏排版编辑</strong><small id="rowOverviewStatus">11 行</small></div>
+      <button id="closeRowOverview" type="button" aria-label="关闭满屏排版编辑">×</button>
     </header>
-    <div class="vertical-row-overview-stage">
-      <canvas id="rowOverviewCanvas" width="720" height="720" aria-label="全部输入行的图标、位置与大小预览"></canvas>
+    <div class="vertical-row-overview-scroll">
+      <div class="vertical-row-overview-stage">
+        <canvas id="rowOverviewCanvas" width="720" height="720" aria-label="全部输入行的图标、位置与大小预览"></canvas>
+      </div>
+      <p>一次查看全部输入行；下方每一行都能独立调整图标间距、大小和左右位置。</p>
+      <div class="vertical-row-overview-heading">
+        <strong>主行图标参数</strong>
+        <span id="rowSettingsCount">11 行 · 间距 / 大小 / 左右位置</span>
+      </div>
+      <div class="vertical-row-gap-list" id="rowGapList" aria-label="每行图标的间距、大小与左右位置"></div>
     </div>
-    <p>这里一次显示全部输入行。拖动左侧任意一行的参数会立即更新；拖住浮层右边缘可左右拉伸，单图标编辑不会叠加到此处。</p>
-    <i class="vertical-row-overview-resize" id="rowOverviewResize" title="左右拖动调整预览宽度" aria-hidden="true"></i>
   </aside>
 
   <script src="js/continuation-gif.js"></script>
@@ -336,7 +338,7 @@ leveling {{play}}p
   <script src="token-asset-tools.js"></script>
   <script src="shared-icon-library.js?v=20260830-3"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
-  <script src="verticalwall.js?v=20260830-7"></script>
+  <script src="verticalwall.js?v=20260830-8"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
 </body>

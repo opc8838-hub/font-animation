@@ -1241,15 +1241,10 @@
   function positionRowOverview() {
     if (rowOverviewPanel.hidden) return;
     const editor = $("#controlPanel").getBoundingClientRect();
-    const availableWidth = window.innerWidth - editor.right - 22;
-    if (window.innerWidth <= 720 || availableWidth < 290) {
-      rowOverviewPanel.style.left = "10px";
-      rowOverviewPanel.style.width = "";
-      return;
-    }
-    rowOverviewPanel.style.left = `${Math.round(editor.right + 12)}px`;
-    const currentWidth = rowOverviewPanel.getBoundingClientRect().width;
-    rowOverviewPanel.style.width = `${Math.max(290, Math.min(currentWidth, availableWidth))}px`;
+    rowOverviewPanel.style.left = `${Math.round(editor.left)}px`;
+    rowOverviewPanel.style.top = `${Math.round(Math.max(0, editor.top))}px`;
+    rowOverviewPanel.style.width = `${Math.round(editor.width)}px`;
+    rowOverviewPanel.style.height = `${Math.round(Math.min(editor.height, window.innerHeight - Math.max(0, editor.top)))}px`;
   }
 
   function openRowOverview() {
@@ -1274,24 +1269,6 @@
   window.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !rowOverviewPanel.hidden && $("#assetEditorDrawer").hidden) closeRowOverview();
   });
-  $("#rowOverviewResize").addEventListener("pointerdown", (event) => {
-    if (window.innerWidth <= 720) return;
-    event.preventDefault();
-    const startX = event.clientX;
-    const startWidth = rowOverviewPanel.getBoundingClientRect().width;
-    const editorRight = $("#controlPanel").getBoundingClientRect().right;
-    const onMove = (moveEvent) => {
-      const maxWidth = Math.max(290, window.innerWidth - editorRight - 22);
-      rowOverviewPanel.style.width = `${Math.max(290, Math.min(maxWidth, startWidth + moveEvent.clientX - startX))}px`;
-    };
-    const onUp = () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-    };
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp, { once: true });
-  });
-
   const SCHEME_STORAGE_KEY = "me-vertical-rise-scheme-v5";
   const LEGACY_SCHEME_STORAGE_KEYS = ["me-vertical-rise-scheme-v4", "me-vertical-rise-scheme-v3", "me-vertical-rise-scheme-v2"];
   let defaultSchemeSnapshot = null;
