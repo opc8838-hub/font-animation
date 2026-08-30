@@ -1190,8 +1190,19 @@
         const centerAxisScaleY = distance === 0
           ? lerp(launchJump.scaleY / Math.max(.001, launchJump.scaleX), 1, centerFillProgress)
           : 1;
-        drawCentered(distance === 0 ? openingLine : lineForLane(lane), y, horizontalPhase, alpha, rowScale,
-          distance === 0 ? introStage : wallStage, indexForLane(lane), 1, centerAxisScaleY);
+        if (distance === 0) {
+          const centerMainMix = smoother(rangeProgress(spreadProgress, .28, .62));
+          if (centerMainMix < .999) {
+            drawCentered(openingLine, y, horizontalPhase, alpha * (1 - centerMainMix), rowScale,
+              introStage, indexForLane(lane), 1, centerAxisScaleY);
+          }
+          if (centerMainMix > .001) {
+            drawCentered(primaryLine, y, horizontalPhase, alpha * centerMainMix, lerp(.96, 1, centerMainMix),
+              wallStage, indexForLane(lane));
+          }
+        } else {
+          drawCentered(lineForLane(lane), y, horizontalPhase, alpha, rowScale, wallStage, indexForLane(lane));
+        }
       }
       const phase = localTime < timing.spreadStart ? "center-launch" : localTime < timing.introEnd ? "launch-spread-overlap" : "wall-spread";
       markPhase(phase, { rows: localTime < timing.spreadStart ? 1 : rowCount });
