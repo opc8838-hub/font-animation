@@ -75,6 +75,7 @@
 - [x] Single-asset scale / offset / gap edits do not stack onto the full-wall row geometry
 - [x] Opening enters the overlap phase before the 0.30s center launch completes
 - [x] Opening rhythm control is visible beside the opening word and updates the launch duration (0.30s and 0.62s tested)
+- [x] Opening icons have an explicit insertion target, visible used-icon list, opening-only size/gap controls, and single-asset size/X/Y/before/after editing
 - [x] Final icon shows an upright frame, turns to the configured angle, returns upright, then restores the letter
 - [x] Console clean
 - [x] PNG generated

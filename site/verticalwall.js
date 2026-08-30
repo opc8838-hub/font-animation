@@ -347,9 +347,29 @@
     textarea.dispatchEvent(new Event("input", { bubbles: true }));
   }
 
+  function setTokenTarget(field, focus = false) {
+    activeTokenInput = field;
+    document.querySelectorAll("[data-token-target]").forEach((button) => {
+      button.classList.toggle("is-active", button.dataset.tokenTarget === (field === inputs.introWord ? "intro" : "rows"));
+    });
+    $("#insertSelectedAsset").textContent = field === inputs.introWord ? "插入到开头光标" : "插入到主行光标";
+    if (focus) field.focus();
+  }
+
   [inputs.rows, inputs.introWord].forEach((field) => {
-    field.addEventListener("focus", () => { activeTokenInput = field; });
+    field.addEventListener("focus", () => { setTokenTarget(field); });
     field.addEventListener("input", renderSelectedAssets);
+  });
+
+  document.querySelectorAll("[data-token-target]").forEach((button) => {
+    button.addEventListener("click", () => setTokenTarget(button.dataset.tokenTarget === "intro" ? inputs.introWord : inputs.rows, true));
+  });
+
+  $("#chooseIntroAsset").addEventListener("click", () => {
+    setTokenTarget(inputs.introWord, true);
+    const library = document.querySelector(".asset-library-panel");
+    library.open = true;
+    library.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
   function usedAssetEntries() {
@@ -396,7 +416,38 @@
     renderSelectedAssets();
   }
 
+  function renderIntroAssets() {
+    const ids = [...inputs.introWord.value.matchAll(/\{\{([^{}]+)\}\}/g)]
+      .map((match) => match[1])
+      .filter((id, index, all) => assets.has(id) && all.indexOf(id) === index);
+    const list = $("#introAssetList");
+    list.replaceChildren();
+    $("#introAssetSummary").textContent = ids.length ? `${ids.length} 个 · 可单独编辑` : "尚未添加";
+    if (!ids.length) {
+      const empty = document.createElement("p");
+      empty.className = "intro-asset-empty";
+      empty.textContent = "选择素材后，可插入到开头文字的任意光标位置。";
+      list.append(empty);
+      return;
+    }
+    ids.forEach((id) => {
+      const asset = assets.get(id);
+      const item = document.createElement("article");
+      item.className = "intro-asset-item";
+      item.innerHTML = `<img alt=""><span></span><button class="edit-intro-asset" type="button">单独编辑</button><button class="remove-intro-asset" type="button" aria-label="只从开头移除">×</button>`;
+      item.querySelector("img").src = asset.src;
+      item.querySelector("span").textContent = asset.label;
+      item.querySelector(".edit-intro-asset").addEventListener("click", () => openAssetEditor(id));
+      item.querySelector(".remove-intro-asset").addEventListener("click", () => {
+        inputs.introWord.value = inputs.introWord.value.split(`{{${id}}}`).join("");
+        inputs.introWord.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      list.append(item);
+    });
+  }
+
   function renderSelectedAssets() {
+    renderIntroAssets();
     const entries = usedAssetEntries();
     $("#selectedAssetCount").textContent = String(entries.length);
     const list = $("#selectedAssetList");
@@ -443,7 +494,7 @@
     const asset = assets.get(selectedAssetId);
     if (!asset) return;
     insertToken(asset.id);
-    $("#assetProcessStatus").textContent = `已把“${asset.label}”插入到当前光标位置。`;
+    $("#assetProcessStatus").textContent = `已把“${asset.label}”插入到${activeTokenInput === inputs.introWord ? "开头" : "主行"}光标位置。`;
   });
 
   $("#finalSlotAssetSelect").addEventListener("change", (event) => {
