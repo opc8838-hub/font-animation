@@ -81,7 +81,8 @@
 - [x] The center row is excluded from the wall-exit 110% scale and vertical drift, and the incoming final line fades in at a fixed 100% scale and centered position instead of creating a second apparent jump
 - [x] During the opening part of wall spread, the center row eases from the opening size to the exact wall-row size; it reaches that size before the surrounding wall has filled, then holds the same rendered scale through wall exit without a step, overshoot, or rebound
 - [x] Wall spread starts during the latter half of the center jump, so the center is still moving and enlarging while the upper and lower rows begin filling; the two phases overlap instead of playing sequentially
-- [x] The live/export wall column and overview use text-only anchors; changing the middle row's icon size, gaps, or X offset affects only that row and cannot shift or refit the entire column
+- [x] The live/export wall column and overview use the same stable anchor; changing the middle row's icon size, gaps, or X offset affects only that row and cannot shift or refit the entire column
+- [x] Carrying opening assets into the center row does not replace the wall's centering reference; live/export and overview use the global icon size for a stable composition width so the whole visual column stays centered while per-row size, gaps, and offsets remain local
 - [x] The opening and real middle row share one fixed center layer, so middle-row editor changes remain visible without a spread-time handoff
 - [x] Opening rhythm control is visible beside the opening word and updates the launch duration (0.30s and 0.62s tested)
 - [x] Opening icons have an explicit insertion target, visible used-icon list, opening-only size/gap controls, and single-asset size/X/Y/before/after editing
