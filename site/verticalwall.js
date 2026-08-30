@@ -22,7 +22,6 @@
     bounce: $("#bounce"), stagger: $("#stagger"), edgeFade: $("#edgeFade"),
     verticalDrift: $("#verticalDrift"), horizontalPhase: $("#horizontalPhase"), nextOpacity: $("#nextOpacity"),
     swapInterval: $("#swapInterval"), finalScanSpeed: $("#finalScanSpeed"), iconHoldDuration: $("#iconHoldDuration"),
-    iconWobbleAngle: $("#iconWobbleAngle"), iconWobbleSpeed: $("#iconWobbleSpeed"),
     assetItemScale: $("#assetItemScale"),
     assetOffsetX: $("#assetOffsetX"), assetOffsetY: $("#assetOffsetY"),
     assetGapBefore: $("#assetGapBefore"), assetGapAfter: $("#assetGapAfter")
@@ -215,12 +214,18 @@
 
   function normalizedFinalSlotSetting(index) {
     const setting = finalSlotSettings[index] || {};
+    const finiteOr = (value, fallback) => Number.isFinite(Number(value)) ? Number(value) : fallback;
+    const defaultThrowAngle = [330, 210, 90][Math.abs(Number(index) || 0) % 3];
+    const defaultTurn = Number(index) % 2 === 0 ? 32 : -32;
     return {
       scale: Math.max(40, Math.min(240, Number(setting.scale) || 100)),
       gapBefore: Math.max(-40, Math.min(120, Number(setting.gapBefore) || 0)),
       gapAfter: Math.max(-40, Math.min(120, Number(setting.gapAfter) || 0)),
       offsetX: Math.max(-120, Math.min(120, Number(setting.offsetX) || 0)),
-      offsetY: Math.max(-120, Math.min(120, Number(setting.offsetY) || 0))
+      offsetY: Math.max(-120, Math.min(120, Number(setting.offsetY) || 0)),
+      throwAngle: Math.max(0, Math.min(360, finiteOr(setting.throwAngle, defaultThrowAngle))),
+      throwDistance: Math.max(0, Math.min(160, finiteOr(setting.throwDistance, 28))),
+      turn: Math.max(-360, Math.min(360, finiteOr(setting.turn, defaultTurn)))
     };
   }
 
@@ -234,7 +239,10 @@
     $("#finalSlotTunerTitle").textContent = `第 ${selectedFinalSlot + 1} 个字 · ${finalCharacters()[selectedFinalSlot]} → ${mappedAsset.label}`;
     [["finalSlotScale", "finalSlotScaleOut", setting.scale, "%"], ["finalSlotGapBefore", "finalSlotGapBeforeOut", setting.gapBefore, ""],
       ["finalSlotGapAfter", "finalSlotGapAfterOut", setting.gapAfter, ""], ["finalSlotOffsetX", "finalSlotOffsetXOut", setting.offsetX, ""],
-      ["finalSlotOffsetY", "finalSlotOffsetYOut", setting.offsetY, ""]].forEach(([inputId, outputId, value, suffix]) => {
+      ["finalSlotOffsetY", "finalSlotOffsetYOut", setting.offsetY, ""],
+      ["finalSlotThrowAngle", "finalSlotThrowAngleOut", setting.throwAngle, "°"],
+      ["finalSlotThrowDistance", "finalSlotThrowDistanceOut", setting.throwDistance, ""],
+      ["finalSlotTurn", "finalSlotTurnOut", setting.turn, "°"]].forEach(([inputId, outputId, value, suffix]) => {
       $("#" + inputId).value = String(value);
       $("#" + outputId).textContent = `${value}${suffix}`;
     });
@@ -464,7 +472,8 @@
   });
   [["finalSlotScale", "scale", "finalSlotScaleOut", "%"], ["finalSlotGapBefore", "gapBefore", "finalSlotGapBeforeOut", ""],
     ["finalSlotGapAfter", "gapAfter", "finalSlotGapAfterOut", ""], ["finalSlotOffsetX", "offsetX", "finalSlotOffsetXOut", ""],
-    ["finalSlotOffsetY", "offsetY", "finalSlotOffsetYOut", ""]].forEach(([inputId, key, outputId, suffix]) => {
+    ["finalSlotOffsetY", "offsetY", "finalSlotOffsetYOut", ""], ["finalSlotThrowAngle", "throwAngle", "finalSlotThrowAngleOut", "°"],
+    ["finalSlotThrowDistance", "throwDistance", "finalSlotThrowDistanceOut", ""], ["finalSlotTurn", "turn", "finalSlotTurnOut", "°"]].forEach(([inputId, key, outputId, suffix]) => {
     $("#" + inputId).addEventListener("input", (event) => {
       if (!finalSlotMap[selectedFinalSlot]) return;
       const setting = normalizedFinalSlotSetting(selectedFinalSlot);
@@ -745,6 +754,9 @@
         asset, enterStart, enterRaw, exitRaw, swap: enterRaw >= .45 && exitRaw < .55,
         requestedHeight, requestedWidth, requiredWidth, gapBefore,
         offsetX: setting.offsetX * unitScale, offsetY: setting.offsetY * unitScale,
+        throwAngle: setting.throwAngle * Math.PI / 180,
+        throwDistance: setting.throwDistance * unitScale,
+        turn: setting.turn * Math.PI / 180,
         widthDelta: (requiredWidth - slot.width) * openProgress, openProgress
       });
     });
@@ -755,18 +767,18 @@
       const dynamicSlotWidth = dynamicWidths[slot.index];
       const replacement = activeReplacements.get(slot.index);
       if (replacement?.swap) {
-        const { asset, enterStart, enterRaw, exitRaw, requestedHeight, requestedWidth, requiredWidth, gapBefore, offsetX, offsetY, openProgress } = replacement;
+        const { asset, enterRaw, exitRaw, requestedHeight, requestedWidth, requiredWidth, gapBefore, offsetX, offsetY,
+          throwAngle, throwDistance, turn, openProgress } = replacement;
         const iconEnter = rangeProgress(enterRaw, .45, 1);
         const iconExit = rangeProgress(exitRaw, 0, .55);
         const replacementScale = Math.min(1.08, .72 + easeOutBack(iconEnter) * .28) * (1 - smooth(iconExit) * .18);
         const fullCenterOffset = (dynamicSlotWidth - requiredWidth) / 2 + gapBefore + requestedWidth / 2;
-        const drawCenterX = cursorX + lerp(slot.width / 2, fullCenterOffset, clamp01(openProgress)) + offsetX;
-        const drawCenterY = y - Math.sin(Math.PI * clamp01(iconEnter)) * requestedHeight * .055 + offsetY;
-        const wobbleAngle = Number(inputs.iconWobbleAngle.value) * Math.PI / 180;
-        const wobbleSpeed = Number(inputs.iconWobbleSpeed.value);
-        const wobbleEnvelope = smoother(rangeProgress(iconEnter, 0, .28)) * (1 - smoother(rangeProgress(iconExit, .05, .55)));
-        const wobble = Math.sin((sequenceElapsed - enterStart) * wobbleSpeed * Math.PI * 2) * wobbleAngle * wobbleEnvelope;
-        drawFinalAsset(context, asset, drawCenterX, drawCenterY, requestedWidth * replacementScale, requestedHeight * replacementScale, sequenceElapsed, wobble);
+        const throwProgress = smoother(rangeProgress(iconEnter, .08, 1));
+        const throwX = Math.cos(throwAngle) * throwDistance * throwProgress;
+        const throwY = Math.sin(throwAngle) * throwDistance * throwProgress;
+        const drawCenterX = cursorX + lerp(slot.width / 2, fullCenterOffset, clamp01(openProgress)) + offsetX + throwX;
+        const drawCenterY = y - Math.sin(Math.PI * clamp01(iconEnter)) * requestedHeight * .055 + offsetY + throwY;
+        drawFinalAsset(context, asset, drawCenterX, drawCenterY, requestedWidth * replacementScale, requestedHeight * replacementScale, sequenceElapsed, turn * throwProgress);
       } else {
         let glyphScaleX = 1;
         let glyphScaleY = 1;
@@ -913,8 +925,7 @@
       canvas.dataset.finalAssetGap = "per-slot";
       canvas.dataset.swapMotion = extras.swapMotion || "idle";
       canvas.dataset.swapTargets = String(extras.swapTargets ?? 0);
-      canvas.dataset.iconWobbleAngle = inputs.iconWobbleAngle.value;
-      canvas.dataset.iconWobbleSpeed = inputs.iconWobbleSpeed.value;
+      canvas.dataset.iconThrowMotion = "per-slot-360";
       canvas.dataset.renderTime = localTime.toFixed(4);
     };
 
@@ -932,7 +943,7 @@
     }
 
     const primaryLine = lineForLane(0);
-    const primaryIndex = indexForLane(0);
+    const openingLine = inputs.introWord.value.trim() || primaryLine;
     const launchProgress = rangeProgress(localTime, 0, timing.introEnd);
     const spreadProgress = rangeProgress(localTime, timing.introEnd, timing.spreadEnd);
     const collapseProgress = rangeProgress(localTime, timing.spreadEnd, timing.collapseEnd);
@@ -945,7 +956,7 @@
         const appearStart = distance === 0 ? 0 : (distance - 1) / Math.max(1, halfRows) * staggerStrength * .84;
         const appearEnd = Math.min(1, appearStart + lerp(.42, .18, staggerStrength));
         const appear = distance === 0
-          ? popEase(launchProgress, Math.min(.24, bounceStrength))
+          ? popEase(launchProgress, .38 + bounceStrength * .25)
           : popEase(rangeProgress(spreadProgress, appearStart, appearEnd), bounceStrength);
         const alpha = (distance === 0
           ? easeOut(rangeProgress(launchProgress, 0, .18))
@@ -958,10 +969,14 @@
           : 1;
         const y = lane * lineHeight * wallZoom * spreadPosition
           + (distance === 0 ? Math.sin(spreadProgress * Math.PI * 2) * lineHeight * .025 : 0);
+        const centerTargetScale = wallFontPx * wallZoom / Math.max(1, introFontPx);
         const rowScale = distance === 0
-          ? lerp(.58, 1.06, appear) * centerMomentum
+          ? (localTime < timing.introEnd
+            ? lerp(.12, 1, appear)
+            : lerp(1, centerTargetScale, spreadProgress) * centerMomentum)
           : lerp(.76, 1, appear);
-        drawCentered(distance === 0 ? (inputs.introWord.value.trim() || primaryLine) : lineForLane(lane), y, horizontalPhase, alpha, rowScale, wallStage, indexForLane(lane));
+        drawCentered(distance === 0 ? openingLine : lineForLane(lane), y, horizontalPhase, alpha, rowScale,
+          distance === 0 ? introStage : wallStage, indexForLane(lane));
       }
       markPhase(localTime < timing.introEnd ? "center-launch" : "wall-spread", { rows: localTime < timing.introEnd ? 1 : rowCount });
       return;
@@ -1008,7 +1023,7 @@
     drawFinalLine(context, inputs.nextWord.value.trim() || "leveling up", 0, 0, inputs.foreground.value, finalStage.assetHeight, finalElapsed, scale);
     context.restore();
     const finalPhase = localTime < timing.scanEnd ? "final-sweep" : localTime < timing.holdEnd ? "final-hold" : "final-exit";
-    markPhase(finalPhase, { finalState: Math.min(1, finalElapsed / Math.max(.001, finalScanDuration())), swapTargets: Object.keys(finalSlotMap).length, swapMotion: "letter-icon-letter-wobble" });
+    markPhase(finalPhase, { finalState: Math.min(1, finalElapsed / Math.max(.001, finalScanDuration())), swapTargets: Object.keys(finalSlotMap).length, swapMotion: "water-scan-one-shot-throw" });
   }
 
   function timelineBeats(timing = choreographyTiming()) {
@@ -1142,8 +1157,6 @@
       swapIntervalOut: `${(Number(inputs.swapInterval.value) / 1000).toFixed(2)}秒`,
       finalScanSpeedOut: `${Number(inputs.finalScanSpeed.value).toFixed(1)}×`,
       iconHoldDurationOut: `${inputs.iconHoldDuration.value}ms`,
-      iconWobbleAngleOut: `${inputs.iconWobbleAngle.value}°`,
-      iconWobbleSpeedOut: `${Number(inputs.iconWobbleSpeed.value).toFixed(1)}次/秒`,
       bounceOut: `${inputs.bounce.value}%`,
       staggerOut: `${inputs.stagger.value}%`,
       edgeFadeOut: `${inputs.edgeFade.value}%`,
@@ -1157,8 +1170,7 @@
   }
 
   Object.values(inputs).forEach((input) => input.addEventListener("input", updateOutputs));
-  [inputs.swapInterval, inputs.finalScanSpeed, inputs.iconHoldDuration, inputs.iconWobbleAngle, inputs.iconWobbleSpeed,
-    inputs.finalDuration, inputs.exitDuration, inputs.finalFontSize,
+  [inputs.swapInterval, inputs.finalScanSpeed, inputs.iconHoldDuration, inputs.finalDuration, inputs.exitDuration, inputs.finalFontSize,
     inputs.finalAssetScale, inputs.finalTextGap]
     .forEach((input) => input.addEventListener("input", () => setTime(choreographyTiming().collapseEnd + .025)));
   [inputs.wallScale, inputs.wallFontSize, inputs.wallAssetScale, inputs.wallTextGap, inputs.lineGap].forEach((input) => {
@@ -1173,7 +1185,8 @@
   inputs.rows.addEventListener("input", syncRowAssetGaps);
   inputs.motionMode.addEventListener("change", () => setTime(0));
 
-  const SCHEME_STORAGE_KEY = "me-vertical-rise-scheme-v2";
+  const SCHEME_STORAGE_KEY = "me-vertical-rise-scheme-v3";
+  const LEGACY_SCHEME_STORAGE_KEY = "me-vertical-rise-scheme-v2";
   let defaultSchemeSnapshot = null;
   let applyingScheme = false;
   let persistTimer = 0;
@@ -1189,7 +1202,7 @@
       if (field) controls[id] = field.type === "checkbox" ? field.checked : field.value;
     });
     return {
-      type: "me-vertical-rise", version: 2, controls, selectedAssetId,
+      type: "me-vertical-rise", version: 3, controls, selectedAssetId,
       rowAssetGaps: [...rowAssetGaps], finalSlotMap: { ...finalSlotMap },
       finalSlotSettings: Object.fromEntries(Object.entries(finalSlotSettings).map(([index, setting]) => [index, normalizedFinalSlotSetting(index)])),
       assets: [...assets.values()].map((asset) => ({
@@ -1203,6 +1216,20 @@
   }
 
   const cloneScheme = (scheme) => JSON.parse(JSON.stringify(scheme));
+
+  function migrateScheme(source) {
+    const scheme = cloneScheme(source);
+    if (!scheme || typeof scheme !== "object") throw new Error("方案内容不完整");
+    scheme.controls ||= {};
+    if (Number(scheme.version) < 3) {
+      if (!scheme.controls.introWord || scheme.controls.introWord === "motivation") scheme.controls.introWord = "leveling up";
+      if (!scheme.controls.nextWord || scheme.controls.nextWord === "togetherness") scheme.controls.nextWord = "leveling up";
+      delete scheme.controls.iconWobbleAngle;
+      delete scheme.controls.iconWobbleSpeed;
+    }
+    scheme.version = 3;
+    return scheme;
+  }
 
   function restoreSchemeAssets(items) {
     assets.clear();
@@ -1273,7 +1300,7 @@
     event.currentTarget.value = "";
     if (!file) return;
     try {
-      applyScheme(JSON.parse(await file.text()), "方案已导入，文字、素材和时间轴均已重建。");
+      applyScheme(migrateScheme(JSON.parse(await file.text())), "方案已导入，文字、素材和时间轴均已重建。");
       localStorage.setItem(SCHEME_STORAGE_KEY, JSON.stringify(collectScheme()));
     } catch (error) {
       $("#schemeStatus").textContent = `导入失败：${error.message}`;
@@ -1465,10 +1492,13 @@
     defaultSchemeSnapshot = collectScheme();
     let storedScheme = null;
     if (!PREVIEW) {
-      try { storedScheme = JSON.parse(localStorage.getItem(SCHEME_STORAGE_KEY) || "null"); }
+      try { storedScheme = JSON.parse(localStorage.getItem(SCHEME_STORAGE_KEY) || localStorage.getItem(LEGACY_SCHEME_STORAGE_KEY) || "null"); }
       catch (_) { $("#schemeStatus").textContent = "本机方案读取失败，已使用默认示例。"; }
     }
-    if (storedScheme?.controls) applyScheme(storedScheme, "已恢复上次自动保存的纵跃方案。");
+    if (storedScheme?.controls) {
+      applyScheme(migrateScheme(storedScheme), "已恢复上次自动保存的纵跃方案。");
+      try { localStorage.setItem(SCHEME_STORAGE_KEY, JSON.stringify(collectScheme())); } catch (_) {}
+    }
     else applyScheme(cloneScheme(defaultSchemeSnapshot), PREVIEW ? "" : "已载入纵跃默认示例。");
     document.fonts.ready.finally(previewLoop);
   }

@@ -121,7 +121,11 @@ leveling {{play}}p
             <label>与右侧文字间距 <output id="finalSlotGapAfterOut">0</output><input id="finalSlotGapAfter" type="range" min="-40" max="120" step="1" value="0"></label>
             <label>水平位置 <output id="finalSlotOffsetXOut">0</output><input id="finalSlotOffsetX" type="range" min="-120" max="120" step="1" value="0"></label>
             <label>垂直位置 <output id="finalSlotOffsetYOut">0</output><input id="finalSlotOffsetY" type="range" min="-120" max="120" step="1" value="0"></label>
+            <label>甩动方向 <output id="finalSlotThrowAngleOut">330°</output><input id="finalSlotThrowAngle" type="range" min="0" max="360" step="1" value="330"></label>
+            <label>甩动距离 <output id="finalSlotThrowDistanceOut">28</output><input id="finalSlotThrowDistance" type="range" min="0" max="160" step="1" value="28"></label>
+            <label>自身旋转角度 <output id="finalSlotTurnOut">32°</output><input id="finalSlotTurn" type="range" min="-360" max="360" step="1" value="32"></label>
           </div>
+          <p class="hint">甩动方向：0° 向右、90° 向下、180° 向左、270° 向上；每个字位单独保存。</p>
         </div>
         <p class="hint">收尾完全复用水流的扫变：从左到右把指定字母换成图标，短暂停留，再从左到右恢复字母。</p>
       </section>
@@ -241,12 +245,6 @@ leveling {{play}}p
           <label>全图标停留 <small class="stage-tag">收尾扫变</small><output id="iconHoldDurationOut">160ms</output>
             <input id="iconHoldDuration" type="range" min="40" max="1200" step="20" value="160">
           </label>
-          <label>图标左右摆角 <small class="stage-tag">收尾图标</small><output id="iconWobbleAngleOut">14°</output>
-            <input id="iconWobbleAngle" type="range" min="0" max="45" step="1" value="14">
-          </label>
-          <label>图标左右摆速 <small class="stage-tag">收尾图标</small><output id="iconWobbleSpeedOut">8.0次/秒</output>
-            <input id="iconWobbleSpeed" type="range" min="1" max="16" step="0.5" value="8">
-          </label>
           <label>恢复后停留 <small class="stage-tag">阶段 5</small><output id="finalDurationOut">0.14秒</output>
             <input id="finalDuration" type="range" min="0" max="8000" step="20" value="140">
           </label>
@@ -254,7 +252,7 @@ leveling {{play}}p
             <input id="exitDuration" type="range" min="60" max="800" step="20" value="120">
           </label>
         </div>
-        <p class="hint">中心词跳出后持续带动各行弹满，不插入静止停留；收尾图标围绕自身中心快速左右摆动，恢复文字并短暂停留后快速消失。</p>
+        <p class="hint">中心词从画布正中心纵深跳出并连续带动各行弹满；收尾保持水流的逐字扫变，每个图标只向设定角度短促甩出一次，随即恢复字母，不做往返震动。</p>
       </section>
 
       <section class="timeline-section">
@@ -327,7 +325,7 @@ leveling {{play}}p
   <script src="token-asset-tools.js"></script>
   <script src="shared-icon-library.js?v=20260830-3"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
-  <script src="verticalwall.js?v=20260830-2"></script>
+  <script src="verticalwall.js?v=20260830-3"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
 </body>
