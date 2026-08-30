@@ -1175,7 +1175,7 @@
       canvas.dataset.centerLineAssets = [...centerWallLine.matchAll(/\{\{([^{}]+)\}\}/g)]
         .map((match) => match[1]).filter((id) => assets.has(id)).join(",");
       canvas.dataset.centerLineOffset = (wallStartX + (centerWallBounds.minX + centerWallBounds.maxX) / 2).toFixed(4);
-      canvas.dataset.centerHandoffMode = openingLine === centerWallLine ? "single-layer" : "content-crossfade";
+      canvas.dataset.centerHandoffMode = "fixed-center-row";
       canvas.dataset.renderTime = localTime.toFixed(4);
     };
 
@@ -1214,35 +1214,16 @@
         const y = distance === 0
           ? launchJump.y * introFontPx
           : lane * lineHeight * wallZoom * spreadPosition;
-        const centerTargetScale = wallFontPx * wallZoom / Math.max(1, introFontPx);
-        const centerFillProgress = smoother(rangeProgress(spreadProgress, .04, 1));
+        const centerStableScale = introFontPx / Math.max(1, wallFontPx * wallZoom);
         const rowScale = distance === 0
-          ? lerp(launchJump.scaleX, centerTargetScale, centerFillProgress)
+          ? centerStableScale * launchJump.scaleX
           : lerp(.76, 1, appear);
         const centerAxisScaleY = distance === 0
-          ? lerp(launchJump.scaleY / Math.max(.001, launchJump.scaleX), 1, centerFillProgress)
+          ? launchJump.scaleY / Math.max(.001, launchJump.scaleX)
           : 1;
         if (distance === 0) {
-          const centerMainMix = smoother(rangeProgress(spreadProgress, .28, .62));
-          if (openingLine === centerWallLine) {
-            if (centerMainMix < .5) {
-              drawCentered(openingLine, y, horizontalPhase, alpha, rowScale,
-                introStage, indexForLane(lane), 1, centerAxisScaleY);
-            } else {
-              const matchedWallScale = introFontPx * rowScale / Math.max(1, wallFontPx * wallZoom);
-              drawCentered(centerWallLine, y, horizontalPhase, alpha, matchedWallScale,
-                wallStage, indexForLane(lane), 1, centerAxisScaleY);
-            }
-          } else {
-            if (centerMainMix < .999) {
-              drawCentered(openingLine, y, horizontalPhase, alpha * (1 - centerMainMix), rowScale,
-                introStage, indexForLane(lane), 1, centerAxisScaleY);
-            }
-            if (centerMainMix > .001) {
-              drawCentered(centerWallLine, y, horizontalPhase, alpha * centerMainMix, lerp(.96, 1, centerMainMix),
-                wallStage, indexForLane(lane));
-            }
-          }
+          drawCentered(centerWallLine, y, horizontalPhase, alpha, rowScale,
+            wallStage, indexForLane(lane), 1, centerAxisScaleY);
         } else {
           drawCentered(lineForLane(lane), y, horizontalPhase, alpha, rowScale, wallStage, indexForLane(lane));
         }
