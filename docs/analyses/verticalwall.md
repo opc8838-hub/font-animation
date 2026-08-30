@@ -9,16 +9,16 @@
 
 ## One-sentence target
 
-`leveling up` 从画布正中心以约 75% 尺寸纵深跳到 100%，并连续带动多行弹满；收束后以水流同款扫变完成末行字母与原位二维旋转图标的切换，最后快速消失。
+`leveling up` 从画布中心略下方压缩起跳，向观看者跃出并越过中心落点后回稳，随即带动多行弹满；收束后以水流同款扫变完成末行字母与“正向→设定角度→回正”的原位二维图标切换，最后快速消失。
 
 ## Phase table
 
 | Time | Source frames | Phase | Visible evidence | Motion interpretation | Confidence |
 | --- | --- | --- | --- | --- | --- |
-| 0.00–0.20s | 源片 009–015，内容按用户修订 | 中心跳出 | `leveling up` 从画布中心向观看者放大，无淡入或换词 | 以约 75% 尺寸直接起跳；开场快慢由独立参数控制 | high |
+| 0.00–0.20s | 源片 009–015，内容按用户修订 | 中心跳出 | `leveling up` 的文字包围盒从约 368×74 增至 448×90，同时中心点向上移动约 21px | 不能只做等比放大；从中心略下方以轻微纵向压缩起跳，越过落点后回稳，开场快慢由独立参数控制 | high |
 | 0.20–0.56s | 源片 015–019 起 | 跳出并连续弹满 | 中心词仍在向前放大时，上下相邻行已经出现 | 铺满提前与开场后段重叠，中心词不经过静止帧就继续匹配字墙尺寸 | high |
 | 0.56–0.86s | 用户修订 | 立即收束 | 满屏完成的下一刻直接进入外围行退场 | 不设置满屏静止段，收尾单行在退场后半段接管中心 | high |
-| 0.86–1.38s | 用户修订 | 末行扫变 | 指定字母依次替换为图标，再依次恢复 | 沿用水流的“字母→图标→字母”扫变；图标先以 0° 正向扫入，再快速原位旋转到各槽位设定角度 | high |
+| 0.86–1.38s | 用户修订 | 末行扫变 | 指定字母依次替换为图标，再依次恢复 | 沿用水流的“字母→图标→字母”扫变；图标以 0° 正向扫入，快速原位旋转到设定角度，再回到 0°，随后才恢复字母 | high |
 | 1.38–1.52s | 用户修订 | 恢复后停留 | 完整 `leveling up` 短暂停留 | 停留时长可编辑 | high |
 | 1.52–1.64s | 用户修订 | 快速消失 | 末行快速缩小并淡出 | 独立可编辑退场时长，结束后循环回到首帧 | high |
 
@@ -42,7 +42,7 @@
 
 - Total loop: 由中心跳出、连续弹满、立即收束、收尾扫变、恢复停留、快速消失六段共同决定
 - Overlaps: 中心跳出的后 32% 与字墙铺满重叠；字墙退场后半段提前显露收尾文字
-- Holds with residual motion: 满屏没有停留；收尾图标先正向出现，再在原槽位快速旋转到设定角度，到恢复节点立即换回字母
+- Holds with residual motion: 满屏没有停留；收尾图标先正向出现，在原槽位快速旋转到设定角度并回正，之后才进入字母恢复节点
 - Hard cuts: 无开场换词硬切，首行与收尾默认统一为 `leveling up`
 - Easing: 开场按源片密集帧使用近线性尺度增长；收尾沿用水流扫变 easing，末帧快速缩小淡出
 
@@ -52,7 +52,7 @@
 - Shared UI: `currentwall.css`, `me-motion-editor.css`, `me-motion-editor.js`
 - Shared media: `shared-icon-library.js`, `token-asset-tools.js`
 - Shared export: `continuation-gif.js`, `h264-mp4-encoder.web.js`
-- New core logic: 每行独立字图间距、大小和左右位置状态；水流同款末行槽位扫变
+- New core logic: 每行独立字图间距、大小和左右位置状态及固定行预览；带纵向轨迹和压缩/回弹的开场跳跃；水流同款末行槽位扫变
 
 ## Uncertainties
 
@@ -69,8 +69,11 @@
 - [x] Canvas-size card is the first inspector card; 16:9, 9:16, 1:1, 4:5, and custom 700×500 refit to exact ratios while the 420px inspector remains fixed
 - [x] Per-slot 2D rotation remains independent (25° versus 0° tested) and survives auto-save/reload
 - [x] Per-row gap / icon size / horizontal position remain independent (row 1: 21px / 137% / −46px; row 2 stayed 0px / 92% / 0px) and survive auto-save/reload
+- [x] Selected-row preview stays visible while scrolling to row 10 and renders the complete row without covering the live stage
+- [x] Single-asset scale / offset / gap edits do not change the selected-row preview; row-owned edits do
 - [x] Opening enters the overlap phase before the 0.30s center launch completes
+- [x] Final icon shows an upright frame, turns to the configured angle, returns upright, then restores the letter
 - [x] Console clean
 - [x] PNG generated
-- [x] Full-cycle GIF generated (320×320, 27 frames)
-- [x] H.264 full-cycle MP4 generated (320×320, 15fps, 27 frames)
+- [x] Full-cycle GIF generated (320×320, 25 frames)
+- [x] H.264 full-cycle MP4 generated (320×320, 15fps, 25 frames)

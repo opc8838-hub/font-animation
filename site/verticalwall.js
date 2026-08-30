@@ -4,6 +4,7 @@
   const PREVIEW = new URLSearchParams(location.search).has("preview");
   const $ = (selector) => document.querySelector(selector);
   const canvas = $("#flowCanvas");
+  const rowPreviewCanvas = $("#rowPreviewCanvas");
   const frameCounter = $("#frameCounter");
   const exportStatus = $("#exportStatus");
   const fps = 30;
@@ -63,6 +64,7 @@
   let rowAssetGaps = [];
   let rowAssetScales = [];
   let rowAssetOffsetsX = [];
+  let selectedRowIndex = 0;
 
   const svg = (body, background = "#ffffff") => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="${background}"/>${body}</svg>`
@@ -485,6 +487,7 @@
 
   function syncRowAssetGaps() {
     const rows = parseRows();
+    selectedRowIndex = Math.max(0, Math.min(rows.length - 1, selectedRowIndex));
     rowAssetGaps = rows.map((_, index) => Number(rowAssetGaps[index]) || 0);
     rowAssetScales = rows.map((_, index) => Number.isFinite(Number(rowAssetScales[index])) ? Number(rowAssetScales[index]) : 92);
     rowAssetOffsetsX = rows.map((_, index) => Number(rowAssetOffsetsX[index]) || 0);
@@ -493,12 +496,29 @@
     rows.forEach((line, index) => {
       const item = document.createElement("div");
       item.className = "vertical-row-gap-item";
+      item.classList.toggle("is-selected", index === selectedRowIndex);
+      item.tabIndex = 0;
+      item.setAttribute("role", "group");
+      item.setAttribute("aria-label", `编辑第 ${index + 1} 行图标排版`);
       item.innerHTML = `<span></span><div class="vertical-row-controls">
         <label><b>图文间距</b><input data-key="gap" type="range" min="-20" max="120" step="1"><output></output></label>
         <label><b>图标大小</b><input data-key="scale" type="range" min="35" max="220" step="1"><output></output></label>
         <label><b>左右位置</b><input data-key="offsetX" type="range" min="-120" max="120" step="1"><output></output></label>
       </div>`;
       item.querySelector("span").textContent = `第 ${index + 1} 行 · ${line.replace(/\{\{[^{}]+\}\}/g, "[图标]")}`;
+      const selectRow = () => {
+        selectedRowIndex = index;
+        list.querySelectorAll(".vertical-row-gap-item").forEach((row, rowIndex) => row.classList.toggle("is-selected", rowIndex === index));
+        renderRowPreview(currentTime());
+      };
+      item.addEventListener("pointerdown", selectRow);
+      item.addEventListener("focusin", selectRow);
+      item.addEventListener("keydown", (event) => {
+        if (event.target === item && (event.key === "Enter" || event.key === " ")) {
+          event.preventDefault();
+          selectRow();
+        }
+      });
       const controls = {
         gap: { values: rowAssetGaps, suffix: "px" },
         scale: { values: rowAssetScales, suffix: "%" },
@@ -513,11 +533,13 @@
           control.values[index] = Number(slider.value);
           output.textContent = `${slider.value}${control.suffix}`;
           layoutCache.clear();
+          renderRowPreview(currentTime());
           setTime(choreographyTiming().spreadStart + choreographyTiming().duration[1] * .8);
         });
       });
       list.append(item);
     });
+    renderRowPreview(currentTime());
   }
 
   function removeAsset(id) {
@@ -590,21 +612,21 @@
     ? Array.from(new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(value), (part) => part.segment)
     : Array.from(value);
 
-  function layoutTokens(context, line, fontPx, assetHeight, textGap, assetGap = textGap, useAssetScale = true) {
-    const cacheKey = [line, context.font, fontPx.toFixed(3), assetHeight.toFixed(3), textGap.toFixed(3), assetGap.toFixed(3), useAssetScale, assetRevision].join("|");
+  function layoutTokens(context, line, fontPx, assetHeight, textGap, assetGap = textGap, useAssetTuning = true) {
+    const cacheKey = [line, context.font, fontPx.toFixed(3), assetHeight.toFixed(3), textGap.toFixed(3), assetGap.toFixed(3), useAssetTuning, assetRevision].join("|");
     const cached = layoutCache.get(cacheKey);
     if (cached) return cached;
     const items = tokensFor(line).flatMap((token) => {
       if (token.type === "text") return graphemes(token.value).map((value) => ({ type: "text", value, width: context.measureText(value).width }));
       const asset = assets.get(token.id);
-      const tunedHeight = assetHeight * (useAssetScale ? (asset?.scale || 1) : 1);
+      const tunedHeight = assetHeight * (useAssetTuning ? (asset?.scale || 1) : 1);
       return [{ ...token, asset, width: tunedHeight * (asset?.ratio || 1), height: tunedHeight }];
     });
     const gaps = items.slice(0, -1).map((item, index) => {
       const next = items[index + 1];
       if (item.type !== "asset" && next?.type !== "asset") return textGap;
-      const tunedBefore = next?.type === "asset" ? (next.asset?.gapBefore || 0) * fontPx / 100 : 0;
-      const tunedAfter = item.type === "asset" ? (item.asset?.gapAfter || 0) * fontPx / 100 : 0;
+      const tunedBefore = useAssetTuning && next?.type === "asset" ? (next.asset?.gapBefore || 0) * fontPx / 100 : 0;
+      const tunedAfter = useAssetTuning && item.type === "asset" ? (item.asset?.gapAfter || 0) * fontPx / 100 : 0;
       return assetGap + tunedBefore + tunedAfter;
     });
     const layout = {
@@ -643,8 +665,8 @@
       window.STGIconLibrary.drawVector(context, item.asset, item.height, options.time || 0);
       context.restore();
     } else if (item.asset?.ready) {
-      const drawX = item.height * item.asset.offsetX / 100;
-      const drawY = item.height * item.asset.offsetY / 100;
+      const drawX = options.useAssetTuning === false ? 0 : item.height * item.asset.offsetX / 100;
+      const drawY = options.useAssetTuning === false ? 0 : item.height * item.asset.offsetY / 100;
       context.save();
       context.shadowColor = "rgba(0, 0, 0, .20)";
       context.shadowBlur = Math.max(2, item.height * .10);
@@ -660,12 +682,13 @@
     context.restore();
   }
 
-  function drawSequence(context, layout, x, y, color, assetRotation = 0, time = 0, assetOffsetX = 0) {
+  function drawSequence(context, layout, x, y, color, assetRotation = 0, time = 0, assetOffsetX = 0, useAssetTuning = true) {
     let cursor = x;
     layout.items.forEach((item, index) => {
       drawItem(context, item, cursor, y, color, {
         rotation: item.type === "asset" ? assetRotation : 0,
         x: item.type === "asset" ? assetOffsetX : 0,
+        useAssetTuning,
         time
       });
       cursor += item.width + (layout.gaps[index] || 0);
@@ -764,7 +787,7 @@
       const closeRaw = rangeProgress(sequenceElapsed, restoreStart + scanTiming.transition * .15, restoreStart + scanTiming.transition);
       const openProgress = Math.max(0, easeOutBack(enterRaw) * (1 - smooth(closeRaw)));
       activeReplacements.set(slot.index, {
-        asset, enterRaw, exitRaw, swap: enterRaw >= .45 && exitRaw < .55,
+        asset, enterStart, enterRaw, exitRaw, swap: enterRaw >= .45 && exitRaw < .55,
         requestedHeight, requestedWidth, requiredWidth, gapBefore,
         offsetX: setting.offsetX * unitScale, offsetY: setting.offsetY * unitScale,
         rotation: setting.rotation * Math.PI / 180,
@@ -778,7 +801,7 @@
       const dynamicSlotWidth = dynamicWidths[slot.index];
       const replacement = activeReplacements.get(slot.index);
       if (replacement?.swap) {
-        const { asset, enterRaw, exitRaw, requestedHeight, requestedWidth, requiredWidth, gapBefore, offsetX, offsetY,
+        const { asset, enterStart, enterRaw, exitRaw, requestedHeight, requestedWidth, requiredWidth, gapBefore, offsetX, offsetY,
           rotation, openProgress } = replacement;
         const iconEnter = rangeProgress(enterRaw, .45, 1);
         const iconExit = rangeProgress(exitRaw, 0, .55);
@@ -786,9 +809,21 @@
         const fullCenterOffset = (dynamicSlotWidth - requiredWidth) / 2 + gapBefore + requestedWidth / 2;
         const drawCenterX = cursorX + lerp(slot.width / 2, fullCenterOffset, clamp01(openProgress)) + offsetX;
         const drawCenterY = y - Math.sin(Math.PI * clamp01(iconEnter)) * requestedHeight * .055 + offsetY;
-        const rotationProgress = smoother(rangeProgress(iconEnter, .38, .70));
+        const rotationElapsed = Math.max(0, sequenceElapsed - (enterStart + scanTiming.transition * .45));
+        const uprightHold = Math.max(.03, scanTiming.transition * .30);
+        const turnElapsed = Math.max(0, rotationElapsed - uprightHold);
+        const turnDuration = Math.max(.055, scanTiming.transition * .55);
+        const angleHold = Math.max(.045, scanTiming.transition * .45);
+        const returnDuration = Math.max(.075, scanTiming.transition * .90);
+        const rotationProgress = rotationElapsed < uprightHold
+          ? 0
+          : turnElapsed < turnDuration
+            ? smoother(turnElapsed / turnDuration)
+            : turnElapsed < turnDuration + angleHold
+              ? 1
+              : 1 - smoother((turnElapsed - turnDuration - angleHold) / returnDuration);
         drawFinalAsset(context, asset, drawCenterX, drawCenterY, requestedWidth * replacementScale, requestedHeight * replacementScale,
-          sequenceElapsed, rotation * rotationProgress);
+          sequenceElapsed, rotation * clamp01(rotationProgress));
       } else {
         let glyphScaleX = 1;
         let glyphScaleY = 1;
@@ -835,6 +870,25 @@
     const x = clamp01(value);
     const overshoot = 1.15 + strength * 1.9;
     return 1 + (overshoot + 1) * Math.pow(x - 1, 3) + overshoot * Math.pow(x - 1, 2);
+  }
+
+  function openingJump(progress) {
+    const x = clamp01(progress);
+    const riseEnd = .68;
+    if (x < riseEnd) {
+      const rise = easeOut(x / riseEnd);
+      return {
+        y: lerp(.30, -.07, rise),
+        scaleX: lerp(.73, 1.025, rise),
+        scaleY: lerp(.64, 1.085, rise)
+      };
+    }
+    const settle = smoother((x - riseEnd) / (1 - riseEnd));
+    return {
+      y: lerp(-.07, 0, settle),
+      scaleX: lerp(1.025, 1, settle),
+      scaleY: lerp(1.085, 1, settle)
+    };
   }
 
   function renderFrame(target, time, width, height, pixelRatio = 1) {
@@ -900,19 +954,19 @@
       wallStage.assetGap + (Number(rowAssetGaps[index]) || 0) * scale, false
     ));
     const wallZoom = Number(inputs.wallScale.value) / 100;
-    const drawCentered = (line, y, xOffset = 0, alpha = 1, rowScale = 1, stage = introStage, rowIndex = 0) => {
+    const drawCentered = (line, y, xOffset = 0, alpha = 1, rowScale = 1, stage = introStage, rowIndex = 0, axisScaleX = 1, axisScaleY = 1) => {
       context.font = fontFor(stage);
       const isWall = stage === wallStage;
       const layout = isWall
-        ? (wallLayouts[rowIndex] || layoutTokens(context, line, stage.fontPx, stage.assetHeight, stage.textGap, stage.assetGap))
+        ? (wallLayouts[rowIndex] || layoutTokens(context, line, stage.fontPx, stage.assetHeight, stage.textGap, stage.assetGap, false))
         : layoutTokens(context, line, stage.fontPx, stage.assetHeight, stage.textGap, stage.assetGap);
       context.save();
       context.globalAlpha *= clamp01(alpha);
       context.translate(w / 2 + xOffset, h / 2 + y);
       const compositionScale = rowScale * (isWall ? wallZoom : 1);
-      context.scale(compositionScale, compositionScale);
+      context.scale(compositionScale * axisScaleX, compositionScale * axisScaleY);
       drawSequence(context, layout, -layout.width / 2, 0, inputs.foreground.value, 0, localTime,
-        isWall ? (Number(rowAssetOffsetsX[rowIndex]) || 0) * scale : 0);
+        isWall ? (Number(rowAssetOffsetsX[rowIndex]) || 0) * scale : 0, !isWall);
       context.restore();
     };
     const markPhase = (phase, extras = {}) => {
@@ -938,7 +992,7 @@
       canvas.dataset.finalAssetGap = "per-slot";
       canvas.dataset.swapMotion = extras.swapMotion || "idle";
       canvas.dataset.swapTargets = String(extras.swapTargets ?? 0);
-      canvas.dataset.iconRotationMotion = "upright-to-target-2d-fixed";
+      canvas.dataset.iconRotationMotion = "upright-angle-return-2d-fixed";
       canvas.dataset.renderTime = localTime.toFixed(4);
     };
 
@@ -958,6 +1012,7 @@
     const primaryLine = lineForLane(0);
     const openingLine = inputs.introWord.value.trim() || primaryLine;
     const launchProgress = rangeProgress(localTime, 0, timing.introEnd);
+    const launchJump = openingJump(launchProgress);
     const spreadProgress = rangeProgress(localTime, timing.spreadStart, timing.spreadEnd);
     const collapseProgress = rangeProgress(localTime, timing.spreadEnd, timing.collapseEnd);
 
@@ -977,16 +1032,19 @@
           * (1 - edgeFade * .7 * smoother(rangeProgress(distanceRatio, .66, 1)));
         if (alpha <= .002) continue;
         const spreadPosition = distance === 0 ? 1 : popEase(rangeProgress(spreadProgress, appearStart, appearEnd), bounceStrength);
-        const y = lane * lineHeight * wallZoom * spreadPosition
-          + (distance === 0 ? Math.sin(spreadProgress * Math.PI * 2) * lineHeight * .025 : 0);
+        const y = distance === 0
+          ? launchJump.y * introFontPx
+          : lane * lineHeight * wallZoom * spreadPosition;
         const centerTargetScale = wallFontPx * wallZoom / Math.max(1, introFontPx);
-        const centerLaunchScale = lerp(.75, 1, easeOut(launchProgress));
         const centerFillProgress = smoother(rangeProgress(spreadProgress, .04, 1));
         const rowScale = distance === 0
-          ? lerp(centerLaunchScale, centerTargetScale, centerFillProgress)
+          ? lerp(launchJump.scaleX, centerTargetScale, centerFillProgress)
           : lerp(.76, 1, appear);
+        const centerAxisScaleY = distance === 0
+          ? lerp(launchJump.scaleY / Math.max(.001, launchJump.scaleX), 1, centerFillProgress)
+          : 1;
         drawCentered(distance === 0 ? openingLine : lineForLane(lane), y, horizontalPhase, alpha, rowScale,
-          distance === 0 ? introStage : wallStage, indexForLane(lane));
+          distance === 0 ? introStage : wallStage, indexForLane(lane), 1, centerAxisScaleY);
       }
       const phase = localTime < timing.spreadStart ? "center-launch" : localTime < timing.introEnd ? "launch-spread-overlap" : "wall-spread";
       markPhase(phase, { rows: localTime < timing.spreadStart ? 1 : rowCount });
@@ -1034,7 +1092,7 @@
     drawFinalLine(context, inputs.nextWord.value.trim() || "leveling up", 0, 0, inputs.foreground.value, finalStage.assetHeight, finalElapsed, scale);
     context.restore();
     const finalPhase = localTime < timing.scanEnd ? "final-sweep" : localTime < timing.holdEnd ? "final-hold" : "final-exit";
-    markPhase(finalPhase, { finalState: Math.min(1, finalElapsed / Math.max(.001, finalScanDuration())), swapTargets: Object.keys(finalSlotMap).length, swapMotion: "water-scan-upright-to-target-2d-rotation" });
+    markPhase(finalPhase, { finalState: Math.min(1, finalElapsed / Math.max(.001, finalScanDuration())), swapTargets: Object.keys(finalSlotMap).length, swapMotion: "water-scan-upright-angle-return-2d-rotation" });
   }
 
   function timelineBeats(timing = choreographyTiming()) {
@@ -1100,6 +1158,7 @@
     const ratio = Number(canvas.dataset.ratio || 1);
     const time = currentTime();
     renderFrame(canvas, time, canvas.width / ratio, canvas.height / ratio, ratio);
+    renderRowPreview(time);
     const displayTime = inputs.motionMode.value === "choreography" ? mod(time, choreographyTiming().cycle) : time;
     frameCounter.textContent = `F ${String(Math.round(displayTime * fps)).padStart(4, "0")}`;
     updateTimelinePlayhead(inputs.motionMode.value === "choreography" ? displayTime : 0, choreographyTiming());
@@ -1256,6 +1315,35 @@
     }
     scheme.version = 5;
     return scheme;
+  }
+
+  function renderRowPreview(time = 0) {
+    if (!rowPreviewCanvas) return;
+    const rows = parseRows();
+    const rowIndex = Math.max(0, Math.min(rows.length - 1, selectedRowIndex));
+    const context = rowPreviewCanvas.getContext("2d");
+    const width = rowPreviewCanvas.width;
+    const height = rowPreviewCanvas.height;
+    const preset = window.STGFontLibrary?.preset(inputs.font.value) || fontPresets[inputs.font.value] || fontPresets["snap-inter-medium"];
+    const fontPx = 68;
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.clearRect(0, 0, width, height);
+    context.fillStyle = inputs.background.value;
+    context.fillRect(0, 0, width, height);
+    context.font = `${preset.style} ${preset.weight} ${fontPx}px "${preset.family}", "Continuation SC", sans-serif`;
+    context.textAlign = "left";
+    context.textBaseline = "middle";
+    context.imageSmoothingEnabled = true;
+    const layout = layoutTokens(context, rows[rowIndex], fontPx, fontPx * rowAssetScales[rowIndex] / 100,
+      Number(inputs.wallTextGap.value), Number(rowAssetGaps[rowIndex]) || 0, false);
+    const fit = Math.min(1, (width - 54) / Math.max(1, layout.width), (height - 52) / fontPx);
+    context.save();
+    context.translate(width / 2, height / 2);
+    context.scale(fit, fit);
+    drawSequence(context, layout, -layout.width / 2, 0, inputs.foreground.value, 0, time,
+      Number(rowAssetOffsetsX[rowIndex]) || 0, false);
+    context.restore();
+    $("#rowPreviewTitle").textContent = `第 ${rowIndex + 1} 行排版预览`;
   }
 
   function restoreSchemeAssets(items) {

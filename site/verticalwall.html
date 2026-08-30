@@ -78,6 +78,11 @@ leveling {{play}}p
           <label>文字<input id="textColor" type="color" value="#090909"></label>
         </div>
         <p class="hint">每个换行只生成一排，不会自动复制相同排。把素材标记插在任意字位，例如 level{{music}}ing up；支持中文、图片和图标。</p>
+        <section class="vertical-row-preview" aria-label="选中行排版预览">
+          <div><strong id="rowPreviewTitle">第 1 行排版预览</strong><small>满屏行专用 · 不与单图标编辑叠加</small></div>
+          <canvas id="rowPreviewCanvas" width="720" height="180" aria-label="选中行文字与图标完整预览"></canvas>
+          <p>点击下方任意一行后，在这里静态查看整行；该行的间距、大小和左右位置彼此独立。</p>
+        </section>
         <div class="vertical-row-gap-list" id="rowGapList" aria-label="每行图标的间距、大小与左右位置"></div>
       </section>
 
@@ -123,7 +128,7 @@ leveling {{play}}p
             <label>垂直位置 <output id="finalSlotOffsetYOut">0</output><input id="finalSlotOffsetY" type="range" min="-120" max="120" step="1" value="0"></label>
             <label>平面旋转角度 <output id="finalSlotRotationOut">0°</output><input id="finalSlotRotation" type="range" min="-360" max="360" step="1" value="0"></label>
           </div>
-          <p class="hint">图标固定在原字母槽位中心，只做二维平面旋转；正数顺时针、负数逆时针，每个字位单独保存。</p>
+          <p class="hint">图标固定在原字母槽位中心：先正向扫入，再快速转到设定角度并回正；正数顺时针、负数逆时针，每个字位单独保存。</p>
         </div>
         <p class="hint">收尾完全复用水流的扫变：从左到右把指定字母换成图标，短暂停留，再从左到右恢复字母。</p>
       </section>
@@ -247,7 +252,7 @@ leveling {{play}}p
             <input id="exitDuration" type="range" min="60" max="800" step="20" value="120">
           </label>
         </div>
-        <p class="hint">中心词从画布正中心以约 75% 尺寸跳到眼前并放大到 100%，随后连续带动各行弹满；收尾保持水流逐字扫变，图标只在原位显示设定的平面角度。</p>
+        <p class="hint">中心词从画布中心略下方压缩起跳，向观看者跃出并回稳，途中连续带动各行弹满；收尾保持水流逐字扫变，图标在原位完成正向、转角和回正。</p>
       </section>
 
       <section class="timeline-section">
@@ -320,7 +325,7 @@ leveling {{play}}p
   <script src="token-asset-tools.js"></script>
   <script src="shared-icon-library.js?v=20260830-3"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
-  <script src="verticalwall.js?v=20260830-5"></script>
+  <script src="verticalwall.js?v=20260830-6"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
 </body>
