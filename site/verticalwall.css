@@ -1,6 +1,6 @@
-.vertical-stage { background: #f7f6f2; }
+.vertical-stage { background: #f7f6f2; transition: none !important; }
 
-.vertical-panel { --panel-width: 340px; }
+.vertical-panel { --panel-width: 420px; }
 
 .vertical-motion-map span:nth-of-type(3) { background: #e7e6df; }
 .vertical-motion-map span:nth-of-type(4) { background: #c1ff1a; }
@@ -22,6 +22,38 @@
 }
 
 .vertical-panel .stage-control-heading:first-child { margin-top: 0; border-top: 0; }
+
+.vertical-row-gap-list {
+  display: grid;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.vertical-row-gap-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 132px;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid #e2e2e5;
+  border-radius: 11px;
+  background: #fafafa;
+}
+
+.vertical-row-gap-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.vertical-row-gap-item label { display: grid; grid-template-columns: 1fr 32px; align-items: center; gap: 6px; }
+.vertical-row-gap-item output { color: #6e6e73; font-size: 9px; text-align: right; }
+
+@media (max-width: 720px) {
+  .vertical-row-gap-item { grid-template-columns: 1fr; }
+}
 .vertical-panel .stage-control-heading b { font: 750 11px/1.2 inherit; }
 .vertical-panel .stage-control-heading span { color: #77776f; font: 600 8px/1.2 "Courier New", monospace; }
 
