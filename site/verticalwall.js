@@ -1105,9 +1105,7 @@
     const primaryLine = rows[centerSource];
     const openingLine = inputs.introWord.value.trim() || primaryLine;
     const hasInlineAsset = (line) => [...line.matchAll(/\{\{([^{}]+)\}\}/g)].some((match) => assets.has(match[1]));
-    const visibleText = (line) => line.replace(/\{\{[^{}]+\}\}/g, "").trim();
-    const carryOpeningAssets = choreography && hasInlineAsset(openingLine) && !hasInlineAsset(primaryLine)
-      && visibleText(openingLine) === visibleText(primaryLine);
+    const carryOpeningAssets = choreography && hasInlineAsset(openingLine) && !hasInlineAsset(primaryLine);
     const centerWallLine = carryOpeningAssets ? openingLine : primaryLine;
     const wallRows = rows.map((line, index) => index === centerSource ? centerWallLine : line);
     const indexForLane = (lane) => mod(centerSource + lane, rows.length);
