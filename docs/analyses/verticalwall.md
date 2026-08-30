@@ -72,6 +72,7 @@
 - [x] The row editor opens as a two-part overlay: parameters occupy the original 420px inspector and a fixed full-wall preview sits immediately to its right without shifting the live stage
 - [x] Global icon size and horizontal position apply to every row, remain the defaults for newly added rows, and still allow independent row overrides
 - [x] Overview renders exactly the input row count (11 rows and 3 rows tested), stays visible while row controls scroll, and updates from both global and row-owned controls
+- [x] Fully revealed first and last wall rows use the same solid text color as every middle row; no distance-based edge fade remains
 - [x] Single-asset scale / offset / gap edits do not stack onto the full-wall row geometry
 - [x] Opening enters the overlap phase before the 0.30s center launch completes
 - [x] Opening rhythm control is visible beside the opening word and updates the launch duration (0.30s and 0.62s tested)

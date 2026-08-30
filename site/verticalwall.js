@@ -21,7 +21,7 @@
     collapseDirection: $("#collapseDirection"), introDuration: $("#introDuration"),
     spreadDuration: $("#spreadDuration"), collapseDuration: $("#collapseDuration"),
     finalDuration: $("#finalDuration"), exitDuration: $("#exitDuration"),
-    bounce: $("#bounce"), stagger: $("#stagger"), edgeFade: $("#edgeFade"),
+    bounce: $("#bounce"), stagger: $("#stagger"),
     verticalDrift: $("#verticalDrift"), horizontalPhase: $("#horizontalPhase"), nextOpacity: $("#nextOpacity"),
     swapInterval: $("#swapInterval"), finalScanSpeed: $("#finalScanSpeed"), iconHoldDuration: $("#iconHoldDuration"),
     assetItemScale: $("#assetItemScale"),
@@ -986,7 +986,6 @@
     const localTime = choreography ? mod(time, timing.cycle) : time;
     const bounceStrength = Number(inputs.bounce.value) / 100;
     const staggerStrength = Number(inputs.stagger.value) / 100;
-    const edgeFade = Number(inputs.edgeFade.value) / 100;
     const horizontalPhase = Number(inputs.horizontalPhase.value) * scale;
     const verticalSpeed = Number(inputs.verticalDrift.value) * scale;
 
@@ -1071,16 +1070,14 @@
       for (let lane = -halfRows; lane <= halfRows; lane += 1) {
         const distance = Math.abs(lane);
         if (distance > 0 && localTime < timing.spreadStart) continue;
-        const distanceRatio = distance / Math.max(1, halfRows);
         const appearStart = distance === 0 ? 0 : (distance - 1) / Math.max(1, halfRows) * staggerStrength * .84;
         const appearEnd = Math.min(1, appearStart + lerp(.42, .18, staggerStrength));
         const appear = distance === 0
           ? launchProgress
           : popEase(rangeProgress(spreadProgress, appearStart, appearEnd), bounceStrength);
-        const alpha = (distance === 0
+        const alpha = distance === 0
           ? 1
-          : smoother(rangeProgress(spreadProgress, appearStart, Math.min(1, appearStart + .16))))
-          * (1 - edgeFade * .7 * smoother(rangeProgress(distanceRatio, .66, 1)));
+          : smoother(rangeProgress(spreadProgress, appearStart, Math.min(1, appearStart + .16)));
         if (alpha <= .002) continue;
         const spreadPosition = distance === 0 ? 1 : popEase(rangeProgress(spreadProgress, appearStart, appearEnd), bounceStrength);
         const y = distance === 0
@@ -1111,12 +1108,10 @@
     if (localTime < timing.collapseEnd) {
       for (let lane = -halfRows; lane <= halfRows; lane += 1) {
         const distance = Math.abs(lane);
-        const distanceRatio = distance / Math.max(1, halfRows);
-        const edgeAlpha = 1 - edgeFade * .7 * smoother(rangeProgress(distanceRatio, .66, 1));
         const collapseOrder = (halfRows - distance) / Math.max(1, halfRows);
         const disappearStart = collapseOrder * .58;
         const disappear = smoother(rangeProgress(collapseProgress, disappearStart, Math.min(1, disappearStart + .30)));
-        const alpha = edgeAlpha * (1 - disappear);
+        const alpha = 1 - disappear;
         if (alpha <= .002) continue;
         const exitScale = lerp(1, 1.10, easeOut(collapseProgress));
         const y = lane * lineHeight * wallZoom + driftY;
@@ -1279,7 +1274,6 @@
       iconHoldDurationOut: `${inputs.iconHoldDuration.value}ms`,
       bounceOut: `${inputs.bounce.value}%`,
       staggerOut: `${inputs.stagger.value}%`,
-      edgeFadeOut: `${inputs.edgeFade.value}%`,
       verticalDriftOut: inputs.verticalDrift.value,
       horizontalPhaseOut: inputs.horizontalPhase.value,
       nextOpacityOut: `${inputs.nextOpacity.value}%`
