@@ -1122,9 +1122,8 @@
     const wallBounds = wallLayouts.map((layout, index) => rowSegmentBounds(
       wallSegments[index], (Number(rowAssetOffsetsX[index]) || 0) * scale
     ) || { minX: 0, maxX: layout.width });
-    const wallMinX = Math.min(...wallBounds.map((bounds) => bounds.minX));
-    const wallMaxX = Math.max(...wallBounds.map((bounds) => bounds.maxX));
-    const wallStartX = -(wallMaxX - wallMinX) / 2 - wallMinX;
+    const centerWallBounds = wallBounds[centerSource] || { minX: 0, maxX: wallLayouts[centerSource]?.width || 0 };
+    const wallStartX = -(centerWallBounds.maxX - centerWallBounds.minX) / 2 - centerWallBounds.minX;
     const wallZoom = Number(inputs.wallScale.value) / 100;
     const drawCentered = (line, y, xOffset = 0, alpha = 1, rowScale = 1, stage = introStage, rowIndex = 0, axisScaleX = 1, axisScaleY = 1) => {
       context.font = fontFor(stage);
@@ -1175,6 +1174,8 @@
       canvas.dataset.centerLineSource = carryOpeningAssets ? "opening-assets" : "middle-row";
       canvas.dataset.centerLineAssets = [...centerWallLine.matchAll(/\{\{([^{}]+)\}\}/g)]
         .map((match) => match[1]).filter((id) => assets.has(id)).join(",");
+      canvas.dataset.centerLineOffset = (wallStartX + (centerWallBounds.minX + centerWallBounds.maxX) / 2).toFixed(4);
+      canvas.dataset.centerHandoffMode = openingLine === centerWallLine ? "single-layer" : "content-crossfade";
       canvas.dataset.renderTime = localTime.toFixed(4);
     };
 
@@ -1223,13 +1224,24 @@
           : 1;
         if (distance === 0) {
           const centerMainMix = smoother(rangeProgress(spreadProgress, .28, .62));
-          if (centerMainMix < .999) {
-            drawCentered(openingLine, y, horizontalPhase, alpha * (1 - centerMainMix), rowScale,
-              introStage, indexForLane(lane), 1, centerAxisScaleY);
-          }
-          if (centerMainMix > .001) {
-            drawCentered(centerWallLine, y, horizontalPhase, alpha * centerMainMix, lerp(.96, 1, centerMainMix),
-              wallStage, indexForLane(lane));
+          if (openingLine === centerWallLine) {
+            if (centerMainMix < .5) {
+              drawCentered(openingLine, y, horizontalPhase, alpha, rowScale,
+                introStage, indexForLane(lane), 1, centerAxisScaleY);
+            } else {
+              const matchedWallScale = introFontPx * rowScale / Math.max(1, wallFontPx * wallZoom);
+              drawCentered(centerWallLine, y, horizontalPhase, alpha, matchedWallScale,
+                wallStage, indexForLane(lane), 1, centerAxisScaleY);
+            }
+          } else {
+            if (centerMainMix < .999) {
+              drawCentered(openingLine, y, horizontalPhase, alpha * (1 - centerMainMix), rowScale,
+                introStage, indexForLane(lane), 1, centerAxisScaleY);
+            }
+            if (centerMainMix > .001) {
+              drawCentered(centerWallLine, y, horizontalPhase, alpha * centerMainMix, lerp(.96, 1, centerMainMix),
+                wallStage, indexForLane(lane));
+            }
           }
         } else {
           drawCentered(lineForLane(lane), y, horizontalPhase, alpha, rowScale, wallStage, indexForLane(lane));

@@ -84,6 +84,8 @@
 - [x] Final-slot angle controls stay visible, with disabled guidance for unmapped characters and saved angles shown on every mapped slot
 - [x] Main-row edits pause on the complete full-wall frame so a newly assigned middle-row icon remains inspectable instead of immediately advancing into collapse
 - [x] An opening-center inline icon carries continuously into the full-wall center row whenever that row has no independently assigned icon, including icon-for-letter replacement text; an explicit middle-row icon still takes priority
+- [x] The shared full-wall left edge is anchored from the center row's own bounds, keeping that row centered through the opening handoff without turning the column into a diagonal staircase
+- [x] Identical opening and center-wall content uses a single-layer, size-matched handoff instead of overlapping two differently scaled copies
 - [x] Final icon hold, 2D rotation round-trip duration, and restored-line hold are independently editable and included in the shared preview/export timeline
 - [x] Console clean
 - [x] PNG generated
