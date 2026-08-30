@@ -951,7 +951,7 @@
       const closeRaw = rangeProgress(sequenceElapsed, restoreStart + scanTiming.transition * .15, restoreStart + scanTiming.transition);
       const openProgress = Math.max(0, easeOutBack(enterRaw) * (1 - smooth(closeRaw)));
       activeReplacements.set(slot.index, {
-        asset, enterStart, enterRaw, exitRaw, swap: enterRaw >= .45 && exitRaw < .55,
+        asset, enterStart, enterRaw, exitRaw, swap: enterRaw >= .45,
         requestedHeight, requestedWidth, requiredWidth, gapBefore,
         offsetX: setting.offsetX * unitScale, offsetY: setting.offsetY * unitScale,
         rotation: setting.rotation * Math.PI / 180,
@@ -960,16 +960,24 @@
     });
     const dynamicWidths = layout.slots.map((slot) => Math.max(1, slot.width + (activeReplacements.get(slot.index)?.widthDelta || 0)));
     let cursorX = centerX - dynamicWidths.reduce((sum, width) => sum + width, 0) / 2;
+    let restoringSlots = 0;
+    let restoreBlendPeak = 0;
     context.fillStyle = color;
     layout.slots.forEach((slot) => {
       const dynamicSlotWidth = dynamicWidths[slot.index];
       const replacement = activeReplacements.get(slot.index);
-      if (replacement?.swap) {
+      const restoreBlend = replacement?.swap
+        ? smoother(rangeProgress(replacement.exitRaw, .12, .88))
+        : 0;
+      if (replacement?.swap && replacement.exitRaw > .12 && replacement.exitRaw < .88) {
+        restoringSlots += 1;
+        restoreBlendPeak = Math.max(restoreBlendPeak, restoreBlend);
+      }
+      if (replacement?.swap && restoreBlend < .999) {
         const { asset, enterStart, enterRaw, exitRaw, requestedHeight, requestedWidth, requiredWidth, gapBefore, offsetX, offsetY,
           rotation, openProgress } = replacement;
         const iconEnter = rangeProgress(enterRaw, .45, 1);
-        const iconExit = rangeProgress(exitRaw, 0, .55);
-        const replacementScale = Math.min(1.08, .72 + easeOutBack(iconEnter) * .28) * (1 - smooth(iconExit) * .18);
+        const replacementScale = Math.min(1.08, .72 + easeOutBack(iconEnter) * .28) * lerp(1, .78, restoreBlend);
         const fullCenterOffset = (dynamicSlotWidth - requiredWidth) / 2 + gapBefore + requestedWidth / 2;
         const drawCenterX = cursorX + lerp(slot.width / 2, fullCenterOffset, clamp01(openProgress)) + offsetX;
         const drawCenterY = y - Math.sin(Math.PI * clamp01(iconEnter)) * requestedHeight * .055 + offsetY;
@@ -986,21 +994,25 @@
             : turnElapsed < turnDuration + angleHold
               ? 1
               : 1 - smoother((turnElapsed - turnDuration - angleHold) / returnDuration);
+        context.save();
+        context.globalAlpha *= 1 - restoreBlend;
         drawFinalAsset(context, asset, drawCenterX, drawCenterY, requestedWidth * replacementScale, requestedHeight * replacementScale,
           sequenceElapsed, rotation * clamp01(rotationProgress));
-      } else {
+        context.restore();
+      }
+      if (!replacement?.swap || restoreBlend > .001) {
         let glyphScaleX = 1;
         let glyphScaleY = 1;
         if (replacement?.enterRaw < .45) {
           const prepare = easeOut(rangeProgress(replacement.enterRaw, 0, .45));
           glyphScaleX = 1 - prepare * .12;
           glyphScaleY = 1 + prepare * .035;
-        } else if (replacement) {
-          const restore = easeOutBack(rangeProgress(replacement.exitRaw, .55, 1));
-          glyphScaleX = .9 + restore * .1;
-          glyphScaleY = 1.04 - restore * .04;
+        } else if (replacement?.swap) {
+          glyphScaleX = lerp(.9, 1, restoreBlend);
+          glyphScaleY = lerp(1.04, 1, restoreBlend);
         }
         context.save();
+        if (replacement?.swap) context.globalAlpha *= restoreBlend;
         context.translate(cursorX + dynamicSlotWidth / 2, y);
         context.scale(glyphScaleX, glyphScaleY);
         context.fillText(slot.character, -slot.width / 2, 0);
@@ -1008,6 +1020,7 @@
       }
       cursorX += dynamicSlotWidth;
     });
+    return { restoringSlots, restoreBlendPeak };
   }
 
   function choreographyTiming() {
@@ -1185,6 +1198,9 @@
       canvas.dataset.centerJumpY = String((extras.centerJumpY ?? 0).toFixed(4));
       canvas.dataset.centerWallRowScale = String((extras.centerWallRowScale ?? 1).toFixed(4));
       canvas.dataset.wallExitScaleMode = extras.wallExitScaleMode || "idle";
+      canvas.dataset.finalRestoreMode = "icon-glyph-crossfade";
+      canvas.dataset.finalRestoringSlots = String(extras.finalRestoringSlots ?? 0);
+      canvas.dataset.finalRestoreBlend = String((extras.finalRestoreBlend ?? 0).toFixed(4));
       canvas.dataset.finalRevealScale = String((extras.finalRevealScale ?? 1).toFixed(4));
       canvas.dataset.renderTime = localTime.toFixed(4);
     };
@@ -1286,10 +1302,12 @@
     context.translate(w / 2, h / 2);
     const finalExitScale = lerp(1, .82, easeOut(exitProgress));
     context.scale(finalExitScale, finalExitScale);
-    drawFinalLine(context, inputs.nextWord.value.trim() || "leveling up", 0, 0, inputs.foreground.value, finalStage.assetHeight, finalElapsed, scale);
+    const finalRestore = drawFinalLine(context, inputs.nextWord.value.trim() || "leveling up", 0, 0, inputs.foreground.value, finalStage.assetHeight, finalElapsed, scale);
     context.restore();
     const finalPhase = localTime < timing.scanEnd ? "final-sweep" : localTime < timing.holdEnd ? "final-hold" : "final-exit";
-    markPhase(finalPhase, { finalState: Math.min(1, finalElapsed / Math.max(.001, finalScanDuration())), swapTargets: Object.keys(finalSlotMap).length, swapMotion: "water-scan-upright-angle-return-2d-rotation" });
+    markPhase(finalPhase, { finalState: Math.min(1, finalElapsed / Math.max(.001, finalScanDuration())),
+      finalRestoringSlots: finalRestore.restoringSlots, finalRestoreBlend: finalRestore.restoreBlendPeak,
+      swapTargets: Object.keys(finalSlotMap).length, swapMotion: "water-scan-upright-angle-return-2d-rotation" });
   }
 
   function timelineBeats(timing = choreographyTiming()) {
