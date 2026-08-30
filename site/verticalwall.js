@@ -1190,7 +1190,11 @@
     const launchProgress = rangeProgress(localTime, 0, timing.introEnd);
     const launchJump = openingJump(launchProgress);
     const centerStableScale = introFontPx / Math.max(1, wallFontPx * wallZoom);
+    const centerFilledZoom = 1.04;
     const spreadProgress = rangeProgress(localTime, timing.spreadStart, timing.spreadEnd);
+    const centerDisplayScale = localTime < timing.spreadStart
+      ? launchJump.scaleX
+      : lerp(1, centerFilledZoom, smoother(spreadProgress));
     const collapseProgress = rangeProgress(localTime, timing.spreadEnd, timing.collapseEnd);
 
     if (localTime < timing.spreadEnd) {
@@ -1211,10 +1215,10 @@
           ? launchJump.y * introFontPx
           : lane * lineHeight * wallZoom * spreadPosition;
         const rowScale = distance === 0
-          ? centerStableScale * launchJump.scaleX
+          ? centerStableScale * centerDisplayScale
           : lerp(.76, 1, appear);
         const centerAxisScaleY = distance === 0
-          ? launchJump.scaleY / Math.max(.001, launchJump.scaleX)
+          ? (localTime < timing.spreadStart ? launchJump.scaleY / Math.max(.001, launchJump.scaleX) : 1)
           : 1;
         if (distance === 0) {
           drawCentered(centerWallLine, y, horizontalPhase, alpha, rowScale,
@@ -1225,7 +1229,9 @@
       }
       const phase = localTime < timing.spreadStart ? "center-launch" : "wall-spread";
       markPhase(phase, { rows: localTime < timing.spreadStart ? 1 : rowCount,
-        centerJumpScaleX: launchJump.scaleX, centerJumpScaleY: launchJump.scaleY, centerJumpY: launchJump.y });
+        centerJumpScaleX: centerDisplayScale,
+        centerJumpScaleY: localTime < timing.spreadStart ? launchJump.scaleY : centerDisplayScale,
+        centerJumpY: localTime < timing.spreadStart ? launchJump.y : 0 });
       return;
     }
 
@@ -1245,14 +1251,15 @@
         if (alpha <= .002) continue;
         const exitScale = lerp(1, 1.10, easeOut(collapseProgress));
         const y = distance === 0 ? 0 : lane * lineHeight * wallZoom + driftY;
-        const rowScale = distance === 0 ? centerStableScale : exitScale;
+        const rowScale = distance === 0 ? centerStableScale * centerFilledZoom : exitScale;
         drawCentered(lineForLane(lane), y, horizontalPhase, alpha, rowScale, wallStage, indexForLane(lane));
       }
 
       const nextReveal = smoother(rangeProgress(collapseProgress, .38, .92));
       const nextAlpha = Number(inputs.nextOpacity.value) / 100 * nextReveal;
       drawCentered(inputs.nextWord.value.trim() || "leveling up", 0, 0, nextAlpha, 1, finalStage);
-      markPhase("wall-exit", { rows: rowCount, centerJumpScaleX: 1, centerJumpScaleY: 1, centerJumpY: 0, finalRevealScale: 1 });
+      markPhase("wall-exit", { rows: rowCount, centerJumpScaleX: centerFilledZoom, centerJumpScaleY: centerFilledZoom,
+        centerJumpY: 0, finalRevealScale: 1 });
       return;
     }
 
