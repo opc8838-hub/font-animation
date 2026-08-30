@@ -82,6 +82,8 @@
 - [x] Opening icons have an explicit insertion target, visible used-icon list, opening-only size/gap controls, and single-asset size/X/Y/before/after editing
 - [x] Final icon shows an upright frame, turns to the configured angle, returns upright, then restores the letter
 - [x] Final-slot angle controls stay visible, with disabled guidance for unmapped characters and saved angles shown on every mapped slot
+- [x] Main-row edits pause on the complete full-wall frame so a newly assigned middle-row icon remains inspectable instead of immediately advancing into collapse
+- [x] Final icon hold, 2D rotation round-trip duration, and restored-line hold are independently editable and included in the shared preview/export timeline
 - [x] Console clean
 - [x] PNG generated
 - [x] Full-cycle GIF generated (320×320, 25 frames)

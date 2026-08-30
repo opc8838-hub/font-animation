@@ -24,6 +24,7 @@
     bounce: $("#bounce"), stagger: $("#stagger"),
     verticalDrift: $("#verticalDrift"), horizontalPhase: $("#horizontalPhase"), nextOpacity: $("#nextOpacity"),
     swapInterval: $("#swapInterval"), finalScanSpeed: $("#finalScanSpeed"), iconHoldDuration: $("#iconHoldDuration"),
+    iconRotationDuration: $("#iconRotationDuration"),
     assetItemScale: $("#assetItemScale"),
     assetOffsetX: $("#assetOffsetX"), assetOffsetY: $("#assetOffsetY"),
     assetGapBefore: $("#assetGapBefore"), assetGapAfter: $("#assetGapAfter")
@@ -379,6 +380,13 @@
     };
   }
 
+  function showWallEditPreview() {
+    const timing = choreographyTiming();
+    paused = true;
+    setTime(Math.max(0, timing.spreadEnd - .001));
+    syncPlaybackControls();
+  }
+
   function updateVisibleRow(index, value) {
     const lines = inputs.rows.value.split(/\r?\n/);
     const visibleIndices = lines.map((line, rawIndex) => line.trim() ? rawIndex : -1).filter((rawIndex) => rawIndex >= 0);
@@ -389,7 +397,7 @@
     layoutCache.clear();
     renderSelectedAssets();
     renderRowOverview(currentTime());
-    setTime(choreographyTiming().spreadStart + choreographyTiming().duration[1] * .8);
+    showWallEditPreview();
   }
 
   [inputs.rows, inputs.introWord].forEach((field) => {
@@ -634,7 +642,7 @@
           output.textContent = `${slider.value}${control.suffix}`;
           layoutCache.clear();
           renderRowOverview(currentTime());
-          setTime(choreographyTiming().spreadStart + choreographyTiming().duration[1] * .8);
+          showWallEditPreview();
         });
       });
       list.append(item);
@@ -649,7 +657,7 @@
     else rowAssetOffsetsX = Array(count).fill(value);
     layoutCache.clear();
     syncRowAssetGaps();
-    setTime(choreographyTiming().spreadStart + choreographyTiming().duration[1] * .8);
+    showWallEditPreview();
   }
 
   $("#globalRowAssetScale").addEventListener("input", (event) => applyGlobalRowControl("scale", Number(event.currentTarget.value)));
@@ -887,7 +895,8 @@
     const speedRatio = speed / 4;
     return {
       transition: Math.max(45, Math.min(220, 100 / speedRatio)) / 1000,
-      hold: Math.max(40, Math.min(1200, Number(inputs.iconHoldDuration.value) / speedRatio)) / 1000,
+      hold: Math.max(40, Math.min(1200, Number(inputs.iconHoldDuration.value))) / 1000,
+      rotation: Math.max(80, Math.min(1200, Number(inputs.iconRotationDuration.value))) / 1000,
       step: Math.max(35, Math.min(1200, Number(inputs.swapInterval.value) / speedRatio)) / 1000
     };
   }
@@ -896,7 +905,7 @@
     const count = Math.max(1, Object.keys(finalSlotMap).filter((index) => assets.has(finalSlotMap[index])).length);
     const scan = finalScanTiming();
     const sweep = Math.max(0, count - 1) * scan.step + scan.transition;
-    return sweep * 2 + scan.hold;
+    return sweep * 2 + scan.rotation + scan.hold;
   }
 
   function drawFinalAsset(context, asset, centerX, centerY, width, height, time, rotation = 0) {
@@ -918,7 +927,7 @@
     const scanTiming = finalScanTiming();
     const activeReplacements = new Map();
     const enterSweepEnd = Math.max(0, mappedSlots.length - 1) * scanTiming.step + scanTiming.transition;
-    const restoreSweepStart = enterSweepEnd + scanTiming.hold;
+    const restoreSweepStart = enterSweepEnd + scanTiming.rotation + scanTiming.hold;
     mappedSlots.forEach((slot, order) => {
       const enterStart = order * scanTiming.step;
       const restoreStart = restoreSweepStart + order * scanTiming.step;
@@ -960,9 +969,9 @@
         const rotationElapsed = Math.max(0, sequenceElapsed - (enterStart + scanTiming.transition * .45));
         const uprightHold = Math.max(.03, scanTiming.transition * .30);
         const turnElapsed = Math.max(0, rotationElapsed - uprightHold);
-        const turnDuration = Math.max(.055, scanTiming.transition * .55);
-        const angleHold = Math.max(.045, scanTiming.transition * .45);
-        const returnDuration = Math.max(.075, scanTiming.transition * .90);
+        const turnDuration = scanTiming.rotation * .42;
+        const angleHold = scanTiming.rotation * .16;
+        const returnDuration = scanTiming.rotation * .42;
         const rotationProgress = rotationElapsed < uprightHold
           ? 0
           : turnElapsed < turnDuration
@@ -1155,6 +1164,8 @@
       canvas.dataset.swapMotion = extras.swapMotion || "idle";
       canvas.dataset.swapTargets = String(extras.swapTargets ?? 0);
       canvas.dataset.iconRotationMotion = "upright-angle-return-2d-fixed";
+      canvas.dataset.iconRotationDuration = inputs.iconRotationDuration.value;
+      canvas.dataset.finalIconHoldDuration = inputs.iconHoldDuration.value;
       canvas.dataset.renderTime = localTime.toFixed(4);
     };
 
@@ -1395,6 +1406,7 @@
       swapIntervalOut: `${(Number(inputs.swapInterval.value) / 1000).toFixed(2)}秒`,
       finalScanSpeedOut: `${Number(inputs.finalScanSpeed.value).toFixed(1)}×`,
       iconHoldDurationOut: `${inputs.iconHoldDuration.value}ms`,
+      iconRotationDurationOut: formatSeconds(Number(inputs.iconRotationDuration.value) / 1000),
       bounceOut: `${inputs.bounce.value}%`,
       staggerOut: `${inputs.stagger.value}%`,
       verticalDriftOut: inputs.verticalDrift.value,
@@ -1407,7 +1419,7 @@
   }
 
   Object.values(inputs).forEach((input) => input.addEventListener("input", updateOutputs));
-  [inputs.swapInterval, inputs.finalScanSpeed, inputs.iconHoldDuration, inputs.finalDuration, inputs.exitDuration, inputs.finalFontSize,
+  [inputs.swapInterval, inputs.finalScanSpeed, inputs.iconHoldDuration, inputs.iconRotationDuration, inputs.finalDuration, inputs.exitDuration, inputs.finalFontSize,
     inputs.finalAssetScale, inputs.finalTextGap]
     .forEach((input) => input.addEventListener("input", () => setTime(choreographyTiming().collapseEnd + .025)));
   [inputs.wallScale, inputs.wallFontSize, inputs.wallTextGap, inputs.lineGap].forEach((input) => {
@@ -1419,7 +1431,10 @@
   [inputs.assetItemScale, inputs.assetOffsetX, inputs.assetOffsetY, inputs.assetGapBefore, inputs.assetGapAfter].forEach((input) => {
     input.addEventListener("input", updateSelectedAsset);
   });
-  inputs.rows.addEventListener("input", syncRowAssetGaps);
+  inputs.rows.addEventListener("input", () => {
+    syncRowAssetGaps();
+    showWallEditPreview();
+  });
   inputs.motionMode.addEventListener("change", () => setTime(0));
 
   function positionRowOverview() {
