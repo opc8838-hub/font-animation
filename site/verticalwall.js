@@ -4,7 +4,8 @@
   const PREVIEW = new URLSearchParams(location.search).has("preview");
   const $ = (selector) => document.querySelector(selector);
   const canvas = $("#flowCanvas");
-  const rowPreviewCanvas = $("#rowPreviewCanvas");
+  const rowOverviewCanvas = $("#rowOverviewCanvas");
+  const rowOverviewPanel = $("#rowOverviewPanel");
   const frameCounter = $("#frameCounter");
   const exportStatus = $("#exportStatus");
   const fps = 30;
@@ -64,7 +65,6 @@
   let rowAssetGaps = [];
   let rowAssetScales = [];
   let rowAssetOffsetsX = [];
-  let selectedRowIndex = 0;
 
   const svg = (body, background = "#ffffff") => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="${background}"/>${body}</svg>`
@@ -487,7 +487,6 @@
 
   function syncRowAssetGaps() {
     const rows = parseRows();
-    selectedRowIndex = Math.max(0, Math.min(rows.length - 1, selectedRowIndex));
     rowAssetGaps = rows.map((_, index) => Number(rowAssetGaps[index]) || 0);
     rowAssetScales = rows.map((_, index) => Number.isFinite(Number(rowAssetScales[index])) ? Number(rowAssetScales[index]) : 92);
     rowAssetOffsetsX = rows.map((_, index) => Number(rowAssetOffsetsX[index]) || 0);
@@ -496,9 +495,6 @@
     rows.forEach((line, index) => {
       const item = document.createElement("div");
       item.className = "vertical-row-gap-item";
-      item.classList.toggle("is-selected", index === selectedRowIndex);
-      item.tabIndex = 0;
-      item.setAttribute("role", "group");
       item.setAttribute("aria-label", `编辑第 ${index + 1} 行图标排版`);
       item.innerHTML = `<span></span><div class="vertical-row-controls">
         <label><b>图文间距</b><input data-key="gap" type="range" min="-20" max="120" step="1"><output></output></label>
@@ -506,19 +502,6 @@
         <label><b>左右位置</b><input data-key="offsetX" type="range" min="-120" max="120" step="1"><output></output></label>
       </div>`;
       item.querySelector("span").textContent = `第 ${index + 1} 行 · ${line.replace(/\{\{[^{}]+\}\}/g, "[图标]")}`;
-      const selectRow = () => {
-        selectedRowIndex = index;
-        list.querySelectorAll(".vertical-row-gap-item").forEach((row, rowIndex) => row.classList.toggle("is-selected", rowIndex === index));
-        renderRowPreview(currentTime());
-      };
-      item.addEventListener("pointerdown", selectRow);
-      item.addEventListener("focusin", selectRow);
-      item.addEventListener("keydown", (event) => {
-        if (event.target === item && (event.key === "Enter" || event.key === " ")) {
-          event.preventDefault();
-          selectRow();
-        }
-      });
       const controls = {
         gap: { values: rowAssetGaps, suffix: "px" },
         scale: { values: rowAssetScales, suffix: "%" },
@@ -533,13 +516,14 @@
           control.values[index] = Number(slider.value);
           output.textContent = `${slider.value}${control.suffix}`;
           layoutCache.clear();
-          renderRowPreview(currentTime());
+          renderRowOverview(currentTime());
           setTime(choreographyTiming().spreadStart + choreographyTiming().duration[1] * .8);
         });
       });
       list.append(item);
     });
-    renderRowPreview(currentTime());
+    $("#rowSettingsCount").textContent = `${rows.length} 行 · 间距 / 大小 / 左右位置`;
+    renderRowOverview(currentTime());
   }
 
   function removeAsset(id) {
@@ -878,16 +862,16 @@
     if (x < riseEnd) {
       const rise = easeOut(x / riseEnd);
       return {
-        y: lerp(.30, -.07, rise),
-        scaleX: lerp(.73, 1.025, rise),
-        scaleY: lerp(.64, 1.085, rise)
+        y: lerp(.48, -.12, rise),
+        scaleX: lerp(.68, 1.04, rise),
+        scaleY: lerp(.52, 1.12, rise)
       };
     }
     const settle = smoother((x - riseEnd) / (1 - riseEnd));
     return {
-      y: lerp(-.07, 0, settle),
-      scaleX: lerp(1.025, 1, settle),
-      scaleY: lerp(1.085, 1, settle)
+      y: lerp(-.12, 0, settle),
+      scaleX: lerp(1.04, 1, settle),
+      scaleY: lerp(1.12, 1, settle)
     };
   }
 
@@ -1158,7 +1142,7 @@
     const ratio = Number(canvas.dataset.ratio || 1);
     const time = currentTime();
     renderFrame(canvas, time, canvas.width / ratio, canvas.height / ratio, ratio);
-    renderRowPreview(time);
+    renderRowOverview(time);
     const displayTime = inputs.motionMode.value === "choreography" ? mod(time, choreographyTiming().cycle) : time;
     frameCounter.textContent = `F ${String(Math.round(displayTime * fps)).padStart(4, "0")}`;
     updateTimelinePlayhead(inputs.motionMode.value === "choreography" ? displayTime : 0, choreographyTiming());
@@ -1254,6 +1238,60 @@
   inputs.rows.addEventListener("input", syncRowAssetGaps);
   inputs.motionMode.addEventListener("change", () => setTime(0));
 
+  function positionRowOverview() {
+    if (rowOverviewPanel.hidden) return;
+    const editor = $("#controlPanel").getBoundingClientRect();
+    const availableWidth = window.innerWidth - editor.right - 22;
+    if (window.innerWidth <= 720 || availableWidth < 290) {
+      rowOverviewPanel.style.left = "10px";
+      rowOverviewPanel.style.width = "";
+      return;
+    }
+    rowOverviewPanel.style.left = `${Math.round(editor.right + 12)}px`;
+    const currentWidth = rowOverviewPanel.getBoundingClientRect().width;
+    rowOverviewPanel.style.width = `${Math.max(290, Math.min(currentWidth, availableWidth))}px`;
+  }
+
+  function openRowOverview() {
+    rowOverviewPanel.hidden = false;
+    $("#openRowOverview").setAttribute("aria-expanded", "true");
+    positionRowOverview();
+    renderRowOverview(currentTime());
+  }
+
+  function closeRowOverview() {
+    rowOverviewPanel.hidden = true;
+    $("#openRowOverview").setAttribute("aria-expanded", "false");
+  }
+
+  $("#openRowOverview").setAttribute("aria-expanded", "false");
+  $("#openRowOverview").addEventListener("click", openRowOverview);
+  $("#closeRowOverview").addEventListener("click", closeRowOverview);
+  window.addEventListener("resize", () => {
+    positionRowOverview();
+    renderRowOverview(currentTime());
+  });
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !rowOverviewPanel.hidden && $("#assetEditorDrawer").hidden) closeRowOverview();
+  });
+  $("#rowOverviewResize").addEventListener("pointerdown", (event) => {
+    if (window.innerWidth <= 720) return;
+    event.preventDefault();
+    const startX = event.clientX;
+    const startWidth = rowOverviewPanel.getBoundingClientRect().width;
+    const editorRight = $("#controlPanel").getBoundingClientRect().right;
+    const onMove = (moveEvent) => {
+      const maxWidth = Math.max(290, window.innerWidth - editorRight - 22);
+      rowOverviewPanel.style.width = `${Math.max(290, Math.min(maxWidth, startWidth + moveEvent.clientX - startX))}px`;
+    };
+    const onUp = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp, { once: true });
+  });
+
   const SCHEME_STORAGE_KEY = "me-vertical-rise-scheme-v5";
   const LEGACY_SCHEME_STORAGE_KEYS = ["me-vertical-rise-scheme-v4", "me-vertical-rise-scheme-v3", "me-vertical-rise-scheme-v2"];
   let defaultSchemeSnapshot = null;
@@ -1317,15 +1355,22 @@
     return scheme;
   }
 
-  function renderRowPreview(time = 0) {
-    if (!rowPreviewCanvas) return;
+  function renderRowOverview(time = 0) {
+    if (!rowOverviewCanvas || rowOverviewPanel.hidden) return;
     const rows = parseRows();
-    const rowIndex = Math.max(0, Math.min(rows.length - 1, selectedRowIndex));
-    const context = rowPreviewCanvas.getContext("2d");
-    const width = rowPreviewCanvas.width;
-    const height = rowPreviewCanvas.height;
+    const [logicalWidth, logicalHeight] = exportDimensions();
+    const width = 720;
+    const height = Math.max(240, Math.min(1600, Math.round(width * logicalHeight / logicalWidth)));
+    if (rowOverviewCanvas.width !== width || rowOverviewCanvas.height !== height) {
+      rowOverviewCanvas.width = width;
+      rowOverviewCanvas.height = height;
+    }
+    const context = rowOverviewCanvas.getContext("2d");
     const preset = window.STGFontLibrary?.preset(inputs.font.value) || fontPresets[inputs.font.value] || fontPresets["snap-inter-medium"];
-    const fontPx = 68;
+    const unitScale = height / 900;
+    const fontPx = Math.max(8, Number(inputs.wallFontSize.value) * unitScale);
+    const lineHeight = Math.max(fontPx * .66, fontPx + Number(inputs.lineGap.value) * unitScale);
+    const wallZoom = Number(inputs.wallScale.value) / 100;
     context.setTransform(1, 0, 0, 1, 0, 0);
     context.clearRect(0, 0, width, height);
     context.fillStyle = inputs.background.value;
@@ -1334,16 +1379,24 @@
     context.textAlign = "left";
     context.textBaseline = "middle";
     context.imageSmoothingEnabled = true;
-    const layout = layoutTokens(context, rows[rowIndex], fontPx, fontPx * rowAssetScales[rowIndex] / 100,
-      Number(inputs.wallTextGap.value), Number(rowAssetGaps[rowIndex]) || 0, false);
-    const fit = Math.min(1, (width - 54) / Math.max(1, layout.width), (height - 52) / fontPx);
-    context.save();
-    context.translate(width / 2, height / 2);
-    context.scale(fit, fit);
-    drawSequence(context, layout, -layout.width / 2, 0, inputs.foreground.value, 0, time,
-      Number(rowAssetOffsetsX[rowIndex]) || 0, false);
-    context.restore();
-    $("#rowPreviewTitle").textContent = `第 ${rowIndex + 1} 行排版预览`;
+    const layouts = rows.map((line, index) => layoutTokens(context, line, fontPx,
+      fontPx * rowAssetScales[index] / 100, Number(inputs.wallTextGap.value) * unitScale,
+      (Number(rowAssetGaps[index]) || 0) * unitScale, false));
+    const widest = Math.max(1, ...layouts.map((layout, index) => layout.width + Math.abs(Number(rowAssetOffsetsX[index]) || 0) * unitScale * 2));
+    const tallestRow = Math.max(fontPx, ...rowAssetScales.map((value) => fontPx * value / 100));
+    const allRowsHeight = Math.max(tallestRow, (rows.length - 1) * lineHeight + tallestRow);
+    const fit = Math.min(1, (width - 48) / (widest * wallZoom), (height - 48) / (allRowsHeight * wallZoom));
+    const renderedLineHeight = lineHeight * wallZoom * fit;
+    const startY = height / 2 - (rows.length - 1) * renderedLineHeight / 2;
+    layouts.forEach((layout, index) => {
+      context.save();
+      context.translate(width / 2, startY + index * renderedLineHeight);
+      context.scale(wallZoom * fit, wallZoom * fit);
+      drawSequence(context, layout, -layout.width / 2, 0, inputs.foreground.value, 0, time,
+        (Number(rowAssetOffsetsX[index]) || 0) * unitScale, false);
+      context.restore();
+    });
+    $("#rowOverviewStatus").textContent = `${rows.length} 行 · ${logicalWidth} × ${logicalHeight}`;
   }
 
   function restoreSchemeAssets(items) {

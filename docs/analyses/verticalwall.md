@@ -9,7 +9,7 @@
 
 ## One-sentence target
 
-`leveling up` 从画布中心略下方压缩起跳，向观看者跃出并越过中心落点后回稳，随即带动多行弹满；收束后以水流同款扫变完成末行字母与“正向→设定角度→回正”的原位二维图标切换，最后快速消失。
+`leveling up` 从画布中心略下方明显压缩起跳，向观看者跃出并越过中心落点后回稳，随即带动多行弹满；收束后以水流同款扫变完成末行字母与“正向→设定角度→回正”的原位二维图标切换，最后快速消失。
 
 ## Phase table
 
@@ -52,7 +52,7 @@
 - Shared UI: `currentwall.css`, `me-motion-editor.css`, `me-motion-editor.js`
 - Shared media: `shared-icon-library.js`, `token-asset-tools.js`
 - Shared export: `continuation-gif.js`, `h264-mp4-encoder.web.js`
-- New core logic: 每行独立字图间距、大小和左右位置状态及固定行预览；带纵向轨迹和压缩/回弹的开场跳跃；水流同款末行槽位扫变
+- New core logic: 每行独立字图间距、大小和左右位置状态及浮动满屏总览；带纵向轨迹和明显压缩/回弹的开场跳跃；水流同款末行槽位扫变
 
 ## Uncertainties
 
@@ -69,9 +69,11 @@
 - [x] Canvas-size card is the first inspector card; 16:9, 9:16, 1:1, 4:5, and custom 700×500 refit to exact ratios while the 420px inspector remains fixed
 - [x] Per-slot 2D rotation remains independent (25° versus 0° tested) and survives auto-save/reload
 - [x] Per-row gap / icon size / horizontal position remain independent (row 1: 21px / 137% / −46px; row 2 stayed 0px / 92% / 0px) and survive auto-save/reload
-- [x] Selected-row preview stays visible while scrolling to row 10 and renders the complete row without covering the live stage
-- [x] Single-asset scale / offset / gap edits do not change the selected-row preview; row-owned edits do
+- [x] Full-wall overview opens as a floating panel without changing editor or live-stage bounds; row settings remain collapsed by default
+- [x] Overview renders exactly the input row count (11 rows and 3 rows tested), updates from row-owned sliders, and resizes horizontally from 390px to 480px
+- [x] Single-asset scale / offset / gap edits do not stack onto the full-wall row geometry
 - [x] Opening enters the overlap phase before the 0.30s center launch completes
+- [x] Opening rhythm control is visible beside the opening word and updates the launch duration (0.30s and 0.62s tested)
 - [x] Final icon shows an upright frame, turns to the configured angle, returns upright, then restores the letter
 - [x] Console clean
 - [x] PNG generated
