@@ -11,7 +11,7 @@
     rows: $("#rowsInput"), font: $("#fontFamily"), fontSize: $("#fontSize"),
     lineGap: $("#lineGap"), assetScale: $("#assetScale"), introAssetGap: $("#introAssetGap"),
     rowCount: $("#rowCount"), wallScale: $("#wallScale"), itemGap: $("#itemGap"),
-    wallFontSize: $("#wallFontSize"), wallAssetScale: $("#wallAssetScale"),
+    wallFontSize: $("#wallFontSize"),
     wallTextGap: $("#wallTextGap"),
     finalFontSize: $("#finalFontSize"), finalAssetScale: $("#finalAssetScale"), finalTextGap: $("#finalTextGap"),
     background: $("#backgroundColor"), foreground: $("#textColor"),
@@ -61,6 +61,8 @@
   let finalSlotMap = { 4: "animal01", 9: "animal08", 11: "cloud" };
   let finalSlotSettings = {};
   let rowAssetGaps = [];
+  let rowAssetScales = [];
+  let rowAssetOffsetsX = [];
 
   const svg = (body, background = "#ffffff") => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="${background}"/>${body}</svg>`
@@ -484,21 +486,35 @@
   function syncRowAssetGaps() {
     const rows = parseRows();
     rowAssetGaps = rows.map((_, index) => Number(rowAssetGaps[index]) || 0);
+    rowAssetScales = rows.map((_, index) => Number.isFinite(Number(rowAssetScales[index])) ? Number(rowAssetScales[index]) : 92);
+    rowAssetOffsetsX = rows.map((_, index) => Number(rowAssetOffsetsX[index]) || 0);
     const list = $("#rowGapList");
     list.replaceChildren();
     rows.forEach((line, index) => {
       const item = document.createElement("div");
       item.className = "vertical-row-gap-item";
-      item.innerHTML = `<span></span><label><input type="range" min="-20" max="120" step="1"><output></output></label>`;
+      item.innerHTML = `<span></span><div class="vertical-row-controls">
+        <label><b>图文间距</b><input data-key="gap" type="range" min="-20" max="120" step="1"><output></output></label>
+        <label><b>图标大小</b><input data-key="scale" type="range" min="35" max="220" step="1"><output></output></label>
+        <label><b>左右位置</b><input data-key="offsetX" type="range" min="-120" max="120" step="1"><output></output></label>
+      </div>`;
       item.querySelector("span").textContent = `第 ${index + 1} 行 · ${line.replace(/\{\{[^{}]+\}\}/g, "[图标]")}`;
-      const slider = item.querySelector("input");
-      const output = item.querySelector("output");
-      slider.value = String(rowAssetGaps[index]);
-      output.textContent = `${rowAssetGaps[index]}px`;
-      slider.addEventListener("input", () => {
-        rowAssetGaps[index] = Number(slider.value);
-        output.textContent = `${slider.value}px`;
-        layoutCache.clear();
+      const controls = {
+        gap: { values: rowAssetGaps, suffix: "px" },
+        scale: { values: rowAssetScales, suffix: "%" },
+        offsetX: { values: rowAssetOffsetsX, suffix: "px" }
+      };
+      item.querySelectorAll("input").forEach((slider) => {
+        const control = controls[slider.dataset.key];
+        const output = slider.parentElement.querySelector("output");
+        slider.value = String(control.values[index]);
+        output.textContent = `${control.values[index]}${control.suffix}`;
+        slider.addEventListener("input", () => {
+          control.values[index] = Number(slider.value);
+          output.textContent = `${slider.value}${control.suffix}`;
+          layoutCache.clear();
+          setTime(choreographyTiming().spreadStart + choreographyTiming().duration[1] * .8);
+        });
       });
       list.append(item);
     });
@@ -574,14 +590,14 @@
     ? Array.from(new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(value), (part) => part.segment)
     : Array.from(value);
 
-  function layoutTokens(context, line, fontPx, assetHeight, textGap, assetGap = textGap) {
-    const cacheKey = [line, context.font, fontPx.toFixed(3), assetHeight.toFixed(3), textGap.toFixed(3), assetGap.toFixed(3), assetRevision].join("|");
+  function layoutTokens(context, line, fontPx, assetHeight, textGap, assetGap = textGap, useAssetScale = true) {
+    const cacheKey = [line, context.font, fontPx.toFixed(3), assetHeight.toFixed(3), textGap.toFixed(3), assetGap.toFixed(3), useAssetScale, assetRevision].join("|");
     const cached = layoutCache.get(cacheKey);
     if (cached) return cached;
     const items = tokensFor(line).flatMap((token) => {
       if (token.type === "text") return graphemes(token.value).map((value) => ({ type: "text", value, width: context.measureText(value).width }));
       const asset = assets.get(token.id);
-      const tunedHeight = assetHeight * (asset?.scale || 1);
+      const tunedHeight = assetHeight * (useAssetScale ? (asset?.scale || 1) : 1);
       return [{ ...token, asset, width: tunedHeight * (asset?.ratio || 1), height: tunedHeight }];
     });
     const gaps = items.slice(0, -1).map((item, index) => {
@@ -644,10 +660,14 @@
     context.restore();
   }
 
-  function drawSequence(context, layout, x, y, color, assetRotation = 0, time = 0) {
+  function drawSequence(context, layout, x, y, color, assetRotation = 0, time = 0, assetOffsetX = 0) {
     let cursor = x;
     layout.items.forEach((item, index) => {
-      drawItem(context, item, cursor, y, color, { rotation: item.type === "asset" ? assetRotation : 0, time });
+      drawItem(context, item, cursor, y, color, {
+        rotation: item.type === "asset" ? assetRotation : 0,
+        x: item.type === "asset" ? assetOffsetX : 0,
+        time
+      });
       cursor += item.width + (layout.gaps[index] || 0);
     });
   }
@@ -766,7 +786,9 @@
         const fullCenterOffset = (dynamicSlotWidth - requiredWidth) / 2 + gapBefore + requestedWidth / 2;
         const drawCenterX = cursorX + lerp(slot.width / 2, fullCenterOffset, clamp01(openProgress)) + offsetX;
         const drawCenterY = y - Math.sin(Math.PI * clamp01(iconEnter)) * requestedHeight * .055 + offsetY;
-        drawFinalAsset(context, asset, drawCenterX, drawCenterY, requestedWidth * replacementScale, requestedHeight * replacementScale, sequenceElapsed, rotation);
+        const rotationProgress = smoother(rangeProgress(iconEnter, .38, .70));
+        drawFinalAsset(context, asset, drawCenterX, drawCenterY, requestedWidth * replacementScale, requestedHeight * replacementScale,
+          sequenceElapsed, rotation * rotationProgress);
       } else {
         let glyphScaleX = 1;
         let glyphScaleY = 1;
@@ -798,13 +820,14 @@
     const exit = Number(inputs.exitDuration.value) / 1000;
     const duration = [launch, spread, collapse, scan, finalHold, exit];
     const introEnd = launch;
-    const spreadEnd = introEnd + spread;
+    const spreadStart = launch * .68;
+    const spreadEnd = spreadStart + spread;
     const collapseEnd = spreadEnd + collapse;
     const scanEnd = collapseEnd + scan;
     const holdEnd = scanEnd + finalHold;
     const exitEnd = holdEnd + exit;
     return {
-      cycle: exitEnd, duration, introEnd, spreadEnd, collapseEnd, scanEnd, holdEnd, exitEnd, finalEnd: exitEnd
+      cycle: exitEnd, duration, introEnd, spreadStart, spreadEnd, collapseEnd, scanEnd, holdEnd, exitEnd, finalEnd: exitEnd
     };
   }
 
@@ -837,7 +860,7 @@
     };
     const wallStage = {
       fontPx: wallFontPx,
-      assetHeight: wallFontPx * Number(inputs.wallAssetScale.value) / 100,
+      assetHeight: wallFontPx,
       textGap: Number(inputs.wallTextGap.value) * scale,
       assetGap: 0
     };
@@ -873,8 +896,8 @@
     const lineForLane = (lane) => rows[indexForLane(lane)];
     context.font = fontFor(wallStage);
     const wallLayouts = rows.map((line, index) => layoutTokens(
-      context, line, wallStage.fontPx, wallStage.assetHeight, wallStage.textGap,
-      wallStage.assetGap + (Number(rowAssetGaps[index]) || 0) * scale
+      context, line, wallStage.fontPx, wallStage.assetHeight * rowAssetScales[index] / 100, wallStage.textGap,
+      wallStage.assetGap + (Number(rowAssetGaps[index]) || 0) * scale, false
     ));
     const wallZoom = Number(inputs.wallScale.value) / 100;
     const drawCentered = (line, y, xOffset = 0, alpha = 1, rowScale = 1, stage = introStage, rowIndex = 0) => {
@@ -888,7 +911,8 @@
       context.translate(w / 2 + xOffset, h / 2 + y);
       const compositionScale = rowScale * (isWall ? wallZoom : 1);
       context.scale(compositionScale, compositionScale);
-      drawSequence(context, layout, -layout.width / 2, 0, inputs.foreground.value, 0, localTime);
+      drawSequence(context, layout, -layout.width / 2, 0, inputs.foreground.value, 0, localTime,
+        isWall ? (Number(rowAssetOffsetsX[rowIndex]) || 0) * scale : 0);
       context.restore();
     };
     const markPhase = (phase, extras = {}) => {
@@ -903,17 +927,18 @@
       canvas.dataset.introTextGap = inputs.itemGap.value;
       canvas.dataset.introAssetGap = inputs.introAssetGap.value;
       canvas.dataset.wallFontSize = inputs.wallFontSize.value;
-      canvas.dataset.wallAssetScale = inputs.wallAssetScale.value;
       canvas.dataset.wallTextGap = inputs.wallTextGap.value;
       canvas.dataset.wallAssetGap = "per-row";
       canvas.dataset.rowAssetGaps = rowAssetGaps.join(",");
+      canvas.dataset.rowAssetScales = rowAssetScales.join(",");
+      canvas.dataset.rowAssetOffsetsX = rowAssetOffsetsX.join(",");
       canvas.dataset.finalFontSize = inputs.finalFontSize.value;
       canvas.dataset.finalAssetScale = inputs.finalAssetScale.value;
       canvas.dataset.finalTextGap = inputs.finalTextGap.value;
       canvas.dataset.finalAssetGap = "per-slot";
       canvas.dataset.swapMotion = extras.swapMotion || "idle";
       canvas.dataset.swapTargets = String(extras.swapTargets ?? 0);
-      canvas.dataset.iconRotationMotion = "per-slot-2d-fixed";
+      canvas.dataset.iconRotationMotion = "upright-to-target-2d-fixed";
       canvas.dataset.renderTime = localTime.toFixed(4);
     };
 
@@ -933,13 +958,13 @@
     const primaryLine = lineForLane(0);
     const openingLine = inputs.introWord.value.trim() || primaryLine;
     const launchProgress = rangeProgress(localTime, 0, timing.introEnd);
-    const spreadProgress = rangeProgress(localTime, timing.introEnd, timing.spreadEnd);
+    const spreadProgress = rangeProgress(localTime, timing.spreadStart, timing.spreadEnd);
     const collapseProgress = rangeProgress(localTime, timing.spreadEnd, timing.collapseEnd);
 
     if (localTime < timing.spreadEnd) {
       for (let lane = -halfRows; lane <= halfRows; lane += 1) {
         const distance = Math.abs(lane);
-        if (distance > 0 && localTime < timing.introEnd) continue;
+        if (distance > 0 && localTime < timing.spreadStart) continue;
         const distanceRatio = distance / Math.max(1, halfRows);
         const appearStart = distance === 0 ? 0 : (distance - 1) / Math.max(1, halfRows) * staggerStrength * .84;
         const appearEnd = Math.min(1, appearStart + lerp(.42, .18, staggerStrength));
@@ -955,15 +980,16 @@
         const y = lane * lineHeight * wallZoom * spreadPosition
           + (distance === 0 ? Math.sin(spreadProgress * Math.PI * 2) * lineHeight * .025 : 0);
         const centerTargetScale = wallFontPx * wallZoom / Math.max(1, introFontPx);
+        const centerLaunchScale = lerp(.75, 1, easeOut(launchProgress));
+        const centerFillProgress = smoother(rangeProgress(spreadProgress, .04, 1));
         const rowScale = distance === 0
-          ? (localTime < timing.introEnd
-            ? lerp(.75, 1, appear)
-            : lerp(1, centerTargetScale, spreadProgress))
+          ? lerp(centerLaunchScale, centerTargetScale, centerFillProgress)
           : lerp(.76, 1, appear);
         drawCentered(distance === 0 ? openingLine : lineForLane(lane), y, horizontalPhase, alpha, rowScale,
           distance === 0 ? introStage : wallStage, indexForLane(lane));
       }
-      markPhase(localTime < timing.introEnd ? "center-launch" : "wall-spread", { rows: localTime < timing.introEnd ? 1 : rowCount });
+      const phase = localTime < timing.spreadStart ? "center-launch" : localTime < timing.introEnd ? "launch-spread-overlap" : "wall-spread";
+      markPhase(phase, { rows: localTime < timing.spreadStart ? 1 : rowCount });
       return;
     }
 
@@ -1008,13 +1034,13 @@
     drawFinalLine(context, inputs.nextWord.value.trim() || "leveling up", 0, 0, inputs.foreground.value, finalStage.assetHeight, finalElapsed, scale);
     context.restore();
     const finalPhase = localTime < timing.scanEnd ? "final-sweep" : localTime < timing.holdEnd ? "final-hold" : "final-exit";
-    markPhase(finalPhase, { finalState: Math.min(1, finalElapsed / Math.max(.001, finalScanDuration())), swapTargets: Object.keys(finalSlotMap).length, swapMotion: "water-scan-fixed-2d-rotation" });
+    markPhase(finalPhase, { finalState: Math.min(1, finalElapsed / Math.max(.001, finalScanDuration())), swapTargets: Object.keys(finalSlotMap).length, swapMotion: "water-scan-upright-to-target-2d-rotation" });
   }
 
   function timelineBeats(timing = choreographyTiming()) {
     return [
-      { kind: "intro", name: "中心跳出", start: 0, end: timing.introEnd },
-      { kind: "orbit", name: "连续弹满", start: timing.introEnd, end: timing.spreadEnd },
+      { kind: "intro", name: "中心跳出", start: 0, end: timing.spreadStart },
+      { kind: "orbit", name: "跳出并连续弹满", start: timing.spreadStart, end: timing.spreadEnd },
       { kind: "replace", name: "立即收束", start: timing.spreadEnd, end: timing.collapseEnd },
       { kind: "contact", name: "字母图标扫变", start: timing.collapseEnd, end: timing.scanEnd },
       { kind: "hold", name: "恢复后停留", start: timing.scanEnd, end: timing.holdEnd },
@@ -1126,7 +1152,6 @@
       introAssetGapOut: `${inputs.introAssetGap.value}px`,
       rowCountOut: inputs.rowCount.value,
       wallFontSizeOut: `${inputs.wallFontSize.value}px`,
-      wallAssetScaleOut: `${inputs.wallAssetScale.value}%`,
       wallTextGapOut: `${inputs.wallTextGap.value}px`,
       wallScaleOut: `${inputs.wallScale.value}%`,
       itemGapOut: `${inputs.itemGap.value}px`,
@@ -1158,8 +1183,8 @@
   [inputs.swapInterval, inputs.finalScanSpeed, inputs.iconHoldDuration, inputs.finalDuration, inputs.exitDuration, inputs.finalFontSize,
     inputs.finalAssetScale, inputs.finalTextGap]
     .forEach((input) => input.addEventListener("input", () => setTime(choreographyTiming().collapseEnd + .025)));
-  [inputs.wallScale, inputs.wallFontSize, inputs.wallAssetScale, inputs.wallTextGap, inputs.lineGap].forEach((input) => {
-    input.addEventListener("input", () => setTime(choreographyTiming().introEnd + choreographyTiming().duration[1] * .8));
+  [inputs.wallScale, inputs.wallFontSize, inputs.wallTextGap, inputs.lineGap].forEach((input) => {
+    input.addEventListener("input", () => setTime(choreographyTiming().spreadStart + choreographyTiming().duration[1] * .8));
   });
   [inputs.fontSize, inputs.assetScale, inputs.itemGap, inputs.introAssetGap].forEach((input) => {
     input.addEventListener("input", () => setTime(choreographyTiming().duration[0] * .5));
@@ -1170,8 +1195,8 @@
   inputs.rows.addEventListener("input", syncRowAssetGaps);
   inputs.motionMode.addEventListener("change", () => setTime(0));
 
-  const SCHEME_STORAGE_KEY = "me-vertical-rise-scheme-v4";
-  const LEGACY_SCHEME_STORAGE_KEYS = ["me-vertical-rise-scheme-v3", "me-vertical-rise-scheme-v2"];
+  const SCHEME_STORAGE_KEY = "me-vertical-rise-scheme-v5";
+  const LEGACY_SCHEME_STORAGE_KEYS = ["me-vertical-rise-scheme-v4", "me-vertical-rise-scheme-v3", "me-vertical-rise-scheme-v2"];
   let defaultSchemeSnapshot = null;
   let applyingScheme = false;
   let persistTimer = 0;
@@ -1187,8 +1212,9 @@
       if (field) controls[id] = field.type === "checkbox" ? field.checked : field.value;
     });
     return {
-      type: "me-vertical-rise", version: 4, controls, selectedAssetId,
-      rowAssetGaps: [...rowAssetGaps], finalSlotMap: { ...finalSlotMap },
+      type: "me-vertical-rise", version: 5, controls, selectedAssetId,
+      rowAssetGaps: [...rowAssetGaps], rowAssetScales: [...rowAssetScales], rowAssetOffsetsX: [...rowAssetOffsetsX],
+      finalSlotMap: { ...finalSlotMap },
       finalSlotSettings: Object.fromEntries(Object.entries(finalSlotSettings).map(([index, setting]) => [index, normalizedFinalSlotSetting(index)])),
       assets: [...assets.values()].map((asset) => ({
         id: asset.id, label: asset.label, src: asset.src, removable: asset.removable,
@@ -1221,7 +1247,14 @@
         setting.rotation = 0;
       });
     }
-    scheme.version = 4;
+    if (Number(scheme.version) < 5) {
+      const legacyScale = Number(scheme.controls.wallAssetScale) || 92;
+      const rowCount = Array.isArray(scheme.rowAssetGaps) ? scheme.rowAssetGaps.length : parseRows().length;
+      if (!Array.isArray(scheme.rowAssetScales)) scheme.rowAssetScales = Array(rowCount).fill(legacyScale);
+      if (!Array.isArray(scheme.rowAssetOffsetsX)) scheme.rowAssetOffsetsX = Array(rowCount).fill(0);
+      delete scheme.controls.wallAssetScale;
+    }
+    scheme.version = 5;
     return scheme;
   }
 
@@ -1249,6 +1282,8 @@
     });
     if (Array.isArray(scheme.assets) && scheme.assets.length) restoreSchemeAssets(scheme.assets);
     rowAssetGaps = Array.isArray(scheme.rowAssetGaps) ? scheme.rowAssetGaps.map(Number) : [];
+    rowAssetScales = Array.isArray(scheme.rowAssetScales) ? scheme.rowAssetScales.map(Number) : [];
+    rowAssetOffsetsX = Array.isArray(scheme.rowAssetOffsetsX) ? scheme.rowAssetOffsetsX.map(Number) : [];
     finalSlotMap = scheme.finalSlotMap && typeof scheme.finalSlotMap === "object" ? { ...scheme.finalSlotMap } : {};
     finalSlotSettings = scheme.finalSlotSettings && typeof scheme.finalSlotSettings === "object" ? { ...scheme.finalSlotSettings } : {};
     selectedAssetId = assets.has(scheme.selectedAssetId) ? scheme.selectedAssetId : assets.keys().next().value;

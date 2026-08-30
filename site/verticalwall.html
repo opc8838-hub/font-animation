@@ -78,7 +78,7 @@ leveling {{play}}p
           <label>文字<input id="textColor" type="color" value="#090909"></label>
         </div>
         <p class="hint">每个换行只生成一排，不会自动复制相同排。把素材标记插在任意字位，例如 level{{music}}ing up；支持中文、图片和图标。</p>
-        <div class="vertical-row-gap-list" id="rowGapList" aria-label="每行图标与文字间距"></div>
+        <div class="vertical-row-gap-list" id="rowGapList" aria-label="每行图标的间距、大小与左右位置"></div>
       </section>
 
       <section class="scene-grid vertical-scene-grid">
@@ -202,9 +202,6 @@ leveling {{play}}p
           <label>满屏文字大小 <small class="stage-tag">铺满阶段</small><output id="wallFontSizeOut">85px</output>
             <input id="wallFontSize" type="range" min="18" max="160" value="85">
           </label>
-          <label>满屏图标大小 <small class="stage-tag">铺满阶段</small><output id="wallAssetScaleOut">92%</output>
-            <input id="wallAssetScale" type="range" min="35" max="220" value="92">
-          </label>
           <label>满屏文字间距 <small class="stage-tag">铺满阶段</small><output id="wallTextGapOut">0px</output>
             <input id="wallTextGap" type="range" min="-12" max="60" value="0">
           </label>
@@ -323,7 +320,7 @@ leveling {{play}}p
   <script src="token-asset-tools.js"></script>
   <script src="shared-icon-library.js?v=20260830-3"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
-  <script src="verticalwall.js?v=20260830-4"></script>
+  <script src="verticalwall.js?v=20260830-5"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
 </body>

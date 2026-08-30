@@ -31,9 +31,7 @@
 
 .vertical-row-gap-item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 132px;
-  align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 9px 10px;
   border: 1px solid #e2e2e5;
   border-radius: 11px;
@@ -48,11 +46,13 @@
   font-weight: 700;
 }
 
-.vertical-row-gap-item label { display: grid; grid-template-columns: 1fr 32px; align-items: center; gap: 6px; }
+.vertical-row-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.vertical-row-gap-item label { display: grid; grid-template-columns: minmax(0, 1fr) 34px; align-items: center; gap: 5px; font-size: 9px; }
+.vertical-row-gap-item label b { grid-column: 1 / -1; font-size: 8px; font-weight: 650; color: #77776f; }
 .vertical-row-gap-item output { color: #6e6e73; font-size: 9px; text-align: right; }
 
 @media (max-width: 720px) {
-  .vertical-row-gap-item { grid-template-columns: 1fr; }
+  .vertical-row-controls { grid-template-columns: 1fr; }
 }
 .vertical-panel .stage-control-heading b { font: 750 11px/1.2 inherit; }
 .vertical-panel .stage-control-heading span { color: #77776f; font: 600 8px/1.2 "Courier New", monospace; }

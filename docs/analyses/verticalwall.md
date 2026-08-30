@@ -15,19 +15,19 @@
 
 | Time | Source frames | Phase | Visible evidence | Motion interpretation | Confidence |
 | --- | --- | --- | --- | --- | --- |
-| 0.00–0.30s | 源片 009–018，内容按用户修订 | 中心跳出 | 源片 `leveling up` 黑色像素包围盒从约 365×72 增长到 484×95，即约 75%→100%；中心位置稳定且无淡入 | 把源片这段尺度轨迹移到循环首帧，直接显示 `leveling up`；使用近线性纵深放大，不从极小尺寸起跳、不回摆 | high |
-| 0.30–0.66s | 源片 019 起 | 连续弹满 | 单行达到全尺寸后，下一批密集帧立即出现上下相邻行 | 中心行继续匹配字墙尺寸，逐行弹出紧接开场 | high |
-| 0.66–0.96s | 用户修订 | 立即收束 | 满屏完成的下一刻直接进入外围行退场 | 不设置满屏静止段，收尾单行在退场后半段接管中心 | high |
-| 0.96–1.48s | 用户修订 | 末行扫变 | 指定字母依次替换为图标，再依次恢复 | 完整沿用水流的“字母→图标→字母”扫变；每个图标保持原槽位中心，只应用独立二维平面旋转角度 | high |
-| 1.48–1.62s | 用户修订 | 恢复后停留 | 完整 `leveling up` 短暂停留 | 停留时长可编辑 | high |
-| 1.62–1.74s | 用户修订 | 快速消失 | 末行快速缩小并淡出 | 独立可编辑退场时长，结束后循环回到首帧 | high |
+| 0.00–0.20s | 源片 009–015，内容按用户修订 | 中心跳出 | `leveling up` 从画布中心向观看者放大，无淡入或换词 | 以约 75% 尺寸直接起跳；开场快慢由独立参数控制 | high |
+| 0.20–0.56s | 源片 015–019 起 | 跳出并连续弹满 | 中心词仍在向前放大时，上下相邻行已经出现 | 铺满提前与开场后段重叠，中心词不经过静止帧就继续匹配字墙尺寸 | high |
+| 0.56–0.86s | 用户修订 | 立即收束 | 满屏完成的下一刻直接进入外围行退场 | 不设置满屏静止段，收尾单行在退场后半段接管中心 | high |
+| 0.86–1.38s | 用户修订 | 末行扫变 | 指定字母依次替换为图标，再依次恢复 | 沿用水流的“字母→图标→字母”扫变；图标先以 0° 正向扫入，再快速原位旋转到各槽位设定角度 | high |
+| 1.38–1.52s | 用户修订 | 恢复后停留 | 完整 `leveling up` 短暂停留 | 停留时长可编辑 | high |
+| 1.52–1.64s | 用户修订 | 快速消失 | 末行快速缩小并淡出 | 独立可编辑退场时长，结束后循环回到首帧 | high |
 
 ## Element model
 
 - Text unit: 开场词、逐行字墙、收尾字母槽位
 - Persistent elements: 背景与中心对齐轴
 - Replaced elements: 收尾指定字母槽位与对应图标互斥显示
-- Image/icon behavior: 每行拥有独立字图间距；收尾每个槽位拥有独立前后间距、大小、静态位置和 −360°～360° 二维平面旋转角
+- Image/icon behavior: 满屏每行分别拥有独立字图间距、图标大小和左右位置；收尾每个槽位拥有独立前后间距、大小、静态位置和 −360°～360° 二维平面旋转角
 - Layer order: 背景 → 字墙/末行 → 舞台播放控件（仅编辑器）
 
 ## Spatial rules
@@ -41,8 +41,8 @@
 ## Timing and easing
 
 - Total loop: 由中心跳出、连续弹满、立即收束、收尾扫变、恢复停留、快速消失六段共同决定
-- Overlaps: 字墙退场后半段提前显露收尾文字
-- Holds with residual motion: 满屏没有停留；图标在水流扫变窗口内保持设定平面角度，到恢复节点立即换回字母
+- Overlaps: 中心跳出的后 32% 与字墙铺满重叠；字墙退场后半段提前显露收尾文字
+- Holds with residual motion: 满屏没有停留；收尾图标先正向出现，再在原槽位快速旋转到设定角度，到恢复节点立即换回字母
 - Hard cuts: 无开场换词硬切，首行与收尾默认统一为 `leveling up`
 - Easing: 开场按源片密集帧使用近线性尺度增长；收尾沿用水流扫变 easing，末帧快速缩小淡出
 
@@ -52,7 +52,7 @@
 - Shared UI: `currentwall.css`, `me-motion-editor.css`, `me-motion-editor.js`
 - Shared media: `shared-icon-library.js`, `token-asset-tools.js`
 - Shared export: `continuation-gif.js`, `h264-mp4-encoder.web.js`
-- New core logic: 每行独立字图间距状态；水流同款末行槽位扫变
+- New core logic: 每行独立字图间距、大小和左右位置状态；水流同款末行槽位扫变
 
 ## Uncertainties
 
@@ -68,6 +68,8 @@
 - [x] Inspector interaction and scrolling
 - [x] Canvas-size card is the first inspector card; 16:9, 9:16, 1:1, 4:5, and custom 700×500 refit to exact ratios while the 420px inspector remains fixed
 - [x] Per-slot 2D rotation remains independent (25° versus 0° tested) and survives auto-save/reload
+- [x] Per-row gap / icon size / horizontal position remain independent (row 1: 21px / 137% / −46px; row 2 stayed 0px / 92% / 0px) and survive auto-save/reload
+- [x] Opening enters the overlap phase before the 0.30s center launch completes
 - [x] Console clean
 - [x] PNG generated
 - [x] Full-cycle GIF generated (320×320, 27 frames)
