@@ -72,7 +72,7 @@
 - [x] The row editor opens as a two-part overlay: parameters occupy the original 420px inspector and a fixed full-wall preview sits immediately to its right without shifting the live stage
 - [x] Global icon size and horizontal position apply to every row, remain the defaults for newly added rows, and still allow independent row overrides
 - [x] Each wall row edits left text, one anchored icon, and right text directly; changing the row selector replaces that icon instead of inserting another token
-- [x] Main row icons share a centered column while each row keeps independent size, column offset, left gap, and right gap
+- [x] Every wall row starts from one shared vertical text edge; icon/right-text offsets never push shorter left text into a diagonal staircase
 - [x] Overview renders exactly the input row count (11 rows and 3 rows tested), stays visible while row controls scroll, and updates from both global and row-owned controls
 - [x] Fully revealed first and last wall rows use the same solid text color as every middle row; no distance-based edge fade remains
 - [x] Single-asset scale / offset / gap edits do not stack onto the full-wall row geometry

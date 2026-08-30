@@ -584,7 +584,7 @@
         <label><b>左侧间距</b><input data-key="gap" type="range" min="-20" max="120" step="1"><output></output></label>
         <label><b>右侧间距</b><input data-key="gapAfter" type="range" min="-20" max="120" step="1"><output></output></label>
         <label><b>图标大小</b><input data-key="scale" type="range" min="35" max="220" step="1"><output></output></label>
-        <label><b>图标列位置</b><input data-key="offsetX" type="range" min="-120" max="120" step="1"><output></output></label>
+        <label><b>图标左右位置</b><input data-key="offsetX" type="range" min="-120" max="120" step="1"><output></output></label>
       </div>`;
       item.querySelector("span").textContent = `第 ${index + 1} 行 · ${line.replace(/\{\{[^{}]+\}\}/g, "[图标]")}`;
       const parts = firstRowAssetParts(line);
@@ -739,32 +739,38 @@
     return layout;
   }
 
-  function layoutRowIconColumn(context, line, fontPx, assetHeight, textGap, gapBefore, gapAfter) {
+  function layoutRowSegments(context, line, fontPx, assetHeight, textGap, gapBefore, gapAfter) {
     const parts = firstRowAssetParts(line);
     const asset = assets.get(parts.assetId);
     if (!asset) return null;
     const left = parts.left ? layoutTokens(context, parts.left, fontPx, assetHeight, textGap, textGap, false) : null;
     const right = parts.right ? layoutTokens(context, parts.right, fontPx, assetHeight, textGap, textGap, false) : null;
     const iconWidth = assetHeight * (asset.ratio || 1);
-    const iconLeft = -iconWidth / 2;
-    const iconRight = iconWidth / 2;
-    const minX = left ? iconLeft - gapBefore - left.width : iconLeft;
-    const maxX = right ? iconRight + gapAfter + right.width : iconRight;
+    const leftWidth = left?.width || 0;
+    const iconX = leftWidth + gapBefore;
+    const rightX = iconX + iconWidth + gapAfter;
+    const width = rightX + (right?.width || 0);
     return {
       asset, assetId: parts.assetId, assetHeight, iconWidth, left, right,
-      leftX: left ? iconLeft - gapBefore - left.width : iconLeft,
-      rightX: iconRight + gapAfter,
-      minX, maxX, width: maxX - minX
+      iconX, rightX, width
     };
   }
 
-  function drawRowIconColumn(context, column, anchorX, y, color, time) {
-    if (column.left) drawSequence(context, column.left, anchorX + column.leftX, y, color, 0, time, 0, false);
+  function rowSegmentBounds(segments, iconOffset = 0) {
+    if (!segments) return null;
+    return {
+      minX: Math.min(0, segments.iconX + iconOffset),
+      maxX: Math.max(segments.left?.width || 0, segments.width + iconOffset)
+    };
+  }
+
+  function drawRowSegments(context, segments, startX, iconOffset, y, color, time) {
+    if (segments.left) drawSequence(context, segments.left, startX, y, color, 0, time, 0, false);
     drawItem(context, {
-      type: "asset", id: column.assetId, asset: column.asset,
-      width: column.iconWidth, height: column.assetHeight
-    }, anchorX - column.iconWidth / 2, y, color, { time, useAssetTuning: false });
-    if (column.right) drawSequence(context, column.right, anchorX + column.rightX, y, color, 0, time, 0, false);
+      type: "asset", id: segments.assetId, asset: segments.asset,
+      width: segments.iconWidth, height: segments.assetHeight
+    }, startX + segments.iconX + iconOffset, y, color, { time, useAssetTuning: false });
+    if (segments.right) drawSequence(context, segments.right, startX + segments.rightX + iconOffset, y, color, 0, time, 0, false);
   }
 
   function drawItem(context, item, x, y, color, options = {}) {
@@ -1081,10 +1087,16 @@
       context, line, wallStage.fontPx, wallStage.assetHeight * rowAssetScales[index] / 100, wallStage.textGap,
       wallStage.assetGap + (Number(rowAssetGaps[index]) || 0) * scale, false
     ));
-    const wallColumns = rows.map((line, index) => layoutRowIconColumn(
+    const wallSegments = rows.map((line, index) => layoutRowSegments(
       context, line, wallStage.fontPx, wallStage.assetHeight * rowAssetScales[index] / 100, wallStage.textGap,
       (Number(rowAssetGaps[index]) || 0) * scale, (Number(rowAssetGapsAfter[index]) || 0) * scale
     ));
+    const wallBounds = wallLayouts.map((layout, index) => rowSegmentBounds(
+      wallSegments[index], (Number(rowAssetOffsetsX[index]) || 0) * scale
+    ) || { minX: 0, maxX: layout.width });
+    const wallMinX = Math.min(...wallBounds.map((bounds) => bounds.minX));
+    const wallMaxX = Math.max(...wallBounds.map((bounds) => bounds.maxX));
+    const wallStartX = -(wallMaxX - wallMinX) / 2 - wallMinX;
     const wallZoom = Number(inputs.wallScale.value) / 100;
     const drawCentered = (line, y, xOffset = 0, alpha = 1, rowScale = 1, stage = introStage, rowIndex = 0, axisScaleX = 1, axisScaleY = 1) => {
       context.font = fontFor(stage);
@@ -1092,16 +1104,16 @@
       const layout = isWall
         ? (wallLayouts[rowIndex] || layoutTokens(context, line, stage.fontPx, stage.assetHeight, stage.textGap, stage.assetGap, false))
         : layoutTokens(context, line, stage.fontPx, stage.assetHeight, stage.textGap, stage.assetGap);
-      const column = isWall ? wallColumns[rowIndex] : null;
+      const segments = isWall ? wallSegments[rowIndex] : null;
       context.save();
       context.globalAlpha *= clamp01(alpha);
       context.translate(w / 2 + xOffset, h / 2 + y);
       const compositionScale = rowScale * (isWall ? wallZoom : 1);
       context.scale(compositionScale * axisScaleX, compositionScale * axisScaleY);
-      if (column) {
-        drawRowIconColumn(context, column, (Number(rowAssetOffsetsX[rowIndex]) || 0) * scale, 0, inputs.foreground.value, localTime);
+      if (segments) {
+        drawRowSegments(context, segments, wallStartX, (Number(rowAssetOffsetsX[rowIndex]) || 0) * scale, 0, inputs.foreground.value, localTime);
       } else {
-        drawSequence(context, layout, -layout.width / 2, 0, inputs.foreground.value, 0, localTime, 0, !isWall);
+        drawSequence(context, layout, isWall ? wallStartX : -layout.width / 2, 0, inputs.foreground.value, 0, localTime, 0, !isWall);
       }
       context.restore();
     };
@@ -1518,14 +1530,16 @@
     const layouts = rows.map((line, index) => layoutTokens(context, line, fontPx,
       fontPx * rowAssetScales[index] / 100, Number(inputs.wallTextGap.value) * unitScale,
       (Number(rowAssetGaps[index]) || 0) * unitScale, false));
-    const columns = rows.map((line, index) => layoutRowIconColumn(context, line, fontPx,
+    const segments = rows.map((line, index) => layoutRowSegments(context, line, fontPx,
       fontPx * rowAssetScales[index] / 100, Number(inputs.wallTextGap.value) * unitScale,
       (Number(rowAssetGaps[index]) || 0) * unitScale, (Number(rowAssetGapsAfter[index]) || 0) * unitScale));
-    const widest = Math.max(1, ...layouts.map((layout, index) => {
-      const column = columns[index];
-      const offset = (Number(rowAssetOffsetsX[index]) || 0) * unitScale;
-      return column ? Math.max(Math.abs(column.minX + offset), Math.abs(column.maxX + offset)) * 2 : layout.width;
-    }));
+    const bounds = layouts.map((layout, index) => rowSegmentBounds(
+      segments[index], (Number(rowAssetOffsetsX[index]) || 0) * unitScale
+    ) || { minX: 0, maxX: layout.width });
+    const minX = Math.min(...bounds.map((item) => item.minX));
+    const maxX = Math.max(...bounds.map((item) => item.maxX));
+    const widest = Math.max(1, maxX - minX);
+    const startX = -widest / 2 - minX;
     const tallestRow = Math.max(fontPx, ...rowAssetScales.map((value) => fontPx * value / 100));
     const allRowsHeight = Math.max(tallestRow, (rows.length - 1) * lineHeight + tallestRow);
     const fit = Math.min(1, (width - 48) / (widest * wallZoom), (height - 48) / (allRowsHeight * wallZoom));
@@ -1535,10 +1549,10 @@
       context.save();
       context.translate(width / 2, startY + index * renderedLineHeight);
       context.scale(wallZoom * fit, wallZoom * fit);
-      if (columns[index]) {
-        drawRowIconColumn(context, columns[index], (Number(rowAssetOffsetsX[index]) || 0) * unitScale, 0, inputs.foreground.value, time);
+      if (segments[index]) {
+        drawRowSegments(context, segments[index], startX, (Number(rowAssetOffsetsX[index]) || 0) * unitScale, 0, inputs.foreground.value, time);
       } else {
-        drawSequence(context, layout, -layout.width / 2, 0, inputs.foreground.value, 0, time, 0, false);
+        drawSequence(context, layout, startX, 0, inputs.foreground.value, 0, time, 0, false);
       }
       context.restore();
     });
