@@ -87,8 +87,9 @@
 - [x] Opening rhythm control is visible beside the opening word and updates the launch duration (0.30s and 0.62s tested)
 - [x] Opening icons have an explicit insertion target, visible used-icon list, opening-only size/gap controls, and single-asset size/X/Y/before/after editing
 - [x] Final icon shows an upright frame, turns to the configured angle, returns upright, then restores the letter
-- [x] During the restore sweep, each icon scales down and fades out while its original glyph fades and eases back in; there is no one-frame icon-to-glyph cut after all icons have appeared
-- [x] During the entry sweep, each glyph compresses and fades while its icon springs upward and outward into the expanding slot; the speed control restarts this stage for immediate preview and shows the resulting scan duration
+- [x] Final entry and restore use Water Flow's transition, stagger, speed scaling, slot expansion, glyph compression, and restore easing; 2D rotation is the only added icon motion
+- [x] Rotation and icon hold share one timing window instead of creating serial pauses, and the restored line exits with Water Flow's subtle upward drift, 5.5% scale reduction, and fade
+- [x] The final-sweep speed control restarts this stage for immediate preview and shows the resulting scan duration
 - [x] Final-slot angle controls stay visible, with disabled guidance for unmapped characters and saved angles shown on every mapped slot
 - [x] Main-row edits pause on the complete full-wall frame so a newly assigned middle-row icon remains inspectable instead of immediately advancing into collapse
 - [x] An opening-center inline icon carries continuously into the full-wall center row whenever that row has no independently assigned icon, including icon-for-letter replacement text; an explicit middle-row icon still takes priority
