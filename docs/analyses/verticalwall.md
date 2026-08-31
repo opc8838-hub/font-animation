@@ -92,6 +92,7 @@
 - [x] The final-sweep speed control restarts this stage for immediate preview and shows the resulting scan duration
 - [x] The full-wall editor uses the same opening-icon carry rule as the live canvas, refreshes when an asset finishes loading, and provides independent horizontal character spacing for every row
 - [x] Final icons return from their configured 2D angle into their own glyph slot without an idle seam; restore motion has a 150ms floor and matches icon/glyph scale at the handoff
+- [x] Each final icon now turns toward its target angle while popping in, holds briefly, returns upright more slowly, and only then enters the shrink-to-glyph restore sweep
 - [x] Final-slot angle controls stay visible, with disabled guidance for unmapped characters and saved angles shown on every mapped slot
 - [x] Main-row edits pause on the complete full-wall frame so a newly assigned middle-row icon remains inspectable instead of immediately advancing into collapse
 - [x] An opening-center inline icon carries continuously into the full-wall center row whenever that row has no independently assigned icon, including icon-for-letter replacement text; an explicit middle-row icon still takes priority
