@@ -8,7 +8,7 @@
   const context = canvas.getContext("2d", { alpha: false, willReadFrequently: true });
   const PREVIEW = new URLSearchParams(location.search).has("preview");
   const STORAGE_KEY = "impactbuild-scheme-v1";
-  const VERSION = 1;
+  const VERSION = 2;
   const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
   const lerp = (from, to, amount) => from + (to - from) * amount;
   const smooth = (value) => { const p = clamp(value); return p * p * (3 - 2 * p); };
@@ -23,7 +23,7 @@
     phrase: "Action becomes progress", fontFamily: "stg:inter", fontWeight: "600",
     backgroundColor: "#050505", textColor: "#f5f5f5", accentColor: "#b783ff",
     canvasPreset: "1920x1080", canvasWidth: "1920", canvasHeight: "1080",
-    impactScale: "420", impactDuration: "100", settleDuration: "900", appendInterval: "667",
+    impactScale: "420", impactDuration: "100", settleDuration: "320", appendInterval: "667",
     appendDuration: "200", finalHold: "1300", blurStrength: "115", masterSpeed: "100",
     fontSize: "10.5", wordGap: "42", iconTextGap: "28", positionX: "50", positionY: "50",
     settleScale: "100", appendSqueeze: "25", appendTravel: "200", breathAmount: "1.5", tailBlur: "22",
@@ -88,7 +88,8 @@
 
   function wordStart(index) {
     if (index <= 0) return 0;
-    return ms("#impactDuration") + ms("#settleDuration") + (index - 1) * ms("#appendInterval") + (wordSettings[index]?.offset || 0) / 1000;
+    const firstJoin = ms("#impactDuration") + ms("#settleDuration") * 0.78;
+    return firstJoin + (index - 1) * ms("#appendInterval") + (wordSettings[index]?.offset || 0) / 1000;
   }
 
   function timeline() {
@@ -197,16 +198,18 @@
     const current = measurePhrase(ctx, currentWords, fontPx, gapPx);
     const previous = state.activeIndex > 0 ? measurePhrase(ctx, words.slice(0, state.activeIndex), fontPx, gapPx) : current;
 
-    let scale = number("#settleScale") / 100;
+    const settledScale = number("#settleScale") / 100;
+    let scale = settledScale;
     const impactDuration = Math.max(0.001, ms("#impactDuration"));
     if (time < impactDuration) {
       const p = clamp(time / impactDuration);
       const reveal = easeOut(p / 0.2);
       const collapse = impactCollapseAt(p);
       const incomingScale = lerp(2.15, number("#impactScale") / 100, reveal);
-      scale = lerp(incomingScale, number("#settleScale") / 100, collapse);
+      scale = lerp(incomingScale, settledScale * 0.92, collapse);
     } else if (time < timeline().settleEnd) {
-      scale = number("#settleScale") / 100;
+      const settleProgress = clamp((time - impactDuration) / Math.max(0.001, timeline().settleEnd - impactDuration));
+      scale = lerp(settledScale * 0.92, settledScale, easeOutCubic(settleProgress));
     }
     if (time >= timeline().appendEnd && time < timeline().finalEnd) {
       const breath = number("#breathAmount") / 100;
@@ -273,17 +276,17 @@
       }
     }
     if (append > 0.01 && strength > 0) {
-      const distance = Math.min(w, h) * 0.24 * append * strength;
+      const distance = Math.min(w, h) * 0.28 * append * strength;
       const appendLag = Math.max(0.001, ms("#appendDuration")) * 0.5;
-      for (let index = 1; index >= 1; index -= 1) {
-        const amount = index;
-        const alpha = 0.3 * append;
+      for (let index = 5; index >= 1; index -= 1) {
+        const amount = index / 5;
+        const alpha = 0.15 * (1 - amount * 0.42) * append;
         drawPhraseLayer(ctx, time, w, h, alpha, distance * amount, 0, 1 + 0.16 * amount * append);
       }
-      for (let index = 2; index >= 1; index -= 1) {
-        const amount = index / 2;
+      for (let index = 4; index >= 1; index -= 1) {
+        const amount = index / 4;
         const sampledTime = Math.max(0, time - appendLag * amount);
-        const alpha = 0.28 * (1 - amount * 0.4) * append;
+        const alpha = 0.13 * (1 - amount * 0.38) * append;
         drawPhraseLayer(ctx, sampledTime, w, h, alpha, distance * amount * 0.86, 0, 1 + 0.13 * amount * append);
       }
     }
@@ -536,7 +539,13 @@
 
   window.addEventListener("resize", syncCanvasShell);
   let initial = DEFAULT;
-  if (!PREVIEW) { try { const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)); if (saved?.version === VERSION) initial = saved; } catch (_) {} }
+  if (!PREVIEW) {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if (saved?.version === VERSION) initial = saved;
+      else if (saved?.version === 1) initial = { ...saved, version: VERSION, settleDuration: saved.settleDuration === "900" ? DEFAULT.settleDuration : saved.settleDuration };
+    } catch (_) {}
+  }
   applyState(initial);
   renderAssets();
   window.STGFontLibrary?.enhanceAll(document);
