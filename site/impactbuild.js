@@ -8,13 +8,14 @@
   const context = canvas.getContext("2d", { alpha: false, willReadFrequently: true });
   const PREVIEW = new URLSearchParams(location.search).has("preview");
   const STORAGE_KEY = "impactbuild-scheme-v1";
-  const VERSION = 4;
+  const VERSION = 5;
   const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
   const lerp = (from, to, amount) => from + (to - from) * amount;
   const smooth = (value) => { const p = clamp(value); return p * p * (3 - 2 * p); };
   const easeOut = (value) => 1 - Math.pow(1 - clamp(value), 4);
   const easeOutCubic = (value) => 1 - Math.pow(1 - clamp(value), 3);
   const APPEND_ACCELERATION_END = 0.16;
+  const APPEND_FOLLOW_STAGGER = 0.07;
   const inertialProgress = (value) => {
     const p = clamp(value);
     if (p < APPEND_ACCELERATION_END) {
@@ -28,6 +29,10 @@
     const p = clamp(value);
     if (p < APPEND_ACCELERATION_END) return Math.sin(p / APPEND_ACCELERATION_END * Math.PI / 2);
     return Math.cos((p - APPEND_ACCELERATION_END) / (1 - APPEND_ACCELERATION_END) * Math.PI / 2);
+  };
+  const followedProgress = (rawProgress, index) => {
+    const delay = Math.min(0.2, Math.max(0, index) * APPEND_FOLLOW_STAGGER);
+    return inertialProgress((rawProgress - delay) / Math.max(0.001, 1 - delay));
   };
   const impactCollapseAt = (progress) => smooth((progress - 0.28) / 0.68);
   const mod = (value, divisor) => ((value % divisor) + divisor) % divisor;
@@ -233,7 +238,7 @@
 
     const transitionAmount = state.activeIndex > 0 ? Math.sin(Math.PI * state.progress) : 0;
     const squeeze = 1 - number("#appendSqueeze") / 100 * transitionAmount;
-    const layoutWidth = state.activeIndex > 0 ? lerp(previous.width, current.width, state.progress) : current.width;
+    const layoutWidth = current.width;
     const centerX = w * number("#positionX") / 100;
     const centerY = h * number("#positionY") / 100;
     const impactAmount = time < impactDuration ? 1 - impactCollapseAt(time / impactDuration) : 0;
@@ -241,6 +246,8 @@
     const fit = Math.min(1, w * widthEnvelope / Math.max(1, current.width * scale));
     scale *= fit;
     const left = centerX - layoutWidth / 2;
+    const previousLeft = centerX - previous.width / 2;
+    const appendShift = Math.max(0, previousLeft - left);
 
     ctx.save();
     ctx.globalAlpha = alpha;
@@ -253,12 +260,18 @@
       const setting = wordSettings[index] || {};
       let itemAlpha = 1;
       let travel = 0;
+      let followOffset = 0;
+      if (state.activeIndex > 0 && index <= state.activeIndex) {
+        const follow = followedProgress(state.rawProgress, index);
+        followOffset = appendShift * (1 - follow);
+      }
       if (index === state.activeIndex) {
         itemAlpha = smooth(state.rawProgress / 0.34);
-        travel = number("#appendTravel") / 100 * fontPx * (1 - state.progress);
+        const follow = followedProgress(state.rawProgress, index);
+        travel = number("#appendTravel") / 100 * fontPx * (1 - follow);
       }
       ctx.save(); ctx.globalAlpha *= itemAlpha;
-      drawItem(ctx, item, cursor + travel, centerY, fontPx, colorOverride || setting.color || $("#textColor").value, time);
+      drawItem(ctx, item, cursor + followOffset + travel, centerY, fontPx, colorOverride || setting.color || $("#textColor").value, time);
       ctx.restore(); cursor += item.width + gapPx;
     });
     ctx.restore();
@@ -558,7 +571,7 @@
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
       if (saved?.version === VERSION) initial = saved;
-      else if (saved?.version === 1 || saved?.version === 2 || saved?.version === 3) {
+      else if (saved?.version === 1 || saved?.version === 2 || saved?.version === 3 || saved?.version === 4) {
         const usedOldDefault = saved.settleDuration === "900" || saved.settleDuration === "320";
         const usedOldAppendDefault = saved.appendDuration === "200";
         initial = {
