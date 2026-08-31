@@ -4,11 +4,11 @@ This is the short entry point for continuing ME Motion Studio work in a fresh ch
 
 ## Start without scanning the repository
 
-1. Run `git status --short`, `git fetch origin`, and inspect the current branch divergence before editing. Preserve unrelated or uncommitted work.
+1. Run `git status --short --branch`, `git fetch origin`, and inspect the current branch divergence before editing. Preserve unrelated or uncommitted work. If the tree is clean, fast-forward local `main` and create a fresh `agent/YYYYMMDD-<slug>` branch; if it is dirty or switching could overwrite work, stop and report the exact state.
 2. Read only:
    - `AGENTS.md`;
    - `.codex/skills/build-font-animation-effects/SKILL.md`;
-   - the requested effect's `site/<slug>.html`, `site/<slug>.css`, and `site/<slug>.js`;
+   - for a new effect, the HTML/CSS/JS of only the closest existing effect; for a refinement, the requested effect's `site/<slug>.html`, `site/<slug>.css`, and `site/<slug>.js`;
    - files directly imported by that effect.
 3. Load skill references conditionally:
    - editor UI or icon interaction: `references/editor-interaction-contract.md`;
@@ -19,7 +19,7 @@ This is the short entry point for continuing ME Motion Studio work in a fresh ch
 
 ## Current source of truth
 
-- Development branch: `agent/aug16-sequence-effects`.
+- Base branch: latest `origin/main`. Create a fresh task branch for each new effect or focused refinement; do not reuse a historical branch named in an old prompt.
 - Gallery: `site/gallery.html`, `site/gallery.js`, and `site/gallery.css`.
 - Shared effect skill: `.codex/skills/build-font-animation-effects/`.
 - Shared fonts: `site/shared-font-library.js` and `site/shared-fonts.css`.
@@ -39,7 +39,11 @@ This is the short entry point for continuing ME Motion Studio work in a fresh ch
 ## Prompt template for a fresh chat
 
 ```text
-继续开发 opc8838-hub/font-animation 的【动效名/slug】。先按 AGENTS.md 的 Low-token continuation 执行，只读 docs/CONTINUE_EFFECT_DEVELOPMENT.md、build-font-animation-effects Skill、该动效 HTML/CSS/JS 及其直接依赖；不要扫描全仓、README 历史或旧对话。先 fetch 并检查当前分支差异，保留其他 agent 的改动。我的本次要求是：【写具体修改】。完成后做针对性浏览器与真实导出验证，再提交到 agent/aug16-sequence-effects。
-```
+继续开发当前工作区里的 opc8838-hub/font-animation，新建动效【中文名 / English name / slug】。不要重新克隆，也不要扫描整台电脑。先完整读取 AGENTS.md、docs/CONTINUE_EFFECT_DEVELOPMENT.md 和 .codex/skills/build-font-animation-effects/SKILL.md；再只读取 Skill 为本任务明确路由的 references、最接近的一个现有动效 HTML/CSS/JS，以及它直接引用的共享文件。不要读取全仓、README 历史、Git 完整历史、旧对话、无关动效、work/ 或输出缓存。
 
-If the user supplies a video, append: `视频只分析本次要求相关的时间段；普通 Canvas/SVG/CSS/GSAP 动效不要默认调用 oil-motion。`
+开始前执行 git fetch origin 和 git status --short --branch。保留所有未提交改动；若工作区干净，则从最新 origin/main 创建 agent/YYYYMMDD-【slug】；若不干净、分支被占用或切换可能覆盖文件，停止切换并报告具体状态。
+
+本次动效要求：【填写】。参考视频：【没有就写“无”；有则填写本机路径】。有参考视频时，按 video-analysis-workflow 先锁定运动契约，正常速度判断节奏、慢动作和密集切帧判断顺序与重叠；冻结已经确认的阶段。普通 Canvas/SVG/CSS/GSAP 动效不要调用 oil-motion。
+
+预览、PNG、GIF、MP4 共用同一确定性时间轴与几何。完成后只做与本次需求相关的浏览器、尺寸和真实导出验证，运行语法检查、编辑器契约检查与 git diff --check；只提交本次文件，不推送或合并到 main，除非我明确要求。
+```
