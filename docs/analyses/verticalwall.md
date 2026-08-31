@@ -96,6 +96,7 @@
 - [x] Final-slot expansion, a subtle 14%-width right-side icon slide, scale reveal, and rotation now begin on the same frame instead of opening the glyph slot before the icon appears
 - [x] The live wall and editor overview now share the same edge-aware fit calculation, including per-row icon offsets, so portrait canvases no longer crop layouts that appear aligned in the overview
 - [x] Final icons keep a fixed center throughout the sweep: no entry slide, lateral drift, or vertical lift; only the configured flat rotation changes
+- [x] Final scan speed now reaches a genuine fast sweep and reports entry-sweep time separately from slow rotation; glyph return and spacing closure share an independent editable 20–600ms duration
 - [x] Final-slot angle controls stay visible, with disabled guidance for unmapped characters and saved angles shown on every mapped slot
 - [x] Main-row edits pause on the complete full-wall frame so a newly assigned middle-row icon remains inspectable instead of immediately advancing into collapse
 - [x] An opening-center inline icon carries continuously into the full-wall center row whenever that row has no independently assigned icon, including icon-for-letter replacement text; an explicit middle-row icon still takes priority

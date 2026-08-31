@@ -25,7 +25,7 @@
 
   <details class="control-panel current-panel vertical-panel" id="controlPanel" open>
     <summary>
-      <span><b>纵跃</b><small>VERTICAL RISE / 40</small></span>
+      <span><b>纵跃</b><small>VERTICAL RISE / 41</small></span>
       <i aria-hidden="true">参数</i>
     </summary>
     <div class="panel-scroll">
@@ -250,13 +250,16 @@ leveling {{play}}p
             <input id="swapInterval" type="range" min="60" max="1200" step="20" value="80">
           </label>
           <label>扫图标整体速度 <small class="stage-tag">收尾扫变</small><output id="finalScanSpeedOut">4.0×</output>
-            <input id="finalScanSpeed" type="range" min="0.5" max="8" step="0.1" value="4">
+            <input id="finalScanSpeed" type="range" min="0.5" max="24" step="0.5" value="4">
           </label>
           <label>收尾图标停留时间 <small class="stage-tag">全部扫入后</small><output id="iconHoldDurationOut">160ms</output>
             <input id="iconHoldDuration" type="range" min="40" max="1200" step="20" value="160">
           </label>
           <label>图标旋转慢动作时长 <small class="stage-tag">原地慢转后瞬间回字</small><output id="iconRotationDurationOut">0.68秒</output>
             <input id="iconRotationDuration" type="range" min="200" max="2400" step="20" value="680">
+          </label>
+          <label>回字收拢用时 <small class="stage-tag">回正、换字、收缩同步</small><output id="finalRestoreDurationOut">40ms</output>
+            <input id="finalRestoreDuration" type="range" min="20" max="600" step="10" value="40">
           </label>
           <label>收尾整句停留时间 <small class="stage-tag">恢复字母后</small><output id="finalDurationOut">0.14秒</output>
             <input id="finalDuration" type="range" min="0" max="8000" step="20" value="140">
@@ -369,7 +372,7 @@ leveling {{play}}p
   <script src="token-asset-tools.js"></script>
   <script src="shared-icon-library.js?v=20260830-3"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
-  <script src="verticalwall.js?v=20260831-40"></script>
+  <script src="verticalwall.js?v=20260831-41"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
 </body>
