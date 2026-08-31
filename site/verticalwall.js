@@ -2015,7 +2015,7 @@
   });
 
   window.addEventListener("beforeunload", () => cancelAnimationFrame(rafId));
-  function initializeEditor() {
+  async function initializeEditor() {
     if (window.innerWidth <= 720) $("#controlPanel").removeAttribute("open");
     syncRowAssetGaps();
     renderAssetGrid();
@@ -2025,7 +2025,15 @@
     updateOutputs();
     syncPlaybackControls();
     syncStagePreview();
-    defaultSchemeSnapshot = collectScheme();
+    const fallbackDefaultScheme = collectScheme();
+    try {
+      const response = await fetch("assets/presets/vertical-rise-default.json?v=20260901-1");
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      defaultSchemeSnapshot = migrateScheme(await response.json());
+    } catch (error) {
+      console.warn("纵跃默认示例读取失败，使用页面内置示例。", error);
+      defaultSchemeSnapshot = fallbackDefaultScheme;
+    }
     let storedScheme = null;
     if (!PREVIEW) {
       try {
