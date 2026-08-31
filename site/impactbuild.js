@@ -14,6 +14,17 @@
   const smooth = (value) => { const p = clamp(value); return p * p * (3 - 2 * p); };
   const easeOut = (value) => 1 - Math.pow(1 - clamp(value), 4);
   const easeOutCubic = (value) => 1 - Math.pow(1 - clamp(value), 3);
+  const APPEND_ACCELERATION_END = 0.38;
+  const inertialProgress = (value) => {
+    const p = clamp(value);
+    if (p < APPEND_ACCELERATION_END) return p * p / APPEND_ACCELERATION_END;
+    return 1 - (1 - p) * (1 - p) / (1 - APPEND_ACCELERATION_END);
+  };
+  const inertialVelocity = (value) => {
+    const p = clamp(value);
+    if (p < APPEND_ACCELERATION_END) return p / APPEND_ACCELERATION_END;
+    return (1 - p) / (1 - APPEND_ACCELERATION_END);
+  };
   const impactCollapseAt = (progress) => smooth((progress - 0.28) / 0.68);
   const mod = (value, divisor) => ((value % divisor) + divisor) % divisor;
   const ms = (id) => Number($(id).value) / 1000;
@@ -153,7 +164,7 @@
         if (time < start + duration) {
           activeIndex = index;
           rawProgress = clamp((time - start) / duration);
-          progress = easeOutCubic(rawProgress);
+          progress = inertialProgress(rawProgress);
         }
       }
     }
@@ -259,9 +270,7 @@
     const impactReveal = time < impactDuration ? easeOut((impactProgress - 0.16) / 0.12) : 1;
     const impactCollapse = time < impactDuration ? impactCollapseAt(impactProgress) : 1;
     const impact = time < impactDuration ? impactReveal * (1 - impactCollapse) : 0;
-    const append = state.activeIndex > 0
-      ? smooth(state.rawProgress / 0.08) * Math.pow(1 - state.rawProgress, 1.2)
-      : 0;
+    const append = state.activeIndex > 0 ? inertialVelocity(state.rawProgress) : 0;
     const tail = time > timeline().finalEnd ? clamp((time - timeline().finalEnd) / timeline().tail) : 0;
     const strength = number("#blurStrength") / 100;
     if (impact > 0.01 && strength > 0) {

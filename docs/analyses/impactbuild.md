@@ -4,6 +4,7 @@
 
 - Normal-speed file: `Desktop/飞书20260831-175005.qt` (not committed)
 - Duration / fps / dimensions: 3.466667s / 30fps / 540×1166, 104 video frames
+- Rhythm recheck: `Desktop/飞书20260831-220006.qt` (not committed), 1.533333s / 30fps / 540×1166, 46 video frames
 - Relevant crop: x=0, y=307, w=540, h=304 (embedded 16:9 motion area)
 - Analysis date: 2026-08-31
 
@@ -46,7 +47,8 @@ A lead word lands as a huge horizontally smeared impact, settles smaller, then e
 - Overlaps: append word visibility, phrase recentering, squeeze, and smear are simultaneous
 - Holds with residual motion: final hold has an editable low-amplitude breathing scale
 - Hard cuts: loop tail cuts directly back to the lead impact
-- Easing hypothesis: cubic ease-out for impact; smoothstep-based append recovery
+- Easing hypothesis: cubic ease-out for impact; each append uses one continuous inertial curve with a short acceleration phase and a longer deceleration phase
+- Append blur rule: directional trail strength follows normalized instantaneous append velocity, so it rises from zero, peaks near maximum speed, and returns to zero at the destination
 
 ## Reuse plan
 
@@ -88,6 +90,7 @@ A lead word lands as a huge horizontally smeared impact, settles smaller, then e
 
 ## Feedback discoveries
 
+- 2026-08-31: the 1.533333s original-speed rhythm recheck shows the first append launching at frame 015, strongest directional blur across frames 015–017, recovery at frame 018, and a clear destination by frame 019; the second append repeats the same shape. v12 replaces the previous start-fast cubic ease-out with a continuous acceleration/deceleration curve and drives every append trail layer from that curve's instantaneous velocity.
 - 2026-08-31: v11 starts the first append on the exact frame where the lead impact ends. Lead recovery, leftward reflow, incoming-word reveal, and both words' directional afterimage now overlap. Temporal samples are clamped to the active append start so the trail cannot accidentally re-sample the earlier giant impact state. `接词滑动时长` is the explicit fast/slow control.
 - 2026-08-31: v10 removes the zero-motion gap between lead-word settling and the first append. The impact now lands slightly below the final small scale, recovers continuously, and overlaps the first leftward phrase reflow during the final 22% of the editable settle window. Nine lightweight right-side samples make the launch trail readable at normal speed without restoring Gaussian-filter jank.
 - 2026-08-31: the v8 preview regression was caused by repeated Canvas `filter: blur()` passes over the full phrase. At normal playback it measured about 48.8fps with 116.7ms worst frames; replacing Gaussian filtering with lightweight directional opacity samples and spreading the impact collapse over consecutive frames measured about 57.9fps, 16.8ms p99, and 33.4ms worst frame while preserving the launch trail.
