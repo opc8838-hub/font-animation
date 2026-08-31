@@ -13,7 +13,6 @@
   const lerp = (from, to, amount) => from + (to - from) * amount;
   const smooth = (value) => { const p = clamp(value); return p * p * (3 - 2 * p); };
   const easeOut = (value) => 1 - Math.pow(1 - clamp(value), 4);
-  const impactSnap = (value) => smooth((clamp(value) - 0.46) / 0.54);
   const mod = (value, divisor) => ((value % divisor) + divisor) % divisor;
   const ms = (id) => Number($(id).value) / 1000;
   const number = (id) => Number($(id).value);
@@ -22,7 +21,7 @@
     phrase: "Action becomes progress", fontFamily: "stg:inter", fontWeight: "600",
     backgroundColor: "#050505", textColor: "#f5f5f5", accentColor: "#b783ff",
     canvasPreset: "1920x1080", canvasWidth: "1920", canvasHeight: "1080",
-    impactScale: "420", impactDuration: "70", settleDuration: "930", appendInterval: "667",
+    impactScale: "420", impactDuration: "100", settleDuration: "900", appendInterval: "667",
     appendDuration: "200", finalHold: "1300", blurStrength: "115", masterSpeed: "100",
     fontSize: "10.5", wordGap: "42", iconTextGap: "28", positionX: "50", positionY: "50",
     settleScale: "100", appendSqueeze: "25", appendTravel: "200", breathAmount: "1.5", tailBlur: "22",
@@ -147,7 +146,7 @@
       if (time >= start) {
         count = index + 1;
         const duration = Math.max(0.001, ms("#appendDuration") / Math.max(0.35, (wordSettings[index]?.strength || 100) / 100));
-        if (time < start + duration) { activeIndex = index; progress = smooth((time - start) / duration); }
+        if (time < start + duration) { activeIndex = index; progress = easeOut((time - start) / duration); }
       }
     }
     return { count, activeIndex, progress };
@@ -194,8 +193,11 @@
     let scale = number("#settleScale") / 100;
     const impactDuration = Math.max(0.001, ms("#impactDuration"));
     if (time < impactDuration) {
-      const p = impactSnap(time / impactDuration);
-      scale = lerp(number("#impactScale") / 100, 1.55, p);
+      const p = clamp(time / impactDuration);
+      const reveal = easeOut(p / 0.28);
+      const collapse = smooth((p - 0.58) / 0.42);
+      const incomingScale = lerp(2.15, number("#impactScale") / 100, reveal);
+      scale = lerp(incomingScale, 1.55, collapse);
     } else if (time < timeline().settleEnd) {
       scale = lerp(1.55, number("#settleScale") / 100, smooth((time - impactDuration) / Math.max(0.001, ms("#settleDuration"))));
     }
@@ -209,7 +211,7 @@
     const layoutWidth = state.activeIndex > 0 ? lerp(previous.width, current.width, state.progress) : current.width;
     const centerX = w * number("#positionX") / 100;
     const centerY = h * number("#positionY") / 100;
-    const impactAmount = time < impactDuration ? 1 - clamp(time / impactDuration) : 0;
+    const impactAmount = time < impactDuration ? 1 - smooth((time / impactDuration - 0.58) / 0.42) : 0;
     const widthEnvelope = lerp(0.9, 1.08, impactAmount);
     const fit = Math.min(1, w * widthEnvelope / Math.max(1, current.width * scale));
     scale *= fit;
@@ -242,31 +244,44 @@
     const time = rawLocalTime(seconds);
     drawBackground(ctx, time, w, h);
     const state = visibleState(time, wordsOf());
-    const impact = time < ms("#impactDuration") ? 1 - impactSnap(time / Math.max(0.001, ms("#impactDuration"))) : 0;
+    const impactDuration = Math.max(0.001, ms("#impactDuration"));
+    const impactProgress = clamp(time / impactDuration);
+    const impactReveal = time < impactDuration ? easeOut(impactProgress / 0.28) : 1;
+    const impactCollapse = time < impactDuration ? smooth((impactProgress - 0.58) / 0.42) : 1;
+    const impact = time < impactDuration ? impactReveal * (1 - impactCollapse) : 0;
+    const settleEcho = time >= impactDuration && time < impactDuration + 0.16
+      ? 1 - smooth((time - impactDuration) / 0.16)
+      : 0;
     const append = state.activeIndex > 0 ? Math.sin(Math.PI * state.progress) : 0;
     const tail = time > timeline().finalEnd ? clamp((time - timeline().finalEnd) / timeline().tail) : 0;
     const strength = number("#blurStrength") / 100;
     if (impact > 0.01 && strength > 0) {
       const distance = Math.min(w, h) * 0.2 * impact * strength;
-      drawPhraseLayer(ctx, time, w, h, 0.22 * impact, 0, 9 * impact, 1 + 0.28 * impact);
-      for (let index = 9; index >= 1; index -= 1) {
-        const amount = index / 9;
-        const alpha = 0.135 * (1 - amount * 0.42) * impact;
+      drawPhraseLayer(ctx, time, w, h, 0.16 * impact, 0, 8 * impact, 1 + 0.24 * impact);
+      for (let index = 7; index >= 1; index -= 1) {
+        const amount = index / 7;
+        const alpha = 0.095 * (1 - amount * 0.44) * impact;
         const blur = 1.8 + 5.2 * amount * impact;
         const stretch = 1 + 0.34 * amount * impact;
         drawPhraseLayer(ctx, time, w, h, alpha, distance * amount, blur, stretch);
         drawPhraseLayer(ctx, time, w, h, alpha, -distance * amount, blur, stretch);
       }
     }
+    if (settleEcho > 0.01 && strength > 0) {
+      const sampledTime = Math.max(0, time - 0.026);
+      const distance = Math.min(w, h) * 0.035 * settleEcho * strength;
+      drawPhraseLayer(ctx, sampledTime, w, h, 0.11 * settleEcho, distance, 1.4 + 2.2 * settleEcho, 1 + 0.08 * settleEcho);
+      drawPhraseLayer(ctx, sampledTime, w, h, 0.055 * settleEcho, distance * 1.8, 2.2 + 2.4 * settleEcho, 1 + 0.12 * settleEcho);
+    }
     if (append > 0.01 && strength > 0) {
-      const distance = Math.min(w, h) * 0.18 * append * strength;
-      const appendLag = Math.max(0.001, ms("#appendDuration")) * 0.44;
-      drawPhraseLayer(ctx, Math.max(0, time - appendLag * 0.34), w, h, 0.18 * append, distance * 0.38, 2.4 * append, 1 + 0.12 * append);
-      for (let index = 9; index >= 1; index -= 1) {
-        const amount = index / 9;
+      const distance = Math.min(w, h) * 0.115 * append * strength;
+      const appendLag = Math.max(0.001, ms("#appendDuration")) * 0.32;
+      drawPhraseLayer(ctx, Math.max(0, time - appendLag * 0.3), w, h, 0.095 * append, distance * 0.34, 1.1 + 1.5 * append, 1 + 0.07 * append);
+      for (let index = 6; index >= 1; index -= 1) {
+        const amount = index / 6;
         const sampledTime = Math.max(0, time - appendLag * amount);
-        const alpha = 0.13 * (1 - amount * 0.48) * append;
-        drawPhraseLayer(ctx, sampledTime, w, h, alpha, distance * amount, 1.2 + 3.2 * amount * append, 1 + 0.16 * amount * append);
+        const alpha = 0.06 * (1 - amount * 0.5) * append;
+        drawPhraseLayer(ctx, sampledTime, w, h, alpha, distance * amount, 0.7 + 1.8 * amount * append, 1 + 0.08 * amount * append);
       }
     }
     const tailSmear = tail * number("#tailBlur") / 100;
@@ -279,7 +294,8 @@
         drawPhraseLayer(ctx, time, w, h, alpha, -distance * amount, 1 + 2 * tailSmear, 1 + 0.08 * tailSmear);
       }
     }
-    drawPhraseLayer(ctx, time, w, h, 1, 0, impact * 1.8 + append * 0.9 + tailSmear * 1.25, 1);
+    const leadAlpha = time < impactDuration ? lerp(0.12, 1, impactReveal) : 1;
+    drawPhraseLayer(ctx, time, w, h, leadAlpha, 0, impact * 1.35 + append * 0.35 + tailSmear * 1.25, 1);
     if (ctx.filter !== "none") ctx.filter = "none";
     if (ctx === context) {
       canvas.dataset.timelineTime = seconds.toFixed(4);
