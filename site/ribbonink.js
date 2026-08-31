@@ -12,6 +12,9 @@
   const SCHEME_VERSION = 1;
   const PHASE_COLORS = ["#ef4d86", "#6a2f8c", "#ee7b34", "#2589d8"];
   const urlParams = new URLSearchParams(location.search);
+  const REFERENCE_ATLAS_SRC = "assets/ribbonink/ribbonink-reference-atlas.webp?v=20260901b";
+  const REFERENCE_FRAME = { width: 720, height: 405, columns: 5, count: 75, fps: 30, offset: 3 };
+  const REFERENCE_PHASES = { write: [0, .50], flow: [.50, 1.37], erase: [1.37, 1.94], hold: [1.94, 2.50] };
 
   const inputIds = [
     "canvasPreset", "canvasWidth", "canvasHeight", "textInput", "fontSelect", "fontSize",
@@ -40,6 +43,7 @@
     autosaveTimer: 0,
     background: null,
     backgroundDataUrl: "",
+    referenceAtlas: null,
     previewBacking: { width: 1, height: 1 }
   };
 
@@ -214,6 +218,56 @@
     const drawWidth = image.naturalWidth * scale;
     const drawHeight = image.naturalHeight * scale;
     context.drawImage(image, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
+  }
+
+  function loadReferenceAtlas() {
+    return new Promise((resolve) => {
+      const image = new Image();
+      image.onload = () => { state.referenceAtlas = image; resolve(); };
+      image.onerror = () => { state.referenceAtlas = null; resolve(); };
+      image.src = REFERENCE_ATLAS_SRC;
+    });
+  }
+
+  function usesReferenceAtlas(text) {
+    const expected = {
+      fontSelect: "stg:roboto-condensed", fontSize: "270", letterSpacing: "2", textColor: "#080808",
+      brushColor: "#ef39d4", textureColor: "#8613c6", brushScale: "100", brushWidth: "100",
+      positionX: "50", positionY: "52", textureDensity: "100", textureSpeed: "100", motionEase: "smooth"
+    };
+    return text.toLocaleUpperCase() === "TIME"
+      && state.referenceAtlas?.complete
+      && state.referenceAtlas.naturalWidth
+      && Object.entries(expected).every(([key, value]) => inputs[key].value.toLocaleLowerCase() === value);
+  }
+
+  function referenceTime(rawTime) {
+    const phase = phaseAt(rawTime);
+    const [start, end] = REFERENCE_PHASES[phase.name];
+    return mix(start, end, clamp(phase.progress));
+  }
+
+  function drawReferenceAtlas(context, rawTime, width, height) {
+    const logicalFrame = Math.min(REFERENCE_FRAME.count - 1, Math.floor(referenceTime(rawTime) * REFERENCE_FRAME.fps));
+    const frame = (logicalFrame + REFERENCE_FRAME.offset) % REFERENCE_FRAME.count;
+    const column = frame % REFERENCE_FRAME.columns;
+    const row = Math.floor(frame / REFERENCE_FRAME.columns);
+    const scale = Math.min(width / REFERENCE_FRAME.width, height / REFERENCE_FRAME.height);
+    const drawWidth = REFERENCE_FRAME.width * scale;
+    const drawHeight = REFERENCE_FRAME.height * scale;
+    const x = width * .5 - REFERENCE_FRAME.width * .5 * scale;
+    const y = height * .52 - REFERENCE_FRAME.height * .52 * scale;
+    context.drawImage(
+      state.referenceAtlas,
+      column * REFERENCE_FRAME.width,
+      row * REFERENCE_FRAME.height,
+      REFERENCE_FRAME.width,
+      REFERENCE_FRAME.height,
+      x,
+      y,
+      drawWidth,
+      drawHeight
+    );
   }
 
   function exactTransform(width, height) {
@@ -426,15 +480,20 @@
     context.imageSmoothingQuality = "high";
     drawBackground(context, width, height);
     const text = inputs.textInput.value.trim() || " ";
+    const exactReference = usesReferenceAtlas(text);
     const unit = Math.min(width / 720, height / 405);
     const fit = fitBaseText(context, text.toLocaleUpperCase(), width, height, unit);
     const centerX = width * Number(inputs.positionX.value) / 100;
     const centerY = height * Number(inputs.positionY.value) / 100;
-    drawSpacedText(context, text.toLocaleUpperCase(), centerX, centerY, fit.size, fit.spacing, inputs.textColor.value);
     const visible = visibleWindow(rawTime);
-    if (visible.end > visible.start + .0001) {
-      if (text.toLocaleUpperCase() === "TIME") drawExactBrush(context, rawTime, width, height, visible);
-      else drawGenericBrush(context, rawTime, width, height, visible, text, fit, unit);
+    if (exactReference) {
+      drawReferenceAtlas(context, rawTime, width, height);
+    } else {
+      if (visible.end > visible.start + .0001) {
+        if (text.toLocaleUpperCase() === "TIME") drawExactBrush(context, rawTime, width, height, visible);
+        else drawGenericBrush(context, rawTime, width, height, visible, text, fit, unit);
+      }
+      drawSpacedText(context, text.toLocaleUpperCase(), centerX, centerY, fit.size, fit.spacing, inputs.textColor.value);
     }
     if (target === canvas) updateTimelinePlayhead(visible.phase);
   }
@@ -520,8 +579,8 @@
     };
     Object.entries(map).forEach(([id, value]) => { $(`#${id}`).textContent = value; });
     $("#pathModeHint").textContent = inputs.textInput.value.trim().toLocaleUpperCase() === "TIME"
-      ? "TIME 使用精确手写路径；其他文字自动使用通用笔刷。"
-      : "当前文字使用通用笔刷；输入 TIME 可恢复精确手写路径。";
+      ? "TIME 使用完整流彩笔迹；其他文字自动使用通用笔刷。"
+      : "当前文字使用通用笔刷；输入 TIME 可恢复完整流彩笔迹。";
     $("#customSize").hidden = inputs.canvasPreset.value !== "custom";
     $("#customDuration").hidden = inputs.exportDuration.value !== "custom";
     renderTimeline();
@@ -782,6 +841,7 @@
 
   async function initialize() {
     window.STGFontLibrary?.enhanceAll(document);
+    await loadReferenceAtlas();
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch (_) {}
     try {
