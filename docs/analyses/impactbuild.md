@@ -16,8 +16,8 @@ A lead word lands as a huge horizontally smeared impact, settles smaller, then e
 | Time | Source frames | Phase | Visible evidence | Motion interpretation | Confidence |
 | --- | --- | --- | --- | --- | --- |
 | 0.00–0.03s | 001 | Pre-roll | unrelated bright interface frame | exclude from the reusable loop | high |
-| 0.03–0.10s | 002–003 | Lead impact | `Action` stays oversized for two frames with symmetric horizontal trails | near-instant oversized cut plus multi-sample horizontal smear | high |
-| 0.10–1.00s | 004–030 | Settle | lead word snaps directly to its small, sharp centered state | no large-word residue and no second entrance | high |
+| 0.03–0.10s | 002–004 | Lead impact | `Action` grows into a bright oversized smear, then passes through a visibly smaller intermediate frame | very fast grow-and-shrink with resolution-normalized horizontal/radial smear | high |
+| 0.10–1.00s | 004–030 | Settle | lead word completes the last short scale step and stays sharp and centered | two-frame shrink, then no large-word residue or second entrance | high |
 | 1.00–1.20s | 031–037 | First append | lead phrase compresses into a horizontal streak while `becomes` appears to its right; both resolve together | one shared phrase layout, horizontal smear and squeeze, then recenter | high |
 | 1.20–1.67s | 037–050 | Hold | two-word phrase remains stable | readable hold with near-zero residual scale | high |
 | 1.67–1.90s | 051–058 | Second append | `progress` enters from the right during the same streak/squeeze event | repeat append event with the same shared motion field | high |
@@ -91,5 +91,7 @@ A lead word lands as a huge horizontally smeared impact, settles smaller, then e
 - 2026-08-31: append motion must recenter existing and incoming words as one phrase; independent word movement looks detached.
 - 2026-08-31: exported MP4 verified at 320×320, 15fps, 52 frames, 3.466667s; extracted event frames preserve the same impact, append, and hold geometry as the live preview.
 - 2026-08-31: dense 30fps recheck confirmed the lead word stays oversized for two useful frames and then snaps down; both append events travel from right to left with the shadow trailing only to the right, while the whole phrase recenters together.
-- 2026-08-31: a second 30fps frame-by-frame comparison corrected the prior interpretation: the loop begins black, the oversized word occupies frames 002–003, and frame 004 is already the clean small word with no dim precursor or large-word residue. During an append, the phrase moves left over 2–3 frames and leaves a short but clearly visible temporal trail on the right.
+- 2026-08-31: a second 30fps frame-by-frame comparison established that the loop begins black and the oversized word occupies the first impact frames without leaving a separate large-word residue after the shrink. During an append, the phrase moves left over 2–3 frames and leaves a short but clearly visible temporal trail on the right.
 - 2026-08-31: v6 was exported at 1920×1080, 30fps, 104 frames, 3.466667s and compared at frames 001–024 and 025–042; the corrected intro cut and right-side append trail remain present in the real MP4 renderer.
+- 2026-08-31: the 34.4s extreme-slow reference `飞书20260831-203348.qt` produced four unique intro states after frame deduplication: prior scene, bright smeared large word, medium sharp word, final small word. The shrink therefore needs a very short continuous curve rather than a hard cut. The five unique first-append states confirmed that the directional trail exists only while the phrase is moving left; it must clear immediately when the layout settles.
+- 2026-08-31: v7 was exported at 1920×1080, 60fps, 207 frames, 3.45s. Frames 001–007 preserve black → growth → bright impact → medium → final small states, while frames 059–074 show the right-side temporal trail only during the first append.
