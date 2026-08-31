@@ -10,6 +10,20 @@ Read this only when a user supplies a video or asks for close motion matching. T
 4. Use the `watch` skill for a broad chronological pass. Prefer `--no-dedup` for subtle kinetic motion and read every returned frame.
 5. Watch is capped at 2 fps. For fast or sub-second motion, use FFmpeg for a dense 10–30 fps crop or contact sheet around the important interval. A six-frame overview is not a frame-level analysis of a 30 fps clip.
 6. Write an evidence table before coding: timestamp/frame range, visible observation, motion interpretation, confidence, and uncertainty. Record phase overlaps; never assume phases are sequential.
+7. Treat slow-motion footage as structural evidence, not the target cadence. It reveals order, overlap, and brief states; normal-speed footage decides whether the result feels fluid, crisp, heavy, or inertial.
+
+## Lock the motion contract before coding
+
+For a new reconstruction or a disputed refinement, record only the observable contract that the implementation must preserve:
+
+- which elements form one moving group and which genuinely lead, follow, or move independently;
+- the coordinate frame and current pose from which every transition starts, including exits;
+- phase start, overlap, and end events rather than only total duration;
+- direction/path plus the velocity shape: launch, acceleration, peak speed, braking, residual inertia, and any intentional overshoot;
+- visibility mechanism and trail behavior: temporal afterimage, static shadow, blur, opacity, scale, clipping, or translation;
+- the exact off-canvas completion condition for every participating element.
+
+Mark already accepted contract items as frozen. During a refinement, change one disputed item or one coupled channel at a time; do not rewrite approved phases merely because the implementation shares a renderer or timeline.
 
 ## Translate evidence into implementation
 
@@ -33,6 +47,15 @@ Use these checks when a reference completes several visible phases within a few 
 - For a character-to-icon scan, preserve the character slot identity: character → icon → original character before advancing, unless concurrent replacements are visible in the reference. Animate the neighboring advances created by a wider icon, then restore the original spacing. Expose scan interval/hold plus per-slot icon scale and before/after gap when those decisions are visible.
 - At responsive sizes, compare normalized row edges and exit envelopes. A crop may hide different content, but it must not create accidental short rows, missing icons, or inconsistent pull-away boundaries.
 
+## Diagnose continuity, inertia, and afterimages
+
+- Derive motion from a continuous displacement or velocity curve. “Fast to the left, then a slight inertial stop” requires a readable launch, peak, and braking tail; it is not a constant translation followed by an abrupt stop, and it must not introduce an unobserved recoil.
+- A motion afterimage is temporal evidence: sample recent positions behind the current direction and scale its spacing/opacity from instantaneous speed. It should become visible as movement starts, peak near maximum speed, and disappear at rest. A permanent shadow or generic blur does not satisfy this behavior.
+- When the leftmost word leads and later words follow, use a small launch delay or elastic drag inside one shared destination and event window. Avoid both rigid-body motion and a visibly separate word-by-word sequence unless the frames show either one.
+- At a large-word-to-small-line transition, verify every intermediate scale and immediately overlapping next action. Do not replace a very fast shrink with a hard cut or insert a zero-motion pause just because the named phases are different.
+- When text, a path, or an icon is meant to leave together, move the already composed group from its current pose with one shared transform and one completion boundary. Do not regenerate the path, reset local coordinates, or let one member begin a second trajectory during exit.
+- If preview is smooth in one browser but stutters in another, profile the actual frame loop before changing choreography. Full-canvas filters, readbacks, DOM reconstruction, and layout reads can mimic bad easing; prefer lightweight transform/opacity or temporal samples and verify normal-speed playback in the affected browser.
+
 ## Reference-to-export comparison loop
 
 1. Align the reference and implementation at an observable event such as first reveal, full occupancy, reversal onset, or final restoration; do not align only by total duration.
@@ -40,6 +63,8 @@ Use these checks when a reference completes several visible phases within a few 
 3. Extract matching dense frames around every phase boundary and at least one overlap. Compare position deltas between frames to detect accidental zero velocity, direction spikes, and rows that stop while others continue.
 4. Compare the real exported video, not only the live stage. Use the same canvas ratio and inspect text/icon spacing, row edges, visibility, and phase timing at the aligned frames.
 5. Change one timing control at a time during diagnosis. Confirm that its label changes the named interval or overlap directly; remove or rename controls whose effect cannot be explained from the visible timeline.
+6. Keep a short regression ledger: accepted phases, the disputed observation, the current hypothesis, the one change made, and the normal-speed result. Stop iterating on a hypothesis when the evidence disproves it instead of stacking compensating offsets.
+7. Add an editor control only for a stable, visible decision the user may reasonably tune. Do not expose repair constants created to compensate for incorrect geometry or timing.
 
 ## Oil Motion decision boundary
 

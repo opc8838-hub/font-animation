@@ -12,11 +12,13 @@ Create the effect-specific motion while reusing the site's established editing a
 1. For any editor UI or interaction work, read [references/editor-interaction-contract.md](references/editor-interaction-contract.md). It defines observable compatibility with Icon Burst; matching only colors or card shapes does not satisfy it.
 2. Read [references/editor-baseline.md](references/editor-baseline.md) before creating or substantially upgrading an effect page.
 3. Read [references/reuse-map.md](references/reuse-map.md) to choose the closest existing implementation instead of rebuilding common systems.
-4. When the user supplies a reference video, read [references/video-analysis-workflow.md](references/video-analysis-workflow.md) before implementing motion. It defines the Watch + FFmpeg evidence workflow and the boundary for optional Oil Motion use.
+4. When the user supplies a reference video or asks to refine a reference-driven effect, read [references/video-analysis-workflow.md](references/video-analysis-workflow.md) before changing motion. It defines the evidence workflow, motion-contract and regression protocol, and the boundary for optional Oil Motion use.
 5. When rows or pages can use different colors, images, GIFs, or videos, read [references/per-page-backgrounds.md](references/per-page-backgrounds.md).
 6. Preserve the user's unrelated work and commit only the effect or shared baseline files placed in scope.
 
 If the task includes a reference video, use the available video-analysis workflow to inspect both normal-speed rhythm and slowed detail before choosing motion phases. Treat the user's video as visual evidence, not as permission to copy unrelated scene framing. Do not invoke `oil-motion` by default: ordinary kinetic typography, path following, color, icon, layout, Canvas, SVG, CSS, or GSAP work should stay in this skill unless the decision boundary in the video-analysis reference is actually met.
+
+For repeated motion refinement, freeze already approved phases and write a compact motion contract before editing: moving group membership, coordinate frame, phase overlap, path/direction, velocity profile, visibility/afterimage behavior, and the exact exit boundary. Change only the disputed contract item until normal-speed playback and dense frames both support the result.
 
 ## Working rules
 
@@ -40,6 +42,13 @@ If the task includes a reference video, use the available video-analysis workflo
 - Keep analysis provenance internal. Product UI must name the motion itself and must not expose labels such as “参考视频”, “参考编舞”, “原片复刻”, or similar implementation notes.
 - Preserve project attribution and existing licenses.
 
+## Skill maintenance discipline
+
+- Keep only cross-effect invariants and routing in this file. Put conditional procedures in `references/`, effect-specific evidence and approved values in `docs/analyses/`, and repeatable deterministic checks in `scripts/`.
+- Add a rule only when it changes a future decision and is supported by a repeated or high-cost failure. Consolidate or replace overlapping wording instead of appending another near-duplicate rule.
+- Do not promote one effect's approved timing, easing, colors, or preset into a universal default. Preserve those values in that effect's scheme and analysis note.
+- When a section becomes specialized enough that most tasks do not need it, move it behind a clearly named reference link rather than growing the entrypoint.
+
 ## Completion gate
 
 Before handing off an effect:
@@ -57,5 +66,6 @@ Before handing off an effect:
 - Check one square or portrait size in addition to 16:9 when the effect claims multi-size export.
 - For page-specific backgrounds, test direct and softened transitions across color, image/GIF, and trimmed video pages; confirm no decode flash and compare the same transition frame in preview and a real export.
 - For fast continuous choreography reconstructed from video, compare dense reference and exported frames at every phase boundary. Confirm active elements never freeze accidentally, icons remain in the same motion field as adjacent text, and character-to-icon scans restore each original character and spacing before completion.
+- During refinement, confirm previously approved phases remain visually unchanged and that a shared moving group never resets its geometry or splits into independent paths at a transition or exit.
 - Confirm the gallery card uses the approved preview. Prefer an approved exported MP4 loop when an iframe would produce a different responsive composition.
 - Run syntax checks and `git diff --check`, bump cache versions, and avoid staging unrelated files.
