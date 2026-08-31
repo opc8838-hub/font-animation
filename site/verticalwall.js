@@ -1012,22 +1012,24 @@
       if (replacement?.swap) {
         const { asset, enterStart, requestedHeight, requestedWidth, requiredWidth, gapBefore, offsetX, offsetY,
           rotation } = replacement;
-        const iconEnter = rangeProgress(replacement.enterRaw, .45, 1);
         const iconExit = rangeProgress(replacement.exitRaw, 0, .55);
-        const entryEase = easeOut(iconEnter);
-        const replacementScale = (.72 + entryEase * .28) * (1 - smooth(iconExit) * .18);
         const fullCenterOffset = (dynamicSlotWidth - requiredWidth) / 2 + gapBefore + requestedWidth / 2;
-        const drawCenterX = cursorX + fullCenterOffset + offsetX;
+        const settledCenterX = cursorX + fullCenterOffset + offsetX;
         const slowMotionStart = enterStart + scanTiming.transition * .45;
         const slowMotionEnd = Math.max(slowMotionStart + .001, replacement.restoreStart);
         const slowProgress = rangeProgress(sequenceElapsed, slowMotionStart, slowMotionEnd);
+        const inertialProgress = 1 - Math.pow(1 - slowProgress, 1.4);
+        const launchProgress = .1 + inertialProgress * .9;
+        const drawCenterX = settledCenterX - requestedWidth * .28 * (1 - launchProgress);
         const drawCenterY = y + offsetY;
+        const replacementScale = (.72 + launchProgress * .28) * (1 - smooth(iconExit) * .18);
+        const rotationMotion = slowProgress;
         const rotationProgress = sequenceElapsed < slowMotionStart
           ? 0
           : sequenceElapsed < slowMotionEnd
-            ? slowProgress < .55
-              ? smoother(slowProgress / .55)
-              : lerp(1, -.35, smoother((slowProgress - .55) / .45))
+            ? rotationMotion < .58
+              ? smoother(rotationMotion / .58)
+              : lerp(1, -.35, smoother((rotationMotion - .58) / .42))
             : lerp(-.35, 0, easeOut(rangeProgress(replacement.exitRaw, 0, .55)));
         drawFinalAsset(context, asset, drawCenterX, drawCenterY, requestedWidth * replacementScale, requestedHeight * replacementScale,
           sequenceElapsed, rotation * Math.max(-1, Math.min(1, rotationProgress)));
@@ -1225,13 +1227,15 @@
       canvas.dataset.finalAssetGap = "per-slot";
       canvas.dataset.swapMotion = extras.swapMotion || "idle";
       canvas.dataset.swapTargets = String(extras.swapTargets ?? 0);
-      canvas.dataset.iconRotationMotion = "fixed-center-instant-pop-continuous-slow-angle-fast-return-glyph-close";
+      canvas.dataset.iconRotationMotion = "ten-percent-launch-continuous-slow-right-inertia-angle-fast-return-glyph-close";
       canvas.dataset.iconRotationDuration = inputs.iconRotationDuration.value;
-      canvas.dataset.iconSlowMotionTurnRatio = ".55";
-      canvas.dataset.iconSlowMotionCrossRatio = ".45";
+      canvas.dataset.iconSlowMotionTurnRatio = ".58";
+      canvas.dataset.iconSlowMotionCrossRatio = ".42";
       canvas.dataset.iconSlowMotionFastReturn = "restore-transition";
-      canvas.dataset.iconSlowMotionDrift = "0";
-      canvas.dataset.finalIconEntrySlide = "0";
+      canvas.dataset.iconSlowMotionDrift = "single-right-entry-only";
+      canvas.dataset.finalIconEntrySlide = ".28";
+      canvas.dataset.finalIconRotationStart = ".10";
+      canvas.dataset.finalIconVerticalMotion = "0";
       canvas.dataset.finalRestoreTransition = finalScanTiming().restoreTransition.toFixed(4);
       canvas.dataset.finalRestoreDuration = inputs.finalRestoreDuration.value;
       canvas.dataset.finalIconHoldDuration = inputs.iconHoldDuration.value;
