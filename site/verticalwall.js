@@ -933,17 +933,18 @@
     const speed = Math.max(.5, Math.min(24, Number(inputs.finalScanSpeed.value)));
     const speedRatio = speed / 4;
     const transition = Math.max(16, Math.min(220, 100 / speedRatio)) / 1000;
-    const launchKick = Math.max(20, Math.min(240, Number(inputs.iconSlowMotionStart.value))) / 1000;
+    const launchKick = Math.max(.008, Math.max(20, Math.min(240, Number(inputs.iconSlowMotionStart.value))) / 1000 / speedRatio);
     const entryStep = Math.max(60, Math.min(1200, Number(inputs.swapInterval.value))) / 1000;
     const step = Math.max(.012, entryStep / speedRatio);
     return {
+      speedRatio,
       transition,
       launchKick,
-      restoreTransition: Math.max(20, Math.min(600, Number(inputs.finalRestoreDuration.value))) / 1000,
-      hold: Math.max(40, Math.min(1200, Number(inputs.iconHoldDuration.value) / speedRatio)) / 1000,
-      rotation: Math.max(200, Math.min(2400, Number(inputs.iconRotationDuration.value))) / 1000,
+      restoreTransition: Math.max(.008, Math.max(20, Math.min(600, Number(inputs.finalRestoreDuration.value))) / 1000 / speedRatio),
+      hold: Math.max(.008, Math.max(40, Math.min(1200, Number(inputs.iconHoldDuration.value))) / 1000 / speedRatio),
+      rotation: Math.max(.04, Math.max(200, Math.min(2400, Number(inputs.iconRotationDuration.value))) / 1000 / speedRatio),
       step,
-      restoreStep: Math.max(20, Math.min(600, Number(inputs.finalRestoreStep.value))) / 1000
+      restoreStep: Math.max(.012, Math.max(20, Math.min(600, Number(inputs.finalRestoreStep.value))) / 1000 / speedRatio)
     };
   }
 
@@ -1254,6 +1255,8 @@
       canvas.dataset.finalRestoreTransition = finalScanTiming().restoreTransition.toFixed(4);
       canvas.dataset.finalRestoreDuration = inputs.finalRestoreDuration.value;
       canvas.dataset.finalIconHoldDuration = inputs.iconHoldDuration.value;
+      canvas.dataset.finalScanMasterRatio = finalScanTiming().speedRatio.toFixed(4);
+      canvas.dataset.finalScanTotalDuration = finalScanDuration().toFixed(4);
       canvas.dataset.centerLineSource = carryOpeningAssets ? "opening-assets" : "middle-row";
       canvas.dataset.centerLineAssets = [...centerWallLine.matchAll(/\{\{([^{}]+)\}\}/g)]
         .map((match) => match[1]).filter((id) => assets.has(id)).join(",");
@@ -1507,8 +1510,7 @@
       finalDurationOut: formatSeconds(Number(inputs.finalDuration.value) / 1000),
       exitDurationOut: formatSeconds(Number(inputs.exitDuration.value) / 1000),
       swapIntervalOut: `${(Number(inputs.swapInterval.value) / 1000).toFixed(2)}秒`,
-      finalScanSpeedOut: `${Number(inputs.finalScanSpeed.value).toFixed(1)}× · 扫入${finalScanPhases(Math.max(1,
-        Object.keys(finalSlotMap).filter((index) => assets.has(finalSlotMap[index])).length)).enterEnd.toFixed(2)}秒`,
+      finalScanSpeedOut: `${Number(inputs.finalScanSpeed.value).toFixed(1)}× · 整段${finalScanDuration().toFixed(2)}秒`,
       iconHoldDurationOut: `${inputs.iconHoldDuration.value}ms`,
       iconRotationDurationOut: formatSeconds(Number(inputs.iconRotationDuration.value) / 1000),
       iconSlowMotionStartOut: `${inputs.iconSlowMotionStart.value}ms`,
@@ -1600,7 +1602,7 @@
       if (field) controls[id] = field.type === "checkbox" ? field.checked : field.value;
     });
     return {
-      type: "me-vertical-rise", version: 19, controls, selectedAssetId,
+      type: "me-vertical-rise", version: 20, controls, selectedAssetId,
       rowAssetGaps: [...rowAssetGaps], rowAssetGapsAfter: [...rowAssetGapsAfter],
       rowAssetScales: [...rowAssetScales], rowAssetOffsetsX: [...rowAssetOffsetsX],
       rowTextGaps: [...rowTextGaps],
@@ -1681,7 +1683,7 @@
     }
     if (Number(scheme.version) < 18) scheme.controls.iconSlowMotionStart = "0";
     if (Number(scheme.version) < 19) scheme.controls.iconSlowMotionStart = "80";
-    scheme.version = 19;
+    scheme.version = 20;
     return scheme;
   }
 
