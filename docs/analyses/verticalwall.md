@@ -92,10 +92,10 @@
 - [x] The final-sweep speed control restarts this stage for immediate preview and shows the resulting scan duration
 - [x] The full-wall editor uses the same opening-icon carry rule as the live canvas, refreshes when an asset finishes loading, and provides independent horizontal character spacing for every row
 - [x] Final icons return from their configured 2D angle into their own glyph slot without an idle seam; restore motion has a 100ms floor and matches icon/glyph scale at the handoff
-- [x] Each final icon now enters a clearly editable slow-motion window while popping in: target angle, one restrained opposite-angle pass, return to zero, then the fast shrink-to-glyph sweep
+- [x] Each final icon enters its editable slow-motion rotation on the exact pop frame, keeps rotating without an idle seam, then rapidly returns to zero while the glyph and spacing restore together
 - [x] Final-slot expansion, a subtle 14%-width right-side icon slide, scale reveal, and rotation now begin on the same frame instead of opening the glyph slot before the icon appears
 - [x] The live wall and editor overview now share the same edge-aware fit calculation, including per-row icon offsets, so portrait canvases no longer crop layouts that appear aligned in the overview
-- [x] Final icons remain airborne through most of the slow-motion window, make one 4.5%-width lateral pass, descend into zero degrees, then hand off quickly to the glyph before the remaining slot width closes
+- [x] Final icons keep a fixed center throughout the sweep: no entry slide, lateral drift, or vertical lift; only the configured flat rotation changes
 - [x] Final-slot angle controls stay visible, with disabled guidance for unmapped characters and saved angles shown on every mapped slot
 - [x] Main-row edits pause on the complete full-wall frame so a newly assigned middle-row icon remains inspectable instead of immediately advancing into collapse
 - [x] An opening-center inline icon carries continuously into the full-wall center row whenever that row has no independently assigned icon, including icon-for-letter replacement text; an explicit middle-row icon still takes priority
