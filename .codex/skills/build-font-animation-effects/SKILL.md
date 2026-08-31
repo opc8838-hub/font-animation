@@ -56,5 +56,6 @@ Before handing off an effect:
 - Export and inspect at least one real GIF and one real video, not only the live preview.
 - Check one square or portrait size in addition to 16:9 when the effect claims multi-size export.
 - For page-specific backgrounds, test direct and softened transitions across color, image/GIF, and trimmed video pages; confirm no decode flash and compare the same transition frame in preview and a real export.
+- For fast continuous choreography reconstructed from video, compare dense reference and exported frames at every phase boundary. Confirm active elements never freeze accidentally, icons remain in the same motion field as adjacent text, and character-to-icon scans restore each original character and spacing before completion.
 - Confirm the gallery card uses the approved preview. Prefer an approved exported MP4 loop when an iframe would produce a different responsive composition.
 - Run syntax checks and `git diff --check`, bump cache versions, and avoid staging unrelated files.
