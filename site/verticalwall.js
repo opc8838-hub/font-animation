@@ -1368,7 +1368,7 @@
     const exitProgress = rangeProgress(localTime, timing.holdEnd, timing.exitEnd);
     context.font = fontFor(finalStage);
     context.save();
-    const finalExitEase = smoother(exitProgress);
+    const finalExitEase = easeOut(exitProgress);
     context.globalAlpha *= Number(inputs.nextOpacity.value) / 100 * (1 - finalExitEase);
     context.translate(w / 2, h / 2 - finalFontPx * .12 * finalExitEase);
     const finalExitScale = 1 - finalExitEase * .055;
@@ -1534,8 +1534,15 @@
     syncPlaybackControls();
   };
   [inputs.swapInterval, inputs.finalScanSpeed, inputs.finalRestoreStep].forEach((input) => input.addEventListener("input", previewFinalSweep));
-  [inputs.iconHoldDuration, inputs.iconRotationDuration, inputs.iconSlowMotionStart, inputs.finalRestoreDuration, inputs.finalDuration, inputs.exitDuration, inputs.finalFontSize, inputs.finalAssetScale, inputs.finalTextGap]
+  [inputs.iconHoldDuration, inputs.iconRotationDuration, inputs.iconSlowMotionStart, inputs.finalRestoreDuration, inputs.finalFontSize, inputs.finalAssetScale, inputs.finalTextGap]
     .forEach((input) => input.addEventListener("input", () => setTime(choreographyTiming().collapseEnd + .025)));
+  const previewFinalExit = () => {
+    paused = false;
+    const timing = choreographyTiming();
+    setTime(timing.holdEnd + .001);
+    syncPlaybackControls();
+  };
+  [inputs.finalDuration, inputs.exitDuration].forEach((input) => input.addEventListener("input", previewFinalExit));
   [inputs.wallScale, inputs.wallFontSize, inputs.wallTextGap, inputs.lineGap].forEach((input) => {
     input.addEventListener("input", () => setTime(choreographyTiming().spreadStart + choreographyTiming().duration[1] * .8));
   });
@@ -1602,7 +1609,7 @@
       if (field) controls[id] = field.type === "checkbox" ? field.checked : field.value;
     });
     return {
-      type: "me-vertical-rise", version: 20, controls, selectedAssetId,
+      type: "me-vertical-rise", version: 21, controls, selectedAssetId,
       rowAssetGaps: [...rowAssetGaps], rowAssetGapsAfter: [...rowAssetGapsAfter],
       rowAssetScales: [...rowAssetScales], rowAssetOffsetsX: [...rowAssetOffsetsX],
       rowTextGaps: [...rowTextGaps],
@@ -1683,7 +1690,8 @@
     }
     if (Number(scheme.version) < 18) scheme.controls.iconSlowMotionStart = "0";
     if (Number(scheme.version) < 19) scheme.controls.iconSlowMotionStart = "80";
-    scheme.version = 20;
+    if (Number(scheme.version) < 21) scheme.controls.finalDuration = "0";
+    scheme.version = 21;
     return scheme;
   }
 
