@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
+  <rect width="1600" height="900" fill="#050505"/>
+  <g font-family="Inter,Arial,sans-serif" font-weight="600" font-size="110" dominant-baseline="middle">
+    <text x="800" y="450" text-anchor="middle" fill="#b783ff" opacity=".10" transform="scale(1.32 1) translate(-194 0)">Action becomes progress</text>
+    <text x="800" y="450" text-anchor="middle" fill="#b783ff" opacity=".12" transform="scale(1.16 1) translate(-110 0)">Action becomes progress</text>
+    <text x="800" y="450" text-anchor="middle"><tspan fill="#b783ff">Action</tspan><tspan fill="#f5f5f5"> becomes </tspan><tspan fill="#b783ff">progress</tspan></text>
+  </g>
+</svg>
