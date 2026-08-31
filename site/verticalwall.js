@@ -978,7 +978,8 @@
       const gapAfter = setting.gapAfter * unitScale;
       const requiredWidth = Math.max(1, requestedWidth + gapBefore + gapAfter);
       const closeRaw = rangeProgress(exitRaw, 0, .55);
-      const openProgress = Math.max(0, easeOutBack(enterRaw) * (1 - smooth(closeRaw)));
+      const openRaw = rangeProgress(enterRaw, .45, 1);
+      const openProgress = easeOut(openRaw) * (1 - smooth(closeRaw));
       activeReplacements.set(slot.index, {
         asset, enterStart, enterRaw, exitRaw, swap: enterRaw >= .45 && exitRaw < .55,
         requestedHeight, requestedWidth, requiredWidth, gapBefore,
@@ -998,9 +999,11 @@
           rotation, openProgress } = replacement;
         const iconEnter = rangeProgress(replacement.enterRaw, .45, 1);
         const iconExit = rangeProgress(replacement.exitRaw, 0, .55);
-        const replacementScale = Math.min(1.08, .72 + easeOutBack(iconEnter) * .28) * (1 - smooth(iconExit) * .18);
+        const entryEase = easeOut(iconEnter);
+        const replacementScale = (.72 + entryEase * .28) * (1 - smooth(iconExit) * .18);
         const fullCenterOffset = (dynamicSlotWidth - requiredWidth) / 2 + gapBefore + requestedWidth / 2;
-        const drawCenterX = cursorX + lerp(slot.width / 2, fullCenterOffset, clamp01(openProgress)) + offsetX;
+        const entrySlideX = (1 - entryEase) * requestedWidth * .14;
+        const drawCenterX = cursorX + lerp(slot.width / 2, fullCenterOffset, clamp01(openProgress)) + entrySlideX + offsetX;
         const drawCenterY = y - Math.sin(Math.PI * clamp01(iconEnter)) * requestedHeight * .055 + offsetY;
         const turnStart = enterStart + scanTiming.transition * .45;
         const turnDuration = scanTiming.rotation * .32;
@@ -1206,10 +1209,11 @@
       canvas.dataset.finalAssetGap = "per-slot";
       canvas.dataset.swapMotion = extras.swapMotion || "idle";
       canvas.dataset.swapTargets = String(extras.swapTargets ?? 0);
-      canvas.dataset.iconRotationMotion = "pop-fast-turn-slow-return-then-glyph";
+      canvas.dataset.iconRotationMotion = "synchronized-right-pop-fast-turn-slow-return-then-glyph";
       canvas.dataset.iconRotationDuration = inputs.iconRotationDuration.value;
       canvas.dataset.iconRotationTurnRatio = ".32";
       canvas.dataset.iconRotationReturnRatio = ".58";
+      canvas.dataset.finalIconEntrySlide = ".14";
       canvas.dataset.finalRestoreTransition = finalScanTiming().restoreTransition.toFixed(4);
       canvas.dataset.finalIconHoldDuration = inputs.iconHoldDuration.value;
       canvas.dataset.centerLineSource = carryOpeningAssets ? "opening-assets" : "middle-row";
