@@ -814,7 +814,7 @@
         || { minX: 0, maxX: layout?.width || fontPx };
       return Math.max(extent, Math.abs(startX + bounds.minX), Math.abs(startX + bounds.maxX));
     }, 1);
-    const margin = Math.min(width, height) * .067;
+    const margin = Math.min(width, height) * .006;
     const contentHeight = Math.max(fontPx, (Math.max(1, rowCount) - 1) * lineHeight + fontPx);
     return Math.min(
       1,
@@ -936,7 +936,7 @@
       transition,
       restoreTransition: Math.max(.10, transition),
       hold: Math.max(40, Math.min(1200, Number(inputs.iconHoldDuration.value) / speedRatio)) / 1000,
-      rotation: Math.max(80, Math.min(1200, Number(inputs.iconRotationDuration.value))) / 1000,
+      rotation: Math.max(200, Math.min(2400, Number(inputs.iconRotationDuration.value))) / 1000,
       step: Math.max(35, Math.min(1200, Number(inputs.swapInterval.value) / speedRatio)) / 1000
     };
   }
@@ -1019,27 +1019,22 @@
         const fullCenterOffset = (dynamicSlotWidth - requiredWidth) / 2 + gapBefore + requestedWidth / 2;
         const entrySlideX = (1 - entryEase) * requestedWidth * .14;
         const drawCenterX = cursorX + lerp(slot.width / 2, fullCenterOffset, clamp01(openProgress)) + entrySlideX + offsetX;
-        const turnStart = enterStart + scanTiming.transition * .45;
-        const turnDuration = scanTiming.rotation * .32;
-        const turnEnd = turnStart + turnDuration;
-        const angleHold = scanTiming.rotation * .22;
-        const returnStart = turnEnd + angleHold;
-        const returnDuration = scanTiming.rotation * .46;
-        const returnEnd = returnStart + returnDuration;
-        const returnProgress = rangeProgress(sequenceElapsed, returnStart, returnEnd);
-        const airborne = entryEase * (sequenceElapsed < returnStart ? 1 : 1 - smoother(returnProgress));
+        const slowMotionStart = enterStart + scanTiming.transition * .45;
+        const slowMotionEnd = slowMotionStart + scanTiming.rotation;
+        const slowProgress = rangeProgress(sequenceElapsed, slowMotionStart, slowMotionEnd);
+        const airborne = entryEase * (1 - smoother(rangeProgress(slowProgress, .72, 1)));
         const drawCenterY = y - requestedHeight * .055 * airborne + offsetY;
-        const rotationProgress = sequenceElapsed < turnStart
+        const rotationProgress = sequenceElapsed < slowMotionStart
           ? 0
-          : sequenceElapsed < turnEnd
-            ? easeOut((sequenceElapsed - turnStart) / turnDuration)
-            : sequenceElapsed < returnStart
-              ? 1
-              : sequenceElapsed < returnEnd
-                ? 1 - smoother((sequenceElapsed - returnStart) / returnDuration)
-                : 0;
-        drawFinalAsset(context, asset, drawCenterX, drawCenterY, requestedWidth * replacementScale, requestedHeight * replacementScale,
-          sequenceElapsed, rotation * clamp01(rotationProgress));
+          : slowProgress < .28
+            ? easeOut(slowProgress / .28)
+            : slowProgress < .62
+              ? lerp(1, -.35, smoother((slowProgress - .28) / .34))
+              : lerp(-.35, 0, smoother((slowProgress - .62) / .38));
+        const driftDirection = rotation < 0 ? -1 : 1;
+        const slowDriftX = Math.sin(slowProgress * Math.PI * 2) * requestedWidth * .045 * driftDirection;
+        drawFinalAsset(context, asset, drawCenterX + slowDriftX, drawCenterY, requestedWidth * replacementScale, requestedHeight * replacementScale,
+          sequenceElapsed, rotation * Math.max(-1, Math.min(1, rotationProgress)));
       } else {
         let glyphScaleX = 1;
         let glyphScaleY = 1;
@@ -1234,11 +1229,12 @@
       canvas.dataset.finalAssetGap = "per-slot";
       canvas.dataset.swapMotion = extras.swapMotion || "idle";
       canvas.dataset.swapTargets = String(extras.swapTargets ?? 0);
-      canvas.dataset.iconRotationMotion = "right-pop-air-hold-return-fast-glyph-close";
+      canvas.dataset.iconRotationMotion = "instant-pop-tenfold-slow-angle-cross-return-fast-glyph-close";
       canvas.dataset.iconRotationDuration = inputs.iconRotationDuration.value;
-      canvas.dataset.iconRotationTurnRatio = ".32";
-      canvas.dataset.iconRotationHoldRatio = ".22";
-      canvas.dataset.iconRotationReturnRatio = ".46";
+      canvas.dataset.iconSlowMotionTurnRatio = ".28";
+      canvas.dataset.iconSlowMotionCrossRatio = ".34";
+      canvas.dataset.iconSlowMotionReturnRatio = ".38";
+      canvas.dataset.iconSlowMotionDrift = ".045";
       canvas.dataset.finalIconEntrySlide = ".14";
       canvas.dataset.finalRestoreTransition = finalScanTiming().restoreTransition.toFixed(4);
       canvas.dataset.finalIconHoldDuration = inputs.iconHoldDuration.value;
@@ -1584,7 +1580,7 @@
       if (field) controls[id] = field.type === "checkbox" ? field.checked : field.value;
     });
     return {
-      type: "me-vertical-rise", version: 9, controls, selectedAssetId,
+      type: "me-vertical-rise", version: 10, controls, selectedAssetId,
       rowAssetGaps: [...rowAssetGaps], rowAssetGapsAfter: [...rowAssetGapsAfter],
       rowAssetScales: [...rowAssetScales], rowAssetOffsetsX: [...rowAssetOffsetsX],
       rowTextGaps: [...rowTextGaps],
@@ -1644,7 +1640,10 @@
       scheme.rowTextGaps = Array(rowCount).fill(0);
       delete scheme.rowOffsetsY;
     }
-    scheme.version = 9;
+    if (Number(scheme.version) < 10 && Number(scheme.controls.iconRotationDuration) < 480) {
+      scheme.controls.iconRotationDuration = "680";
+    }
+    scheme.version = 10;
     return scheme;
   }
 
