@@ -10,20 +10,20 @@
 
 ## One-sentence target
 
-A lead word lands as a huge horizontally smeared impact, settles smaller, then each later word whips in from the right while the growing phrase recenters as one unit.
+A lead word lands as a huge horizontally smeared impact and settles; at each join, the existing phrase receives the leftward impulse first and the incoming word follows from the right into the same final layout.
 
 ## Phase table
 
 | Time | Source frames | Phase | Visible evidence | Motion interpretation | Confidence |
 | --- | --- | --- | --- | --- | --- |
-| 0.00–0.03s | 001 | Pre-roll | unrelated bright interface frame | exclude from the reusable loop | high |
-| 0.03–0.10s | 002–004 | Lead impact | `Action` grows into a bright oversized smear, then passes through a visibly smaller intermediate frame | very fast grow-and-shrink with resolution-normalized horizontal/radial smear | high |
-| 0.10–1.00s | 004–030 | Settle | lead word completes the last short scale step and stays sharp and centered | two-frame shrink, then no large-word residue or second entrance | high |
-| 1.00–1.20s | 031–037 | First append | lead phrase compresses into a horizontal streak while `becomes` appears to its right; both resolve together | one shared phrase layout, horizontal smear and squeeze, then recenter | high |
-| 1.20–1.67s | 037–050 | Hold | two-word phrase remains stable | readable hold with near-zero residual scale | high |
-| 1.67–1.90s | 051–058 | Second append | `progress` enters from the right during the same streak/squeeze event | repeat append event with the same shared motion field | high |
-| 1.90–3.20s | 058–097 | Final hold | complete phrase stays centered | long readable hold with very slight breathing | high |
-| 3.20–3.47s | 097–104 | Loop tail | phrase softens into a mild horizontal blur without leaving frame | short blur tail before the hard loop cut | medium |
+| 0.000–0.033s | 001 | Pre-roll | unrelated bright interface frame | exclude from the reusable loop | high |
+| 0.033–0.100s | 002–003 | Lead impact | `Action` flashes oversized and resolves to the small line | very fast grow-and-shrink with resolution-normalized horizontal/radial smear | high |
+| 0.100–0.450s | 003–014 | Settle / hold | lead word stays sharp and centered | rapid final scale recovery followed by a readable hold | high |
+| 0.450–0.650s | 015–020 | First append | `Action` moves left before `becomes` becomes readable; both decelerate into place | existing phrase impulse followed by a delayed incoming-word track | high |
+| 0.650–0.783s | 021–024 | Hold | two-word phrase remains stable | short readable hold | high |
+| 0.783–0.983s | 025–030 | Second append | the existing two-word phrase moves left together, then `progress` follows from the right | repeat the same two-track join field | high |
+| 0.983–1.383s | 031–042 | Final hold | complete phrase stays centered | readable hold with very slight breathing | high |
+| 1.383–1.533s | 043–046 | Loop tail | phrase softens into a mild horizontal blur | short blur tail before the loop cut | medium |
 
 ## Element model
 
@@ -43,7 +43,7 @@ A lead word lands as a huge horizontally smeared impact, settles smaller, then e
 
 ## Timing and easing
 
-- Default loop: 3.47s
+- Default loop: 1.533s
 - Overlaps: append word visibility, phrase recentering, squeeze, and smear are simultaneous
 - Holds with residual motion: final hold has an editable low-amplitude breathing scale
 - Hard cuts: loop tail cuts directly back to the lead impact
@@ -90,6 +90,7 @@ A lead word lands as a huge horizontally smeared impact, settles smaller, then e
 
 ## Feedback discoveries
 
+- 2026-08-31: direct measurement of the 46-frame normal-speed recheck corrected the choreography and timeline in v15. The first visible join frame is 015 and the second is 025, so their continuous starts lie between the preceding stable frame and those samples (modelled at 0.450s and 0.783s). Each join lasts about 0.200s, the final hold is about 0.400s, and the complete loop is 1.533s. During the first join, `Action` moves left one frame before `becomes` is readable; during the second, the already-visible `Action becomes` phrase moves as one old group before `progress` follows. v15 therefore removes per-old-word staggering, delays only the incoming word, uses a fast impulse followed by continuous deceleration, and removes the unsupported 25% sharp-text squeeze while retaining velocity-driven afterimages.
 - 2026-08-31: v14 corrects the remaining rigid-body feel without changing the approved afterimage. Existing words no longer share one recenter progress: the leftmost word launches immediately and each word to its right follows roughly 7% of the 170ms append event later (about 12ms), capped at a subtle 20% total drag. Every follower still reaches the same final layout on the same end frame, so the result is a crisp inertial pull rather than a visible word-by-word sequence.
 - 2026-08-31: v12's append still felt rigid because its acceleration occupied 38% of the event: at 30fps/200ms the first moving frame advanced only 7.3%, and the incoming word inherited the same 7.3% opacity before the next frames jumped by 21.9% and 30.5%. v13 shortens acceleration to 16%, uses a sine/cosine-integrated velocity curve with a smooth speed peak, reveals the incoming word independently over the first two frames, and changes the migrated default append duration from 200ms to 170ms. The corrected 30fps samples advance about 22%, 30%, 25%, 17%, and 7% before stopping, preserving the approved velocity-driven trail while removing the sticky start.
 - 2026-08-31: the 1.533333s original-speed rhythm recheck shows the first append launching at frame 015, strongest directional blur across frames 015–017, recovery at frame 018, and a clear destination by frame 019; the second append repeats the same shape. v12 replaces the previous start-fast cubic ease-out with a continuous acceleration/deceleration curve and drives every append trail layer from that curve's instantaneous velocity.

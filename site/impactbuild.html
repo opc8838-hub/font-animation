@@ -49,14 +49,14 @@
       </section>
 
       <section class="panel-card">
-        <div class="section-heading"><p class="section-label">核心节奏</p><small class="section-note">默认值来自 104 帧逐帧分析</small></div>
+        <div class="section-heading"><p class="section-label">核心节奏</p><small class="section-note">短促冲量，连续减速</small></div>
         <div class="control-grid">
           <label>首词冲击 <output id="impactScaleOut"></output><input id="impactScale" type="range" min="120" max="520" value="420"></label>
           <label>冲击时长 <output id="impactDurationOut"></output><input id="impactDuration" type="range" min="50" max="500" value="100"></label>
-          <label>首词回弹 <output id="settleDurationOut"></output><input id="settleDuration" type="range" min="120" max="1800" value="200"></label>
-          <label>接词间隔 <output id="appendIntervalOut"></output><input id="appendInterval" type="range" min="250" max="1800" value="667"></label>
-          <label>接词滑动时长 <output id="appendDurationOut"></output><input id="appendDuration" type="range" min="80" max="800" value="170"></label>
-          <label>最后停留 <output id="finalHoldOut"></output><input id="finalHold" type="range" min="200" max="4000" value="1300"></label>
+          <label>首词停稳时长 <output id="settleDurationOut"></output><input id="settleDuration" type="range" min="120" max="1800" value="350"></label>
+          <label>接词间隔 <output id="appendIntervalOut"></output><input id="appendInterval" type="range" min="250" max="1800" value="333"></label>
+          <label>接词滑动时长 <output id="appendDurationOut"></output><input id="appendDuration" type="range" min="80" max="800" value="200"></label>
+          <label>最后停留 <output id="finalHoldOut"></output><input id="finalHold" type="range" min="200" max="4000" value="400"></label>
           <label>横向阴影强度 <output id="blurStrengthOut"></output><input id="blurStrength" type="range" min="0" max="140" value="115"></label>
           <label>整体速度 <output id="masterSpeedOut"></output><input id="masterSpeed" type="range" min="40" max="220" value="100"></label>
         </div>
@@ -73,7 +73,7 @@
         </div>
         <details><summary>高级细调</summary><div class="control-grid advanced-grid">
           <label>收稳比例 <output id="settleScaleOut"></output><input id="settleScale" type="range" min="35" max="120" value="100"></label>
-          <label>接入压缩 <output id="appendSqueezeOut"></output><input id="appendSqueeze" type="range" min="0" max="55" value="25"></label>
+          <label>接入压缩 <output id="appendSqueezeOut"></output><input id="appendSqueeze" type="range" min="0" max="55" value="0"></label>
           <label>向左滚入距离 <output id="appendTravelOut"></output><input id="appendTravel" type="range" min="0" max="360" value="200"></label>
           <label>呼吸幅度 <output id="breathAmountOut"></output><input id="breathAmount" type="range" min="0" max="10" step="0.5" value="1.5"></label>
           <label>尾部模糊 <output id="tailBlurOut"></output><input id="tailBlur" type="range" min="0" max="100" value="22"></label>
@@ -105,7 +105,7 @@
   <script src="shared-icon-library.js?v=20260827-1"></script>
   <script src="js/continuation-gif.js"></script>
   <script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="impactbuild.js?v=20260831-14"></script>
+  <script src="impactbuild.js?v=20260831-15"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260831-impact1"></script>
 </body>
