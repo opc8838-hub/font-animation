@@ -916,8 +916,10 @@
   function finalScanTiming() {
     const speed = Math.max(.5, Math.min(8, Number(inputs.finalScanSpeed.value)));
     const speedRatio = speed / 4;
+    const transition = Math.max(45, Math.min(220, 100 / speedRatio)) / 1000;
     return {
-      transition: Math.max(45, Math.min(220, 100 / speedRatio)) / 1000,
+      transition,
+      restoreTransition: Math.max(.15, transition),
       hold: Math.max(40, Math.min(1200, Number(inputs.iconHoldDuration.value) / speedRatio)) / 1000,
       rotation: Math.max(80, Math.min(1200, Number(inputs.iconRotationDuration.value))) / 1000,
       step: Math.max(35, Math.min(1200, Number(inputs.swapInterval.value) / speedRatio)) / 1000
@@ -927,8 +929,9 @@
   function finalScanDuration() {
     const count = Math.max(1, Object.keys(finalSlotMap).filter((index) => assets.has(finalSlotMap[index])).length);
     const scan = finalScanTiming();
-    const sweep = Math.max(0, count - 1) * scan.step + scan.transition;
-    return sweep * 2 + Math.max(scan.rotation, scan.hold);
+    const enterSweep = Math.max(0, count - 1) * scan.step + scan.transition;
+    const restoreSweep = Math.max(0, count - 1) * scan.step + scan.restoreTransition;
+    return enterSweep + Math.max(scan.rotation, scan.hold) + restoreSweep;
   }
 
   function drawFinalAsset(context, asset, centerX, centerY, width, height, time, rotation = 0) {
@@ -954,20 +957,20 @@
     mappedSlots.forEach((slot, order) => {
       const enterStart = order * scanTiming.step;
       const restoreStart = restoreSweepStart + order * scanTiming.step;
-      if (sequenceElapsed < enterStart || sequenceElapsed >= restoreStart + scanTiming.transition) return;
+      if (sequenceElapsed < enterStart || sequenceElapsed >= restoreStart + scanTiming.restoreTransition) return;
       const asset = assets.get(finalSlotMap[slot.index]);
       const enterRaw = rangeProgress(sequenceElapsed, enterStart, enterStart + scanTiming.transition);
-      const exitRaw = rangeProgress(sequenceElapsed, restoreStart, restoreStart + scanTiming.transition);
+      const exitRaw = rangeProgress(sequenceElapsed, restoreStart, restoreStart + scanTiming.restoreTransition);
       const setting = normalizedFinalSlotSetting(slot.index);
       const requestedHeight = assetHeight * setting.scale / 100;
       const requestedWidth = requestedHeight * (asset.ratio || 1);
       const gapBefore = setting.gapBefore * unitScale;
       const gapAfter = setting.gapAfter * unitScale;
       const requiredWidth = Math.max(1, requestedWidth + gapBefore + gapAfter);
-      const closeRaw = rangeProgress(sequenceElapsed, restoreStart + scanTiming.transition * .15, restoreStart + scanTiming.transition);
+      const closeRaw = rangeProgress(exitRaw, 0, .55);
       const openProgress = Math.max(0, easeOutBack(enterRaw) * (1 - smooth(closeRaw)));
       activeReplacements.set(slot.index, {
-        asset, enterStart, enterRaw, exitRaw, swap: enterRaw >= .45 && exitRaw < .55,
+        asset, enterStart, restoreStart, enterRaw, exitRaw, swap: enterRaw >= .45 && exitRaw < .55,
         requestedHeight, requestedWidth, requiredWidth, gapBefore,
         offsetX: setting.offsetX * unitScale, offsetY: setting.offsetY * unitScale,
         rotation: setting.rotation * Math.PI / 180,
@@ -989,19 +992,21 @@
         const fullCenterOffset = (dynamicSlotWidth - requiredWidth) / 2 + gapBefore + requestedWidth / 2;
         const drawCenterX = cursorX + lerp(slot.width / 2, fullCenterOffset, clamp01(openProgress)) + offsetX;
         const drawCenterY = y - Math.sin(Math.PI * clamp01(iconEnter)) * requestedHeight * .055 + offsetY;
-        const rotationElapsed = Math.max(0, sequenceElapsed - (enterStart + scanTiming.transition * .45));
+        const rotationStart = enterStart + scanTiming.transition * .45;
         const uprightHold = Math.max(.03, scanTiming.transition * .30);
-        const turnElapsed = Math.max(0, rotationElapsed - uprightHold);
-        const turnDuration = scanTiming.rotation * .42;
-        const angleHold = scanTiming.rotation * .16;
-        const returnDuration = scanTiming.rotation * .42;
-        const rotationProgress = rotationElapsed < uprightHold
+        const turnStart = rotationStart + uprightHold;
+        const turnDuration = Math.max(.08, scanTiming.rotation * .42);
+        const turnEnd = turnStart + turnDuration;
+        const returnEnd = replacement.restoreStart + scanTiming.restoreTransition * .55;
+        const returnDuration = Math.max(.10, scanTiming.rotation * .46);
+        const returnStart = Math.max(turnEnd, returnEnd - returnDuration);
+        const rotationProgress = sequenceElapsed < turnStart
           ? 0
-          : turnElapsed < turnDuration
-            ? smoother(turnElapsed / turnDuration)
-            : turnElapsed < turnDuration + angleHold
+          : sequenceElapsed < turnEnd
+            ? easeOut((sequenceElapsed - turnStart) / turnDuration)
+            : sequenceElapsed < returnStart
               ? 1
-              : 1 - smoother((turnElapsed - turnDuration - angleHold) / returnDuration);
+              : 1 - smoother((sequenceElapsed - returnStart) / Math.max(.001, returnEnd - returnStart));
         drawFinalAsset(context, asset, drawCenterX, drawCenterY, requestedWidth * replacementScale, requestedHeight * replacementScale,
           sequenceElapsed, rotation * clamp01(rotationProgress));
       } else {
@@ -1013,8 +1018,8 @@
           glyphScaleY = 1 + prepare * .035;
         } else if (replacement) {
           const restore = easeOutBack(rangeProgress(replacement.exitRaw, .55, 1));
-          glyphScaleX = .9 + restore * .1;
-          glyphScaleY = 1.04 - restore * .04;
+          glyphScaleX = .82 + restore * .18;
+          glyphScaleY = 1.02 - restore * .02;
         }
         context.save();
         context.translate(cursorX + dynamicSlotWidth / 2, y);
@@ -1191,8 +1196,9 @@
       canvas.dataset.finalAssetGap = "per-slot";
       canvas.dataset.swapMotion = extras.swapMotion || "idle";
       canvas.dataset.swapTargets = String(extras.swapTargets ?? 0);
-      canvas.dataset.iconRotationMotion = "upright-angle-return-2d-fixed";
+      canvas.dataset.iconRotationMotion = "upright-angle-return-anchored-to-glyph";
       canvas.dataset.iconRotationDuration = inputs.iconRotationDuration.value;
+      canvas.dataset.finalRestoreTransition = finalScanTiming().restoreTransition.toFixed(4);
       canvas.dataset.finalIconHoldDuration = inputs.iconHoldDuration.value;
       canvas.dataset.centerLineSource = carryOpeningAssets ? "opening-assets" : "middle-row";
       canvas.dataset.centerLineAssets = [...centerWallLine.matchAll(/\{\{([^{}]+)\}\}/g)]
