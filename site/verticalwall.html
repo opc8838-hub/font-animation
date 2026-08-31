@@ -25,7 +25,7 @@
 
   <details class="control-panel current-panel vertical-panel" id="controlPanel" open>
     <summary>
-      <span><b>纵跃</b><small>VERTICAL RISE / 45</small></span>
+      <span><b>纵跃</b><small>VERTICAL RISE / 46</small></span>
       <i aria-hidden="true">参数</i>
     </summary>
     <div class="panel-scroll">
@@ -142,7 +142,7 @@ leveling {{play}}p
             <label>垂直位置 <output id="finalSlotOffsetYOut">0</output><input id="finalSlotOffsetY" type="range" min="-120" max="120" step="1" value="0"></label>
             <label>平面旋转角度 <output id="finalSlotRotationOut">0°</output><input id="finalSlotRotation" type="range" min="-360" max="360" step="1" value="0"></label>
           </div>
-          <p class="hint">图标先快速向右弹出，接近最远点时进入慢动作并旋转；正数顺时针、负数逆时针，每个字位单独保存角度。</p>
+          <p class="hint">图标先原地放大并快速向右弹到位；慢动作期间位置锁定，只按设定角度左右旋转，随后从左到右快速回字。</p>
         </div>
         <p class="hint">收尾完全复用水流的扫变：从左到右把指定字母换成图标，短暂停留，再从左到右恢复字母。</p>
       </section>
@@ -258,8 +258,8 @@ leveling {{play}}p
           <label>图标旋转慢动作时长 <small class="stage-tag">原地慢转后瞬间回字</small><output id="iconRotationDurationOut">0.68秒</output>
             <input id="iconRotationDuration" type="range" min="200" max="2400" step="20" value="680">
           </label>
-          <label>慢动作开始点 <small class="stage-tag">接近回收点再慢放</small><output id="iconSlowMotionStartOut">弹出80%时</output>
-            <input id="iconSlowMotionStart" type="range" min="0" max="95" step="5" value="80">
+          <label>慢动作开始时间 <small class="stage-tag">快弹到位后只旋转</small><output id="iconSlowMotionStartOut">快弹50ms后</output>
+            <input id="iconSlowMotionStart" type="range" min="20" max="240" step="10" value="50">
           </label>
           <label>回字收拢用时 <small class="stage-tag">回正、换字、收缩同步</small><output id="finalRestoreDurationOut">20ms</output>
             <input id="finalRestoreDuration" type="range" min="20" max="600" step="10" value="20">
@@ -375,7 +375,7 @@ leveling {{play}}p
   <script src="token-asset-tools.js"></script>
   <script src="shared-icon-library.js?v=20260830-3"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
-  <script src="verticalwall.js?v=20260831-45"></script>
+  <script src="verticalwall.js?v=20260831-46"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
 </body>
