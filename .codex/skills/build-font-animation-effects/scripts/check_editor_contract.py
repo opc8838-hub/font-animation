@@ -28,6 +28,7 @@ def main() -> int:
     js = js_path.read_text(encoding="utf-8")
     errors: list[str] = []
 
+    text_only = 'data-editor-capabilities="text-only"' in html
     required_html = {
         "scheme Save": "保存方案",
         "scheme Import": "导入方案",
@@ -44,6 +45,13 @@ def main() -> int:
         "explicit commit": "me-asset-commit",
         "single asset editor": "me-asset-editor",
     }
+    if text_only:
+        asset_labels = {
+            "selected asset panel", "selected asset toggle", "selected asset list",
+            "asset editor drawer", "asset library", "selection-first card",
+            "explicit commit", "single asset editor",
+        }
+        required_html = {label: token for label, token in required_html.items() if label not in asset_labels}
     source = html + "\n" + js
     for label, token in required_html.items():
         if token not in source:
@@ -52,14 +60,20 @@ def main() -> int:
     background = html.find('id="backgroundColor"')
     text_color = html.find('id="textColor"')
     asset_panel = html.find("me-layer-panel")
-    if min(background, text_color, asset_panel) < 0 or not (background < asset_panel and text_color < asset_panel):
+    if text_only:
+        if min(background, text_color) < 0:
+            errors.append("text-only effects still require background and text color controls")
+    elif min(background, text_color, asset_panel) < 0 or not (background < asset_panel and text_color < asset_panel):
         errors.append("background/text color controls must be inside the text area before the asset panel")
 
-    for label, alternatives in {
+    state_checks = {
         "expanded state": ("is-list-expanded",),
         "manager state transition": ("setAssetManager", "setLayerManager"),
         "selected list rebuild": ("renderSelectedAssets", "renderAssets"),
-    }.items():
+    }
+    if text_only:
+        state_checks = {}
+    for label, alternatives in state_checks.items():
         if not any(token in js for token in alternatives):
             errors.append(f"missing {label}: one of {', '.join(alternatives)}")
 
