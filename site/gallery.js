@@ -66,7 +66,7 @@ const count = document.querySelector("#visibleCount");
 const emptyState = document.querySelector("#emptyState");
 const filterButtons = [...document.querySelectorAll(".filter")];
 let activeFilter = "all";
-const livePreviews = new Set(["textswell", "impactbuild"]);
+const livePreviews = new Set(["textswell"]);
 const featuredPreviews = new Set(["textswell", "impactbuild", "currentwall", "iconburst", "continuation", "beforeafter", "shutterafter", "pathwriter", "scrapbin"]);
 const liveObserver = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
@@ -92,7 +92,7 @@ function render() {
   grid.innerHTML = visible.map(([slug, zh, en, , categoryName]) => {
     const index = effects.findIndex((effect) => effect[0] === slug) + 1;
     const imageName = slug === "crashclock" ? "final_crashclock.png" : ["iconburst", "focuswheel", "gradienttype", "glyphrelay", "wordgather", "focusportal", "rapidsequence", "citystack", "colorcanvas", "liquidtype", "scrapbin", "terminalbrand", "slotstories", "mediacascade", "colorrecompose", "phrasebuild", "switchdrop", "searchtyping", "beforeafter", "shutterafter", "assemble", "verbcue", "tighten", "titlecard", "lockup", "promptcue", "pullback", "textswell", "impactbuild", "wordflip", "textbuild", "textswap", "textreveal", "phoneframe", "laptopframe", "orbitgallery", "followerrush", "logoassemble", "moodboard"].includes(slug) ? `final_${slug}.svg` : `final_${slug}.png`;
-    const target = slug === "flash" ? "flash-scenes.html" : slug === "iconburst" ? "iconburst.html?from=gallery&v=20260824-37" : slug === "continuation" ? "continuation.html?from=gallery&v=20260829-editor25" : slug === "currentwall" ? "currentwall.html?from=gallery&v=20260830-28" : slug === "beforeafter" ? "beforeafter.html?from=gallery&v=20260825-latest1" : slug === "shutterafter" ? "shutterafter.html?from=gallery&v=20260827-1" : slug === "pathwriter" ? "pathwriter.html?from=gallery&v=20260827-default2" : slug === "scrapbin" ? "scrapbin.html?from=gallery&v=20260826-delete11" : slug === "liquidtype" ? "liquidtype.html?from=gallery&v=20260824-scatter3" : `${slug}.html`;
+    const target = slug === "flash" ? "flash-scenes.html" : slug === "iconburst" ? "iconburst.html?from=gallery&v=20260824-37" : slug === "continuation" ? "continuation.html?from=gallery&v=20260829-editor25" : slug === "currentwall" ? "currentwall.html?from=gallery&v=20260830-28" : slug === "beforeafter" ? "beforeafter.html?from=gallery&v=20260825-latest1" : slug === "shutterafter" ? "shutterafter.html?from=gallery&v=20260827-1" : slug === "pathwriter" ? "pathwriter.html?from=gallery&v=20260827-default2" : slug === "impactbuild" ? "impactbuild.html?from=gallery&v=20260901-final1" : slug === "scrapbin" ? "scrapbin.html?from=gallery&v=20260826-delete11" : slug === "liquidtype" ? "liquidtype.html?from=gallery&v=20260824-scatter3" : `${slug}.html`;
     const detail = slug === "flash" ? "13 个独立子风格" : categoryName;
     const preview = slug === "continuation"
       ? `<video class="effect-loop" src="assets/previews/continuation-card.mp4?v=20260829-1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
@@ -110,6 +110,8 @@ function render() {
         ? `<video class="effect-loop" src="assets/previews/delete-card.mp4?v=20260826-3" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
       : slug === "colorrecompose"
         ? `<video class="effect-loop" src="assets/previews/color-recompose-card.mp4?v=20260827-1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
+      : slug === "impactbuild"
+        ? `<video class="effect-loop" src="assets/previews/impactbuild-card.mp4?v=20260901-1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
       : livePreviews.has(slug)
         ? `<iframe class="effect-live" title="${zh}实时预览" data-src="${slug}.html?preview=1&amp;v=${slug === "currentwall" ? "20260824-ui10" : "20260824-37"}" loading="lazy" tabindex="-1"></iframe>`
         : `<img src="${imageName}" alt="${zh}动态字体效果预览" ${index > 8 ? 'loading="lazy"' : ""}>`;

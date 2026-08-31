@@ -6,7 +6,9 @@
   const canvas = $("#impactCanvas");
   const shell = $("#canvasShell");
   const context = canvas.getContext("2d", { alpha: false });
-  const PREVIEW = new URLSearchParams(location.search).has("preview");
+  const searchParams = new URLSearchParams(location.search);
+  const PREVIEW = searchParams.has("preview");
+  const GALLERY_DEFAULT = searchParams.get("from") === "gallery";
   const STORAGE_KEY = "impactbuild-scheme-v1";
   const VERSION = 7;
   const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
@@ -52,6 +54,9 @@
       { color: "#b783ff", offset: 0, strength: 100 }
     ], assetTunes: {}, backgroundMedia: null
   };
+
+  let bundledDefaultScheme = null;
+  const defaultState = () => bundledDefaultScheme || DEFAULT;
 
   let wordSettings = structuredClone(DEFAULT.wordSettings);
   let backgroundMedia = null;
@@ -600,33 +605,52 @@
     $("#schemeStatus").textContent = savedLocally ? "方案已保存到本机，并下载了完整 JSON" : "完整 JSON 已下载；本机缓存空间不足";
   });
   $("#importScheme").addEventListener("change", async (event) => { const file = event.target.files?.[0]; event.target.value = ""; if (!file) return; try { const scheme = JSON.parse(await file.text()); if (!scheme || typeof scheme !== "object" || Array.isArray(scheme)) throw new Error("方案结构无效"); applyState(scheme); let persisted = true; try { localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState())); } catch (_) { persisted = false; } $("#schemeStatus").textContent = persisted ? "方案导入成功；文字、重影、素材和时间线已重建" : "方案已导入，但本机缓存空间不足"; } catch (error) { $("#schemeStatus").textContent = `导入失败：${error.message}`; } });
-  $("#restoreDefault").addEventListener("click", () => { try { localStorage.removeItem(STORAGE_KEY); } catch (_) {} applyState(DEFAULT); schedulePersist(); $("#schemeStatus").textContent = "已恢复最新默认示例与全部参数"; });
-  $("#clearRebuild").addEventListener("click", () => { try { localStorage.removeItem(STORAGE_KEY); } catch (_) {} applyState({ ...DEFAULT, phrase: "", wordSettings: [], assetTunes: {}, backgroundMedia: null }); schedulePersist(); $("#schemeStatus").textContent = "已清空文字、图标与背景，可重新创作"; });
+  $("#restoreDefault").addEventListener("click", () => { try { localStorage.removeItem(STORAGE_KEY); } catch (_) {} applyState(defaultState()); schedulePersist(); $("#schemeStatus").textContent = "已恢复最新默认示例与全部参数"; });
+  $("#clearRebuild").addEventListener("click", () => { try { localStorage.removeItem(STORAGE_KEY); } catch (_) {} applyState({ ...defaultState(), phrase: "", wordSettings: [], assetTunes: {}, backgroundMedia: null }); schedulePersist(); $("#schemeStatus").textContent = "已清空文字、图标与背景，可重新创作"; });
 
   window.addEventListener("resize", syncCanvasShell);
-  let initial = DEFAULT;
-  if (!PREVIEW) {
+  async function initialize() {
     try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-      if (saved?.version === VERSION) initial = saved;
-      else if (saved?.version === 1 || saved?.version === 2 || saved?.version === 3 || saved?.version === 4 || saved?.version === 5 || saved?.version === 6) {
-        const usedOldDefault = saved.settleDuration === "900" || saved.settleDuration === "320" || saved.settleDuration === "200" || saved.settleDuration === "367";
-        const usedOldAppendDefault = saved.appendDuration === "170";
-        initial = {
-          ...saved,
-          version: VERSION,
-          settleDuration: usedOldDefault ? DEFAULT.settleDuration : saved.settleDuration,
-          appendInterval: saved.appendInterval === "667" ? DEFAULT.appendInterval : saved.appendInterval,
-          appendDuration: usedOldAppendDefault ? DEFAULT.appendDuration : saved.appendDuration,
-          finalHold: saved.finalHold === "1300" ? DEFAULT.finalHold : saved.finalHold,
-          appendSqueeze: saved.appendSqueeze === "25" ? DEFAULT.appendSqueeze : saved.appendSqueeze
-        };
-      }
-    } catch (_) {}
+      const response = await fetch("impact-build-scheme.json?v=20260901-1", { cache: "no-store" });
+      if (!response.ok) throw new Error(`默认方案 ${response.status}`);
+      const scheme = await response.json();
+      if (!scheme || typeof scheme !== "object" || Array.isArray(scheme)) throw new Error("默认方案结构无效");
+      bundledDefaultScheme = { ...DEFAULT, ...scheme };
+    } catch (error) {
+      console.error(error);
+    }
+    const latestDefault = defaultState();
+    let initial = latestDefault;
+    if (!PREVIEW && GALLERY_DEFAULT) {
+      initial = latestDefault;
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(latestDefault)); } catch (_) {}
+      const cleanUrl = new URL(location.href);
+      cleanUrl.searchParams.delete("from");
+      history.replaceState({}, "", cleanUrl);
+    } else if (!PREVIEW) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (saved?.version === VERSION) initial = saved;
+        else if (saved?.version === 1 || saved?.version === 2 || saved?.version === 3 || saved?.version === 4 || saved?.version === 5 || saved?.version === 6) {
+          const usedOldDefault = saved.settleDuration === "900" || saved.settleDuration === "320" || saved.settleDuration === "200" || saved.settleDuration === "367";
+          const usedOldAppendDefault = saved.appendDuration === "170";
+          initial = {
+            ...saved,
+            version: VERSION,
+            settleDuration: usedOldDefault ? latestDefault.settleDuration : saved.settleDuration,
+            appendInterval: saved.appendInterval === "667" ? latestDefault.appendInterval : saved.appendInterval,
+            appendDuration: usedOldAppendDefault ? latestDefault.appendDuration : saved.appendDuration,
+            finalHold: saved.finalHold === "1300" ? latestDefault.finalHold : saved.finalHold,
+            appendSqueeze: saved.appendSqueeze === "25" ? latestDefault.appendSqueeze : saved.appendSqueeze
+          };
+        }
+      } catch (_) {}
+    }
+    applyState(initial);
+    renderAssets();
+    window.STGFontLibrary?.enhanceAll(document);
+    document.fonts?.ready?.then(() => replay());
+    previewLoop();
   }
-  applyState(initial);
-  renderAssets();
-  window.STGFontLibrary?.enhanceAll(document);
-  document.fonts?.ready?.then(() => replay());
-  previewLoop();
+  initialize();
 })();
