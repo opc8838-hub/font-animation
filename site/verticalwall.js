@@ -777,7 +777,7 @@
     return layout;
   }
 
-  function layoutRowSegments(context, line, fontPx, assetHeight, textGap, gapBefore, gapAfter) {
+  function layoutRowSegments(context, line, fontPx, assetHeight, textGap, gapBefore, gapAfter, frameWidth = 0) {
     const parts = firstRowAssetParts(line);
     const asset = assets.get(parts.assetId);
     if (!asset) return null;
@@ -785,9 +785,12 @@
     const right = parts.right ? layoutTokens(context, parts.right, fontPx, assetHeight, textGap, textGap, false) : null;
     const iconWidth = assetHeight * (asset.ratio || 1);
     const leftWidth = left?.width || 0;
-    const iconX = leftWidth + gapBefore;
-    const rightX = iconX + iconWidth + gapAfter;
-    const width = rightX + (right?.width || 0);
+    const naturalWidth = leftWidth + gapBefore + iconWidth + gapAfter + (right?.width || 0);
+    const width = frameWidth > 0 ? frameWidth : naturalWidth;
+    const rightX = right ? width - right.width : width;
+    const slotStart = leftWidth + gapBefore;
+    const slotEnd = rightX - gapAfter;
+    const iconX = slotStart + (slotEnd - slotStart - iconWidth) / 2;
     return {
       asset, assetId: parts.assetId, assetHeight, iconWidth, left, right,
       iconX, rightX, width
@@ -805,7 +808,7 @@
     if (!segments) return null;
     return {
       minX: Math.min(0, segments.iconX + iconOffset),
-      maxX: Math.max(segments.left?.width || 0, segments.width + iconOffset)
+      maxX: Math.max(segments.width, segments.iconX + iconOffset + segments.iconWidth)
     };
   }
 
@@ -830,7 +833,7 @@
       type: "asset", id: segments.assetId, asset: segments.asset,
       width: segments.iconWidth, height: segments.assetHeight
     }, startX + segments.iconX + iconOffset, y, color, { time, useAssetTuning: false });
-    if (segments.right) drawSequence(context, segments.right, startX + segments.rightX + iconOffset, y, color, 0, time, 0, false);
+    if (segments.right) drawSequence(context, segments.right, startX + segments.rightX, y, color, 0, time, 0, false);
   }
 
   function drawItem(context, item, x, y, color, options = {}) {
@@ -1170,20 +1173,21 @@
       context, line, wallStage.fontPx, wallStage.assetHeight * rowAssetScales[index] / 100, wallRowTextGaps[index],
       wallRowTextGaps[index] + (Number(rowAssetGaps[index]) || 0) * scale, false
     ));
+    const globalRowAssetScale = Number($("#globalRowAssetScale").value) || 100;
+    const neutralWallWidths = wallRows.map((line, index) => neutralRowWidth(
+      context, line, wallStage.fontPx, wallStage.fontPx * globalRowAssetScale / 100, wallRowTextGaps[index]
+    ));
+    const fixedWallWidth = Math.max(...neutralWallWidths, wallStage.fontPx);
     const wallSegments = wallRows.map((line, index) => layoutRowSegments(
       context, line, wallStage.fontPx, wallStage.assetHeight * rowAssetScales[index] / 100, wallRowTextGaps[index],
       wallRowTextGaps[index] + (Number(rowAssetGaps[index]) || 0) * scale,
-      wallRowTextGaps[index] + (Number(rowAssetGapsAfter[index]) || 0) * scale
+      wallRowTextGaps[index] + (Number(rowAssetGapsAfter[index]) || 0) * scale,
+      fixedWallWidth
     ));
     const centerWallBounds = rowSegmentBounds(
       wallSegments[centerSource], (Number(rowAssetOffsetsX[centerSource]) || 0) * scale
     ) || { minX: 0, maxX: wallLayouts[centerSource]?.width || 0 };
-    const globalRowAssetScale = Number($("#globalRowAssetScale").value) || 100;
-    const neutralWallWidths = rows.map((line, index) => neutralRowWidth(
-      context, line, wallStage.fontPx, wallStage.fontPx * globalRowAssetScale / 100, wallRowTextGaps[index]
-    ));
-    const neutralWallWidth = neutralWallWidths.reduce((sum, width) => sum + width, 0) / neutralWallWidths.length;
-    const wallStartX = -neutralWallWidth / 2;
+    const wallStartX = -fixedWallWidth / 2;
     const requestedWallZoom = Number(inputs.wallScale.value) / 100;
     const wallFit = wallFrameFit(
       wallLayouts, wallSegments, wallStartX,
@@ -1232,6 +1236,10 @@
       canvas.dataset.rowAssetOffsetsX = rowAssetOffsetsX.join(",");
       canvas.dataset.rowTextGaps = rowTextGaps.join(",");
       canvas.dataset.neutralRowWidths = neutralWallWidths.map((width) => width.toFixed(3)).join(",");
+      canvas.dataset.fixedRowFrameWidth = fixedWallWidth.toFixed(3);
+      canvas.dataset.rowFrameWidths = wallSegments.map((segments) => (segments?.width || fixedWallWidth).toFixed(3)).join(",");
+      canvas.dataset.rowRightTextAnchors = wallSegments.map((segments) => (segments ? wallStartX + segments.rightX : wallStartX + fixedWallWidth).toFixed(3)).join(",");
+      canvas.dataset.rowRightEdges = wallSegments.map((segments) => (wallStartX + (segments?.width || fixedWallWidth)).toFixed(3)).join(",");
       canvas.dataset.finalFontSize = inputs.finalFontSize.value;
       canvas.dataset.finalAssetScale = inputs.finalAssetScale.value;
       canvas.dataset.finalTextGap = inputs.finalTextGap.value;
@@ -1725,16 +1733,17 @@
     const layouts = rows.map((line, index) => layoutTokens(context, line, fontPx,
       fontPx * rowAssetScales[index] / 100, previewRowTextGaps[index],
       previewRowTextGaps[index] + (Number(rowAssetGaps[index]) || 0) * unitScale, false));
-    const segments = rows.map((line, index) => layoutRowSegments(context, line, fontPx,
-      fontPx * rowAssetScales[index] / 100, previewRowTextGaps[index],
-      previewRowTextGaps[index] + (Number(rowAssetGaps[index]) || 0) * unitScale,
-      previewRowTextGaps[index] + (Number(rowAssetGapsAfter[index]) || 0) * unitScale));
     const plainWidths = rows.map((line, index) => neutralRowWidth(
       context, line, fontPx, fontPx * (Number($("#globalRowAssetScale").value) || 100) / 100,
       previewRowTextGaps[index]
     ));
-    const anchorWidth = plainWidths.reduce((sum, value) => sum + value, 0) / plainWidths.length || 1;
-    const startX = -anchorWidth / 2;
+    const fixedFrameWidth = Math.max(...plainWidths, fontPx);
+    const segments = rows.map((line, index) => layoutRowSegments(context, line, fontPx,
+      fontPx * rowAssetScales[index] / 100, previewRowTextGaps[index],
+      previewRowTextGaps[index] + (Number(rowAssetGaps[index]) || 0) * unitScale,
+      previewRowTextGaps[index] + (Number(rowAssetGapsAfter[index]) || 0) * unitScale,
+      fixedFrameWidth));
+    const startX = -fixedFrameWidth / 2;
     const fit = wallFrameFit(
       layouts, segments, startX,
       rowAssetOffsetsX.map((value) => (Number(value) || 0) * unitScale),
@@ -1757,6 +1766,10 @@
     rowOverviewCanvas.dataset.columnAnchorX = startX.toFixed(4);
     rowOverviewCanvas.dataset.logicalColumnAnchor = (startX / unitScale).toFixed(4);
     rowOverviewCanvas.dataset.layoutFit = fit.toFixed(6);
+    rowOverviewCanvas.dataset.fixedRowFrameWidth = fixedFrameWidth.toFixed(3);
+    rowOverviewCanvas.dataset.rowFrameWidths = segments.map((row) => (row?.width || fixedFrameWidth).toFixed(3)).join(",");
+    rowOverviewCanvas.dataset.rowRightTextAnchors = segments.map((row) => (row ? startX + row.rightX : startX + fixedFrameWidth).toFixed(3)).join(",");
+    rowOverviewCanvas.dataset.rowRightEdges = segments.map((row) => (startX + (row?.width || fixedFrameWidth)).toFixed(3)).join(",");
     rowOverviewCanvas.dataset.rowTextGaps = rowTextGaps.join(",");
     rowOverviewCanvas.dataset.rowWidths = plainWidths.map((width) => width.toFixed(3)).join(",");
     $("#rowOverviewStatus").textContent = `${rows.length} 行 · ${logicalWidth} × ${logicalHeight}`;
