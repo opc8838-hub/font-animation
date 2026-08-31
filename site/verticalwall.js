@@ -230,9 +230,7 @@
       gapAfter: Math.max(-40, Math.min(120, Number(setting.gapAfter) || 0)),
       offsetX: Math.max(-120, Math.min(120, Number(setting.offsetX) || 0)),
       offsetY: Math.max(-120, Math.min(120, Number(setting.offsetY) || 0)),
-      rotation: Math.max(-360, Math.min(360, finiteOr(setting.rotation, 0))),
-      turnSpeed: Math.max(.25, Math.min(4, finiteOr(setting.turnSpeed, 1))),
-      returnSpeed: Math.max(.25, Math.min(4, finiteOr(setting.returnSpeed, 1)))
+      rotation: Math.max(-360, Math.min(360, finiteOr(setting.rotation, 0)))
     };
   }
 
@@ -241,10 +239,8 @@
     const mappedAsset = assets.get(finalSlotMap[selectedFinalSlot]);
     const controls = [["finalSlotScale", "finalSlotScaleOut", "scale", "%"], ["finalSlotGapBefore", "finalSlotGapBeforeOut", "gapBefore", ""],
       ["finalSlotGapAfter", "finalSlotGapAfterOut", "gapAfter", ""], ["finalSlotOffsetX", "finalSlotOffsetXOut", "offsetX", ""],
-      ["finalSlotOffsetY", "finalSlotOffsetYOut", "offsetY", ""], ["finalSlotRotation", "finalSlotRotationOut", "rotation", "°"],
-      ["finalSlotTurnSpeed", "finalSlotTurnSpeedOut", "turnSpeed", "×"], ["finalSlotReturnSpeed", "finalSlotReturnSpeedOut", "returnSpeed", "×"]];
-    const setting = mappedAsset ? normalizedFinalSlotSetting(selectedFinalSlot)
-      : { scale: 100, gapBefore: 0, gapAfter: 0, offsetX: 0, offsetY: 0, rotation: 0, turnSpeed: 1, returnSpeed: 1 };
+      ["finalSlotOffsetY", "finalSlotOffsetYOut", "offsetY", ""], ["finalSlotRotation", "finalSlotRotationOut", "rotation", "°"]];
+    const setting = mappedAsset ? normalizedFinalSlotSetting(selectedFinalSlot) : { scale: 100, gapBefore: 0, gapAfter: 0, offsetX: 0, offsetY: 0, rotation: 0 };
     tuner.classList.toggle("is-disabled", !mappedAsset);
     $("#finalSlotTunerTitle").textContent = mappedAsset
       ? `第 ${selectedFinalSlot + 1} 个字 · ${finalCharacters()[selectedFinalSlot]} → ${mappedAsset.label}`
@@ -582,8 +578,7 @@
   });
   [["finalSlotScale", "scale", "finalSlotScaleOut", "%"], ["finalSlotGapBefore", "gapBefore", "finalSlotGapBeforeOut", ""],
     ["finalSlotGapAfter", "gapAfter", "finalSlotGapAfterOut", ""], ["finalSlotOffsetX", "offsetX", "finalSlotOffsetXOut", ""],
-    ["finalSlotOffsetY", "offsetY", "finalSlotOffsetYOut", ""], ["finalSlotRotation", "rotation", "finalSlotRotationOut", "°"],
-    ["finalSlotTurnSpeed", "turnSpeed", "finalSlotTurnSpeedOut", "×"], ["finalSlotReturnSpeed", "returnSpeed", "finalSlotReturnSpeedOut", "×"]].forEach(([inputId, key, outputId, suffix]) => {
+    ["finalSlotOffsetY", "offsetY", "finalSlotOffsetYOut", ""], ["finalSlotRotation", "rotation", "finalSlotRotationOut", "°"]].forEach(([inputId, key, outputId, suffix]) => {
     $("#" + inputId).addEventListener("input", (event) => {
       if (!finalSlotMap[selectedFinalSlot]) return;
       const setting = normalizedFinalSlotSetting(selectedFinalSlot);
@@ -751,7 +746,6 @@
     return x * x * x * (x * (x * 6 - 15) + 10);
   };
   const easeOut = (value) => 1 - Math.pow(1 - clamp01(value), 3);
-  const speedCurve = (value, speed) => 1 - Math.pow(1 - clamp01(value), Math.max(.25, Math.min(4, speed)));
   const rangeProgress = (value, from, to) => clamp01((value - from) / (to - from));
   const graphemes = (value) => typeof Intl.Segmenter === "function"
     ? Array.from(new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(value), (part) => part.segment)
@@ -939,8 +933,10 @@
     const speed = Math.max(.5, Math.min(24, Number(inputs.finalScanSpeed.value)));
     const speedRatio = speed / 4;
     const transition = Math.max(16, Math.min(220, 100 / speedRatio)) / 1000;
+    const slowStart = Math.max(0, Math.min(.95, Number(inputs.iconSlowMotionStart.value) / 100));
     return {
       transition,
+      launchKick: .08 * Math.sqrt(slowStart),
       restoreTransition: Math.max(20, Math.min(600, Number(inputs.finalRestoreDuration.value))) / 1000,
       hold: Math.max(40, Math.min(1200, Number(inputs.iconHoldDuration.value) / speedRatio)) / 1000,
       rotation: Math.max(200, Math.min(2400, Number(inputs.iconRotationDuration.value))) / 1000,
@@ -957,7 +953,7 @@
   function finalScanPhases(count, scan = finalScanTiming()) {
     const lastEnterStart = Math.max(0, count - 1) * scan.step;
     const enterSweep = Math.max(0, count - 1) * scan.step + scan.transition;
-    const lastRotationEnd = lastEnterStart + scan.transition * .45 + scan.rotation;
+    const lastRotationEnd = lastEnterStart + scan.transition * .45 + scan.launchKick + scan.rotation;
     const restoreStart = Math.max(enterSweep + scan.hold, lastRotationEnd);
     return {
       enterEnd: enterSweep,
@@ -1007,7 +1003,6 @@
         requestedHeight, requestedWidth, requiredWidth, gapBefore,
         offsetX: setting.offsetX * unitScale, offsetY: setting.offsetY * unitScale,
         rotation: setting.rotation * Math.PI / 180,
-        turnSpeed: setting.turnSpeed, returnSpeed: setting.returnSpeed,
         widthDelta: (requiredWidth - slot.width) * openProgress, openProgress
       });
     });
@@ -1019,16 +1014,19 @@
       const replacement = activeReplacements.get(slot.index);
       if (replacement?.swap) {
         const { asset, enterStart, requestedHeight, requestedWidth, requiredWidth, gapBefore, offsetX, offsetY,
-          rotation, turnSpeed, returnSpeed } = replacement;
+          rotation } = replacement;
         const iconExit = rangeProgress(replacement.exitRaw, 0, .55);
         const fullCenterOffset = (dynamicSlotWidth - requiredWidth) / 2 + gapBefore + requestedWidth / 2;
         const settledCenterX = cursorX + fullCenterOffset + offsetX;
-        const slowMotionStart = enterStart + scanTiming.transition * .45;
+        const launchStart = enterStart + scanTiming.transition * .45;
+        const slowMotionStart = launchStart + scanTiming.launchKick;
         const slowMotionEnd = Math.max(slowMotionStart + .001, replacement.restoreStart);
         const slowProgress = rangeProgress(sequenceElapsed, slowMotionStart, slowMotionEnd);
-        const inertialProgress = 1 - Math.pow(1 - slowProgress, 1.4);
-        const launchHeadStart = Math.max(0, Math.min(.8, Number(inputs.iconSlowMotionStart.value) / 100));
-        const launchProgress = launchHeadStart + inertialProgress * (1 - launchHeadStart);
+        const launchHeadStart = Math.max(0, Math.min(.95, Number(inputs.iconSlowMotionStart.value) / 100));
+        const fastLaunch = scanTiming.launchKick <= .001 ? 1 : rangeProgress(sequenceElapsed, launchStart, slowMotionStart);
+        const launchProgress = sequenceElapsed < slowMotionStart
+          ? launchHeadStart * easeOut(fastLaunch)
+          : launchHeadStart + smoother(slowProgress) * (1 - launchHeadStart);
         const drawCenterX = settledCenterX - requestedWidth * .28 * (1 - launchProgress);
         const drawCenterY = y + offsetY;
         const replacementScale = (.72 + launchProgress * .28) * (1 - smooth(iconExit) * .18);
@@ -1037,9 +1035,9 @@
           ? 0
           : sequenceElapsed < slowMotionEnd
             ? rotationMotion < .58
-              ? speedCurve(rotationMotion / .58, turnSpeed)
-              : lerp(1, -.35, speedCurve((rotationMotion - .58) / .42, returnSpeed))
-            : lerp(-.35, 0, speedCurve(rangeProgress(replacement.exitRaw, 0, .55), returnSpeed));
+              ? smoother(rotationMotion / .58)
+              : lerp(1, -.35, smoother((rotationMotion - .58) / .42))
+            : lerp(-.35, 0, easeOut(rangeProgress(replacement.exitRaw, 0, .55)));
         drawFinalAsset(context, asset, drawCenterX, drawCenterY, requestedWidth * replacementScale, requestedHeight * replacementScale,
           sequenceElapsed, rotation * Math.max(-1, Math.min(1, rotationProgress)));
       } else {
@@ -1236,7 +1234,7 @@
       canvas.dataset.finalAssetGap = "per-slot";
       canvas.dataset.swapMotion = extras.swapMotion || "idle";
       canvas.dataset.swapTargets = String(extras.swapTargets ?? 0);
-      canvas.dataset.iconRotationMotion = "editable-launch-point-continuous-slow-right-inertia-angle-fast-return-glyph-close";
+      canvas.dataset.iconRotationMotion = "fast-inertial-launch-near-edge-slow-angle-ultrafast-glyph-close";
       canvas.dataset.iconRotationDuration = inputs.iconRotationDuration.value;
       canvas.dataset.iconSlowMotionStart = inputs.iconSlowMotionStart.value;
       canvas.dataset.iconSlowMotionTurnRatio = ".58";
@@ -1244,10 +1242,9 @@
       canvas.dataset.iconSlowMotionFastReturn = "restore-transition";
       canvas.dataset.iconSlowMotionDrift = "single-right-entry-only";
       canvas.dataset.finalIconEntrySlide = ".28";
-      canvas.dataset.finalIconRotationStart = ".10";
+      canvas.dataset.finalIconRotationStart = (Number(inputs.iconSlowMotionStart.value) / 100).toFixed(2);
       canvas.dataset.finalIconVerticalMotion = "0";
-      canvas.dataset.finalSlotTurnSpeeds = Object.keys(finalSlotMap).map((index) => normalizedFinalSlotSetting(index).turnSpeed).join(",");
-      canvas.dataset.finalSlotReturnSpeeds = Object.keys(finalSlotMap).map((index) => normalizedFinalSlotSetting(index).returnSpeed).join(",");
+      canvas.dataset.finalIconLaunchKick = finalScanTiming().launchKick.toFixed(4);
       canvas.dataset.finalRestoreTransition = finalScanTiming().restoreTransition.toFixed(4);
       canvas.dataset.finalRestoreDuration = inputs.finalRestoreDuration.value;
       canvas.dataset.finalIconHoldDuration = inputs.iconHoldDuration.value;
@@ -1596,7 +1593,7 @@
       if (field) controls[id] = field.type === "checkbox" ? field.checked : field.value;
     });
     return {
-      type: "me-vertical-rise", version: 13, controls, selectedAssetId,
+      type: "me-vertical-rise", version: 14, controls, selectedAssetId,
       rowAssetGaps: [...rowAssetGaps], rowAssetGapsAfter: [...rowAssetGapsAfter],
       rowAssetScales: [...rowAssetScales], rowAssetOffsetsX: [...rowAssetOffsetsX],
       rowTextGaps: [...rowTextGaps],
@@ -1661,13 +1658,15 @@
     }
     if (Number(scheme.version) < 11) scheme.controls.finalRestoreDuration = "40";
     if (Number(scheme.version) < 12) scheme.controls.iconSlowMotionStart = "10";
-    if (Number(scheme.version) < 13) {
+    if (Number(scheme.version) < 14) {
+      scheme.controls.iconSlowMotionStart = "80";
+      scheme.controls.finalRestoreDuration = "20";
       Object.values(scheme.finalSlotSettings || {}).forEach((setting) => {
-        setting.turnSpeed = 1;
-        setting.returnSpeed = 1;
+        delete setting.turnSpeed;
+        delete setting.returnSpeed;
       });
     }
-    scheme.version = 13;
+    scheme.version = 14;
     return scheme;
   }
 

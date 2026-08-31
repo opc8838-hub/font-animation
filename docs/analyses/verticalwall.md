@@ -95,9 +95,9 @@
 - [x] Each final icon enters its editable slow-motion rotation on the exact pop frame, keeps rotating without an idle seam, then rapidly returns to zero while the glyph and spacing restore together
 - [x] Final-slot expansion, a subtle 14%-width right-side icon slide, scale reveal, and rotation now begin on the same frame instead of opening the glyph slot before the icon appears
 - [x] The live wall and editor overview now share the same edge-aware fit calculation, including per-row icon offsets, so portrait canvases no longer crop layouts that appear aligned in the overview
-- [x] Final icons make one restrained rightward launch with no vertical motion: after the editable fast-launch head start, launch scale, decelerating position, and configured flat rotation share the same slow-motion window and finish together
-- [x] The fast-launch distance before slow motion begins is editable from 0–80%; it is serialized with schemes and changes only the slow-motion entry point
-- [x] Every mapped final icon owns independent 0.25–4× target-turn and return-to-zero speed curves; both survive scheme save/import without changing another icon
+- [x] Final icons first complete an inertial 80ms-or-shorter rightward launch, then enter slow motion near the return point; rotation happens only in that late slow window
+- [x] The fast-launch distance before slow motion begins is editable from 0–95% and defaults to 80%; it is serialized with schemes and changes only the slow-motion entry point
+- [x] The abandoned per-icon turn/return speed controls were removed; the slow rotation uses one coherent curve and hands directly to the independently editable ultrafast glyph close
 - [x] Final scan speed now reaches a genuine fast sweep and reports entry-sweep time separately from slow rotation; glyph return and spacing closure share an independent editable 20–600ms duration
 - [x] Final-slot angle controls stay visible, with disabled guidance for unmapped characters and saved angles shown on every mapped slot
 - [x] Main-row edits pause on the complete full-wall frame so a newly assigned middle-row icon remains inspectable instead of immediately advancing into collapse
