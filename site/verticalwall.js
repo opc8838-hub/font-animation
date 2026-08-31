@@ -809,19 +809,34 @@
     };
   }
 
-  function wallFrameFit(layouts, segments, startX, offsetsX, requestedZoom, width, height, lineHeight, fontPx, rowCount) {
-    const horizontalExtent = layouts.reduce((extent, layout, index) => {
-      const bounds = rowSegmentBounds(segments[index], offsetsX[index] || 0)
+  function wallFrameGeometry(layouts, segments, startX, offsetsX, requestedZoom, width, height, lineHeight, fontPx, rowCount) {
+    const horizontalBounds = layouts.reduce((extent, layout, index) => {
+      const rowBounds = rowSegmentBounds(segments[index], offsetsX[index] || 0)
         || { minX: 0, maxX: layout?.width || fontPx };
-      return Math.max(extent, Math.abs(startX + bounds.minX), Math.abs(startX + bounds.maxX));
-    }, 1);
+      return {
+        minX: Math.min(extent.minX, startX + rowBounds.minX),
+        maxX: Math.max(extent.maxX, startX + rowBounds.maxX)
+      };
+    }, { minX: Infinity, maxX: -Infinity });
+    const minX = Number.isFinite(horizontalBounds.minX) ? horizontalBounds.minX : -fontPx / 2;
+    const maxX = Number.isFinite(horizontalBounds.maxX) ? horizontalBounds.maxX : fontPx / 2;
+    const tightPortraitFill = height / Math.max(1, width) >= 1.6;
+    const horizontalSpan = tightPortraitFill
+      ? Math.max(1, maxX - minX)
+      : Math.max(1, Math.max(Math.abs(minX), Math.abs(maxX)) * 2);
     const margin = Math.min(width, height) * .006;
     const contentHeight = Math.max(fontPx, (Math.max(1, rowCount) - 1) * lineHeight + fontPx);
-    return Math.min(
+    const fit = Math.min(
       1,
-      Math.max(.01, width - margin * 2) / (horizontalExtent * 2 * requestedZoom),
+      Math.max(.01, width - margin * 2) / (horizontalSpan * requestedZoom),
       Math.max(.01, height - margin * 2) / (contentHeight * requestedZoom)
     );
+    return {
+      fit,
+      centerOffsetX: tightPortraitFill ? -(minX + maxX) / 2 : 0,
+      horizontalSpan,
+      tightPortraitFill
+    };
   }
 
   function drawRowSegments(context, segments, startX, iconOffset, y, color, time) {
@@ -1185,12 +1200,13 @@
     const neutralWallWidth = neutralWallWidths.reduce((sum, width) => sum + width, 0) / neutralWallWidths.length;
     const wallStartX = -neutralWallWidth / 2;
     const requestedWallZoom = Number(inputs.wallScale.value) / 100;
-    const wallFit = wallFrameFit(
+    const wallGeometry = wallFrameGeometry(
       wallLayouts, wallSegments, wallStartX,
       rowAssetOffsetsX.map((value) => (Number(value) || 0) * scale),
       requestedWallZoom, w, h, lineHeight, wallFontPx, rowCount
     );
-    const wallZoom = requestedWallZoom * wallFit;
+    const wallZoom = requestedWallZoom * wallGeometry.fit;
+    const fittedWallStartX = wallStartX + wallGeometry.centerOffsetX;
     const drawCentered = (line, y, xOffset = 0, alpha = 1, rowScale = 1, stage = introStage, rowIndex = 0, axisScaleX = 1, axisScaleY = 1) => {
       context.font = fontFor(stage);
       const isWall = stage === wallStage;
@@ -1204,9 +1220,9 @@
       const compositionScale = rowScale * (isWall ? wallZoom : 1);
       context.scale(compositionScale * axisScaleX, compositionScale * axisScaleY);
       if (segments) {
-        drawRowSegments(context, segments, wallStartX, (Number(rowAssetOffsetsX[rowIndex]) || 0) * scale, 0, inputs.foreground.value, localTime);
+        drawRowSegments(context, segments, fittedWallStartX, (Number(rowAssetOffsetsX[rowIndex]) || 0) * scale, 0, inputs.foreground.value, localTime);
       } else {
-        drawSequence(context, layout, isWall ? wallStartX : -layout.width / 2, 0, inputs.foreground.value, 0, localTime, 0, !isWall);
+        drawSequence(context, layout, isWall ? fittedWallStartX : -layout.width / 2, 0, inputs.foreground.value, 0, localTime, 0, !isWall);
       }
       context.restore();
     };
@@ -1260,9 +1276,11 @@
       canvas.dataset.centerLineSource = carryOpeningAssets ? "opening-assets" : "middle-row";
       canvas.dataset.centerLineAssets = [...centerWallLine.matchAll(/\{\{([^{}]+)\}\}/g)]
         .map((match) => match[1]).filter((id) => assets.has(id)).join(",");
-      canvas.dataset.centerLineOffset = (wallStartX + (centerWallBounds.minX + centerWallBounds.maxX) / 2).toFixed(4);
-      canvas.dataset.columnAnchorX = wallStartX.toFixed(4);
+      canvas.dataset.centerLineOffset = (fittedWallStartX + (centerWallBounds.minX + centerWallBounds.maxX) / 2).toFixed(4);
+      canvas.dataset.columnAnchorX = fittedWallStartX.toFixed(4);
       canvas.dataset.columnAnchorSource = "neutral-row-composition";
+      canvas.dataset.wallFrameFitMode = wallGeometry.tightPortraitFill ? "portrait-true-bounds" : "symmetric-safe-bounds";
+      canvas.dataset.wallFrameCoverage = Math.min(1, wallGeometry.horizontalSpan * wallZoom / Math.max(1, w)).toFixed(4);
       canvas.dataset.centerHandoffMode = "fixed-center-row";
       canvas.dataset.centerJumpScaleX = String((extras.centerJumpScaleX ?? 1).toFixed(4));
       canvas.dataset.centerJumpScaleY = String((extras.centerJumpScaleY ?? 1).toFixed(4));
@@ -1727,12 +1745,13 @@
     ));
     const anchorWidth = plainWidths.reduce((sum, value) => sum + value, 0) / plainWidths.length || 1;
     const startX = -anchorWidth / 2;
-    const fit = wallFrameFit(
+    const geometry = wallFrameGeometry(
       layouts, segments, startX,
       rowAssetOffsetsX.map((value) => (Number(value) || 0) * unitScale),
       requestedWallZoom, width, height, lineHeight, fontPx, rows.length
     );
-    const wallZoom = requestedWallZoom * fit;
+    const wallZoom = requestedWallZoom * geometry.fit;
+    const fittedStartX = startX + geometry.centerOffsetX;
     const renderedLineHeight = lineHeight * wallZoom;
     const startY = height / 2 - (rows.length - 1) * renderedLineHeight / 2;
     layouts.forEach((layout, index) => {
@@ -1740,15 +1759,17 @@
       context.translate(width / 2, startY + index * renderedLineHeight);
       context.scale(wallZoom, wallZoom);
       if (segments[index]) {
-        drawRowSegments(context, segments[index], startX, (Number(rowAssetOffsetsX[index]) || 0) * unitScale, 0, inputs.foreground.value, time);
+        drawRowSegments(context, segments[index], fittedStartX, (Number(rowAssetOffsetsX[index]) || 0) * unitScale, 0, inputs.foreground.value, time);
       } else {
-        drawSequence(context, layout, startX, 0, inputs.foreground.value, 0, time, 0, false);
+        drawSequence(context, layout, fittedStartX, 0, inputs.foreground.value, 0, time, 0, false);
       }
       context.restore();
     });
-    rowOverviewCanvas.dataset.columnAnchorX = startX.toFixed(4);
-    rowOverviewCanvas.dataset.logicalColumnAnchor = (startX / unitScale).toFixed(4);
-    rowOverviewCanvas.dataset.layoutFit = fit.toFixed(6);
+    rowOverviewCanvas.dataset.columnAnchorX = fittedStartX.toFixed(4);
+    rowOverviewCanvas.dataset.logicalColumnAnchor = (fittedStartX / unitScale).toFixed(4);
+    rowOverviewCanvas.dataset.layoutFit = geometry.fit.toFixed(6);
+    rowOverviewCanvas.dataset.wallFrameFitMode = geometry.tightPortraitFill ? "portrait-true-bounds" : "symmetric-safe-bounds";
+    rowOverviewCanvas.dataset.wallFrameCoverage = Math.min(1, geometry.horizontalSpan * wallZoom / Math.max(1, width)).toFixed(4);
     rowOverviewCanvas.dataset.rowTextGaps = rowTextGaps.join(",");
     rowOverviewCanvas.dataset.rowWidths = plainWidths.map((width) => width.toFixed(3)).join(",");
     $("#rowOverviewStatus").textContent = `${rows.length} 行 · ${logicalWidth} × ${logicalHeight}`;
