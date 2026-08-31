@@ -90,3 +90,4 @@ A lead word lands as a huge horizontally smeared impact, settles smaller, then e
 
 - 2026-08-31: append motion must recenter existing and incoming words as one phrase; independent word movement looks detached.
 - 2026-08-31: exported MP4 verified at 320×320, 15fps, 52 frames, 3.466667s; extracted event frames preserve the same impact, append, and hold geometry as the live preview.
+- 2026-08-31: dense 30fps recheck confirmed the lead word stays oversized for two useful frames and then snaps down; both append events travel from right to left with the shadow trailing only to the right, while the whole phrase recenters together.

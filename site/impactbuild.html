@@ -9,7 +9,7 @@
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="workspace-editor.css">
   <link rel="stylesheet" href="me-motion-editor.css">
-  <link rel="stylesheet" href="impactbuild.css?v=20260831-1">
+  <link rel="stylesheet" href="impactbuild.css?v=20260831-4">
   <link rel="stylesheet" href="stg-cn.css">
 </head>
 <body class="me-motion-editor impactbuild-editor">
@@ -51,13 +51,13 @@
       <section class="panel-card">
         <div class="section-heading"><p class="section-label">核心节奏</p><small class="section-note">默认值来自 104 帧逐帧分析</small></div>
         <div class="control-grid">
-          <label>首词冲击 <output id="impactScaleOut"></output><input id="impactScale" type="range" min="120" max="520" value="360"></label>
-          <label>冲击时长 <output id="impactDurationOut"></output><input id="impactDuration" type="range" min="60" max="500" value="100"></label>
-          <label>首词收稳 <output id="settleDurationOut"></output><input id="settleDuration" type="range" min="200" max="1800" value="900"></label>
+          <label>首词冲击 <output id="impactScaleOut"></output><input id="impactScale" type="range" min="120" max="520" value="420"></label>
+          <label>冲击时长 <output id="impactDurationOut"></output><input id="impactDuration" type="range" min="50" max="500" value="70"></label>
+          <label>首词收稳 <output id="settleDurationOut"></output><input id="settleDuration" type="range" min="200" max="1800" value="930"></label>
           <label>接词间隔 <output id="appendIntervalOut"></output><input id="appendInterval" type="range" min="250" max="1800" value="667"></label>
           <label>单次接入 <output id="appendDurationOut"></output><input id="appendDuration" type="range" min="80" max="600" value="200"></label>
           <label>最后停留 <output id="finalHoldOut"></output><input id="finalHold" type="range" min="200" max="4000" value="1300"></label>
-          <label>拖影强度 <output id="blurStrengthOut"></output><input id="blurStrength" type="range" min="0" max="140" value="82"></label>
+          <label>横向阴影强度 <output id="blurStrengthOut"></output><input id="blurStrength" type="range" min="0" max="140" value="115"></label>
           <label>整体速度 <output id="masterSpeedOut"></output><input id="masterSpeed" type="range" min="40" max="220" value="100"></label>
         </div>
       </section>
@@ -74,7 +74,7 @@
         <details><summary>高级细调</summary><div class="control-grid advanced-grid">
           <label>收稳比例 <output id="settleScaleOut"></output><input id="settleScale" type="range" min="35" max="120" value="100"></label>
           <label>接入压缩 <output id="appendSqueezeOut"></output><input id="appendSqueeze" type="range" min="0" max="55" value="25"></label>
-          <label>接入距离 <output id="appendTravelOut"></output><input id="appendTravel" type="range" min="0" max="220" value="84"></label>
+          <label>向左滚入距离 <output id="appendTravelOut"></output><input id="appendTravel" type="range" min="0" max="360" value="200"></label>
           <label>呼吸幅度 <output id="breathAmountOut"></output><input id="breathAmount" type="range" min="0" max="10" step="0.5" value="1.5"></label>
           <label>尾部模糊 <output id="tailBlurOut"></output><input id="tailBlur" type="range" min="0" max="100" value="22"></label>
         </div></details>
@@ -105,7 +105,7 @@
   <script src="shared-icon-library.js?v=20260827-1"></script>
   <script src="js/continuation-gif.js"></script>
   <script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="impactbuild.js?v=20260831-1"></script>
+  <script src="impactbuild.js?v=20260831-4"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260831-impact1"></script>
 </body>
