@@ -230,7 +230,9 @@
       gapAfter: Math.max(-40, Math.min(120, Number(setting.gapAfter) || 0)),
       offsetX: Math.max(-120, Math.min(120, Number(setting.offsetX) || 0)),
       offsetY: Math.max(-120, Math.min(120, Number(setting.offsetY) || 0)),
-      rotation: Math.max(-360, Math.min(360, finiteOr(setting.rotation, 0)))
+      rotation: Math.max(-360, Math.min(360, finiteOr(setting.rotation, 0))),
+      turnSpeed: Math.max(.25, Math.min(4, finiteOr(setting.turnSpeed, 1))),
+      returnSpeed: Math.max(.25, Math.min(4, finiteOr(setting.returnSpeed, 1)))
     };
   }
 
@@ -239,8 +241,10 @@
     const mappedAsset = assets.get(finalSlotMap[selectedFinalSlot]);
     const controls = [["finalSlotScale", "finalSlotScaleOut", "scale", "%"], ["finalSlotGapBefore", "finalSlotGapBeforeOut", "gapBefore", ""],
       ["finalSlotGapAfter", "finalSlotGapAfterOut", "gapAfter", ""], ["finalSlotOffsetX", "finalSlotOffsetXOut", "offsetX", ""],
-      ["finalSlotOffsetY", "finalSlotOffsetYOut", "offsetY", ""], ["finalSlotRotation", "finalSlotRotationOut", "rotation", "°"]];
-    const setting = mappedAsset ? normalizedFinalSlotSetting(selectedFinalSlot) : { scale: 100, gapBefore: 0, gapAfter: 0, offsetX: 0, offsetY: 0, rotation: 0 };
+      ["finalSlotOffsetY", "finalSlotOffsetYOut", "offsetY", ""], ["finalSlotRotation", "finalSlotRotationOut", "rotation", "°"],
+      ["finalSlotTurnSpeed", "finalSlotTurnSpeedOut", "turnSpeed", "×"], ["finalSlotReturnSpeed", "finalSlotReturnSpeedOut", "returnSpeed", "×"]];
+    const setting = mappedAsset ? normalizedFinalSlotSetting(selectedFinalSlot)
+      : { scale: 100, gapBefore: 0, gapAfter: 0, offsetX: 0, offsetY: 0, rotation: 0, turnSpeed: 1, returnSpeed: 1 };
     tuner.classList.toggle("is-disabled", !mappedAsset);
     $("#finalSlotTunerTitle").textContent = mappedAsset
       ? `第 ${selectedFinalSlot + 1} 个字 · ${finalCharacters()[selectedFinalSlot]} → ${mappedAsset.label}`
@@ -578,7 +582,8 @@
   });
   [["finalSlotScale", "scale", "finalSlotScaleOut", "%"], ["finalSlotGapBefore", "gapBefore", "finalSlotGapBeforeOut", ""],
     ["finalSlotGapAfter", "gapAfter", "finalSlotGapAfterOut", ""], ["finalSlotOffsetX", "offsetX", "finalSlotOffsetXOut", ""],
-    ["finalSlotOffsetY", "offsetY", "finalSlotOffsetYOut", ""], ["finalSlotRotation", "rotation", "finalSlotRotationOut", "°"]].forEach(([inputId, key, outputId, suffix]) => {
+    ["finalSlotOffsetY", "offsetY", "finalSlotOffsetYOut", ""], ["finalSlotRotation", "rotation", "finalSlotRotationOut", "°"],
+    ["finalSlotTurnSpeed", "turnSpeed", "finalSlotTurnSpeedOut", "×"], ["finalSlotReturnSpeed", "returnSpeed", "finalSlotReturnSpeedOut", "×"]].forEach(([inputId, key, outputId, suffix]) => {
     $("#" + inputId).addEventListener("input", (event) => {
       if (!finalSlotMap[selectedFinalSlot]) return;
       const setting = normalizedFinalSlotSetting(selectedFinalSlot);
@@ -746,6 +751,7 @@
     return x * x * x * (x * (x * 6 - 15) + 10);
   };
   const easeOut = (value) => 1 - Math.pow(1 - clamp01(value), 3);
+  const speedCurve = (value, speed) => 1 - Math.pow(1 - clamp01(value), Math.max(.25, Math.min(4, speed)));
   const rangeProgress = (value, from, to) => clamp01((value - from) / (to - from));
   const graphemes = (value) => typeof Intl.Segmenter === "function"
     ? Array.from(new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(value), (part) => part.segment)
@@ -1001,6 +1007,7 @@
         requestedHeight, requestedWidth, requiredWidth, gapBefore,
         offsetX: setting.offsetX * unitScale, offsetY: setting.offsetY * unitScale,
         rotation: setting.rotation * Math.PI / 180,
+        turnSpeed: setting.turnSpeed, returnSpeed: setting.returnSpeed,
         widthDelta: (requiredWidth - slot.width) * openProgress, openProgress
       });
     });
@@ -1012,7 +1019,7 @@
       const replacement = activeReplacements.get(slot.index);
       if (replacement?.swap) {
         const { asset, enterStart, requestedHeight, requestedWidth, requiredWidth, gapBefore, offsetX, offsetY,
-          rotation } = replacement;
+          rotation, turnSpeed, returnSpeed } = replacement;
         const iconExit = rangeProgress(replacement.exitRaw, 0, .55);
         const fullCenterOffset = (dynamicSlotWidth - requiredWidth) / 2 + gapBefore + requestedWidth / 2;
         const settledCenterX = cursorX + fullCenterOffset + offsetX;
@@ -1030,9 +1037,9 @@
           ? 0
           : sequenceElapsed < slowMotionEnd
             ? rotationMotion < .58
-              ? smoother(rotationMotion / .58)
-              : lerp(1, -.35, smoother((rotationMotion - .58) / .42))
-            : lerp(-.35, 0, easeOut(rangeProgress(replacement.exitRaw, 0, .55)));
+              ? speedCurve(rotationMotion / .58, turnSpeed)
+              : lerp(1, -.35, speedCurve((rotationMotion - .58) / .42, returnSpeed))
+            : lerp(-.35, 0, speedCurve(rangeProgress(replacement.exitRaw, 0, .55), returnSpeed));
         drawFinalAsset(context, asset, drawCenterX, drawCenterY, requestedWidth * replacementScale, requestedHeight * replacementScale,
           sequenceElapsed, rotation * Math.max(-1, Math.min(1, rotationProgress)));
       } else {
@@ -1239,6 +1246,8 @@
       canvas.dataset.finalIconEntrySlide = ".28";
       canvas.dataset.finalIconRotationStart = ".10";
       canvas.dataset.finalIconVerticalMotion = "0";
+      canvas.dataset.finalSlotTurnSpeeds = Object.keys(finalSlotMap).map((index) => normalizedFinalSlotSetting(index).turnSpeed).join(",");
+      canvas.dataset.finalSlotReturnSpeeds = Object.keys(finalSlotMap).map((index) => normalizedFinalSlotSetting(index).returnSpeed).join(",");
       canvas.dataset.finalRestoreTransition = finalScanTiming().restoreTransition.toFixed(4);
       canvas.dataset.finalRestoreDuration = inputs.finalRestoreDuration.value;
       canvas.dataset.finalIconHoldDuration = inputs.iconHoldDuration.value;
@@ -1587,7 +1596,7 @@
       if (field) controls[id] = field.type === "checkbox" ? field.checked : field.value;
     });
     return {
-      type: "me-vertical-rise", version: 12, controls, selectedAssetId,
+      type: "me-vertical-rise", version: 13, controls, selectedAssetId,
       rowAssetGaps: [...rowAssetGaps], rowAssetGapsAfter: [...rowAssetGapsAfter],
       rowAssetScales: [...rowAssetScales], rowAssetOffsetsX: [...rowAssetOffsetsX],
       rowTextGaps: [...rowTextGaps],
@@ -1652,7 +1661,13 @@
     }
     if (Number(scheme.version) < 11) scheme.controls.finalRestoreDuration = "40";
     if (Number(scheme.version) < 12) scheme.controls.iconSlowMotionStart = "10";
-    scheme.version = 12;
+    if (Number(scheme.version) < 13) {
+      Object.values(scheme.finalSlotSettings || {}).forEach((setting) => {
+        setting.turnSpeed = 1;
+        setting.returnSpeed = 1;
+      });
+    }
+    scheme.version = 13;
     return scheme;
   }
 
