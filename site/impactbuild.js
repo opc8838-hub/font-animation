@@ -8,7 +8,7 @@
   const context = canvas.getContext("2d", { alpha: false, willReadFrequently: true });
   const PREVIEW = new URLSearchParams(location.search).has("preview");
   const STORAGE_KEY = "impactbuild-scheme-v1";
-  const VERSION = 2;
+  const VERSION = 3;
   const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
   const lerp = (from, to, amount) => from + (to - from) * amount;
   const smooth = (value) => { const p = clamp(value); return p * p * (3 - 2 * p); };
@@ -23,7 +23,7 @@
     phrase: "Action becomes progress", fontFamily: "stg:inter", fontWeight: "600",
     backgroundColor: "#050505", textColor: "#f5f5f5", accentColor: "#b783ff",
     canvasPreset: "1920x1080", canvasWidth: "1920", canvasHeight: "1080",
-    impactScale: "420", impactDuration: "100", settleDuration: "320", appendInterval: "667",
+    impactScale: "420", impactDuration: "100", settleDuration: "200", appendInterval: "667",
     appendDuration: "200", finalHold: "1300", blurStrength: "115", masterSpeed: "100",
     fontSize: "10.5", wordGap: "42", iconTextGap: "28", positionX: "50", positionY: "50",
     settleScale: "100", appendSqueeze: "25", appendTravel: "200", breathAmount: "1.5", tailBlur: "22",
@@ -88,7 +88,7 @@
 
   function wordStart(index) {
     if (index <= 0) return 0;
-    const firstJoin = ms("#impactDuration") + ms("#settleDuration") * 0.78;
+    const firstJoin = ms("#impactDuration");
     return firstJoin + (index - 1) * ms("#appendInterval") + (wordSettings[index]?.offset || 0) / 1000;
   }
 
@@ -260,7 +260,7 @@
     const impactCollapse = time < impactDuration ? impactCollapseAt(impactProgress) : 1;
     const impact = time < impactDuration ? impactReveal * (1 - impactCollapse) : 0;
     const append = state.activeIndex > 0
-      ? smooth(state.rawProgress / 0.12) * Math.pow(1 - state.rawProgress, 1.8)
+      ? smooth(state.rawProgress / 0.08) * Math.pow(1 - state.rawProgress, 1.2)
       : 0;
     const tail = time > timeline().finalEnd ? clamp((time - timeline().finalEnd) / timeline().tail) : 0;
     const strength = number("#blurStrength") / 100;
@@ -276,17 +276,19 @@
       }
     }
     if (append > 0.01 && strength > 0) {
-      const distance = Math.min(w, h) * 0.28 * append * strength;
-      const appendLag = Math.max(0.001, ms("#appendDuration")) * 0.5;
-      for (let index = 5; index >= 1; index -= 1) {
-        const amount = index / 5;
-        const alpha = 0.15 * (1 - amount * 0.42) * append;
+      const blurUnit = Math.min(w, h) / 304;
+      const distance = Math.min(w, h) * 0.32 * append * strength;
+      const appendLag = Math.max(0.001, ms("#appendDuration")) * 0.58;
+      drawPhraseLayer(ctx, time, w, h, 0.58 * append, distance * 0.34, 3.4 * blurUnit, 1 + 0.18 * append);
+      for (let index = 7; index >= 1; index -= 1) {
+        const amount = index / 7;
+        const alpha = 0.14 * (1 - amount * 0.38) * append;
         drawPhraseLayer(ctx, time, w, h, alpha, distance * amount, 0, 1 + 0.16 * amount * append);
       }
-      for (let index = 4; index >= 1; index -= 1) {
-        const amount = index / 4;
-        const sampledTime = Math.max(0, time - appendLag * amount);
-        const alpha = 0.13 * (1 - amount * 0.38) * append;
+      for (let index = 6; index >= 1; index -= 1) {
+        const amount = index / 6;
+        const sampledTime = Math.max(wordStart(state.activeIndex), time - appendLag * amount);
+        const alpha = 0.12 * (1 - amount * 0.34) * append;
         drawPhraseLayer(ctx, sampledTime, w, h, alpha, distance * amount * 0.86, 0, 1 + 0.13 * amount * append);
       }
     }
@@ -543,7 +545,10 @@
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
       if (saved?.version === VERSION) initial = saved;
-      else if (saved?.version === 1) initial = { ...saved, version: VERSION, settleDuration: saved.settleDuration === "900" ? DEFAULT.settleDuration : saved.settleDuration };
+      else if (saved?.version === 1 || saved?.version === 2) {
+        const usedOldDefault = saved.settleDuration === "900" || saved.settleDuration === "320";
+        initial = { ...saved, version: VERSION, settleDuration: usedOldDefault ? DEFAULT.settleDuration : saved.settleDuration };
+      }
     } catch (_) {}
   }
   applyState(initial);
