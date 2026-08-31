@@ -8,22 +8,26 @@
   const context = canvas.getContext("2d", { alpha: false, willReadFrequently: true });
   const PREVIEW = new URLSearchParams(location.search).has("preview");
   const STORAGE_KEY = "impactbuild-scheme-v1";
-  const VERSION = 3;
+  const VERSION = 4;
   const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
   const lerp = (from, to, amount) => from + (to - from) * amount;
   const smooth = (value) => { const p = clamp(value); return p * p * (3 - 2 * p); };
   const easeOut = (value) => 1 - Math.pow(1 - clamp(value), 4);
   const easeOutCubic = (value) => 1 - Math.pow(1 - clamp(value), 3);
-  const APPEND_ACCELERATION_END = 0.38;
+  const APPEND_ACCELERATION_END = 0.16;
   const inertialProgress = (value) => {
     const p = clamp(value);
-    if (p < APPEND_ACCELERATION_END) return p * p / APPEND_ACCELERATION_END;
-    return 1 - (1 - p) * (1 - p) / (1 - APPEND_ACCELERATION_END);
+    if (p < APPEND_ACCELERATION_END) {
+      const phase = p / APPEND_ACCELERATION_END * Math.PI / 2;
+      return APPEND_ACCELERATION_END * (1 - Math.cos(phase));
+    }
+    const phase = (p - APPEND_ACCELERATION_END) / (1 - APPEND_ACCELERATION_END) * Math.PI / 2;
+    return APPEND_ACCELERATION_END + (1 - APPEND_ACCELERATION_END) * Math.sin(phase);
   };
   const inertialVelocity = (value) => {
     const p = clamp(value);
-    if (p < APPEND_ACCELERATION_END) return p / APPEND_ACCELERATION_END;
-    return (1 - p) / (1 - APPEND_ACCELERATION_END);
+    if (p < APPEND_ACCELERATION_END) return Math.sin(p / APPEND_ACCELERATION_END * Math.PI / 2);
+    return Math.cos((p - APPEND_ACCELERATION_END) / (1 - APPEND_ACCELERATION_END) * Math.PI / 2);
   };
   const impactCollapseAt = (progress) => smooth((progress - 0.28) / 0.68);
   const mod = (value, divisor) => ((value % divisor) + divisor) % divisor;
@@ -35,7 +39,7 @@
     backgroundColor: "#050505", textColor: "#f5f5f5", accentColor: "#b783ff",
     canvasPreset: "1920x1080", canvasWidth: "1920", canvasHeight: "1080",
     impactScale: "420", impactDuration: "100", settleDuration: "200", appendInterval: "667",
-    appendDuration: "200", finalHold: "1300", blurStrength: "115", masterSpeed: "100",
+    appendDuration: "170", finalHold: "1300", blurStrength: "115", masterSpeed: "100",
     fontSize: "10.5", wordGap: "42", iconTextGap: "28", positionX: "50", positionY: "50",
     settleScale: "100", appendSqueeze: "25", appendTravel: "200", breathAmount: "1.5", tailBlur: "22",
     exportDuration: "cycle", exportFps: "30", customDuration: "3.5",
@@ -250,7 +254,7 @@
       let itemAlpha = 1;
       let travel = 0;
       if (index === state.activeIndex) {
-        itemAlpha = state.progress;
+        itemAlpha = smooth(state.rawProgress / 0.34);
         travel = number("#appendTravel") / 100 * fontPx * (1 - state.progress);
       }
       ctx.save(); ctx.globalAlpha *= itemAlpha;
@@ -554,9 +558,15 @@
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
       if (saved?.version === VERSION) initial = saved;
-      else if (saved?.version === 1 || saved?.version === 2) {
+      else if (saved?.version === 1 || saved?.version === 2 || saved?.version === 3) {
         const usedOldDefault = saved.settleDuration === "900" || saved.settleDuration === "320";
-        initial = { ...saved, version: VERSION, settleDuration: usedOldDefault ? DEFAULT.settleDuration : saved.settleDuration };
+        const usedOldAppendDefault = saved.appendDuration === "200";
+        initial = {
+          ...saved,
+          version: VERSION,
+          settleDuration: usedOldDefault ? DEFAULT.settleDuration : saved.settleDuration,
+          appendDuration: usedOldAppendDefault ? DEFAULT.appendDuration : saved.appendDuration
+        };
       }
     } catch (_) {}
   }
