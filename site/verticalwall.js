@@ -67,6 +67,7 @@
   let rowAssetGapsAfter = [];
   let rowAssetScales = [];
   let rowAssetOffsetsX = [];
+  let rowOffsetsY = [];
 
   const svg = (body, background = "#ffffff") => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="${background}"/>${body}</svg>`
@@ -92,6 +93,7 @@
       asset.ready = true;
       assetRevision += 1;
       layoutCache.clear();
+      renderRowOverview(currentTime());
     };
     image.src = src;
     assets.set(id, asset);
@@ -370,6 +372,15 @@
     if (focus) field.focus();
   }
 
+  function effectiveWallRows(rows = parseRows()) {
+    const centerSource = Math.floor(rows.length / 2);
+    const primaryLine = rows[centerSource];
+    const openingLine = inputs.introWord.value.trim() || primaryLine;
+    const hasInlineAsset = (line) => [...line.matchAll(/\{\{([^{}]+)\}\}/g)].some((match) => assets.has(match[1]));
+    const carryOpeningAssets = inputs.motionMode.value === "choreography" && hasInlineAsset(openingLine) && !hasInlineAsset(primaryLine);
+    return rows.map((line, index) => index === centerSource && carryOpeningAssets ? openingLine : line);
+  }
+
   function firstRowAssetParts(line) {
     const match = /\{\{([^{}]+)\}\}/.exec(line);
     if (!match || !assets.has(match[1])) return { left: line, assetId: "", right: "" };
@@ -404,6 +415,7 @@
     field.addEventListener("focus", () => { setTokenTarget(field); });
     field.addEventListener("input", renderSelectedAssets);
   });
+  inputs.introWord.addEventListener("input", syncRowAssetGaps);
 
   document.querySelectorAll("[data-token-target]").forEach((button) => {
     button.addEventListener("click", () => setTokenTarget(button.dataset.tokenTarget === "intro" ? inputs.introWord : inputs.rows, true));
@@ -583,17 +595,19 @@
 
   function syncRowAssetGaps() {
     const rows = parseRows();
+    const displayRows = effectiveWallRows(rows);
     const globalScale = Number($("#globalRowAssetScale").value) || 92;
     const globalOffsetX = Number($("#globalRowAssetOffsetX").value) || 0;
     rowAssetGaps = rows.map((_, index) => Number(rowAssetGaps[index]) || 0);
     rowAssetGapsAfter = rows.map((_, index) => Number.isFinite(Number(rowAssetGapsAfter[index])) ? Number(rowAssetGapsAfter[index]) : rowAssetGaps[index]);
     rowAssetScales = rows.map((_, index) => Number.isFinite(Number(rowAssetScales[index])) ? Number(rowAssetScales[index]) : globalScale);
     rowAssetOffsetsX = rows.map((_, index) => Number.isFinite(Number(rowAssetOffsetsX[index])) ? Number(rowAssetOffsetsX[index]) : globalOffsetX);
+    rowOffsetsY = rows.map((_, index) => Number.isFinite(Number(rowOffsetsY[index])) ? Number(rowOffsetsY[index]) : 0);
     $("#globalRowAssetScaleOut").textContent = `${globalScale}%`;
     $("#globalRowAssetOffsetXOut").textContent = `${globalOffsetX}px`;
     const list = $("#rowGapList");
     list.replaceChildren();
-    rows.forEach((line, index) => {
+    displayRows.forEach((line, index) => {
       const item = document.createElement("div");
       item.className = "vertical-row-gap-item";
       item.setAttribute("aria-label", `编辑第 ${index + 1} 行图标排版`);
@@ -606,6 +620,7 @@
         <label><b>右侧间距</b><input data-key="gapAfter" type="range" min="-20" max="120" step="1"><output></output></label>
         <label><b>图标大小</b><input data-key="scale" type="range" min="35" max="220" step="1"><output></output></label>
         <label><b>图标左右位置</b><input data-key="offsetX" type="range" min="-120" max="120" step="1"><output></output></label>
+        <label><b>本行上下位置</b><input data-key="offsetY" type="range" min="-120" max="120" step="1"><output></output></label>
       </div>`;
       item.querySelector("span").textContent = `第 ${index + 1} 行 · ${line.replace(/\{\{[^{}]+\}\}/g, "[图标]")}`;
       const parts = firstRowAssetParts(line);
@@ -630,7 +645,8 @@
         gap: { values: rowAssetGaps, suffix: "px" },
         gapAfter: { values: rowAssetGapsAfter, suffix: "px" },
         scale: { values: rowAssetScales, suffix: "%" },
-        offsetX: { values: rowAssetOffsetsX, suffix: "px" }
+        offsetX: { values: rowAssetOffsetsX, suffix: "px" },
+        offsetY: { values: rowOffsetsY, suffix: "px" }
       };
       item.querySelectorAll(".vertical-row-controls input").forEach((slider) => {
         const control = controls[slider.dataset.key];
@@ -647,7 +663,7 @@
       });
       list.append(item);
     });
-    $("#rowSettingsCount").textContent = `${rows.length} 行 · 左文 / 图标 / 右文 / 独立微调`;
+    $("#rowSettingsCount").textContent = `${rows.length} 行 · 图标与每行上下位置独立微调`;
     renderRowOverview(currentTime());
   }
 
@@ -1127,6 +1143,9 @@
     const neutralWallWidth = neutralWallWidths.reduce((sum, width) => sum + width, 0) / neutralWallWidths.length;
     const wallStartX = -neutralWallWidth / 2;
     const wallZoom = Number(inputs.wallScale.value) / 100;
+    const rowOffsetProgress = choreography
+      ? smoother(rangeProgress(localTime, timing.spreadStart, timing.introEnd))
+      : 1;
     const drawCentered = (line, y, xOffset = 0, alpha = 1, rowScale = 1, stage = introStage, rowIndex = 0, axisScaleX = 1, axisScaleY = 1) => {
       context.font = fontFor(stage);
       const isWall = stage === wallStage;
@@ -1136,7 +1155,8 @@
       const segments = isWall ? wallSegments[rowIndex] : null;
       context.save();
       context.globalAlpha *= clamp01(alpha);
-      context.translate(w / 2 + xOffset, h / 2 + y);
+      const rowOffsetY = isWall ? (Number(rowOffsetsY[rowIndex]) || 0) * scale * wallZoom * rowOffsetProgress : 0;
+      context.translate(w / 2 + xOffset, h / 2 + y + rowOffsetY);
       const compositionScale = rowScale * (isWall ? wallZoom : 1);
       context.scale(compositionScale * axisScaleX, compositionScale * axisScaleY);
       if (segments) {
@@ -1164,6 +1184,7 @@
       canvas.dataset.rowAssetGapsAfter = rowAssetGapsAfter.join(",");
       canvas.dataset.rowAssetScales = rowAssetScales.join(",");
       canvas.dataset.rowAssetOffsetsX = rowAssetOffsetsX.join(",");
+      canvas.dataset.rowOffsetsY = rowOffsetsY.join(",");
       canvas.dataset.finalFontSize = inputs.finalFontSize.value;
       canvas.dataset.finalAssetScale = inputs.finalAssetScale.value;
       canvas.dataset.finalTextGap = inputs.finalTextGap.value;
@@ -1479,7 +1500,7 @@
     rowOverviewPanel.hidden = false;
     $("#openRowOverview").setAttribute("aria-expanded", "true");
     positionRowOverview();
-    renderRowOverview(currentTime());
+    syncRowAssetGaps();
   }
 
   function closeRowOverview() {
@@ -1515,9 +1536,10 @@
       if (field) controls[id] = field.type === "checkbox" ? field.checked : field.value;
     });
     return {
-      type: "me-vertical-rise", version: 7, controls, selectedAssetId,
+      type: "me-vertical-rise", version: 8, controls, selectedAssetId,
       rowAssetGaps: [...rowAssetGaps], rowAssetGapsAfter: [...rowAssetGapsAfter],
       rowAssetScales: [...rowAssetScales], rowAssetOffsetsX: [...rowAssetOffsetsX],
+      rowOffsetsY: [...rowOffsetsY],
       finalSlotMap: { ...finalSlotMap },
       finalSlotSettings: Object.fromEntries(Object.entries(finalSlotSettings).map(([index, setting]) => [index, normalizedFinalSlotSetting(index)])),
       assets: [...assets.values()].map((asset) => ({
@@ -1565,13 +1587,17 @@
     if (Number(scheme.version) < 7) {
       scheme.rowAssetGapsAfter = Array.isArray(scheme.rowAssetGaps) ? [...scheme.rowAssetGaps] : [];
     }
-    scheme.version = 7;
+    if (Number(scheme.version) < 8) {
+      const rowCount = Array.isArray(scheme.rowAssetScales) ? scheme.rowAssetScales.length : parseRows().length;
+      scheme.rowOffsetsY = Array(rowCount).fill(0);
+    }
+    scheme.version = 8;
     return scheme;
   }
 
   function renderRowOverview(time = 0) {
     if (!rowOverviewCanvas || rowOverviewPanel.hidden) return;
-    const rows = parseRows();
+    const rows = effectiveWallRows();
     const [logicalWidth, logicalHeight] = exportDimensions();
     const width = 720;
     const height = Math.max(240, Math.min(1600, Math.round(width * logicalHeight / logicalWidth)));
@@ -1606,13 +1632,17 @@
     const anchorWidth = plainWidths.reduce((sum, value) => sum + value, 0) / plainWidths.length || 1;
     const widest = Math.max(1, ...plainWidths);
     const startX = -anchorWidth / 2;
-    const allRowsHeight = Math.max(fontPx, (rows.length - 1) * lineHeight + fontPx);
+    const rawRowPositions = rows.map((_, index) =>
+      (index - (rows.length - 1) / 2) * lineHeight + (Number(rowOffsetsY[index]) || 0) * unitScale
+    );
+    const rowMinY = Math.min(...rawRowPositions);
+    const rowMaxY = Math.max(...rawRowPositions);
+    const rowCenterY = (rowMinY + rowMaxY) / 2;
+    const allRowsHeight = Math.max(fontPx, rowMaxY - rowMinY + fontPx);
     const fit = Math.min(1, (width - 48) / (widest * wallZoom), (height - 48) / (allRowsHeight * wallZoom));
-    const renderedLineHeight = lineHeight * wallZoom * fit;
-    const startY = height / 2 - (rows.length - 1) * renderedLineHeight / 2;
     layouts.forEach((layout, index) => {
       context.save();
-      context.translate(width / 2, startY + index * renderedLineHeight);
+      context.translate(width / 2, height / 2 + (rawRowPositions[index] - rowCenterY) * wallZoom * fit);
       context.scale(wallZoom * fit, wallZoom * fit);
       if (segments[index]) {
         drawRowSegments(context, segments[index], startX, (Number(rowAssetOffsetsX[index]) || 0) * unitScale, 0, inputs.foreground.value, time);
@@ -1623,6 +1653,7 @@
     });
     rowOverviewCanvas.dataset.columnAnchorX = startX.toFixed(4);
     rowOverviewCanvas.dataset.layoutFit = fit.toFixed(6);
+    rowOverviewCanvas.dataset.rowOffsetsY = rowOffsetsY.join(",");
     $("#rowOverviewStatus").textContent = `${rows.length} 行 · ${logicalWidth} × ${logicalHeight}`;
   }
 
@@ -1653,6 +1684,7 @@
     rowAssetGapsAfter = Array.isArray(scheme.rowAssetGapsAfter) ? scheme.rowAssetGapsAfter.map(Number) : [];
     rowAssetScales = Array.isArray(scheme.rowAssetScales) ? scheme.rowAssetScales.map(Number) : [];
     rowAssetOffsetsX = Array.isArray(scheme.rowAssetOffsetsX) ? scheme.rowAssetOffsetsX.map(Number) : [];
+    rowOffsetsY = Array.isArray(scheme.rowOffsetsY) ? scheme.rowOffsetsY.map(Number) : [];
     finalSlotMap = scheme.finalSlotMap && typeof scheme.finalSlotMap === "object" ? { ...scheme.finalSlotMap } : {};
     finalSlotSettings = scheme.finalSlotSettings && typeof scheme.finalSlotSettings === "object" ? { ...scheme.finalSlotSettings } : {};
     selectedAssetId = assets.has(scheme.selectedAssetId) ? scheme.selectedAssetId : assets.keys().next().value;
