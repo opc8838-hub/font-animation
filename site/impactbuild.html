@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <script>if (new URLSearchParams(location.search).has("preview")) document.documentElement.classList.add("is-preview");</script>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="冲击接句：首词大幅冲击，后续词带横向拖影逐拍接入。">
+  <title>冲击接句 Impact Build | ME Motion Studio</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="workspace-editor.css">
+  <link rel="stylesheet" href="me-motion-editor.css">
+  <link rel="stylesheet" href="impactbuild.css?v=20260831-7a">
+  <link rel="stylesheet" href="stg-cn.css">
+</head>
+<body class="me-motion-editor impactbuild-editor">
+  <main class="impact-stage" aria-label="冲击接句实时画板">
+    <div class="impact-canvas-shell" id="canvasShell"><canvas id="impactCanvas"></canvas></div>
+    <div class="me-stage-controls"><button id="stagePause" type="button">暂停</button><button id="stageReplay" type="button">重播</button></div>
+  </main>
+
+  <details class="control-panel impact-panel" open>
+    <summary><span><b>冲击接句</b><small>IMPACT BUILD</small></span></summary>
+    <div class="panel-scroll">
+      <section class="panel-card canvas-card">
+        <div class="section-heading"><p class="section-label">画板尺寸</p><small class="section-note">所见即所得；预览与导出共用构图</small></div>
+        <label>比例<select id="canvasPreset"><option value="1080x1080">1:1 · 1080×1080</option><option value="1080x1350">4:5 · 1080×1350</option><option value="1080x1920">9:16 · 1080×1920</option><option value="1920x1080" selected>16:9 · 1920×1080</option><option value="custom">自定义尺寸</option></select></label>
+        <div class="custom-size" id="customSize" hidden><label>宽<input id="canvasWidth" type="number" min="240" max="3840" value="1920"></label><span>×</span><label>高<input id="canvasHeight" type="number" min="240" max="3840" value="1080"></label></div>
+      </section>
+
+      <section class="panel-card text-card">
+        <div class="section-heading"><p class="section-label">文字与颜色</p><small class="section-note">空格分词；后续词依次从右侧接入</small></div>
+        <label>句子<textarea id="phrase" rows="3" spellcheck="false">Action becomes progress</textarea></label>
+        <div class="control-grid two"><label>字体<select id="fontFamily"><option value="stg:inter">Inter</option></select></label><label>字重<select id="fontWeight"><option value="400">400</option><option value="500">500</option><option value="600" selected>600</option><option value="700">700</option><option value="800">800</option><option value="900">900</option></select></label></div>
+        <div class="color-row"><label>背景<input id="backgroundColor" type="color" value="#050505"></label><label>默认字色<input id="textColor" type="color" value="#f5f5f5"></label><label>强调色<input id="accentColor" type="color" value="#b783ff"></label></div>
+        <label class="media-upload">背景图片 / GIF / 视频<input id="backgroundUpload" type="file" accept="image/*,video/*"></label><button id="clearBackground" type="button">移除背景媒体</button>
+      </section>
+
+      <section class="panel-card asset-card me-layer-panel" id="assetPanel">
+        <div class="asset-selected-head"><div><p class="section-label">已选图标 <span id="selectedAssetCount">0</span></p><small class="section-note">图标与文字共享同一运动场</small></div><button class="me-layer-toggle" id="toggleSelectedAssets" type="button">展开已选</button></div>
+        <div class="me-layer-items" id="selectedAssetItems" hidden></div>
+        <details class="asset-library-details"><summary>图标素材库</summary><div class="me-asset-library" id="assetLibrary"></div></details>
+        <div class="asset-commit-row"><span id="assetCandidateName">尚未选择</span><button class="me-asset-commit" id="commitAsset" type="button" disabled>插入到光标</button></div>
+        <aside class="me-asset-drawer" id="assetDrawer" hidden><div class="drawer-head"><b id="assetDrawerTitle">图标编辑</b><button id="closeAssetDrawer" type="button">×</button></div><div class="me-asset-editor"><label>图标大小 <output id="assetScaleOut">100%</output><input id="assetScale" type="range" min="20" max="300" value="100"></label><label>水平偏移 <output id="assetOffsetXOut">0%</output><input id="assetOffsetX" type="range" min="-150" max="150" value="0"></label><label>垂直偏移 <output id="assetOffsetYOut">0%</output><input id="assetOffsetY" type="range" min="-150" max="150" value="0"></label></div></aside>
+      </section>
+
+      <section class="panel-card">
+        <div class="section-heading"><p class="section-label">逐词编辑</p><small class="section-note">每个词独立颜色、接入节拍和冲击强度</small></div>
+        <div id="wordRows" class="word-rows"></div>
+      </section>
+
+      <section class="panel-card">
+        <div class="section-heading"><p class="section-label">核心节奏</p><small class="section-note">短促冲量，连续减速</small></div>
+        <div class="control-grid">
+          <label>首词冲击 <output id="impactScaleOut"></output><input id="impactScale" type="range" min="120" max="520" value="420"></label>
+          <label>冲击时长 <output id="impactDurationOut"></output><input id="impactDuration" type="range" min="50" max="500" value="100"></label>
+          <label>首词停稳时长 <output id="settleDurationOut"></output><input id="settleDuration" type="range" min="120" max="1800" value="350"></label>
+          <label>接词间隔 <output id="appendIntervalOut"></output><input id="appendInterval" type="range" min="250" max="1800" value="333"></label>
+          <label>接词滑动时长 <output id="appendDurationOut"></output><input id="appendDuration" type="range" min="80" max="800" value="200"></label>
+          <label>最后停留 <output id="finalHoldOut"></output><input id="finalHold" type="range" min="200" max="4000" value="400"></label>
+          <label>重影长度 <output id="blurStrengthOut"></output><input id="blurStrength" type="range" min="0" max="220" value="115"></label>
+          <label>左移重影数量 <output id="ghostCountOut"></output><input id="ghostCount" type="range" min="4" max="28" step="1" value="18"></label>
+          <label>左移重影力度 <output id="ghostForceOut"></output><input id="ghostForce" type="range" min="30" max="250" step="5" value="140"></label>
+          <label>整体速度 <output id="masterSpeedOut"></output><input id="masterSpeed" type="range" min="40" max="220" value="100"></label>
+        </div>
+      </section>
+
+      <section class="panel-card">
+        <div class="section-heading"><p class="section-label">排版</p><small class="section-note">不同画板会立刻按真实比例重排</small></div>
+        <div class="control-grid">
+          <label>字号 <output id="fontSizeOut"></output><input id="fontSize" type="range" min="3" max="24" step="0.5" value="10.5"></label>
+          <label>词间距 <output id="wordGapOut"></output><input id="wordGap" type="range" min="0" max="160" value="42"></label>
+          <label>图标与文字间距 <output id="iconTextGapOut"></output><input id="iconTextGap" type="range" min="0" max="160" value="28"></label>
+          <label>水平位置 <output id="positionXOut"></output><input id="positionX" type="range" min="5" max="95" value="50"></label>
+          <label>垂直位置 <output id="positionYOut"></output><input id="positionY" type="range" min="5" max="95" value="50"></label>
+        </div>
+        <details><summary>高级细调</summary><div class="control-grid advanced-grid">
+          <label>收稳比例 <output id="settleScaleOut"></output><input id="settleScale" type="range" min="35" max="120" value="100"></label>
+          <label>接入压缩 <output id="appendSqueezeOut"></output><input id="appendSqueeze" type="range" min="0" max="55" value="0"></label>
+          <label>向左滚入距离 <output id="appendTravelOut"></output><input id="appendTravel" type="range" min="0" max="360" value="200"></label>
+          <label>呼吸幅度 <output id="breathAmountOut"></output><input id="breathAmount" type="range" min="0" max="10" step="0.5" value="1.5"></label>
+          <label>尾部模糊 <output id="tailBlurOut"></output><input id="tailBlur" type="range" min="0" max="100" value="22"></label>
+        </div></details>
+      </section>
+
+      <section class="panel-card">
+        <div class="section-heading"><p class="section-label">编舞时间轴</p><small class="section-note">点击色块跳到对应动作</small></div>
+        <div class="me-choreo-track"><div class="me-choreo-scroll"><div class="me-choreo-bar" id="choreoBar"><div class="me-choreo-playhead" id="choreoPlayhead"></div></div></div><ol class="me-choreo-legend" id="choreoLegend"></ol></div>
+      </section>
+
+      <section class="panel-card scheme-card">
+        <div class="section-heading"><p class="section-label">方案</p><small class="section-note">自动保存当前编辑</small></div>
+        <div class="me-scheme-actions"><button id="saveScheme" type="button">保存方案</button><label class="me-scheme-import">导入方案<input id="importScheme" type="file" accept="application/json,.json"></label><button id="restoreDefault" type="button">恢复默认</button><button id="clearRebuild" type="button">清理重做</button></div>
+        <p id="schemeStatus" class="status-copy">已载入默认示例</p>
+      </section>
+
+      <section class="panel-card export-card">
+        <div class="section-heading"><p class="section-label">导出</p><small class="section-note">PNG、GIF、MP4 使用同一确定性时间轴</small></div>
+        <div class="control-grid two"><label>时长<select id="exportDuration"><option value="cycle">完整一轮</option><option value="1">1 秒</option><option value="3">3 秒</option><option value="5">5 秒</option><option value="custom">自定义</option></select></label><label>帧率<select id="exportFps"><option value="15">15 FPS</option><option value="24">24 FPS</option><option value="30" selected>30 FPS</option><option value="60">60 FPS</option></select></label></div>
+        <label id="customDurationWrap" hidden>自定义秒数<input id="customDuration" type="number" min="0.5" max="30" step="0.1" value="3.5"></label>
+        <div class="export-actions"><button id="exportPng" type="button">PNG</button><button id="exportGif" type="button">GIF</button><button id="exportMp4" type="button">MP4</button></div>
+        <p id="exportStatus" class="status-copy">等待导出</p>
+      </section>
+    </div>
+  </details>
+
+  <script src="shared-font-library.js?v=20260824-2"></script>
+  <script src="shared-icon-library.js?v=20260827-1"></script>
+  <script src="js/continuation-gif.js"></script>
+  <script src="js/h264-mp4-encoder.web.js"></script>
+  <script src="impactbuild.js?v=20260901-18"></script>
+  <script src="me-motion-editor.js"></script>
+  <script src="stg-cn.js?v=20260831-impact1"></script>
+</body>
+</html>
