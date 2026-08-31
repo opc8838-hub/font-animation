@@ -527,19 +527,47 @@
   function download(blob, name) { const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = name; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1200); }
   function busy(value, text) { ["#exportPng", "#exportGif", "#exportMp4"].forEach((id) => { $(id).disabled = value; }); $("#exportStatus").textContent = text; }
 
-  $("#exportPng").addEventListener("click", async () => { const target = makeExportCanvas(); await prepareBackground(rawLocalTime(currentTime())); renderFrame(target.getContext("2d"), currentTime(), target.width, target.height); target.toBlob((blob) => { if (blob) download(blob, `impact-build-${target.width}x${target.height}.png`); }, "image/png"); });
+  $("#exportPng").addEventListener("click", async () => {
+    busy(true, "正在准备 PNG…");
+    try {
+      const target = makeExportCanvas();
+      await prepareBackground(rawLocalTime(currentTime()));
+      renderFrame(target.getContext("2d"), currentTime(), target.width, target.height);
+      const blob = await new Promise((resolve, reject) => target.toBlob((value) => value ? resolve(value) : reject(new Error("画面编码失败")), "image/png"));
+      download(blob, `impact-build-${target.width}x${target.height}.png`);
+      busy(false, `PNG 已生成 · ${target.width} × ${target.height}`);
+    } catch (error) {
+      busy(false, `PNG 失败：${error.message}`);
+    }
+  });
   $("#exportGif").addEventListener("click", async () => {
     if (!window.GIF) return busy(false, "GIF 编码器未加载");
-    const target = makeExportCanvas(); const ctx = target.getContext("2d"); const fps = number("#exportFps"); const duration = exportDuration(); const count = Math.ceil(duration * fps); busy(true, `准备 GIF · 0/${count}`);
-    const gif = new GIF({ workers: 2, quality: 10, width: target.width, height: target.height, workerScript: "js/continuation-gif.worker.js" });
-    for (let frame = 0; frame < count; frame += 1) { await prepareBackground(rawLocalTime(frame / fps)); renderFrame(ctx, frame / fps, target.width, target.height); gif.addFrame(target, { copy: true, delay: 1000 / fps }); if (frame % 4 === 0) { $("#exportStatus").textContent = `准备 GIF · ${frame + 1}/${count}`; await new Promise((resolve) => setTimeout(resolve, 0)); } }
-    gif.on("progress", (progress) => { $("#exportStatus").textContent = `编码 GIF · ${Math.round(progress * 100)}%`; }); gif.on("finished", (blob) => { download(blob, `impact-build-${target.width}x${target.height}-${fps}fps.gif`); busy(false, "GIF 已生成"); }); gif.render();
+    try {
+      const target = makeExportCanvas(); const ctx = target.getContext("2d"); const fps = number("#exportFps"); const duration = exportDuration(); const count = Math.ceil(duration * fps); busy(true, `准备 GIF · 0/${count}`);
+      const gif = new GIF({ workers: 2, quality: 10, width: target.width, height: target.height, workerScript: "js/continuation-gif.worker.js" });
+      for (let frame = 0; frame < count; frame += 1) { await prepareBackground(rawLocalTime(frame / fps)); renderFrame(ctx, frame / fps, target.width, target.height); gif.addFrame(target, { copy: true, delay: 1000 / fps }); if (frame % 4 === 0) { $("#exportStatus").textContent = `准备 GIF · ${frame + 1}/${count}`; await new Promise((resolve) => setTimeout(resolve, 0)); } }
+      gif.on("progress", (progress) => { $("#exportStatus").textContent = `编码 GIF · ${Math.round(progress * 100)}%`; });
+      gif.on("finished", (blob) => { download(blob, `impact-build-${target.width}x${target.height}-${fps}fps.gif`); busy(false, `GIF 已生成 · ${target.width} × ${target.height} · ${fps} FPS`); });
+      gif.on("abort", () => busy(false, "GIF 导出已中止"));
+      gif.render();
+    } catch (error) {
+      busy(false, `GIF 失败：${error.message}`);
+    }
   });
   $("#exportMp4").addEventListener("click", async () => {
     if (!window.HME?.createH264MP4Encoder) return busy(false, "MP4 编码器未加载");
-    const target = makeExportCanvas(); const ctx = target.getContext("2d", { willReadFrequently: true }); const fps = number("#exportFps"); const duration = exportDuration(); const count = Math.ceil(duration * fps); busy(true, `导出 MP4 · 0%`);
-    const encoder = await HME.createH264MP4Encoder(); encoder.outputFilename = "impact-build.mp4"; encoder.width = target.width; encoder.height = target.height; encoder.frameRate = fps; encoder.kbps = 16000; encoder.groupOfPictures = Math.max(1, Math.round(fps / 2)); encoder.initialize();
-    try { for (let frame = 0; frame < count; frame += 1) { await prepareBackground(rawLocalTime(frame / fps)); renderFrame(ctx, frame / fps, target.width, target.height); encoder.addFrameRgba(ctx.getImageData(0, 0, target.width, target.height).data); if (frame % 2 === 0) { $("#exportStatus").textContent = `导出 MP4 · ${Math.round((frame + 1) / count * 100)}%`; await new Promise((resolve) => setTimeout(resolve, 0)); } } encoder.finalize(); const bytes = encoder.FS.readFile(encoder.outputFilename); download(new Blob([bytes], { type: "video/mp4" }), `impact-build-${target.width}x${target.height}-${fps}fps.mp4`); busy(false, "MP4 已生成"); } catch (error) { busy(false, `MP4 失败：${error.message}`); } finally { try { encoder.delete(); } catch (_) {} }
+    let encoder;
+    busy(true, "正在准备 MP4…");
+    try {
+      const target = makeExportCanvas(); const ctx = target.getContext("2d", { willReadFrequently: true }); const fps = number("#exportFps"); const duration = exportDuration(); const count = Math.ceil(duration * fps);
+      encoder = await HME.createH264MP4Encoder(); encoder.outputFilename = "impact-build.mp4"; encoder.width = target.width; encoder.height = target.height; encoder.frameRate = fps; encoder.kbps = 16000; encoder.groupOfPictures = Math.max(1, Math.round(fps / 2)); encoder.initialize();
+      for (let frame = 0; frame < count; frame += 1) { await prepareBackground(rawLocalTime(frame / fps)); renderFrame(ctx, frame / fps, target.width, target.height); encoder.addFrameRgba(ctx.getImageData(0, 0, target.width, target.height).data); if (frame % 2 === 0) { $("#exportStatus").textContent = `导出 MP4 · ${Math.round((frame + 1) / count * 100)}%`; await new Promise((resolve) => setTimeout(resolve, 0)); } }
+      encoder.finalize(); const bytes = encoder.FS.readFile(encoder.outputFilename); download(new Blob([bytes], { type: "video/mp4" }), `impact-build-${target.width}x${target.height}-${fps}fps.mp4`); busy(false, `MP4 已生成 · ${target.width} × ${target.height} · ${fps} FPS · ${(bytes.length / 1024 / 1024).toFixed(2)} MB`);
+    } catch (error) {
+      busy(false, `MP4 失败：${error.message}`);
+    } finally {
+      try { encoder?.delete(); } catch (_) {}
+    }
   });
 
   $("#stagePause").addEventListener("click", togglePause); $("#stageReplay").addEventListener("click", replay);
@@ -564,10 +592,16 @@
     node.addEventListener("change", schedulePersist);
   });
 
-  $("#saveScheme").addEventListener("click", () => { const blob = new Blob([JSON.stringify(collectState(), null, 2)], { type: "application/json" }); download(blob, "impact-build-scheme.json"); try { localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState())); } catch (_) {} $("#schemeStatus").textContent = "方案已保存并下载"; });
-  $("#importScheme").addEventListener("change", async (event) => { const file = event.target.files?.[0]; event.target.value = ""; if (!file) return; try { applyState(JSON.parse(await file.text())); schedulePersist(); $("#schemeStatus").textContent = "方案导入成功"; } catch (_) { $("#schemeStatus").textContent = "方案文件无法读取"; } });
-  $("#restoreDefault").addEventListener("click", () => { applyState(DEFAULT); schedulePersist(); $("#schemeStatus").textContent = "已恢复默认示例"; });
-  $("#clearRebuild").addEventListener("click", () => { applyState({ ...DEFAULT, phrase: "", wordSettings: [] }); schedulePersist(); $("#schemeStatus").textContent = "已清空，可重新输入"; });
+  $("#saveScheme").addEventListener("click", () => {
+    const scheme = collectState();
+    let savedLocally = true;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(scheme)); } catch (_) { savedLocally = false; }
+    download(new Blob([JSON.stringify(scheme, null, 2)], { type: "application/json" }), "impact-build-scheme.json");
+    $("#schemeStatus").textContent = savedLocally ? "方案已保存到本机，并下载了完整 JSON" : "完整 JSON 已下载；本机缓存空间不足";
+  });
+  $("#importScheme").addEventListener("change", async (event) => { const file = event.target.files?.[0]; event.target.value = ""; if (!file) return; try { const scheme = JSON.parse(await file.text()); if (!scheme || typeof scheme !== "object" || Array.isArray(scheme)) throw new Error("方案结构无效"); applyState(scheme); let persisted = true; try { localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState())); } catch (_) { persisted = false; } $("#schemeStatus").textContent = persisted ? "方案导入成功；文字、重影、素材和时间线已重建" : "方案已导入，但本机缓存空间不足"; } catch (error) { $("#schemeStatus").textContent = `导入失败：${error.message}`; } });
+  $("#restoreDefault").addEventListener("click", () => { try { localStorage.removeItem(STORAGE_KEY); } catch (_) {} applyState(DEFAULT); schedulePersist(); $("#schemeStatus").textContent = "已恢复最新默认示例与全部参数"; });
+  $("#clearRebuild").addEventListener("click", () => { try { localStorage.removeItem(STORAGE_KEY); } catch (_) {} applyState({ ...DEFAULT, phrase: "", wordSettings: [], assetTunes: {}, backgroundMedia: null }); schedulePersist(); $("#schemeStatus").textContent = "已清空文字、图标与背景，可重新创作"; });
 
   window.addEventListener("resize", syncCanvasShell);
   let initial = DEFAULT;
