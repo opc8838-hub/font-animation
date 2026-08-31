@@ -4,17 +4,17 @@
     {
       "color": "#b783ff",
       "offset": 0,
-      "strength": 100
+      "strength": 180
     },
     {
       "color": "#f5f5f5",
       "offset": 0,
-      "strength": 100
+      "strength": 180
     },
     {
       "color": "#b783ff",
       "offset": 0,
-      "strength": 100
+      "strength": 82
     }
   ],
   "assetTunes": {},
@@ -28,11 +28,11 @@
   "canvasPreset": "1920x1080",
   "canvasWidth": "1920",
   "canvasHeight": "1080",
-  "impactScale": "420",
-  "impactDuration": "100",
-  "settleDuration": "350",
+  "impactScale": "520",
+  "impactDuration": "308",
+  "settleDuration": "297",
   "appendInterval": "333",
-  "appendDuration": "200",
+  "appendDuration": "473",
   "finalHold": "400",
   "blurStrength": "115",
   "ghostCount": "18",
@@ -49,6 +49,6 @@
   "breathAmount": "1.5",
   "tailBlur": "22",
   "exportDuration": "cycle",
-  "exportFps": "30",
+  "exportFps": "60",
   "customDuration": "3.5"
 }

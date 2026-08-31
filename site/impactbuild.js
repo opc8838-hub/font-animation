@@ -611,7 +611,7 @@
   window.addEventListener("resize", syncCanvasShell);
   async function initialize() {
     try {
-      const response = await fetch("impact-build-scheme.json?v=20260901-1", { cache: "no-store" });
+      const response = await fetch("impact-build-scheme.json?v=20260901-2", { cache: "no-store" });
       if (!response.ok) throw new Error(`默认方案 ${response.status}`);
       const scheme = await response.json();
       if (!scheme || typeof scheme !== "object" || Array.isArray(scheme)) throw new Error("默认方案结构无效");
