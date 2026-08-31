@@ -90,7 +90,7 @@
 - [x] Final entry and restore use Water Flow's transition, stagger, speed scaling, slot expansion, glyph compression, and restore easing; 2D rotation is the only added icon motion
 - [x] Rotation and icon hold share one timing window instead of creating serial pauses, and the restored line exits with Water Flow's subtle upward drift, 5.5% scale reduction, and fade
 - [x] The final-sweep speed control restarts this stage for immediate preview and shows the resulting scan duration
-- [x] The full-wall editor uses the same opening-icon carry rule as the live canvas, refreshes when an asset finishes loading, and provides an independent vertical offset for every row
+- [x] The full-wall editor uses the same opening-icon carry rule as the live canvas, refreshes when an asset finishes loading, and provides independent horizontal character spacing for every row
 - [x] Final icons return from their configured 2D angle into their own glyph slot without an idle seam; restore motion has a 150ms floor and matches icon/glyph scale at the handoff
 - [x] Final-slot angle controls stay visible, with disabled guidance for unmapped characters and saved angles shown on every mapped slot
 - [x] Main-row edits pause on the complete full-wall frame so a newly assigned middle-row icon remains inspectable instead of immediately advancing into collapse
