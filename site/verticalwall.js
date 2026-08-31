@@ -933,8 +933,9 @@
     const speed = Math.max(.5, Math.min(24, Number(inputs.finalScanSpeed.value)));
     const speedRatio = speed / 4;
     const transition = Math.max(16, Math.min(220, 100 / speedRatio)) / 1000;
-    const launchKick = Math.max(20, Math.min(240, Number(inputs.iconSlowMotionStart.value))) / 1000;
-    const step = Math.max(12, Math.min(1200, Number(inputs.swapInterval.value) / speedRatio)) / 1000;
+    const launchKick = Math.max(0, Math.min(240, Number(inputs.iconSlowMotionStart.value))) / 1000;
+    const restoreStep = Math.max(60, Math.min(1200, Number(inputs.swapInterval.value))) / 1000;
+    const step = Math.max(.012, restoreStep / speedRatio);
     return {
       transition,
       launchKick,
@@ -942,7 +943,7 @@
       hold: Math.max(40, Math.min(1200, Number(inputs.iconHoldDuration.value) / speedRatio)) / 1000,
       rotation: Math.max(200, Math.min(2400, Number(inputs.iconRotationDuration.value))) / 1000,
       step,
-      restoreStep: Math.max(.028, step)
+      restoreStep
     };
   }
 
@@ -1025,12 +1026,13 @@
         const slowMotionStart = launchStart + scanTiming.launchKick;
         const slowMotionEnd = Math.max(slowMotionStart + .001, replacement.restoreStart);
         const slowProgress = rangeProgress(sequenceElapsed, slowMotionStart, slowMotionEnd);
-        const stillScale = easeOut(rangeProgress(sequenceElapsed, launchStart, launchStart + scanTiming.launchKick * .45));
-        const fastLaunch = easeOut(rangeProgress(sequenceElapsed, launchStart + scanTiming.launchKick * .35, slowMotionStart));
-        const launchProgress = sequenceElapsed < slowMotionStart ? fastLaunch : 1;
+        const delayedScale = scanTiming.launchKick > .001
+          ? easeOut(rangeProgress(sequenceElapsed, launchStart, slowMotionStart)) * .24
+          : 0;
+        const launchProgress = sequenceElapsed < slowMotionStart ? 0 : smoother(slowProgress);
         const drawCenterX = settledCenterX - requestedWidth * .28 * (1 - launchProgress);
         const drawCenterY = y + offsetY;
-        const replacementScale = (.72 + Math.max(stillScale, launchProgress) * .28) * (1 - smooth(iconExit) * .18);
+        const replacementScale = (.72 + Math.max(delayedScale, launchProgress) * .28) * (1 - smooth(iconExit) * .18);
         const rotationMotion = slowProgress;
         const rotationProgress = sequenceElapsed < slowMotionStart
           ? 0
@@ -1235,13 +1237,13 @@
       canvas.dataset.finalAssetGap = "per-slot";
       canvas.dataset.swapMotion = extras.swapMotion || "idle";
       canvas.dataset.swapTargets = String(extras.swapTargets ?? 0);
-      canvas.dataset.iconRotationMotion = "still-scale-fast-launch-locked-slow-angle-swing-ultrafast-ordered-glyph-close";
+      canvas.dataset.iconRotationMotion = "instant-slow-launch-scale-angle-swing-ultrafast-left-to-right-glyph-close";
       canvas.dataset.iconRotationDuration = inputs.iconRotationDuration.value;
       canvas.dataset.iconSlowMotionStart = inputs.iconSlowMotionStart.value;
       canvas.dataset.iconSlowMotionTurnRatio = ".45";
       canvas.dataset.iconSlowMotionCrossRatio = ".55";
       canvas.dataset.iconSlowMotionFastReturn = "restore-transition";
-      canvas.dataset.iconSlowMotionDrift = "single-right-entry-only";
+      canvas.dataset.iconSlowMotionDrift = "single-right-entry-during-slow-motion";
       canvas.dataset.finalIconEntrySlide = ".28";
       canvas.dataset.finalIconRotationStart = `${inputs.iconSlowMotionStart.value}ms`;
       canvas.dataset.finalIconVerticalMotion = "0";
@@ -1508,7 +1510,7 @@
         Object.keys(finalSlotMap).filter((index) => assets.has(finalSlotMap[index])).length)).enterEnd.toFixed(2)}秒`,
       iconHoldDurationOut: `${inputs.iconHoldDuration.value}ms`,
       iconRotationDurationOut: formatSeconds(Number(inputs.iconRotationDuration.value) / 1000),
-      iconSlowMotionStartOut: `快弹${inputs.iconSlowMotionStart.value}ms后`,
+      iconSlowMotionStartOut: Number(inputs.iconSlowMotionStart.value) === 0 ? "立即慢动作" : `延迟${inputs.iconSlowMotionStart.value}ms`,
       finalRestoreDurationOut: `${inputs.finalRestoreDuration.value}ms`,
       bounceOut: `${inputs.bounce.value}%`,
       staggerOut: `${inputs.stagger.value}%`,
@@ -1596,7 +1598,7 @@
       if (field) controls[id] = field.type === "checkbox" ? field.checked : field.value;
     });
     return {
-      type: "me-vertical-rise", version: 15, controls, selectedAssetId,
+      type: "me-vertical-rise", version: 16, controls, selectedAssetId,
       rowAssetGaps: [...rowAssetGaps], rowAssetGapsAfter: [...rowAssetGapsAfter],
       rowAssetScales: [...rowAssetScales], rowAssetOffsetsX: [...rowAssetOffsetsX],
       rowTextGaps: [...rowTextGaps],
@@ -1670,7 +1672,8 @@
       });
     }
     if (Number(scheme.version) < 15) scheme.controls.iconSlowMotionStart = "50";
-    scheme.version = 15;
+    if (Number(scheme.version) < 16) scheme.controls.iconSlowMotionStart = "0";
+    scheme.version = 16;
     return scheme;
   }
 
