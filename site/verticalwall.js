@@ -808,6 +808,21 @@
     };
   }
 
+  function wallFrameFit(layouts, segments, startX, offsetsX, requestedZoom, width, height, lineHeight, fontPx, rowCount) {
+    const horizontalExtent = layouts.reduce((extent, layout, index) => {
+      const bounds = rowSegmentBounds(segments[index], offsetsX[index] || 0)
+        || { minX: 0, maxX: layout?.width || fontPx };
+      return Math.max(extent, Math.abs(startX + bounds.minX), Math.abs(startX + bounds.maxX));
+    }, 1);
+    const margin = Math.min(width, height) * .067;
+    const contentHeight = Math.max(fontPx, (Math.max(1, rowCount) - 1) * lineHeight + fontPx);
+    return Math.min(
+      1,
+      Math.max(.01, width - margin * 2) / (horizontalExtent * 2 * requestedZoom),
+      Math.max(.01, height - margin * 2) / (contentHeight * requestedZoom)
+    );
+  }
+
   function drawRowSegments(context, segments, startX, iconOffset, y, color, time) {
     if (segments.left) drawSequence(context, segments.left, startX, y, color, 0, time, 0, false);
     drawItem(context, {
@@ -919,7 +934,7 @@
     const transition = Math.max(45, Math.min(220, 100 / speedRatio)) / 1000;
     return {
       transition,
-      restoreTransition: Math.max(.15, transition),
+      restoreTransition: Math.max(.10, transition),
       hold: Math.max(40, Math.min(1200, Number(inputs.iconHoldDuration.value) / speedRatio)) / 1000,
       rotation: Math.max(80, Math.min(1200, Number(inputs.iconRotationDuration.value))) / 1000,
       step: Math.max(35, Math.min(1200, Number(inputs.swapInterval.value) / speedRatio)) / 1000
@@ -977,7 +992,7 @@
       const gapBefore = setting.gapBefore * unitScale;
       const gapAfter = setting.gapAfter * unitScale;
       const requiredWidth = Math.max(1, requestedWidth + gapBefore + gapAfter);
-      const closeRaw = rangeProgress(exitRaw, 0, .55);
+      const closeRaw = exitRaw;
       const openRaw = rangeProgress(enterRaw, .45, 1);
       const openProgress = easeOut(openRaw) * (1 - smooth(closeRaw));
       activeReplacements.set(slot.index, {
@@ -1004,14 +1019,16 @@
         const fullCenterOffset = (dynamicSlotWidth - requiredWidth) / 2 + gapBefore + requestedWidth / 2;
         const entrySlideX = (1 - entryEase) * requestedWidth * .14;
         const drawCenterX = cursorX + lerp(slot.width / 2, fullCenterOffset, clamp01(openProgress)) + entrySlideX + offsetX;
-        const drawCenterY = y - Math.sin(Math.PI * clamp01(iconEnter)) * requestedHeight * .055 + offsetY;
         const turnStart = enterStart + scanTiming.transition * .45;
         const turnDuration = scanTiming.rotation * .32;
         const turnEnd = turnStart + turnDuration;
-        const angleHold = scanTiming.rotation * .10;
+        const angleHold = scanTiming.rotation * .22;
         const returnStart = turnEnd + angleHold;
-        const returnDuration = scanTiming.rotation * .58;
+        const returnDuration = scanTiming.rotation * .46;
         const returnEnd = returnStart + returnDuration;
+        const returnProgress = rangeProgress(sequenceElapsed, returnStart, returnEnd);
+        const airborne = entryEase * (sequenceElapsed < returnStart ? 1 : 1 - smoother(returnProgress));
+        const drawCenterY = y - requestedHeight * .055 * airborne + offsetY;
         const rotationProgress = sequenceElapsed < turnStart
           ? 0
           : sequenceElapsed < turnEnd
@@ -1163,7 +1180,13 @@
     ));
     const neutralWallWidth = neutralWallWidths.reduce((sum, width) => sum + width, 0) / neutralWallWidths.length;
     const wallStartX = -neutralWallWidth / 2;
-    const wallZoom = Number(inputs.wallScale.value) / 100;
+    const requestedWallZoom = Number(inputs.wallScale.value) / 100;
+    const wallFit = wallFrameFit(
+      wallLayouts, wallSegments, wallStartX,
+      rowAssetOffsetsX.map((value) => (Number(value) || 0) * scale),
+      requestedWallZoom, w, h, lineHeight, wallFontPx, rowCount
+    );
+    const wallZoom = requestedWallZoom * wallFit;
     const drawCentered = (line, y, xOffset = 0, alpha = 1, rowScale = 1, stage = introStage, rowIndex = 0, axisScaleX = 1, axisScaleY = 1) => {
       context.font = fontFor(stage);
       const isWall = stage === wallStage;
@@ -1196,6 +1219,8 @@
       canvas.dataset.introAssetGap = inputs.introAssetGap.value;
       canvas.dataset.wallFontSize = inputs.wallFontSize.value;
       canvas.dataset.wallTextGap = inputs.wallTextGap.value;
+      canvas.dataset.wallLayoutFit = wallFit.toFixed(6);
+      canvas.dataset.wallColumnAnchor = (wallStartX / scale).toFixed(4);
       canvas.dataset.wallAssetGap = "per-row";
       canvas.dataset.rowAssetGaps = rowAssetGaps.join(",");
       canvas.dataset.rowAssetGapsAfter = rowAssetGapsAfter.join(",");
@@ -1209,10 +1234,11 @@
       canvas.dataset.finalAssetGap = "per-slot";
       canvas.dataset.swapMotion = extras.swapMotion || "idle";
       canvas.dataset.swapTargets = String(extras.swapTargets ?? 0);
-      canvas.dataset.iconRotationMotion = "synchronized-right-pop-fast-turn-slow-return-then-glyph";
+      canvas.dataset.iconRotationMotion = "right-pop-air-hold-return-fast-glyph-close";
       canvas.dataset.iconRotationDuration = inputs.iconRotationDuration.value;
       canvas.dataset.iconRotationTurnRatio = ".32";
-      canvas.dataset.iconRotationReturnRatio = ".58";
+      canvas.dataset.iconRotationHoldRatio = ".22";
+      canvas.dataset.iconRotationReturnRatio = ".46";
       canvas.dataset.finalIconEntrySlide = ".14";
       canvas.dataset.finalRestoreTransition = finalScanTiming().restoreTransition.toFixed(4);
       canvas.dataset.finalIconHoldDuration = inputs.iconHoldDuration.value;
@@ -1637,7 +1663,7 @@
     const unitScale = height / 900;
     const fontPx = Math.max(8, Number(inputs.wallFontSize.value) * unitScale);
     const lineHeight = Math.max(fontPx * .66, fontPx + Number(inputs.lineGap.value) * unitScale);
-    const wallZoom = Number(inputs.wallScale.value) / 100;
+    const requestedWallZoom = Number(inputs.wallScale.value) / 100;
     context.setTransform(1, 0, 0, 1, 0, 0);
     context.clearRect(0, 0, width, height);
     context.fillStyle = inputs.background.value;
@@ -1661,16 +1687,19 @@
       previewRowTextGaps[index]
     ));
     const anchorWidth = plainWidths.reduce((sum, value) => sum + value, 0) / plainWidths.length || 1;
-    const widest = Math.max(1, ...plainWidths);
     const startX = -anchorWidth / 2;
-    const allRowsHeight = Math.max(fontPx, (rows.length - 1) * lineHeight + fontPx);
-    const fit = Math.min(1, (width - 48) / (widest * wallZoom), (height - 48) / (allRowsHeight * wallZoom));
-    const renderedLineHeight = lineHeight * wallZoom * fit;
+    const fit = wallFrameFit(
+      layouts, segments, startX,
+      rowAssetOffsetsX.map((value) => (Number(value) || 0) * unitScale),
+      requestedWallZoom, width, height, lineHeight, fontPx, rows.length
+    );
+    const wallZoom = requestedWallZoom * fit;
+    const renderedLineHeight = lineHeight * wallZoom;
     const startY = height / 2 - (rows.length - 1) * renderedLineHeight / 2;
     layouts.forEach((layout, index) => {
       context.save();
       context.translate(width / 2, startY + index * renderedLineHeight);
-      context.scale(wallZoom * fit, wallZoom * fit);
+      context.scale(wallZoom, wallZoom);
       if (segments[index]) {
         drawRowSegments(context, segments[index], startX, (Number(rowAssetOffsetsX[index]) || 0) * unitScale, 0, inputs.foreground.value, time);
       } else {
@@ -1679,6 +1708,7 @@
       context.restore();
     });
     rowOverviewCanvas.dataset.columnAnchorX = startX.toFixed(4);
+    rowOverviewCanvas.dataset.logicalColumnAnchor = (startX / unitScale).toFixed(4);
     rowOverviewCanvas.dataset.layoutFit = fit.toFixed(6);
     rowOverviewCanvas.dataset.rowTextGaps = rowTextGaps.join(",");
     rowOverviewCanvas.dataset.rowWidths = plainWidths.map((width) => width.toFixed(3)).join(",");
