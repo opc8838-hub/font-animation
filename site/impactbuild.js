@@ -13,7 +13,8 @@
   const lerp = (from, to, amount) => from + (to - from) * amount;
   const smooth = (value) => { const p = clamp(value); return p * p * (3 - 2 * p); };
   const easeOut = (value) => 1 - Math.pow(1 - clamp(value), 4);
-  const impactCollapseAt = (progress) => easeOut((progress - 0.45) / 0.42);
+  const easeOutCubic = (value) => 1 - Math.pow(1 - clamp(value), 3);
+  const impactCollapseAt = (progress) => smooth((progress - 0.28) / 0.68);
   const mod = (value, divisor) => ((value % divisor) + divisor) % divisor;
   const ms = (id) => Number($(id).value) / 1000;
   const number = (id) => Number($(id).value);
@@ -151,7 +152,7 @@
         if (time < start + duration) {
           activeIndex = index;
           rawProgress = clamp((time - start) / duration);
-          progress = easeOut(rawProgress);
+          progress = easeOutCubic(rawProgress);
         }
       }
     }
@@ -260,32 +261,30 @@
       : 0;
     const tail = time > timeline().finalEnd ? clamp((time - timeline().finalEnd) / timeline().tail) : 0;
     const strength = number("#blurStrength") / 100;
-    const blurUnit = Math.min(w, h) / 304;
     if (impact > 0.01 && strength > 0) {
       const distance = Math.min(w, h) * 0.29 * impact * strength;
-      drawPhraseLayer(ctx, time, w, h, 0.27 * impact, 0, (7 + 5 * impact) * blurUnit, 1 + 0.34 * impact);
-      for (let index = 10; index >= 1; index -= 1) {
-        const amount = index / 10;
-        const alpha = 0.085 * (1 - amount * 0.5) * impact;
-        const blur = (3.5 + 8 * amount * impact) * blurUnit;
-        const stretch = 1 + 0.5 * amount * impact;
-        drawPhraseLayer(ctx, time, w, h, alpha, distance * amount, blur, stretch);
-        drawPhraseLayer(ctx, time, w, h, alpha, -distance * amount, blur, stretch);
+      drawPhraseLayer(ctx, time, w, h, 0.3 * impact, 0, 0, 1 + 0.38 * impact);
+      for (let index = 4; index >= 1; index -= 1) {
+        const amount = index / 4;
+        const alpha = 0.09 * (1 - amount * 0.28) * impact;
+        const stretch = 1 + 0.56 * amount * impact;
+        drawPhraseLayer(ctx, time, w, h, alpha, distance * amount, 0, stretch);
+        drawPhraseLayer(ctx, time, w, h, alpha, -distance * amount, 0, stretch);
       }
     }
     if (append > 0.01 && strength > 0) {
       const distance = Math.min(w, h) * 0.24 * append * strength;
-      const appendLag = Math.max(0.001, ms("#appendDuration")) * 0.56;
-      for (let index = 6; index >= 1; index -= 1) {
-        const amount = index / 6;
-        const alpha = 0.19 * (1 - amount * 0.5) * append;
-        drawPhraseLayer(ctx, time, w, h, alpha, distance * amount, (1.8 + 5.2 * amount * append) * blurUnit, 1 + 0.16 * amount * append);
+      const appendLag = Math.max(0.001, ms("#appendDuration")) * 0.5;
+      for (let index = 1; index >= 1; index -= 1) {
+        const amount = index;
+        const alpha = 0.3 * append;
+        drawPhraseLayer(ctx, time, w, h, alpha, distance * amount, 0, 1 + 0.16 * amount * append);
       }
-      for (let index = 6; index >= 1; index -= 1) {
-        const amount = index / 6;
+      for (let index = 2; index >= 1; index -= 1) {
+        const amount = index / 2;
         const sampledTime = Math.max(0, time - appendLag * amount);
-        const alpha = 0.15 * (1 - amount * 0.46) * append;
-        drawPhraseLayer(ctx, sampledTime, w, h, alpha, distance * amount * 0.86, (1.5 + 4.5 * amount * append) * blurUnit, 1 + 0.13 * amount * append);
+        const alpha = 0.28 * (1 - amount * 0.4) * append;
+        drawPhraseLayer(ctx, sampledTime, w, h, alpha, distance * amount * 0.86, 0, 1 + 0.13 * amount * append);
       }
     }
     const tailSmear = tail * number("#tailBlur") / 100;
@@ -294,13 +293,13 @@
       for (let index = 5; index >= 1; index -= 1) {
         const amount = index / 5;
         const alpha = 0.045 * (1 - amount * 0.4) * tailSmear;
-        drawPhraseLayer(ctx, time, w, h, alpha, distance * amount, (1 + 2 * tailSmear) * blurUnit, 1 + 0.08 * tailSmear);
-        drawPhraseLayer(ctx, time, w, h, alpha, -distance * amount, (1 + 2 * tailSmear) * blurUnit, 1 + 0.08 * tailSmear);
+        drawPhraseLayer(ctx, time, w, h, alpha, distance * amount, 0, 1 + 0.08 * tailSmear);
+        drawPhraseLayer(ctx, time, w, h, alpha, -distance * amount, 0, 1 + 0.08 * tailSmear);
       }
     }
     const leadAlpha = time < impactDuration ? impactReveal : 1;
-    drawPhraseLayer(ctx, time, w, h, leadAlpha, 0, (impact * 5.4 + append * 4.2 + tailSmear * 1.25) * blurUnit, 1);
-    if (impact > 0.01) drawPhraseLayer(ctx, time, w, h, 0.76 * impact, 0, (2.2 + impact * 3) * blurUnit, 1.04, $("#textColor").value);
+    drawPhraseLayer(ctx, time, w, h, leadAlpha, 0, 0, 1);
+    if (impact > 0.01) drawPhraseLayer(ctx, time, w, h, 0.76 * impact, 0, 0, 1.04, $("#textColor").value);
     if (ctx.filter !== "none") ctx.filter = "none";
     if (ctx === context) {
       canvas.dataset.timelineTime = seconds.toFixed(4);

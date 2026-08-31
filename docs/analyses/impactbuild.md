@@ -88,6 +88,7 @@ A lead word lands as a huge horizontally smeared impact, settles smaller, then e
 
 ## Feedback discoveries
 
+- 2026-08-31: the v8 preview regression was caused by repeated Canvas `filter: blur()` passes over the full phrase. At normal playback it measured about 48.8fps with 116.7ms worst frames; replacing Gaussian filtering with lightweight directional opacity samples and spreading the impact collapse over consecutive frames measured about 57.9fps, 16.8ms p99, and 33.4ms worst frame while preserving the launch trail.
 - 2026-08-31: v8 uses the append event's raw linear progress for its blur envelope instead of the already eased layout progress. This keeps a visible right-side afterimage in the first moving frames and removes it as soon as the leftward move settles. The lead impact uses a wider, softer normalized bloom so the opening reads as an exaggerated flash rather than a clean scale-up.
 - 2026-08-31: append motion must recenter existing and incoming words as one phrase; independent word movement looks detached.
 - 2026-08-31: exported MP4 verified at 320×320, 15fps, 52 frames, 3.466667s; extracted event frames preserve the same impact, append, and hold geometry as the live preview.
