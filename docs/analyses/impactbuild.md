@@ -63,7 +63,7 @@ A lead word lands as a huge horizontally smeared impact and settles; at each joi
 ### Common
 
 - Canvas ratio/custom size, phrase, font/weight, colors, font size, word gap, phrase position
-- Impact scale/duration, settle duration, append duration/interval, final hold, blur strength
+- Impact scale/duration, settle duration, append duration/interval, final hold, afterimage length/count/force
 - Optional icon insertion and icon/text gap
 
 ### Advanced
@@ -90,6 +90,7 @@ A lead word lands as a huge horizontally smeared impact and settles; at each joi
 
 ## Feedback discoveries
 
+- 2026-08-31: v16 separates the append afterimage into editable length, layer count, and opacity force. The join curve now reaches 96% of its destination during the first 68% of the event, then continuously brakes through the final 4% as a short inertia tail with no overshoot or recoil. The live preview no longer requests a readback-optimized Canvas context, while MP4 export retains it for `getImageData`, keeping preview and export geometry identical without forcing the browser preview onto the slower readback path.
 - 2026-08-31: direct measurement of the 46-frame normal-speed recheck corrected the choreography and timeline in v15. The first visible join frame is 015 and the second is 025, so their continuous starts lie between the preceding stable frame and those samples (modelled at 0.450s and 0.783s). Each join lasts about 0.200s, the final hold is about 0.400s, and the complete loop is 1.533s. During the first join, `Action` moves left one frame before `becomes` is readable; during the second, the already-visible `Action becomes` phrase moves as one old group before `progress` follows. v15 therefore removes per-old-word staggering, delays only the incoming word, uses a fast impulse followed by continuous deceleration, and removes the unsupported 25% sharp-text squeeze while retaining velocity-driven afterimages.
 - 2026-08-31: v14 corrects the remaining rigid-body feel without changing the approved afterimage. Existing words no longer share one recenter progress: the leftmost word launches immediately and each word to its right follows roughly 7% of the 170ms append event later (about 12ms), capped at a subtle 20% total drag. Every follower still reaches the same final layout on the same end frame, so the result is a crisp inertial pull rather than a visible word-by-word sequence.
 - 2026-08-31: v12's append still felt rigid because its acceleration occupied 38% of the event: at 30fps/200ms the first moving frame advanced only 7.3%, and the incoming word inherited the same 7.3% opacity before the next frames jumped by 21.9% and 30.5%. v13 shortens acceleration to 16%, uses a sine/cosine-integrated velocity curve with a smooth speed peak, reveals the incoming word independently over the first two frames, and changes the migrated default append duration from 200ms to 170ms. The corrected 30fps samples advance about 22%, 30%, 25%, 17%, and 7% before stopping, preserving the approved velocity-driven trail while removing the sticky start.

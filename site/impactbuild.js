@@ -5,17 +5,27 @@
   const $$ = (selector) => [...document.querySelectorAll(selector)];
   const canvas = $("#impactCanvas");
   const shell = $("#canvasShell");
-  const context = canvas.getContext("2d", { alpha: false, willReadFrequently: true });
+  const context = canvas.getContext("2d", { alpha: false });
   const PREVIEW = new URLSearchParams(location.search).has("preview");
   const STORAGE_KEY = "impactbuild-scheme-v1";
-  const VERSION = 6;
+  const VERSION = 7;
   const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
   const lerp = (from, to, amount) => from + (to - from) * amount;
   const smooth = (value) => { const p = clamp(value); return p * p * (3 - 2 * p); };
   const easeOut = (value) => 1 - Math.pow(1 - clamp(value), 4);
   const easeOutCubic = (value) => 1 - Math.pow(1 - clamp(value), 3);
   const APPEND_INCOMING_DELAY = 0.12;
-  const inertialProgress = (value) => 1 - Math.pow(1 - clamp(value), 3);
+  const inertialProgress = (value) => {
+    const p = clamp(value);
+    const brakeAt = 0.68;
+    const fastEnd = 0.96;
+    if (p < brakeAt) {
+      const impulse = p / brakeAt;
+      return fastEnd * (1 - Math.pow(1 - impulse, 3));
+    }
+    const inertia = (p - brakeAt) / (1 - brakeAt);
+    return fastEnd + (1 - fastEnd) * (1 - Math.pow(1 - inertia, 2));
+  };
   const inertialVelocity = (value) => {
     const p = clamp(value);
     const launch = smooth(p / 0.08);
@@ -32,7 +42,7 @@
     backgroundColor: "#050505", textColor: "#f5f5f5", accentColor: "#b783ff",
     canvasPreset: "1920x1080", canvasWidth: "1920", canvasHeight: "1080",
     impactScale: "420", impactDuration: "100", settleDuration: "350", appendInterval: "333",
-    appendDuration: "200", finalHold: "400", blurStrength: "115", masterSpeed: "100",
+    appendDuration: "200", finalHold: "400", blurStrength: "115", ghostCount: "18", ghostForce: "140", masterSpeed: "100",
     fontSize: "10.5", wordGap: "42", iconTextGap: "28", positionX: "50", positionY: "50",
     settleScale: "100", appendSqueeze: "0", appendTravel: "200", breathAmount: "1.5", tailBlur: "22",
     exportDuration: "cycle", exportFps: "30", customDuration: "3.5",
@@ -295,16 +305,20 @@
       const blurUnit = Math.min(w, h) / 304;
       const distance = Math.min(w, h) * 0.32 * append * strength;
       const appendLag = Math.max(0.001, ms("#appendDuration")) * 0.58;
-      drawPhraseLayer(ctx, time, w, h, 0.58 * append, distance * 0.34, 3.4 * blurUnit, 1 + 0.18 * append);
-      for (let index = 7; index >= 1; index -= 1) {
-        const amount = index / 7;
-        const alpha = 0.14 * (1 - amount * 0.38) * append;
+      const ghostCount = Math.max(4, Math.round(number("#ghostCount")));
+      const immediateCount = Math.max(1, Math.ceil(ghostCount * 0.55));
+      const temporalCount = Math.max(1, ghostCount - immediateCount);
+      const ghostForce = number("#ghostForce") / 100;
+      drawPhraseLayer(ctx, time, w, h, clamp(0.58 * append * ghostForce), distance * 0.34, 3.4 * blurUnit, 1 + 0.18 * append);
+      for (let index = immediateCount; index >= 1; index -= 1) {
+        const amount = index / immediateCount;
+        const alpha = clamp(0.14 * (1 - amount * 0.38) * append * ghostForce);
         drawPhraseLayer(ctx, time, w, h, alpha, distance * amount, 0, 1 + 0.16 * amount * append);
       }
-      for (let index = 6; index >= 1; index -= 1) {
-        const amount = index / 6;
+      for (let index = temporalCount; index >= 1; index -= 1) {
+        const amount = index / temporalCount;
         const sampledTime = Math.max(wordStart(state.activeIndex), time - appendLag * amount);
-        const alpha = 0.12 * (1 - amount * 0.34) * append;
+        const alpha = clamp(0.12 * (1 - amount * 0.34) * append * ghostForce);
         drawPhraseLayer(ctx, sampledTime, w, h, alpha, distance * amount * 0.86, 0, 1 + 0.13 * amount * append);
       }
     }
@@ -466,7 +480,7 @@
   }
 
   const outputMap = {
-    impactScale: (v) => `${(v / 100).toFixed(2)}×`, impactDuration: (v) => `${(v / 1000).toFixed(2)}秒`, settleDuration: (v) => `${(v / 1000).toFixed(2)}秒`, appendInterval: (v) => `${(v / 1000).toFixed(2)}秒`, appendDuration: (v) => `${(v / 1000).toFixed(2)}秒`, finalHold: (v) => `${(v / 1000).toFixed(2)}秒`, blurStrength: (v) => `${v}%`, masterSpeed: (v) => `${(v / 100).toFixed(2)}×`, fontSize: (v) => `${v}%`, wordGap: (v) => `${v}%`, iconTextGap: (v) => `${v}%`, positionX: (v) => `${v}%`, positionY: (v) => `${v}%`, settleScale: (v) => `${(v / 100).toFixed(2)}×`, appendSqueeze: (v) => `${v}%`, appendTravel: (v) => `${v}%`, breathAmount: (v) => `${v}%`, tailBlur: (v) => `${v}%`
+    impactScale: (v) => `${(v / 100).toFixed(2)}×`, impactDuration: (v) => `${(v / 1000).toFixed(2)}秒`, settleDuration: (v) => `${(v / 1000).toFixed(2)}秒`, appendInterval: (v) => `${(v / 1000).toFixed(2)}秒`, appendDuration: (v) => `${(v / 1000).toFixed(2)}秒`, finalHold: (v) => `${(v / 1000).toFixed(2)}秒`, blurStrength: (v) => `${v}%`, ghostCount: (v) => `${v} 层`, ghostForce: (v) => `${v}%`, masterSpeed: (v) => `${(v / 100).toFixed(2)}×`, fontSize: (v) => `${v}%`, wordGap: (v) => `${v}%`, iconTextGap: (v) => `${v}%`, positionX: (v) => `${v}%`, positionY: (v) => `${v}%`, settleScale: (v) => `${(v / 100).toFixed(2)}×`, appendSqueeze: (v) => `${v}%`, appendTravel: (v) => `${v}%`, breathAmount: (v) => `${v}%`, tailBlur: (v) => `${v}%`
   };
 
   function updateOutputs() { Object.entries(outputMap).forEach(([id, format]) => { const node = $(`#${id}`); const out = $(`#${id}Out`); if (node && out) out.textContent = format(Number(node.value)); }); }
@@ -561,7 +575,7 @@
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
       if (saved?.version === VERSION) initial = saved;
-      else if (saved?.version === 1 || saved?.version === 2 || saved?.version === 3 || saved?.version === 4 || saved?.version === 5) {
+      else if (saved?.version === 1 || saved?.version === 2 || saved?.version === 3 || saved?.version === 4 || saved?.version === 5 || saved?.version === 6) {
         const usedOldDefault = saved.settleDuration === "900" || saved.settleDuration === "320" || saved.settleDuration === "200" || saved.settleDuration === "367";
         const usedOldAppendDefault = saved.appendDuration === "170";
         initial = {
