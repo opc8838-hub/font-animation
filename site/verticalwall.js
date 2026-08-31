@@ -24,7 +24,8 @@
     bounce: $("#bounce"), stagger: $("#stagger"),
     verticalDrift: $("#verticalDrift"), horizontalPhase: $("#horizontalPhase"), nextOpacity: $("#nextOpacity"),
     swapInterval: $("#swapInterval"), finalScanSpeed: $("#finalScanSpeed"), iconHoldDuration: $("#iconHoldDuration"),
-    iconRotationDuration: $("#iconRotationDuration"), finalRestoreDuration: $("#finalRestoreDuration"),
+    iconRotationDuration: $("#iconRotationDuration"), iconSlowMotionStart: $("#iconSlowMotionStart"),
+    finalRestoreDuration: $("#finalRestoreDuration"),
     assetItemScale: $("#assetItemScale"),
     assetOffsetX: $("#assetOffsetX"), assetOffsetY: $("#assetOffsetY"),
     assetGapBefore: $("#assetGapBefore"), assetGapAfter: $("#assetGapAfter")
@@ -1019,7 +1020,8 @@
         const slowMotionEnd = Math.max(slowMotionStart + .001, replacement.restoreStart);
         const slowProgress = rangeProgress(sequenceElapsed, slowMotionStart, slowMotionEnd);
         const inertialProgress = 1 - Math.pow(1 - slowProgress, 1.4);
-        const launchProgress = .1 + inertialProgress * .9;
+        const launchHeadStart = Math.max(0, Math.min(.8, Number(inputs.iconSlowMotionStart.value) / 100));
+        const launchProgress = launchHeadStart + inertialProgress * (1 - launchHeadStart);
         const drawCenterX = settledCenterX - requestedWidth * .28 * (1 - launchProgress);
         const drawCenterY = y + offsetY;
         const replacementScale = (.72 + launchProgress * .28) * (1 - smooth(iconExit) * .18);
@@ -1227,8 +1229,9 @@
       canvas.dataset.finalAssetGap = "per-slot";
       canvas.dataset.swapMotion = extras.swapMotion || "idle";
       canvas.dataset.swapTargets = String(extras.swapTargets ?? 0);
-      canvas.dataset.iconRotationMotion = "ten-percent-launch-continuous-slow-right-inertia-angle-fast-return-glyph-close";
+      canvas.dataset.iconRotationMotion = "editable-launch-point-continuous-slow-right-inertia-angle-fast-return-glyph-close";
       canvas.dataset.iconRotationDuration = inputs.iconRotationDuration.value;
+      canvas.dataset.iconSlowMotionStart = inputs.iconSlowMotionStart.value;
       canvas.dataset.iconSlowMotionTurnRatio = ".58";
       canvas.dataset.iconSlowMotionCrossRatio = ".42";
       canvas.dataset.iconSlowMotionFastReturn = "restore-transition";
@@ -1496,6 +1499,7 @@
         Object.keys(finalSlotMap).filter((index) => assets.has(finalSlotMap[index])).length)).enterEnd.toFixed(2)}秒`,
       iconHoldDurationOut: `${inputs.iconHoldDuration.value}ms`,
       iconRotationDurationOut: formatSeconds(Number(inputs.iconRotationDuration.value) / 1000),
+      iconSlowMotionStartOut: `弹出${inputs.iconSlowMotionStart.value}%时`,
       finalRestoreDurationOut: `${inputs.finalRestoreDuration.value}ms`,
       bounceOut: `${inputs.bounce.value}%`,
       staggerOut: `${inputs.stagger.value}%`,
@@ -1515,7 +1519,7 @@
     syncPlaybackControls();
   };
   [inputs.swapInterval, inputs.finalScanSpeed].forEach((input) => input.addEventListener("input", previewFinalSweep));
-  [inputs.iconHoldDuration, inputs.iconRotationDuration, inputs.finalRestoreDuration, inputs.finalDuration, inputs.exitDuration, inputs.finalFontSize, inputs.finalAssetScale, inputs.finalTextGap]
+  [inputs.iconHoldDuration, inputs.iconRotationDuration, inputs.iconSlowMotionStart, inputs.finalRestoreDuration, inputs.finalDuration, inputs.exitDuration, inputs.finalFontSize, inputs.finalAssetScale, inputs.finalTextGap]
     .forEach((input) => input.addEventListener("input", () => setTime(choreographyTiming().collapseEnd + .025)));
   [inputs.wallScale, inputs.wallFontSize, inputs.wallTextGap, inputs.lineGap].forEach((input) => {
     input.addEventListener("input", () => setTime(choreographyTiming().spreadStart + choreographyTiming().duration[1] * .8));
@@ -1583,7 +1587,7 @@
       if (field) controls[id] = field.type === "checkbox" ? field.checked : field.value;
     });
     return {
-      type: "me-vertical-rise", version: 11, controls, selectedAssetId,
+      type: "me-vertical-rise", version: 12, controls, selectedAssetId,
       rowAssetGaps: [...rowAssetGaps], rowAssetGapsAfter: [...rowAssetGapsAfter],
       rowAssetScales: [...rowAssetScales], rowAssetOffsetsX: [...rowAssetOffsetsX],
       rowTextGaps: [...rowTextGaps],
@@ -1647,7 +1651,8 @@
       scheme.controls.iconRotationDuration = "680";
     }
     if (Number(scheme.version) < 11) scheme.controls.finalRestoreDuration = "40";
-    scheme.version = 11;
+    if (Number(scheme.version) < 12) scheme.controls.iconSlowMotionStart = "10";
+    scheme.version = 12;
     return scheme;
   }
 
