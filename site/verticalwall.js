@@ -1,7 +1,9 @@
 (() => {
   "use strict";
 
-  const PREVIEW = new URLSearchParams(location.search).has("preview");
+  const pageParams = new URLSearchParams(location.search);
+  const PREVIEW = pageParams.has("preview");
+  const FROM_GALLERY = pageParams.get("from") === "gallery";
   const $ = (selector) => document.querySelector(selector);
   const canvas = $("#flowCanvas");
   const rowOverviewCanvas = $("#rowOverviewCanvas");
@@ -2048,7 +2050,7 @@
       defaultSchemeSnapshot = fallbackDefaultScheme;
     }
     let storedScheme = null;
-    if (!PREVIEW) {
+    if (!PREVIEW && !FROM_GALLERY) {
       try {
         const storedValue = localStorage.getItem(SCHEME_STORAGE_KEY)
           || LEGACY_SCHEME_STORAGE_KEYS.map((key) => localStorage.getItem(key)).find(Boolean);
@@ -2061,6 +2063,11 @@
       try { localStorage.setItem(SCHEME_STORAGE_KEY, JSON.stringify(collectScheme())); } catch (_) {}
     }
     else applyScheme(cloneScheme(defaultSchemeSnapshot), PREVIEW ? "" : "已载入纵跃默认示例。");
+    if (FROM_GALLERY) {
+      const cleanUrl = new URL(location.href);
+      cleanUrl.searchParams.delete("from");
+      history.replaceState(null, "", `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
+    }
     document.fonts.ready.finally(previewLoop);
   }
 
