@@ -4,7 +4,7 @@ This is the short entry point for continuing ME Motion Studio work in a fresh ch
 
 ## Start without scanning the repository
 
-1. Run `git status --short --branch`, `git fetch origin`, and inspect the current branch divergence before editing. Preserve unrelated or uncommitted work. If the tree is clean, fast-forward local `main` and create a fresh `agent/YYYYMMDD-<slug>` branch; if it is dirty or switching could overwrite work, stop and report the exact state.
+1. Run `git status --short --branch`, `git fetch origin`, and inspect the current branch divergence before editing. Preserve unrelated or uncommitted work. Before replaying or merging a completed task branch, check whether its tip is already an ancestor of `origin/main`; when a squash merge is possible, also compare the scoped files and skip work whose content is already present. If the tree is clean, fast-forward local `main` and create a fresh `agent/YYYYMMDD-<slug>` branch; if it is dirty or switching could overwrite work, stop and report the exact state.
 2. Read only:
    - `AGENTS.md`;
    - `.codex/skills/build-font-animation-effects/SKILL.md`;

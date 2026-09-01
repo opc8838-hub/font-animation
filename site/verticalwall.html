@@ -9,22 +9,57 @@
   <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&amp;f[]=general-sans@400,500,600&amp;f[]=clash-display@500,600&amp;f[]=cabinet-grotesk@500,700&amp;display=swap">
   <link rel="stylesheet" href="continuation.css">
   <link rel="stylesheet" href="currentwall.css">
-  <link rel="stylesheet" href="verticalwall.css">
+  <link rel="stylesheet" href="verticalwall.css?v=20260830-15">
   <link rel="stylesheet" href="me-motion-editor.css">
   <link rel="stylesheet" href="stg-cn.css">
 </head>
 <body class="me-motion-editor">
-  <main class="current-stage vertical-stage" aria-label="纵向弹墙动效画布">
+  <main class="current-stage vertical-stage" id="currentStage" aria-label="纵向弹墙动效画布">
     <canvas id="flowCanvas"></canvas>
-    <div class="canvas-mark" aria-hidden="true"><span id="frameCounter">F 0000</span><span>30 FPS</span></div>
+    <span id="frameCounter" hidden>F 0000</span>
+    <div class="vertical-stage-controls me-stage-controls" aria-label="画布播放控制">
+      <button id="stagePauseButton" type="button" aria-pressed="false"><span id="stagePauseIcon">Ⅱ</span><span id="stagePauseLabel">暂停</span></button>
+      <button id="stageRestartButton" type="button">↻ 重播</button>
+    </div>
   </main>
 
   <details class="control-panel current-panel vertical-panel" id="controlPanel" open>
     <summary>
-      <span><b>纵跃</b><small>VERTICAL RISE / 26</small></span>
+      <span><b>纵跃</b><small>VERTICAL RISE / 57</small></span>
       <i aria-hidden="true">参数</i>
     </summary>
     <div class="panel-scroll">
+      <section class="canvas-size-section">
+        <div class="section-heading">
+          <p class="section-label">画板尺寸</p>
+          <small class="section-note" id="canvasSizeReadout">实时预览与导出一致</small>
+        </div>
+        <select id="exportPreset">
+          <option value="1920x1080" selected>16:9 · 1920 × 1080</option>
+          <option value="1080x1920">9:16 · 1080 × 1920</option>
+          <option value="1080x1080">1:1 · 1080 × 1080</option>
+          <option value="1080x1350">4:5 · 1080 × 1350</option>
+          <option value="custom">自定义尺寸</option>
+        </select>
+        <div class="custom-size" id="customSize" hidden>
+          <label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label>
+          <span>×</span>
+          <label>高<input id="exportHeight" type="number" min="240" max="3840" value="1080"></label>
+        </div>
+        <p class="hint">选择比例后，右侧画布立即按该尺寸缩放；预览和导出共用同一构图。</p>
+      </section>
+
+      <section class="scheme-section">
+        <p class="section-label">方案</p>
+        <div class="scheme-actions me-scheme-actions">
+          <button id="saveScheme" type="button">保存方案</button>
+          <label class="scheme-import me-scheme-import">导入方案<input id="importScheme" type="file" accept="application/json,.json"></label>
+          <button id="resetScheme" type="button">恢复默认</button>
+          <button id="clearScheme" type="button">清理重做</button>
+        </div>
+        <p class="hint" id="schemeStatus" aria-live="polite">文字、逐行间距、图标与节奏都会随方案保存。</p>
+      </section>
+
       <section>
         <label class="section-label" for="rowsInput">铺满文字 · 每行一个版本</label>
         <textarea id="rowsInput" rows="11" spellcheck="false">{{watch}}eveling up
@@ -37,22 +72,45 @@ level{{cloud}}ng up
 leveli{{music}}g up
 levelin{{play}} up
 leveling {{play}}p
-leveling u{{watch}}</textarea>
+        leveling u{{watch}}</textarea>
+        <div class="color-row text-color-row">
+          <label>背景<input id="backgroundColor" type="color" value="#f7f6f2"></label>
+          <label>文字<input id="textColor" type="color" value="#090909"></label>
+        </div>
         <p class="hint">每个换行只生成一排，不会自动复制相同排。把素材标记插在任意字位，例如 level{{music}}ing up；支持中文、图片和图标。</p>
+        <button class="vertical-row-overview-open" id="openRowOverview" type="button">编辑满屏排版</button>
       </section>
 
       <section class="scene-grid vertical-scene-grid">
         <label>动效模式
           <select id="motionMode">
-            <option value="choreography" selected>参考视频编排</option>
+            <option value="choreography" selected>完整纵跃</option>
             <option value="continuous">持续纵向循环</option>
           </select>
         </label>
         <label>开场主词
-          <input id="introWord" type="text" value="motivation" spellcheck="false">
+          <input id="introWord" type="text" value="leveling up" spellcheck="false">
         </label>
-        <label>收尾一行
-          <input id="nextWord" type="text" value="togetherness" spellcheck="false">
+        <div class="intro-asset-setup">
+          <div class="intro-asset-heading">
+            <span><strong>开头图标</strong><small id="introAssetSummary">尚未添加</small></span>
+            <button id="chooseIntroAsset" type="button">选择图标并插入</button>
+          </div>
+          <div class="intro-asset-list" id="introAssetList" aria-live="polite"></div>
+          <div class="intro-asset-controls">
+            <label>开头图标大小 <output id="assetScaleOut">92%</output>
+              <input id="assetScale" type="range" min="45" max="180" value="92">
+            </label>
+            <label>开头字图间距 <output id="introAssetGapOut">0px</output>
+              <input id="introAssetGap" type="range" min="0" max="80" value="0">
+            </label>
+          </div>
+        </div>
+        <label>开场跳跃节奏 <output id="introDurationOut">0.30秒</output>
+          <input id="introDuration" type="range" min="100" max="1600" step="20" value="300">
+        </label>
+        <label class="final-line-field">收尾一行
+          <input id="nextWord" type="text" value="leveling up" spellcheck="false">
         </label>
         <label>收回方向
           <select id="collapseDirection">
@@ -61,77 +119,82 @@ leveling u{{watch}}</textarea>
             <option value="down">整体向下退出</option>
           </select>
         </label>
-        <p class="hint">开场主词会快速切到第一行，再从中心向上下弹出并铺满。满屏退场后只保留“收尾一行”。</p>
+        <div class="final-slot-editor" id="finalSlotEditor" aria-label="收尾字符图标映射"></div>
+        <div class="final-slot-picker">
+          <img id="finalSlotAssetPreview" alt="当前准备添加的图标">
+          <label><span>给选中的字选择图标或表情</span>
+            <select id="finalSlotAssetSelect" aria-label="给选中的字选择图标或表情"></select>
+          </label>
+        </div>
+        <div class="final-slot-actions">
+          <p id="finalSlotStatus">先点击一个字符，再从下方素材库选择图标。</p>
+          <button id="assignFinalAsset" type="button">添加/替换图标</button>
+          <button id="removeFinalAsset" type="button">删除图标，恢复文字</button>
+        </div>
+        <div class="final-slot-tuner is-disabled" id="finalSlotTuner">
+          <strong id="finalSlotTunerTitle">收尾图标角度与排版</strong>
+          <p class="final-slot-tuner-state" id="finalSlotTunerState">请先点击上方一个已经显示图标的字位。</p>
+          <div class="controls-grid quick-grid">
+            <label>这个图标大小 <output id="finalSlotScaleOut">100%</output><input id="finalSlotScale" type="range" min="40" max="240" step="5" value="100"></label>
+            <label>与左侧文字间距 <output id="finalSlotGapBeforeOut">0</output><input id="finalSlotGapBefore" type="range" min="-40" max="120" step="1" value="0"></label>
+            <label>与右侧文字间距 <output id="finalSlotGapAfterOut">0</output><input id="finalSlotGapAfter" type="range" min="-40" max="120" step="1" value="0"></label>
+            <label>水平位置 <output id="finalSlotOffsetXOut">0</output><input id="finalSlotOffsetX" type="range" min="-120" max="120" step="1" value="0"></label>
+            <label>垂直位置 <output id="finalSlotOffsetYOut">0</output><input id="finalSlotOffsetY" type="range" min="-120" max="120" step="1" value="0"></label>
+            <label>平面旋转角度 <output id="finalSlotRotationOut">0°</output><input id="finalSlotRotation" type="range" min="-360" max="360" step="1" value="0"></label>
+          </div>
+          <p class="hint">图标先保持 0° 快速向右弹出并放大；弹出完成后锁定位置，再慢动作左右旋转，最后瞬间回字收拢。</p>
+        </div>
+        <p class="hint">收尾完全复用水流的扫变：从左到右把指定字母换成图标，短暂停留，再从左到右恢复字母。</p>
       </section>
 
-      <section>
-        <label class="section-label" for="finalStates">收尾图标变化 · 每行一个连续状态</label>
-        <textarea id="finalStates" rows="5" spellcheck="false">toge{{animal01}}herness
-toge{{animal01}}hern{{animal08}}ss
-t{{music}}ge{{animal01}}hern{{animal08}}ss
-t{{music}}ge{{animal01}}hern{{animal08}}s{{cloud}}</textarea>
-        <p class="hint">第一行从“收尾一行”开始，随后按这里的顺序切换。每行可在任意字位插入内置图标、透明动物或上传图片。</p>
-      </section>
-
-      <section class="asset-section">
+      <section class="asset-section me-layer-panel" id="assetManager">
+        <div class="asset-manager-title">
+          <span><strong>已选图片与图标</strong><small><b id="selectedAssetCount">0</b> 项 · 展开后逐项编辑</small></span>
+          <button id="toggleAssetManager" class="me-layer-toggle" type="button" aria-expanded="false">展开已选</button>
+        </div>
         <div class="section-heading">
-          <p class="section-label">图片 / 图标字位</p>
+          <p class="section-label">图片与图标</p>
           <label class="upload-button">添加图片<input id="assetUpload" type="file" accept="image/*" multiple></label>
         </div>
         <label class="asset-background-toggle"><input id="assetRemoveBackground" type="checkbox" checked> 上传时自动去背景并裁掉透明空白</label>
-        <p class="asset-process-status" id="assetProcessStatus" aria-live="polite">内置透明动物可直接使用；上传图片在浏览器本地高清处理。</p>
-        <div class="asset-grid" id="assetGrid"></div>
-        <div class="asset-tuner" id="assetTuner">
-          <div class="asset-tuner-head"><span>当前素材精调</span><b id="selectedAssetName">音乐</b></div>
+        <p class="asset-process-status" id="assetProcessStatus" aria-live="polite">包含完整表情、透明动物、Bot 和 GIF 动图库。</p>
+        <div class="asset-insert-target" aria-label="选择图标插入位置">
+          <span>插入位置</span>
+          <button class="is-active" data-token-target="rows" type="button">满屏主行</button>
+          <button data-token-target="intro" type="button">开头主词</button>
+        </div>
+        <div class="asset-selected-summary me-asset-selected-summary">
+          <div class="asset-selected-copy"><img id="selectedAssetPreview" alt=""><span><small>当前选择</small><b id="selectedAssetName">音乐</b></span></div>
+          <button id="insertSelectedAsset" class="me-asset-commit" type="button">插入到光标</button>
+        </div>
+        <details class="asset-library-panel">
+          <summary><strong>＋ 添加内置图标与图片</strong><span>点击只选择，不会直接添加</span></summary>
+          <div class="asset-grid me-asset-library" id="assetGrid"></div>
+        </details>
+        <div class="selected-asset-list me-layer-items" id="selectedAssetList" aria-live="polite"></div>
+        <p class="hint">先选择素材并完成编辑，再点“插入到光标”。添加素材不会自动展开已选列表。</p>
+      </section>
+
+      <aside class="asset-editor-drawer me-asset-drawer" id="assetEditorDrawer" aria-label="当前素材编辑面板" hidden>
+        <div class="asset-tuner me-asset-editor" id="assetTuner">
+          <div class="asset-drawer-heading"><span>正在单独编辑</span><button id="closeAssetEditor" type="button">关闭</button></div>
+          <div class="asset-tuner-head"><span>当前素材</span><b id="currentAssetEditorName">大小、位置与间距</b></div>
           <div class="asset-tuner-grid">
-            <label>大小 <output id="assetItemScaleOut">100%</output>
-              <input id="assetItemScale" type="range" min="40" max="200" value="100">
-            </label>
-            <label>左右 <output id="assetOffsetXOut">0%</output>
-              <input id="assetOffsetX" type="range" min="-60" max="60" value="0">
-            </label>
-            <label>上下 <output id="assetOffsetYOut">0%</output>
-              <input id="assetOffsetY" type="range" min="-60" max="60" value="0">
-            </label>
-            <label>立体仰角 <output id="assetPitchOut">0°</output>
-              <input id="assetPitch" type="range" min="-50" max="50" value="0">
-            </label>
+            <label>大小 <output id="assetItemScaleOut">100%</output><input id="assetItemScale" type="range" min="40" max="200" value="100"></label>
+            <label>左右 <output id="assetOffsetXOut">0%</output><input id="assetOffsetX" type="range" min="-60" max="60" value="0"></label>
+            <label>上下 <output id="assetOffsetYOut">0%</output><input id="assetOffsetY" type="range" min="-60" max="60" value="0"></label>
+            <label>与前文字间距 <output id="assetGapBeforeOut">0</output><input id="assetGapBefore" type="range" min="-20" max="100" value="0"></label>
+            <label>与后文字间距 <output id="assetGapAfterOut">0</output><input id="assetGapAfter" type="range" min="-20" max="100" value="0"></label>
           </div>
         </div>
-        <p class="hint">先把光标放进文字框，再点击素材插入。上传的 PNG、JPG、WEBP、SVG 可重复出现在任意行和任意字位。</p>
-      </section>
+      </aside>
 
       <section class="font-picker">
         <label class="section-label" for="fontFamily">字体</label>
         <select id="fontFamily">
-          <optgroup label="Snap 动效字体">
-            <option value="snap-inter-medium" selected>Inter Medium</option>
-            <option value="snap-inter-black">Inter Black</option>
-            <option value="snap-ibm-plex">IBM Plex Mono Bold Italic</option>
-            <option value="snap-space-mono">Space Mono Bold</option>
-            <option value="snap-space-grotesk">Space Grotesk Bold</option>
-          </optgroup>
-          <optgroup label="Free Faces · OFL">
-            <option value="ff-space-grotesk">Space Grotesk</option>
-            <option value="ff-martian-mono">Martian Mono</option>
-            <option value="ff-oi">Oi Display</option>
-            <option value="ff-barriecito">Barriecito</option>
-          </optgroup>
-          <optgroup label="UNCUT · OFL">
-            <option value="uncut-berlin">Berlin Grotesk</option>
-            <option value="uncut-berlin-bold">Berlin Grotesk Bold</option>
-          </optgroup>
-          <optgroup label="Fontshare · 官方 API">
-            <option value="fs-satoshi">Satoshi</option>
-            <option value="fs-general-sans">General Sans</option>
-            <option value="fs-clash-display">Clash Display</option>
-            <option value="fs-cabinet">Cabinet Grotesk</option>
-          </optgroup>
-          <optgroup label="中文字体">
-            <option value="cn-noto-regular">Noto Sans SC</option>
-            <option value="cn-noto-black">Noto Sans SC Black</option>
-          </optgroup>
+          <option value="stg:inter" selected>Inter</option>
         </select>
+        <p class="hint">统一字体库包含拉丁、中文、日文与韩文字体；预览和导出使用同一字体。</p>
       </section>
 
       <section class="motion-quick">
@@ -140,21 +203,15 @@ t{{music}}ge{{animal01}}hern{{animal08}}s{{cloud}}</textarea>
           <small class="section-note">开场 / 满屏 / 收尾独立</small>
         </div>
         <div class="motion-map vertical-motion-map" aria-label="动效阶段">
-          <span>开场单行</span><i>→</i><span>新行弹出</span><i>→</i><span>铺满屏幕</span><i>→</i><span>满屏退场</span><i>→</i><span>单行缩小</span><i>→</i><span>图标依次切换</span>
+          <span>中心跳出</span><i>→</i><span>连续弹满</span><i>→</i><span>立即收束</span><i>→</i><span>字母图标扫变</span><i>→</i><span>快速消失</span>
         </div>
         <div class="controls-grid quick-grid">
           <div class="stage-control-heading"><b>01 开场单行</b><span>文字与图标独立排版</span></div>
           <label>开场文字大小 <small class="stage-tag">开场单行</small><output id="fontSizeOut">76px</output>
             <input id="fontSize" type="range" min="24" max="160" value="76">
           </label>
-          <label>开场图标大小 <small class="stage-tag">开场单行</small><output id="assetScaleOut">92%</output>
-            <input id="assetScale" type="range" min="45" max="180" value="92">
-          </label>
           <label>开场文字间距 <small class="stage-tag">开场单行</small><output id="itemGapOut">0px</output>
             <input id="itemGap" type="range" min="-8" max="40" value="0">
-          </label>
-          <label>开场字图间距 <small class="stage-tag">开场单行</small><output id="introAssetGapOut">0px</output>
-            <input id="introAssetGap" type="range" min="0" max="80" value="0">
           </label>
           <div class="stage-control-heading"><b>02 满屏铺开</b><span>只影响周围铺满的各行</span></div>
           <label>铺满行数 <small class="stage-tag">画面</small><output id="rowCountOut">11</output>
@@ -163,14 +220,8 @@ t{{music}}ge{{animal01}}hern{{animal08}}s{{cloud}}</textarea>
           <label>满屏文字大小 <small class="stage-tag">铺满阶段</small><output id="wallFontSizeOut">85px</output>
             <input id="wallFontSize" type="range" min="18" max="160" value="85">
           </label>
-          <label>满屏图标大小 <small class="stage-tag">铺满阶段</small><output id="wallAssetScaleOut">92%</output>
-            <input id="wallAssetScale" type="range" min="35" max="220" value="92">
-          </label>
           <label>满屏文字间距 <small class="stage-tag">铺满阶段</small><output id="wallTextGapOut">0px</output>
             <input id="wallTextGap" type="range" min="-12" max="60" value="0">
-          </label>
-          <label>满屏字图间距 <small class="stage-tag">铺满阶段</small><output id="wallAssetGapOut">0px</output>
-            <input id="wallAssetGap" type="range" min="0" max="80" value="0">
           </label>
           <label>满屏行距 <small class="stage-tag">铺满阶段</small><output id="lineGapOut">-8px</output>
             <input id="lineGap" type="range" min="-35" max="100" value="-8">
@@ -189,71 +240,61 @@ t{{music}}ge{{animal01}}hern{{animal08}}s{{cloud}}</textarea>
             <input id="finalTextGap" type="range" min="-12" max="60" value="0">
           </label>
           <div class="stage-control-heading"><b>04 时间与替换</b><span>控制节奏和局部图标切换</span></div>
-          <label>开场停留 <small class="stage-tag">阶段 1</small><output id="introDurationOut">0.30秒</output>
-            <input id="introDuration" type="range" min="100" max="2000" step="50" value="300">
-          </label>
-          <label>新行弹出 <small class="stage-tag">阶段 2</small><output id="singleDurationOut">0.12秒</output>
-            <input id="singleDuration" type="range" min="80" max="1200" step="20" value="120">
-          </label>
-          <label>弹满屏用时 <small class="stage-tag">阶段 3</small><output id="spreadDurationOut">0.36秒</output>
+          <label>连续弹满用时 <small class="stage-tag">阶段 2</small><output id="spreadDurationOut">0.36秒</output>
             <input id="spreadDuration" type="range" min="80" max="2000" step="20" value="360">
           </label>
-          <label>满屏停留 <small class="stage-tag">阶段 4</small><output id="holdDurationOut">0.15秒</output>
-            <input id="holdDuration" type="range" min="0" max="8000" step="50" value="150">
-          </label>
-          <label>满屏退场 <small class="stage-tag">阶段 5</small><output id="collapseDurationOut">0.30秒</output>
+          <label>满屏立即收束 <small class="stage-tag">阶段 3</small><output id="collapseDurationOut">0.30秒</output>
             <input id="collapseDuration" type="range" min="150" max="4000" step="50" value="300">
           </label>
-          <label>收尾总时长 <small class="stage-tag">阶段 6</small><output id="finalDurationOut">2.4秒</output>
-            <input id="finalDuration" type="range" min="600" max="12000" step="100" value="2400">
+          <label>扫入每个字的间隔 <small class="stage-tag">图标依次弹出</small><output id="swapIntervalOut">0.08秒</output>
+            <input id="swapInterval" type="range" min="60" max="1200" step="20" value="80">
           </label>
-          <label>收尾缩小 <small class="stage-tag">阶段 6</small><output id="finalShrinkOut">28%</output>
-            <input id="finalShrink" type="range" min="0" max="55" value="28">
+          <label>收尾扫图标总速度 <small class="stage-tag">弹出、慢转、回字整段联动</small><output id="finalScanSpeedOut">4.0× · 整段1.04秒</output>
+            <input id="finalScanSpeed" type="range" min="0.5" max="24" step="0.5" value="4">
           </label>
-          <label>图标出现方式 <small class="stage-tag">收尾替换</small>
-            <select id="swapAppearanceMode">
-              <option value="simultaneous" selected>几乎同时出现</option>
-              <option value="sequential">按状态逐个出现</option>
-            </select>
+          <label>收尾图标停留时间 <small class="stage-tag">全部扫入后</small><output id="iconHoldDurationOut">160ms</output>
+            <input id="iconHoldDuration" type="range" min="40" max="1200" step="20" value="160">
           </label>
-          <label>同时出现错开 <small class="stage-tag">同时模式</small><output id="swapStaggerOut">18ms</output>
-            <input id="swapStagger" type="range" min="0" max="120" step="2" value="18">
+          <label>图标旋转慢动作时长 <small class="stage-tag">原地慢转后瞬间回字</small><output id="iconRotationDurationOut">0.68秒</output>
+            <input id="iconRotationDuration" type="range" min="200" max="2400" step="20" value="680">
           </label>
-          <label>逐个模式停留 <small class="stage-tag">只用于逐个</small><output id="finalSwapIntervalOut">260ms</output>
-            <input id="finalSwapInterval" type="range" min="60" max="1200" step="20" value="260">
+          <label>快速弹出用时 <small class="stage-tag">弹完后再慢转</small><output id="iconSlowMotionStartOut">80ms</output>
+            <input id="iconSlowMotionStart" type="range" min="20" max="240" step="10" value="80">
           </label>
-          <label>局部震动幅度 <small class="stage-tag">目标字位</small><output id="swapShakeStrengthOut">6%</output>
-            <input id="swapShakeStrength" type="range" min="0" max="18" value="6">
+          <label>回字收拢用时 <small class="stage-tag">回正、换字、收缩同步</small><output id="finalRestoreDurationOut">20ms</output>
+            <input id="finalRestoreDuration" type="range" min="20" max="600" step="10" value="20">
           </label>
-          <label>局部震动时长 <small class="stage-tag">目标字位</small><output id="swapShakeDurationOut">90ms</output>
-            <input id="swapShakeDuration" type="range" min="30" max="300" step="10" value="90">
+          <label>从左到右回字间隔 <small class="stage-tag">每个字依次恢复</small><output id="finalRestoreStepOut">140ms</output>
+            <input id="finalRestoreStep" type="range" min="20" max="600" step="10" value="140">
           </label>
-          <label>单次替换速度 <small class="stage-tag">图标弹出</small><output id="swapTransitionDurationOut">140ms</output>
-            <input id="swapTransitionDuration" type="range" min="60" max="500" step="10" value="140">
+          <label>收尾整句停留时间 <small class="stage-tag">0 即回字后马上消失</small><output id="finalDurationOut">0.00秒</output>
+            <input id="finalDuration" type="range" min="0" max="8000" step="20" value="0">
           </label>
-          <label>收尾字图间距 <small class="stage-tag">最终一行</small><output id="swapBreathingOut">14px</output>
-            <input id="swapBreathing" type="range" min="0" max="80" step="1" value="14">
-          </label>
-          <label>图标弹出摆角 <small class="stage-tag">上下左右</small><output id="swapAngleOut">36°</output>
-            <input id="swapAngle" type="range" min="0" max="65" value="36">
+          <label>最后快速消失 <small class="stage-tag">阶段 6</small><output id="exitDurationOut">0.12秒</output>
+            <input id="exitDuration" type="range" min="60" max="800" step="20" value="120">
           </label>
         </div>
-        <p class="hint">“几乎同时出现”会直接读取收尾状态列表的最后一行，让全部目标字位在同一动作内震动、让位和弹出；错开设为 0ms 就是完全同时。“按状态逐个出现”保留原来的逐行变化方式。</p>
+        <p class="hint">中心词从画布中心略下方压缩起跳，向观看者跃出并回稳，途中连续带动各行弹满；收尾保持水流逐字扫变，图标在原位完成正向、转角和回正。</p>
+      </section>
+
+      <section class="timeline-section">
+        <div class="section-heading"><p class="section-label">动效时间轴</p><small class="section-note">点一段可跳到该阶段</small></div>
+        <div class="flow-timeline me-choreo-track" id="flowTimeline" aria-label="纵跃动效时间轴">
+          <div class="me-choreo-scroll"><div class="flow-timeline-track me-choreo-bar" id="flowTimelineTrack"></div></div>
+          <ol class="flow-timeline-list me-choreo-legend" id="flowTimelineList"></ol>
+        </div>
       </section>
 
       <details class="advanced-controls motion-advanced">
         <summary><span>高级动效参数</span><small>精调时打开</small></summary>
         <div class="advanced-body">
-          <p class="hint advanced-hint">默认值按参考视频设置。需要更强的弹性、边缘层次或纵向漂移时再调整。</p>
+          <p class="hint advanced-hint">默认值按纵跃节奏设置。需要更强的弹性、边缘层次或纵向漂移时再调整。</p>
           <section class="controls-grid">
             <label>逐行弹性 <output id="bounceOut">22%</output>
               <input id="bounce" type="range" min="0" max="100" value="22">
             </label>
             <label>逐行错开 <output id="staggerOut">68%</output>
               <input id="stagger" type="range" min="0" max="100" value="68">
-            </label>
-            <label>边缘灰度 <output id="edgeFadeOut">58%</output>
-              <input id="edgeFade" type="range" min="0" max="100" value="58">
             </label>
             <label>满屏纵向漂移 <output id="verticalDriftOut">-8</output>
               <input id="verticalDrift" type="range" min="-120" max="120" value="-8">
@@ -269,11 +310,6 @@ t{{music}}ge{{animal01}}hern{{animal08}}s{{cloud}}</textarea>
         </div>
       </details>
 
-      <section class="color-row">
-        <label>背景<input id="backgroundColor" type="color" value="#f7f6f2"></label>
-        <label>文字<input id="textColor" type="color" value="#090909"></label>
-      </section>
-
       <section class="transport" aria-label="时间轴控制">
         <button id="restartButton" type="button">重播</button>
         <button id="pauseButton" type="button">暂停</button>
@@ -282,35 +318,67 @@ t{{music}}ge{{animal01}}hern{{animal08}}s{{cloud}}</textarea>
       </section>
 
       <section class="export-panel">
-        <label class="section-label" for="exportPreset">导出尺寸</label>
-        <select id="exportPreset">
-          <option value="current">当前画板</option>
-          <option value="1080x1080">1:1 · 1080 × 1080</option>
-          <option value="1080x1350">4:5 · 1080 × 1350</option>
-          <option value="1080x1920">9:16 · 1080 × 1920</option>
-          <option value="1920x1080">16:9 · 1920 × 1080</option>
-          <option value="1200x628">横幅 · 1200 × 628</option>
-          <option value="custom">自定义尺寸</option>
-        </select>
-        <div class="custom-size" id="customSize" hidden>
-          <label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label>
-          <span>×</span>
-          <label>高<input id="exportHeight" type="number" min="240" max="3840" value="1920"></label>
+        <p class="section-label">导出</p>
+        <div class="export-options">
+          <label>导出时长
+            <select id="exportDuration"><option value="cycle" selected>完整一轮</option><option value="3">3 秒</option><option value="5">5 秒</option><option value="custom">自定义</option></select>
+          </label>
+          <label>帧率
+            <select id="exportFps"><option value="15">15 FPS</option><option value="24">24 FPS</option><option value="30" selected>30 FPS</option><option value="60">60 FPS</option></select>
+          </label>
         </div>
+        <label class="custom-duration" id="customDurationWrap" hidden>自定义秒数<input id="customDuration" type="number" min="0.5" max="30" step="0.1" value="4"></label>
         <div class="export-actions">
           <button id="exportPng" type="button">PNG 图片</button>
           <button id="exportGif" type="button">GIF 动图</button>
           <button id="exportVideo" type="button">视频</button>
         </div>
-        <p class="export-status" id="exportStatus" aria-live="polite">PNG 导出当前帧；GIF / 视频导出一遍完整编排。</p>
+        <p class="export-status" id="exportStatus" aria-live="polite">PNG、GIF、MP4 与实时画布使用同一条确定性时间轴。</p>
       </section>
       <p class="formula">纵向字墙：中心行 + 距离顺序 × 逐行延迟<br>行位置 = 中心 + 纵向相位 + 线性漂移</p>
     </div>
   </details>
 
+  <aside class="vertical-row-overview" id="rowOverviewPanel" role="dialog" aria-modal="false" aria-labelledby="rowOverviewTitle" hidden>
+    <header>
+      <div><strong id="rowOverviewTitle">主行图标编辑</strong><small id="rowOverviewStatus">11 行</small></div>
+      <button id="closeRowOverview" type="button" aria-label="关闭满屏排版编辑">×</button>
+    </header>
+    <div class="vertical-row-overview-body">
+      <section class="vertical-row-parameter-pane" aria-label="主行图标参数">
+        <div class="vertical-row-global-controls">
+          <div>
+            <strong>全局对齐</strong>
+            <span>先统一，再逐行微调</span>
+          </div>
+          <div class="vertical-row-global-grid">
+            <label><b>全部图标大小</b><input id="globalRowAssetScale" type="range" min="35" max="220" step="1" value="92"><output id="globalRowAssetScaleOut">92%</output></label>
+            <label><b>全部左右位置</b><input id="globalRowAssetOffsetX" type="range" min="-120" max="120" step="1" value="0"><output id="globalRowAssetOffsetXOut">0px</output></label>
+          </div>
+        </div>
+        <div class="vertical-row-list-scroll">
+          <div class="vertical-row-overview-heading">
+            <strong>逐行微调</strong>
+            <span id="rowSettingsCount">11 行 · 图标与整行左右字距独立微调</span>
+          </div>
+          <div class="vertical-row-gap-list" id="rowGapList" aria-label="每行左侧文字、图标、右侧文字及独立排版参数"></div>
+        </div>
+      </section>
+      <section class="vertical-row-preview-pane" aria-label="满屏排版预览">
+        <div class="vertical-row-overview-stage">
+          <canvas id="rowOverviewCanvas" width="720" height="720" aria-label="全部输入行的图标、位置与大小预览"></canvas>
+        </div>
+        <p>每行文字从同一条竖线开始，保持整列端正。图标和右侧文字可逐行微调并立即更新。</p>
+      </section>
+    </div>
+  </aside>
+
   <script src="js/continuation-gif.js"></script>
+  <script src="js/h264-mp4-encoder.web.js"></script>
   <script src="token-asset-tools.js"></script>
-  <script src="verticalwall.js?v=20260824-fonts1"></script>
+  <script src="shared-icon-library.js?v=20260830-3"></script>
+  <script src="shared-font-library.js?v=20260824-2"></script>
+  <script src="verticalwall.js?v=20260901-57"></script>
   <script src="me-motion-editor.js"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
 </body>

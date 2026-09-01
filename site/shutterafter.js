@@ -12,8 +12,8 @@
   const exportStatus = $("#exportStatus");
   const schemeStatus = $("#schemeStatus");
   const fps = 30;
-  const SAVE_KEY = "me-shutterafter-preset-v14";
-  const DEFAULT_PRESET_URL = "assets/presets/shutterafter-default.json?v=20260827-user3";
+  const SAVE_KEY = "me-shutterafter-preset-v15";
+  const DEFAULT_PRESET_URL = "assets/presets/shutterafter-default.json?v=20260827-apple1";
   const LAYOUT_REF_W = 390;
   const MIN_PAIRS = 3;
 
@@ -57,7 +57,18 @@
     const x = clamp01(t);
     return x * x * (3 - 2 * x);
   };
+  const easeOutInertia = (t) => {
+    const x = clamp01(t);
+    return 1 - Math.exp(-5.6 * x) * Math.cos(Math.PI * 1.32 * x);
+  };
+  const appleSpin = (t) => {
+    const x = clamp01(t);
+    if (x < 0.42) return 0.058 * (1 - Math.pow(1 - x / 0.42, 3));
+    if (x < 0.74) return lerp(0.058, -0.016, easeInOutCubic((x - 0.42) / 0.32));
+    return lerp(-0.016, 0, easeOutCubic((x - 0.74) / 0.26));
+  };
   const scrollEase = (t, style) => {
+    if (style === "apple") return easeOutInertia(t);
     if (style === "spring") return easeOutBack(t);
     if (style === "snap") return easeOutCubic(t);
     if (style === "drift") return smoothstep(t);
@@ -188,7 +199,7 @@
       shutterLook: ["glass", "ring", "camera", "raised", "flat"].includes(inputs.shutterLook?.value) ? inputs.shutterLook.value : "glass",
       flashStyle: ["soft", "lift", "glow", "fade", "blowout"].includes(inputs.flashStyle?.value) ? inputs.flashStyle.value : "soft",
       wipeStyle: ["fade", "wipe", "ltr", "rtl", "snap"].includes(inputs.wipeStyle?.value) ? inputs.wipeStyle.value : "fade",
-      scrollStyle: ["slide", "drift", "spring", "fade", "snap"].includes(inputs.scrollStyle?.value) ? inputs.scrollStyle.value : "slide",
+      scrollStyle: ["apple", "slide", "drift", "spring", "fade", "snap"].includes(inputs.scrollStyle?.value) ? inputs.scrollStyle.value : "apple",
       stageBg: colorValue("stageBg", "#ffffff"),
       shutterColor: colorValue("shutterColor", "#ffffff"),
       beforeHold: Number(inputs.beforeHold.value) / 1000,
@@ -244,8 +255,9 @@
       if (index < count - 1) {
         const scrollEnd = t + options.scrollDuration;
         if (clock < scrollEnd) {
-          const p = scrollEase((clock - t) / Math.max(0.001, options.scrollDuration), options.scrollStyle);
-          return { index, phase: "scroll", local: p, position: index + p, reveal: 1, shutter: 1 };
+          const raw = (clock - t) / Math.max(0.001, options.scrollDuration);
+          const p = scrollEase(raw, options.scrollStyle);
+          return { index, phase: "scroll", local: p, position: index + p, reveal: 1, shutter: 1, scrollT: raw };
         }
         t = scrollEnd;
       }
@@ -383,15 +395,18 @@
     return board;
   }
 
-  function peekPose(offset, cardW, gap, sideTilt, sideLift, sideShift) {
+  function peekPose(offset, cardW, gap, sideTilt, sideLift, sideShift, feel) {
     const slot = Math.max(-1.4, Math.min(1.4, offset));
     const dist = Math.min(1, Math.abs(slot));
     const dir = slot === 0 ? 0 : Math.sign(slot);
+    const apple = feel === "apple";
+    const yaw = slot * (apple ? sideTilt * 1.18 + 0.03 : sideTilt);
     return {
-      x: slot * (cardW + gap) + dir * dist * sideShift,
+      x: slot * (cardW + gap) * (apple ? 0.98 : 1) + dir * dist * sideShift,
       y: dist * sideLift,
       scale: 1,
-      rotZ: slot * sideTilt
+      scaleX: apple ? Math.max(0.9, Math.cos(yaw * 1.04)) : 1,
+      rotZ: yaw
     };
   }
 
@@ -524,6 +539,7 @@
     const shutterR = Math.max(8, Math.min(w, h) * options.shutterSize);
     const shutterY = y + cardH + options.shutterOffset * sy;
 
+    const feel = options.scrollStyle || "apple";
     const items = [base - 1, base, base + 1];
     if (state.position - base > 0.02) items.push(base + 2);
     items.sort((a, b) => Math.abs(b - state.position) - Math.abs(a - state.position));
@@ -534,27 +550,29 @@
 
     items.forEach((rawIndex) => {
       const offset = rawIndex - state.position;
-      if (Math.abs(offset) > 1.1) return;
+      if (Math.abs(offset) > 1.18) return;
       const pair = pairs[wrap(rawIndex)];
       const reveal = cardReveal(Math.round(rawIndex), state);
-      const pose = peekPose(offset, cardW, gap, options.sideTilt || 0, (options.sideLift || 0) * sy, (options.sideShift || 0) * sx);
+      const pose = peekPose(offset, cardW, gap, options.sideTilt || 0, (options.sideLift || 0) * sy, (options.sideShift || 0) * sx, feel);
       const travel = Math.abs(offset - Math.round(offset));
-      const feel = options.scrollStyle || "slide";
-      const slideScale = feel === "spring" ? 1 + 0.07 * Math.sin(travel * Math.PI)
+      const slideScale = feel === "apple" ? 1 + 0.008 * Math.sin(travel * Math.PI)
+        : feel === "spring" ? 1 + 0.07 * Math.sin(travel * Math.PI)
         : feel === "drift" ? 1 + 0.02 * Math.sin(travel * Math.PI)
         : feel === "snap" ? 1
         : 1 + 0.035 * Math.sin(travel * Math.PI);
-      const edgeCut = Math.abs(offset) <= 1 ? 1 : clamp01(1 - (Math.abs(offset) - 1) / 0.08);
+      const edgeCut = Math.abs(offset) <= 1 ? 1 : clamp01(1 - (Math.abs(offset) - 1) / 0.12);
       const slideAlpha = (feel === "fade" ? 1 - 0.38 * travel : 1) * edgeCut;
       const drawW = cardW * pose.scale * slideScale;
       const drawH = cardH * pose.scale * slideScale;
       const cx = w / 2 + pose.x;
+      const extraSpin = feel === "apple" && state.phase === "scroll" ? appleSpin(state.scrollT || 0) : 0;
       context.save();
       context.imageSmoothingEnabled = true;
       context.imageSmoothingQuality = "high";
       context.globalAlpha = slideAlpha;
       context.translate(cx, cy + pose.y);
-      context.rotate(pose.rotZ);
+      context.rotate(pose.rotZ + extraSpin);
+      context.scale(pose.scaleX || 1, 1);
       const isHero = state.phase !== "scroll" && Math.abs(offset) < 0.42;
       if (isHero) {
         context.save();

@@ -48,7 +48,7 @@ A 9:16 card carousel holds an original photo in the center with Before on top; t
 - Overlaps: pop runs over the first Before hold
 - Holds with residual motion: none after settle
 - Hard cuts: none; shutter uses a short dim, wipe is clipped reveal
-- Easing/spring hypotheses: scroll ease-in-out cubic; pop ease-out then settle; wipe ease-in-out
+- Easing/spring hypotheses: default carousel is Apple-like inertia (light right yaw, ~3% overshoot, gentle rebound); other scroll styles keep cubic / back / snap; pop ease-out then settle; wipe ease-in-out
 
 ## Reuse plan
 
