@@ -28,7 +28,9 @@ Required interaction:
 ## Scheme, choreography, and playback
 
 - The scheme card contains exactly Save, Import, Restore Default, and Clear/Rebuild in the shared two-column layout.
+- Define scheme-loading precedence explicitly. The approved default is the immutable Reset source; imported or edited state may become the working autosave. Decide whether each entry path (for example gallery entry versus ordinary refresh) opens the approved default or the autosave, and encode that choice directly instead of inheriting accidental `localStorage` precedence.
 - Choreography uses the shared colored `me-choreo-*` blocks, legend, playhead, and click-to-seek behavior. Phase labels and widths derive from the same timing model as preview/export.
+- A timing control updates that same timing model and seeks to or replays the phase it controls so the change is immediately observable. A control labeled as total speed or total duration must include every delay, stagger, hold, and transition inside the named phase; unrelated hidden waits must not make the control appear ineffective.
 - The stage contains synchronized Pause/Play and Replay controls using `me-stage-controls`.
 
 ## Page-owned sequence editing
@@ -73,5 +75,7 @@ Test these observable behaviors in a real browser:
 12. Reordering pages keeps typography, timing, icons, background, video trim, and transition attached to the original page content.
 13. A trimmed video page previews and exports the same source interval without flashing between seeks.
 14. Direct switching has no inserted fade; crossfade has no blank or uninitialized frame.
+15. Test the declared entry paths with clean storage and with an existing autosave. Restore Default must reproduce the approved default exactly, while import and autosave must not mutate that default source.
+16. Change each timing control and confirm the active phase/playhead previews the affected beat and the shared preview/export duration model changes by the displayed amount, without an unrelated static interval.
 
 Run `scripts/check_editor_contract.py` for a fast structural check, then perform the browser checks above. Static success does not replace interaction testing.

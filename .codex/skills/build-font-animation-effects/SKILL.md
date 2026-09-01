@@ -24,6 +24,7 @@ For repeated motion refinement, freeze already approved phases and write a compa
 
 - Separate the unique choreography from the reusable editor shell.
 - Reuse shared fonts and icon/media assets by path; do not duplicate them into each effect.
+- Treat a user-approved default scheme, gallery image, or preview video as a frozen artifact. Unrelated refinements must not regenerate or rewrite its bytes unless the user explicitly requests a replacement.
 - Use the project-wide `site/shared-font-library.js` and `site/shared-fonts.css` catalog for every font selector and renderer. New effects must not maintain a private reduced font list.
 - Use `site/shared-icon-library.js` as the canonical icon/expression catalog. Consume its `flow`, `gifMotion`, `animals`, and `bots` groups and its deterministic `drawVector()` renderer instead of copying private asset arrays from another effect.
 - Present the complete shared `gifMotion` group under `GIF 动图`, including collision GIFs, construct motion, and the transparent black-line cloud, orbit, and coil variants. A new effect must not silently expose only a subset when it claims to use the shared icon library.
@@ -68,4 +69,5 @@ Before handing off an effect:
 - For fast continuous choreography reconstructed from video, compare dense reference and exported frames at every phase boundary. Confirm active elements never freeze accidentally, icons remain in the same motion field as adjacent text, and character-to-icon scans restore each original character and spacing before completion.
 - During refinement, confirm previously approved phases remain visually unchanged and that a shared moving group never resets its geometry or splits into independent paths at a transition or exit.
 - Confirm the gallery card uses the approved preview. Prefer an approved exported MP4 loop when an iframe would produce a different responsive composition.
+- After unrelated refinements, verify approved schemes and gallery assets by scoped diff or checksum before handoff.
 - Run syntax checks and `git diff --check`, bump cache versions, and avoid staging unrelated files.
