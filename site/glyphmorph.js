@@ -211,7 +211,7 @@
 
   function renderTimeline() {
     const segments = timelineSegments();
-    $("timeline").innerHTML = segments.map(({ from, to, durationMs }) => `<div class="gm-timeline-block" role="listitem"><strong>${escapeHtml(from.text || "空白")} → ${escapeHtml(to.text || "空白")}</strong><small>${(durationMs / 1000).toFixed(2)}s</small></div>`).join("");
+    $("timeline").innerHTML = segments.map(({ from, to, durationMs }) => `<div class="gm-timeline-block me-choreo-block" role="listitem"><strong>${escapeHtml(from.text || "空白")} → ${escapeHtml(to.text || "空白")}</strong><small>${(durationMs / 1000).toFixed(2)}s</small></div>`).join("");
     const total = cycleDurationMs();
     $("scrubber").max = String(Math.max(0.001, total));
     $("timeTotal").textContent = `${(total / 1000).toFixed(2)}s`;
@@ -399,7 +399,22 @@
     $("schemeFile").value = "";
   });
   $("restoreScheme").addEventListener("click", () => { localStorage.removeItem(STORAGE_KEY); applyScheme(clone(DEFAULT_SCHEME), "已恢复不可变默认方案。" ); });
-  $("clearScheme").addEventListener("click", () => applyScheme({ ...clone(DEFAULT_SCHEME), rows: [{ id: uid(), text: "", hold: 100 }, { id: uid(), text: "", hold: 100 }] }, "文字序列已清空。" ));
+  $("clearScheme").addEventListener("click", () => $("clearDialog").showModal());
+  $("clearChanges").addEventListener("click", () => {
+    localStorage.removeItem(STORAGE_KEY);
+    applyScheme(clone(DEFAULT_SCHEME), "已清空全部改动并恢复默认方案。" );
+    $("clearDialog").close("clear-changes");
+  });
+  $("clearAll").addEventListener("click", () => {
+    const cleared = clone(state.scheme);
+    cleared.rows = [{ id: uid(), text: "", hold: 100 }, { id: uid(), text: "", hold: 100 }];
+    applyScheme(cleared, "全部文字内容已清空，当前样式与画布保持不变。" );
+    $("clearDialog").close("clear-all");
+  });
+  $("closeClearDialog").addEventListener("click", () => $("clearDialog").close("cancel"));
+  $("clearDialog").addEventListener("click", (event) => {
+    if (event.target === $("clearDialog")) $("clearDialog").close("cancel");
+  });
 
   $("exportPng").addEventListener("click", () => {
     const output = exportCanvas();

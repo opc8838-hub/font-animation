@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="me-motion-editor.css?v=20260901-1">
   <link rel="stylesheet" href="shared-fonts.css?v=20260824-2">
   <link rel="stylesheet" href="stg-cn.css?v=20260824-1">
-  <link rel="stylesheet" href="glyphmorph.css?v=20260901-1">
+  <link rel="stylesheet" href="glyphmorph.css?v=20260901-2">
 </head>
 <body class="glyphmorph-editor">
   <aside id="glyphMorphInspector" class="gm-inspector" aria-label="字融编辑器">
@@ -23,10 +23,14 @@
       <div class="gm-card-title"><span>01</span><h2>画布尺寸</h2></div>
       <label class="gm-field gm-field-wide">预设
         <select id="canvasPreset">
-          <option value="1080x1080">方形 · 1080 × 1080</option>
-          <option value="1080x1350">竖版 · 1080 × 1350</option>
-          <option value="1080x1920">故事 · 1080 × 1920</option>
-          <option value="1920x1080">横版 · 1920 × 1080</option>
+          <option value="1080x1080">1:1 方形 · 1080 × 1080</option>
+          <option value="1080x1350">4:5 竖版 · 1080 × 1350</option>
+          <option value="1080x1440">3:4 竖版 · 1080 × 1440</option>
+          <option value="1080x1620">2:3 竖版 · 1080 × 1620</option>
+          <option value="1080x1920">9:16 全屏 · 1080 × 1920</option>
+          <option value="1920x1080">16:9 横版 · 1920 × 1080</option>
+          <option value="1440x1080">4:3 横版 · 1440 × 1080</option>
+          <option value="1620x1080">3:2 横版 · 1620 × 1080</option>
           <option value="custom">自定义</option>
         </select>
       </label>
@@ -77,8 +81,8 @@
 
     <section class="gm-card">
       <div class="gm-card-title"><span>05</span><h2>时间轴</h2></div>
-      <div id="timeline" class="gm-timeline" role="list" aria-label="字融动效时间轴"></div>
-      <input id="scrubber" class="gm-scrubber" type="range" min="0" max="1" step="0.001" value="0" aria-label="时间轴播放头">
+      <div class="me-choreo-scroll"><div id="timeline" class="gm-timeline me-choreo-track me-choreo-bar" role="list" aria-label="字融动效时间轴"></div></div>
+      <input id="scrubber" class="gm-scrubber me-choreo-playhead" type="range" min="0" max="1" step="0.001" value="0" aria-label="时间轴播放头">
       <div class="gm-time-readout"><span id="timeNow">0.00s</span><span id="timeTotal">0.00s</span></div>
     </section>
 
@@ -116,7 +120,7 @@
     <div id="compositionFrame" class="gm-composition-frame">
       <canvas id="glyphMorphCanvas" width="1080" height="1080" aria-label="字融效果预览"></canvas>
     </div>
-    <div class="gm-stage-controls" aria-label="预览控制">
+    <div class="gm-stage-controls me-stage-controls" aria-label="预览控制">
       <button id="toggleInspector" type="button" aria-pressed="false">▤ <span>编辑器</span></button>
       <i aria-hidden="true"></i>
       <button id="restartPreview" type="button">↺ <span>重播</span></button>
@@ -124,9 +128,26 @@
     </div>
   </main>
 
+  <dialog id="clearDialog" class="gm-clear-dialog" aria-labelledby="clearDialogTitle">
+    <div class="gm-dialog-body">
+      <div class="gm-dialog-heading">
+        <div><small>清空方式</small><h2 id="clearDialogTitle">要清空什么？</h2></div>
+        <button id="closeClearDialog" class="gm-dialog-close" aria-label="关闭" type="button">×</button>
+      </div>
+      <button id="clearChanges" class="gm-clear-choice" type="button">
+        <strong>清空改动</strong>
+        <span>撤销本次编辑，恢复首次打开时的默认文字、尺寸和参数。</span>
+      </button>
+      <button id="clearAll" class="gm-clear-choice gm-clear-choice-danger" type="button">
+        <strong>清空所有内容</strong>
+        <span>清空全部文字行，但保留当前画布、字体、颜色和动效参数。</span>
+      </button>
+    </div>
+  </dialog>
+
   <script src="js/continuation-gif.js?v=20260824-1"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
-  <script src="glyphmorph.js?v=20260901-1"></script>
+  <script src="glyphmorph.js?v=20260901-2"></script>
   <script src="stg-cn.js?v=20260901-1"></script>
 </body>
 </html>

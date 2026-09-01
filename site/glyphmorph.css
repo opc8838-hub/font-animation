@@ -51,6 +51,19 @@ button, select, input[type="number"] { color: inherit; }
 .gm-actions button { min-height: 34px; border: 1px solid #363636; border-radius: 7px; background: #222; color: #d7d7d7; font-size: 10px; cursor: pointer; }
 .gm-actions button:hover { border-color: #777; background: #292929; }
 .gm-status { margin: 9px 0 0; }
+.gm-clear-dialog { width: min(390px, calc(100vw - 32px)); padding: 0; border: 1px solid #3b3b3b; border-radius: 16px; background: #171717; color: #f4f4f4; box-shadow: 0 24px 90px rgba(0,0,0,.7); }
+.gm-clear-dialog::backdrop { background: rgba(0,0,0,.68); backdrop-filter: blur(4px); }
+.gm-dialog-body { display: grid; gap: 8px; padding: 16px; }
+.gm-dialog-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+.gm-dialog-heading > div { flex: 1; }
+.gm-dialog-heading small { color: #777; font-size: 9px; letter-spacing: .12em; }
+.gm-dialog-heading h2 { margin: 2px 0 0; font-size: 17px; }
+.gm-dialog-close { width: 30px; height: 30px; border: 1px solid #343434; border-radius: 50%; background: #222; color: #aaa; cursor: pointer; }
+.gm-clear-choice { display: grid; gap: 4px; width: 100%; padding: 13px; text-align: left; border: 1px solid #353535; border-radius: 10px; background: #222; color: #eee; cursor: pointer; }
+.gm-clear-choice:hover, .gm-clear-choice:focus-visible { border-color: #8b8b8b; outline: 0; }
+.gm-clear-choice strong { font-size: 12px; }
+.gm-clear-choice span { color: #8d8d8d; font-size: 10px; line-height: 1.45; }
+.gm-clear-choice-danger strong { color: #ff9d91; }
 .gm-stage { position: relative; min-width: 0; height: 100dvh; display: grid; place-items: center; overflow: hidden; padding: 38px 38px 78px; background: #080808; }
 .gm-composition-frame { position: relative; width: min(100%, calc((100dvh - 116px) * var(--gm-aspect, 1))); max-height: calc(100dvh - 116px); aspect-ratio: var(--gm-aspect, 1); overflow: hidden; background: white; box-shadow: 0 20px 80px rgba(0,0,0,.55); }
 .gm-composition-frame canvas { display: block; width: 100%; height: 100%; }

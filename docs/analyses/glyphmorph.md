@@ -117,3 +117,4 @@ A centered sequence of words changes rapidly by preserving and sliding reusable 
 ## Feedback discoveries
 
 - 2026-09-01: retained glyph identity plus opposing old/new stagger is the defining motion; a whole-word dissolve is not an acceptable approximation.
+- 2026-09-01: the canonical four-action scheme card keeps one `清空` action; it opens a choice between restoring every edited value to the immutable opening default and clearing only all text content while retaining the current visual settings. Canvas presets explicitly cover 1:1, 4:5, 3:4, 2:3, 9:16, 16:9, 4:3, and 3:2.
