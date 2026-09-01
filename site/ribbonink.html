@@ -118,10 +118,17 @@
         </label>
         <label class="ink-field">节奏
           <select id="motionEase">
-            <option value="smooth" selected>柔顺推进</option>
+            <option value="snake" selected>蛇形变速</option>
+            <option value="smooth">柔顺推进</option>
             <option value="direct">清晰匀速</option>
             <option value="snappy">快速收放</option>
           </select>
+        </label>
+        <label class="ink-range">蛇形顿挫 <output id="snakeIntensityOut">82%</output>
+          <input id="snakeIntensity" type="range" min="0" max="100" value="82">
+        </label>
+        <label class="ink-range">I 压弹 <output id="letterImpactOut">100%</output>
+          <input id="letterImpact" type="range" min="0" max="140" value="100">
         </label>
       </section>
 

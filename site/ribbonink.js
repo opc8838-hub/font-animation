@@ -7,9 +7,9 @@
   const workspace = $("#workspace");
   const exportStatus = $("#exportStatus");
   const schemeStatus = $("#schemeStatus");
-  const STORAGE_KEY = "me-ribbon-ink-autosave-v2";
+  const STORAGE_KEY = "me-ribbon-ink-autosave-v3";
   const EFFECT_ID = "ribbon-ink";
-  const SCHEME_VERSION = 2;
+  const SCHEME_VERSION = 3;
   const PHASE_COLORS = ["#ef4d86", "#6a2f8c", "#ee7b34", "#2589d8"];
   const urlParams = new URLSearchParams(location.search);
   const BRUSH_MOTHER_SRC = "assets/ribbonink/ribbonink-brush-mother.png?v=20260902-1";
@@ -29,6 +29,7 @@
     "brushScale", "brushWidth", "positionX", "positionY", "textureDensity", "textureSpeed",
     "dotScale", "dotDelay",
     "writeDuration", "flowDuration", "eraseDuration", "holdDuration", "motionEase",
+    "snakeIntensity", "letterImpact",
     "exportDuration", "exportDurationCustom", "exportFps"
   ];
   const inputs = Object.fromEntries(inputIds.map((id) => [id, $(`#${id}`)]));
@@ -41,7 +42,8 @@
     brushScale: "100", brushWidth: "100", positionX: "50", positionY: "52",
     textureDensity: "100", textureSpeed: "100", dotScale: "100", dotDelay: "46",
     writeDuration: "50", flowDuration: "87",
-    eraseDuration: "57", holdDuration: "56", motionEase: "smooth",
+    eraseDuration: "57", holdDuration: "56", motionEase: "snake",
+    snakeIntensity: "82", letterImpact: "100",
     exportDuration: "full", exportDurationCustom: "2.5", exportFps: "30"
   };
 
@@ -110,10 +112,31 @@
   function easeOutQuint(value) { return 1 - Math.pow(1 - clamp(value), 5); }
   function easeInCubic(value) { return Math.pow(clamp(value), 3); }
 
+  function snakeEase(value, phase) {
+    const x = clamp(value);
+    const anchors = phase === "erase"
+      ? [[0, 0], [.18, .27], [.46, .38], [.68, .78], [1, 1]]
+      : [[0, 0], [.16, .29], [.45, .40], [.64, .79], [1, 1]];
+    let segmentIndex = anchors.length - 2;
+    for (let index = 0; index < anchors.length - 1; index += 1) {
+      if (x <= anchors[index + 1][0]) { segmentIndex = index; break; }
+    }
+    const [timeA, progressA] = anchors[segmentIndex];
+    const [timeB, progressB] = anchors[segmentIndex + 1];
+    const local = clamp((x - timeA) / Math.max(.001, timeB - timeA));
+    const shaped = segmentIndex === 0 || segmentIndex === anchors.length - 2
+      ? easeOutQuint(local)
+      : smoothstep(local);
+    const stepped = mix(progressA, progressB, shaped);
+    const intensity = Number(inputs.snakeIntensity.value) / 100;
+    return mix(smoothstep(x), stepped, intensity);
+  }
+
   function phaseEase(value, phase) {
     const mode = inputs.motionEase.value;
     if (mode === "direct") return clamp(value);
     if (mode === "snappy") return phase === "erase" ? easeInCubic(value) : easeOutQuint(value);
+    if (mode === "snake") return snakeEase(value, phase);
     return smoothstep(value);
   }
 
@@ -198,7 +221,43 @@
     return { glyphs, widths, total: widths.reduce((sum, value) => sum + value, 0) + Math.max(0, glyphs.length - 1) * spacing };
   }
 
-  function drawSpacedText(context, text, centerX, centerY, size, spacing, color) {
+  function springOut(value) {
+    const x = clamp(value);
+    return 1 - Math.exp(-6.5 * x) * Math.cos(10.5 * x);
+  }
+
+  function impactLetterState(visible) {
+    const intensity = clamp(Number(inputs.letterImpact.value) / 100, 0, 1.4);
+    let reaction = { alpha: 1, scaleX: 1, scaleY: 1, y: 0 };
+    if (visible.phase.name === "write") {
+      const hit = smoothstep((visible.end - .13) / .22);
+      reaction = {
+        alpha: hit < .72 ? 1 : 0,
+        scaleX: 1 + Math.sin(hit * Math.PI) * .13 - hit * .24,
+        scaleY: 1 - hit * .91 - Math.sin(hit * Math.PI) * .08,
+        y: hit * .53
+      };
+    } else if (visible.phase.name === "flow") {
+      reaction = { alpha: 0, scaleX: .76, scaleY: .09, y: .53 };
+    } else if (visible.phase.name === "erase") {
+      const release = clamp((visible.start - .27) / .23);
+      const spring = springOut(release);
+      reaction = {
+        alpha: release > .02 ? 1 : 0,
+        scaleX: mix(.76, 1, spring),
+        scaleY: mix(.09, 1, spring),
+        y: .53 * (1 - spring)
+      };
+    }
+    return {
+      alpha: clamp(mix(1, reaction.alpha, Math.min(1, intensity))),
+      scaleX: mix(1, reaction.scaleX, intensity),
+      scaleY: Math.max(.02, mix(1, reaction.scaleY, intensity)),
+      y: reaction.y * intensity
+    };
+  }
+
+  function drawSpacedText(context, text, centerX, centerY, size, spacing, color, visible) {
     const metrics = spacedTextMetrics(context, text, size, spacing);
     context.save();
     context.font = fontSpec(size);
@@ -207,7 +266,18 @@
     context.fillStyle = color;
     let cursor = centerX - metrics.total / 2;
     metrics.glyphs.forEach((glyph, index) => {
-      context.fillText(glyph, cursor, centerY);
+      if (glyph === "I" && visible) {
+        const motion = impactLetterState(visible);
+        const glyphCenter = cursor + metrics.widths[index] / 2;
+        context.save();
+        context.globalAlpha *= motion.alpha;
+        context.translate(glyphCenter, centerY + motion.y * size);
+        context.scale(motion.scaleX, motion.scaleY);
+        context.fillText(glyph, -metrics.widths[index] / 2, 0);
+        context.restore();
+      } else {
+        context.fillText(glyph, cursor, centerY);
+      }
       cursor += metrics.widths[index] + spacing;
     });
     context.restore();
@@ -481,22 +551,38 @@
   function dotState(phase) {
     const delay = Number(inputs.dotDelay.value) / 100;
     if (phase.name === "write") {
-      const progress = clamp((phase.progress - delay) / Math.max(.001, 1 - delay));
-      return { scale: easeOutBack(progress), alpha: progress <= 0 ? 0 : 1, turn: progress * .55 };
+      const pathProgress = phaseEase(phase.progress, "write");
+      const progress = clamp((pathProgress - delay) / .22);
+      const settle = easeOutBack(progress);
+      return {
+        scaleX: settle,
+        scaleY: settle * (1 + Math.sin(progress * Math.PI) * .08),
+        y: -.52 * Math.exp(-4.8 * progress) * Math.cos(7.5 * progress),
+        alpha: smoothstep(progress * 3),
+        turn: progress * .55
+      };
     }
     if (phase.name === "flow") {
-      return { scale: 1 + Math.sin(phase.progress * Math.PI * 2) * .018, alpha: 1, turn: .55 + phase.progress * 1.5 };
+      const pulse = Math.sin(phase.progress * Math.PI * 2);
+      return { scaleX: 1 - pulse * .012, scaleY: 1 + pulse * .024, y: -pulse * .018, alpha: 1, turn: .55 + phase.progress * 1.5 };
     }
     if (phase.name === "erase") {
-      const progress = clamp((phase.progress - .06) / .26);
-      return { scale: 1 - easeInCubic(progress), alpha: 1 - progress, turn: 2.05 + progress * .8 };
+      const progress = clamp((phase.progress - .10) / .42);
+      const lift = easeInCubic(progress);
+      return {
+        scaleX: 1 - lift * .18,
+        scaleY: 1 + Math.sin(progress * Math.PI) * .12 - lift * .20,
+        y: -.72 * lift,
+        alpha: 1 - smoothstep((progress - .70) / .30),
+        turn: 2.05 + progress * .8
+      };
     }
-    return { scale: 0, alpha: 0, turn: 0 };
+    return { scaleX: 0, scaleY: 0, y: 0, alpha: 0, turn: 0 };
   }
 
   function drawDot(context, rawTime, width, height, phase, transform) {
     const motion = dotState(phase);
-    if (motion.alpha <= .001 || motion.scale <= .001) return;
+    if (motion.alpha <= .001 || motion.scaleX <= .001 || motion.scaleY <= .001) return;
     ensureScratch(width, height);
     const shape = shapeCanvas.getContext("2d");
     const paint = paintCanvas.getContext("2d");
@@ -508,19 +594,20 @@
     const center = transformPoint(centerSource, transform);
     const baseWidth = DOT_REGION.width / MOTHER_FRAME.width * 720 * transform.scale;
     const baseHeight = DOT_REGION.height / MOTHER_FRAME.height * 405 * transform.scale * transform.widthScale;
-    const dotScale = Number(inputs.dotScale.value) / 100 * motion.scale;
-    const drawWidth = baseWidth * dotScale;
-    const drawHeight = baseHeight * dotScale;
+    const dotScale = Number(inputs.dotScale.value) / 100;
+    const drawWidth = baseWidth * dotScale * motion.scaleX;
+    const drawHeight = baseHeight * dotScale * motion.scaleY;
+    const centerY = center.y + motion.y * baseHeight * dotScale;
     if (state.brushMother?.complete && state.brushMother.naturalWidth) {
       shape.drawImage(
         state.brushMother,
         DOT_REGION.x, DOT_REGION.y, DOT_REGION.width, DOT_REGION.height,
-        center.x - drawWidth / 2, center.y - drawHeight / 2, drawWidth, drawHeight
+        center.x - drawWidth / 2, centerY - drawHeight / 2, drawWidth, drawHeight
       );
     } else {
       shape.fillStyle = "#fff";
       shape.beginPath();
-      shape.ellipse(center.x, center.y, drawWidth * .44, drawHeight * .44, 0, 0, Math.PI * 2);
+      shape.ellipse(center.x, centerY, drawWidth * .44, drawHeight * .44, 0, 0, Math.PI * 2);
       shape.fill();
     }
     const colors = paletteColors();
@@ -530,7 +617,7 @@
     paint.fillRect(0, 0, width, height);
     paint.globalCompositeOperation = "source-atop";
     paint.save();
-    paint.translate(center.x, center.y);
+    paint.translate(center.x, centerY);
     paint.rotate(motion.turn + rawTime * .35 * Number(inputs.textureSpeed.value) / 100);
     paint.fillStyle = colors[1];
     paint.beginPath();
@@ -575,7 +662,7 @@
     if (visible.end > visible.start + .0001 || visible.phase.name === "write" || visible.phase.name === "erase") {
       drawExactBrush(context, rawTime, width, height, visible);
     }
-    drawSpacedText(context, text.toLocaleUpperCase(), centerX, centerY, fit.size, fit.spacing, inputs.textColor.value);
+    drawSpacedText(context, text.toLocaleUpperCase(), centerX, centerY, fit.size, fit.spacing, inputs.textColor.value, visible);
     if (target === canvas) updateTimelinePlayhead(visible.phase);
   }
 
@@ -655,6 +742,8 @@
       textureSpeedOut: `${inputs.textureSpeed.value}%`,
       dotScaleOut: `${inputs.dotScale.value}%`,
       dotDelayOut: `${inputs.dotDelay.value}%`,
+      snakeIntensityOut: `${inputs.snakeIntensity.value}%`,
+      letterImpactOut: `${inputs.letterImpact.value}%`,
       writeDurationOut: `${(Number(inputs.writeDuration.value) / 100).toFixed(2)} 秒`,
       flowDurationOut: `${(Number(inputs.flowDuration.value) / 100).toFixed(2)} 秒`,
       eraseDurationOut: `${(Number(inputs.eraseDuration.value) / 100).toFixed(2)} 秒`,
