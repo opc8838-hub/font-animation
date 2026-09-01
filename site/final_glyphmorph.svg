@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">字融 Glyph Morph 动效预览</title>
+  <desc id="desc">September 向 October 逐字匹配变形的中间画面</desc>
+  <rect width="1200" height="800" fill="#f7f7f4"/>
+  <g fill="#111" font-family="Inter,Arial,sans-serif" font-weight="500" text-anchor="middle">
+    <text x="600" y="400" font-size="118">October</text>
+  </g>
+  <g fill="#111" font-family="Inter,Arial,sans-serif" font-weight="500" text-anchor="middle" opacity=".18">
+    <text x="278" y="400" font-size="54">S</text>
+    <text x="367" y="400" font-size="72">e</text>
+    <text x="457" y="400" font-size="91">p</text>
+  </g>
+  <circle cx="55" cy="55" r="28" fill="#111"/>
+  <text x="55" y="62" fill="#fff" font-family="Arial,sans-serif" font-size="18" font-weight="700" text-anchor="middle">ME</text>
+  <text x="1140" y="60" fill="#777" font-family="Arial,sans-serif" font-size="18" text-anchor="end">GLYPH MORPH</text>
+</svg>
