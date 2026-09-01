@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'></svg>">
+  <title>点解 Dot Resolve | ME Motion Studio</title>
+  <link rel="stylesheet" href="workspace-editor.css?v=20260901-1">
+  <link rel="stylesheet" href="me-motion-editor.css?v=20260901-1">
+  <link rel="stylesheet" href="shared-fonts.css?v=20260824-2">
+  <link rel="stylesheet" href="stg-cn.css?v=20260824-1">
+  <link rel="stylesheet" href="glyphmorph.css?v=20260902-2">
+</head>
+<body class="glyphmorph-editor" data-morph-port="dotresolve">
+  <aside id="glyphMorphInspector" class="gm-inspector" aria-label="点解编辑器">
+    <header class="gm-header">
+      <a href="gallery.html" aria-label="返回效果库">ME</a>
+      <div><small>ME MOTION STUDIO</small><h1>点解 <span>Dot Resolve</span></h1></div>
+    </header>
+
+    <section class="gm-card gm-canvas-card">
+      <div class="gm-card-title"><span>01</span><h2>画布尺寸</h2></div>
+      <label class="gm-field gm-field-wide">预设
+        <select id="canvasPreset">
+          <option value="1080x1080">1:1 方形 · 1080 × 1080</option>
+          <option value="1080x1350">4:5 竖版 · 1080 × 1350</option>
+          <option value="1080x1440">3:4 竖版 · 1080 × 1440</option>
+          <option value="1080x1620">2:3 竖版 · 1080 × 1620</option>
+          <option value="1080x1920">9:16 全屏 · 1080 × 1920</option>
+          <option value="1920x1080">16:9 横版 · 1920 × 1080</option>
+          <option value="1440x1080">4:3 横版 · 1440 × 1080</option>
+          <option value="1620x1080">3:2 横版 · 1620 × 1080</option>
+          <option value="custom">自定义</option>
+        </select>
+      </label>
+      <div class="gm-grid-2 gm-custom-size" hidden>
+        <label class="gm-field">宽度 <input id="canvasWidth" type="number" min="320" max="3840" step="1" value="1080"></label>
+        <label class="gm-field">高度 <input id="canvasHeight" type="number" min="320" max="3840" step="1" value="1080"></label>
+      </div>
+    </section>
+
+    <section class="gm-card">
+      <div class="gm-card-title"><span>02</span><h2>文字序列</h2><button id="addRow" class="gm-text-button" type="button">＋ 添加</button></div>
+      <p class="gm-help">每一行是一个画面。把光标放到文字的任意位置，再从图标库插入。</p>
+      <div id="sequenceRows" class="gm-sequence"></div>
+      <div class="gm-grid-2 gm-text-colors">
+        <label class="gm-field">文字色 <input id="textColor" type="color"></label>
+        <label class="gm-field">背景色 <input id="backgroundColor" type="color"></label>
+      </div>
+    </section>
+
+    <section class="gm-card gm-icon-launch-card">
+      <div class="gm-card-title"><span>03</span><h2>图标库</h2><button id="openIconLibrary" class="gm-text-button" type="button" aria-expanded="false">右侧展开</button></div>
+      <p class="gm-help">从文字行点击“插入图标”，图库会在右侧独立打开，左栏不再上下跳动。</p>
+      <button id="openIconLibraryLarge" class="gm-open-library" type="button">打开图标库</button>
+    </section>
+
+    <section class="gm-card">
+      <div class="gm-card-title"><span>04</span><h2>字体与构图</h2></div>
+      <label class="gm-field gm-field-wide">字体
+        <select id="fontFamily"><option value="stg:inter">Inter</option></select>
+      </label>
+      <div class="gm-grid-2">
+        <label class="gm-field">字号 <input id="fontSize" type="range" min="42" max="260" step="1"><output for="fontSize"></output></label>
+        <label class="gm-field">字距 <input id="tracking" type="range" min="-12" max="60" step="1"><output for="tracking"></output></label>
+        <label class="gm-field">水平 <input id="positionX" type="range" min="-40" max="40" step="1"><output for="positionX"></output></label>
+        <label class="gm-field">垂直 <input id="positionY" type="range" min="-40" max="40" step="1"><output for="positionY"></output></label>
+      </div>
+      <fieldset class="gm-segmented"><legend>对齐</legend>
+        <label><input type="radio" name="alignment" value="left"><span>左</span></label>
+        <label><input type="radio" name="alignment" value="center"><span>中</span></label>
+        <label><input type="radio" name="alignment" value="right"><span>右</span></label>
+      </fieldset>
+    </section>
+
+    <section class="gm-card">
+      <div class="gm-card-title"><span>05</span><h2>动效节奏</h2></div>
+      <div class="gm-grid-2">
+        <label class="gm-field">变形 <input id="morphDuration" type="range" min="180" max="1400" step="10"><output for="morphDuration"></output></label>
+        <label class="gm-field">逐字错峰 <input id="characterDelay" type="range" min="0" max="0.12" step="0.001"><output for="characterDelay"></output></label>
+        <label class="gm-field">像素半径 <input id="effectAmount" type="range" min="2" max="12" step="0.5"><output for="effectAmount"></output></label>
+        <label class="gm-field">总速度 <input id="speed" type="range" min="0.25" max="2" step="0.05"><output for="speed"></output></label>
+      </div>
+      <label class="gm-check"><input id="loop" type="checkbox"><span>循环播放</span></label>
+    </section>
+
+    <section class="gm-card">
+      <div class="gm-card-title"><span>06</span><h2>时间轴</h2></div>
+      <div class="me-choreo-scroll"><div id="timeline" class="gm-timeline me-choreo-track me-choreo-bar" role="list" aria-label="点解动效时间轴"></div></div>
+      <input id="scrubber" class="gm-scrubber me-choreo-playhead" type="range" min="0" max="1" step="0.001" value="0" aria-label="时间轴播放头">
+      <div class="gm-time-readout"><span id="timeNow">0.00s</span><span id="timeTotal">0.00s</span></div>
+    </section>
+
+    <section class="gm-card">
+      <div class="gm-card-title"><span>07</span><h2>方案</h2></div>
+      <div class="gm-actions gm-actions-4">
+        <button id="saveScheme" type="button">保存方案</button>
+        <button id="importScheme" type="button">导入方案</button>
+        <button id="restoreScheme" type="button">恢复默认</button>
+        <button id="clearScheme" type="button" aria-label="清空所有行">清理重做</button>
+      </div>
+      <input id="schemeFile" type="file" accept="application/json,.json" hidden>
+    </section>
+
+    <section class="gm-card">
+      <div class="gm-card-title"><span>08</span><h2>真实导出</h2></div>
+      <div class="gm-grid-2">
+        <label class="gm-field">时长
+          <select id="exportDuration"><option value="cycle">完整循环</option><option value="3">3 秒</option><option value="5">5 秒</option><option value="10">10 秒</option></select>
+        </label>
+        <label class="gm-field">帧率
+          <select id="exportFps"><option value="24">24 fps</option><option value="30" selected>30 fps</option><option value="60">60 fps</option></select>
+        </label>
+      </div>
+      <div class="gm-actions gm-actions-3">
+        <button id="exportPng" type="button">PNG</button>
+        <button id="exportGif" type="button">GIF</button>
+        <button id="exportMp4" type="button">MP4</button>
+      </div>
+      <p id="exportStatus" class="gm-status" aria-live="polite">输出将严格使用当前画布尺寸。</p>
+    </section>
+  </aside>
+
+  <aside id="iconLibraryDrawer" class="gm-library-drawer" aria-label="图标库侧窗" hidden>
+    <header class="gm-library-drawer-header">
+      <div><small>当前文字行的图标</small><h2>图标库</h2></div>
+      <button id="closeIconLibrary" type="button" aria-label="关闭图标库">×</button>
+    </header>
+    <div id="iconLibraryBrowse" class="gm-library-browse">
+      <div id="iconLayerPanel" class="gm-layer-panel me-layer-panel">
+        <div class="gm-layer-summary">
+          <div><small>已插入图标</small><strong id="selectedIconCount">0</strong></div>
+          <button id="toggleSelectedIcons" class="me-layer-toggle" type="button" aria-expanded="false">展开已选</button>
+        </div>
+        <div id="selectedIconItems" class="gm-layer-items me-layer-items"></div>
+      </div>
+      <div class="gm-library-selection">
+        <div id="librarySelectionPreview" class="gm-library-selection-preview" aria-hidden="true">＋</div>
+        <div><small>当前候选</small><strong id="librarySelectionName">请先选择图标</strong><span id="insertTargetLabel">目标：第 01 行 · 文字末尾</span></div>
+        <button id="insertSelectedIcon" class="me-asset-commit" type="button" disabled>插入到光标</button>
+      </div>
+      <div id="iconLibrary" class="gm-icon-groups"></div>
+    </div>
+
+    <section id="iconAssetDrawer" class="gm-asset-drawer me-asset-drawer" aria-label="单图标编辑" hidden>
+      <header>
+        <div><small>单独编辑</small><h2 id="activeIconName">图标</h2></div>
+        <button id="closeIconDrawer" type="button" aria-label="返回图标库">←</button>
+      </header>
+      <div class="me-asset-editor gm-asset-editor">
+        <label class="gm-field gm-field-wide">所属文字行<select id="iconRow"></select></label>
+        <label class="gm-field gm-field-wide">插入位置<select id="iconBoundary"></select></label>
+        <div class="gm-grid-2">
+          <label class="gm-field">图标大小<input id="iconSize" type="range" min="20" max="220" step="1"><output for="iconSize"></output></label>
+          <label class="gm-field">图标与文字间距<input id="iconGap" type="range" min="0" max="80" step="1"><output for="iconGap"></output></label>
+          <label class="gm-field">水平左右位置<input id="iconX" type="range" min="-100" max="100" step="1"><output for="iconX"></output></label>
+          <label class="gm-field">垂直位置<input id="iconY" type="range" min="-100" max="100" step="1"><output for="iconY"></output></label>
+        </div>
+        <button id="removeActiveIcon" class="gm-remove-active" type="button">删除这个图标</button>
+      </div>
+    </section>
+  </aside>
+
+  <main id="glyphMorphStage" class="gm-stage">
+    <div id="compositionFrame" class="gm-composition-frame">
+      <canvas id="glyphMorphCanvas" width="1080" height="1080" aria-label="点解效果预览"></canvas>
+    </div>
+    <div class="gm-stage-controls me-stage-controls" aria-label="预览控制">
+      <button id="toggleInspector" type="button" aria-pressed="false">▤ <span>编辑器</span></button>
+      <i aria-hidden="true"></i>
+      <button id="restartPreview" type="button">↺ <span>重播</span></button>
+      <button id="togglePlayback" type="button" aria-pressed="false">Ⅱ <span>暂停</span></button>
+    </div>
+  </main>
+
+  <script src="js/continuation-gif.js?v=20260824-1"></script>
+  <script src="shared-font-library.js?v=20260824-2"></script>
+  <script src="shared-icon-library.js?v=20260902-1"></script>
+  <script src="morphports.js?v=20260902-1"></script>
+  <script src="stg-cn.js?v=20260901-1"></script>
+</body>
+</html>

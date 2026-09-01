@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "canvas": { "width": 1080, "height": 1080, "preset": "1080x1080" },
+  "typography": { "fontFamily": "stg:inter", "fontSize": 160, "tracking": 0, "positionX": 0, "positionY": 0, "alignment": "center", "textColor": "#111111", "backgroundColor": "#ffffff" },
+  "motion": { "morphDuration": 600, "characterDelay": 0.026, "effectAmount": 168, "speed": 1, "loop": true },
+  "rows": [
+    { "id": "cascade-01", "text": "BALANCE", "hold": 650, "icons": [] },
+    { "id": "cascade-02", "text": "TIPPING", "hold": 650, "icons": [{ "id": "cascade-icon-01", "libraryId": "animal-14", "boundary": 3, "size": 78, "gap": 8, "x": 0, "y": -2 }] },
+    { "id": "cascade-03", "text": "失重", "hold": 650, "icons": [] },
+    { "id": "cascade-04", "text": "LAND", "hold": 650, "icons": [] }
+  ]
+}
