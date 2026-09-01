@@ -30,7 +30,7 @@
     item("construct-pulse", "脉冲线束", vectorPreview('<g fill="none" stroke="#ffcf20" stroke-width="4" stroke-linecap="round"><path d="M14 50h28l8-23 15 49 13-38 11 24 10-12h47"/><path d="M14 67h132" stroke="#985cff" stroke-width="2"/></g>'), "vector/pulse", { kind: "vector", vectorType: "pulse" })
   ];
 
-  const animals = Array.from({ length: 31 }, (_, index) => item(
+  const animals = Array.from({ length: 59 }, (_, index) => item(
     `animal-${String(index + 1).padStart(2, "0")}`,
     index === 4 ? "鲸鱼" : `透明动物 ${String(index + 1).padStart(2, "0")}`,
     `assets/transparent-animals/animal-${String(index + 1).padStart(2, "0")}.png`,

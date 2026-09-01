@@ -6,22 +6,26 @@ Read this contract whenever an effect adds or changes text, asset, scheme, timel
 
 - Keep the text input, text color, and background color in the same text-editing card. Do not place the two color fields after advanced motion controls.
 - Content edits immediately rebuild derived rows, selected assets, replacement targets, and choreography labels.
+- In row-based sequences, put `插入图标` and `暂停修改` directly on every row. `暂停修改` seeks to the row's deterministic hold frame where the whole row is readable; it must not stop on an outgoing transition, a partial glyph state, or the next row.
+- Show every inserted inline icon as a compact row-owned chip with preview/name, character-boundary position, and a small explicit `编辑` button. Editing that chip invokes the same row seek-and-pause behavior before opening its controls.
+- Track the text caret by grapheme boundary on focus, click, selection, and keyboard edits. Clamp existing icon boundaries after text changes so Chinese, emoji, and combined characters cannot strand an icon outside the row.
 
 ## Selected assets and library
 
 Use one asset state model and three distinct surfaces:
 
 1. **Selected layer** — assets already used by the composition. Its compact header shows the real count and an `展开已选` button.
-2. **Library** — built-in and uploaded candidates. Put large libraries inside collapsed `<details>` groups. Clicking a library item only selects it; it never inserts or adds by itself.
-3. **Single-asset editor** — opened only by an explicit `单独编辑` action on a selected item. Do not duplicate this editor below the compact library.
+2. **Library** — built-in and uploaded candidates. Put large libraries inside collapsed `<details>` groups. Clicking the main library tile only selects it; an adjacent small `插入` button is an explicit commit and may select plus insert that one candidate.
+3. **Single-asset editor** — opened only by an explicit `编辑` or `单独编辑` action on a selected item. Do not duplicate this editor below the compact library.
 
 Required interaction:
 
 - Adding or uploading an asset does not automatically expand the selected layer.
-- A separate `添加` or `插入到光标` action commits the current library selection.
-- Expanding uses a fixed overlay equal to the existing left-editor width. It shows the complete selected list and does not resize or shift the live stage.
+- A separate `添加` or `插入到光标` action commits the current library selection. A compact `插入` beside each candidate is also valid because it is visibly separate from the selection tile; it must insert once at the active row/caret without making the user scroll back to a top or bottom commit bar.
+- Opening a large library must not scroll the inspector or cover the composition canvas. On wide desktop reserve an adjacent column and refit the stage to the remaining workspace; at medium widths replace or overlay the inspector rather than the canvas; on mobile keep the stage visible above a lower library sheet.
 - Each selected row shows preview, name, usage/role, `单独编辑`, and remove. The list supports the effect's meaningful order; when order affects playback, drag and keyboard reorder must update the state model.
-- Single editing opens a drawer immediately to the right of the left editor and overlays the stage instead of shrinking it. Closing the drawer keeps the selected list expanded. `Escape` closes the drawer first, then the expanded list.
+- Single editing reuses the adjacent library surface and swaps its browse view for controls for exactly one asset. Closing returns to the library without changing the composition; `Escape` closes the single editor first, then the selected manager, then the library drawer.
+- Inline-icon controls include owning row, valid grapheme boundary, `图标大小`, `图标与文字间距`, horizontal position, and vertical position. Every change updates the paused row and the shared export geometry immediately.
 - The DOM uses `me-layer-panel`, `me-layer-toggle`, `me-layer-items`, `me-asset-drawer`, `me-asset-library`, `me-asset-choice`, `me-asset-editor`, and `me-asset-commit`. The expanded state is `is-list-expanded`.
 - Import, reset, clear, text edits, insertion, removal, and reorder all rerender the selected count/list. Do not rebuild the list per animation frame.
 
@@ -64,8 +68,8 @@ Test these observable behaviors in a real browser:
 1. Library click changes selection but leaves composition text/state unchanged.
 2. Explicit commit changes the composition and immediately adds a selected row.
 3. Adding another asset does not open the selected manager.
-4. Expand shows every selected item; collapse restores the normal editor without changing stage bounds.
-5. `单独编辑` opens one drawer only; sliders change that exact asset and export geometry.
+4. Opening the library leaves the inspector scroll position stable and keeps the whole composition canvas visible. Wide desktop may refit the stage; medium desktop overlays/replaces only the inspector; mobile keeps the stage above the sheet.
+5. `编辑`/`单独编辑` opens one editor only; sliders change that exact asset and export geometry, and the owning row is paused on a fully readable frame.
 6. Close and `Escape` follow the drawer-first order.
 7. Switching 16:9 → 9:16 → 1:1 visibly changes the live frame to each exact aspect ratio while inspector bounds remain stable.
 8. A real export at the selected size has the same normalized typography, icons, spacing, and positions as the live frame.
@@ -77,5 +81,7 @@ Test these observable behaviors in a real browser:
 14. Direct switching has no inserted fade; crossfade has no blank or uninitialized frame.
 15. Test the declared entry paths with clean storage and with an existing autosave. Restore Default must reproduce the approved default exactly, while import and autosave must not mutate that default source.
 16. Change each timing control and confirm the active phase/playhead previews the affected beat and the shared preview/export duration model changes by the displayed amount, without an unrelated static interval.
+17. In every row, click `暂停修改` and confirm the complete row is visible. Open each row icon's small `编辑` button and confirm the same row/frame remains visible while size, gap, X/Y, row, and boundary controls are changed.
+18. Select a candidate without inserting, then use its adjacent `插入` button. Confirm exactly one icon appears at the active grapheme boundary and no reverse scroll is needed.
 
 Run `scripts/check_editor_contract.py` for a fast structural check, then perform the browser checks above. Static success does not replace interaction testing.

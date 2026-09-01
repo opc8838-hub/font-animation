@@ -1,0 +1,139 @@
+{
+  "version": 2,
+  "canvas": {
+    "width": 1080,
+    "height": 1080,
+    "preset": "1080x1080"
+  },
+  "typography": {
+    "fontFamily": "stg:inter",
+    "fontSize": 150,
+    "tracking": 0,
+    "positionX": 0,
+    "positionY": 0,
+    "alignment": "center",
+    "textColor": "#111111",
+    "backgroundColor": "#ffffff"
+  },
+  "motion": {
+    "morphDuration": 600,
+    "characterDelay": 33,
+    "scaleFloor": 0.2,
+    "speed": 1.1,
+    "loop": true
+  },
+  "rows": [
+    {
+      "id": "month-01",
+      "text": "January",
+      "hold": 100,
+      "icons": [
+        {
+          "id": "gm-mtiwdbki-o66e2f",
+          "libraryId": "animal-56",
+          "boundary": 4,
+          "size": 105,
+          "gap": 1,
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "id": "month-02",
+      "text": "February",
+      "hold": 100,
+      "icons": [
+        {
+          "id": "gm-mtisnt3w-y8g89h",
+          "libraryId": "animal-02",
+          "boundary": 3,
+          "size": 123,
+          "gap": 2,
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "id": "month-03",
+      "text": "March",
+      "hold": 100,
+      "icons": []
+    },
+    {
+      "id": "month-04",
+      "text": "四月",
+      "hold": 100,
+      "icons": [
+        {
+          "id": "gm-mtiwc4ke-otnhg5",
+          "libraryId": "animal-57",
+          "boundary": 2,
+          "size": 138,
+          "gap": 12,
+          "x": -5,
+          "y": -9
+        }
+      ]
+    },
+    {
+      "id": "month-05",
+      "text": "May",
+      "hold": 100,
+      "icons": []
+    },
+    {
+      "id": "month-06",
+      "text": "June",
+      "hold": 100,
+      "icons": []
+    },
+    {
+      "id": "month-07",
+      "text": "July",
+      "hold": 100,
+      "icons": []
+    },
+    {
+      "id": "month-08",
+      "text": "August",
+      "hold": 100,
+      "icons": [
+        {
+          "id": "gm-mtiwfq1a-io9hdk",
+          "libraryId": "animal-35",
+          "boundary": 0,
+          "size": 130,
+          "gap": 3,
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "id": "month-09",
+      "text": "September",
+      "hold": 100,
+      "icons": []
+    },
+    {
+      "id": "month-10",
+      "text": "October",
+      "hold": 100,
+      "icons": []
+    },
+    {
+      "id": "month-11",
+      "text": "November",
+      "hold": 100,
+      "icons": []
+    },
+    {
+      "id": "month-12",
+      "text": "December",
+      "hold": 100,
+      "icons": []
+    }
+  ]
+}
