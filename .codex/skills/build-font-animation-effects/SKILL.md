@@ -14,7 +14,8 @@ Create the effect-specific motion while reusing the site's established editing a
 3. Read [references/reuse-map.md](references/reuse-map.md) to choose the closest existing implementation instead of rebuilding common systems.
 4. When the user supplies a reference video or asks to refine a reference-driven effect, read [references/video-analysis-workflow.md](references/video-analysis-workflow.md) before changing motion. It defines the evidence workflow, motion-contract and regression protocol, and the boundary for optional Oil Motion use.
 5. When rows or pages can use different colors, images, GIFs, or videos, read [references/per-page-backgrounds.md](references/per-page-backgrounds.md).
-6. Preserve the user's unrelated work and commit only the effect or shared baseline files placed in scope.
+6. When importing, replacing, or expanding the shared icon collection, read [references/icon-library-maintenance.md](references/icon-library-maintenance.md).
+7. Preserve the user's unrelated work and commit only the effect or shared baseline files placed in scope.
 
 If the task includes a reference video, use the available video-analysis workflow to inspect both normal-speed rhythm and slowed detail before choosing motion phases. Treat the user's video as visual evidence, not as permission to copy unrelated scene framing. Do not invoke `oil-motion` by default: ordinary kinetic typography, path following, color, icon, layout, Canvas, SVG, CSS, or GSAP work should stay in this skill unless the decision boundary in the video-analysis reference is actually met.
 
@@ -34,6 +35,8 @@ For repeated motion refinement, freeze already approved phases and write a compa
 - Give every effect editor the Icon Burst choreography UI, not merely a functional timeline. Reuse `me-choreo-track`, `me-choreo-scroll`, `me-choreo-bar`, `me-choreo-block`, `me-choreo-playhead`, and `me-choreo-legend`; preserve the colored phase blocks, visible playhead, legend rows, and click-to-seek behavior.
 - Use Icon Burst as the canonical editor UI and interaction language across effects. Implement the state transitions and surface separation in the editor interaction contract, not a lookalike custom hierarchy.
 - Treat selected assets, the candidate library, and the single-asset drawer as three different surfaces backed by one state model. Do not auto-expand on add and do not duplicate the single-asset editor under the compact library.
+- For row-based text with inline icons, use Glyph Morph as the canonical interaction pattern: each row owns `插入图标` and `暂停修改`; each inserted icon chip has an explicit small `编辑` action; both row pause and icon edit seek to that row's stable, fully readable frame before pausing.
+- Open large candidate libraries in an adjacent responsive drawer instead of scrolling the inspector to a library at its bottom. Keep the composition canvas unobscured, and give each candidate an adjacent explicit `插入` button so selection and commit never require a return scroll.
 - Put a compact Pause/Play and Replay control group at the horizontal center near the bottom of the live stage, matching Icon Burst. Keep editor-panel playback controls synchronized when both are present.
 - Make canvas size the first card in the editor. Selecting 1:1, 4:5, 9:16, 16:9, or custom dimensions must immediately refit the right-side live stage to that exact aspect ratio and composition geometry; keep duration, FPS, and export actions lower in the export card without duplicating size there.
 - Keep the selected canvas centered and responsive inside the available right-side workspace. The framed stage is the actual composition, not a decorative mockup, and typography, icons, spacing, and positions must match the selected export dimensions.
@@ -61,6 +64,7 @@ Before handing off an effect:
 - Check that timeline blocks, durations, active beat, playhead, and click-to-seek all stay synchronized after timing edits.
 - Test save, reload, JSON export/import, reset, and clear. If undo/redo exists internally, do not add extra visible scheme-card buttons that make the canonical four-action card inconsistent.
 - Check that the scheme card shows exactly the shared four Icon Burst actions, choreography uses the colored Icon Burst blocks and legend, library-card clicks do not insert content, and stage Pause/Play and Replay work without desynchronizing the timeline.
+- For row-based inline icons, verify that every row can pause on its complete readable state; row-chip `编辑` opens that exact icon without covering the canvas; a candidate's adjacent `插入` commits at the current grapheme boundary without scrolling back to another control.
 - Switch among 1:1, 9:16, and 16:9 before export; confirm the live frame changes aspect immediately while the inspector keeps its bounds, then compare the normalized live composition with a real export at the selected size.
 - Run `python .codex/skills/build-font-animation-effects/scripts/check_editor_contract.py <effect.html> <effect.js>` for pages using the shared editor, then test every acceptance check in the editor interaction contract in a real browser.
 - Export and inspect at least one real GIF and one real video, not only the live preview.

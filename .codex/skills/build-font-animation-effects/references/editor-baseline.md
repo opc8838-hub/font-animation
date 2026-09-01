@@ -16,7 +16,7 @@ Apply this baseline to new effect pages unless the user explicitly removes a cap
 - Recompute layout from actual text metrics. Do not assume a fixed word, equal left/right character counts, or a fixed number of lines.
 - For row/page sequences, use stable page ids and keep page-specific controls inside the corresponding row. When the effect exposes them, font family, font sizes, text/punctuation colors, letter/segment spacing, reveal style, phase durations, page hold, order, and assigned assets are independent per page.
 - Rebuild order options and all dependent page/asset controls after add or delete. Reordering moves the complete page state rather than copying visible text into a different page object.
-- When inline icons are supported, let the user insert each icon at a meaningful character boundary and edit its text-to-icon gap; do not automatically add the same icon to every page.
+- When inline icons are supported, let the user insert each icon at a meaningful grapheme boundary and edit its text-to-icon gap; do not automatically add the same icon to every page. Keep `插入图标` and `暂停修改` on the owning row, and show a small `编辑` action on every inserted icon chip.
 
 ## Shared icon and media library
 
@@ -37,6 +37,8 @@ The shared `GIF 动图` group includes:
 
 Present the complete group as `GIF 动图`. Keep real GIF/WebP/APNG candidates animated in the live preview instead of snapshotting their first frame; call the shared vector renderer with the consuming effect's deterministic timeline so preview and export share the same motion. Do not rasterize vector screenshots or recreate a reduced private list.
 
+The current animal catalog uses stable ids `animal-01` through `animal-59`. Render `groups.animals` dynamically and never preserve an old hard-coded 31-item limit. For ingestion, alpha validation, sequential ids, cache bumps, and consumer checks, follow [icon-library-maintenance.md](icon-library-maintenance.md).
+
 When icon quantity is part of the choreography, treat the selected list as a candidate pool. Adding a candidate raises the possible peak count; it must not force every selected asset into one permanently wider row. Compute a centered count envelope such as few → many → few, reveal outward and recover inward, keep visible assets flipping throughout the phase, and schedule without replacement inside each frame.
 
 Built-in candidates have stable `libraryId` values. Unless the effect explicitly calls for clones, reject duplicate selected `libraryId` values and schedule visible icons without replacement so the same icon does not appear multiple times in one frame. Do not create several independently moving copies merely to make an effect look busier.
@@ -46,6 +48,8 @@ Do not reintroduce the removed square, triangle, heart, circle, or star choices 
 For icon-rich effects, support:
 
 - Separate library selection from composition mutation. A library-card click only selects an item for editing; an explicit Add/Insert button commits it to the text, glyph slot, orbit list, or composition.
+- Put a compact explicit `插入` beside each candidate when the library is long. It may select and commit that candidate in one action, while the main tile remains selection-only.
+- Open long libraries in a responsive side drawer launched from the active row. Do not place the whole library below the inspector content and force a down-then-up scroll; never cover the actual composition canvas.
 - Add/remove assets and arbitrary asset counts.
 - Drag to reorder selected assets; expanded management should use the full editor width without shrinking the stage.
 - Roles such as opening/orbit and glyph replacement when relevant.
@@ -53,6 +57,7 @@ For icon-rich effects, support:
 - Global icon size, horizontal/vertical spacing, text-to-icon slot gap, cluster X/Y position, density, and effect-specific spacing controls.
 - Upload/replace PNG, JPG, WebP, SVG, GIF, or other formats already supported by the consuming renderer.
 - Keep artwork optically centered inside icon containers.
+- For an inserted inline icon, expose owning row, grapheme boundary, size, `图标与文字间距`, X, and Y in one focused editor. Opening it pauses on the owning row's complete readable frame so every adjustment is visible.
 
 When text and icon counts are asymmetric, center the middle icon slot independently of left/right word length. Do not derive the slot center from character count alone.
 

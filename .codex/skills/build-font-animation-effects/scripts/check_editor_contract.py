@@ -63,6 +63,19 @@ def main() -> int:
         if not any(token in js for token in alternatives):
             errors.append(f"missing {label}: one of {', '.join(alternatives)}")
 
+    inline_icons = "iconBoundary" in source or "插入到光标" in source
+    if inline_icons:
+        for label, alternatives in {
+            "row-local icon insertion": ("插入图标",),
+            "row-local pause for editing": ("暂停修改",),
+            "explicit inline-icon edit": ('data-action="edit-icon"', "edit-icon"),
+            "candidate-adjacent insert": ("quick-insert", "quickInsert"),
+            "row seek before editing": ("seekToRowStart", "seekToPage", "seekToRow"),
+            "responsive library drawer": ("setIconLibraryDrawer", "setLibraryDrawer", "setAssetLibraryDrawer"),
+        }.items():
+            if not any(token in source for token in alternatives):
+                errors.append(f"missing {label}: one of {', '.join(alternatives)}")
+
     if errors:
         for error in errors:
             fail(error)

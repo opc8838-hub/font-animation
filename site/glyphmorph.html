@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="me-motion-editor.css?v=20260901-1">
   <link rel="stylesheet" href="shared-fonts.css?v=20260824-2">
   <link rel="stylesheet" href="stg-cn.css?v=20260824-1">
-  <link rel="stylesheet" href="glyphmorph.css?v=20260901-2">
+  <link rel="stylesheet" href="glyphmorph.css?v=20260902-2">
 </head>
 <body class="glyphmorph-editor">
   <aside id="glyphMorphInspector" class="gm-inspector" aria-label="字融编辑器">
@@ -42,12 +42,22 @@
 
     <section class="gm-card">
       <div class="gm-card-title"><span>02</span><h2>文字序列</h2><button id="addRow" class="gm-text-button" type="button">＋ 添加</button></div>
-      <p class="gm-help">每一行是一个画面。重复字形会沿基线移位，其余字形原位缩放。</p>
+      <p class="gm-help">每一行是一个画面。把光标放到文字的任意位置，再从图标库插入。</p>
       <div id="sequenceRows" class="gm-sequence"></div>
+      <div class="gm-grid-2 gm-text-colors">
+        <label class="gm-field">文字色 <input id="textColor" type="color"></label>
+        <label class="gm-field">背景色 <input id="backgroundColor" type="color"></label>
+      </div>
+    </section>
+
+    <section class="gm-card gm-icon-launch-card">
+      <div class="gm-card-title"><span>03</span><h2>图标库</h2><button id="openIconLibrary" class="gm-text-button" type="button" aria-expanded="false">右侧展开</button></div>
+      <p class="gm-help">从文字行点击“插入图标”，图库会在右侧独立打开，左栏不再上下跳动。</p>
+      <button id="openIconLibraryLarge" class="gm-open-library" type="button">打开图标库</button>
     </section>
 
     <section class="gm-card">
-      <div class="gm-card-title"><span>03</span><h2>字体与构图</h2></div>
+      <div class="gm-card-title"><span>04</span><h2>字体与构图</h2></div>
       <label class="gm-field gm-field-wide">字体
         <select id="fontFamily"><option value="stg:inter">Inter</option></select>
       </label>
@@ -57,10 +67,6 @@
         <label class="gm-field">水平 <input id="positionX" type="range" min="-40" max="40" step="1"><output for="positionX"></output></label>
         <label class="gm-field">垂直 <input id="positionY" type="range" min="-40" max="40" step="1"><output for="positionY"></output></label>
       </div>
-      <div class="gm-grid-2">
-        <label class="gm-field">文字色 <input id="textColor" type="color"></label>
-        <label class="gm-field">背景色 <input id="backgroundColor" type="color"></label>
-      </div>
       <fieldset class="gm-segmented"><legend>对齐</legend>
         <label><input type="radio" name="alignment" value="left"><span>左</span></label>
         <label><input type="radio" name="alignment" value="center"><span>中</span></label>
@@ -69,7 +75,7 @@
     </section>
 
     <section class="gm-card">
-      <div class="gm-card-title"><span>04</span><h2>动效节奏</h2></div>
+      <div class="gm-card-title"><span>05</span><h2>动效节奏</h2></div>
       <div class="gm-grid-2">
         <label class="gm-field">变形 <input id="morphDuration" type="range" min="180" max="1400" step="10"><output for="morphDuration"></output></label>
         <label class="gm-field">错峰 <input id="characterDelay" type="range" min="0" max="100" step="1"><output for="characterDelay"></output></label>
@@ -80,25 +86,25 @@
     </section>
 
     <section class="gm-card">
-      <div class="gm-card-title"><span>05</span><h2>时间轴</h2></div>
+      <div class="gm-card-title"><span>06</span><h2>时间轴</h2></div>
       <div class="me-choreo-scroll"><div id="timeline" class="gm-timeline me-choreo-track me-choreo-bar" role="list" aria-label="字融动效时间轴"></div></div>
       <input id="scrubber" class="gm-scrubber me-choreo-playhead" type="range" min="0" max="1" step="0.001" value="0" aria-label="时间轴播放头">
       <div class="gm-time-readout"><span id="timeNow">0.00s</span><span id="timeTotal">0.00s</span></div>
     </section>
 
     <section class="gm-card">
-      <div class="gm-card-title"><span>06</span><h2>方案</h2></div>
+      <div class="gm-card-title"><span>07</span><h2>方案</h2></div>
       <div class="gm-actions gm-actions-4">
-        <button id="saveScheme" type="button">保存</button>
-        <button id="importScheme" type="button">导入</button>
+        <button id="saveScheme" type="button">保存方案</button>
+        <button id="importScheme" type="button">导入方案</button>
         <button id="restoreScheme" type="button">恢复默认</button>
-        <button id="clearScheme" type="button">清空</button>
+        <button id="clearScheme" type="button" aria-label="清空所有行">清理重做</button>
       </div>
       <input id="schemeFile" type="file" accept="application/json,.json" hidden>
     </section>
 
     <section class="gm-card">
-      <div class="gm-card-title"><span>07</span><h2>真实导出</h2></div>
+      <div class="gm-card-title"><span>08</span><h2>真实导出</h2></div>
       <div class="gm-grid-2">
         <label class="gm-field">时长
           <select id="exportDuration"><option value="cycle">完整循环</option><option value="3">3 秒</option><option value="5">5 秒</option><option value="10">10 秒</option></select>
@@ -116,6 +122,46 @@
     </section>
   </aside>
 
+  <aside id="iconLibraryDrawer" class="gm-library-drawer" aria-label="图标库侧窗" hidden>
+    <header class="gm-library-drawer-header">
+      <div><small>当前文字行的图标</small><h2>图标库</h2></div>
+      <button id="closeIconLibrary" type="button" aria-label="关闭图标库">×</button>
+    </header>
+    <div id="iconLibraryBrowse" class="gm-library-browse">
+      <div id="iconLayerPanel" class="gm-layer-panel me-layer-panel">
+        <div class="gm-layer-summary">
+          <div><small>已插入图标</small><strong id="selectedIconCount">0</strong></div>
+          <button id="toggleSelectedIcons" class="me-layer-toggle" type="button" aria-expanded="false">展开已选</button>
+        </div>
+        <div id="selectedIconItems" class="gm-layer-items me-layer-items"></div>
+      </div>
+      <div class="gm-library-selection">
+        <div id="librarySelectionPreview" class="gm-library-selection-preview" aria-hidden="true">＋</div>
+        <div><small>当前候选</small><strong id="librarySelectionName">请先选择图标</strong><span id="insertTargetLabel">目标：第 01 行 · 文字末尾</span></div>
+        <button id="insertSelectedIcon" class="me-asset-commit" type="button" disabled>插入到光标</button>
+      </div>
+      <div id="iconLibrary" class="gm-icon-groups"></div>
+    </div>
+
+    <section id="iconAssetDrawer" class="gm-asset-drawer me-asset-drawer" aria-label="单图标编辑" hidden>
+      <header>
+        <div><small>单独编辑</small><h2 id="activeIconName">图标</h2></div>
+        <button id="closeIconDrawer" type="button" aria-label="返回图标库">←</button>
+      </header>
+      <div class="me-asset-editor gm-asset-editor">
+        <label class="gm-field gm-field-wide">所属文字行<select id="iconRow"></select></label>
+        <label class="gm-field gm-field-wide">插入位置<select id="iconBoundary"></select></label>
+        <div class="gm-grid-2">
+          <label class="gm-field">图标大小<input id="iconSize" type="range" min="20" max="220" step="1"><output for="iconSize"></output></label>
+          <label class="gm-field">图标与文字间距<input id="iconGap" type="range" min="0" max="80" step="1"><output for="iconGap"></output></label>
+          <label class="gm-field">水平左右位置<input id="iconX" type="range" min="-100" max="100" step="1"><output for="iconX"></output></label>
+          <label class="gm-field">垂直位置<input id="iconY" type="range" min="-100" max="100" step="1"><output for="iconY"></output></label>
+        </div>
+        <button id="removeActiveIcon" class="gm-remove-active" type="button">删除这个图标</button>
+      </div>
+    </section>
+  </aside>
+
   <main id="glyphMorphStage" class="gm-stage">
     <div id="compositionFrame" class="gm-composition-frame">
       <canvas id="glyphMorphCanvas" width="1080" height="1080" aria-label="字融效果预览"></canvas>
@@ -128,26 +174,10 @@
     </div>
   </main>
 
-  <dialog id="clearDialog" class="gm-clear-dialog" aria-labelledby="clearDialogTitle">
-    <div class="gm-dialog-body">
-      <div class="gm-dialog-heading">
-        <div><small>清空方式</small><h2 id="clearDialogTitle">要清空什么？</h2></div>
-        <button id="closeClearDialog" class="gm-dialog-close" aria-label="关闭" type="button">×</button>
-      </div>
-      <button id="clearChanges" class="gm-clear-choice" type="button">
-        <strong>清空改动</strong>
-        <span>撤销本次编辑，恢复首次打开时的默认文字、尺寸和参数。</span>
-      </button>
-      <button id="clearAll" class="gm-clear-choice gm-clear-choice-danger" type="button">
-        <strong>清空所有内容</strong>
-        <span>清空全部文字行，但保留当前画布、字体、颜色和动效参数。</span>
-      </button>
-    </div>
-  </dialog>
-
   <script src="js/continuation-gif.js?v=20260824-1"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
-  <script src="glyphmorph.js?v=20260901-2"></script>
+  <script src="shared-icon-library.js?v=20260902-1"></script>
+  <script src="glyphmorph.js?v=20260902-3"></script>
   <script src="stg-cn.js?v=20260901-1"></script>
 </body>
 </html>

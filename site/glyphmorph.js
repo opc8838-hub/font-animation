@@ -5,7 +5,7 @@
   // LTMorphingLabel (MIT, lexrus/LTMorphingLabel). No Swift/UIKit source is embedded.
   const $ = (id) => document.getElementById(id);
   const STORAGE_KEY = "me-motion-glyphmorph-v1";
-  const VERSION = 1;
+  const VERSION = 2;
   const segmenter = typeof Intl.Segmenter === "function" ? new Intl.Segmenter(undefined, { granularity: "grapheme" }) : null;
   const split = (value) => segmenter ? Array.from(segmenter.segment(String(value)), ({ segment }) => segment) : Array.from(String(value));
   const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
@@ -13,17 +13,26 @@
   const clone = (value) => JSON.parse(JSON.stringify(value));
   const uid = () => `gm-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
+  // Frozen approved example. Keep synchronized with assets/presets/glyphmorph-default.json.
   const DEFAULT_SCHEME = Object.freeze({
     version: VERSION,
     canvas: { width: 1080, height: 1080, preset: "1080x1080" },
     typography: { fontFamily: "stg:inter", fontSize: 150, tracking: 0, positionX: 0, positionY: 0, alignment: "center", textColor: "#111111", backgroundColor: "#ffffff" },
-    motion: { morphDuration: 600, characterDelay: 26, scaleFloor: 0.02, speed: 1, loop: true },
+    motion: { morphDuration: 600, characterDelay: 33, scaleFloor: 0.2, speed: 1.1, loop: true },
     rows: [
-      ["month-01", "January", 100], ["month-02", "February", 100], ["month-03", "March", 100],
-      ["month-04", "April", 100], ["month-05", "May", 100], ["month-06", "June", 100],
-      ["month-07", "July", 100], ["month-08", "August", 100], ["month-09", "September", 100],
-      ["month-10", "October", 100], ["month-11", "November", 100], ["month-12", "December", 100]
-    ].map(([id, text, hold]) => ({ id, text, hold }))
+      { id: "month-01", text: "January", hold: 100, icons: [{ id: "gm-mtiwdbki-o66e2f", libraryId: "animal-56", boundary: 4, size: 105, gap: 1, x: 0, y: 0 }] },
+      { id: "month-02", text: "February", hold: 100, icons: [{ id: "gm-mtisnt3w-y8g89h", libraryId: "animal-02", boundary: 3, size: 123, gap: 2, x: 0, y: 0 }] },
+      { id: "month-03", text: "March", hold: 100, icons: [] },
+      { id: "month-04", text: "四月", hold: 100, icons: [{ id: "gm-mtiwc4ke-otnhg5", libraryId: "animal-57", boundary: 2, size: 138, gap: 12, x: -5, y: -9 }] },
+      { id: "month-05", text: "May", hold: 100, icons: [] },
+      { id: "month-06", text: "June", hold: 100, icons: [] },
+      { id: "month-07", text: "July", hold: 100, icons: [] },
+      { id: "month-08", text: "August", hold: 100, icons: [{ id: "gm-mtiwfq1a-io9hdk", libraryId: "animal-35", boundary: 0, size: 130, gap: 3, x: 0, y: 0 }] },
+      { id: "month-09", text: "September", hold: 100, icons: [] },
+      { id: "month-10", text: "October", hold: 100, icons: [] },
+      { id: "month-11", text: "November", hold: 100, icons: [] },
+      { id: "month-12", text: "December", hold: 100, icons: [] }
+    ]
   });
 
   const state = {
@@ -32,7 +41,12 @@
     elapsedMs: 0,
     lastFrame: performance.now(),
     exportBusy: false,
-    reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches
+    reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches,
+    activeRowId: "month-01",
+    caretBoundary: 7,
+    librarySelectionId: "",
+    activeIconId: "",
+    imageCache: new Map()
   };
 
   const canvas = $("glyphMorphCanvas");
@@ -51,9 +65,30 @@
       from: row,
       to: rows[(index + 1) % rows.length],
       morphMs: state.scheme.motion.morphDuration,
-      holdMs: Math.max(0, Number(rows[(index + 1) % rows.length].hold) || 0),
-      durationMs: state.scheme.motion.morphDuration + Math.max(0, Number(rows[(index + 1) % rows.length].hold) || 0)
+      holdMs: Math.max(0, Number(row.hold) || 0),
+      durationMs: state.scheme.motion.morphDuration + Math.max(0, Number(row.hold) || 0)
     }));
+  }
+  function rowStartElapsed(rowIndex) {
+    const segments = timelineSegments();
+    const length = segments.length;
+    if (!length) return 0;
+    const index = ((rowIndex % length) + length) % length;
+    let rawStart = 0;
+    for (let cursor = 0; cursor < index; cursor += 1) rawStart += segments[cursor].durationMs;
+    return rawStart / Math.max(0.01, state.scheme.motion.speed);
+  }
+
+  function seekToRowStart(rowIdOrIndex, pause = true) {
+    const rows = state.scheme.rows.length > 1 ? state.scheme.rows : [{ id: "blank-a", text: "", hold: 100 }, { id: "blank-b", text: "", hold: 100 }];
+    const index = typeof rowIdOrIndex === "number" ? rowIdOrIndex : rows.findIndex((row) => row.id === rowIdOrIndex);
+    const total = cycleDurationMs();
+    const elapsedMs = Math.min(total, rowStartElapsed(index));
+    state.elapsedMs = elapsedMs;
+    state.playing = !pause;
+    state.lastFrame = performance.now();
+    updatePlaybackButton();
+    resizePreview();
   }
 
   function cycleDurationMs() {
@@ -71,15 +106,81 @@
       const segment = segments[index];
       if (local < cursor + segment.durationMs || index === segments.length - 1) {
         const segmentTime = local - cursor;
-        return { segment, index, progress: clamp(segmentTime / Math.max(1, segment.morphMs)), inHold: segmentTime >= segment.morphMs };
+        return { segment, index, progress: clamp((segmentTime - segment.holdMs) / Math.max(1, segment.morphMs)), inHold: segmentTime < segment.holdMs };
       }
       cursor += segment.durationMs;
     }
     return { segment: segments[0], index: 0, progress: 0, inHold: false };
   }
 
-  function glyphLayout(ctx, text, width, height) {
-    const glyphs = split(text);
+  function libraryAsset(libraryId) {
+    return window.STGIconLibrary?.byId?.get(libraryId) || null;
+  }
+
+  function rowTokens(row) {
+    const glyphs = split(row.text);
+    const buckets = new Map();
+    (row.icons || []).forEach((icon) => {
+      const boundary = clamp(Math.round(Number(icon.boundary) || 0), 0, glyphs.length);
+      if (!buckets.has(boundary)) buckets.set(boundary, []);
+      buckets.get(boundary).push(icon);
+    });
+    const tokens = [];
+    for (let boundary = 0; boundary <= glyphs.length; boundary += 1) {
+      (buckets.get(boundary) || []).forEach((icon) => tokens.push({ type: "icon", key: `i:${icon.libraryId}`, icon }));
+      if (boundary < glyphs.length) tokens.push({ type: "glyph", key: `g:${glyphs[boundary]}`, glyph: glyphs[boundary] });
+    }
+    return tokens;
+  }
+
+  async function loadAssetResource(asset) {
+    if (!asset || asset.kind === "vector") return null;
+    if (state.imageCache.has(asset.libraryId)) return state.imageCache.get(asset.libraryId);
+    const promise = (async () => {
+      let fallbackImage = null;
+      const fallbackPromise = new Promise((resolve) => {
+        const image = new Image();
+        image.decoding = "async";
+        image.onload = () => { fallbackImage = image; resolve(image); };
+        image.onerror = () => resolve(null);
+        image.src = asset.url;
+      });
+      if (/gif/i.test(asset.fileType || "") && "ImageDecoder" in window) {
+        try {
+          const response = await fetch(asset.url);
+          if (!response.ok) throw new Error(`asset ${response.status}`);
+          const blob = await response.blob();
+          const decoder = new ImageDecoder({ data: blob.stream(), type: asset.fileType });
+          await decoder.tracks.ready;
+          const frameCount = decoder.tracks.selectedTrack?.frameCount || 1;
+          const frames = [];
+          let totalMs = 0;
+          for (let index = 0; index < frameCount; index += 1) {
+            const decoded = await decoder.decode({ frameIndex: index, completeFramesOnly: true });
+            const durationMs = Math.max(20, Number(decoded.image.duration || 100000) / 1000);
+            frames.push({ image: decoded.image, startMs: totalMs, durationMs });
+            totalMs += durationMs;
+          }
+          return { kind: "frames", frames, totalMs, decoder, fallbackImage: await fallbackPromise };
+        } catch (error) {
+          console.warn(`动态图标解码回退：${asset.name}`, error);
+        }
+      }
+      return { kind: "image", image: await fallbackPromise };
+    })();
+    state.imageCache.set(asset.libraryId, promise);
+    const resource = await promise;
+    state.imageCache.set(asset.libraryId, resource);
+    return resource;
+  }
+
+  async function preloadInsertedAssets() {
+    const ids = new Set(state.scheme.rows.flatMap((row) => (row.icons || []).map((icon) => icon.libraryId)));
+    await Promise.all(Array.from(ids, (id) => loadAssetResource(libraryAsset(id))));
+  }
+
+  function glyphLayout(ctx, row, width, height) {
+    const sourceTokens = rowTokens(row);
     const typography = state.scheme.typography;
     const unit = Math.min(width, height) / 1080;
     const baseSize = Math.max(1, typography.fontSize * unit);
@@ -91,8 +192,14 @@
     const weight = preset.weight || 500;
     const measure = (size) => {
       ctx.font = `${style} ${weight} ${size}px ${family}`;
-      const widths = glyphs.map((glyph) => ctx.measureText(glyph).width);
-      return { widths, total: widths.reduce((sum, item) => sum + item, 0) + Math.max(0, glyphs.length - 1) * tracking * (size / baseSize) };
+      const fitScale = size / baseSize;
+      const tokens = sourceTokens.map((token) => {
+        if (token.type === "glyph") return { ...token, width: ctx.measureText(token.glyph).width };
+        const iconSize = size * clamp(Number(token.icon.size) || 90, 20, 220) / 100;
+        const gap = clamp(Number(token.icon.gap) || 0, 0, 80) * unit * fitScale;
+        return { ...token, iconSize, gap, width: iconSize + gap * 2 };
+      });
+      return { tokens, total: tokens.reduce((sum, token) => sum + token.width, 0) + Math.max(0, tokens.length - 1) * tracking * fitScale };
     };
     let fontSize = baseSize;
     let metrics = measure(fontSize);
@@ -108,20 +215,19 @@
     if (typography.alignment === "left") start = width * 0.08 + typography.positionX / 100 * width;
     if (typography.alignment === "right") start = width * 0.92 + typography.positionX / 100 * width - metrics.total;
     let cursor = start;
-    const slots = glyphs.map((glyph, index) => {
-      const glyphWidth = metrics.widths[index];
-      const slot = { glyph, x: cursor + glyphWidth / 2, y: baseline, width: glyphWidth };
-      cursor += glyphWidth + appliedTracking;
+    const slots = metrics.tokens.map((token) => {
+      const slot = { token, x: cursor + token.width / 2, y: baseline, width: token.width };
+      cursor += token.width + appliedTracking;
       return slot;
     });
-    return { glyphs, slots, fontSize, family, style, weight };
+    return { tokens: metrics.tokens, slots, fontSize, family, style, weight, unit };
   }
 
   function matchGlyphs(from, to) {
     const claimed = new Set();
     const matches = new Map();
-    from.forEach((glyph, oldIndex) => {
-      const newIndex = to.findIndex((candidate, index) => candidate === glyph && !claimed.has(index));
+    from.forEach((token, oldIndex) => {
+      const newIndex = to.findIndex((candidate, index) => candidate.key === token.key && !claimed.has(index));
       if (newIndex >= 0) {
         claimed.add(newIndex);
         matches.set(oldIndex, newIndex);
@@ -130,17 +236,57 @@
     return { matches, claimed };
   }
 
-  function drawGlyph(ctx, slot, layout, scale, alpha) {
-    if (!slot.glyph.trim() || alpha <= 0 || scale <= 0) return;
+  function drawableImage(resource, timeSeconds) {
+    if (!resource) return null;
+    if (resource.kind === "image") return resource.image;
+    if (resource.kind === "frames" && resource.frames.length) {
+      const timeMs = ((timeSeconds * 1000) % resource.totalMs + resource.totalMs) % resource.totalMs;
+      return (resource.frames.find((frame) => timeMs >= frame.startMs && timeMs < frame.startMs + frame.durationMs) || resource.frames[0]).image;
+    }
+    return resource.fallbackImage || null;
+  }
+
+  function drawToken(ctx, slot, layout, scale, alpha, timeSeconds, iconOverride = null) {
+    const token = slot.token;
+    if (alpha <= 0 || scale <= 0) return;
     ctx.save();
     ctx.globalAlpha = clamp(alpha);
-    ctx.fillStyle = state.scheme.typography.textColor;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.font = `${layout.style} ${layout.weight} ${layout.fontSize}px ${layout.family}`;
-    ctx.translate(slot.x, slot.y);
+    if (token.type === "glyph") {
+      if (!token.glyph.trim()) { ctx.restore(); return; }
+      ctx.fillStyle = state.scheme.typography.textColor;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = `${layout.style} ${layout.weight} ${layout.fontSize}px ${layout.family}`;
+      ctx.translate(slot.x, slot.y);
+      ctx.scale(scale, scale);
+      ctx.fillText(token.glyph, 0, 0);
+      ctx.restore();
+      return;
+    }
+    const icon = iconOverride || token.icon;
+    const size = layout.fontSize * clamp(Number(icon.size) || 90, 20, 220) / 100;
+    const offsetX = layout.fontSize * clamp(Number(icon.x) || 0, -100, 100) / 100;
+    const offsetY = layout.fontSize * clamp(Number(icon.y) || 0, -100, 100) / 100;
+    const asset = libraryAsset(icon.libraryId);
+    ctx.translate(slot.x + offsetX, slot.y + offsetY);
     ctx.scale(scale, scale);
-    ctx.fillText(slot.glyph, 0, 0);
+    if (asset?.kind === "vector") {
+      window.STGIconLibrary.drawVector(ctx, asset, size, timeSeconds);
+    } else {
+      const cached = state.imageCache.get(icon.libraryId);
+      const resource = cached && typeof cached.then !== "function" ? cached : null;
+      const image = drawableImage(resource, timeSeconds);
+      if (image) {
+        const naturalWidth = image.displayWidth || image.naturalWidth || image.width || 1;
+        const naturalHeight = image.displayHeight || image.naturalHeight || image.height || 1;
+        const fit = size / Math.max(naturalWidth, naturalHeight);
+        ctx.drawImage(image, -naturalWidth * fit / 2, -naturalHeight * fit / 2, naturalWidth * fit, naturalHeight * fit);
+      } else {
+        ctx.strokeStyle = state.scheme.typography.textColor;
+        ctx.lineWidth = Math.max(1, size * 0.05);
+        ctx.strokeRect(-size * 0.32, -size * 0.32, size * 0.64, size * 0.64);
+      }
+    }
     ctx.restore();
   }
 
@@ -151,14 +297,14 @@
     ctx.fillStyle = state.scheme.typography.backgroundColor;
     ctx.fillRect(0, 0, width, height);
     const timeline = resolveTimeline(timeSeconds * 1000);
-    const fromLayout = glyphLayout(ctx, timeline.segment.from.text, width, height);
-    const toLayout = glyphLayout(ctx, timeline.segment.to.text, width, height);
+    const fromLayout = glyphLayout(ctx, timeline.segment.from, width, height);
+    const toLayout = glyphLayout(ctx, timeline.segment.to, width, height);
     if (timeline.inHold) {
-      toLayout.slots.forEach((slot) => drawGlyph(ctx, slot, toLayout, 1, 1));
+      fromLayout.slots.forEach((slot) => drawToken(ctx, slot, fromLayout, 1, 1, timeSeconds));
       ctx.restore();
       return timeline;
     }
-    const { matches, claimed } = matchGlyphs(fromLayout.glyphs, toLayout.glyphs);
+    const { matches, claimed } = matchGlyphs(fromLayout.tokens, toLayout.tokens);
     const delayRatio = state.scheme.motion.characterDelay / Math.max(1, state.scheme.motion.morphDuration);
     const floor = state.scheme.motion.scaleFloor;
     fromLayout.slots.forEach((oldSlot, oldIndex) => {
@@ -166,17 +312,22 @@
       const eased = easeOutQuint(glyphProgress);
       const newIndex = matches.get(oldIndex);
       if (newIndex == null) {
-        drawGlyph(ctx, oldSlot, fromLayout, Math.max(floor, 1 - eased), 1 - eased);
+        drawToken(ctx, oldSlot, fromLayout, Math.max(floor, 1 - eased), 1 - eased, timeSeconds);
         return;
       }
       const target = toLayout.slots[newIndex];
-      drawGlyph(ctx, { glyph: oldSlot.glyph, x: oldSlot.x + (target.x - oldSlot.x) * eased, y: oldSlot.y }, fromLayout, 1, 1);
+      let iconOverride = null;
+      if (oldSlot.token.type === "icon" && target.token.type === "icon") {
+        iconOverride = { ...oldSlot.token.icon };
+        ["size", "gap", "x", "y"].forEach((key) => { iconOverride[key] = Number(oldSlot.token.icon[key] || 0) + (Number(target.token.icon[key] || 0) - Number(oldSlot.token.icon[key] || 0)) * eased; });
+      }
+      drawToken(ctx, { token: oldSlot.token, x: oldSlot.x + (target.x - oldSlot.x) * eased, y: oldSlot.y + (target.y - oldSlot.y) * eased }, fromLayout, 1, 1, timeSeconds, iconOverride);
     });
     toLayout.slots.forEach((newSlot, newIndex) => {
       if (claimed.has(newIndex)) return;
       const glyphProgress = clamp(timeline.progress - delayRatio * newIndex);
       const eased = easeOutQuint(glyphProgress);
-      drawGlyph(ctx, newSlot, toLayout, floor + (1 - floor) * eased, eased);
+      drawToken(ctx, newSlot, toLayout, floor + (1 - floor) * eased, eased, timeSeconds);
     });
     ctx.restore();
     return timeline;
@@ -195,14 +346,113 @@
 
   function renderRows() {
     $("sequenceRows").innerHTML = state.scheme.rows.map((row, index) => `
-      <div class="gm-row" data-row-id="${row.id}">
-        <span class="gm-row-index">${String(index + 1).padStart(2, "0")}</span>
-        <input data-key="text" value="${escapeHtml(row.text)}" aria-label="第 ${index + 1} 行文字">
-        <input data-key="hold" type="number" min="0" max="5000" step="10" value="${row.hold}" aria-label="第 ${index + 1} 行停留毫秒">
-        <button data-action="up" type="button" aria-label="上移">↑</button>
-        <button data-action="down" type="button" aria-label="下移">↓</button>
-        <button data-action="delete" type="button" aria-label="删除">×</button>
+      <div class="gm-row-shell" data-row-id="${row.id}">
+        <div class="gm-row">
+          <span class="gm-row-index">${String(index + 1).padStart(2, "0")}</span>
+          <input data-key="text" value="${escapeHtml(row.text)}" aria-label="第 ${index + 1} 行文字">
+          <input data-key="hold" type="number" min="0" max="5000" step="10" value="${row.hold}" aria-label="第 ${index + 1} 行停留毫秒">
+          <button data-action="up" type="button" aria-label="上移">↑</button>
+          <button data-action="down" type="button" aria-label="下移">↓</button>
+          <button data-action="delete" type="button" aria-label="删除">×</button>
+        </div>
+        <div class="gm-row-meta">
+          <button class="gm-row-target${state.activeRowId === row.id ? " is-active" : ""}" data-action="target" type="button">＋ 插入图标</button>
+          <button class="gm-row-pause" data-action="pause-row" type="button">暂停修改</button>
+          <span class="gm-row-icon-count">${(row.icons || []).length} 个图标</span>
+        </div>
+        <div class="gm-row-icons">${(row.icons || []).map((icon) => {
+          const asset = libraryAsset(icon.libraryId);
+          const name = escapeHtml(asset?.name || "图标");
+          return `<div class="gm-inline-icon-chip"><img src="${escapeHtml(asset?.url || "")}" alt=""><strong>${name}</strong><span>位置 ${icon.boundary}</span><button class="gm-inline-icon-edit" data-action="edit-icon" data-icon-id="${icon.id}" type="button" aria-label="编辑${name}">编辑</button></div>`;
+        }).join("")}</div>
       </div>`).join("");
+    updateInsertTargetLabel();
+  }
+
+  function allInsertedIcons() {
+    return state.scheme.rows.flatMap((row, rowIndex) => (row.icons || []).map((icon) => ({ icon, row, rowIndex })));
+  }
+
+  function activeIconEntry() {
+    return allInsertedIcons().find(({ icon }) => icon.id === state.activeIconId) || null;
+  }
+
+  function renderSelectedAssets() {
+    const entries = allInsertedIcons();
+    $("selectedIconCount").textContent = String(entries.length);
+    $("selectedIconItems").innerHTML = entries.length ? entries.map(({ icon, row, rowIndex }) => {
+      const asset = libraryAsset(icon.libraryId);
+      return `<div class="gm-selected-icon" data-icon-id="${icon.id}">
+        <img src="${escapeHtml(asset?.url || "")}" alt="">
+        <div><strong>${escapeHtml(asset?.name || "图标")}</strong><small>第 ${String(rowIndex + 1).padStart(2, "0")} 行 · 边界 ${icon.boundary} · ${icon.size}% · 间距 ${icon.gap}</small></div>
+        <div class="gm-selected-icon-actions"><button data-action="edit-icon" type="button">单独编辑</button><button data-action="remove-icon" type="button" aria-label="删除">×</button></div>
+      </div>`;
+    }).join("") : '<p class="gm-help">还没有插入图标。先从下方图库选择，再点击“插入到光标”。</p>';
+    renderAssetEditor();
+  }
+
+  function renderIconLibrary() {
+    const groups = window.STGIconLibrary?.groups || {};
+    const labels = { flow: "流动图标", gifMotion: "GIF 动图", animals: "透明动物", bots: "Bot 动态图标" };
+    $("iconLibrary").innerHTML = ["flow", "gifMotion", "animals", "bots"].map((groupName, groupIndex) => {
+      const assets = groups[groupName] || [];
+      return `<details class="gm-icon-group"${groupIndex === 0 ? " open" : ""}><summary>${labels[groupName]} · ${assets.length}</summary><div class="gm-asset-library me-asset-library">${assets.map((asset) => {
+        const selected = state.librarySelectionId === asset.libraryId;
+        return `<div class="gm-asset-choice-wrap${selected ? " is-selected" : ""}" data-library-id="${asset.libraryId}">
+          <button class="gm-asset-choice me-asset-choice${selected ? " is-selected" : ""}" data-library-id="${asset.libraryId}" type="button"><img src="${escapeHtml(asset.url)}" alt=""><span>${escapeHtml(asset.name)}</span></button>
+          <button class="gm-asset-quick-insert" data-quick-insert="${asset.libraryId}" type="button" aria-label="插入${escapeHtml(asset.name)}">＋ 插入</button>
+        </div>`;
+      }).join("")}</div></details>`;
+    }).join("");
+    renderLibrarySelection();
+  }
+
+  function renderLibrarySelection() {
+    const asset = libraryAsset(state.librarySelectionId);
+    $("librarySelectionPreview").innerHTML = asset ? `<img src="${escapeHtml(asset.url)}" alt="">` : "＋";
+    $("librarySelectionName").textContent = asset?.name || "请先选择图标";
+    $("insertSelectedIcon").disabled = !asset || !state.activeRowId;
+    $("iconLibrary").querySelectorAll(".gm-asset-choice-wrap").forEach((wrapper) => {
+      const selected = wrapper.dataset.libraryId === state.librarySelectionId;
+      wrapper.classList.toggle("is-selected", selected);
+      wrapper.querySelector(".gm-asset-choice")?.classList.toggle("is-selected", selected);
+    });
+    updateInsertTargetLabel();
+  }
+
+  function updateInsertTargetLabel() {
+    const rowIndex = state.scheme.rows.findIndex((row) => row.id === state.activeRowId);
+    const row = state.scheme.rows[rowIndex] || state.scheme.rows[0];
+    if (!row || !$("insertTargetLabel")) return;
+    const length = split(row.text).length;
+    const boundary = clamp(state.caretBoundary, 0, length);
+    const position = boundary === 0 ? "文字开头" : boundary === length ? "文字末尾" : `第 ${boundary} 字后`;
+    $("insertTargetLabel").textContent = `目标：第 ${String(Math.max(0, rowIndex) + 1).padStart(2, "0")} 行 · ${position}`;
+  }
+
+  function boundaryOptions(row, selected) {
+    const glyphs = split(row.text);
+    return Array.from({ length: glyphs.length + 1 }, (_, boundary) => {
+      const label = boundary === 0 ? "文字开头" : boundary === glyphs.length ? "文字末尾" : `第 ${boundary} 字“${glyphs[boundary - 1]}”之后`;
+      return `<option value="${boundary}"${boundary === selected ? " selected" : ""}>${escapeHtml(label)}</option>`;
+    }).join("");
+  }
+
+  function renderAssetEditor() {
+    const entry = activeIconEntry();
+    const drawer = $("iconAssetDrawer");
+    $("iconLibraryBrowse").hidden = Boolean(entry);
+    if (!entry) {
+      drawer.hidden = true;
+      return;
+    }
+    const { icon, row } = entry;
+    drawer.hidden = false;
+    const asset = libraryAsset(icon.libraryId);
+    $("activeIconName").textContent = asset?.name || "图标";
+    $("iconRow").innerHTML = state.scheme.rows.map((item, index) => `<option value="${item.id}"${item.id === row.id ? " selected" : ""}>第 ${String(index + 1).padStart(2, "0")} 行 · ${escapeHtml(item.text || "空白")}</option>`).join("");
+    $("iconBoundary").innerHTML = boundaryOptions(row, icon.boundary);
+    [["iconSize", icon.size, "%"], ["iconGap", icon.gap, "px"], ["iconX", icon.x, "%"], ["iconY", icon.y, "%"]].forEach(([id, value, suffix]) => { $(id).value = String(value); const output = document.querySelector(`output[for="${id}"]`); if (output) output.value = `${value}${suffix}`; });
   }
 
   function escapeHtml(value) {
@@ -237,6 +487,8 @@
     window.STGFontLibrary?.enhanceSelect($("fontFamily"));
     $("fontFamily").value = typography.fontFamily;
     renderRows();
+    renderIconLibrary();
+    renderSelectedAssets();
     renderTimeline();
     updateOutputs();
     resizePreview();
@@ -272,11 +524,24 @@
       canvas: { ...clone(DEFAULT_SCHEME.canvas), ...(scheme.canvas || {}) },
       typography: { ...clone(DEFAULT_SCHEME.typography), ...(scheme.typography || {}) },
       motion: { ...clone(DEFAULT_SCHEME.motion), ...(scheme.motion || {}) },
-      rows: scheme.rows.map((row) => ({ id: row.id || uid(), text: String(row.text ?? ""), hold: clamp(Number(row.hold) || 0, 0, 5000) }))
+      rows: scheme.rows.map((row) => {
+        const text = String(row.text ?? "");
+        const glyphCount = split(text).length;
+        const seen = new Set();
+        const icons = (Array.isArray(row.icons) ? row.icons : []).map((icon) => ({
+          id: icon.id || uid(), libraryId: String(icon.libraryId || ""), boundary: clamp(Math.round(Number(icon.boundary) || 0), 0, glyphCount),
+          size: clamp(Number(icon.size) || 90, 20, 220), gap: clamp(Number(icon.gap) || 12, 0, 80), x: clamp(Number(icon.x) || 0, -100, 100), y: clamp(Number(icon.y) || 0, -100, 100)
+        })).filter((icon) => libraryAsset(icon.libraryId) && !seen.has(icon.libraryId) && seen.add(icon.libraryId));
+        return { id: row.id || uid(), text, hold: clamp(Number(row.hold) || 0, 0, 5000), icons };
+      })
     };
-    if (state.scheme.rows.length < 2) state.scheme.rows.push({ id: uid(), text: "", hold: 100 });
+    if (state.scheme.rows.length < 2) state.scheme.rows.push({ id: uid(), text: "", hold: 100, icons: [] });
+    if (!state.scheme.rows.some((row) => row.id === state.activeRowId)) state.activeRowId = state.scheme.rows[0].id;
+    state.caretBoundary = clamp(state.caretBoundary, 0, split(state.scheme.rows.find((row) => row.id === state.activeRowId)?.text || "").length);
+    state.activeIconId = "";
     state.elapsedMs = 0;
     syncControlsFromState();
+    preloadInsertedAssets().then(resizePreview);
     autoSave();
     if (status) $("exportStatus").textContent = status;
   }
@@ -313,7 +578,9 @@
     if (!h264Loader) h264Loader = new Promise((resolve, reject) => {
       const script = document.createElement("script");
       script.src = "js/h264-mp4-encoder.web.js";
-      script.onload = resolve;
+      script.onload = () => window.HME?.createH264MP4Encoder
+        ? resolve()
+        : reject(new Error("MP4 编码器初始化失败"));
       script.onerror = () => reject(new Error("MP4 编码器加载失败"));
       document.head.append(script);
     });
@@ -341,29 +608,185 @@
   document.querySelectorAll('input[name="alignment"]').forEach((input) => input.addEventListener("change", () => changed()));
 
   $("sequenceRows").addEventListener("input", (event) => {
-    const rowElement = event.target.closest(".gm-row");
+    const rowElement = event.target.closest(".gm-row-shell");
     const row = state.scheme.rows.find((item) => item.id === rowElement?.dataset.rowId);
     if (!row) return;
     row[event.target.dataset.key] = event.target.dataset.key === "hold" ? clamp(Number(event.target.value) || 0, 0, 5000) : event.target.value;
+    if (event.target.dataset.key === "text") {
+      const glyphCount = split(row.text).length;
+      (row.icons || []).forEach((icon) => { icon.boundary = clamp(icon.boundary, 0, glyphCount); });
+      state.activeRowId = row.id;
+      state.caretBoundary = split(row.text.slice(0, event.target.selectionStart ?? row.text.length)).length;
+      updateInsertTargetLabel();
+      renderSelectedAssets();
+    }
     state.elapsedMs = 0;
     renderTimeline();
     autoSave();
   });
+  function captureCaret(input) {
+    const rowElement = input.closest(".gm-row-shell");
+    const row = state.scheme.rows.find((item) => item.id === rowElement?.dataset.rowId);
+    if (!row) return;
+    state.activeRowId = row.id;
+    state.caretBoundary = split(row.text.slice(0, input.selectionStart ?? row.text.length)).length;
+    document.querySelectorAll(".gm-row-target").forEach((button) => button.classList.toggle("is-active", button.closest(".gm-row-shell")?.dataset.rowId === row.id));
+    renderLibrarySelection();
+  }
+  ["focusin", "click", "keyup", "select"].forEach((eventName) => $("sequenceRows").addEventListener(eventName, (event) => {
+    if (event.target.matches('input[data-key="text"]')) captureCaret(event.target);
+  }));
   $("sequenceRows").addEventListener("click", (event) => {
     const button = event.target.closest("button[data-action]");
-    const rowElement = button?.closest(".gm-row");
+    const rowElement = button?.closest(".gm-row-shell");
     if (!button || !rowElement) return;
     const index = state.scheme.rows.findIndex((item) => item.id === rowElement.dataset.rowId);
-    if (button.dataset.action === "delete" && state.scheme.rows.length > 2) state.scheme.rows.splice(index, 1);
+    if (button.dataset.action === "edit-icon") { openIconEditor(button.dataset.iconId); return; }
+    if (button.dataset.action === "pause-row") {
+      const row = state.scheme.rows[index];
+      if (row) {
+        state.activeRowId = row.id;
+        seekToRowStart(index, true);
+      }
+      return;
+    }
+    if (button.dataset.action === "target") {
+      const row = state.scheme.rows[index];
+      const input = rowElement.querySelector('input[data-key="text"]');
+      state.activeRowId = row.id;
+      state.caretBoundary = split(row.text.slice(0, input.selectionStart ?? row.text.length)).length;
+      renderRows(); renderLibrarySelection();
+      setIconLibraryDrawer(true);
+      return;
+    }
+    if (button.dataset.action === "delete" && state.scheme.rows.length > 2) {
+      state.scheme.rows.splice(index, 1);
+      if (!state.scheme.rows.some((row) => row.id === state.activeRowId)) state.activeRowId = state.scheme.rows[Math.max(0, index - 1)].id;
+    }
     if (button.dataset.action === "up" && index > 0) [state.scheme.rows[index - 1], state.scheme.rows[index]] = [state.scheme.rows[index], state.scheme.rows[index - 1]];
     if (button.dataset.action === "down" && index < state.scheme.rows.length - 1) [state.scheme.rows[index + 1], state.scheme.rows[index]] = [state.scheme.rows[index], state.scheme.rows[index + 1]];
     state.elapsedMs = 0;
-    renderRows(); renderTimeline(); autoSave();
+    renderRows(); renderSelectedAssets(); renderTimeline(); autoSave(); resizePreview();
   });
   $("addRow").addEventListener("click", () => {
-    state.scheme.rows.push({ id: uid(), text: "新文字", hold: 100 });
-    renderRows(); renderTimeline(); autoSave();
+    const row = { id: uid(), text: "新文字", hold: 100, icons: [] };
+    state.scheme.rows.push(row);
+    state.activeRowId = row.id; state.caretBoundary = split(row.text).length;
+    renderRows(); renderSelectedAssets(); renderTimeline(); autoSave();
     $("sequenceRows").lastElementChild?.querySelector('input[data-key="text"]')?.select();
+  });
+
+  function setLayerManager(expanded) {
+    $("iconLayerPanel").classList.toggle("is-list-expanded", expanded);
+    $("toggleSelectedIcons").setAttribute("aria-expanded", String(expanded));
+    $("toggleSelectedIcons").textContent = expanded ? "收起已选" : "展开已选";
+    if (!expanded) { state.activeIconId = ""; renderAssetEditor(); }
+  }
+  function setIconLibraryDrawer(open) {
+    const drawer = $("iconLibraryDrawer");
+    drawer.hidden = !open;
+    document.body.classList.toggle("gm-library-open", open);
+    $("openIconLibrary").setAttribute("aria-expanded", String(open));
+    $("openIconLibraryLarge").setAttribute("aria-expanded", String(open));
+    if (!open) {
+      state.activeIconId = "";
+      renderAssetEditor();
+    }
+    requestAnimationFrame(resizePreview);
+  }
+  function openIconEditor(iconId) {
+    const entry = allInsertedIcons().find(({ icon }) => icon.id === iconId);
+    if (!entry) return;
+    state.activeRowId = entry.row.id;
+    state.caretBoundary = clamp(entry.icon.boundary, 0, split(entry.row.text).length);
+    state.activeIconId = iconId;
+    seekToRowStart(entry.rowIndex, true);
+    setIconLibraryDrawer(true);
+    renderAssetEditor();
+    renderRows();
+    renderSelectedAssets();
+  }
+  function removeIcon(iconId) {
+    state.scheme.rows.forEach((row) => { row.icons = (row.icons || []).filter((icon) => icon.id !== iconId); });
+    if (state.activeIconId === iconId) state.activeIconId = "";
+    renderRows(); renderSelectedAssets(); autoSave(); resizePreview();
+  }
+
+  function insertSelectedIconAtCaret() {
+    const row = state.scheme.rows.find((item) => item.id === state.activeRowId);
+    const asset = libraryAsset(state.librarySelectionId);
+    if (!row || !asset) return;
+    if ((row.icons || []).some((icon) => icon.libraryId === asset.libraryId)) {
+      $("exportStatus").textContent = `“${asset.name}”已经在这一行；可在单独编辑中移动它。`;
+      return;
+    }
+    const icon = { id: uid(), libraryId: asset.libraryId, boundary: clamp(state.caretBoundary, 0, split(row.text).length), size: 90, gap: 12, x: 0, y: 0 };
+    row.icons = [...(row.icons || []), icon];
+    loadAssetResource(asset).then(resizePreview);
+    const rowElement = document.querySelector(`.gm-row-shell[data-row-id="${row.id}"]`);
+    if (rowElement) {
+      const input = rowElement.querySelector('input[data-key="text"]');
+      if (input) state.caretBoundary = split(row.text.slice(0, input.selectionStart ?? row.text.length)).length;
+    }
+    renderRows(); renderSelectedAssets(); autoSave(); resizePreview();
+    $("exportStatus").textContent = `已将“${asset.name}”插入第 ${state.scheme.rows.indexOf(row) + 1} 行。`;
+  }
+
+  $("iconLibrary").addEventListener("click", (event) => {
+    const quickInsert = event.target.closest("button[data-quick-insert]");
+    if (quickInsert) {
+      state.librarySelectionId = quickInsert.dataset.quickInsert;
+      renderLibrarySelection();
+      insertSelectedIconAtCaret();
+      return;
+    }
+    const choice = event.target.closest("button[data-library-id]");
+    if (!choice) return;
+    state.librarySelectionId = choice.dataset.libraryId;
+    renderLibrarySelection();
+  });
+  $("insertSelectedIcon").addEventListener("click", insertSelectedIconAtCaret);
+  $("toggleSelectedIcons").addEventListener("click", () => setLayerManager(!$("iconLayerPanel").classList.contains("is-list-expanded")));
+  ["openIconLibrary", "openIconLibraryLarge"].forEach((id) => $(id).addEventListener("click", () => setIconLibraryDrawer(true)));
+  $("closeIconLibrary").addEventListener("click", () => setIconLibraryDrawer(false));
+  $("selectedIconItems").addEventListener("click", (event) => {
+    const row = event.target.closest("[data-icon-id]");
+    const button = event.target.closest("button[data-action]");
+    if (!row || !button) return;
+    if (button.dataset.action === "edit-icon") openIconEditor(row.dataset.iconId);
+    if (button.dataset.action === "remove-icon") removeIcon(row.dataset.iconId);
+  });
+  $("closeIconDrawer").addEventListener("click", () => { state.activeIconId = ""; renderAssetEditor(); renderSelectedAssets(); });
+  $("removeActiveIcon").addEventListener("click", () => { if (state.activeIconId) removeIcon(state.activeIconId); });
+  $("iconRow").addEventListener("change", () => {
+    const entry = activeIconEntry();
+    const targetRow = state.scheme.rows.find((row) => row.id === $("iconRow").value);
+    if (!entry || !targetRow || targetRow.id === entry.row.id) return;
+    if ((targetRow.icons || []).some((icon) => icon.libraryId === entry.icon.libraryId)) { $("exportStatus").textContent = "目标行已经有同一个图标。"; renderAssetEditor(); return; }
+    entry.row.icons = entry.row.icons.filter((icon) => icon.id !== entry.icon.id);
+    entry.icon.boundary = clamp(entry.icon.boundary, 0, split(targetRow.text).length);
+    targetRow.icons = [...(targetRow.icons || []), entry.icon];
+    renderRows(); renderSelectedAssets(); autoSave(); resizePreview();
+  });
+  $("iconBoundary").addEventListener("change", () => {
+    const entry = activeIconEntry(); if (!entry) return;
+    entry.icon.boundary = clamp(Number($("iconBoundary").value), 0, split(entry.row.text).length);
+    renderRows(); renderSelectedAssets(); autoSave(); resizePreview();
+  });
+  [["iconSize", "size", "%"], ["iconGap", "gap", "px"], ["iconX", "x", "%"], ["iconY", "y", "%"]].forEach(([id, key, suffix]) => {
+    $(id).addEventListener("input", () => {
+      const entry = activeIconEntry(); if (!entry) return;
+      entry.icon[key] = Number($(id).value);
+      const output = document.querySelector(`output[for="${id}"]`); if (output) output.value = `${entry.icon[key]}${suffix}`;
+      autoSave(); resizePreview();
+    });
+    $(id).addEventListener("change", () => { renderRows(); renderSelectedAssets(); });
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    if (state.activeIconId) { state.activeIconId = ""; renderAssetEditor(); renderSelectedAssets(); return; }
+    if ($("iconLayerPanel").classList.contains("is-list-expanded")) { setLayerManager(false); return; }
+    if (document.body.classList.contains("gm-library-open")) setIconLibraryDrawer(false);
   });
 
   $("scrubber").addEventListener("input", () => {
@@ -373,8 +796,9 @@
     resizePreview();
   });
   $("togglePlayback").addEventListener("click", () => { state.playing = !state.playing; state.lastFrame = performance.now(); updatePlaybackButton(); });
-  $("restartPreview").addEventListener("click", () => { state.elapsedMs = 0; state.playing = true; state.lastFrame = performance.now(); updatePlaybackButton(); });
+  $("restartPreview").addEventListener("click", () => { seekToRowStart(0, false); });
   $("toggleInspector").addEventListener("click", () => {
+    if (!document.body.classList.contains("gm-inspector-hidden")) setIconLibraryDrawer(false);
     document.body.classList.toggle("gm-inspector-hidden");
     const hidden = document.body.classList.contains("gm-inspector-hidden");
     $("toggleInspector").setAttribute("aria-pressed", String(hidden));
@@ -399,24 +823,14 @@
     $("schemeFile").value = "";
   });
   $("restoreScheme").addEventListener("click", () => { localStorage.removeItem(STORAGE_KEY); applyScheme(clone(DEFAULT_SCHEME), "已恢复不可变默认方案。" ); });
-  $("clearScheme").addEventListener("click", () => $("clearDialog").showModal());
-  $("clearChanges").addEventListener("click", () => {
-    localStorage.removeItem(STORAGE_KEY);
-    applyScheme(clone(DEFAULT_SCHEME), "已清空全部改动并恢复默认方案。" );
-    $("clearDialog").close("clear-changes");
-  });
-  $("clearAll").addEventListener("click", () => {
+  $("clearScheme").addEventListener("click", () => {
     const cleared = clone(state.scheme);
-    cleared.rows = [{ id: uid(), text: "", hold: 100 }, { id: uid(), text: "", hold: 100 }];
+    cleared.rows = [{ id: uid(), text: "", hold: 100, icons: [] }, { id: uid(), text: "", hold: 100, icons: [] }];
     applyScheme(cleared, "全部文字内容已清空，当前样式与画布保持不变。" );
-    $("clearDialog").close("clear-all");
-  });
-  $("closeClearDialog").addEventListener("click", () => $("clearDialog").close("cancel"));
-  $("clearDialog").addEventListener("click", (event) => {
-    if (event.target === $("clearDialog")) $("clearDialog").close("cancel");
   });
 
-  $("exportPng").addEventListener("click", () => {
+  $("exportPng").addEventListener("click", async () => {
+    await preloadInsertedAssets();
     const output = exportCanvas();
     renderFrame(output, state.elapsedMs / 1000, output.width, output.height);
     output.toBlob((blob) => {
@@ -431,6 +845,7 @@
     setBusy(true, "正在准备 GIF…");
     let workerUrl = "";
     try {
+      await preloadInsertedAssets();
       const response = await fetch("js/continuation-gif.worker.js");
       if (!response.ok) throw new Error(`worker ${response.status}`);
       workerUrl = URL.createObjectURL(new Blob([await response.text()], { type: "text/javascript" }));
@@ -454,31 +869,37 @@
   $("exportMp4").addEventListener("click", async () => {
     const output = exportCanvas();
     output.width -= output.width % 2; output.height -= output.height % 2;
-    const fps = Number($("exportFps").value);
+    const requestedFps = Number($("exportFps").value);
+    const fps = [24, 30, 60].includes(requestedFps) ? requestedFps : 30;
     const total = Math.max(1, Math.ceil(exportSeconds() * fps));
     let encoder = null;
     setBusy(true, "正在加载 MP4 编码器…");
     try {
       await loadH264Encoder();
+      await preloadInsertedAssets();
       encoder = await window.HME.createH264MP4Encoder();
       encoder.width = output.width; encoder.height = output.height; encoder.frameRate = fps;
-      encoder.kbps = Math.max(4000, Math.round(output.width * output.height * fps * 0.12 / 1000));
-      encoder.outputFilename = "glyph-morph.mp4";
+      encoder.kbps = Math.max(8000, Math.min(30000, Math.round(output.width * output.height * fps * 0.18 / 1000)));
+      encoder.groupOfPictures = Math.max(12, Math.round(fps / 2));
+      encoder.outputFilename = `glyph-morph-${output.width}x${output.height}-${fps}fps.mp4`;
       encoder.initialize();
       const outputContext = output.getContext("2d", { willReadFrequently: true });
+      const progressInterval = Math.max(1, Math.floor(fps / 10));
       for (let index = 0; index < total; index += 1) {
         renderFrame(output, index / fps, output.width, output.height);
         encoder.addFrameRgba(outputContext.getImageData(0, 0, output.width, output.height).data);
-        if (index % 3 === 0 || index === total - 1) $("exportStatus").textContent = `正在编码 MP4 · ${Math.round((index + 1) / total * 100)}%`;
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        if (index % progressInterval === 0 || index === total - 1) {
+          $("exportStatus").textContent = `正在导出 MP4 ${output.width} × ${output.height} · ${fps}fps · ${Math.round((index + 1) / total * 100)}%`;
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
       }
       encoder.finalize();
       const mp4 = encoder.FS.readFile(encoder.outputFilename);
-      download(new Blob([mp4], { type: "video/mp4" }), `glyph-morph-${output.width}x${output.height}.mp4`);
-      setBusy(false, "MP4 已生成");
+      download(new Blob([mp4], { type: "video/mp4" }), encoder.outputFilename);
+      setBusy(false, `MP4 已生成 · ${output.width} × ${output.height} · ${fps}fps · ${(mp4.length / 1024 / 1024).toFixed(1)} MB`);
     } catch (error) {
       console.error(error); setBusy(false, `MP4 生成失败：${error.message}`);
-    } finally { encoder?.delete(); }
+    } finally { try { encoder?.delete(); } catch (_) {} }
   });
 
   function animationLoop(now) {
@@ -499,12 +920,13 @@
     let stored = null;
     try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch (_) {}
     const useDefault = new URLSearchParams(location.search).has("preview");
-    applyScheme(useDefault || stored?.version !== VERSION ? clone(DEFAULT_SCHEME) : stored);
+    renderIconLibrary();
+    applyScheme(useDefault || !stored?.rows || Number(stored.version || 1) > VERSION ? clone(DEFAULT_SCHEME) : stored);
     if (state.reducedMotion) { state.playing = false; state.elapsedMs = state.scheme.motion.morphDuration; updatePlaybackButton(); }
     new ResizeObserver(resizePreview).observe(frame);
     document.fonts?.ready.then(resizePreview);
     window.addEventListener("resize", resizePreview, { passive: true });
-    window.__glyphMorphTest = { renderFrame, resolveTimeline, matchGlyphs, getScheme: () => clone(state.scheme), cycleDurationMs, setTime: (seconds) => { state.elapsedMs = seconds * 1000; resizePreview(); } };
+    window.__glyphMorphTest = { renderFrame, resolveTimeline, matchGlyphs, getScheme: () => clone(state.scheme), cycleDurationMs, rowStartElapsed, preloadInsertedAssets, setTime: (seconds) => { state.elapsedMs = seconds * 1000; resizePreview(); } };
     requestAnimationFrame(animationLoop);
   }
 

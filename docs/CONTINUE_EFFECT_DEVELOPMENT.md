@@ -26,6 +26,7 @@ This is the short entry point for continuing ME Motion Studio work in a fresh ch
 - Shared editor baseline: `site/me-motion-editor.js`, `site/me-motion-editor.css`, `site/workspace-editor.css`.
 - Shared assets/media: `site/shared-icon-library.js`, `site/media-layer.js`, `site/media-layer.css`, and the icon paths documented by the project skill.
 - Path Writer (`轨书`): `site/pathwriter.html`, `site/pathwriter.css`, `site/pathwriter.js`; default preset `site/assets/presets/pathwriter-default.json`; gallery video `site/assets/previews/pathwriter-card.mp4`.
+- Glyph Morph (`字融`): `site/glyphmorph.html`, `site/glyphmorph.css`, `site/glyphmorph.js`; canonical row/caret inline-icon editor; default preset `site/assets/presets/glyphmorph-default.json`; gallery video `site/assets/previews/glyphmorph-card.mp4`.
 
 ## Minimal verification before handoff
 

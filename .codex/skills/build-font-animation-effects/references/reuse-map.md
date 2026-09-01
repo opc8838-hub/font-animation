@@ -39,6 +39,20 @@ Use `site/sequence-motion.js` and `site/sequence-motion.css` for:
 
 Do not copy its small fixed `iconOptions` when the task needs the full current library; connect the Icon Burst asset sources instead.
 
+## Row text and inline-icon editing
+
+Use `site/glyphmorph.html`, `site/glyphmorph.css`, and `site/glyphmorph.js` for:
+
+- Stable text rows with grapheme-aware caret boundaries and row-owned inline icons.
+- Per-row `插入图标` and `暂停修改`, where pause seeks to the row's complete readable hold frame.
+- Compact inserted-icon chips with preview, boundary, and a small explicit `编辑` button.
+- A right-side candidate drawer that reserves space on wide desktop, replaces the inspector at medium widths, and sits below the sticky stage on mobile, so the canvas is never covered.
+- Selection-only candidate tiles plus adjacent one-step `插入` buttons that avoid reverse scrolling through a long library.
+- Focused editing of icon row, character boundary, size, text gap, X, and Y while the owning row stays paused.
+- One deterministic Canvas layout for live preview, PNG, GIF, and H.264 MP4 at 24/30/60 FPS.
+
+The approved default is `site/assets/presets/glyphmorph-default.json`; the gallery loop is `site/assets/previews/glyphmorph-card.mp4`. Do not regenerate either after unrelated refinements.
+
 ## Per-page background and video editing
 
 Use `site/continuation.html`, `site/continuation.css`, and `site/continuation.js` for row-scoped background color, image/GIF/video upload, video filmstrip trimming, direct/crossfade transitions, stable row-id assignment, serialized media state, and deterministic preview/export seeking. Apply the behavioral requirements in [per-page-backgrounds.md](per-page-backgrounds.md); copy only the media pattern, not Continuation's typography choreography.
@@ -60,7 +74,7 @@ For a new effect, use a live iframe only when it preserves the same composition 
 ## Shared media and encoders
 
 - Fonts: `site/assets/` and `site/assets/fonts/`.
-- Transparent animals: `site/assets/transparent-animals/`.
+- Transparent animals: `site/assets/transparent-animals/`, currently stable ids `animal-01` through `animal-59`; follow [icon-library-maintenance.md](icon-library-maintenance.md) when expanding them.
 - Bot GIFs: `site/assets/bot-series/`.
 - Shared icon/expression catalog and deterministic vector renderer: `site/shared-icon-library.js`.
 - Collision GIFs: `site/crash_resources/images/0.gif` for the animated hand and `site/crash_resources/images/1.gif` for animated sky.
