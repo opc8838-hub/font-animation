@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="shared-fonts.css?v=20260901-1">
   <link rel="stylesheet" href="workspace-editor.css?v=20260901-1">
   <link rel="stylesheet" href="me-motion-editor.css?v=20260901-1">
-  <link rel="stylesheet" href="ribbonink.css?v=20260901-2">
+  <link rel="stylesheet" href="ribbonink.css?v=20260902-1">
 </head>
 <body data-editor-capabilities="text-only">
   <aside class="ink-panel" id="editorPanel" aria-label="流彩笔迹编辑器">
@@ -50,14 +50,28 @@
         <div class="ink-color-grid">
           <label>底字<input id="textColor" type="color" value="#080808"></label>
           <label>背景<input id="backgroundColor" type="color" value="#f7f7f5"></label>
-          <label>主色<input id="brushColor" type="color" value="#ef39d4"></label>
-          <label>流色<input id="textureColor" type="color" value="#8613c6"></label>
+        </div>
+        <label class="ink-field">笔迹配色
+          <select id="palettePreset">
+            <option value="reference" selected>玫紫流彩</option>
+            <option value="apple">苹果彩虹</option>
+            <option value="ocean">海盐蓝绿</option>
+            <option value="sunset">暖阳日落</option>
+            <option value="custom">自定义</option>
+          </select>
+        </label>
+        <div class="ink-color-grid ink-palette-grid" aria-label="五色笔迹">
+          <label>颜色 1<input id="inkColor1" type="color" value="#f34bd9"></label>
+          <label>颜色 2<input id="inkColor2" type="color" value="#a40de4"></label>
+          <label>颜色 3<input id="inkColor3" type="color" value="#ff78e9"></label>
+          <label>颜色 4<input id="inkColor4" type="color" value="#7827d8"></label>
+          <label>颜色 5<input id="inkColor5" type="color" value="#f33ccd"></label>
         </div>
         <div class="ink-button-row">
           <label class="ink-button ink-button-soft">上传背景<input id="backgroundUpload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden></label>
           <button class="ink-button ink-button-soft" id="clearBackground" type="button">清除背景</button>
         </div>
-        <p class="ink-help" id="pathModeHint">TIME 使用完整流彩笔迹；其他文字自动使用通用笔刷。</p>
+        <p class="ink-help">底字、笔迹、配色与导出始终使用同一套画布几何。</p>
       </section>
 
       <section class="ink-card" aria-labelledby="shapeTitle">
@@ -79,6 +93,12 @@
         </label>
         <label class="ink-range">纹理流速 <output id="textureSpeedOut">100%</output>
           <input id="textureSpeed" type="range" min="0" max="220" value="100">
+        </label>
+        <label class="ink-range">i 点大小 <output id="dotScaleOut">100%</output>
+          <input id="dotScale" type="range" min="55" max="160" value="100">
+        </label>
+        <label class="ink-range">i 点出场 <output id="dotDelayOut">46%</output>
+          <input id="dotDelay" type="range" min="25" max="75" value="46">
         </label>
       </section>
 
@@ -176,6 +196,6 @@
   <script src="me-motion-editor.js?v=20260901-1"></script>
   <script src="js/continuation-gif.js?v=20260901-1"></script>
   <script src="js/h264-mp4-encoder.web.js?v=20260901-1"></script>
-  <script src="ribbonink.js?v=20260901-2"></script>
+  <script src="ribbonink.js?v=20260902-1"></script>
 </body>
 </html>

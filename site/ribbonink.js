@@ -7,19 +7,27 @@
   const workspace = $("#workspace");
   const exportStatus = $("#exportStatus");
   const schemeStatus = $("#schemeStatus");
-  const STORAGE_KEY = "me-ribbon-ink-autosave-v1";
+  const STORAGE_KEY = "me-ribbon-ink-autosave-v2";
   const EFFECT_ID = "ribbon-ink";
-  const SCHEME_VERSION = 1;
+  const SCHEME_VERSION = 2;
   const PHASE_COLORS = ["#ef4d86", "#6a2f8c", "#ee7b34", "#2589d8"];
   const urlParams = new URLSearchParams(location.search);
-  const REFERENCE_ATLAS_SRC = "assets/ribbonink/ribbonink-reference-atlas.webp?v=20260901b";
-  const REFERENCE_FRAME = { width: 720, height: 405, columns: 5, count: 75, fps: 30, offset: 3 };
-  const REFERENCE_PHASES = { write: [0, .50], flow: [.50, 1.37], erase: [1.37, 1.94], hold: [1.94, 2.50] };
+  const BRUSH_MOTHER_SRC = "assets/ribbonink/ribbonink-brush-mother.png?v=20260902-1";
+  const MOTHER_FRAME = { width: 1672, height: 941 };
+  const DOT_REGION = { x: 520, y: 150, width: 190, height: 205, centerX: 612, centerY: 252 };
+  const PALETTES = {
+    reference: ["#f34bd9", "#a40de4", "#ff78e9", "#7827d8", "#f33ccd"],
+    apple: ["#ff375f", "#ff9f0a", "#ffd60a", "#30d158", "#0a84ff"],
+    ocean: ["#64d2ff", "#0a84ff", "#5e5ce6", "#30d158", "#00c7be"],
+    sunset: ["#ff2d55", "#ff375f", "#ff9f0a", "#ffd60a", "#bf5af2"]
+  };
 
   const inputIds = [
     "canvasPreset", "canvasWidth", "canvasHeight", "textInput", "fontSelect", "fontSize",
-    "letterSpacing", "textColor", "backgroundColor", "brushColor", "textureColor",
+    "letterSpacing", "textColor", "backgroundColor", "palettePreset",
+    "inkColor1", "inkColor2", "inkColor3", "inkColor4", "inkColor5",
     "brushScale", "brushWidth", "positionX", "positionY", "textureDensity", "textureSpeed",
+    "dotScale", "dotDelay",
     "writeDuration", "flowDuration", "eraseDuration", "holdDuration", "motionEase",
     "exportDuration", "exportDurationCustom", "exportFps"
   ];
@@ -28,9 +36,11 @@
   const defaultValues = {
     canvasPreset: "1920x1080", canvasWidth: "1920", canvasHeight: "1080",
     textInput: "TIME", fontSelect: "stg:roboto-condensed", fontSize: "270", letterSpacing: "2",
-    textColor: "#080808", backgroundColor: "#f7f7f5", brushColor: "#ef39d4", textureColor: "#8613c6",
+    textColor: "#080808", backgroundColor: "#f7f7f5", palettePreset: "reference",
+    inkColor1: "#f34bd9", inkColor2: "#a40de4", inkColor3: "#ff78e9", inkColor4: "#7827d8", inkColor5: "#f33ccd",
     brushScale: "100", brushWidth: "100", positionX: "50", positionY: "52",
-    textureDensity: "100", textureSpeed: "100", writeDuration: "50", flowDuration: "87",
+    textureDensity: "100", textureSpeed: "100", dotScale: "100", dotDelay: "46",
+    writeDuration: "50", flowDuration: "87",
     eraseDuration: "57", holdDuration: "56", motionEase: "smooth",
     exportDuration: "full", exportDurationCustom: "2.5", exportFps: "30"
   };
@@ -43,11 +53,15 @@
     autosaveTimer: 0,
     background: null,
     backgroundDataUrl: "",
-    referenceAtlas: null,
+    brushMother: null,
+    motherDetail: null,
+    motherHighlight: null,
     previewBacking: { width: 1, height: 1 }
   };
 
-  const maskCanvas = document.createElement("canvas");
+  const shapeCanvas = document.createElement("canvas");
+  const revealCanvas = document.createElement("canvas");
+  const detailLayerCanvas = document.createElement("canvas");
   const paintCanvas = document.createElement("canvas");
 
   const authored = [
@@ -85,7 +99,7 @@
       start: .47,
       end: .53,
       width: .76,
-      dot: [329, 153]
+      dot: [260, 112]
     }
   ];
 
@@ -220,67 +234,70 @@
     context.drawImage(image, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
   }
 
-  function loadReferenceAtlas() {
+  function prepareMotherMasks(image) {
+    const scan = document.createElement("canvas");
+    scan.width = MOTHER_FRAME.width;
+    scan.height = MOTHER_FRAME.height;
+    const scanContext = scan.getContext("2d", { willReadFrequently: true });
+    scanContext.drawImage(image, 0, 0, scan.width, scan.height);
+    const source = scanContext.getImageData(0, 0, scan.width, scan.height);
+    const detail = scanContext.createImageData(scan.width, scan.height);
+    const highlight = scanContext.createImageData(scan.width, scan.height);
+    for (let index = 0; index < source.data.length; index += 4) {
+      const red = source.data[index];
+      const green = source.data[index + 1];
+      const blue = source.data[index + 2];
+      const alpha = source.data[index + 3];
+      const purple = clamp((blue - red + 58) / 112);
+      const light = clamp((red + green - 278) / 145) * (1 - purple * .45);
+      detail.data[index] = detail.data[index + 1] = detail.data[index + 2] = 255;
+      detail.data[index + 3] = Math.round(alpha * purple * .92);
+      highlight.data[index] = highlight.data[index + 1] = highlight.data[index + 2] = 255;
+      highlight.data[index + 3] = Math.round(alpha * light * .66);
+    }
+    const detailCanvas = document.createElement("canvas");
+    const highlightCanvas = document.createElement("canvas");
+    detailCanvas.width = highlightCanvas.width = scan.width;
+    detailCanvas.height = highlightCanvas.height = scan.height;
+    detailCanvas.getContext("2d").putImageData(detail, 0, 0);
+    highlightCanvas.getContext("2d").putImageData(highlight, 0, 0);
+    state.motherDetail = detailCanvas;
+    state.motherHighlight = highlightCanvas;
+  }
+
+  function loadBrushMother() {
     return new Promise((resolve) => {
       const image = new Image();
-      image.onload = () => { state.referenceAtlas = image; resolve(); };
-      image.onerror = () => { state.referenceAtlas = null; resolve(); };
-      image.src = REFERENCE_ATLAS_SRC;
+      image.onload = () => {
+        state.brushMother = image;
+        prepareMotherMasks(image);
+        resolve();
+      };
+      image.onerror = () => {
+        state.brushMother = null;
+        state.motherDetail = state.motherHighlight = null;
+        resolve();
+      };
+      image.src = BRUSH_MOTHER_SRC;
     });
-  }
-
-  function usesReferenceAtlas(text) {
-    const expected = {
-      fontSelect: "stg:roboto-condensed", fontSize: "270", letterSpacing: "2", textColor: "#080808",
-      brushColor: "#ef39d4", textureColor: "#8613c6", brushScale: "100", brushWidth: "100",
-      positionX: "50", positionY: "52", textureDensity: "100", textureSpeed: "100", motionEase: "smooth"
-    };
-    return text.toLocaleUpperCase() === "TIME"
-      && state.referenceAtlas?.complete
-      && state.referenceAtlas.naturalWidth
-      && Object.entries(expected).every(([key, value]) => inputs[key].value.toLocaleLowerCase() === value);
-  }
-
-  function referenceTime(rawTime) {
-    const phase = phaseAt(rawTime);
-    const [start, end] = REFERENCE_PHASES[phase.name];
-    return mix(start, end, clamp(phase.progress));
-  }
-
-  function drawReferenceAtlas(context, rawTime, width, height) {
-    const logicalFrame = Math.min(REFERENCE_FRAME.count - 1, Math.floor(referenceTime(rawTime) * REFERENCE_FRAME.fps));
-    const frame = (logicalFrame + REFERENCE_FRAME.offset) % REFERENCE_FRAME.count;
-    const column = frame % REFERENCE_FRAME.columns;
-    const row = Math.floor(frame / REFERENCE_FRAME.columns);
-    const scale = Math.min(width / REFERENCE_FRAME.width, height / REFERENCE_FRAME.height);
-    const drawWidth = REFERENCE_FRAME.width * scale;
-    const drawHeight = REFERENCE_FRAME.height * scale;
-    const x = width * .5 - REFERENCE_FRAME.width * .5 * scale;
-    const y = height * .52 - REFERENCE_FRAME.height * .52 * scale;
-    context.drawImage(
-      state.referenceAtlas,
-      column * REFERENCE_FRAME.width,
-      row * REFERENCE_FRAME.height,
-      REFERENCE_FRAME.width,
-      REFERENCE_FRAME.height,
-      x,
-      y,
-      drawWidth,
-      drawHeight
-    );
   }
 
   function exactTransform(width, height) {
     const scale = Math.min(width / 720, height / 405) * Number(inputs.brushScale.value) / 100;
     return {
       scale,
+      widthScale: Number(inputs.brushWidth.value) / 100,
       x: width * Number(inputs.positionX.value) / 100 - 360 * scale,
       y: height * Number(inputs.positionY.value) / 100 - 210 * scale
     };
   }
 
   function transformPoint(point, transform) {
-    return { x: transform.x + point.x * transform.scale, y: transform.y + point.y * transform.scale, angle: point.angle || 0 };
+    return {
+      x: transform.x + point.x * transform.scale,
+      y: transform.y + (210 + (point.y - 210) * transform.widthScale) * transform.scale,
+      angle: point.angle || 0
+    };
   }
 
   function strokeLocalWindow(stroke, start, end) {
@@ -342,34 +359,75 @@
   }
 
   function ensureScratch(width, height) {
-    if (maskCanvas.width !== width || maskCanvas.height !== height) {
-      maskCanvas.width = paintCanvas.width = width;
-      maskCanvas.height = paintCanvas.height = height;
+    if (shapeCanvas.width !== width || shapeCanvas.height !== height) {
+      shapeCanvas.width = revealCanvas.width = detailLayerCanvas.width = paintCanvas.width = width;
+      shapeCanvas.height = revealCanvas.height = detailLayerCanvas.height = paintCanvas.height = height;
     }
   }
 
-  function paintTexture(context, width, height, rawTime, transform, visible) {
-    context.globalCompositeOperation = "source-atop";
+  function paletteColors() {
+    return [1, 2, 3, 4, 5].map((index) => inputs[`inkColor${index}`].value);
+  }
+
+  function sourceToLogical(x, y) {
+    return { x: x / MOTHER_FRAME.width * 720, y: y / MOTHER_FRAME.height * 405 };
+  }
+
+  function drawMotherSilhouette(context, transform, omitDot) {
+    const image = state.brushMother;
+    const top = transform.y + (210 - 210 * transform.widthScale) * transform.scale;
+    if (image?.complete && image.naturalWidth) {
+      context.drawImage(image, transform.x, top, 720 * transform.scale, 405 * transform.scale * transform.widthScale);
+    } else {
+      const fallbackWidth = 92 * transform.scale * transform.widthScale;
+      authored.filter((stroke) => !stroke.dot).forEach((stroke) => drawSampledStroke(context, stroke, 0, 1, transform, fallbackWidth));
+    }
+    if (!omitDot) return;
+    const a = transformPoint(sourceToLogical(DOT_REGION.x - 16, DOT_REGION.y - 16), transform);
+    const b = transformPoint(sourceToLogical(DOT_REGION.x + DOT_REGION.width + 16, DOT_REGION.y + DOT_REGION.height + 16), transform);
+    context.clearRect(a.x, a.y, b.x - a.x, b.y - a.y);
+  }
+
+  function drawMotherToneLayer(target, toneMask, color, transform) {
+    if (!toneMask) return;
+    const layer = detailLayerCanvas.getContext("2d");
+    layer.setTransform(1, 0, 0, 1, 0, 0);
+    layer.clearRect(0, 0, detailLayerCanvas.width, detailLayerCanvas.height);
+    const top = transform.y + (210 - 210 * transform.widthScale) * transform.scale;
+    layer.drawImage(toneMask, transform.x, top, 720 * transform.scale, 405 * transform.scale * transform.widthScale);
+    layer.globalCompositeOperation = "source-in";
+    layer.fillStyle = color;
+    layer.fillRect(0, 0, detailLayerCanvas.width, detailLayerCanvas.height);
+    layer.globalCompositeOperation = "destination-in";
+    layer.drawImage(shapeCanvas, 0, 0);
+    layer.globalCompositeOperation = "source-over";
+    target.drawImage(detailLayerCanvas, 0, 0);
+  }
+
+  function drawInkFlow(context, rawTime, transform) {
+    const colors = paletteColors();
     const density = Number(inputs.textureDensity.value) / 100;
     const speed = Number(inputs.textureSpeed.value) / 100;
-    const count = Math.max(5, Math.round(10 * density));
-    context.strokeStyle = inputs.textureColor.value;
+    const count = Math.max(6, Math.round(9 * density));
+    context.globalCompositeOperation = "source-atop";
+    context.globalAlpha = .58;
     context.lineCap = "round";
     context.lineJoin = "round";
     for (let index = 0; index < count; index += 1) {
       const seed = fract(Math.sin(index * 41.31) * 928.13);
-      const head = fract(index / count + rawTime * .075 * speed + seed * .035);
-      const wormLength = .035 + seed * .015;
-      context.lineWidth = transform.scale * mix(12, 18, seed);
+      const head = fract(index / count + rawTime * .082 * speed + seed * .04);
+      const bandLength = .072 + seed * .088;
+      context.strokeStyle = colors[(index + 1) % colors.length];
+      context.lineWidth = transform.scale * transform.widthScale * mix(34, 72, seed);
       context.beginPath();
       let hasPoint = false;
-      const steps = 12;
+      const steps = 20;
       for (let step = 0; step <= steps; step += 1) {
-        const u = head + wormLength * (step / steps);
-        if (u > 1 || u < visible.start || u > visible.end) continue;
+        const u = head - bandLength / 2 + bandLength * (step / steps);
+        if (u < 0 || u > 1) continue;
         const point = pointOnMain(u, transform);
-        const wave = Math.sin(step / steps * Math.PI * 2 + index * 1.93 + rawTime * 1.2 * speed);
-        const offset = wave * transform.scale * mix(2.5, 7, seed);
+        const wave = Math.sin(step / steps * Math.PI * 2 + index * 1.93 + rawTime * 1.4 * speed);
+        const offset = wave * transform.scale * transform.widthScale * mix(2, 9, seed);
         const x = point.x - Math.sin(point.angle) * offset;
         const y = point.y + Math.cos(point.angle) * offset;
         if (!hasPoint) context.moveTo(x, y);
@@ -378,93 +436,122 @@
       }
       if (hasPoint) context.stroke();
     }
-    const dot = transformPoint({ x: 329, y: 153 }, transform);
-    if (visible.start < .52 && visible.end > .48) {
-      context.fillStyle = inputs.textureColor.value;
-      context.beginPath();
-      context.ellipse(dot.x - 3 * transform.scale, dot.y + 2 * transform.scale, 7 * transform.scale, 12 * transform.scale, .55, 0, Math.PI * 2);
-      context.fill();
-    }
+    context.globalAlpha = 1;
     context.globalCompositeOperation = "source-over";
   }
 
-  function drawExactBrush(context, rawTime, width, height, visible) {
+  function drawMainBrush(context, rawTime, width, height, visible, transform) {
     ensureScratch(width, height);
-    const mask = maskCanvas.getContext("2d");
+    const shape = shapeCanvas.getContext("2d");
+    const reveal = revealCanvas.getContext("2d");
     const paint = paintCanvas.getContext("2d");
-    mask.setTransform(1, 0, 0, 1, 0, 0);
+    shape.setTransform(1, 0, 0, 1, 0, 0);
+    reveal.setTransform(1, 0, 0, 1, 0, 0);
     paint.setTransform(1, 0, 0, 1, 0, 0);
-    mask.clearRect(0, 0, width, height);
+    shape.clearRect(0, 0, width, height);
+    reveal.clearRect(0, 0, width, height);
     paint.clearRect(0, 0, width, height);
-    const transform = exactTransform(width, height);
-    const baseWidth = 37 * transform.scale * Number(inputs.brushWidth.value) / 100;
-    authored.forEach((stroke) => drawSampledStroke(mask, stroke, visible.start, visible.end, transform, baseWidth));
-    paint.drawImage(maskCanvas, 0, 0);
+    drawMotherSilhouette(shape, transform, true);
+    if (visible.start > .0001 || visible.end < .9999) {
+      const revealWidth = 128 * transform.scale * transform.widthScale;
+      authored.filter((stroke) => !stroke.dot).forEach((stroke) => drawSampledStroke(reveal, stroke, visible.start, visible.end, transform, revealWidth));
+      shape.globalCompositeOperation = "destination-in";
+      shape.drawImage(revealCanvas, 0, 0);
+      shape.globalCompositeOperation = "source-over";
+    }
+    paint.drawImage(shapeCanvas, 0, 0);
     paint.globalCompositeOperation = "source-in";
-    paint.fillStyle = inputs.brushColor.value;
+    const colors = paletteColors();
+    paint.fillStyle = colors[0];
     paint.fillRect(0, 0, width, height);
-    paintTexture(paint, width, height, rawTime, transform, visible);
+    paint.globalCompositeOperation = "source-over";
+    drawMotherToneLayer(paint, state.motherDetail, colors[1], transform);
+    drawMotherToneLayer(paint, state.motherHighlight, colors[2], transform);
+    drawInkFlow(paint, rawTime, transform);
     context.drawImage(paintCanvas, 0, 0);
   }
 
-  function drawGenericBrush(context, rawTime, width, height, visible, text, baseFit, unit) {
+  function easeOutBack(value) {
+    const x = clamp(value);
+    const c1 = 1.70158;
+    const c3 = c1 + 1;
+    return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+  }
+
+  function dotState(phase) {
+    const delay = Number(inputs.dotDelay.value) / 100;
+    if (phase.name === "write") {
+      const progress = clamp((phase.progress - delay) / Math.max(.001, 1 - delay));
+      return { scale: easeOutBack(progress), alpha: progress <= 0 ? 0 : 1, turn: progress * .55 };
+    }
+    if (phase.name === "flow") {
+      return { scale: 1 + Math.sin(phase.progress * Math.PI * 2) * .018, alpha: 1, turn: .55 + phase.progress * 1.5 };
+    }
+    if (phase.name === "erase") {
+      const progress = clamp((phase.progress - .06) / .26);
+      return { scale: 1 - easeInCubic(progress), alpha: 1 - progress, turn: 2.05 + progress * .8 };
+    }
+    return { scale: 0, alpha: 0, turn: 0 };
+  }
+
+  function drawDot(context, rawTime, width, height, phase, transform) {
+    const motion = dotState(phase);
+    if (motion.alpha <= .001 || motion.scale <= .001) return;
     ensureScratch(width, height);
-    const mask = maskCanvas.getContext("2d");
+    const shape = shapeCanvas.getContext("2d");
     const paint = paintCanvas.getContext("2d");
-    mask.setTransform(1, 0, 0, 1, 0, 0);
+    shape.setTransform(1, 0, 0, 1, 0, 0);
     paint.setTransform(1, 0, 0, 1, 0, 0);
-    mask.clearRect(0, 0, width, height);
+    shape.clearRect(0, 0, width, height);
     paint.clearRect(0, 0, width, height);
-    const centerX = width * Number(inputs.positionX.value) / 100;
-    const centerY = height * Number(inputs.positionY.value) / 100 + baseFit.size * .2;
-    const textMetrics = spacedTextMetrics(context, text.toLocaleUpperCase(), baseFit.size, baseFit.spacing);
-    const span = Math.min(width * .8, Math.max(baseFit.size * 1.25, textMetrics.total * 1.08));
-    const left = centerX - span / 2;
-    const right = centerX + span / 2;
-    const clipLeft = mix(left, right, visible.start);
-    const clipRight = mix(left, right, visible.end);
-    mask.save();
-    mask.beginPath();
-    mask.rect(clipLeft, centerY - baseFit.size, Math.max(0, clipRight - clipLeft), baseFit.size * 2);
-    mask.clip();
-    mask.strokeStyle = "#fff";
-    mask.lineJoin = "round";
-    mask.lineCap = "round";
-    mask.lineWidth = Math.max(8, 34 * unit * Number(inputs.brushWidth.value) / 100 * Number(inputs.brushScale.value) / 100);
-    mask.beginPath();
-    mask.moveTo(left, centerY + baseFit.size * .2);
-    mask.bezierCurveTo(
-      left + span * .2, centerY - baseFit.size * .18,
-      left + span * .4, centerY + baseFit.size * .18,
-      centerX, centerY
-    );
-    mask.bezierCurveTo(
-      left + span * .64, centerY - baseFit.size * .16,
-      left + span * .78, centerY + baseFit.size * .2,
-      right, centerY - baseFit.size * .04
-    );
-    mask.stroke();
-    mask.restore();
-    paint.drawImage(maskCanvas, 0, 0);
+    const centerSource = sourceToLogical(DOT_REGION.centerX, DOT_REGION.centerY);
+    const center = transformPoint(centerSource, transform);
+    const baseWidth = DOT_REGION.width / MOTHER_FRAME.width * 720 * transform.scale;
+    const baseHeight = DOT_REGION.height / MOTHER_FRAME.height * 405 * transform.scale * transform.widthScale;
+    const dotScale = Number(inputs.dotScale.value) / 100 * motion.scale;
+    const drawWidth = baseWidth * dotScale;
+    const drawHeight = baseHeight * dotScale;
+    if (state.brushMother?.complete && state.brushMother.naturalWidth) {
+      shape.drawImage(
+        state.brushMother,
+        DOT_REGION.x, DOT_REGION.y, DOT_REGION.width, DOT_REGION.height,
+        center.x - drawWidth / 2, center.y - drawHeight / 2, drawWidth, drawHeight
+      );
+    } else {
+      shape.fillStyle = "#fff";
+      shape.beginPath();
+      shape.ellipse(center.x, center.y, drawWidth * .44, drawHeight * .44, 0, 0, Math.PI * 2);
+      shape.fill();
+    }
+    const colors = paletteColors();
+    paint.drawImage(shapeCanvas, 0, 0);
     paint.globalCompositeOperation = "source-in";
-    paint.fillStyle = inputs.brushColor.value;
+    paint.fillStyle = colors[2];
     paint.fillRect(0, 0, width, height);
     paint.globalCompositeOperation = "source-atop";
-    paint.fillStyle = inputs.textureColor.value;
-    const speed = Number(inputs.textureSpeed.value) / 100;
-    const density = Number(inputs.textureDensity.value) / 100;
-    const blobs = Math.max(5, Math.round(9 * density));
-    for (let index = 0; index < blobs; index += 1) {
-      const u = fract(index / blobs + rawTime * .09 * speed);
-      if (u < visible.start || u > visible.end) continue;
-      const x = mix(left, right, u);
-      const y = centerY + Math.sin(u * Math.PI * 4 + .6) * baseFit.size * .09;
-      paint.beginPath();
-      paint.ellipse(x, y, baseFit.size * .075, baseFit.size * .032, Math.sin(index) * .55, 0, Math.PI * 2);
-      paint.fill();
-    }
+    paint.save();
+    paint.translate(center.x, center.y);
+    paint.rotate(motion.turn + rawTime * .35 * Number(inputs.textureSpeed.value) / 100);
+    paint.fillStyle = colors[1];
+    paint.beginPath();
+    paint.ellipse(-drawWidth * .18, drawHeight * .06, drawWidth * .26, drawHeight * .58, -.35, 0, Math.PI * 2);
+    paint.fill();
+    paint.fillStyle = colors[4];
+    paint.beginPath();
+    paint.ellipse(drawWidth * .22, -drawHeight * .23, drawWidth * .13, drawHeight * .22, .5, 0, Math.PI * 2);
+    paint.fill();
+    paint.restore();
     paint.globalCompositeOperation = "source-over";
+    context.save();
+    context.globalAlpha = motion.alpha;
     context.drawImage(paintCanvas, 0, 0);
+    context.restore();
+  }
+
+  function drawExactBrush(context, rawTime, width, height, visible) {
+    const transform = exactTransform(width, height);
+    drawMainBrush(context, rawTime, width, height, visible, transform);
+    drawDot(context, rawTime, width, height, visible.phase, transform);
   }
 
   function renderFrame(target, rawTime, width, height, backingWidth = width, backingHeight = height) {
@@ -480,21 +567,15 @@
     context.imageSmoothingQuality = "high";
     drawBackground(context, width, height);
     const text = inputs.textInput.value.trim() || " ";
-    const exactReference = usesReferenceAtlas(text);
     const unit = Math.min(width / 720, height / 405);
     const fit = fitBaseText(context, text.toLocaleUpperCase(), width, height, unit);
     const centerX = width * Number(inputs.positionX.value) / 100;
     const centerY = height * Number(inputs.positionY.value) / 100;
     const visible = visibleWindow(rawTime);
-    if (exactReference) {
-      drawReferenceAtlas(context, rawTime, width, height);
-    } else {
-      if (visible.end > visible.start + .0001) {
-        if (text.toLocaleUpperCase() === "TIME") drawExactBrush(context, rawTime, width, height, visible);
-        else drawGenericBrush(context, rawTime, width, height, visible, text, fit, unit);
-      }
-      drawSpacedText(context, text.toLocaleUpperCase(), centerX, centerY, fit.size, fit.spacing, inputs.textColor.value);
+    if (visible.end > visible.start + .0001 || visible.phase.name === "write" || visible.phase.name === "erase") {
+      drawExactBrush(context, rawTime, width, height, visible);
     }
+    drawSpacedText(context, text.toLocaleUpperCase(), centerX, centerY, fit.size, fit.spacing, inputs.textColor.value);
     if (target === canvas) updateTimelinePlayhead(visible.phase);
   }
 
@@ -572,18 +653,23 @@
       positionYOut: `${inputs.positionY.value}%`,
       textureDensityOut: `${inputs.textureDensity.value}%`,
       textureSpeedOut: `${inputs.textureSpeed.value}%`,
+      dotScaleOut: `${inputs.dotScale.value}%`,
+      dotDelayOut: `${inputs.dotDelay.value}%`,
       writeDurationOut: `${(Number(inputs.writeDuration.value) / 100).toFixed(2)} 秒`,
       flowDurationOut: `${(Number(inputs.flowDuration.value) / 100).toFixed(2)} 秒`,
       eraseDurationOut: `${(Number(inputs.eraseDuration.value) / 100).toFixed(2)} 秒`,
       holdDurationOut: `${(Number(inputs.holdDuration.value) / 100).toFixed(2)} 秒`
     };
     Object.entries(map).forEach(([id, value]) => { $(`#${id}`).textContent = value; });
-    $("#pathModeHint").textContent = inputs.textInput.value.trim().toLocaleUpperCase() === "TIME"
-      ? "TIME 使用完整流彩笔迹；其他文字自动使用通用笔刷。"
-      : "当前文字使用通用笔刷；输入 TIME 可恢复完整流彩笔迹。";
     $("#customSize").hidden = inputs.canvasPreset.value !== "custom";
     $("#customDuration").hidden = inputs.exportDuration.value !== "custom";
     renderTimeline();
+  }
+
+  function applyPalettePreset(name) {
+    const colors = PALETTES[name];
+    if (!colors) return;
+    colors.forEach((color, index) => { inputs[`inkColor${index + 1}`].value = color; });
   }
 
   function schemeData() {
@@ -755,6 +841,8 @@
   Object.entries(inputs).forEach(([key, input]) => {
     if (!input) return;
     const handler = () => {
+      if (key === "palettePreset") applyPalettePreset(input.value);
+      if (/^inkColor[1-5]$/.test(key) && document.activeElement === input) inputs.palettePreset.value = "custom";
       updateOutputs();
       if (["canvasPreset", "canvasWidth", "canvasHeight"].includes(key)) updateStageLayout();
       queueAutosave();
@@ -841,7 +929,7 @@
 
   async function initialize() {
     window.STGFontLibrary?.enhanceAll(document);
-    await loadReferenceAtlas();
+    await loadBrushMother();
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch (_) {}
     try {

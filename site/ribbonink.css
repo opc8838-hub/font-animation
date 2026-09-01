@@ -146,6 +146,7 @@ select { font: inherit; }
 }
 
 .ink-color-grid { margin-bottom: 13px; }
+.ink-palette-grid label:last-child { grid-column: 1 / -1; }
 
 .ink-color-grid label {
   display: flex;
