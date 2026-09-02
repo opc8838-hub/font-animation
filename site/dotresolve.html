@@ -41,8 +41,8 @@
     </section>
 
     <section class="gm-card">
-      <div class="gm-card-title"><span>02</span><h2>文字序列</h2><button id="addRow" class="gm-text-button" type="button">＋ 添加</button></div>
-      <p class="gm-help">每一行是一个画面。把光标放到文字的任意位置，再从图标库插入。</p>
+      <div class="gm-card-title"><span>02</span><h2>演示名称</h2><button id="addRow" class="gm-text-button" type="button">＋ 扩展序列</button></div>
+      <p class="gm-help">默认只演示 RESOLVE；留白行负责复位。需要时仍可扩展为多词序列。</p>
       <div id="sequenceRows" class="gm-sequence"></div>
       <div class="gm-grid-2 gm-text-colors">
         <label class="gm-field">文字色 <input id="textColor" type="color"></label>
@@ -75,10 +75,11 @@
     </section>
 
     <section class="gm-card">
-      <div class="gm-card-title"><span>05</span><h2>动效节奏</h2></div>
+      <div class="gm-card-title"><span>05</span><h2>解析节奏</h2></div>
+      <p class="gm-help">旧字降低采样并消散，新字从粗像素逐步恢复清晰。</p>
       <div class="gm-grid-2">
-        <label class="gm-field">变形 <input id="morphDuration" type="range" min="180" max="1400" step="10"><output for="morphDuration"></output></label>
-        <label class="gm-field">逐字错峰 <input id="characterDelay" type="range" min="0" max="0.12" step="0.001"><output for="characterDelay"></output></label>
+        <label class="gm-field">像素化时长 <input id="morphDuration" type="range" min="180" max="1400" step="10"><output for="morphDuration"></output></label>
+        <label class="gm-field">解析错峰 <input id="characterDelay" type="range" min="0" max="0.12" step="0.001"><output for="characterDelay"></output></label>
         <label class="gm-field">像素半径 <input id="effectAmount" type="range" min="2" max="12" step="0.5"><output for="effectAmount"></output></label>
         <label class="gm-field">总速度 <input id="speed" type="range" min="0.25" max="2" step="0.05"><output for="speed"></output></label>
       </div>
@@ -177,7 +178,7 @@
   <script src="js/continuation-gif.js?v=20260824-1"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
   <script src="shared-icon-library.js?v=20260902-1"></script>
-  <script src="morphports.js?v=20260902-1"></script>
+  <script src="morphports.js?v=20260902-2"></script>
   <script src="stg-cn.js?v=20260901-1"></script>
 </body>
 </html>

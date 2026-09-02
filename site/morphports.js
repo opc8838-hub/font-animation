@@ -4,7 +4,7 @@
   // Independent Canvas ports of four observable per-glyph motion contracts from
   // LTMorphingLabel (MIT, lexrus/LTMorphingLabel). No Swift/UIKit source is embedded.
   const $ = (id) => document.getElementById(id);
-  const VERSION = 1;
+  const VERSION = 2;
   const segmenter = typeof Intl.Segmenter === "function" ? new Intl.Segmenter(undefined, { granularity: "grapheme" }) : null;
   const split = (value) => segmenter ? Array.from(segmenter.segment(String(value)), ({ segment }) => segment) : Array.from(String(value));
   const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
@@ -24,56 +24,52 @@
   const PORTS = {
     sproutshift: {
       mode: "sprout", slug: "sproutshift", zh: "字芽", en: "Sprout Shift", amountLabel: "最小缩放", amountUnit: "%", amountMin: 0, amountMax: 0.35, amountStep: 0.01,
+      phaseLabel: "缩放生长", enterLabel: "放大出现", exitLabel: "缩小退出",
       scheme: {
         version: VERSION, canvas: BASE_CANVAS, typography: BASE_TYPE, motion: { ...BASE_MOTION, effectAmount: 0 },
         rows: [
-          { id: "sprout-01", text: "BLOOM", hold: 650, icons: [] },
-          { id: "sprout-02", text: "BRIGHT", hold: 650, icons: [{ id: "sprout-icon-01", libraryId: "animal-20", boundary: 2, size: 82, gap: 8, x: 0, y: -2 }] },
-          { id: "sprout-03", text: "生长", hold: 650, icons: [] },
-          { id: "sprout-04", text: "OPEN", hold: 650, icons: [] }
+          { id: "sprout-title", text: "SPROUT", hold: 800, icons: [] },
+          { id: "sprout-blank", text: "", hold: 260, icons: [] }
         ]
       }
     },
     mistlift: {
       mode: "mist", slug: "mistlift", zh: "雾升", en: "Mist Lift", amountLabel: "升散幅度", amountUnit: "×", amountMin: 0.4, amountMax: 1.6, amountStep: 0.05,
+      phaseLabel: "升散浮入", enterLabel: "下方浮入", exitLabel: "向上升散",
       scheme: {
         version: VERSION, canvas: BASE_CANVAS, typography: BASE_TYPE, motion: { ...BASE_MOTION, effectAmount: 1 },
         rows: [
-          { id: "mist-01", text: "MORNING", hold: 650, icons: [] },
-          { id: "mist-02", text: "MIST", hold: 650, icons: [] },
-          { id: "mist-03", text: "轻雾", hold: 650, icons: [{ id: "mist-icon-01", libraryId: "animal-22", boundary: 1, size: 82, gap: 10, x: 0, y: -4 }] },
-          { id: "mist-04", text: "CLEAR", hold: 650, icons: [] }
+          { id: "mist-title", text: "MIST", hold: 800, icons: [] },
+          { id: "mist-blank", text: "", hold: 260, icons: [] }
         ]
       }
     },
     typecascade: {
       mode: "cascade", slug: "typecascade", zh: "字倾", en: "Type Cascade", amountLabel: "倾倒角度", amountUnit: "°", amountMin: 60, amountMax: 220, amountStep: 1,
+      phaseLabel: "倾倒坠落", enterLabel: "基线长入", exitLabel: "倾倒坠落",
       scheme: {
         version: VERSION, canvas: BASE_CANVAS, typography: { ...BASE_TYPE, fontSize: 160 }, motion: { ...BASE_MOTION, effectAmount: 168 },
         rows: [
-          { id: "cascade-01", text: "BALANCE", hold: 650, icons: [] },
-          { id: "cascade-02", text: "TIPPING", hold: 650, icons: [{ id: "cascade-icon-01", libraryId: "animal-14", boundary: 3, size: 78, gap: 8, x: 0, y: -2 }] },
-          { id: "cascade-03", text: "失重", hold: 650, icons: [] },
-          { id: "cascade-04", text: "LAND", hold: 650, icons: [] }
+          { id: "cascade-title", text: "CASCADE", hold: 800, icons: [] },
+          { id: "cascade-blank", text: "", hold: 260, icons: [] }
         ]
       }
     },
     dotresolve: {
       mode: "dots", slug: "dotresolve", zh: "点解", en: "Dot Resolve", amountLabel: "像素半径", amountUnit: "×", amountMin: 2, amountMax: 12, amountStep: 0.5,
+      phaseLabel: "像素解析", enterLabel: "颗粒解析", exitLabel: "像素消散",
       scheme: {
         version: VERSION, canvas: BASE_CANVAS, typography: BASE_TYPE, motion: { ...BASE_MOTION, effectAmount: 6 },
         rows: [
-          { id: "dots-01", text: "SIGNAL", hold: 650, icons: [] },
-          { id: "dots-02", text: "NOISE", hold: 650, icons: [] },
-          { id: "dots-03", text: "像素", hold: 650, icons: [{ id: "dots-icon-01", libraryId: "animal-23", boundary: 2, size: 82, gap: 10, x: 0, y: -2 }] },
-          { id: "dots-04", text: "CLARITY", hold: 650, icons: [] }
+          { id: "dots-title", text: "RESOLVE", hold: 800, icons: [] },
+          { id: "dots-blank", text: "", hold: 260, icons: [] }
         ]
       }
     }
   };
   const portKey = document.body.dataset.morphPort;
   const port = PORTS[portKey] || PORTS.sproutshift;
-  const STORAGE_KEY = `me-motion-${port.slug}-v1`;
+  const STORAGE_KEY = `me-motion-${port.slug}-v2`;
 
   // Frozen approved example. Keep synchronized with assets/presets/{slug}-default.json.
   const DEFAULT_SCHEME = Object.freeze(clone(port.scheme));
@@ -465,7 +461,7 @@
       <div class="gm-row-shell" data-row-id="${row.id}">
         <div class="gm-row">
           <span class="gm-row-index">${String(index + 1).padStart(2, "0")}</span>
-          <input data-key="text" value="${escapeHtml(row.text)}" aria-label="第 ${index + 1} 行文字">
+          <input data-key="text" value="${escapeHtml(row.text)}" placeholder="${row.text ? "演示名称" : "复位留白"}" aria-label="第 ${index + 1} 行文字">
           <input data-key="hold" type="number" min="0" max="5000" step="10" value="${row.hold}" aria-label="第 ${index + 1} 行停留毫秒">
           <button data-action="up" type="button" aria-label="上移">↑</button>
           <button data-action="down" type="button" aria-label="下移">↓</button>
@@ -577,7 +573,10 @@
 
   function renderTimeline() {
     const segments = timelineSegments();
-    $("timeline").innerHTML = segments.map(({ from, to, durationMs }) => `<div class="gm-timeline-block me-choreo-block" role="listitem"><strong>${escapeHtml(from.text || "空白")} → ${escapeHtml(to.text || "空白")}</strong><small>${(durationMs / 1000).toFixed(2)}s</small></div>`).join("");
+    $("timeline").innerHTML = segments.map(({ from, to, durationMs }) => {
+      const phase = from.text && !to.text ? port.exitLabel : !from.text && to.text ? port.enterLabel : port.phaseLabel;
+      return `<div class="gm-timeline-block me-choreo-block" role="listitem"><strong>${escapeHtml(phase)}</strong><small>${escapeHtml(from.text || "留白")} → ${escapeHtml(to.text || "留白")} · ${(durationMs / 1000).toFixed(2)}s</small></div>`;
+    }).join("");
     const total = cycleDurationMs();
     $("scrubber").max = String(Math.max(0.001, total));
     $("timeTotal").textContent = `${(total / 1000).toFixed(2)}s`;

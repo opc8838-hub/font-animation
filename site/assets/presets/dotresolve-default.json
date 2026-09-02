@@ -1,12 +1,10 @@
 {
-  "version": 1,
+  "version": 2,
   "canvas": { "width": 1080, "height": 1080, "preset": "1080x1080" },
   "typography": { "fontFamily": "stg:inter", "fontSize": 174, "tracking": 0, "positionX": 0, "positionY": 0, "alignment": "center", "textColor": "#111111", "backgroundColor": "#ffffff" },
   "motion": { "morphDuration": 600, "characterDelay": 0.026, "effectAmount": 6, "speed": 1, "loop": true },
   "rows": [
-    { "id": "dots-01", "text": "SIGNAL", "hold": 650, "icons": [] },
-    { "id": "dots-02", "text": "NOISE", "hold": 650, "icons": [] },
-    { "id": "dots-03", "text": "像素", "hold": 650, "icons": [{ "id": "dots-icon-01", "libraryId": "animal-23", "boundary": 2, "size": 82, "gap": 10, "x": 0, "y": -2 }] },
-    { "id": "dots-04", "text": "CLARITY", "hold": 650, "icons": [] }
+    { "id": "dots-title", "text": "RESOLVE", "hold": 800, "icons": [] },
+    { "id": "dots-blank", "text": "", "hold": 260, "icons": [] }
   ]
 }

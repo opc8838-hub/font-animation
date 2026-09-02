@@ -1,12 +1,10 @@
 {
-  "version": 1,
+  "version": 2,
   "canvas": { "width": 1080, "height": 1080, "preset": "1080x1080" },
   "typography": { "fontFamily": "stg:inter", "fontSize": 174, "tracking": 0, "positionX": 0, "positionY": 0, "alignment": "center", "textColor": "#111111", "backgroundColor": "#ffffff" },
   "motion": { "morphDuration": 600, "characterDelay": 0.026, "effectAmount": 1, "speed": 1, "loop": true },
   "rows": [
-    { "id": "mist-01", "text": "MORNING", "hold": 650, "icons": [] },
-    { "id": "mist-02", "text": "MIST", "hold": 650, "icons": [] },
-    { "id": "mist-03", "text": "轻雾", "hold": 650, "icons": [{ "id": "mist-icon-01", "libraryId": "animal-22", "boundary": 1, "size": 82, "gap": 10, "x": 0, "y": -4 }] },
-    { "id": "mist-04", "text": "CLEAR", "hold": 650, "icons": [] }
+    { "id": "mist-title", "text": "MIST", "hold": 800, "icons": [] },
+    { "id": "mist-blank", "text": "", "hold": 260, "icons": [] }
   ]
 }

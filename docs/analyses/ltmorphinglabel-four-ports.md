@@ -8,12 +8,12 @@
 
 | 上游实现标识 | 本项目名称 | slug | 默认演示词组 |
 | --- | --- | --- | --- |
-| 默认缩放实现 | 字芽 Sprout Shift | `sproutshift` | BLOOM → BRIGHT → 生长 → OPEN |
-| 上升消散实现 | 雾升 Mist Lift | `mistlift` | MORNING → MIST → 轻雾 → CLEAR |
-| 倾倒坠落实现 | 字倾 Type Cascade | `typecascade` | BALANCE → TIPPING → 失重 → LAND |
-| 低分辨率像素实现 | 点解 Dot Resolve | `dotresolve` | SIGNAL → NOISE → 像素 → CLARITY |
+| 默认缩放实现 | 字芽 Sprout Shift | `sproutshift` | SPROUT → 留白复位 |
+| 上升消散实现 | 雾升 Mist Lift | `mistlift` | MIST → 留白复位 |
+| 倾倒坠落实现 | 字倾 Type Cascade | `typecascade` | CASCADE → 留白复位 |
+| 低分辨率像素实现 | 点解 Dot Resolve | `dotresolve` | RESOLVE → 留白复位 |
 
-四页没有动效模式切换器；共享代码只负责一致的编辑、图标、时间轴和导出能力。
+四页没有动效模式切换器；共享代码只负责一致的编辑、图标、时间轴和导出能力。默认方案各自只有一个可见演示名称，第二行是不可见的循环复位状态；由“名称出现—稳定停留—名称退出—留白复位”构成单一节奏，避免多个词连续变化掩盖效果差异。用户仍可主动扩展为多词序列。
 
 ## 共同运动合同
 
