@@ -221,32 +221,30 @@
     return { glyphs, widths, total: widths.reduce((sum, value) => sum + value, 0) + Math.max(0, glyphs.length - 1) * spacing };
   }
 
-  function springOut(value) {
-    const x = clamp(value);
-    return 1 - Math.exp(-6.5 * x) * Math.cos(10.5 * x);
-  }
-
   function impactLetterState(visible) {
     const intensity = clamp(Number(inputs.letterImpact.value) / 100, 0, 1.4);
     let reaction = { alpha: 1, scaleX: 1, scaleY: 1, y: 0 };
     if (visible.phase.name === "write") {
-      const hit = smoothstep((visible.end - .13) / .22);
+      const hit = smoothstep((visible.phase.progress - .04) / .36);
       reaction = {
-        alpha: hit < .72 ? 1 : 0,
-        scaleX: 1 + Math.sin(hit * Math.PI) * .13 - hit * .24,
-        scaleY: 1 - hit * .91 - Math.sin(hit * Math.PI) * .08,
-        y: hit * .53
+        alpha: hit < .90 ? 1 : 0,
+        scaleX: 1 + Math.sin(hit * Math.PI) * .16 - hit * .22,
+        scaleY: 1 - hit * .89 - Math.sin(hit * Math.PI) * .09,
+        y: hit * .54
       };
     } else if (visible.phase.name === "flow") {
       reaction = { alpha: 0, scaleX: .76, scaleY: .09, y: .53 };
     } else if (visible.phase.name === "erase") {
-      const release = clamp((visible.start - .27) / .23);
-      const spring = springOut(release);
+      const release = clamp((visible.phase.progress - .36) / .42);
+      const rising = release < .62;
+      const spring = rising
+        ? smoothstep(release / .62)
+        : smoothstep((release - .62) / .38);
       reaction = {
-        alpha: release > .02 ? 1 : 0,
-        scaleX: mix(.76, 1, spring),
-        scaleY: mix(.09, 1, spring),
-        y: .53 * (1 - spring)
+        alpha: release > .04 ? 1 : 0,
+        scaleX: rising ? mix(.76, .93, spring) : mix(.93, 1, spring),
+        scaleY: rising ? mix(.09, 1.18, spring) : mix(1.18, 1, spring),
+        y: rising ? mix(.54, -.075, spring) : mix(-.075, 0, spring)
       };
     }
     return {
