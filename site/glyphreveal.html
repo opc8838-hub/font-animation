@@ -5,18 +5,18 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="color-scheme" content="dark">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'></svg>">
-  <title>字芽 Sprout Shift | ME Motion Studio</title>
+  <title>字现 Glyph Reveal | ME Motion Studio</title>
   <link rel="stylesheet" href="workspace-editor.css?v=20260901-1">
   <link rel="stylesheet" href="me-motion-editor.css?v=20260901-1">
   <link rel="stylesheet" href="shared-fonts.css?v=20260824-2">
   <link rel="stylesheet" href="stg-cn.css?v=20260824-1">
   <link rel="stylesheet" href="glyphmorph.css?v=20260904-1">
 </head>
-<body class="glyphmorph-editor" data-morph-port="sproutshift">
-  <aside id="glyphMorphInspector" class="gm-inspector" aria-label="字芽编辑器">
+<body class="glyphmorph-editor" data-morph-port="glyphreveal">
+  <aside id="glyphMorphInspector" class="gm-inspector" aria-label="字现编辑器">
     <header class="gm-header">
       <a href="gallery.html" aria-label="返回效果库">ME</a>
-      <div><small>ME MOTION STUDIO</small><h1>字芽 <span>Sprout Shift</span></h1></div>
+      <div><small>ME MOTION STUDIO</small><h1>字现 <span>Glyph Reveal</span></h1></div>
     </header>
 
     <section class="gm-card gm-canvas-card">
@@ -42,7 +42,7 @@
 
     <section class="gm-card">
       <div class="gm-card-title"><span>02</span><h2>文字段落</h2><button id="addRow" class="gm-text-button" type="button">＋ 添加段落</button></div>
-      <p class="gm-help">默认按 7 个文字节拍演示完整缩放变形；每段可独立停留、插入图标并设置背景视频。</p>
+      <p class="gm-help">默认让一句文字显现、停留、清空并重复两次；每段可独立停留、插入图标并设置背景视频。</p>
       <div id="sequenceRows" class="gm-sequence"></div>
       <div class="gm-grid-2 gm-text-colors">
         <label class="gm-field">文字色 <input id="textColor" type="color"></label>
@@ -75,11 +75,11 @@
     </section>
 
     <section class="gm-card">
-      <div class="gm-card-title"><span>05</span><h2>生长节奏</h2></div>
-      <p class="gm-help">旧字围绕基线缩小退出，新字从近零尺寸放大出现。</p>
+      <div class="gm-card-title"><span>05</span><h2>显现节奏</h2></div>
+      <p class="gm-help">字符从近零尺寸逐字长入，整句停留后清空，再按参考节奏重新出现。</p>
       <div class="gm-grid-2">
-        <label class="gm-field">缩放时长 <input id="morphDuration" type="range" min="180" max="1400" step="10"><output for="morphDuration"></output></label>
-        <label class="gm-field">生长错峰 <input id="characterDelay" type="range" min="0" max="0.12" step="0.001"><output for="characterDelay"></output></label>
+        <label class="gm-field">显现时长 <input id="morphDuration" type="range" min="180" max="1400" step="10"><output for="morphDuration"></output></label>
+        <label class="gm-field">逐字错峰 <input id="characterDelay" type="range" min="0" max="0.12" step="0.001"><output for="characterDelay"></output></label>
         <label class="gm-field">最小缩放 <input id="effectAmount" type="range" min="0" max="0.35" step="0.01"><output for="effectAmount"></output></label>
         <label class="gm-field">总速度 <input id="speed" type="range" min="0.25" max="2" step="0.05"><output for="speed"></output></label>
       </div>
@@ -88,7 +88,7 @@
 
     <section class="gm-card">
       <div class="gm-card-title"><span>06</span><h2>时间轴</h2></div>
-      <div class="me-choreo-scroll"><div id="timeline" class="gm-timeline me-choreo-track me-choreo-bar" role="list" aria-label="字芽动效时间轴"></div></div>
+      <div class="me-choreo-scroll"><div id="timeline" class="gm-timeline me-choreo-track me-choreo-bar" role="list" aria-label="字现动效时间轴"></div></div>
       <input id="scrubber" class="gm-scrubber me-choreo-playhead" type="range" min="0" max="1" step="0.001" value="0" aria-label="时间轴播放头">
       <div class="gm-time-readout"><span id="timeNow">0.00s</span><span id="timeTotal">0.00s</span></div>
     </section>
@@ -165,7 +165,7 @@
 
   <main id="glyphMorphStage" class="gm-stage">
     <div id="compositionFrame" class="gm-composition-frame">
-      <canvas id="glyphMorphCanvas" width="1080" height="1080" aria-label="字芽效果预览"></canvas>
+      <canvas id="glyphMorphCanvas" width="1080" height="1080" aria-label="字现效果预览"></canvas>
     </div>
     <div class="gm-stage-controls me-stage-controls" aria-label="预览控制">
       <button id="toggleInspector" type="button" aria-pressed="false">▤ <span>编辑器</span></button>

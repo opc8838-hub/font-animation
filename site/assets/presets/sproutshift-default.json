@@ -1,10 +1,15 @@
 {
-  "version": 2,
+  "version": 3,
   "canvas": { "width": 1080, "height": 1080, "preset": "1080x1080" },
   "typography": { "fontFamily": "stg:inter", "fontSize": 174, "tracking": 0, "positionX": 0, "positionY": 0, "alignment": "center", "textColor": "#111111", "backgroundColor": "#ffffff" },
-  "motion": { "morphDuration": 600, "characterDelay": 0.026, "effectAmount": 0, "speed": 1, "loop": true },
+  "motion": { "morphDuration": 600, "characterDelay": 0.026, "effectAmount": 0, "speed": 1, "loop": false },
   "rows": [
-    { "id": "sprout-title", "text": "SPROUT", "hold": 800, "icons": [] },
-    { "id": "sprout-blank", "text": "", "hold": 260, "icons": [] }
+    { "id": "sprout-01", "text": "Motion", "hold": 100, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
+    { "id": "sprout-02", "text": "Motion is not just", "hold": 650, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
+    { "id": "sprout-03", "text": "what the eye can see", "hold": 650, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
+    { "id": "sprout-04", "text": "and scroll past.", "hold": 650, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
+    { "id": "sprout-05", "text": "Motion", "hold": 650, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
+    { "id": "sprout-06", "text": "is how ideas speak.", "hold": 750, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
+    { "id": "sprout-07", "text": "— ME Studio", "hold": 1200, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 }
   ]
 }

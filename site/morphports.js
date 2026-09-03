@@ -1,10 +1,10 @@
 (() => {
   "use strict";
 
-  // Independent Canvas ports of four observable per-glyph motion contracts from
+  // Independent Canvas ports of five observable per-glyph motion contracts from
   // LTMorphingLabel (MIT, lexrus/LTMorphingLabel). No Swift/UIKit source is embedded.
   const $ = (id) => document.getElementById(id);
-  const VERSION = 2;
+  const VERSION = 3;
   const segmenter = typeof Intl.Segmenter === "function" ? new Intl.Segmenter(undefined, { granularity: "grapheme" }) : null;
   const split = (value) => segmenter ? Array.from(segmenter.segment(String(value)), ({ segment }) => segment) : Array.from(String(value));
   const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
@@ -20,7 +20,8 @@
 
   const BASE_CANVAS = { width: 1080, height: 1080, preset: "1080x1080" };
   const BASE_TYPE = { fontFamily: "stg:inter", fontSize: 174, tracking: 0, positionX: 0, positionY: 0, alignment: "center", textColor: "#111111", backgroundColor: "#ffffff" };
-  const BASE_MOTION = { morphDuration: 600, characterDelay: 0.026, speed: 1, loop: true };
+  const BASE_MOTION = { morphDuration: 600, characterDelay: 0.026, speed: 1, loop: false };
+  const row = (id, text, hold, extra = {}) => ({ id, text, hold, icons: [], backgroundColor: "#ffffff", backgroundMedia: null, backgroundTransition: "direct", backgroundTransitionDuration: 120, ...extra });
   const PORTS = {
     sproutshift: {
       mode: "sprout", slug: "sproutshift", zh: "字芽", en: "Sprout Shift", amountLabel: "最小缩放", amountUnit: "%", amountMin: 0, amountMax: 0.35, amountStep: 0.01,
@@ -28,8 +29,13 @@
       scheme: {
         version: VERSION, canvas: BASE_CANVAS, typography: BASE_TYPE, motion: { ...BASE_MOTION, effectAmount: 0 },
         rows: [
-          { id: "sprout-title", text: "SPROUT", hold: 800, icons: [] },
-          { id: "sprout-blank", text: "", hold: 260, icons: [] }
+          row("sprout-01", "Motion", 100),
+          row("sprout-02", "Motion is not just", 650),
+          row("sprout-03", "what the eye can see", 650),
+          row("sprout-04", "and scroll past.", 650),
+          row("sprout-05", "Motion", 650),
+          row("sprout-06", "is how ideas speak.", 750),
+          row("sprout-07", "— ME Studio", 1200)
         ]
       }
     },
@@ -39,8 +45,11 @@
       scheme: {
         version: VERSION, canvas: BASE_CANVAS, typography: BASE_TYPE, motion: { ...BASE_MOTION, effectAmount: 1 },
         rows: [
-          { id: "mist-title", text: "MIST", hold: 800, icons: [] },
-          { id: "mist-blank", text: "", hold: 260, icons: [] }
+          row("mist-01", "Pause and listen,", 800),
+          row("mist-02", "‘What moved first?’", 800),
+          row("mist-03", "then the letters answer,", 800),
+          row("mist-04", "‘Watch the space between.’", 800),
+          row("mist-05", "— ME Studio", 1400)
         ]
       }
     },
@@ -50,8 +59,13 @@
       scheme: {
         version: VERSION, canvas: BASE_CANVAS, typography: { ...BASE_TYPE, fontSize: 160 }, motion: { ...BASE_MOTION, effectAmount: 168 },
         rows: [
-          { id: "cascade-title", text: "CASCADE", hold: 800, icons: [] },
-          { id: "cascade-blank", text: "", hold: 260, icons: [] }
+          row("cascade-01", "Sketch", 450),
+          row("cascade-02", "Frame", 450),
+          row("cascade-03", "Rhythm", 450),
+          row("cascade-04", "Keyframe", 450),
+          row("cascade-05", "Timeline", 450),
+          row("cascade-06", "Render", 600),
+          row("cascade-07", "Create", 1278)
         ]
       }
     },
@@ -59,17 +73,30 @@
       mode: "dots", slug: "dotresolve", zh: "点解", en: "Dot Resolve", amountLabel: "像素半径", amountUnit: "×", amountMin: 2, amountMax: 12, amountStep: 0.5,
       phaseLabel: "像素解析", enterLabel: "颗粒解析", exitLabel: "像素消散",
       scheme: {
-        version: VERSION, canvas: BASE_CANVAS, typography: BASE_TYPE, motion: { ...BASE_MOTION, effectAmount: 6 },
+        version: VERSION, canvas: BASE_CANVAS, typography: BASE_TYPE, motion: { ...BASE_MOTION, loop: true, effectAmount: 6 },
         rows: [
-          { id: "dots-title", text: "RESOLVE", hold: 800, icons: [] },
-          { id: "dots-blank", text: "", hold: 260, icons: [] }
+          row("dots-01", "Signal", 650),
+          row("dots-02", "Frame", 650),
+          row("dots-03", "Composition", 650),
+          row("dots-04", "Motion", 750)
+        ]
+      }
+    },
+    glyphreveal: {
+      mode: "sprout", slug: "glyphreveal", zh: "字现", en: "Glyph Reveal", amountLabel: "最小缩放", amountUnit: "%", amountMin: 0, amountMax: 0.35, amountStep: 0.01,
+      phaseLabel: "逐字显现", enterLabel: "逐字显现", exitLabel: "逐字隐去",
+      scheme: {
+        version: VERSION, canvas: BASE_CANVAS, typography: { ...BASE_TYPE, fontSize: 154 }, motion: { ...BASE_MOTION, loop: true, effectAmount: 0 },
+        rows: [
+          row("reveal-blank", "", 50),
+          row("reveal-title", "Words come alive", 884)
         ]
       }
     }
   };
   const portKey = document.body.dataset.morphPort;
   const port = PORTS[portKey] || PORTS.sproutshift;
-  const STORAGE_KEY = `me-motion-${port.slug}-v2`;
+  const STORAGE_KEY = `me-motion-${port.slug}-v3`;
 
   // Frozen approved example. Keep synchronized with assets/presets/{slug}-default.json.
   const DEFAULT_SCHEME = Object.freeze(clone(port.scheme));
@@ -85,7 +112,9 @@
     caretBoundary: split(DEFAULT_SCHEME.rows[0].text).length,
     librarySelectionId: "",
     activeIconId: "",
-    imageCache: new Map()
+    imageCache: new Map(),
+    backgroundCache: new Map(),
+    activeBackgroundRowId: ""
   };
 
   const canvas = $("glyphMorphCanvas");
@@ -93,6 +122,28 @@
   const context = canvas.getContext("2d");
   const controlIds = ["fontFamily", "fontSize", "tracking", "positionX", "positionY", "textColor", "backgroundColor", "morphDuration", "characterDelay", "effectAmount", "speed", "loop"];
   const controls = Object.fromEntries(controlIds.map((id) => [id, $(id)]));
+  const normalizeColor = (value, fallback = "#ffffff") => /^#[0-9a-f]{6}$/i.test(String(value || "")) ? String(value) : fallback;
+  const normalizeBackgroundTransition = (value) => value === "crossfade" ? "crossfade" : "direct";
+  const normalizeBackgroundTransitionDuration = (value) => clamp(Number.isFinite(Number(value)) ? Number(value) : 120, 10, 2000);
+  const normalizeBackgroundMedia = (media) => media && typeof media === "object" && media.url ? {
+    name: String(media.name || "背景视频"),
+    url: String(media.url),
+    fileType: String(media.fileType || "video/mp4"),
+    videoStart: Math.max(0, Number.isFinite(Number(media.videoStart)) ? Number(media.videoStart) : 0),
+    videoEnd: Number.isFinite(Number(media.videoEnd)) && Number(media.videoEnd) > 0 ? Number(media.videoEnd) : null
+  } : null;
+  const isVideoMedia = (media) => /^video\//i.test(media?.fileType || "");
+  const videoClipBounds = (media, duration) => {
+    const safeDuration = Math.max(0.1, Number(duration) || 0.1);
+    const start = clamp(Number(media?.videoStart) || 0, 0, Math.max(0, safeDuration - 0.1));
+    const requestedEnd = Number(media?.videoEnd);
+    const end = clamp(Number.isFinite(requestedEnd) && requestedEnd > 0 ? Math.max(requestedEnd, start + 0.1) : safeDuration, start + 0.1, safeDuration);
+    return { start, end, duration: Math.max(0.1, end - start) };
+  };
+  const videoClipTime = (media, duration, localTime) => {
+    const clip = videoClipBounds(media, duration);
+    return Math.min(clip.end - 0.001, clip.start + (((localTime % clip.duration) + clip.duration) % clip.duration));
+  };
 
   function fontPreset() {
     return window.STGFontLibrary?.preset(state.scheme.typography.fontFamily) || { family: "STG Inter", weight: 500, style: "normal" };
@@ -100,14 +151,14 @@
 
   function timelineSegments() {
     const rows = state.scheme.rows.length > 1 ? state.scheme.rows : [{ id: "blank-a", text: "", hold: 100 }, { id: "blank-b", text: "", hold: 100 }];
-    return rows.map((row, index) => ({
-      from: row,
-      to: rows[(index + 1) % rows.length],
-      morphMs: state.scheme.motion.morphDuration,
-      tailMs: state.scheme.motion.morphDuration * state.scheme.motion.characterDelay * Math.max(0, rowTokens(rows[(index + 1) % rows.length]).length - 1),
-      holdMs: Math.max(0, Number(row.hold) || 0),
-      durationMs: state.scheme.motion.morphDuration * (1 + state.scheme.motion.characterDelay * Math.max(0, rowTokens(rows[(index + 1) % rows.length]).length - 1)) + Math.max(0, Number(row.hold) || 0)
-    }));
+    return rows.map((row, index) => {
+      const terminal = !state.scheme.motion.loop && index === rows.length - 1;
+      const to = terminal ? row : rows[(index + 1) % rows.length];
+      const morphMs = terminal ? 0 : state.scheme.motion.morphDuration;
+      const tailMs = terminal ? 0 : morphMs * state.scheme.motion.characterDelay * Math.max(0, rowTokens(to).length - 1);
+      const holdMs = Math.max(0, Number(row.hold) || 0);
+      return { from: row, to, morphMs, tailMs, holdMs, durationMs: holdMs + morphMs + tailMs, terminal };
+    });
   }
   function rowStartElapsed(rowIndex) {
     const segments = timelineSegments();
@@ -146,11 +197,11 @@
       const segment = segments[index];
       if (local < cursor + segment.durationMs || index === segments.length - 1) {
         const segmentTime = local - cursor;
-        return { segment, index, progress: Math.max(0, (segmentTime - segment.holdMs) / Math.max(1, segment.morphMs)), inHold: segmentTime < segment.holdMs };
+        return { segment, index, segmentTime, rawLocal: local, rawCycle, progress: Math.max(0, (segmentTime - segment.holdMs) / Math.max(1, segment.morphMs)), inHold: segment.terminal || segmentTime < segment.holdMs };
       }
       cursor += segment.durationMs;
     }
-    return { segment: segments[0], index: 0, progress: 0, inHold: false };
+    return { segment: segments[0], index: 0, segmentTime: 0, rawLocal: 0, rawCycle, progress: 0, inHold: true };
   }
 
   function libraryAsset(libraryId) {
@@ -217,6 +268,218 @@
   async function preloadInsertedAssets() {
     const ids = new Set(state.scheme.rows.flatMap((row) => (row.icons || []).map((icon) => icon.libraryId)));
     await Promise.all(Array.from(ids, (id) => loadAssetResource(libraryAsset(id))));
+  }
+
+  async function prepareRowBackground(row) {
+    const media = normalizeBackgroundMedia(row?.backgroundMedia);
+    if (!row?.id || !isVideoMedia(media)) {
+      if (row?.id) state.backgroundCache.delete(row.id);
+      return null;
+    }
+    const existing = state.backgroundCache.get(row.id);
+    if (existing?.url === media.url) return existing.promise;
+    existing?.video?.pause();
+    existing?.exportVideo?.pause();
+    const runtime = { url: media.url, video: null, exportVideo: null, duration: 0, previewImage: null, exportImage: null, exportTime: -1, filmstrip: null, filmstripPromise: null, promise: null, exportPromise: null };
+    state.backgroundCache.set(row.id, runtime);
+    const loadVideo = (key) => new Promise((resolve) => {
+      const video = document.createElement("video");
+      video.muted = true;
+      video.loop = false;
+      video.playsInline = true;
+      video.preload = "auto";
+      const finish = () => { runtime[key] = video; runtime.duration = Number(video.duration) || runtime.duration; resolve(runtime); };
+      video.addEventListener("loadeddata", finish, { once: true });
+      video.addEventListener("error", () => resolve(runtime), { once: true });
+      video.src = media.url;
+      video.load();
+    });
+    runtime.promise = loadVideo("video");
+    runtime.exportPromise = loadVideo("exportVideo");
+    return runtime.promise;
+  }
+
+  async function preloadRowBackgrounds() {
+    await Promise.all(state.scheme.rows.map((item) => prepareRowBackground(item)));
+  }
+
+  async function prepareVideoFilmstrip(runtime) {
+    if (!runtime?.url) return null;
+    if (runtime.filmstrip) return runtime.filmstrip;
+    if (runtime.filmstripPromise) return runtime.filmstripPromise;
+    runtime.filmstripPromise = (async () => {
+      const video = document.createElement("video");
+      video.muted = true;
+      video.playsInline = true;
+      video.preload = "auto";
+      await new Promise((resolve, reject) => {
+        video.addEventListener("loadeddata", resolve, { once: true });
+        video.addEventListener("error", reject, { once: true });
+        video.src = runtime.url;
+        video.load();
+      });
+      const duration = Number(video.duration) || runtime.duration;
+      if (!(duration > 0)) return null;
+      const filmstrip = document.createElement("canvas");
+      filmstrip.width = 720;
+      filmstrip.height = 96;
+      const filmstripContext = filmstrip.getContext("2d");
+      const frameCount = 8;
+      const frameWidth = filmstrip.width / frameCount;
+      const seek = (time) => new Promise((resolve) => {
+        let settled = false;
+        const done = () => {
+          if (settled) return;
+          settled = true;
+          if (typeof video.requestVideoFrameCallback === "function") {
+            const fallback = setTimeout(resolve, 120);
+            video.requestVideoFrameCallback(() => { clearTimeout(fallback); resolve(); });
+          } else requestAnimationFrame(resolve);
+        };
+        video.addEventListener("seeked", done, { once: true });
+        video.currentTime = clamp(time, 0, Math.max(0, duration - 0.001));
+        setTimeout(done, 800);
+      });
+      for (let frameIndex = 0; frameIndex < frameCount; frameIndex += 1) {
+        await seek((frameIndex + 0.5) / frameCount * duration);
+        const sourceWidth = video.videoWidth || 1;
+        const sourceHeight = video.videoHeight || 1;
+        const cover = Math.max(frameWidth / sourceWidth, filmstrip.height / sourceHeight);
+        const drawWidth = sourceWidth * cover;
+        const drawHeight = sourceHeight * cover;
+        filmstripContext.save();
+        filmstripContext.beginPath();
+        filmstripContext.rect(frameIndex * frameWidth, 0, frameWidth, filmstrip.height);
+        filmstripContext.clip();
+        filmstripContext.drawImage(video, frameIndex * frameWidth + (frameWidth - drawWidth) / 2, (filmstrip.height - drawHeight) / 2, drawWidth, drawHeight);
+        filmstripContext.restore();
+      }
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+      runtime.filmstrip = filmstrip;
+      return filmstrip;
+    })().catch(() => null);
+    return runtime.filmstripPromise;
+  }
+
+  function activatePreviewBackgrounds(rowIds) {
+    const active = new Set(rowIds.filter(Boolean));
+    state.backgroundCache.forEach((runtime, rowId) => { if (!active.has(rowId)) runtime.video?.pause(); });
+    state.activeBackgroundRowId = Array.from(active).join("|");
+  }
+
+  function cachePreviewVideoFrame(runtime) {
+    const video = runtime?.video;
+    if (!video || video.readyState < 2 || video.seeking || !video.videoWidth || !video.videoHeight) return;
+    const frameCanvas = runtime.previewImage || document.createElement("canvas");
+    if (frameCanvas.width !== video.videoWidth || frameCanvas.height !== video.videoHeight) {
+      frameCanvas.width = video.videoWidth;
+      frameCanvas.height = video.videoHeight;
+    }
+    frameCanvas.getContext("2d").drawImage(video, 0, 0, frameCanvas.width, frameCanvas.height);
+    runtime.previewImage = frameCanvas;
+  }
+
+  function backgroundImageAt(row, localTime, preview, freeze = false) {
+    const media = normalizeBackgroundMedia(row?.backgroundMedia);
+    const runtime = state.backgroundCache.get(row?.id);
+    if (!media || !runtime) return null;
+    if (!preview) return runtime.exportImage || runtime.previewImage || (runtime.exportVideo?.readyState >= 2 ? runtime.exportVideo : null);
+    const video = runtime.video;
+    if (!video || video.readyState < 2) return runtime.previewImage;
+    const duration = runtime.duration || Number(video.duration) || 0;
+    const target = freeze ? videoClipBounds(media, duration).start : videoClipTime(media, duration, localTime);
+    if (!video.seeking && Math.abs(video.currentTime - target) > 0.16) video.currentTime = target;
+    if (state.playing && !freeze && !state.exportBusy && !video.seeking) {
+      video.playbackRate = clamp(Number(state.scheme.motion.speed) || 1, 0.25, 2);
+      video.play().catch(() => {});
+    } else video.pause();
+    cachePreviewVideoFrame(runtime);
+    return video.seeking ? runtime.previewImage : video;
+  }
+
+  async function seekRuntimeBackground(row, localTime, freeze = false) {
+    const media = normalizeBackgroundMedia(row?.backgroundMedia);
+    const runtime = state.backgroundCache.get(row?.id);
+    if (!media || !runtime) return;
+    await runtime.exportPromise;
+    const video = runtime.exportVideo;
+    const duration = runtime.duration || Number(video?.duration) || 0;
+    if (!video || !(duration > 0)) return;
+    const target = freeze ? videoClipBounds(media, duration).start : videoClipTime(media, duration, localTime);
+    if (Math.abs(video.currentTime - target) > 1 / 240) {
+      await new Promise((resolve) => {
+        let settled = false;
+        const done = () => {
+          if (settled) return;
+          settled = true;
+          if (typeof video.requestVideoFrameCallback === "function") {
+            const fallback = setTimeout(resolve, 180);
+            video.requestVideoFrameCallback(() => { clearTimeout(fallback); resolve(); });
+          } else requestAnimationFrame(resolve);
+        };
+        video.addEventListener("seeked", done, { once: true });
+        video.currentTime = target;
+        setTimeout(done, 800);
+      });
+    }
+    const frameCanvas = runtime.exportImage || document.createElement("canvas");
+    frameCanvas.width = video.videoWidth || 2;
+    frameCanvas.height = video.videoHeight || 2;
+    frameCanvas.getContext("2d").drawImage(video, 0, 0, frameCanvas.width, frameCanvas.height);
+    runtime.exportImage = frameCanvas;
+    runtime.exportTime = target;
+  }
+
+  function drawBackgroundLayer(ctx, width, height, rowState, image, alpha = 1) {
+    if (alpha <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = clamp(alpha);
+    ctx.fillStyle = normalizeColor(rowState?.backgroundColor, state.scheme.typography.backgroundColor);
+    ctx.fillRect(0, 0, width, height);
+    if (image) {
+      const sourceWidth = image.videoWidth || image.width || image.naturalWidth || width;
+      const sourceHeight = image.videoHeight || image.height || image.naturalHeight || height;
+      const cover = Math.max(width / Math.max(1, sourceWidth), height / Math.max(1, sourceHeight));
+      const drawWidth = sourceWidth * cover;
+      const drawHeight = sourceHeight * cover;
+      ctx.drawImage(image, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
+    }
+    ctx.restore();
+  }
+
+  function renderBackground(ctx, timeline, width, height, preview) {
+    const morphElapsed = Math.max(0, timeline.segmentTime - timeline.segment.holdMs) / 1000;
+    if (timeline.inHold) {
+      activatePreviewBackgrounds(preview ? [timeline.segment.from.id] : []);
+      drawBackgroundLayer(ctx, width, height, timeline.segment.from, backgroundImageAt(timeline.segment.from, timeline.segmentTime / 1000, preview));
+      return;
+    }
+    const incoming = timeline.segment.to;
+    const transition = normalizeBackgroundTransition(incoming.backgroundTransition);
+    if (transition === "crossfade") {
+      activatePreviewBackgrounds(preview ? [timeline.segment.from.id, incoming.id] : []);
+      drawBackgroundLayer(ctx, width, height, timeline.segment.from, backgroundImageAt(timeline.segment.from, timeline.segmentTime / 1000, preview));
+      const duration = normalizeBackgroundTransitionDuration(incoming.backgroundTransitionDuration) / 1000;
+      const progress = clamp(morphElapsed / Math.max(0.01, duration));
+      const eased = progress * progress * (3 - 2 * progress);
+      drawBackgroundLayer(ctx, width, height, incoming, backgroundImageAt(incoming, 0, preview, true), eased);
+      return;
+    }
+    activatePreviewBackgrounds(preview ? [incoming.id] : []);
+    drawBackgroundLayer(ctx, width, height, incoming, backgroundImageAt(incoming, 0, preview, true));
+  }
+
+  async function prepareBackgroundFrame(timeSeconds) {
+    const timeline = resolveTimeline(timeSeconds * 1000);
+    if (timeline.inHold) {
+      await seekRuntimeBackground(timeline.segment.from, timeline.segmentTime / 1000);
+      return;
+    }
+    const incoming = timeline.segment.to;
+    if (normalizeBackgroundTransition(incoming.backgroundTransition) === "crossfade") await seekRuntimeBackground(timeline.segment.from, timeline.segmentTime / 1000);
+    await seekRuntimeBackground(incoming, 0, true);
   }
 
   function glyphLayout(ctx, row, width, height) {
@@ -383,9 +646,8 @@
     const ctx = targetCanvas.getContext("2d", { willReadFrequently: true });
     ctx.save();
     ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = state.scheme.typography.backgroundColor;
-    ctx.fillRect(0, 0, width, height);
     const timeline = resolveTimeline(timeSeconds * 1000);
+    renderBackground(ctx, timeline, width, height, targetCanvas === canvas);
     const fromLayout = glyphLayout(ctx, timeline.segment.from, width, height);
     const toLayout = glyphLayout(ctx, timeline.segment.to, width, height);
     if (timeline.inHold) {
@@ -461,7 +723,7 @@
       <div class="gm-row-shell" data-row-id="${row.id}">
         <div class="gm-row">
           <span class="gm-row-index">${String(index + 1).padStart(2, "0")}</span>
-          <input data-key="text" value="${escapeHtml(row.text)}" placeholder="${row.text ? "演示名称" : "复位留白"}" aria-label="第 ${index + 1} 行文字">
+          <input data-key="text" value="${escapeHtml(row.text)}" placeholder="${row.text ? "文字段落" : "复位留白"}" aria-label="第 ${index + 1} 行文字">
           <input data-key="hold" type="number" min="0" max="5000" step="10" value="${row.hold}" aria-label="第 ${index + 1} 行停留毫秒">
           <button data-action="up" type="button" aria-label="上移">↑</button>
           <button data-action="down" type="button" aria-label="下移">↓</button>
@@ -472,13 +734,166 @@
           <button class="gm-row-pause" data-action="pause-row" type="button">暂停修改</button>
           <span class="gm-row-icon-count">${(row.icons || []).length} 个图标</span>
         </div>
+        <details class="gm-row-background">
+          <summary><span>本行背景</span><b>${escapeHtml(row.backgroundMedia?.name || "纯色")}</b></summary>
+          <div class="gm-row-background-grid">
+            <label>背景颜色<input data-background-key="backgroundColor" type="color" value="${normalizeColor(row.backgroundColor, state.scheme.typography.backgroundColor)}"></label>
+            <label class="gm-background-upload">上传背景视频<input data-background-file type="file" accept="video/mp4,video/webm,video/quicktime"></label>
+            <label>背景转场<select data-background-key="backgroundTransition"><option value="direct"${row.backgroundTransition === "direct" ? " selected" : ""}>直接切换</option><option value="crossfade"${row.backgroundTransition === "crossfade" ? " selected" : ""}>柔和叠化</option></select></label>
+            <label>叠化时长<input data-background-key="backgroundTransitionDuration" type="number" min="10" max="2000" step="10" value="${normalizeBackgroundTransitionDuration(row.backgroundTransitionDuration)}"><small>毫秒</small></label>
+            <div class="gm-background-video"${row.backgroundMedia ? "" : " hidden"}>
+              <div class="gm-background-video-head"><strong>${escapeHtml(row.backgroundMedia?.name || "")}</strong><button data-background-remove type="button">移除视频</button></div>
+              <div class="gm-video-timeline" aria-label="拖动两侧把手裁剪视频片段">
+                <canvas data-video-filmstrip width="720" height="96"></canvas>
+                <div class="gm-video-selection"><span class="gm-video-handle is-start" data-video-edge="start" role="slider" tabindex="0"></span><span class="gm-video-handle is-end" data-video-edge="end" role="slider" tabindex="0"></span></div>
+              </div>
+              <div class="gm-video-scale"><span>0.0 秒</span><span data-video-duration>读取中…</span></div>
+              <label>开始秒数<input data-video-start type="number" min="0" step="0.1" value="${Number(row.backgroundMedia?.videoStart || 0)}"></label>
+              <label>结束秒数<input data-video-end type="number" min="0.1" step="0.1" value="${row.backgroundMedia?.videoEnd == null ? "" : Number(row.backgroundMedia.videoEnd)}"></label>
+            </div>
+          </div>
+        </details>
         <div class="gm-row-icons">${(row.icons || []).map((icon) => {
           const asset = libraryAsset(icon.libraryId);
           const name = escapeHtml(asset?.name || "图标");
           return `<div class="gm-inline-icon-chip"><img src="${escapeHtml(asset?.url || "")}" alt=""><strong>${name}</strong><span>位置 ${icon.boundary}</span><button class="gm-inline-icon-edit" data-action="edit-icon" data-icon-id="${icon.id}" type="button" aria-label="编辑${name}">编辑</button></div>`;
         }).join("")}</div>
       </div>`).join("");
+    bindRowBackgroundControls();
     updateInsertTargetLabel();
+  }
+
+  const fileAsDataUrl = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  function bindRowBackgroundControls() {
+    document.querySelectorAll(".gm-row-shell").forEach((rowElement) => {
+      const rowState = state.scheme.rows.find((item) => item.id === rowElement.dataset.rowId);
+      if (!rowState) return;
+      const color = rowElement.querySelector('[data-background-key="backgroundColor"]');
+      const transition = rowElement.querySelector('[data-background-key="backgroundTransition"]');
+      const transitionDuration = rowElement.querySelector('[data-background-key="backgroundTransitionDuration"]');
+      const fileInput = rowElement.querySelector("[data-background-file]");
+      const mediaPanel = rowElement.querySelector(".gm-background-video");
+      const startInput = rowElement.querySelector("[data-video-start]");
+      const endInput = rowElement.querySelector("[data-video-end]");
+      const timeline = rowElement.querySelector(".gm-video-timeline");
+      const selection = rowElement.querySelector(".gm-video-selection");
+      const filmstripCanvas = rowElement.querySelector("[data-video-filmstrip]");
+      const summary = rowElement.querySelector(".gm-row-background summary b");
+      const durationLabel = rowElement.querySelector("[data-video-duration]");
+      let draggedEdge = "";
+
+      const drawFilmstrip = (filmstrip) => {
+        if (!filmstrip || !filmstripCanvas.isConnected) return;
+        const filmstripContext = filmstripCanvas.getContext("2d");
+        filmstripContext.clearRect(0, 0, filmstripCanvas.width, filmstripCanvas.height);
+        filmstripContext.drawImage(filmstrip, 0, 0, filmstripCanvas.width, filmstripCanvas.height);
+      };
+      const refreshMediaUi = async () => {
+        const media = normalizeBackgroundMedia(rowState.backgroundMedia);
+        mediaPanel.hidden = !media;
+        summary.textContent = media ? media.name : "纯色";
+        if (!media) return;
+        mediaPanel.querySelector("strong").textContent = media.name;
+        const runtime = await prepareRowBackground(rowState);
+        if (!rowElement.isConnected || !runtime) return;
+        const duration = runtime.duration || 0;
+        if (!(duration > 0)) return;
+        const clip = videoClipBounds(media, duration);
+        rowState.backgroundMedia.videoStart = clip.start;
+        rowState.backgroundMedia.videoEnd = clip.end;
+        startInput.max = String(Math.max(0, duration - 0.1));
+        endInput.max = String(duration);
+        startInput.value = String(Number(clip.start.toFixed(2)));
+        endInput.value = String(Number(clip.end.toFixed(2)));
+        durationLabel.textContent = `${duration.toFixed(1)} 秒`;
+        selection.style.left = `${clip.start / duration * 100}%`;
+        selection.style.width = `${clip.duration / duration * 100}%`;
+        selection.querySelector(".is-start").setAttribute("aria-valuetext", `${clip.start.toFixed(1)} 秒`);
+        selection.querySelector(".is-end").setAttribute("aria-valuetext", `${clip.end.toFixed(1)} 秒`);
+        if (runtime.filmstrip) drawFilmstrip(runtime.filmstrip);
+        else prepareVideoFilmstrip(runtime).then(drawFilmstrip);
+      };
+      const commitTrim = () => {
+        const runtime = state.backgroundCache.get(rowState.id);
+        if (!rowState.backgroundMedia || !(runtime?.duration > 0)) return;
+        const draft = { ...rowState.backgroundMedia, videoStart: Number(startInput.value), videoEnd: Number(endInput.value) };
+        const clip = videoClipBounds(draft, runtime.duration);
+        rowState.backgroundMedia.videoStart = clip.start;
+        rowState.backgroundMedia.videoEnd = clip.end;
+        runtime.exportImage = null;
+        runtime.exportTime = -1;
+        autoSave();
+        refreshMediaUi();
+        resizePreview();
+      };
+      const pointerSeconds = (event) => {
+        const runtime = state.backgroundCache.get(rowState.id);
+        const rect = timeline.getBoundingClientRect();
+        return clamp((event.clientX - rect.left) / Math.max(1, rect.width), 0, 1) * (runtime?.duration || 0);
+      };
+      const setBoundary = (edge, rawSeconds) => {
+        const runtime = state.backgroundCache.get(rowState.id);
+        if (!rowState.backgroundMedia || !(runtime?.duration > 0)) return;
+        const clip = videoClipBounds(rowState.backgroundMedia, runtime.duration);
+        const seconds = Math.round(Number(rawSeconds) * 10) / 10;
+        if (edge === "start") startInput.value = String(clamp(seconds, 0, clip.end - 0.1));
+        else endInput.value = String(clamp(seconds, clip.start + 0.1, runtime.duration));
+        commitTrim();
+      };
+
+      color.addEventListener("input", () => { rowState.backgroundColor = color.value; autoSave(); resizePreview(); });
+      transition.addEventListener("change", () => { rowState.backgroundTransition = normalizeBackgroundTransition(transition.value); autoSave(); resizePreview(); });
+      transitionDuration.addEventListener("input", () => { rowState.backgroundTransitionDuration = normalizeBackgroundTransitionDuration(transitionDuration.value); autoSave(); resizePreview(); });
+      [startInput, endInput].forEach((input) => input.addEventListener("change", commitTrim));
+      fileInput.addEventListener("change", async () => {
+        const file = fileInput.files?.[0];
+        if (!file) return;
+        rowState.backgroundMedia = normalizeBackgroundMedia({ name: file.name, url: await fileAsDataUrl(file), fileType: file.type || "video/mp4", videoStart: 0, videoEnd: null });
+        rowState.backgroundTransition = "crossfade";
+        rowState.backgroundTransitionDuration = 120;
+        transition.value = "crossfade";
+        transitionDuration.value = "120";
+        fileInput.value = "";
+        await prepareRowBackground(rowState);
+        await refreshMediaUi();
+        autoSave();
+        resizePreview();
+      });
+      rowElement.querySelector("[data-background-remove]").addEventListener("click", () => {
+        state.backgroundCache.get(rowState.id)?.video?.pause();
+        state.backgroundCache.get(rowState.id)?.exportVideo?.pause();
+        state.backgroundCache.delete(rowState.id);
+        rowState.backgroundMedia = null;
+        autoSave();
+        refreshMediaUi();
+        resizePreview();
+      });
+      timeline.addEventListener("pointerdown", (event) => {
+        const runtime = state.backgroundCache.get(rowState.id);
+        if (!(runtime?.duration > 0)) return;
+        const clip = videoClipBounds(rowState.backgroundMedia, runtime.duration);
+        const seconds = pointerSeconds(event);
+        draggedEdge = event.target.closest("[data-video-edge]")?.dataset.videoEdge || (Math.abs(seconds - clip.start) <= Math.abs(seconds - clip.end) ? "start" : "end");
+        timeline.setPointerCapture(event.pointerId);
+        setBoundary(draggedEdge, seconds);
+        event.preventDefault();
+      });
+      timeline.addEventListener("pointermove", (event) => { if (draggedEdge && timeline.hasPointerCapture(event.pointerId)) setBoundary(draggedEdge, pointerSeconds(event)); });
+      ["pointerup", "pointercancel", "lostpointercapture"].forEach((eventName) => timeline.addEventListener(eventName, () => { draggedEdge = ""; }));
+      selection.querySelectorAll("[data-video-edge]").forEach((handle) => handle.addEventListener("keydown", (event) => {
+        if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+        const current = handle.dataset.videoEdge === "start" ? Number(startInput.value) : Number(endInput.value);
+        setBoundary(handle.dataset.videoEdge, current + (event.key === "ArrowLeft" ? -0.1 : 0.1));
+        event.preventDefault();
+      }));
+      refreshMediaUi();
+    });
   }
 
   function allInsertedIcons() {
@@ -573,8 +988,8 @@
 
   function renderTimeline() {
     const segments = timelineSegments();
-    $("timeline").innerHTML = segments.map(({ from, to, durationMs }) => {
-      const phase = from.text && !to.text ? port.exitLabel : !from.text && to.text ? port.enterLabel : port.phaseLabel;
+    $("timeline").innerHTML = segments.map(({ from, to, durationMs, terminal }) => {
+      const phase = terminal ? "结束停留" : from.text && !to.text ? port.exitLabel : !from.text && to.text ? port.enterLabel : port.phaseLabel;
       return `<div class="gm-timeline-block me-choreo-block" role="listitem"><strong>${escapeHtml(phase)}</strong><small>${escapeHtml(from.text || "留白")} → ${escapeHtml(to.text || "留白")} · ${(durationMs / 1000).toFixed(2)}s</small></div>`;
     }).join("");
     const total = cycleDurationMs();
@@ -621,7 +1036,8 @@
   }
 
   function autoSave() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.scheme));
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.scheme)); }
+    catch (_) { if ($("exportStatus")) $("exportStatus").textContent = "背景视频较大，当前编辑仍可使用；请保存 JSON 方案以长期保留。"; }
   }
 
   function changed({ restart = false } = {}) {
@@ -648,16 +1064,29 @@
           id: icon.id || uid(), libraryId: String(icon.libraryId || ""), boundary: clamp(Math.round(Number(icon.boundary) || 0), 0, glyphCount),
           size: clamp(Number(icon.size) || 90, 20, 220), gap: clamp(Number(icon.gap) || 12, 0, 80), x: clamp(Number(icon.x) || 0, -100, 100), y: clamp(Number(icon.y) || 0, -100, 100)
         })).filter((icon) => libraryAsset(icon.libraryId) && !seen.has(icon.libraryId) && seen.add(icon.libraryId));
-        return { id: row.id || uid(), text, hold: clamp(Number(row.hold) || 0, 0, 5000), icons };
+        return {
+          id: row.id || uid(), text, hold: clamp(Number(row.hold) || 0, 0, 5000), icons,
+          backgroundColor: normalizeColor(row.backgroundColor, scheme.typography?.backgroundColor || DEFAULT_SCHEME.typography.backgroundColor),
+          backgroundMedia: normalizeBackgroundMedia(row.backgroundMedia),
+          backgroundTransition: normalizeBackgroundTransition(row.backgroundTransition),
+          backgroundTransitionDuration: normalizeBackgroundTransitionDuration(row.backgroundTransitionDuration)
+        };
       })
     };
-    if (state.scheme.rows.length < 2) state.scheme.rows.push({ id: uid(), text: "", hold: 100, icons: [] });
+    if (state.scheme.rows.length < 2) state.scheme.rows.push(row(uid(), "", 100, { backgroundColor: state.scheme.typography.backgroundColor }));
+    const liveRowIds = new Set(state.scheme.rows.map((item) => item.id));
+    state.backgroundCache.forEach((runtime, rowId) => {
+      if (liveRowIds.has(rowId)) return;
+      runtime.video?.pause();
+      runtime.exportVideo?.pause();
+      state.backgroundCache.delete(rowId);
+    });
     if (!state.scheme.rows.some((row) => row.id === state.activeRowId)) state.activeRowId = state.scheme.rows[0].id;
     state.caretBoundary = clamp(state.caretBoundary, 0, split(state.scheme.rows.find((row) => row.id === state.activeRowId)?.text || "").length);
     state.activeIconId = "";
     state.elapsedMs = 0;
     syncControlsFromState();
-    preloadInsertedAssets().then(resizePreview);
+    Promise.all([preloadInsertedAssets(), preloadRowBackgrounds()]).then(() => { renderRows(); resizePreview(); });
     autoSave();
     if (status) $("exportStatus").textContent = status;
   }
@@ -716,17 +1145,23 @@
     }
     changed({ restart: false });
   });
-  ["canvasWidth", "canvasHeight"].forEach((id) => $(id).addEventListener("change", () => {
+  ["canvasWidth", "canvasHeight"].forEach((id) => ["input", "change"].forEach((eventName) => $(id).addEventListener(eventName, () => {
     state.scheme.canvas[id === "canvasWidth" ? "width" : "height"] = clamp(Number($(id).value) || 1080, 320, 3840);
-    changed();
+    changed({ restart: false });
+  })));
+  controlIds.forEach((id) => controls[id].addEventListener("input", () => {
+    if (id === "backgroundColor") {
+      state.scheme.rows.forEach((item) => { item.backgroundColor = controls.backgroundColor.value; });
+      renderRows();
+    }
+    changed({ restart: id === "morphDuration" || id === "characterDelay" || id === "speed" });
   }));
-  controlIds.forEach((id) => controls[id].addEventListener("input", () => changed({ restart: id === "morphDuration" || id === "characterDelay" || id === "speed" })));
   document.querySelectorAll('input[name="alignment"]').forEach((input) => input.addEventListener("change", () => changed()));
 
   $("sequenceRows").addEventListener("input", (event) => {
     const rowElement = event.target.closest(".gm-row-shell");
     const row = state.scheme.rows.find((item) => item.id === rowElement?.dataset.rowId);
-    if (!row) return;
+    if (!row || !event.target.dataset.key) return;
     row[event.target.dataset.key] = event.target.dataset.key === "hold" ? clamp(Number(event.target.value) || 0, 0, 5000) : event.target.value;
     if (event.target.dataset.key === "text") {
       const glyphCount = split(row.text).length;
@@ -776,7 +1211,11 @@
       return;
     }
     if (button.dataset.action === "delete" && state.scheme.rows.length > 2) {
-      state.scheme.rows.splice(index, 1);
+      const [removed] = state.scheme.rows.splice(index, 1);
+      const runtime = state.backgroundCache.get(removed?.id);
+      runtime?.video?.pause();
+      runtime?.exportVideo?.pause();
+      state.backgroundCache.delete(removed?.id);
       if (!state.scheme.rows.some((row) => row.id === state.activeRowId)) state.activeRowId = state.scheme.rows[Math.max(0, index - 1)].id;
     }
     if (button.dataset.action === "up" && index > 0) [state.scheme.rows[index - 1], state.scheme.rows[index]] = [state.scheme.rows[index], state.scheme.rows[index - 1]];
@@ -785,9 +1224,9 @@
     renderRows(); renderSelectedAssets(); renderTimeline(); autoSave(); resizePreview();
   });
   $("addRow").addEventListener("click", () => {
-    const row = { id: uid(), text: "新文字", hold: 100, icons: [] };
-    state.scheme.rows.push(row);
-    state.activeRowId = row.id; state.caretBoundary = split(row.text).length;
+    const nextRow = row(uid(), "新文字", 100, { backgroundColor: state.scheme.typography.backgroundColor });
+    state.scheme.rows.push(nextRow);
+    state.activeRowId = nextRow.id; state.caretBoundary = split(nextRow.text).length;
     renderRows(); renderSelectedAssets(); renderTimeline(); autoSave();
     $("sequenceRows").lastElementChild?.querySelector('input[data-key="text"]')?.select();
   });
@@ -946,8 +1385,9 @@
   });
 
   $("exportPng").addEventListener("click", async () => {
-    await preloadInsertedAssets();
+    await Promise.all([preloadInsertedAssets(), preloadRowBackgrounds()]);
     const output = exportCanvas();
+    await prepareBackgroundFrame(state.elapsedMs / 1000);
     renderFrame(output, state.elapsedMs / 1000, output.width, output.height);
     output.toBlob((blob) => {
       if (!blob) return;
@@ -961,7 +1401,7 @@
     setBusy(true, "正在准备 GIF…");
     let workerUrl = "";
     try {
-      await preloadInsertedAssets();
+      await Promise.all([preloadInsertedAssets(), preloadRowBackgrounds()]);
       const response = await fetch("js/continuation-gif.worker.js");
       if (!response.ok) throw new Error(`worker ${response.status}`);
       workerUrl = URL.createObjectURL(new Blob([await response.text()], { type: "text/javascript" }));
@@ -970,6 +1410,7 @@
       const total = Math.max(1, Math.ceil(exportSeconds() * fps));
       const gif = new GIF({ workers: 2, quality: 10, width: output.width, height: output.height, workerScript: workerUrl });
       for (let index = 0; index < total; index += 1) {
+        await prepareBackgroundFrame(index / fps);
         renderFrame(output, index / fps, output.width, output.height);
         gif.addFrame(output, { copy: true, delay: 1000 / fps });
       }
@@ -992,7 +1433,7 @@
     setBusy(true, "正在加载 MP4 编码器…");
     try {
       await loadH264Encoder();
-      await preloadInsertedAssets();
+      await Promise.all([preloadInsertedAssets(), preloadRowBackgrounds()]);
       encoder = await window.HME.createH264MP4Encoder();
       encoder.width = output.width; encoder.height = output.height; encoder.frameRate = fps;
       encoder.kbps = Math.max(8000, Math.min(30000, Math.round(output.width * output.height * fps * 0.18 / 1000)));
@@ -1002,6 +1443,7 @@
       const outputContext = output.getContext("2d", { willReadFrequently: true });
       const progressInterval = Math.max(1, Math.floor(fps / 10));
       for (let index = 0; index < total; index += 1) {
+        await prepareBackgroundFrame(index / fps);
         renderFrame(output, index / fps, output.width, output.height);
         encoder.addFrameRgba(outputContext.getImageData(0, 0, output.width, output.height).data);
         if (index % progressInterval === 0 || index === total - 1) {
@@ -1026,8 +1468,9 @@
     }
     state.lastFrame = now;
     renderFrame(canvas, state.elapsedMs / 1000, canvas.width, canvas.height);
-    $("scrubber").value = String(Math.min(state.elapsedMs % Math.max(1, total), total));
-    $("timeNow").textContent = `${((state.elapsedMs % Math.max(1, total)) / 1000).toFixed(2)}s`;
+    const displayTime = state.scheme.motion.loop ? state.elapsedMs % Math.max(1, total) : Math.min(state.elapsedMs, total);
+    $("scrubber").value = String(displayTime);
+    $("timeNow").textContent = `${(displayTime / 1000).toFixed(2)}s`;
     requestAnimationFrame(animationLoop);
   }
 

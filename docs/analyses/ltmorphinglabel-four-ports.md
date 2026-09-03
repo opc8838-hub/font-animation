@@ -1,19 +1,34 @@
-# LTMorphingLabel 四种字形动效移植分析
+# LTMorphingLabel 五段参考视频动效分析
 
-日期：2026-09-02
+日期：2026-09-02；参考视频复核：2026-09-04
 
 参考实现：<https://github.com/lexrus/LTMorphingLabel>（MIT）。本项目只移植可观察到的逐字运动合同与数学参数，使用现有 Canvas、编辑器、图标库和确定性导出栈重新实现，不嵌入 Swift/UIKit 源码。
 
 ## 独立产品命名
 
-| 上游实现标识 | 本项目名称 | slug | 默认演示词组 |
+| 参考视频 | 本项目名称 | slug | 默认文字序列 |
 | --- | --- | --- | --- |
-| 默认缩放实现 | 字芽 Sprout Shift | `sproutshift` | SPROUT → 留白复位 |
-| 上升消散实现 | 雾升 Mist Lift | `mistlift` | MIST → 留白复位 |
-| 倾倒坠落实现 | 字倾 Type Cascade | `typecascade` | CASCADE → 留白复位 |
-| 低分辨率像素实现 | 点解 Dot Resolve | `dotresolve` | RESOLVE → 留白复位 |
+| `scale (default).qt` | 字芽 Sprout Shift | `sproutshift` | Motion → Motion is not just → what the eye can see → and scroll past. → Motion → is how ideas speak. → — ME Studio |
+| `evaporate.qt` | 雾升 Mist Lift | `mistlift` | Pause and listen, → “What moved first?” → then the letters answer, → “Watch the space between.” → — ME Studio |
+| `.fall.qt` | 字倾 Type Cascade | `typecascade` | Sketch → Frame → Rhythm → Keyframe → Timeline → Render → Create |
+| `pixelate.qt` | 点解 Dot Resolve | `dotresolve` | Signal → Frame → Composition → Motion（循环） |
+| `UIKit.qt` | 字现 Glyph Reveal | `glyphreveal` | Words come alive → 留白（同一句完整出现两次） |
 
-四页没有动效模式切换器；共享代码只负责一致的编辑、图标、时间轴和导出能力。默认方案各自只有一个可见演示名称，第二行是不可见的循环复位状态；由“名称出现—稳定停留—名称退出—留白复位”构成单一节奏，避免多个词连续变化掩盖效果差异。用户仍可主动扩展为多词序列。
+五页没有动效模式切换器；共享代码只负责一致的编辑、完整图标库、逐行背景和确定性导出能力。2026-09-02 的“每页只留一个演示名称”结论被用户提供的五段独立视频推翻：一个视频就是一个完整动效，必须保留视频中的文字段数、顺序和每次变形节奏，只替换文案。`pixelate.qt` 的 8.24 秒录屏展示四项列表循环后进入下一轮；默认方案保留四项而不是把录屏尾部重复项复制成新内容。
+
+## 参考视频证据与运动合同
+
+五段文件均为正常速度 30fps 录屏，位于本机 `Desktop/动销1`，不提交仓库。Watch 全片无去重采样与 FFmpeg 10fps 密集接触表共同用于判断；正常速度决定节奏。
+
+| 视频 | 元数据 | 观察到的文字状态 | 冻结运动合同 | 不确定项 |
+| --- | --- | --- | --- | --- |
+| scale | 9.533s，286 帧，854×232 | 7 个连续文字节拍，单行居中 | 相同字形沿基线迁移；删除字围绕自身中心缩小，新增字从近零尺寸放大；新旧阶段重叠且保持当前行重排 | 录屏结尾未展示回到首行的循环边界 |
+| evaporate | 8.219s，246 帧，888×262 | 5 个连续文字节拍，单行居中 | 旧字逐个向上漂移并淡出，新字从下方向基线浮入；字符使用波浪错峰，退出与进入同时发生 | 字体抗锯齿会令最淡的首末一帧略有差异 |
+| fall | 8.242s，247 帧，886×270 | 7 个连续文字节拍，单行居中 | 旧字围绕字框底部左右交错旋转并坠到基线下方；新字在基线长入；两组在过渡中上下重叠 | 浏览器字体度量会改变旋转枢轴的绝对像素位置 |
+| pixelate | 8.242s，247 帧，882×266 | 4 项列表循环，录屏可见进入第二轮 | 旧字降低采样分辨率并淡出，新字从粗像素恢复清晰；相同字仍沿基线迁移；不添加位移、旋转或蒸散 | 录屏压缩本身会叠加轻微块状噪声 |
+| UIKit | 4.736s，142 帧，888×400 | 1 行同文案出现、停留、复位并再次出现 | 从留白到完整句：字形分别由近零尺寸放大并淡入，字符有轻微错峰；完整行稳定停留；第二轮重复同一合同 | 顶部录屏遮罩不属于合成画面 |
+
+页面拥有稳定行 ID。文字、停留、图标和本行背景颜色/视频/裁剪区间/转场必须随行一起重排；图标作为字位 token 继承所在字的同一运动场。逐行视频以该行首次进入的局部时间从 `videoStart` 播放至 `videoEnd`，预览与导出共用同一裁剪和 cover 几何。
 
 ## 共同运动合同
 

@@ -1,10 +1,13 @@
 {
-  "version": 2,
+  "version": 3,
   "canvas": { "width": 1080, "height": 1080, "preset": "1080x1080" },
   "typography": { "fontFamily": "stg:inter", "fontSize": 174, "tracking": 0, "positionX": 0, "positionY": 0, "alignment": "center", "textColor": "#111111", "backgroundColor": "#ffffff" },
-  "motion": { "morphDuration": 600, "characterDelay": 0.026, "effectAmount": 1, "speed": 1, "loop": true },
+  "motion": { "morphDuration": 600, "characterDelay": 0.026, "effectAmount": 1, "speed": 1, "loop": false },
   "rows": [
-    { "id": "mist-title", "text": "MIST", "hold": 800, "icons": [] },
-    { "id": "mist-blank", "text": "", "hold": 260, "icons": [] }
+    { "id": "mist-01", "text": "Pause and listen,", "hold": 800, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
+    { "id": "mist-02", "text": "‘What moved first?’", "hold": 800, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
+    { "id": "mist-03", "text": "then the letters answer,", "hold": 800, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
+    { "id": "mist-04", "text": "‘Watch the space between.’", "hold": 800, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
+    { "id": "mist-05", "text": "— ME Studio", "hold": 1400, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 }
   ]
 }
