@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>流彩笔迹 Ribbon Ink | ME Motion Studio</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="shared-fonts.css?v=20260901-1">
+  <link rel="stylesheet" href="workspace-editor.css?v=20260901-1">
+  <link rel="stylesheet" href="me-motion-editor.css?v=20260901-1">
+  <link rel="stylesheet" href="ribbonink.css?v=20260902-1">
+</head>
+<body data-editor-capabilities="text-only">
+  <aside class="ink-panel" id="editorPanel" aria-label="流彩笔迹编辑器">
+    <header class="ink-panel-header">
+      <div><span>ME 动效编辑器</span><strong>流彩笔迹</strong></div>
+      <a href="gallery.html">全部效果</a>
+    </header>
+
+    <div class="ink-panel-scroll">
+      <section class="ink-card" aria-labelledby="canvasTitle">
+        <div class="ink-card-heading"><span>01</span><h2 id="canvasTitle">画布尺寸</h2></div>
+        <label class="ink-field">比例与分辨率
+          <select id="canvasPreset">
+            <option value="1080x1080">1:1 · 1080 × 1080</option>
+            <option value="1080x1350">4:5 · 1080 × 1350</option>
+            <option value="1080x1920">9:16 · 1080 × 1920</option>
+            <option value="1920x1080" selected>16:9 · 1920 × 1080</option>
+            <option value="custom">自定义</option>
+          </select>
+        </label>
+        <div class="ink-size-grid" id="customSize" hidden>
+          <label class="ink-field">宽度<input id="canvasWidth" type="number" min="240" max="3840" step="2" value="1920"></label>
+          <label class="ink-field">高度<input id="canvasHeight" type="number" min="240" max="3840" step="2" value="1080"></label>
+        </div>
+      </section>
+
+      <section class="ink-card" aria-labelledby="textTitle">
+        <div class="ink-card-heading"><span>02</span><h2 id="textTitle">文字与颜色</h2></div>
+        <label class="ink-field">文字<input id="textInput" type="text" value="TIME" maxlength="28" autocomplete="off"></label>
+        <label class="ink-field">字体
+          <select id="fontSelect"><option value="stg:roboto-condensed">Roboto Condensed</option></select>
+        </label>
+        <label class="ink-range">字号 <output id="fontSizeOut">270</output>
+          <input id="fontSize" type="range" min="72" max="360" value="270">
+        </label>
+        <label class="ink-range">字距 <output id="letterSpacingOut">2</output>
+          <input id="letterSpacing" type="range" min="-14" max="42" value="2">
+        </label>
+        <div class="ink-color-grid">
+          <label>底字<input id="textColor" type="color" value="#080808"></label>
+          <label>背景<input id="backgroundColor" type="color" value="#f7f7f5"></label>
+        </div>
+        <label class="ink-field">笔迹配色
+          <select id="palettePreset">
+            <option value="reference" selected>玫紫流彩</option>
+            <option value="apple">苹果彩虹</option>
+            <option value="ocean">海盐蓝绿</option>
+            <option value="sunset">暖阳日落</option>
+            <option value="custom">自定义</option>
+          </select>
+        </label>
+        <div class="ink-color-grid ink-palette-grid" aria-label="五色笔迹">
+          <label>颜色 1<input id="inkColor1" type="color" value="#f34bd9"></label>
+          <label>颜色 2<input id="inkColor2" type="color" value="#a40de4"></label>
+          <label>颜色 3<input id="inkColor3" type="color" value="#ff78e9"></label>
+          <label>颜色 4<input id="inkColor4" type="color" value="#7827d8"></label>
+          <label>颜色 5<input id="inkColor5" type="color" value="#f33ccd"></label>
+        </div>
+        <div class="ink-button-row">
+          <label class="ink-button ink-button-soft">上传背景<input id="backgroundUpload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden></label>
+          <button class="ink-button ink-button-soft" id="clearBackground" type="button">清除背景</button>
+        </div>
+        <p class="ink-help">底字、笔迹、配色与导出始终使用同一套画布几何。</p>
+      </section>
+
+      <section class="ink-card" aria-labelledby="shapeTitle">
+        <div class="ink-card-heading"><span>03</span><h2 id="shapeTitle">笔触造型</h2></div>
+        <label class="ink-range">笔触大小 <output id="brushScaleOut">100%</output>
+          <input id="brushScale" type="range" min="55" max="150" value="100">
+        </label>
+        <label class="ink-range">笔触粗细 <output id="brushWidthOut">100%</output>
+          <input id="brushWidth" type="range" min="55" max="160" value="100">
+        </label>
+        <label class="ink-range">横向位置 <output id="positionXOut">50%</output>
+          <input id="positionX" type="range" min="8" max="92" value="50">
+        </label>
+        <label class="ink-range">纵向位置 <output id="positionYOut">52%</output>
+          <input id="positionY" type="range" min="12" max="88" value="52">
+        </label>
+        <label class="ink-range">纹理密度 <output id="textureDensityOut">100%</output>
+          <input id="textureDensity" type="range" min="45" max="190" value="100">
+        </label>
+        <label class="ink-range">纹理流速 <output id="textureSpeedOut">100%</output>
+          <input id="textureSpeed" type="range" min="0" max="220" value="100">
+        </label>
+        <label class="ink-range">i 点大小 <output id="dotScaleOut">100%</output>
+          <input id="dotScale" type="range" min="55" max="160" value="100">
+        </label>
+        <label class="ink-range">i 点出场 <output id="dotDelayOut">46%</output>
+          <input id="dotDelay" type="range" min="25" max="75" value="46">
+        </label>
+      </section>
+
+      <section class="ink-card" aria-labelledby="motionTitle">
+        <div class="ink-card-heading"><span>04</span><h2 id="motionTitle">动作节奏</h2></div>
+        <label class="ink-range">写入 <output id="writeDurationOut">0.50 秒</output>
+          <input id="writeDuration" type="range" min="20" max="120" value="50">
+        </label>
+        <label class="ink-range">流动停留 <output id="flowDurationOut">0.87 秒</output>
+          <input id="flowDuration" type="range" min="20" max="180" value="87">
+        </label>
+        <label class="ink-range">擦除 <output id="eraseDurationOut">0.57 秒</output>
+          <input id="eraseDuration" type="range" min="20" max="120" value="57">
+        </label>
+        <label class="ink-range">底字停留 <output id="holdDurationOut">0.56 秒</output>
+          <input id="holdDuration" type="range" min="10" max="160" value="56">
+        </label>
+        <label class="ink-field">节奏
+          <select id="motionEase">
+            <option value="snake" selected>蛇形变速</option>
+            <option value="smooth">柔顺推进</option>
+            <option value="direct">清晰匀速</option>
+            <option value="snappy">快速收放</option>
+          </select>
+        </label>
+        <label class="ink-range">蛇形顿挫 <output id="snakeIntensityOut">82%</output>
+          <input id="snakeIntensity" type="range" min="0" max="100" value="82">
+        </label>
+        <label class="ink-range">I 压弹 <output id="letterImpactOut">100%</output>
+          <input id="letterImpact" type="range" min="0" max="140" value="100">
+        </label>
+      </section>
+
+      <section class="ink-card" aria-labelledby="timelineTitle">
+        <div class="ink-card-heading"><span>05</span><h2 id="timelineTitle">编舞时间线</h2></div>
+        <div class="me-choreo-scroll" id="timelineScroll">
+          <div class="me-choreo-track" id="timelineTrack" aria-label="点击时间线跳转">
+            <div class="me-choreo-bar" id="timelineBar"></div>
+            <div class="me-choreo-playhead" id="timelinePlayhead" aria-hidden="true"></div>
+          </div>
+        </div>
+        <div class="me-choreo-legend" id="timelineLegend"></div>
+      </section>
+
+      <section class="ink-card" aria-labelledby="playTitle">
+        <div class="ink-card-heading"><span>06</span><h2 id="playTitle">播放</h2></div>
+        <div class="ink-button-grid">
+          <button class="ink-button ink-button-primary" id="pauseButton" type="button">暂停</button>
+          <button class="ink-button" id="replayButton" type="button">重新播放</button>
+          <button class="ink-button ink-button-soft" id="backButton" type="button">上一帧</button>
+          <button class="ink-button ink-button-soft" id="forwardButton" type="button">下一帧</button>
+        </div>
+      </section>
+
+      <section class="ink-card" aria-labelledby="schemeTitle">
+        <div class="ink-card-heading"><span>07</span><h2 id="schemeTitle">方案</h2></div>
+        <div class="me-scheme-grid">
+          <button class="me-scheme-action" id="saveScheme" type="button">保存方案</button>
+          <label class="me-scheme-action">导入方案<input id="importScheme" type="file" accept="application/json" hidden></label>
+          <button class="me-scheme-action" id="resetScheme" type="button">恢复默认</button>
+          <button class="me-scheme-action" id="clearScheme" type="button">清理重做</button>
+        </div>
+        <p class="ink-status" id="schemeStatus">已载入默认方案。</p>
+      </section>
+
+      <section class="ink-card" aria-labelledby="exportTitle">
+        <div class="ink-card-heading"><span>08</span><h2 id="exportTitle">导出</h2></div>
+        <label class="ink-field">导出时长
+          <select id="exportDuration">
+            <option value="full" selected>完整循环</option>
+            <option value="3">3 秒</option>
+            <option value="5">5 秒</option>
+            <option value="custom">自定义</option>
+          </select>
+        </label>
+        <label class="ink-field" id="customDuration" hidden>秒数<input id="exportDurationCustom" type="number" min="0.5" max="15" step="0.1" value="2.5"></label>
+        <label class="ink-field">帧率
+          <select id="exportFps"><option>15</option><option>24</option><option selected>30</option><option>60</option></select>
+        </label>
+        <div class="ink-button-grid ink-export-grid">
+          <button class="ink-button" id="exportPng" type="button">PNG 当前帧</button>
+          <button class="ink-button" id="exportGif" type="button">GIF 动画</button>
+          <button class="ink-button ink-button-primary" id="exportVideo" type="button">MP4 视频</button>
+        </div>
+        <p class="ink-status" id="exportStatus">画面与导出共用同一时间轴。</p>
+      </section>
+    </div>
+  </aside>
+
+  <main class="ink-workspace" id="workspace">
+    <div class="ink-stage-shell" id="stageShell">
+      <canvas id="stageCanvas" aria-label="流彩笔迹实时画布"></canvas>
+      <span class="ink-size-badge" id="sizeBadge">1920 × 1080</span>
+      <div class="me-stage-controls ink-stage-controls" aria-label="舞台播放控制">
+        <button id="stagePauseButton" type="button">暂停</button>
+        <button id="stageReplayButton" type="button">重播</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="shared-font-library.js?v=20260901-1"></script>
+  <script src="me-motion-editor.js?v=20260901-1"></script>
+  <script src="js/continuation-gif.js?v=20260901-1"></script>
+  <script src="js/h264-mp4-encoder.web.js?v=20260901-1"></script>
+  <script src="ribbonink.js?v=20260904-1"></script>
+</body>
+</html>
