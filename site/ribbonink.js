@@ -74,6 +74,11 @@
   const revealCanvas = document.createElement("canvas");
   const detailLayerCanvas = document.createElement("canvas");
   const paintCanvas = document.createElement("canvas");
+  const mainToneCanvas = document.createElement("canvas");
+  const textLayerCanvas = document.createElement("canvas");
+  const foregroundTextCanvas = document.createElement("canvas");
+  const textLayerKeys = ["", ""];
+  let mainToneKey = "";
 
   const authored = [
     {
@@ -81,23 +86,15 @@
       end: .88,
       width: 1,
       segments: [
-        [[-22, 374], [56, 317], [160, 229], [247, 169]],
-        [[247, 169], [276, 149], [309, 155], [305, 180]],
-        [[305, 180], [300, 205], [263, 211], [237, 198]],
-        [[237, 198], [218, 188], [216, 210], [234, 230]],
-        [[234, 230], [252, 250], [282, 251], [305, 228]],
-        [[305, 228], [319, 214], [325, 195], [329, 185]],
-        [[329, 185], [331, 207], [322, 240], [340, 248]],
-        [[340, 248], [354, 254], [367, 223], [378, 210]],
-        [[378, 210], [389, 197], [393, 207], [386, 229]],
-        [[386, 229], [381, 248], [395, 252], [406, 239]],
-        [[406, 239], [420, 222], [418, 199], [430, 198]],
-        [[430, 198], [443, 198], [432, 244], [450, 249]],
-        [[450, 249], [465, 254], [481, 222], [498, 210]],
-        [[498, 210], [519, 194], [544, 201], [546, 222]],
-        [[546, 222], [547, 242], [521, 253], [497, 241]],
-        [[497, 241], [516, 266], [550, 269], [584, 247]],
-        [[584, 247], [628, 221], [683, 218], [756, 264]]
+        [[-25, 409], [40, 332], [141, 245], [209, 204]],
+        [[209, 204], [264, 172], [279, 189], [259, 211]],
+        [[259, 211], [221, 235], [190, 284], [222, 298]],
+        [[222, 298], [245, 300], [297, 237], [342, 213]],
+        [[342, 213], [427, 166], [506, 121], [600, 126]],
+        [[600, 126], [615, 138], [529, 159], [503, 183]],
+        [[503, 183], [490, 200], [556, 166], [576, 181]],
+        [[576, 181], [590, 199], [489, 243], [503, 275]],
+        [[503, 275], [516, 310], [598, 246], [756, 190]]
       ]
     },
     {
@@ -133,10 +130,18 @@
     const [timeA, progressA] = anchors[segmentIndex];
     const [timeB, progressB] = anchors[segmentIndex + 1];
     const local = clamp((x - timeA) / Math.max(.001, timeB - timeA));
-    const shaped = segmentIndex === 0 || segmentIndex === anchors.length - 2
-      ? easeOutQuint(local)
-      : smoothstep(local);
-    const stepped = mix(progressA, progressB, shaped);
+    // Monotone Hermite interpolation: slow down without stopping at every knot.
+    const slopes = anchors.slice(1).map((p, i) => (p[1] - anchors[i][1]) / (p[0] - anchors[i][0]));
+    const tangent = (i) => {
+      if (i === 0) return slopes[0];
+      if (i === anchors.length - 1) return slopes[slopes.length - 1];
+      const a = anchors[i][0] - anchors[i - 1][0];
+      const b = anchors[i + 1][0] - anchors[i][0];
+      return 3 * (a + b) / ((2 * b + a) / slopes[i - 1] + (b + 2 * a) / slopes[i]);
+    };
+    const t2 = local * local, t3 = t2 * local, span = timeB - timeA;
+    const stepped = (2 * t3 - 3 * t2 + 1) * progressA + (t3 - 2 * t2 + local) * span * tangent(segmentIndex)
+      + (-2 * t3 + 3 * t2) * progressB + (t3 - t2) * span * tangent(segmentIndex + 1);
     const intensity = Number(inputs.snakeIntensity.value) / 100;
     return mix(smoothstep(x), stepped, intensity);
   }
@@ -232,17 +237,16 @@
 
   function impactLetterState(visible) {
     const intensity = clamp(Number(inputs.letterImpact.value) / 100, 0, 1.4);
-    let reaction = { alpha: 1, scaleX: 1, scaleY: 1, y: 0 };
+    let reaction = { alpha: 1, scaleX: 1, scaleY: 1 };
     if (visible.phase.name === "write") {
       const hit = smoothstep((visible.phase.progress - .04) / .36);
       reaction = {
         alpha: hit < .90 ? 1 : 0,
         scaleX: 1 + Math.sin(hit * Math.PI) * .16 - hit * .22,
-        scaleY: 1 - hit * .89 - Math.sin(hit * Math.PI) * .09,
-        y: hit * .54
+        scaleY: 1 - hit * .89 - Math.sin(hit * Math.PI) * .09
       };
     } else if (visible.phase.name === "flow") {
-      reaction = { alpha: 0, scaleX: .76, scaleY: .09, y: .53 };
+      reaction = { alpha: 0, scaleX: .76, scaleY: .09 };
     } else if (visible.phase.name === "erase") {
       const release = clamp((visible.phase.progress - .36) / .42);
       const rising = release < .62;
@@ -252,19 +256,27 @@
       reaction = {
         alpha: release > .04 ? 1 : 0,
         scaleX: rising ? mix(.76, .93, spring) : mix(.93, 1, spring),
-        scaleY: rising ? mix(.09, 1.18, spring) : mix(1.18, 1, spring),
-        y: rising ? mix(.54, -.075, spring) : mix(-.075, 0, spring)
+        scaleY: rising ? mix(.09, 1.18, spring) : mix(1.18, 1, spring)
       };
     }
     return {
       alpha: clamp(mix(1, reaction.alpha, Math.min(1, intensity))),
       scaleX: mix(1, reaction.scaleX, intensity),
-      scaleY: Math.max(.02, mix(1, reaction.scaleY, intensity)),
-      y: reaction.y * intensity
+      scaleY: Math.max(.02, mix(1, reaction.scaleY, intensity))
     };
   }
 
-  function drawSpacedText(context, text, centerX, centerY, size, spacing, color, visible) {
+  function endLetterState(visible) {
+    const phase = visible.phase;
+    let squeeze = 0;
+    if (phase.name === "write") squeeze = smoothstep((phase.progress - .38) / .40);
+    if (phase.name === "flow") squeeze = 1;
+    if (phase.name === "erase") squeeze = 1 - easeOutBack((phase.progress - .64) / .30);
+    const amount = clamp(Number(inputs.letterImpact.value) / 100, 0, 1.4);
+    return { alpha: 1, scaleX: 1 - .16 * squeeze * amount, scaleY: 1 - .22 * squeeze * amount };
+  }
+
+  function drawSpacedText(context, text, centerX, centerY, size, spacing, color, visible, foreground = false) {
     const metrics = spacedTextMetrics(context, text, size, spacing);
     context.save();
     context.font = fontSpec(size);
@@ -273,14 +285,36 @@
     context.fillStyle = color;
     let cursor = centerX - metrics.total / 2;
     metrics.glyphs.forEach((glyph, index) => {
-      if (glyph === "I" && visible) {
-        const motion = impactLetterState(visible);
+      if (foreground) {
+        if (glyph === "M") {
+          // Only M's central diagonals cross in front of the ribbon. Its stems
+          // remain behind it; never repaint the whole word above the brush.
+          const bounds = context.measureText(glyph);
+          const left = cursor - bounds.actualBoundingBoxLeft;
+          const top = centerY - bounds.actualBoundingBoxAscent;
+          const w = bounds.actualBoundingBoxLeft + bounds.actualBoundingBoxRight;
+          const h = bounds.actualBoundingBoxAscent + bounds.actualBoundingBoxDescent;
+          context.save();
+          context.beginPath();
+          context.moveTo(left + .24 * w, top);
+          context.lineTo(left + .77 * w, top);
+          context.lineTo(left + .77 * w, top + h);
+          context.lineTo(left + .24 * w, top + h);
+          context.closePath();
+          context.clip();
+          context.fillText(glyph, cursor, centerY);
+          context.restore();
+        }
+      } else if ((glyph === "I" || glyph === "E") && visible) {
+        const motion = glyph === "I" ? impactLetterState(visible) : endLetterState(visible);
         const glyphCenter = cursor + metrics.widths[index] / 2;
+        const descent = context.measureText(glyph).actualBoundingBoxDescent;
         context.save();
         context.globalAlpha *= motion.alpha;
-        context.translate(glyphCenter, centerY + motion.y * size);
+        // The source squashes into the baseline, not below it.
+        context.translate(glyphCenter, centerY + descent);
         context.scale(motion.scaleX, motion.scaleY);
-        context.fillText(glyph, -metrics.widths[index] / 2, 0);
+        context.fillText(glyph, -metrics.widths[index] / 2, -descent);
         context.restore();
       } else {
         context.fillText(glyph, cursor, centerY);
@@ -404,38 +438,52 @@
       context.fill();
       return;
     }
-    const points = stroke.samples;
-    let previous = null;
+    const at = (s) => {
+      const samples = stroke.samples;
+      const hi = samples.findIndex(p => p.s >= s);
+      if (hi <= 0) return hi === 0 ? samples[0] : samples[samples.length - 1];
+      const a = samples[hi - 1], b = samples[hi];
+      const t = (s - a.s) / Math.max(1e-8, b.s - a.s);
+      return { x: mix(a.x, b.x, t), y: mix(a.y, b.y, t), s };
+    };
+    const points = [at(range.start), ...stroke.samples.filter(p => p.s > range.start && p.s < range.end), at(range.end)];
+    // This is only a reveal mask; the mother alpha owns the irregular width.
+    // Batch the path instead of submitting hundreds of overlapping round strokes.
+    context.strokeStyle = "#fff";
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    context.lineWidth = baseWidth * stroke.width;
+    context.beginPath();
+    let started = false;
     points.forEach((sample) => {
       if (sample.s < range.start || sample.s > range.end) return;
       const point = transformPoint(sample, transform);
-      if (previous) {
-        const width = baseWidth * stroke.width * widthProfile(sample.s);
-        context.strokeStyle = "#fff";
-        context.lineCap = "round";
-        context.lineJoin = "round";
-        context.lineWidth = width;
-        context.beginPath();
-        context.moveTo(previous.x, previous.y);
-        context.lineTo(point.x, point.y);
-        context.stroke();
-      }
-      previous = point;
+      if (started) context.lineTo(point.x, point.y);
+      else context.moveTo(point.x, point.y);
+      started = true;
     });
+    if (started) context.stroke();
   }
 
   function pointOnMain(u, transform) {
     const samples = authored[0].samples;
-    const index = clamp(u) * (samples.length - 1);
-    const low = Math.floor(index);
-    const high = Math.min(samples.length - 1, low + 1);
-    const amount = index - low;
+    const s = clamp(u);
+    let low = 0, high = samples.length - 1;
+    while (high - low > 1) {
+      const mid = (low + high) >> 1;
+      if (samples[mid].s < s) low = mid;
+      else high = mid;
+    }
     const a = samples[low];
     const b = samples[high];
-    return transformPoint({ x: mix(a.x, b.x, amount), y: mix(a.y, b.y, amount), angle: mix(a.angle, b.angle, amount) }, transform);
+    const amount = (s - a.s) / Math.max(1e-8, b.s - a.s);
+    const turn = Math.atan2(Math.sin(b.angle - a.angle), Math.cos(b.angle - a.angle));
+    return transformPoint({ x: mix(a.x, b.x, amount), y: mix(a.y, b.y, amount), angle: a.angle + turn * amount }, transform);
   }
 
   function ensureScratch(width, height) {
+    width = Math.ceil(width);
+    height = Math.ceil(height);
     if (shapeCanvas.width !== width || shapeCanvas.height !== height) {
       shapeCanvas.width = revealCanvas.width = detailLayerCanvas.width = paintCanvas.width = width;
       shapeCanvas.height = revealCanvas.height = detailLayerCanvas.height = paintCanvas.height = height;
@@ -525,25 +573,33 @@
     shape.setTransform(1, 0, 0, 1, 0, 0);
     reveal.setTransform(1, 0, 0, 1, 0, 0);
     paint.setTransform(1, 0, 0, 1, 0, 0);
-    shape.clearRect(0, 0, width, height);
     reveal.clearRect(0, 0, width, height);
     paint.clearRect(0, 0, width, height);
-    drawMotherSilhouette(shape, transform, true);
+    const colors = paletteColors();
+    const key = JSON.stringify([width, height, transform, colors.slice(0, 3), !!state.motherDetail, !!state.motherHighlight]);
+    if (key !== mainToneKey) {
+      shape.clearRect(0, 0, width, height);
+      drawMotherSilhouette(shape, transform, true);
+      mainToneCanvas.width = Math.ceil(width);
+      mainToneCanvas.height = Math.ceil(height);
+      const tone = mainToneCanvas.getContext("2d");
+      tone.drawImage(shapeCanvas, 0, 0);
+      tone.globalCompositeOperation = "source-in";
+      tone.fillStyle = colors[0];
+      tone.fillRect(0, 0, width, height);
+      tone.globalCompositeOperation = "source-over";
+      drawMotherToneLayer(tone, state.motherDetail, colors[1], transform);
+      drawMotherToneLayer(tone, state.motherHighlight, colors[2], transform);
+      mainToneKey = key;
+    }
+    paint.drawImage(mainToneCanvas, 0, 0);
     if (visible.start > .0001 || visible.end < .9999) {
       const revealWidth = 128 * transform.scale * transform.widthScale;
       authored.filter((stroke) => !stroke.dot).forEach((stroke) => drawSampledStroke(reveal, stroke, visible.start, visible.end, transform, revealWidth));
-      shape.globalCompositeOperation = "destination-in";
-      shape.drawImage(revealCanvas, 0, 0);
-      shape.globalCompositeOperation = "source-over";
+      paint.globalCompositeOperation = "destination-in";
+      paint.drawImage(revealCanvas, 0, 0);
+      paint.globalCompositeOperation = "source-over";
     }
-    paint.drawImage(shapeCanvas, 0, 0);
-    paint.globalCompositeOperation = "source-in";
-    const colors = paletteColors();
-    paint.fillStyle = colors[0];
-    paint.fillRect(0, 0, width, height);
-    paint.globalCompositeOperation = "source-over";
-    drawMotherToneLayer(paint, state.motherDetail, colors[1], transform);
-    drawMotherToneLayer(paint, state.motherHighlight, colors[2], transform);
     drawInkFlow(paint, rawTime, transform);
     context.drawImage(paintCanvas, 0, 0);
   }
@@ -651,6 +707,13 @@
   function renderFrame(target, rawTime, width, height, backingWidth = width, backingHeight = height) {
     const targetWidth = Math.max(1, Math.round(backingWidth));
     const targetHeight = Math.max(1, Math.round(backingHeight));
+    // Uniformly scale the shared coordinate system to preview backing pixels.
+    // This avoids full-export-size scratch layers on a small live stage.
+    if (target === canvas) {
+      const rasterScale = Math.min(1, targetWidth / width, targetHeight / height);
+      width *= rasterScale;
+      height *= rasterScale;
+    }
     if (target.width !== targetWidth || target.height !== targetHeight) {
       target.width = targetWidth;
       target.height = targetHeight;
@@ -674,10 +737,37 @@
     const centerX = width * Number(inputs.positionX.value) / 100;
     const centerY = height * Number(inputs.positionY.value) / 100;
     const visible = visibleWindow(rawTime);
+    // Align the glyph ink box to the source baseline (not the font's em box).
+    // Keep this in logical composition units for all preview/export sizes.
+    const drawTextLayer = (foreground) => {
+      const textCanvas = foreground ? foregroundTextCanvas : textLayerCanvas;
+      const slot = foreground ? 1 : 0;
+      const key = JSON.stringify([width, height, text, fontSpec(fit.size), fit.spacing, centerX, centerY,
+        document.fonts.check(fontSpec(fit.size), text || " "), inputs.textColor.value,
+        foreground ? null : [impactLetterState(visible), endLetterState(visible)]]);
+      // An alpha layer prevents opaque-canvas LCD text AA from changing after
+      // the first frame/readback. PNG and video receive the same glyph pixels.
+      if (textLayerKeys[slot] !== key) {
+        if (textCanvas.width !== Math.ceil(width) || textCanvas.height !== Math.ceil(height)) {
+          textCanvas.width = Math.ceil(width);
+          textCanvas.height = Math.ceil(height);
+        }
+        const layer = textCanvas.getContext("2d");
+        layer.clearRect(0, 0, textCanvas.width, textCanvas.height);
+        layer.save();
+        layer.translate(0, centerY + 16 * unit);
+        layer.scale(1, .95);
+        drawSpacedText(layer, text.toLocaleUpperCase(), centerX, 0, fit.size, fit.spacing, inputs.textColor.value, visible, foreground);
+        layer.restore();
+        textLayerKeys[slot] = key;
+      }
+      context.drawImage(textCanvas, 0, 0);
+    };
+    drawTextLayer(false);
     if (visible.end > visible.start + .0001 || visible.phase.name === "write" || visible.phase.name === "erase") {
       drawExactBrush(context, rawTime, width, height, visible);
     }
-    drawSpacedText(context, text.toLocaleUpperCase(), centerX, centerY, fit.size, fit.spacing, inputs.textColor.value, visible);
+    drawTextLayer(true);
     if (target === canvas) updateTimelinePlayhead(visible.phase);
   }
 
@@ -698,7 +788,7 @@
   }
 
   function previewLoop() {
-    renderPreview();
+    if (!state.exporting) renderPreview();
     state.raf = requestAnimationFrame(previewLoop);
   }
 
@@ -984,6 +1074,7 @@
 
   const exportButtons = [$("#exportPng"), $("#exportGif"), $("#exportVideo")];
   function setExportBusy(busy, message) {
+    state.exporting = busy;
     $("#editorPanel").inert = busy;
     workspace.inert = busy;
     exportButtons.forEach((button) => { button.disabled = busy; });
