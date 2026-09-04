@@ -132,17 +132,15 @@
   }
   function singleTextExit(progress) {
     const q = clamp(progress);
-    // One continuous damped impulse: press, release past rest, then collapse.
-    // The smooth gate removes the hard first-frame velocity of a raw sine.
-    const spring = smooth(q / .18) * Math.exp(-4.2 * q) * Math.sin(2.15 * Math.PI * q);
-    const collapse = smooth((q - .42) / .58);
-    const fade = smooth((q - .24) / .76);
+    // One uninterrupted downward press around the rendered text's bottom edge.
+    const collapse = smooth(q);
+    const fade = smooth((q - .65) / .35);
     return {
-      sx: 1 + .04 * spring - .10 * collapse,
-      sy: 1 - .22 * spring - .94 * collapse,
+      sx: 1,
+      sy: 1 - collapse,
       dx: 0,
-      dy: .03 * spring + .012 * collapse,
-      alpha: 1 - fade * fade
+      dy: 0,
+      alpha: 1 - fade
     };
   }
   root.RibbonInkSequence = { compile, evaluate, progress, section, settings, distances, releaseAt, textExit, singleTextExit };

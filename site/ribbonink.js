@@ -893,8 +893,12 @@
         const composed = singleExitCanvas.getContext("2d");
         composed.setTransform(1, 0, 0, 1, 0, 0); composed.clearRect(0, 0, width, height);
         drawTextLayer(false, composed); drawTextLayer(true, composed);
+        composed.font = fontSpec(fit.size);
+        composed.textBaseline = "middle";
+        const descent = Math.max(0, ...Array.from(text.toLocaleUpperCase(), glyph => composed.measureText(glyph).actualBoundingBoxDescent));
+        const exitPivotY = centerY + 16 * unit + .95 * descent;
         context.save(); context.globalAlpha = exit.alpha;
-        context.translate(centerX + width * exit.dx, centerY + height * exit.dy); context.scale(exit.sx, exit.sy); context.translate(-centerX, -centerY);
+        context.translate(centerX, exitPivotY); context.scale(exit.sx, exit.sy); context.translate(-centerX, -exitPivotY);
         context.drawImage(singleExitCanvas, 0, 0); context.restore();
       }
       if (target === canvas) updateTimelinePlayhead(phase);
