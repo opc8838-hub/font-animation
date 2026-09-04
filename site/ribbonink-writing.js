@@ -1,7 +1,7 @@
 /* Smooth ribbon material and a separate depth mask, shared by every output. */
 (function (root) {
   'use strict';
-  let ink, rear, layer;
+  let ink, rear, layer, cover;
   const smooth = x => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); };
   function surface(canvas, w, h) {
     canvas ||= document.createElement('canvas');
@@ -20,21 +20,26 @@
     path.arc(a.x, a.y, a.r, a.angle - Math.PI / 2, a.angle + Math.PI / 2, true);
     path.closePath(); return path;
   }
+  function radius(p, motion, brushWidth) {
+    const organic = .96 + .12 * Math.sin(p.length / 84) + .10 * root.RibbonInkFreehand.noise(p.length / 135, 7);
+    const pressure = .89 + .11 * Math.cos(p.angle * 2 - .4);
+    // A broad, rounded brush end, not a tapered pen nib. Keep the existing
+    // pressure variation in the body; only soften the two moving cut ends.
+    // Near-full radius also makes the side meet the semicircular cap gently.
+    const tail = motion.tail > 0 ? .94 + .06 * smooth((p.length - motion.tail) / 46) : 1;
+    const head = .96 + .04 * smooth((motion.head - p.length) / 32);
+    return brushWidth * .5 * organic * pressure * Math.min(head, tail);
+  }
   function draw(route, motion, w, h, unit, brushWidth, colors, time, speed, density, weave) {
-    ink = surface(ink, w, h); rear = surface(rear, w, h); layer = surface(layer, w, h);
+    ink = surface(ink, w, h); rear = surface(rear, w, h); layer = surface(layer, w, h); cover = surface(cover, w, h);
     const ctx = ink.getContext('2d'), depth = rear.getContext('2d'), paint = layer.getContext('2d');
-    if (motion.head <= motion.tail) return { ink, rear };
+    const coverage = cover.getContext('2d');
+    if (motion.head <= motion.tail) return { ink, rear, cover };
     const noise = root.RibbonInkFreehand.noise;
     for (const part of route.parts) {
       const from = Math.max(part.start, motion.tail), to = Math.min(part.end, motion.head);
       if (to <= from) continue;
-      const points = root.RibbonInkSequence.section(part.points, from, to).map(p => {
-        const organic = .96 + .12 * Math.sin(p.length / 84) + .10 * noise(p.length / 135, 7);
-        const pressure = .89 + .11 * Math.cos(p.angle * 2 - .4);
-        const tail = motion.tail > 0 ? .28 + .72 * smooth((p.length - motion.tail) / 46) : 1;
-        const head = .68 + .32 * smooth((motion.head - p.length) / 32);
-        return { ...p, r: brushWidth * .5 * organic * pressure * Math.min(head, tail) };
-      });
+      const points = root.RibbonInkSequence.section(part.points, from, to).map(p => ({ ...p, r: radius(p, motion, brushWidth) }));
       if (points.length < 2) continue;
       paint.setTransform(1, 0, 0, 1, 0, 0); paint.clearRect(0, 0, w, h);
       paint.save(); paint.scale(unit, unit); paint.translate(-motion.camera * w / unit, 0);
@@ -70,11 +75,14 @@
       depth.fillStyle = '#fff';
       // Cover the ink's antialiased fringe so a rear stroke cannot leave a
       // colored hairline across a solid glyph when the text is composited back.
-      depth.fill(outline(points.map(p => ({ ...p, r: p.r + 1.25 }))));
+      const expanded = outline(points.map(p => ({ ...p, r: p.r + 1.25 })));
+      depth.fill(expanded);
       depth.restore();
+      coverage.save(); coverage.scale(unit, unit); coverage.translate(-motion.camera * w / unit, 0);
+      coverage.fillStyle = '#fff'; coverage.fill(expanded); coverage.restore();
     }
     depth.globalCompositeOperation = 'source-over';
-    return { ink, rear };
+    return { ink, rear, cover };
   }
-  root.RibbonInkWriting = { draw };
+  root.RibbonInkWriting = { draw, radius };
 })(typeof window === 'undefined' ? globalThis : window);

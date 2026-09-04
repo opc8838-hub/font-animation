@@ -97,6 +97,14 @@ select { font: inherit; }
 
 .ink-card h2 { margin: 0; font-size: 14px; letter-spacing: -.02em; }
 .ink-page-heading { margin: 16px 0 12px; font-size: 13px; }
+.ink-glyph-editor { margin: 10px 0 16px; padding: 12px; border: 1px solid var(--ink-line); border-radius: 12px; background: #fafafb; }
+.ink-glyph-editor summary { font-size: 12px; font-weight: 750; cursor: pointer; }
+.ink-glyph-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+.ink-glyph-chips button { min-width: 38px; min-height: 42px; padding: 6px 9px; background: #fff; border: 1px solid #d3d3d8; border-radius: 9px; font-size: 18px; cursor: pointer; }
+.ink-glyph-chips button[aria-pressed="true"] { color: #0964c4; background: #eaf3ff; border-color: #0b76e8; box-shadow: inset 0 0 0 1px #0b76e8; }
+.ink-glyph-chips button:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+#glyphFields { min-width: 0; padding: 0; margin: 0; border: 0; }
+#glyphFields:disabled { opacity: .5; }
 body.is-two-pages .me-choreo-track { min-width: 430px; }
 
 .ink-field,

@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="shared-fonts.css?v=20260901-1">
   <link rel="stylesheet" href="workspace-editor.css?v=20260901-1">
   <link rel="stylesheet" href="me-motion-editor.css?v=20260901-1">
-  <link rel="stylesheet" href="ribbonink.css?v=20260904-9">
+  <link rel="stylesheet" href="ribbonink.css?v=20260905-12">
 </head>
 <body data-editor-capabilities="text-only">
   <aside class="ink-panel" id="editorPanel" aria-label="流彩笔迹编辑器">
@@ -100,6 +100,24 @@
           <label class="ink-field">第二页笔迹<select id="page2Route"><option value="loop">回环穿行</option><option value="arc">弧线绕行</option></select></label>
           <label class="ink-field">文字穿插<select id="page2Weave"><option value="weave">前后交错</option><option value="reverse">反向交错</option><option value="front">笔迹全部在前</option><option value="back">笔迹全部在后</option></select></label>
           <label class="ink-field">第二页文字<input id="page2Text" type="text" value="FLOW" maxlength="28" autocomplete="off"></label>
+          <details class="ink-glyph-editor" open>
+            <summary>逐字穿插与动作</summary>
+            <p class="ink-help">点选下方字块，可多选。设置只作用于选中字；整字动作不拆分内部笔画。</p>
+            <div id="glyphChips" class="ink-glyph-chips" role="group" aria-label="选择第二页文字"></div>
+            <div class="ink-button-row"><button class="ink-button" id="selectAllGlyphs" type="button">全选文字</button><button class="ink-button" id="deselectGlyphs" type="button">取消选择</button></div>
+            <p id="glyphSelection" class="ink-status" aria-live="polite"></p>
+            <fieldset id="glyphFields">
+              <legend class="ink-page-heading">选中文字的设置</legend>
+              <label class="ink-field">所选字穿插<select id="glyphDepth"><option value="" disabled>多种设置</option><option value="inherit">默认交错（跟随上方）</option><option value="front">笔迹在字前</option><option value="back">笔迹在字后</option></select></label>
+              <label class="ink-field">接触动作<select id="glyphMotion"><option value="" disabled>多种设置</option><option value="auto">自动轻压</option><option value="none">不动</option><option value="press">下压回弹</option><option value="hide">压下隐藏后弹回</option><option value="lean">侧让回弹</option><option value="turn">轻转回弹</option></select></label>
+              <label class="ink-range">动作幅度 <output id="glyphAmountOut">100%</output><input id="glyphAmount" type="range" min="0" max="140" value="100"></label>
+              <label class="ink-field">动作方向<select id="glyphDirection"><option value="" disabled>多种设置</option><option value="down">默认：下压 / 右让 / 顺时针</option><option value="left">向左 / 逆时针</option><option value="right">向右 / 顺时针</option></select></label>
+              <label class="ink-field">变形支点<select id="glyphPivot"><option value="" disabled>多种设置</option><option value="bottom">字的底部</option><option value="center">字的中心</option><option value="top">字的顶部</option></select></label>
+              <label class="ink-range">回弹时长 <output id="glyphReboundOut">0.36 秒</output><input id="glyphRebound" type="range" min="16" max="65" value="36"></label>
+              <div class="ink-button-row"><button class="ink-button" id="inspectGlyphContact" type="button">暂停看接触</button><button class="ink-button" id="playGlyphContact" type="button">从接触处播放</button></div>
+            </fieldset>
+            <p class="ink-help" id="glyphStatus" role="status">笔锋碰到才响应，笔尾离开后回弹。自动模式在笔迹从字后经过时响应较轻。</p>
+          </details>
           <label class="ink-field">第二页字体<select id="page2Font"><option value="stg:roboto-condensed">Roboto Condensed</option></select></label>
           <label class="ink-range">第二页字号 <output id="page2SizeOut">270</output><input id="page2Size" type="range" min="72" max="360" value="270"></label>
           <label class="ink-range">第二页字距 <output id="page2SpacingOut">2</output><input id="page2Spacing" type="range" min="-14" max="42" value="2"></label>
@@ -243,7 +261,8 @@
   <script src="js/h264-mp4-encoder.web.js?v=20260901-1"></script>
   <script src="ribbonink-freehand.js?v=20260904-5"></script>
   <script src="ribbonink-sequence.js?v=20260904-10"></script>
-  <script src="ribbonink-writing.js?v=20260904-10"></script>
-  <script src="ribbonink.js?v=20260904-10"></script>
+  <script src="ribbonink-writing.js?v=20260905-12"></script>
+  <script src="ribbonink-glyphs.js?v=20260905-12"></script>
+  <script src="ribbonink.js?v=20260905-12"></script>
 </body>
 </html>

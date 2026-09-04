@@ -9,7 +9,7 @@
   const schemeStatus = $("#schemeStatus");
   const STORAGE_KEY = "me-ribbon-ink-autosave-v3";
   const EFFECT_ID = "ribbon-ink";
-  const SCHEME_VERSION = 6;
+  const SCHEME_VERSION = 7;
   const freehand = window.RibbonInkFreehand;
   let drawing = freehand.validate(null);
   let compiledDrawing = freehand.compile(drawing);
@@ -81,10 +81,13 @@
   const foregroundTextCanvas = document.createElement("canvas");
   const textLayerKeys = ["", ""];
   const mEdgeCache = new Map();
-  const page2Canvas = document.createElement("canvas");
   const page2Occlusion = document.createElement("canvas");
   let sequenceRouteKey = "", sequenceRoute;
-  let page2Key = "";
+  const glyphEngine = window.RibbonInkGlyphs;
+  const glyphRenderer = glyphEngine.renderer(page2FontSpec);
+  let page2Glyphs = glyphEngine.reconcile([], defaultValues.page2Text);
+  let selectedGlyphs = new Set([page2Glyphs[0].id]);
+  let lastGlyphFrame;
   let mainToneKey = "";
 
   const authored = [
@@ -784,36 +787,10 @@
     catch (_) { schemeStatus.textContent = "部分字体加载失败，当前使用后备字体。"; }
   }
 
-  function drawSecondPage(context, width, height, motion, alpha = 1) {
-    if (motion.scale <= 0 || alpha <= 0) return;
-    const text = inputs.page2Text.value.trim().toLocaleUpperCase();
-    const unit = Math.min(width / 720, height / 405);
-    const font = page2FontSpec;
-    const key = JSON.stringify([width, height, text, inputs.page2Font.value, inputs.page2Size.value,
-      inputs.page2Spacing.value, inputs.page2Color.value, document.fonts.check(font(32), text || " ")]);
-    if (key !== page2Key) {
-      page2Canvas.width = Math.ceil(width); page2Canvas.height = Math.ceil(height);
-      const ctx = page2Canvas.getContext("2d");
-      let size = Number(inputs.page2Size.value) * unit;
-      let gap = Number(inputs.page2Spacing.value) * unit;
-      ctx.font = font(size);
-      const glyphs = Array.from(text);
-      const total = glyphs.reduce((n, ch) => n + ctx.measureText(ch).width, 0) + gap * Math.max(0, glyphs.length - 1);
-      const fit = Math.min(1, width * .76 / Math.max(1, total));
-      size *= fit; gap *= fit; ctx.font = font(size);
-      const metrics = ctx.measureText(text);
-      let cursor = (width - total * fit) / 2;
-      const baseline = height / 2 + (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2;
-      ctx.fillStyle = inputs.page2Color.value;
-      glyphs.forEach(ch => { ctx.fillText(ch, cursor, baseline); cursor += ctx.measureText(ch).width + gap; });
-      page2Key = key;
-    }
-    context.save();
-    context.globalAlpha *= alpha;
-    context.translate(width * (1 - motion.camera) + width / 2, height / 2);
-    context.scale(motion.scale, motion.scale);
-    context.drawImage(page2Canvas, -width / 2, -height / 2);
-    context.restore();
+  function secondPageFrame(width, height, motion, elapsed, span) {
+    const values = Object.fromEntries(Object.entries(inputs).map(([key, input]) => [key, input.value]));
+    lastGlyphFrame = glyphRenderer.frame(width, height, motion, elapsed, sequenceRoute, span, values, page2Glyphs);
+    return lastGlyphFrame;
   }
 
   function renderFrame(target, rawTime, width, height, backingWidth = width, backingHeight = height) {
@@ -891,13 +868,15 @@
       const motion = window.RibbonInkSequence.evaluate(elapsed, phase.span.bridge, Number(inputs.page2Pop.value) / 100, sequenceRoute, phase.span.page2);
       if (phase.name === "reset") {
         const fade = smoothstep(phase.progress);
-        drawSecondPage(context, width, height, { ...motion, camera: 1, scale: 1 }, 1 - fade);
+        const letters = secondPageFrame(width, height, { ...motion, camera: 1, scale: 1 }, elapsed, phase.span);
+        context.save(); context.globalAlpha = 1 - fade; context.drawImage(letters.base, 0, 0); context.restore();
         context.save(); context.globalAlpha = fade; drawTextLayer(false); context.restore();
       } else {
         if (motion.camera < 1) {
           context.save(); context.translate(-motion.camera * width, 0); drawTextLayer(false); context.restore();
         }
-        drawSecondPage(context, width, height, motion);
+        const letters = secondPageFrame(width, height, motion, elapsed, phase.span);
+        context.drawImage(letters.base, 0, 0);
         const ribbon = window.RibbonInkWriting.draw(sequenceRoute, motion, width, height, unit,
           74 * Number(inputs.brushWidth.value) / 100, paletteColors(), phase.time,
           Number(inputs.textureSpeed.value) / 100, Number(inputs.textureDensity.value) / 100, inputs.page2Weave.value);
@@ -913,12 +892,14 @@
             page2Occlusion.width = Math.ceil(width); page2Occlusion.height = Math.ceil(height);
           }
           const over = page2Occlusion.getContext("2d");
-          over.clearRect(0, 0, width, height);
-          drawSecondPage(over, width, height, motion);
-          over.globalCompositeOperation = "destination-in";
-          over.drawImage(ribbon.rear, 0, 0);
-          over.globalCompositeOperation = "source-over";
-          context.drawImage(page2Occlusion, 0, 0);
+          for (const [glyphs, mask] of [[letters.inherit, ribbon.rear], [letters.back, ribbon.cover]]) {
+            over.clearRect(0, 0, width, height);
+            over.drawImage(glyphs, 0, 0);
+            over.globalCompositeOperation = "destination-in";
+            over.drawImage(mask, 0, 0);
+            over.globalCompositeOperation = "source-over";
+            context.drawImage(page2Occlusion, 0, 0);
+          }
         }
       }
       if (target === canvas) updateTimelinePlayhead(phase);
@@ -966,6 +947,9 @@
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     state.previewBacking = { width: Math.round(cssWidth * dpr), height: Math.round(cssHeight * dpr) };
     $("#sizeBadge").textContent = `${width} × ${height}`;
+    // Prepare font masks/contact windows on an editor change, not on the first
+    // live bridge frame. Both renders are synchronous, so no warm-up pose flashes.
+    if (twoPages()) renderPreview(timing().write + timing().flow + timing().bridge * .84);
     renderPreview();
   }
 
@@ -1003,7 +987,68 @@
     document.querySelectorAll(".me-choreo-block").forEach((block) => block.classList.toggle("is-active", block.dataset.phase === phase.name));
   }
 
+  const glyphFields = { glyphDepth: 'depth', glyphMotion: 'motion', glyphAmount: 'amount', glyphDirection: 'direction', glyphPivot: 'pivot', glyphRebound: 'rebound' };
+  function syncGlyphEditor() {
+    page2Glyphs = glyphEngine.reconcile(page2Glyphs, inputs.page2Text.value);
+    selectedGlyphs = new Set([...selectedGlyphs].filter(id => page2Glyphs.some(g => g.id === id)));
+    const list = $("#glyphChips"), signature = JSON.stringify(page2Glyphs.map(g => [g.id, g.text]));
+    if (list.dataset.signature !== signature) {
+      list.replaceChildren();
+      page2Glyphs.forEach((g, index) => {
+        const button = document.createElement('button'); button.type = 'button'; button.dataset.glyphId = g.id;
+        button.textContent = g.text.trim() ? g.text : '␣'; button.setAttribute('aria-label', `${index + 1}：${g.text.trim() ? g.text : '空格'}`);
+        button.addEventListener('click', () => {
+          if (selectedGlyphs.has(g.id)) selectedGlyphs.delete(g.id); else selectedGlyphs.add(g.id);
+          syncGlyphEditor();
+          setPaused(true); setTime(timing().write + timing().flow + timing().bridge + timing().page2 - .01);
+          $("#glyphStatus").textContent = '已暂停在完整文字；点击“暂停看接触”检查穿插和动作。';
+        });
+        list.append(button);
+      });
+      list.dataset.signature = signature;
+    }
+    list.querySelectorAll('button').forEach(button => button.setAttribute('aria-pressed', String(selectedGlyphs.has(button.dataset.glyphId))));
+    const chosen = page2Glyphs.filter(g => selectedGlyphs.has(g.id));
+    $("#glyphSelection").textContent = chosen.length ? `已选 ${chosen.length} 字：${chosen.map(g => g.text).join('、')}` : '尚未选择文字';
+    $("#glyphFields").disabled = !chosen.length;
+    for (const [id, key] of Object.entries(glyphFields)) {
+      const input = $(`#${id}`), mixed = chosen.some(g => g[key] !== chosen[0][key]);
+      const value = chosen[0]?.[key] ?? glyphEngine.defaults[key];
+      if (input.type === 'range') {
+        input.value = Math.round(value * 100);
+        $(`#${id}Out`).textContent = mixed ? '多种设置' : key === 'amount' ? `${Math.round(value * 100)}%` : `${value.toFixed(2)} 秒`;
+      } else input.value = mixed ? '' : value;
+    }
+  }
+  function seekGlyphContact(play = false) {
+    if (!twoPages()) return;
+    const span = timing(), start = span.write + span.flow;
+    setPaused(true); renderPreview(start + span.bridge * .84);
+    const events = page2Glyphs.flatMap((g, i) => selectedGlyphs.has(g.id) ? lastGlyphFrame.events[i] : []);
+    const event = events.sort((a, b) => a.start - b.start)[0];
+    if (!event) {
+      setTime(start + span.bridge + span.page2 - .01);
+      $("#glyphStatus").textContent = '所选字没有被笔锋碰到，可换路线、字体或字号后再看。'; return;
+    }
+    setTime(start + (play ? Math.max(0, event.start - .08) : Math.min(event.release - .01, event.start + .13)));
+    if (play) setPaused(false);
+    $("#glyphStatus").textContent = `接触 ${event.start.toFixed(2)} 秒 · 笔尾释放 ${event.release.toFixed(2)} 秒（从跨页书写起算）`;
+  }
+  $("#selectAllGlyphs").addEventListener('click', () => { selectedGlyphs = new Set(page2Glyphs.map(g => g.id)); syncGlyphEditor(); });
+  $("#deselectGlyphs").addEventListener('click', () => { selectedGlyphs.clear(); syncGlyphEditor(); });
+  $("#inspectGlyphContact").addEventListener('click', () => seekGlyphContact());
+  $("#playGlyphContact").addEventListener('click', () => seekGlyphContact(true));
+  for (const [id, key] of Object.entries(glyphFields)) $("#" + id).addEventListener('input', event => {
+    const value = event.target.type === 'range' ? Number(event.target.value) / 100 : event.target.value;
+    page2Glyphs = page2Glyphs.map(g => selectedGlyphs.has(g.id) ? { ...g, ...glyphEngine.normalize({ ...g, [key]: value }) } : g);
+    syncGlyphEditor(); queueAutosave();
+    const span = timing(), time = currentTime() % span.total, elapsed = time - span.write - span.flow;
+    const showingContact = state.paused && lastGlyphFrame && page2Glyphs.some((g, i) => selectedGlyphs.has(g.id) && lastGlyphFrame.events[i]?.some(e => elapsed >= e.start && elapsed <= e.release + g.rebound));
+    if (showingContact) renderPreview(); else seekGlyphContact();
+  });
+
   function updateOutputs() {
+    syncGlyphEditor();
     updateDrawingUI();
     $("#sequenceCard").hidden = inputs.drawingMode.value === "freehand";
     $("#secondPageTools").hidden = !twoPages();
@@ -1048,7 +1093,7 @@
   function schemeData() {
     const values = {};
     Object.entries(inputs).forEach(([key, input]) => { values[key] = input.value; });
-    return { version: SCHEME_VERSION, effect: EFFECT_ID, values, drawing: structuredClone(drawing), background: state.backgroundDataUrl || "" };
+    return { version: SCHEME_VERSION, effect: EFFECT_ID, values, page2Glyphs: structuredClone(page2Glyphs), drawing: structuredClone(drawing), background: state.backgroundDataUrl || "" };
   }
 
   function loadBackground(dataUrl) {
@@ -1065,10 +1110,13 @@
   async function applyScheme(data) {
     if (!data || data.effect !== EFFECT_ID) throw new Error("不是流彩笔迹方案");
     const nextDrawing = freehand.validate(data.drawing);
+    const nextGlyphs = glyphEngine.reconcile(data.page2Glyphs ?? [], String(data.values?.page2Text ?? defaultValues.page2Text));
     finishDrawing();
     drawing = nextDrawing;
     compiledDrawing = freehand.compile(drawing);
     redoStrokes = [];
+    page2Glyphs = nextGlyphs;
+    selectedGlyphs = new Set(nextGlyphs.length ? [nextGlyphs[0].id] : []);
     Object.entries({ ...defaultValues, ...data.values }).forEach(([key, value]) => {
       if (inputs[key] && value != null) inputs[key].value = String(value);
     });
@@ -1123,9 +1171,11 @@
 
   function replay() {
     finishDrawing(); drawingEnabled = false; updateDrawingUI();
+    if (twoPages()) renderPreview(timing().write + timing().flow + timing().bridge * .84);
     state.pausedAt = 0;
     state.startedAt = performance.now();
     if (state.paused) setPaused(false);
+    renderPreview(0);
   }
 
   function updateDrawingUI() {
@@ -1350,7 +1400,7 @@
       if (/^inkColor[1-5]$/.test(key)) inputs.palettePreset.value = "custom";
       updateOutputs();
       if (["fontSelect", "page2Font"].includes(key)) {
-        ensurePageFonts().then(() => { page2Key = ""; textLayerKeys.fill(""); renderPreview(); });
+        ensurePageFonts().then(() => { textLayerKeys.fill(""); renderPreview(); });
       }
       if (key === "sequenceMode") replay();
       if (twoPages() && ["page2Route", "page2Weave"].includes(key)) {
