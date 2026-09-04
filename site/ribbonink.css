@@ -96,6 +96,8 @@ select { font: inherit; }
 }
 
 .ink-card h2 { margin: 0; font-size: 14px; letter-spacing: -.02em; }
+.ink-page-heading { margin: 16px 0 12px; font-size: 13px; }
+body.is-two-pages .me-choreo-track { min-width: 430px; }
 
 .ink-field,
 .ink-range {

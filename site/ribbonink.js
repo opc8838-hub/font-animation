@@ -9,7 +9,7 @@
   const schemeStatus = $("#schemeStatus");
   const STORAGE_KEY = "me-ribbon-ink-autosave-v3";
   const EFFECT_ID = "ribbon-ink";
-  const SCHEME_VERSION = 4;
+  const SCHEME_VERSION = 5;
   const freehand = window.RibbonInkFreehand;
   let drawing = freehand.validate(null);
   let compiledDrawing = freehand.compile(drawing);
@@ -30,6 +30,7 @@
   };
 
   const inputIds = [
+    "sequenceMode", "page2Text", "page2Font", "page2Size", "page2Spacing", "page2Color", "bridgeDuration", "page2Pop", "page2Hold",
     "drawingMode", "freehandWidth",
     "canvasPreset", "canvasWidth", "canvasHeight", "textInput", "fontSelect", "fontSize",
     "letterSpacing", "textColor", "backgroundColor", "palettePreset",
@@ -43,6 +44,7 @@
   const inputs = Object.fromEntries(inputIds.map((id) => [id, $(`#${id}`)]));
 
   const defaultValues = {
+    sequenceMode: "single", page2Text: "FLOW", page2Font: "stg:roboto-condensed", page2Size: "270", page2Spacing: "2", page2Color: "#080808", bridgeDuration: "90", page2Pop: "42", page2Hold: "125",
     drawingMode: "time", freehandWidth: "28",
     canvasPreset: "1920x1080", canvasWidth: "1920", canvasHeight: "1080",
     textInput: "TIME", fontSelect: "stg:roboto-condensed", fontSize: "270", letterSpacing: "2",
@@ -79,6 +81,8 @@
   const foregroundTextCanvas = document.createElement("canvas");
   const textLayerKeys = ["", ""];
   const mEdgeCache = new Map();
+  const page2Canvas = document.createElement("canvas");
+  let page2Key = "";
   let mainToneKey = "";
 
   const authored = [
@@ -188,11 +192,19 @@
   }
   authored.forEach((stroke) => { stroke.samples = sampleStroke(stroke); });
 
+  function twoPages() { return inputs.drawingMode.value === "time" && inputs.sequenceMode.value === "double"; }
+
   function timing() {
     const write = Number(inputs.writeDuration.value) / 100;
     const flow = Number(inputs.flowDuration.value) / 100;
     const erase = Number(inputs.eraseDuration.value) / 100;
     const hold = Number(inputs.holdDuration.value) / 100;
+    if (twoPages()) {
+      const bridge = Number(inputs.bridgeDuration.value) / 100;
+      const page2 = Number(inputs.page2Hold.value) / 100;
+      const reset = .28;
+      return { write, flow, erase, hold, bridge, page2, reset, total: write + flow + bridge + page2 + reset };
+    }
     return { write, flow, erase, hold, total: write + flow + erase + hold };
   }
 
@@ -201,6 +213,12 @@
     const time = ((rawTime % span.total) + span.total) % span.total;
     if (time < span.write) return { name: "write", progress: time / Math.max(.001, span.write), time, span };
     if (time < span.write + span.flow) return { name: "flow", progress: (time - span.write) / Math.max(.001, span.flow), time, span };
+    if (twoPages()) {
+      const elapsed = time - span.write - span.flow;
+      if (elapsed < span.bridge) return { name: "bridge", progress: elapsed / span.bridge, time, span };
+      if (elapsed < span.bridge + span.page2) return { name: "page2", progress: (elapsed - span.bridge) / span.page2, time, span };
+      return { name: "reset", progress: (elapsed - span.bridge - span.page2) / span.reset, time, span };
+    }
     if (time < span.write + span.flow + span.erase) return { name: "erase", progress: (time - span.write - span.flow) / Math.max(.001, span.erase), time, span };
     return { name: "hold", progress: (time - span.write - span.flow - span.erase) / Math.max(.001, span.hold), time, span };
   }
@@ -751,6 +769,51 @@
     drawDot(context, rawTime, width, height, visible.phase, transform);
   }
 
+  function page2FontSpec(size) {
+    const preset = window.STGFontLibrary?.preset(inputs.page2Font.value);
+    const family = window.STGFontLibrary?.family(inputs.page2Font.value) || "sans-serif";
+    return `${preset?.style || "normal"} ${preset?.weight || 700} ${size}px ${family}`;
+  }
+
+  async function ensurePageFonts() {
+    const requests = [document.fonts.load(fontSpec(32), inputs.textInput.value || "TIME")];
+    if (twoPages()) requests.push(document.fonts.load(page2FontSpec(32), inputs.page2Text.value || "FLOW"));
+    try { await Promise.all(requests); }
+    catch (_) { schemeStatus.textContent = "部分字体加载失败，当前使用后备字体。"; }
+  }
+
+  function drawSecondPage(context, width, height, motion, alpha = 1) {
+    if (motion.scale <= 0 || alpha <= 0) return;
+    const text = inputs.page2Text.value.trim().toLocaleUpperCase();
+    const unit = Math.min(width / 720, height / 405);
+    const font = page2FontSpec;
+    const key = JSON.stringify([width, height, text, inputs.page2Font.value, inputs.page2Size.value,
+      inputs.page2Spacing.value, inputs.page2Color.value, document.fonts.check(font(32), text || " ")]);
+    if (key !== page2Key) {
+      page2Canvas.width = Math.ceil(width); page2Canvas.height = Math.ceil(height);
+      const ctx = page2Canvas.getContext("2d");
+      let size = Number(inputs.page2Size.value) * unit;
+      let gap = Number(inputs.page2Spacing.value) * unit;
+      ctx.font = font(size);
+      const glyphs = Array.from(text);
+      const total = glyphs.reduce((n, ch) => n + ctx.measureText(ch).width, 0) + gap * Math.max(0, glyphs.length - 1);
+      const fit = Math.min(1, width * .76 / Math.max(1, total));
+      size *= fit; gap *= fit; ctx.font = font(size);
+      const metrics = ctx.measureText(text);
+      let cursor = (width - total * fit) / 2;
+      const baseline = height / 2 + (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2;
+      ctx.fillStyle = inputs.page2Color.value;
+      glyphs.forEach(ch => { ctx.fillText(ch, cursor, baseline); cursor += ctx.measureText(ch).width + gap; });
+      page2Key = key;
+    }
+    context.save();
+    context.globalAlpha *= alpha;
+    context.translate(width * (1 - motion.camera) + width / 2, height / 2);
+    context.scale(motion.scale, motion.scale);
+    context.drawImage(page2Canvas, -width / 2, -height / 2);
+    context.restore();
+  }
+
   function renderFrame(target, rawTime, width, height, backingWidth = width, backingHeight = height) {
     const targetWidth = Math.max(1, Math.round(backingWidth));
     const targetHeight = Math.max(1, Math.round(backingHeight));
@@ -783,7 +846,12 @@
     const fit = fitBaseText(context, text.toLocaleUpperCase(), width, height, unit);
     const centerX = width * Number(inputs.positionX.value) / 100;
     const centerY = height * Number(inputs.positionY.value) / 100;
-    const visible = visibleWindow(rawTime);
+    const phase = phaseAt(rawTime);
+    const sequenceActive = twoPages() && ["bridge", "page2", "reset"].includes(phase.name);
+    const elapsed = phase.time - phase.span.write - phase.span.flow;
+    const visible = sequenceActive
+      ? { start: 0, end: 1, phase: { ...phase, name: phase.name === "reset" ? "hold" : "flow", progress: 1 + elapsed / phase.span.flow } }
+      : visibleWindow(rawTime);
     // Align the glyph ink box to the source baseline (not the font's em box).
     // Keep this in logical composition units for all preview/export sizes.
     const drawTextLayer = (foreground) => {
@@ -810,6 +878,33 @@
       }
       context.drawImage(textCanvas, 0, 0);
     };
+    if (sequenceActive) {
+      const transform = exactTransform(width, height);
+      const tip = (transform.x + 720 * transform.scale) / width;
+      const motion = window.RibbonInkSequence.evaluate(elapsed, phase.span.bridge, Number(inputs.page2Pop.value) / 100, tip);
+      if (phase.name === "reset") {
+        const fade = smoothstep(phase.progress);
+        drawSecondPage(context, width, height, { ...motion, camera: 1, scale: 1 }, 1 - fade);
+        context.save(); context.globalAlpha = fade; drawTextLayer(false); context.restore();
+      } else {
+        if (motion.camera < 1) {
+          context.save(); context.translate(-motion.camera * width, 0); drawTextLayer(false); context.restore();
+        }
+        drawSecondPage(context, width, height, motion);
+        // Translate the same already-materialized ribbon; its phase and texture
+        // clock are never restarted when the camera crosses the page boundary.
+        if (motion.offset > -1 && motion.offset < 1) {
+          context.save(); context.translate(motion.offset * width, 0);
+          drawExactBrush(context, rawTime, width, height, visible);
+          context.restore();
+        }
+        if (motion.camera < 1) {
+          context.save(); context.translate(-motion.camera * width, 0); drawTextLayer(true); context.restore();
+        }
+      }
+      if (target === canvas) updateTimelinePlayhead(phase);
+      return;
+    }
     drawTextLayer(false);
     if (visible.end > visible.start + .0001 || visible.phase.name === "write" || visible.phase.name === "erase") {
       drawExactBrush(context, rawTime, width, height, visible);
@@ -857,6 +952,13 @@
 
   function timelinePhases() {
     const span = timing();
+    if (twoPages()) return [
+      { id: "write", label: "首页写入", duration: span.write, color: PHASE_COLORS[0] },
+      { id: "flow", label: "首页流动", duration: span.flow, color: PHASE_COLORS[1] },
+      { id: "bridge", label: "接力·弹出", duration: span.bridge, color: PHASE_COLORS[2] },
+      { id: "page2", label: "第二页", duration: span.page2, color: PHASE_COLORS[3] },
+      { id: "reset", label: "回首页", duration: span.reset, color: "#777780" }
+    ];
     return [
       { id: "write", label: "写入", duration: span.write, color: PHASE_COLORS[0] },
       { id: "flow", label: "流动", duration: span.flow, color: PHASE_COLORS[1] },
@@ -884,7 +986,16 @@
 
   function updateOutputs() {
     updateDrawingUI();
+    $("#sequenceCard").hidden = inputs.drawingMode.value === "freehand";
+    $("#secondPageTools").hidden = !twoPages();
+    document.body.classList.toggle("is-two-pages", twoPages());
+    ["eraseDuration", "holdDuration"].forEach(id => { inputs[id].closest("label").hidden = twoPages(); });
     const map = {
+      page2SizeOut: inputs.page2Size.value,
+      page2SpacingOut: inputs.page2Spacing.value,
+      bridgeDurationOut: `${(Number(inputs.bridgeDuration.value) / 100).toFixed(2)} 秒`,
+      page2PopOut: `${(Number(inputs.page2Pop.value) / 100).toFixed(2)} 秒`,
+      page2HoldOut: `${(Number(inputs.page2Hold.value) / 100).toFixed(2)} 秒`,
       freehandWidthOut: `${inputs.freehandWidth.value}`,
       fontSizeOut: `${inputs.fontSize.value}`,
       letterSpacingOut: `${inputs.letterSpacing.value}`,
@@ -943,6 +1054,7 @@
       if (inputs[key] && value != null) inputs[key].value = String(value);
     });
     await loadBackground(data.background || "");
+    await ensurePageFonts();
     updateOutputs();
     updateStageLayout();
     setTime(0);
@@ -1004,7 +1116,7 @@
     ["textInput", "fontSelect", "fontSize", "letterSpacing", "textColor", "brushScale", "brushWidth", "positionX", "positionY", "dotScale", "dotDelay", "letterImpact"].forEach(id => {
       inputs[id].closest("label").hidden = enabled;
     });
-    $("#textTitle").textContent = enabled ? "笔迹与颜色" : "文字与颜色";
+    $("#textTitle").textContent = enabled ? "笔迹与颜色" : twoPages() ? "第一页文字与共用配色" : "文字与颜色";
     inputs.holdDuration.closest("label").firstChild.textContent = enabled ? "留白停留 " : "底字停留 ";
     $("#drawingHint").hidden = !enabled || drawing.strokes.length > 0;
     $("#undoInk").disabled = !drawing.strokes.length;
@@ -1128,7 +1240,8 @@
     exportStatus.textContent = message;
   }
 
-  $("#exportPng").addEventListener("click", () => {
+  $("#exportPng").addEventListener("click", async () => {
+    await ensurePageFonts();
     const output = makeExportCanvas();
     renderFrame(output, currentTime(), output.width, output.height);
     output.toBlob((blob) => {
@@ -1138,7 +1251,8 @@
     }, "image/png");
   });
 
-  $("#exportGif").addEventListener("click", () => {
+  $("#exportGif").addEventListener("click", async () => {
+    await ensurePageFonts();
     if (!window.GIF) { exportStatus.textContent = "GIF 编码器未加载，请刷新后重试。"; return; }
     const output = makeExportCanvas();
     const fps = exportFps();
@@ -1166,6 +1280,7 @@
   });
 
   $("#exportVideo").addEventListener("click", async () => {
+    await ensurePageFonts();
     if (!window.HME?.createH264MP4Encoder) { exportStatus.textContent = "MP4 编码器未加载，请刷新后重试。"; return; }
     const output = makeExportCanvas();
     const context = output.getContext("2d", { willReadFrequently: true });
@@ -1215,6 +1330,16 @@
       if (key === "palettePreset") applyPalettePreset(input.value);
       if (/^inkColor[1-5]$/.test(key)) inputs.palettePreset.value = "custom";
       updateOutputs();
+      if (["fontSelect", "page2Font"].includes(key)) {
+        ensurePageFonts().then(() => { page2Key = ""; textLayerKeys.fill(""); renderPreview(); });
+      }
+      if (key === "sequenceMode") replay();
+      if (twoPages() && ["bridgeDuration", "page2Pop"].includes(key)) {
+        setTime(timing().write + timing().flow); setPaused(false);
+      }
+      if (twoPages() && ["page2Text", "page2Font", "page2Size", "page2Spacing", "page2Color", "page2Hold"].includes(key)) {
+        setPaused(true); setTime(timing().write + timing().flow + timing().bridge + timing().page2 - .05);
+      }
       if (["canvasPreset", "canvasWidth", "canvasHeight"].includes(key)) updateStageLayout();
       if (drawingEnabled && inputs.drawingMode.value === "freehand") showWholeDrawing();
       queueAutosave();
@@ -1275,7 +1400,7 @@
   });
 
   $("#clearScheme").addEventListener("click", async () => {
-    const cleared = { ...defaultValues, textInput: "", drawingMode: inputs.drawingMode.value };
+    const cleared = { ...defaultValues, textInput: "", page2Text: "", drawingMode: inputs.drawingMode.value, sequenceMode: inputs.sequenceMode.value };
     await applyScheme({ version: SCHEME_VERSION, effect: EFFECT_ID, values: cleared, background: "" });
     localStorage.removeItem(STORAGE_KEY);
     clearTimeout(state.autosaveTimer); state.autosaveTimer = 0;
@@ -1283,6 +1408,8 @@
   });
 
   $("#pauseButton").addEventListener("click", () => setPaused(!state.paused));
+  $("#editFirstPage").addEventListener("click", () => { setPaused(true); setTime(0); inputs.textInput.focus(); });
+  $("#editSecondPage").addEventListener("click", () => { setPaused(true); setTime(timing().write + timing().flow + timing().bridge + timing().page2 - .05); inputs.page2Text.focus(); });
   $("#stagePauseButton").addEventListener("click", () => setPaused(!state.paused));
   $("#replayButton").addEventListener("click", replay);
   $("#stageReplayButton").addEventListener("click", replay);
@@ -1313,6 +1440,9 @@
     if (urlParams.get("from") === "gallery") saved = null;
     try {
       await applyScheme(saved?.effect === EFFECT_ID ? saved : { version: SCHEME_VERSION, effect: EFFECT_ID, values: defaultValues, background: "" });
+      if (!saved && urlParams.get("sequence") === "2") {
+        inputs.sequenceMode.value = "double"; updateOutputs(); replay();
+      }
       schemeStatus.textContent = saved?.effect === EFFECT_ID ? "已恢复上次自动保存的方案。" : "已载入默认方案。";
     } catch (error) {
       console.warn(error);
