@@ -30,42 +30,178 @@
     const head = .96 + .04 * smooth((motion.head - p.length) / 32);
     return brushWidth * .5 * organic * pressure * Math.min(head, tail);
   }
-  function draw(route, motion, w, h, unit, brushWidth, colors, time, speed, density, weave) {
+  function pigmentBounds(length, drift, density) {
+    const u = (length - drift) * density * 1.65;
+    // Unequal wavelengths create connected lobes and narrow waists. This is
+    // a two-dimensional dye boundary, not a collection of round-ended strokes.
+    const center = .86 * Math.sin(u / 68) + .48 * Math.sin(u / 123 + 1.3) + .28 * Math.sin(u / 31 + .7);
+    const half = .53 + .20 * Math.sin(u / 89 + .9) + .14 * Math.cos(u / 39);
+    return { low: center - half, high: center + half, u };
+  }
+  const materialDrift = (time, speed) => time * 140 * speed;
+  const softMax = (a, b, k = .3) => {
+    const h = Math.max(0, k - Math.abs(a - b)) / k;
+    return Math.max(a,b) + h*h*k*.25;
+  };
+  let dyeCache;
+  function materialRings(length, drift, density) {
+    if (dyeCache && dyeCache.length === length && dyeCache.density === density
+      && dyeCache.from < -drift-128 && dyeCache.to > length-drift+128) return dyeCache.rings;
+    // Build the advecting field once in material coordinates. Each frame only
+    // bends its contours onto the fixed route; no per-frame grid reconstruction.
+    const from = Math.floor((-drift-1536)/3)*3;
+    const to = Math.ceil((length-drift+384)/3)*3;
+    const extent = to-from;
+    const nx = Math.ceil(extent / 3), ny = 64, stride = ny + 1;
+    const values = new Float32Array((nx+1)*stride);
+    const noise = root.RibbonInkFreehand.noise, step = 190/density;
+    const pools = [];
+    for (let k = Math.floor(from/step)-1; k*step < to+step; k++) {
+      pools.push({center:k*step+noise(k,23)*step*.32,
+        half:(50+22*(noise(k,41)+1))/density, flip:noise(k,13)>0?1:-1, cut:Math.abs(k)%2===0});
+    }
+    for (let x=0;x<=nx;x++) {
+      const s=from+x/nx*extent, b=pigmentBounds(s,0,density);
+      const nearby=pools.filter(p=>Math.abs(s-p.center)<p.half*1.5);
+      for (let y=0;y<=ny;y++) {
+        const v=y/ny*5-2.5;
+        let f=Math.min(v-b.low,b.high-v);
+        for(const p of nearby) {
+          const u=(s-p.center)/p.half;
+          // A lobe curls back across the width; the soft union rounds its
+          // junction with the main field instead of leaving pointed cutouts.
+          const middle=p.flip*(.35+.48*Math.sin(u*2.8));
+          const pool=(1-Math.hypot(u,(v-middle)/.70))*.70;
+          f=p.cut ? -softMax(-f,pool) : softMax(f,pool);
+        }
+        values[x*stride+y]=(x===0||x===nx||y===0||y===ny)?-3:f;
+      }
+    }
+    const vertices=new Map(), links=new Map();
+    const edge=(x,y,e)=>{
+      const endpoints=[[[x,y],[x+1,y]],[[x+1,y],[x+1,y+1]],[[x,y+1],[x+1,y+1]],[[x,y],[x,y+1]]][e];
+      const [a,b]=endpoints, ai=a[0]*stride+a[1], bi=b[0]*stride+b[1];
+      const id=ai*2+(a[0]===b[0]?1:0);
+      if(!vertices.has(id)) {
+        const t=values[ai]/(values[ai]-values[bi]);
+        vertices.set(id,[from+(a[0]+(b[0]-a[0])*t)/nx*extent,(a[1]+(b[1]-a[1])*t)/ny*5-2.5]);
+      }
+      return id;
+    };
+    const pairs={1:[[3,0]],2:[[0,1]],3:[[3,1]],4:[[1,2]],6:[[0,2]],7:[[3,2]],8:[[2,3]],9:[[0,2]],11:[[1,2]],12:[[1,3]],13:[[0,1]],14:[[3,0]]};
+    for(let x=0;x<nx;x++)for(let y=0;y<ny;y++) {
+      const corners=[values[x*stride+y],values[(x+1)*stride+y],values[(x+1)*stride+y+1],values[x*stride+y+1]];
+      const mask=corners.reduce((n,v,i)=>n+(v>0?1<<i:0),0);
+      let segments=pairs[mask];
+      if(mask===5||mask===10) {
+        const inside=corners.reduce((a,b)=>a+b,0)>0;
+        segments=(mask===5)===inside?[[0,1],[2,3]]:[[3,0],[1,2]];
+      }
+      for(const [a,b] of segments||[]) {
+        const ia=edge(x,y,a),ib=edge(x,y,b);
+        if(!links.has(ia))links.set(ia,[]);if(!links.has(ib))links.set(ib,[]);
+        links.get(ia).push(ib);links.get(ib).push(ia);
+      }
+    }
+    const rings=[],visited=new Set();
+    for(const start of links.keys()) {
+      if(visited.has(start))continue;
+      let at=start,previous=-1;
+      const ring=[];
+      do {
+        ring.push(vertices.get(at));
+        visited.add(at);
+        const next=links.get(at).find(id=>id!==previous);
+        if(next===undefined)break;
+        previous=at;at=next;
+      }while(at!==start&&!visited.has(at));
+      rings.push(ring);
+    }
+    dyeCache={length,density,from,to,rings};
+    return rings;
+  }
+  function clipRing(ring, limit, keepGreater) {
+    const result=[];
+    let a=ring.at(-1),insideA=keepGreater?a[0]>=limit:a[0]<=limit;
+    for(const b of ring) {
+      const insideB=keepGreater?b[0]>=limit:b[0]<=limit;
+      if(insideA!==insideB) {
+        const t=(limit-a[0])/(b[0]-a[0]);
+        result.push([limit,a[1]+(b[1]-a[1])*t]);
+      }
+      if(insideB)result.push(b);
+      a=b;insideA=insideB;
+    }
+    return result;
+  }
+  function dyeContours(points, brushWidth, drift, density, rings, part) {
+    const path=new Path2D(),accents=[new Path2D(),new Path2D(),new Path2D()];
+    const start=points[0].length,length=points.at(-1).length;
+    const mapped=([u,v])=>{
+      const s=u+drift;
+      let lo=0,hi=points.length-1;
+      while(hi-lo>1){const m=(lo+hi)>>1;if(points[m].length<s)lo=m;else hi=m;}
+      const a=points[lo],b=points[hi],t=Math.max(0,Math.min(1,(s-a.length)/Math.max(1e-8,b.length-a.length)));
+      const angle=a.angle+Math.atan2(Math.sin(b.angle-a.angle),Math.cos(b.angle-a.angle))*t;
+      const extra=s<start?s-start:s>length?s-length:0;
+      const r=radius({length:Math.max(start,Math.min(length,s)),angle},{head:Infinity,tail:0},brushWidth);
+      return [a.x+(b.x-a.x)*t+Math.cos(angle)*extra-Math.sin(angle)*r*v,
+        a.y+(b.y-a.y)*t+Math.sin(angle)*extra+Math.cos(angle)*r*v];
+    };
+    for(const uv of rings) {
+      let clipped=clipRing(uv,part.start-drift-brushWidth*1.5,true);
+      if(!clipped.length)continue;
+      clipped=clipRing(clipped,part.end-drift+brushWidth*1.5,false);
+      if(clipped.length<3)continue;
+      const ring=clipped.map(mapped),loop=new Path2D(),last=ring.at(-1),first=ring[0];
+      loop.moveTo((last[0]+first[0])/2,(last[1]+first[1])/2);
+      ring.forEach((p,i)=>{const n=ring[(i+1)%ring.length];loop.quadraticCurveTo(p[0],p[1],(p[0]+n[0])/2,(p[1]+n[1])/2);});
+      loop.closePath();path.addPath(loop);
+      const index=Math.abs(Math.floor(uv[0][0]/(190/density)))%3;
+      accents[index].addPath(loop);
+    }
+    return {path,accents};
+  }
+  function paletteStyle(ctx, colors, nextColors, index, part, route) {
+    if (colors[index] === nextColors[index]) return colors[index];
+    if (part !== route.parts[0]) return nextColors[index];
+    const start = part.points[0].x, end = part.points.at(-1).x;
+    const gradient = ctx.createLinearGradient(start, 0, start + (end-start)*.82, 0);
+    gradient.addColorStop(0, colors[index]);
+    gradient.addColorStop(.12, colors[index]);
+    gradient.addColorStop(1, nextColors[index]);
+    return gradient;
+  }
+  function draw(route, motion, w, h, unit, brushWidth, colors, time, speed, density, weave, nextColors = colors) {
     ink = surface(ink, w, h); rear = surface(rear, w, h); layer = surface(layer, w, h); cover = surface(cover, w, h);
     const ctx = ink.getContext('2d'), depth = rear.getContext('2d'), paint = layer.getContext('2d');
     const coverage = cover.getContext('2d');
     if (motion.head <= motion.tail) return { ink, rear, cover };
-    const noise = root.RibbonInkFreehand.noise;
+    const routePoints = route.parts.flatMap(part => part.points).filter((p, i, list) => !i || p.length > list[i - 1].length + 1e-8);
+    const drift = materialDrift(time, speed);
+    const rings = materialRings(route.length,drift,density);
     for (const part of route.parts) {
       const from = Math.max(part.start, motion.tail), to = Math.min(part.end, motion.head);
       if (to <= from) continue;
       const points = root.RibbonInkSequence.section(part.points, from, to).map(p => ({ ...p, r: radius(p, motion, brushWidth) }));
       if (points.length < 2) continue;
+      const dye = dyeContours(routePoints,brushWidth,drift,density,rings,part);
       paint.setTransform(1, 0, 0, 1, 0, 0); paint.clearRect(0, 0, w, h);
       paint.save(); paint.scale(unit, unit); paint.translate(-motion.camera * w / unit, 0);
       const body = outline(points);
-      paint.fillStyle = colors[0]; paint.fill(body);
+      paint.fillStyle = paletteStyle(paint,colors,nextColors,0,part,route); paint.fill(body);
       paint.globalCompositeOperation = 'source-atop';
-      const vein = points.map(p => {
-        const u = (p.length - time * 24 * speed) * density;
-        const offset = (.64 * Math.sin(u / 77) + noise(u / 74, 11) * 1.35) * p.r;
-        return { ...p, x: p.x - Math.sin(p.angle) * offset, y: p.y + Math.cos(p.angle) * offset,
-          r: p.r * (.49 + .15 * Math.sin(u / 111 + 1) + .12 * noise(u / 85, 3)) };
-      });
-      paint.fillStyle = colors[1]; paint.fill(outline(vein));
-      // Broad pigment islands, not evenly spaced stripes or a hairline highlight.
-      const step = 195 / density, drift = time * 24 * speed;
-      for (let k = Math.floor((from - drift) / step) - 1; k * step + drift < to + step; k++) {
-        const center = k * step + drift + noise(k, 23) * step * .38;
-        const half = 36 + 24 * (noise(k, 41) + 1);
-        const pool = points.filter(p => Math.abs(p.length - center) < half).map(p => {
-          const side = noise(k, 13) > 0 ? .64 : -.60;
-          return { ...p, x: p.x - Math.sin(p.angle) * p.r * side, y: p.y + Math.cos(p.angle) * p.r * side,
-            r: Math.max(.001, p.r * .58 * Math.sin((p.length - center + half) / (2 * half) * Math.PI)) };
-        });
-        if (pool.length < 2) continue;
-        paint.globalAlpha = .8; paint.fillStyle = colors[[2, 4, 3][Math.abs(k) % 3]]; paint.fill(outline(pool));
-      }
+      // Keep pigment geometry independent of the reveal window. Moving head
+      // and tail clip a continuously advecting field, not newly capped decals.
+      paint.fillStyle = paletteStyle(paint,colors,nextColors,1,part,route);
+      paint.fill(dye.path,'evenodd');
+      // Give every convex dye tip a finite round radius, including the very
+      // narrow lobes created as two color regions separate. Curves alone can
+      // still form needle-like ends; a round dilation prevents those tips.
+      paint.lineJoin='round';paint.lineCap='round';paint.lineWidth=brushWidth*.09;
+      paint.strokeStyle=paint.fillStyle;paint.stroke(dye.path);
+      // Accent tones belong to the same contours, not an extra layer of marks.
+      dye.accents.forEach((path,i)=>{paint.globalAlpha=.10;paint.fillStyle=paletteStyle(paint,colors,nextColors,[2,4,3][i],part,route);paint.fill(path,'evenodd');});
       paint.restore();
       ctx.drawImage(layer, 0, 0);
       const behind = weave === 'back' || (weave !== 'front' && (weave === 'reverse' ? !part.rear : part.rear));
@@ -84,5 +220,5 @@
     depth.globalCompositeOperation = 'source-over';
     return { ink, rear, cover };
   }
-  root.RibbonInkWriting = { draw, radius };
+  root.RibbonInkWriting = { draw, radius, materialDrift, pigmentBounds, paletteStyle };
 })(typeof window === 'undefined' ? globalThis : window);

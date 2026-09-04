@@ -9,7 +9,7 @@
   const schemeStatus = $("#schemeStatus");
   const STORAGE_KEY = "me-ribbon-ink-autosave-v3";
   const EFFECT_ID = "ribbon-ink";
-  const SCHEME_VERSION = 8;
+  const SCHEME_VERSION = 10;
   const freehand = window.RibbonInkFreehand;
   let drawing = freehand.validate(null);
   let compiledDrawing = freehand.compile(drawing);
@@ -30,6 +30,8 @@
   };
 
   const inputIds = [
+    "page2PaletteMode", "page2PalettePreset", "page2InkColor1", "page2InkColor2", "page2InkColor3", "page2InkColor4", "page2InkColor5",
+    "page2TextExit", "page2EmptyHold",
     "page2Rhythm", "page2SlowPosition", "page2SlowWidth", "page2SlowStrength", "page2Finish",
     "sequenceMode", "page2Route", "page2Weave", "page2Text", "page2Font", "page2Size", "page2Spacing", "page2Color", "bridgeDuration", "page2Pop", "page2Hold",
     "drawingMode", "freehandWidth",
@@ -45,8 +47,11 @@
   const inputs = Object.fromEntries(inputIds.map((id) => [id, $(`#${id}`)]));
 
   const defaultValues = {
+    page2PaletteMode: "inherit", page2PalettePreset: "reference",
+    page2InkColor1: "#f34bd9", page2InkColor2: "#a40de4", page2InkColor3: "#ff78e9", page2InkColor4: "#7827d8", page2InkColor5: "#f33ccd",
+    page2TextExit: "24", page2EmptyHold: "20",
     page2Rhythm: "snake", page2SlowPosition: "48", page2SlowWidth: "30", page2SlowStrength: "82", page2Finish: "36",
-    sequenceMode: "single", page2Route: "loop", page2Weave: "weave", page2Text: "FLOW", page2Font: "stg:roboto-condensed", page2Size: "270", page2Spacing: "2", page2Color: "#080808", bridgeDuration: "90", page2Pop: "42", page2Hold: "125",
+    sequenceMode: "single", page2Route: "loop", page2Weave: "weave", page2Text: "FLOW", page2Font: "stg:roboto-condensed", page2Size: "270", page2Spacing: "2", page2Color: "#080808", bridgeDuration: "90", page2Pop: "42", page2Hold: "35",
     drawingMode: "time", freehandWidth: "28",
     canvasPreset: "1920x1080", canvasWidth: "1920", canvasHeight: "1080",
     textInput: "TIME", fontSelect: "stg:roboto-condensed", fontSize: "270", letterSpacing: "2",
@@ -210,8 +215,10 @@
       const bridge = Number(inputs.bridgeDuration.value) / 100;
       const finish = Number(inputs.page2Finish.value) / 100;
       const endHold = Number(inputs.page2Hold.value) / 100;
-      const page2 = finish + endHold;
-      return { write, flow, erase, hold, bridge, page2, finish, endHold, reset: 0, total: write + flow + bridge + page2 };
+      const textExit = Number(inputs.page2TextExit.value) / 100;
+      const emptyHold = Number(inputs.page2EmptyHold.value) / 100;
+      const page2 = finish + endHold + textExit + emptyHold;
+      return { write, flow, erase, hold, bridge, page2, finish, endHold, textExit, emptyHold, reset: 0, total: write + flow + bridge + page2 };
     }
     return { write, flow, erase, hold, total: write + flow + erase + hold };
   }
@@ -225,7 +232,10 @@
       const elapsed = time - span.write - span.flow;
       if (elapsed < span.bridge) return { name: "bridge", progress: elapsed / span.bridge, time, span };
       if (elapsed < span.bridge + span.finish) return { name: "page2", progress: (elapsed - span.bridge) / span.finish, time, span };
-      return { name: "settled", progress: (elapsed - span.bridge - span.finish) / span.endHold, time, span };
+      const afterInk = elapsed - span.bridge - span.finish;
+      if (afterInk < span.endHold) return { name: "settled", progress: afterInk / span.endHold, time, span };
+      if (afterInk < span.endHold + span.textExit) return { name: "textExit", progress: (afterInk - span.endHold) / span.textExit, time, span };
+      return { name: "empty", progress: (afterInk - span.endHold - span.textExit) / Math.max(.001, span.emptyHold), time, span };
     }
     if (time < span.write + span.flow + span.erase) return { name: "erase", progress: (time - span.write - span.flow) / Math.max(.001, span.erase), time, span };
     return { name: "hold", progress: (time - span.write - span.flow - span.erase) / Math.max(.001, span.hold), time, span };
@@ -566,6 +576,10 @@
   function paletteColors() {
     return [1, 2, 3, 4, 5].map((index) => inputs[`inkColor${index}`].value);
   }
+  function page2PaletteColors() {
+    return inputs.page2PaletteMode.value === "inherit" ? paletteColors()
+      : [1, 2, 3, 4, 5].map(index => inputs[`page2InkColor${index}`].value);
+  }
 
   function sourceToLogical(x, y) {
     return { x: x / MOTHER_FRAME.width * 720, y: y / MOTHER_FRAME.height * 405 };
@@ -829,7 +843,7 @@
     const centerX = width * Number(inputs.positionX.value) / 100;
     const centerY = height * Number(inputs.positionY.value) / 100;
     const phase = phaseAt(rawTime);
-    const sequenceActive = twoPages() && ["bridge", "page2", "settled"].includes(phase.name);
+    const sequenceActive = twoPages() && ["bridge", "page2", "settled", "textExit", "empty"].includes(phase.name);
     const elapsed = phase.time - phase.span.write - phase.span.flow;
     const visible = sequenceActive
       ? { start: 0, end: 1, phase: { ...phase, name: phase.name === "reset" ? "hold" : "flow", progress: 1 + elapsed / phase.span.flow } }
@@ -870,9 +884,12 @@
       }
       const motion = window.RibbonInkSequence.evaluate(elapsed, phase.span.bridge, Number(inputs.page2Pop.value) / 100, sequenceRoute, phase.span.page2,
         window.RibbonInkSequence.settings(Object.fromEntries(Object.entries(inputs).map(([key, input]) => [key, input.value]))));
-      if (phase.name === "settled") {
+      if (["settled", "textExit", "empty"].includes(phase.name)) {
         const letters = secondPageFrame(width, height, { ...motion, camera: 1, scale: 1 }, elapsed, phase.span);
-        context.drawImage(letters.base, 0, 0);
+        const exit = window.RibbonInkSequence.textExit(phase.name === "settled" ? 0 : phase.name === "empty" ? 1 : phase.progress);
+        context.save(); context.globalAlpha = exit.alpha;
+        context.translate(width * (.5 + exit.dx), height * .62); context.scale(exit.sx, exit.sy);
+        context.drawImage(letters.base, -width * .5, -height * .62); context.restore();
       } else {
         if (motion.camera < 1) {
           context.save(); context.translate(-motion.camera * width, 0); drawTextLayer(false); context.restore();
@@ -881,7 +898,7 @@
         context.drawImage(letters.base, 0, 0);
         const ribbon = window.RibbonInkWriting.draw(sequenceRoute, motion, width, height, unit,
           74 * Number(inputs.brushWidth.value) / 100, paletteColors(), phase.time,
-          Number(inputs.textureSpeed.value) / 100, Number(inputs.textureDensity.value) / 100, inputs.page2Weave.value);
+          Number(inputs.textureSpeed.value) / 100, Number(inputs.textureDensity.value) / 100, inputs.page2Weave.value, page2PaletteColors());
         context.drawImage(ribbon.ink, 0, 0);
         if (motion.camera < 1) {
           // Existing ink is stationary in the world: the ONLY transform is the camera.
@@ -962,8 +979,10 @@
       { id: "flow", label: "首页流动", duration: span.flow, color: PHASE_COLORS[1] },
       { id: "bridge", label: "续写·弹出", duration: span.bridge, color: PHASE_COLORS[2] },
       { id: "page2", label: "收笔轻弹", duration: span.finish, color: PHASE_COLORS[3] },
-      { id: "settled", label: "文字停留", duration: span.endHold, color: "#777780" }
-    ];
+      { id: "settled", label: "文字停留", duration: span.endHold, color: "#777780" },
+      { id: "textExit", label: "文字退场", duration: span.textExit, color: "#9e499f" },
+      { id: "empty", label: "结束留白", duration: span.emptyHold, color: "#657476" }
+    ].filter(phase => phase.duration > 0);
     return [
       { id: "write", label: "写入", duration: span.write, color: PHASE_COLORS[0] },
       { id: "flow", label: "流动", duration: span.flow, color: PHASE_COLORS[1] },
@@ -1002,7 +1021,7 @@
         button.addEventListener('click', () => {
           if (selectedGlyphs.has(g.id)) selectedGlyphs.delete(g.id); else selectedGlyphs.add(g.id);
           syncGlyphEditor();
-          setPaused(true); setTime(timing().write + timing().flow + timing().bridge + timing().page2 - .01);
+          setPaused(true); setTime(secondPageRestTime());
           $("#glyphStatus").textContent = '已暂停在完整文字；点击“暂停看接触”检查穿插和动作。';
         });
         list.append(button);
@@ -1029,7 +1048,7 @@
     const events = page2Glyphs.flatMap((g, i) => selectedGlyphs.has(g.id) ? lastGlyphFrame.events[i] : []);
     const event = events.sort((a, b) => a.start - b.start)[0];
     if (!event) {
-      setTime(start + span.bridge + span.page2 - .01);
+      setTime(secondPageRestTime());
       $("#glyphStatus").textContent = '所选字没有被笔锋碰到，可换路线、字体或字号后再看。'; return;
     }
     setTime(start + (play ? Math.max(0, event.start - .08) : Math.min(event.release - .01, event.start + .13)));
@@ -1054,9 +1073,12 @@
     updateDrawingUI();
     $("#sequenceCard").hidden = inputs.drawingMode.value === "freehand";
     $("#secondPageTools").hidden = !twoPages();
+    $("#page2PaletteTools").hidden = inputs.page2PaletteMode.value !== "custom";
     document.body.classList.toggle("is-two-pages", twoPages());
     ["eraseDuration", "holdDuration"].forEach(id => { inputs[id].closest("label").hidden = twoPages(); });
     const map = {
+      page2TextExitOut: `${(Number(inputs.page2TextExit.value) / 100).toFixed(2)} 秒`,
+      page2EmptyHoldOut: `${(Number(inputs.page2EmptyHold.value) / 100).toFixed(2)} 秒`,
       page2SlowPositionOut: `${inputs.page2SlowPosition.value}%`,
       page2SlowWidthOut: `${inputs.page2SlowWidth.value}%`,
       page2SlowStrengthOut: `${inputs.page2SlowStrength.value}%`,
@@ -1193,7 +1215,7 @@
     ["textInput", "fontSelect", "fontSize", "letterSpacing", "textColor", "brushScale", "brushWidth", "positionX", "positionY", "dotScale", "dotDelay", "letterImpact"].forEach(id => {
       inputs[id].closest("label").hidden = enabled;
     });
-    $("#textTitle").textContent = enabled ? "笔迹与颜色" : twoPages() ? "第一页文字与共用配色" : "文字与颜色";
+    $("#textTitle").textContent = enabled ? "笔迹与颜色" : twoPages() ? "第一页文字与配色" : "文字与颜色";
     inputs.holdDuration.closest("label").firstChild.textContent = enabled ? "留白停留 " : "底字停留 ";
     $("#drawingHint").hidden = !enabled || drawing.strokes.length > 0;
     $("#undoInk").disabled = !drawing.strokes.length;
@@ -1406,6 +1428,10 @@
       }
       if (key === "palettePreset") applyPalettePreset(input.value);
       if (/^inkColor[1-5]$/.test(key)) inputs.palettePreset.value = "custom";
+      if (key === "page2PalettePreset" && PALETTES[input.value]) {
+        PALETTES[input.value].forEach((color,index) => { inputs[`page2InkColor${index+1}`].value = color; });
+      }
+      if (/^page2InkColor[1-5]$/.test(key)) inputs.page2PalettePreset.value = "custom";
       updateOutputs();
       if (["fontSelect", "page2Font"].includes(key)) {
         ensurePageFonts().then(() => { textLayerKeys.fill(""); renderPreview(); });
@@ -1418,15 +1444,29 @@
         setTime(timing().write + timing().flow); setPaused(false);
       }
       if (twoPages() && key === "page2Finish") playEnding();
-      if (twoPages() && ["page2Text", "page2Font", "page2Size", "page2Spacing", "page2Color", "page2Hold"].includes(key)) {
-        setPaused(true); setTime(timing().write + timing().flow + timing().bridge + timing().page2 - .05);
+      if (twoPages() && ["page2Text", "page2Font", "page2Size", "page2Spacing", "page2Color"].includes(key)) {
+        setPaused(true); setTime(secondPageRestTime());
       }
+      if (twoPages() && /^(page2Palette|page2InkColor)/.test(key)) {
+        setPaused(true); setTime(timing().write + timing().flow + timing().bridge * .84);
+      }
+      if (twoPages() && ["page2TextExit", "page2Hold", "page2EmptyHold"].includes(key)) playEnding();
       if (["canvasPreset", "canvasWidth", "canvasHeight"].includes(key)) updateStageLayout();
       if (drawingEnabled && inputs.drawingMode.value === "freehand") showWholeDrawing();
       queueAutosave();
     };
     input.addEventListener("input", handler);
     input.addEventListener("change", handler);
+  });
+
+  $("#copyPage1Palette").addEventListener("click", () => {
+    paletteColors().forEach((color,index) => { inputs[`page2InkColor${index+1}`].value = color; });
+    inputs.page2PalettePreset.value = inputs.palettePreset.value;
+    updateOutputs(); queueAutosave();
+    setPaused(true); setTime(timing().write + timing().flow + timing().bridge * .84);
+  });
+  $("#previewPage2Palette").addEventListener("click", () => {
+    setTime(timing().write + timing().flow - .15); setPaused(false);
   });
 
   $("#backgroundUpload").addEventListener("change", (event) => {
@@ -1490,9 +1530,10 @@
 
   $("#pauseButton").addEventListener("click", () => setPaused(!state.paused));
   function playEnding() { setPaused(true); setTime(timing().write + timing().flow + timing().bridge - .08); setPaused(false); }
+  function secondPageRestTime() { const s = timing(); return s.write + s.flow + s.bridge + s.finish + Math.min(.1, s.endHold / 2); }
   $("#previewEnding").addEventListener("click", playEnding);
   $("#editFirstPage").addEventListener("click", () => { setPaused(true); setTime(0); inputs.textInput.focus(); });
-  $("#editSecondPage").addEventListener("click", () => { setPaused(true); setTime(timing().write + timing().flow + timing().bridge + timing().page2 - .05); inputs.page2Text.focus(); });
+  $("#editSecondPage").addEventListener("click", () => { setPaused(true); setTime(secondPageRestTime()); inputs.page2Text.focus(); });
   $("#stagePauseButton").addEventListener("click", () => setPaused(!state.paused));
   $("#replayButton").addEventListener("click", replay);
   $("#stageReplayButton").addEventListener("click", replay);

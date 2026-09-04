@@ -97,6 +97,20 @@
         <div id="secondPageTools" hidden data-page-id="second">
           <div class="ink-button-row"><button class="ink-button" id="editFirstPage" type="button">第一页 · 暂停修改</button><button class="ink-button" id="editSecondPage" type="button">第二页 · 暂停修改</button></div>
           <h3 class="ink-page-heading">第二页</h3>
+          <label class="ink-field">第二页笔迹配色<select id="page2PaletteMode"><option value="inherit">沿用首页配色</option><option value="custom">独立配色</option></select></label>
+          <div id="page2PaletteTools" hidden>
+            <label class="ink-field">第二页配色预设<select id="page2PalettePreset"><option value="reference">粉紫流彩</option><option value="apple">缤纷彩色</option><option value="ocean">海洋蓝绿</option><option value="sunset">日落暖色</option><option value="custom">自定义</option></select></label>
+            <div class="ink-color-grid">
+              <label>第二页主色<input id="page2InkColor1" type="color" value="#f34bd9"></label>
+              <label>第二页墨纹<input id="page2InkColor2" type="color" value="#a40de4"></label>
+              <label>第二页辅色一<input id="page2InkColor3" type="color" value="#ff78e9"></label>
+              <label>第二页辅色二<input id="page2InkColor4" type="color" value="#7827d8"></label>
+              <label>第二页辅色三<input id="page2InkColor5" type="color" value="#f33ccd"></label>
+            </div>
+            <button class="ink-button" id="copyPage1Palette" type="button">复制首页配色</button>
+            <p class="ink-help">新颜色随跨页续写逐步带入，到达第二页文字前完成换色。原有笔迹不会整条突然变色。</p>
+          </div>
+          <button class="ink-button" id="previewPage2Palette" type="button">播放跨页换色</button>
           <label class="ink-field">第二页笔迹<select id="page2Route"><option value="loop">回环穿行</option><option value="arc">弧线绕行</option></select></label>
           <label class="ink-field">文字穿插<select id="page2Weave"><option value="weave">前后交错</option><option value="reverse">反向交错</option><option value="front">笔迹全部在前</option><option value="back">笔迹全部在后</option></select></label>
           <label class="ink-field">第二页文字<input id="page2Text" type="text" value="FLOW" maxlength="28" autocomplete="off"></label>
@@ -132,11 +146,13 @@
             <label class="ink-range">慢动作力度 <output id="page2SlowStrengthOut">82%</output><input id="page2SlowStrength" type="range" min="0" max="100" value="82"></label>
             <label class="ink-range">收笔轻弹 <output id="page2FinishOut">0.36 秒</output><input id="page2Finish" type="range" min="28" max="50" value="36"></label>
             <button class="ink-button" id="previewEnding" type="button">播放收笔结尾</button>
-            <p class="ink-help">短顿后加速收走笔尾，文字回弹落稳后留下。预览循环会在停留结束后重新开始。</p>
+            <p class="ink-help">先收走笔迹、回弹落稳，再按下方停留与退场时间让文字跟着消失。</p>
           </details>
           <label class="ink-range">整字弹出 <output id="page2PopOut">0.42 秒</output><input id="page2Pop" type="range" min="20" max="65" value="42"></label>
-          <label class="ink-range">结束文字停留 <output id="page2HoldOut">1.25 秒</output><input id="page2Hold" type="range" min="30" max="250" value="125"></label>
-          <p class="ink-help">笔锋沿新路线继续书写，经过中心时整字弹出；已写下的笔迹不会整体搬动。穿插按实际字形合成。两页共用上方配色、粗细与背景。</p>
+          <label class="ink-range">笔迹消失后，文字停留 <output id="page2HoldOut">0.35 秒</output><input id="page2Hold" type="range" min="0" max="250" value="35"></label>
+          <label class="ink-range">文字消失时长 <output id="page2TextExitOut">0.24 秒</output><input id="page2TextExit" type="range" min="10" max="80" value="24"></label>
+          <label class="ink-range">结束留白 <output id="page2EmptyHoldOut">0.20 秒</output><input id="page2EmptyHold" type="range" min="0" max="150" value="20"></label>
+          <p class="ink-help">笔锋沿新路线继续书写，经过中心时整字弹出；已写下的笔迹不会整体搬动。穿插按实际字形合成。两页共用粗细与背景，笔迹配色可独立设置。</p>
         </div>
       </section>
 
@@ -271,9 +287,9 @@
   <script src="js/continuation-gif.js?v=20260901-1"></script>
   <script src="js/h264-mp4-encoder.web.js?v=20260901-1"></script>
   <script src="ribbonink-freehand.js?v=20260904-5"></script>
-  <script src="ribbonink-sequence.js?v=20260905-13"></script>
-  <script src="ribbonink-writing.js?v=20260905-12"></script>
+  <script src="ribbonink-sequence.js?v=20260905-15"></script>
+  <script src="ribbonink-writing.js?v=20260905-15"></script>
   <script src="ribbonink-glyphs.js?v=20260905-13"></script>
-  <script src="ribbonink.js?v=20260905-13"></script>
+  <script src="ribbonink.js?v=20260905-15"></script>
 </body>
 </html>

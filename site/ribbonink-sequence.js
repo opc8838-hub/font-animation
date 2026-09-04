@@ -105,5 +105,9 @@
     }
     return result;
   }
-  root.RibbonInkSequence = { compile, evaluate, progress, section, settings, distances, releaseAt };
+  function textExit(progress) {
+    const q = clamp(progress), collapse = q * q * q;
+    return { sx: 1 + .08 * Math.sin(Math.PI * q), sy: 1 - .94 * collapse, dx: .075 * q * q, alpha: 1 - collapse };
+  }
+  root.RibbonInkSequence = { compile, evaluate, progress, section, settings, distances, releaseAt, textExit };
 })(typeof window === 'undefined' ? globalThis : window);
