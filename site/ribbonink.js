@@ -50,10 +50,10 @@
 
   const defaultValues = {
     page1Weave: "weave", page1Choreo: "auto",
-    singleTextExit: "20", singleEmptyHold: "20",
+    singleTextExit: "16", singleEmptyHold: "20",
     page2PaletteMode: "inherit", page2PalettePreset: "reference",
     page2InkColor1: "#f34bd9", page2InkColor2: "#a40de4", page2InkColor3: "#ff78e9", page2InkColor4: "#7827d8", page2InkColor5: "#f33ccd",
-    page2TextExit: "20", page2EmptyHold: "20",
+    page2TextExit: "16", page2EmptyHold: "20",
     page2Rhythm: "snake", page2SlowPosition: "48", page2SlowWidth: "30", page2SlowStrength: "82", page2Finish: "36",
     sequenceMode: "single", page2Route: "loop", page2Weave: "weave", page2Text: "FLOW", page2Font: "stg:roboto-condensed", page2Size: "270", page2Spacing: "2", page2Color: "#080808", bridgeDuration: "90", page2Pop: "42", page2Hold: "35",
     drawingMode: "time", freehandWidth: "28",
