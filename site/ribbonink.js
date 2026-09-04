@@ -48,7 +48,7 @@
   const inputs = Object.fromEntries(inputIds.map((id) => [id, $(`#${id}`)]));
 
   const defaultValues = {
-    singleTextExit: "24", singleEmptyHold: "20",
+    singleTextExit: "34", singleEmptyHold: "20",
     page2PaletteMode: "inherit", page2PalettePreset: "reference",
     page2InkColor1: "#f34bd9", page2InkColor2: "#a40de4", page2InkColor3: "#ff78e9", page2InkColor4: "#7827d8", page2InkColor5: "#f33ccd",
     page2TextExit: "24", page2EmptyHold: "20",
