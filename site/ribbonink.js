@@ -886,7 +886,7 @@
     };
     if (!twoPages() && ["singleSettled", "singleTextExit", "singleEmpty"].includes(phase.name)) {
       if (phase.name !== "singleEmpty") {
-        const exit = window.RibbonInkSequence.textExit(phase.name === "singleSettled" ? 0 : phase.progress);
+        const exit = window.RibbonInkSequence.singleTextExit(phase.name === "singleSettled" ? 0 : phase.progress);
         if (singleExitCanvas.width !== Math.ceil(width) || singleExitCanvas.height !== Math.ceil(height)) {
           singleExitCanvas.width = Math.ceil(width); singleExitCanvas.height = Math.ceil(height);
         }
@@ -894,7 +894,7 @@
         composed.setTransform(1, 0, 0, 1, 0, 0); composed.clearRect(0, 0, width, height);
         drawTextLayer(false, composed); drawTextLayer(true, composed);
         context.save(); context.globalAlpha = exit.alpha;
-        context.translate(centerX + width * exit.dx, centerY); context.scale(exit.sx, exit.sy); context.translate(-centerX, -centerY);
+        context.translate(centerX + width * exit.dx, centerY + height * exit.dy); context.scale(exit.sx, exit.sy); context.translate(-centerX, -centerY);
         context.drawImage(singleExitCanvas, 0, 0); context.restore();
       }
       if (target === canvas) updateTimelinePlayhead(phase);

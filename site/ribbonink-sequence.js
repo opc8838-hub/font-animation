@@ -130,5 +130,21 @@
     const q = clamp(progress), collapse = q * q * q;
     return { sx: 1 + .08 * Math.sin(Math.PI * q), sy: 1 - .94 * collapse, dx: .075 * q * q, alpha: 1 - collapse };
   }
-  root.RibbonInkSequence = { compile, evaluate, progress, section, settings, distances, releaseAt, textExit };
+  function singleTextExit(progress) {
+    const q = clamp(progress);
+    let sx, sy, dy;
+    if (q < .28) {
+      const t = smooth(q / .28);
+      sx = mix(1, 1.025, t); sy = mix(1, .84, t); dy = mix(0, .016, t);
+    } else if (q < .48) {
+      const t = smooth((q - .28) / .20);
+      sx = mix(1.025, .99, t); sy = mix(.84, .95, t); dy = mix(.016, .006, t);
+    } else {
+      const t = smooth((q - .48) / .52);
+      sx = mix(.99, .90, t); sy = mix(.95, .06, t); dy = mix(.006, .014, t);
+    }
+    const fade = smooth((q - .24) / .76);
+    return { sx, sy, dx: 0, dy, alpha: 1 - fade * fade };
+  }
+  root.RibbonInkSequence = { compile, evaluate, progress, section, settings, distances, releaseAt, textExit, singleTextExit };
 })(typeof window === 'undefined' ? globalThis : window);
