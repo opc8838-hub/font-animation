@@ -137,9 +137,9 @@ main { overflow: hidden; }
   background: #f5f5f5;
 }
 .effect-card[data-effect="continuation"] video.effect-loop {
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
-  transform: scale(1.14);
+  transform: none;
 }
 
 .effect-card.has-live-preview {

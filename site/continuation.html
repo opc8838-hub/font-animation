@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="续句：前半句预备位移后接入后半句，支持逐字扫入与图标续接。">
+  <meta name="description" content="续句：文字与图标整体居中，支持逐字扫入、弹出与图标续接。">
   <title>续句 Continuation | ME Motion Studio</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="me-motion-editor.css?v=20260828-1">
@@ -49,7 +49,7 @@
       <section class="motion-section">
         <p class="section-label">整体动效</p>
         <div class="controls-grid">
-          <label>预备比例 <output id="anticipationOut">25%</output><input id="anticipation" type="range" min="10" max="45" value="25"></label><label>统一前后句间距 <output id="wordGapOut">8</output><input id="wordGap" type="range" min="0" max="48" value="8"></label>
+          <label>整体布局 <output id="anticipationOut">居中锁定</output><input id="anticipation" type="range" min="10" max="45" value="25" hidden disabled><small>文字与图标按可见范围整体居中。</small></label><label>统一前后句间距 <output id="wordGapOut">8</output><input id="wordGap" type="range" min="0" max="48" value="8"></label>
           <label>收束起点 <output id="settleScaleOut">110%</output><input id="settleScale" type="range" min="100" max="125" value="110"></label>
           <label>播放速度 <output id="speedOut">1.00×</output><input id="speed" type="range" min="50" max="160" value="100"></label>
         </div>
@@ -80,6 +80,6 @@
 
   <aside class="me-asset-drawer" id="assetDrawer" hidden aria-label="单个图标编辑器"><header><div><small>单独编辑</small><strong id="drawerAssetName">图标</strong></div><button id="closeAssetDrawer" type="button" aria-label="关闭">×</button></header><div class="me-asset-editor"><label>所属行<select id="assetRowAssignment"></select></label><label>插入位置<select id="assetInsertionPoint"></select></label><label>图文间距 <output id="assetSpacingOut">6</output><input id="assetSpacing" type="range" min="0" max="96" step="1" value="6"></label><label>大小 <output id="assetSizeOut">100%</output><input id="assetSize" type="range" min="25" max="250" value="100"></label><label>透明度 <output id="assetOpacityOut">100%</output><input id="assetOpacity" type="range" min="0" max="100" value="100"></label><label>水平偏移 <output id="assetXOut">0</output><input id="assetX" type="range" min="-160" max="160" value="0"></label><label>垂直偏移 <output id="assetYOut">0</output><input id="assetY" type="range" min="-160" max="160" value="0"></label><label>旋转 <output id="assetRotationOut">0°</output><input id="assetRotation" type="range" min="-180" max="180" value="0"></label></div></aside>
 
-  <script src="shared-font-library.js?v=20260824-2"></script><script src="shared-icon-library.js?v=20260902-1"></script><script src="js/continuation-gif.js"></script><script src="js/h264-mp4-encoder.web.js"></script><script src="continuation.js?v=20260829-editor25"></script><script src="me-motion-editor.js?v=20260828-1"></script><script src="stg-cn.js?v=20260828-1"></script>
+  <script src="shared-font-library.js?v=20260824-2"></script><script src="shared-icon-library.js?v=20260902-1"></script><script src="js/continuation-gif.js"></script><script src="js/h264-mp4-encoder.web.js"></script><script src="continuation.js?v=20260904-center1"></script><script src="me-motion-editor.js?v=20260828-1"></script><script src="stg-cn.js?v=20260828-1"></script>
 </body>
 </html>

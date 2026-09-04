@@ -72,7 +72,6 @@
   const easeOut = (value) => 1 - Math.pow(1 - clamp01(value), 3);
   const easeOutBack = (value, overshoot) => { const progress = clamp01(value); if (overshoot <= 0) return easeOut(progress); const shifted = progress - 1; return 1 + (overshoot + 1) * Math.pow(shifted, 3) + overshoot * Math.pow(shifted, 2); };
   const easeOutExpo = (value) => value >= 1 ? 1 : 1 - Math.pow(2, -10 * clamp01(value));
-  const easeIn = (value) => Math.pow(clamp01(value), 3);
   const easeSettle = (value) => 1 - Math.pow(1 - clamp01(value), 2);
 
   const sharedIcons = window.STGIconLibrary;
@@ -338,7 +337,7 @@
       motionOptions.append(leadIntroLabel, revealLabel);
       const timingOptions = document.createElement("details");
       timingOptions.className = "pair-timing-options";
-      timingOptions.innerHTML = `<summary><span>本行动效节奏 · 独立</span><b class="pair-timing-summary"></b></summary><div class="pair-timing-grid"><label><span>前半句入场 <output class="pair-intro-duration-out"></output></span><input class="pair-intro-duration" type="range" min="50" max="1000" step="10"></label><label><span>前半句停顿 <output class="pair-root-hold-out"></output></span><input class="pair-root-hold" type="range" min="0" max="1500" step="10"></label><label><span>预备左移 <output class="pair-anticipation-duration-out"></output></span><input class="pair-anticipation-duration" type="range" min="30" max="800" step="10"></label><label><span class="pair-reveal-duration-label">后半句接入</span> <output class="pair-reveal-duration-out"></output><input class="pair-reveal-duration" type="range" min="50" max="3000" step="10"></label><label><span>组合结束停留 <output class="pair-settle-duration-out"></output></span><input class="pair-settle-duration" type="range" min="100" max="1500" step="10"></label><label class="pair-pop-only"><span>弹出距离 <output class="pair-pop-distance-out"></output></span><input class="pair-pop-distance" type="range" min="0" max="220" step="1"></label><label class="pair-pop-only"><span>弹性感 <output class="pair-pop-bounce-out"></output></span><input class="pair-pop-bounce" type="range" min="0" max="100" step="1"></label></div></details>`;
+      timingOptions.innerHTML = `<summary><span>本行动效节奏 · 独立</span><b class="pair-timing-summary"></b></summary><div class="pair-timing-grid"><label><span>前半句入场 <output class="pair-intro-duration-out"></output></span><input class="pair-intro-duration" type="range" min="50" max="1000" step="10"></label><label><span>前半句停顿 <output class="pair-root-hold-out"></output></span><input class="pair-root-hold" type="range" min="0" max="1500" step="10"></label><label><span>居中预备 <output class="pair-anticipation-duration-out"></output></span><input class="pair-anticipation-duration" type="range" min="30" max="800" step="10"></label><label><span class="pair-reveal-duration-label">后半句接入</span> <output class="pair-reveal-duration-out"></output><input class="pair-reveal-duration" type="range" min="50" max="3000" step="10"></label><label><span>组合结束停留 <output class="pair-settle-duration-out"></output></span><input class="pair-settle-duration" type="range" min="100" max="1500" step="10"></label><label class="pair-pop-only"><span>弹出距离 <output class="pair-pop-distance-out"></output></span><input class="pair-pop-distance" type="range" min="0" max="220" step="1"></label><label class="pair-pop-only"><span>弹性感 <output class="pair-pop-bounce-out"></output></span><input class="pair-pop-bounce" type="range" min="0" max="100" step="1"></label></div></details>`;
       row.querySelector(".pair-sweep-options").before(timingOptions);
       const backgroundOptions = document.createElement("details");
       backgroundOptions.className = "pair-background-options";
@@ -697,7 +696,7 @@
   function updateOutputs() {
     const values = {
       leadFontSizeOut: inputs.leadFontSize.value, suffixFontSizeOut: inputs.suffixFontSize.value,
-      anticipationOut: `${inputs.anticipation.value}%`, wordGapOut: inputs.wordGap.value,
+      anticipationOut: "居中锁定", wordGapOut: inputs.wordGap.value,
       settleScaleOut: `${inputs.settleScale.value}%`, speedOut: `${(Number(inputs.speed.value) / 100).toFixed(2)}×`
     };
     Object.entries(values).forEach(([id, value]) => { const output = $(`#${id}`); if (output) output.textContent = value; });
@@ -707,7 +706,7 @@
   const phaseDefinitions = [
     { key: "intro", index: "01", label: "主词入场", className: "is-intro" },
     { key: "hold", index: "02", label: "主词停顿", className: "is-hold" },
-    { key: "anticipation", index: "03", label: "预备左移", className: "is-contact" },
+    { key: "anticipation", index: "03", label: "居中预备", className: "is-contact" },
     { key: "reveal", index: "04", label: "后句接入", className: "is-color" },
     { key: "phraseHold", index: "05", label: "本页停留", className: "is-replace" }
   ];
@@ -1185,6 +1184,80 @@
     return { items, width };
   }
 
+  // Measure ink, not the transparent rectangle around an icon. Bitmap/GIF frames
+  // are cached by identity; vectors use the shared renderer at a fixed resolution
+  // so preview and export derive the same normalized bounds.
+  const imageBoundsCache = new WeakMap();
+  const boundsCanvas = document.createElement("canvas");
+  boundsCanvas.width = boundsCanvas.height = 512;
+  const boundsContext = boundsCanvas.getContext("2d", { willReadFrequently: true });
+  function assetInkBounds(asset, image, time) {
+    if (asset.kind !== "vector" && !image) return null;
+    const rotation = Number(asset.rotation) || 0;
+    const cached = asset.kind !== "vector" ? imageBoundsCache.get(image) : null;
+    if (cached?.has(rotation)) return cached.get(rotation);
+    boundsContext.clearRect(0, 0, 512, 512);
+    boundsContext.save();
+    boundsContext.translate(256, 256);
+    boundsContext.rotate(rotation * Math.PI / 180);
+    if (asset.kind === "vector") sharedIcons.drawVector(boundsContext, asset, 320, time);
+    else {
+      const width = image.width || image.naturalWidth;
+      const height = image.height || image.naturalHeight;
+      const fit = 320 / Math.max(width, height, 1);
+      boundsContext.drawImage(image, -width * fit / 2, -height * fit / 2, width * fit, height * fit);
+    }
+    boundsContext.restore();
+    let result;
+    try {
+      const pixels = boundsContext.getImageData(0, 0, 512, 512).data;
+      let left = 512, top = 512, right = -1, bottom = -1;
+      for (let y = 0; y < 512; y += 1) for (let x = 0; x < 512; x += 1) {
+        if (pixels[(y * 512 + x) * 4 + 3] <= 2) continue;
+        left = Math.min(left, x); right = Math.max(right, x + 1);
+        top = Math.min(top, y); bottom = Math.max(bottom, y + 1);
+      }
+      result = right < 0 ? null : { left: (left - 256) / 320, right: (right - 256) / 320, top: (top - 256) / 320, bottom: (bottom - 256) / 320 };
+    } catch (_) {
+      // A cross-origin image may be drawable but not readable.
+      result = { left: -.5, right: .5, top: -.5, bottom: .5 };
+      boundsCanvas.width = 512;
+    }
+    if (asset.kind !== "vector") {
+      const rotations = cached || new Map();
+      rotations.set(rotation, result);
+      imageBoundsCache.set(image, rotations);
+    }
+    return result;
+  }
+
+  function compositionBounds(context, items, preset, outputScale, time) {
+    const bounds = { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity };
+    const include = (x, y) => {
+      bounds.left = Math.min(bounds.left, x); bounds.right = Math.max(bounds.right, x);
+      bounds.top = Math.min(bounds.top, y); bounds.bottom = Math.max(bounds.bottom, y);
+    };
+    items.forEach((item) => {
+      if (item.alpha < 1 / 255) return;
+      if (item.type === "character") {
+        canvasFont(context, preset, item.weight, item.fontSize);
+        const ink = context.measureText(item.character);
+        if (!ink.actualBoundingBoxLeft && !ink.actualBoundingBoxRight) return;
+        include(item.x - ink.actualBoundingBoxLeft * item.scale, -ink.actualBoundingBoxAscent * item.scale);
+        include(item.x + ink.actualBoundingBoxRight * item.scale, ink.actualBoundingBoxDescent * item.scale);
+      } else {
+        if (Number(item.asset.opacity) <= 0) return;
+        const ink = assetInkBounds(item.asset, item.image, time);
+        if (!ink) return;
+        const centerX = item.width / 2 + Number(item.asset.x) * outputScale;
+        const centerY = Number(item.asset.y) * outputScale;
+        include(item.x + (centerX + ink.left * item.width) * item.scale, (centerY + ink.top * item.width) * item.scale);
+        include(item.x + (centerX + ink.right * item.width) * item.scale, (centerY + ink.bottom * item.width) * item.scale);
+      }
+    });
+    return Number.isFinite(bounds.left) ? bounds : null;
+  }
+
   function drawBackgroundLayer(context, width, height, color, media, image, alpha = 1) {
     if (alpha <= 0) return;
     context.save();
@@ -1261,9 +1334,7 @@
     const settleStartScale = Number(inputs.settleScale.value) / 100;
     const leadFit = Math.min(1, availableWidth / Math.max(1, leadWidth * settleStartScale));
     const phraseFit = Math.min(1, availableWidth / Math.max(1, fullWidth * settleStartScale));
-    const anticipationStart = timing.intro + timing.hold;
     let groupScale = leadFit;
-    let groupX = 0;
     let leadAlpha = 1;
     let assembled = local >= timing.revealAt;
     if (!assembled) {
@@ -1276,27 +1347,17 @@
         if (pairIndex === 0) leadAlpha = introProgress;
         else groupScale = leadFit * (settleStartScale + (1 - settleStartScale) * introProgress);
       }
-      if (local >= anticipationStart) groupX = -suffixWidth * Number(inputs.anticipation.value) / 100 * easeIn((local - anticipationStart) / timing.anticipation);
     } else {
       const settleProgress = easeSettle((local - timing.revealAt) / timing.settle);
       groupScale = phraseFit * (settleStartScale + (1 - settleStartScale) * settleProgress);
     }
 
-    context.save();
-    context.translate(anchorX + groupX * groupScale, anchorY);
-    context.scale(groupScale, groupScale);
     const leadX = assembled ? -fullWidth / 2 : -leadWidth / 2;
-    context.fillStyle = leadColor;
-    context.globalAlpha = leadAlpha;
-    canvasFont(context, preset, inputs.leadFontWeight.value, leadSize);
+    const drawItems = [];
     let leadCursor = leadX;
     leadLayout.items.forEach((item) => {
       leadCursor += item.gapBefore;
-      if (item.type === "character") {
-        context.globalAlpha = leadAlpha;
-        context.fillStyle = isPunctuation(item.character) ? punctuationColor : leadColor;
-        context.fillText(item.character, leadCursor, 0);
-      } else drawAsset(context, item.asset, assetImageAt(item.asset, realSeconds), leadCursor + item.width / 2, 0, item.width, outputScale / groupScale, leadAlpha, realSeconds);
+      drawItems.push({ ...item, x: leadCursor, scale: 1, alpha: leadAlpha, fontSize: leadSize, weight: inputs.leadFontWeight.value, color: isPunctuation(item.character) ? punctuationColor : leadColor, image: item.type === "asset" ? assetImageAt(item.asset, realSeconds) : null });
       leadCursor += item.width;
     });
 
@@ -1309,25 +1370,42 @@
       const popScale = revealStyle === "rightPop" ? .88 + .12 * popEase : 1;
       const revealUnits = suffixLayout.items.length;
       const stagger = revealUnits > 1 ? Math.max(0, timing.reveal - .045) / (revealUnits - 1) : 0;
-      context.save();
-      context.translate(leadX + leadWidth + gap + popOffset, 0);
-      context.scale(popScale, popScale);
       let cursor = 0;
-      canvasFont(context, preset, inputs.suffixFontWeight.value, suffixSize);
       suffixLayout.items.forEach((item, index) => {
         cursor += item.gapBefore;
         const unitElapsed = revealElapsed - index * stagger;
         const alpha = revealStyle === "type" ? easeOut(unitElapsed / .045) : wholeAlpha;
-        if (item.type === "character") {
-          const finalColor = isPunctuation(item.character) ? punctuationColor : suffixColor;
-          const sweepDuration = Number(sweepDurationMs) / 1000;
-          const sweepActive = revealStyle === "type" && sweepEnabled && unitElapsed >= 0 && unitElapsed < sweepDuration;
-          if (alpha > 0) { context.globalAlpha = alpha; context.fillStyle = sweepActive ? normalizeColor(sweepColors[item.characterIndex], finalColor) : finalColor; context.fillText(item.character, cursor, 0); }
-        } else drawAsset(context, item.asset, assetImageAt(item.asset, realSeconds), cursor + item.width / 2, 0, item.width, outputScale / (groupScale * popScale), alpha, realSeconds);
+        const finalColor = isPunctuation(item.character) ? punctuationColor : suffixColor;
+        const sweepDuration = Number(sweepDurationMs) / 1000;
+        const sweepActive = revealStyle === "type" && sweepEnabled && unitElapsed >= 0 && unitElapsed < sweepDuration;
+        drawItems.push({ ...item, x: leadX + leadWidth + gap + popOffset + cursor * popScale, scale: popScale, alpha, fontSize: suffixSize, weight: inputs.suffixFontWeight.value, color: sweepActive ? normalizeColor(sweepColors[item.characterIndex], finalColor) : finalColor, image: item.type === "asset" ? assetImageAt(item.asset, realSeconds) : null });
         cursor += item.width;
       });
-      context.restore();
     }
+
+    // Only currently visible content participates. Hidden suffixes, icon padding,
+    // pop overshoot and local offsets must not pull the composition off its anchor.
+    const bounds = compositionBounds(context, drawItems, preset, outputScale, realSeconds);
+    context.save();
+    if (bounds) {
+      groupScale = Math.min(groupScale, availableWidth / Math.max(1, bounds.right - bounds.left), height * .92 / Math.max(1, bounds.bottom - bounds.top));
+      context.translate(anchorX, anchorY);
+      context.scale(groupScale, groupScale);
+      context.translate(-(bounds.left + bounds.right) / 2, -(bounds.top + bounds.bottom) / 2);
+    }
+    drawItems.forEach((item) => {
+      if (item.alpha < 1 / 255) return;
+      context.save();
+      context.translate(item.x, 0);
+      context.scale(item.scale, item.scale);
+      if (item.type === "character") {
+        canvasFont(context, preset, item.weight, item.fontSize);
+        context.globalAlpha = item.alpha;
+        context.fillStyle = item.color;
+        context.fillText(item.character, 0, 0);
+      } else drawAsset(context, item.asset, item.image, item.width / 2, 0, item.width, outputScale, item.alpha, realSeconds);
+      context.restore();
+    });
     context.restore();
     return { pairIndex, local, timing, leadText, suffixText };
   }
