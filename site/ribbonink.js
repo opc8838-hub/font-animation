@@ -1468,6 +1468,9 @@
   $("#previewPage2Palette").addEventListener("click", () => {
     setTime(timing().write + timing().flow - .15); setPaused(false);
   });
+  $("#previewPage2Route").addEventListener("click", () => {
+    setTime(timing().write + timing().flow - .15); setPaused(false);
+  });
 
   $("#backgroundUpload").addEventListener("change", (event) => {
     const file = event.currentTarget.files?.[0];
