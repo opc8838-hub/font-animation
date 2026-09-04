@@ -5,10 +5,19 @@
   const smooth = x => { x = clamp(x); return x * x * (3 - 2 * x); };
   const mix = (a, b, t) => a + (b - a) * t;
   // Positive velocity: fast launch, brief slow-motion pocket, fast release.
-  function progress(x) { x = clamp(x); return x + .075 * Math.sin(2 * Math.PI * x); }
-  function inverse(value) {
+  function progress(x, options) {
+    x = clamp(x);
+    if (!options) return x + .075 * Math.sin(2 * Math.PI * x);
+    const width = Math.max(.1, Math.min(.5, options.width ?? .3));
+    const center = Math.max(width / 2, Math.min(1 - width / 2, options.position ?? .48));
+    const strength = options.rhythm === 'linear' ? 0 : options.rhythm === 'smooth' ? .45 : .96 * clamp(options.strength ?? .82);
+    const d = Math.max(0, Math.min(width, x - center + width / 2));
+    const area = d / 2 - width / (4 * Math.PI) * Math.sin(2 * Math.PI * d / width);
+    return (x - strength * area) / (1 - strength * width / 2);
+  }
+  function inverse(value, options) {
     let a = 0, b = 1;
-    for (let i = 0; i < 36; i++) { const m = (a + b) / 2; if (progress(m) < value) a = m; else b = m; }
+    for (let i = 0; i < 36; i++) { const m = (a + b) / 2; if (progress(m, options) < value) a = m; else b = m; }
     return (a + b) / 2;
   }
   function point(segment, t) {
@@ -47,16 +56,40 @@
     });
     return { parts, length, contactDistance: parts[0].end };
   }
-  function evaluate(elapsed, bridge, popDuration, route, hold = 1.25) {
+  function settings(values) {
+    return { rhythm: values.page2Rhythm, position: Number(values.page2SlowPosition) / 100,
+      width: Number(values.page2SlowWidth) / 100, strength: Number(values.page2SlowStrength) / 100,
+      finish: Number(values.page2Finish) / 100 };
+  }
+  function distances(elapsed, bridge, hold, options) {
+    if (!options) {
+      const delay = Math.min(hold * .85, bridge * .57 + Math.min(.22, hold * .18));
+      return { head: progress(elapsed / bridge), tail: progress((elapsed - delay) / bridge) };
+    }
+    const head = .84 * progress(elapsed / bridge, options);
+    const tail = .84 * progress((elapsed - bridge * .6) / bridge, options);
+    if (elapsed <= bridge) return { head, tail };
+    const t = clamp((elapsed - bridge) / options.finish);
+    const h = clamp(t / .58), r = clamp(t / .78);
+    const startTail = .84 * progress(.4, options);
+    return { head: mix(.84, 1, .15 * h + .85 * h * h),
+      tail: mix(startTail, 1, .15 * r + .85 * r * r * r) };
+  }
+  function releaseAt(distance, bridge, hold, options) {
+    let a = 0, b = options ? bridge + options.finish : bridge + Math.min(hold * .85, bridge * .57 + Math.min(.22, hold * .18));
+    for (let i = 0; i < 36; i++) { const m = (a + b) / 2; if (distances(m, bridge, hold, options).tail < distance) a = m; else b = m; }
+    return (a + b) / 2;
+  }
+  function evaluate(elapsed, bridge, popDuration, route, hold = 1.25, options) {
     const q = Math.max(0, elapsed) / bridge;
-    const contact = inverse(route.contactDistance / route.length) * bridge;
+    const contact = inverse(route.contactDistance / route.length / (options ? .84 : 1), options) * bridge;
     const u = clamp((elapsed - contact) / popDuration);
     const c = 1.70158;
     const scale = u === 0 ? 0 : 1 + (c + 1) * (u - 1) ** 3 + c * (u - 1) ** 2;
-    const delay = Math.min(hold * .85, bridge * .57 + Math.min(.22, hold * .18));
+    const stroke = distances(elapsed, bridge, hold, options);
     const cameraEnd = Math.max(.08, contact / bridge * .92);
-    return { camera: smooth((q - .005) / (cameraEnd - .005)), head: progress(q) * route.length,
-      tail: progress((elapsed - delay) / bridge) * route.length, contact, scale, pop: u };
+    return { camera: smooth((q - .005) / (cameraEnd - .005)), head: stroke.head * route.length,
+      tail: stroke.tail * route.length, contact, scale, pop: u };
   }
   function section(points, from, to) {
     const result = [];
@@ -72,5 +105,5 @@
     }
     return result;
   }
-  root.RibbonInkSequence = { compile, evaluate, progress, section };
+  root.RibbonInkSequence = { compile, evaluate, progress, section, settings, distances, releaseAt };
 })(typeof window === 'undefined' ? globalThis : window);

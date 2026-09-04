@@ -33,11 +33,6 @@
       used.add(id); return { id, text, ...normalize(source) };
     });
   }
-  function inverse(value) {
-    let a = 0, b = 1;
-    for (let i = 0; i < 32; i++) { const m = (a + b) / 2; if (root.RibbonInkSequence.progress(m) < value) a = m; else b = m; }
-    return (a + b) / 2;
-  }
   function at(route, distance) {
     const part = route.parts.find(p => distance <= p.end) || route.parts.at(-1);
     const points = part.points;
@@ -56,13 +51,13 @@
     return false;
   }
   function contacts(layout, route, options) {
-    const { W, H, bridge, hold, pop, brushWidth } = options;
+    const { W, H, bridge, hold, pop, brushWidth, rhythm } = options;
     const events = layout.map(() => []), active = layout.map(() => null);
-    const delay = Math.min(hold * .85, bridge * .57 + Math.min(.22, hold * .18));
-    const steps = Math.max(120, Math.ceil(bridge * 180));
+    const duration = bridge + (rhythm?.finish || 0);
+    const steps = Math.max(120, Math.ceil(duration * 180));
     for (let frame = 0; frame <= steps; frame++) {
-      const time = frame / steps * bridge;
-      const motion = root.RibbonInkSequence.evaluate(time, bridge, pop, route, hold);
+      const time = frame / steps * duration;
+      const motion = root.RibbonInkSequence.evaluate(time, bridge, pop, route, hold, rhythm);
       // Let the whole-word entrance become readable before local deformation.
       if (motion.pop < .65 || motion.scale <= 0) continue;
       const tip = at(route, motion.head);
@@ -82,7 +77,7 @@
     return events.map(list => {
       const merged = [];
       list.forEach(event => {
-        event.release = inverse(event.endDistance / route.length) * bridge + delay;
+        event.release = root.RibbonInkSequence.releaseAt(event.endDistance / route.length, bridge, hold, rhythm);
         const previous = merged.at(-1);
         if (previous && event.start < previous.release + .06) previous.release = Math.max(previous.release, event.release);
         else merged.push(event);
@@ -147,16 +142,17 @@
         });
         layoutKey = key; eventKey = '';
       }
-      const nextEventKey = JSON.stringify([W, H, font, settings.page2Spacing, annotations.map(a => a.text), route.parts[0].points[0], settings.page2Route, span.bridge, span.page2, settings.page2Pop, settings.brushWidth]);
+      const rhythm = root.RibbonInkSequence.settings(settings);
+      const nextEventKey = JSON.stringify([W, H, font, settings.page2Spacing, annotations.map(a => a.text), route.parts[0].points[0], settings.page2Route, span.bridge, span.page2, settings.page2Pop, settings.brushWidth, rhythm]);
       if (eventKey !== nextEventKey) {
-        events = contacts(layout, route, { W, H, bridge: span.bridge, hold: span.page2, pop: Number(settings.page2Pop) / 100, brushWidth: 74 * Number(settings.brushWidth) / 100 });
+        events = contacts(layout, route, { W, H, bridge: span.bridge, hold: span.page2, pop: Number(settings.page2Pop) / 100, brushWidth: 74 * Number(settings.brushWidth) / 100, rhythm });
         eventKey = nextEventKey;
       }
       for (const canvas of [base, inherit, back]) {
         if (canvas.width !== Math.ceil(width) || canvas.height !== Math.ceil(height)) { canvas.width = Math.ceil(width); canvas.height = Math.ceil(height); }
         const ctx = canvas.getContext('2d'); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
-      const poses = annotations.map((a, index) => pose(a, events[index], elapsed, span.bridge + span.page2, settings.page2Weave));
+      const poses = annotations.map((a, index) => pose(a, events[index], elapsed, span.bridge + span.finish, settings.page2Weave));
       if (motion.scale > 0) annotations.forEach((a, index) => {
         const g = layout[index], p = poses[index];
         if (p.alpha <= 0) return;

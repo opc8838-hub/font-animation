@@ -123,8 +123,19 @@
           <label class="ink-range">第二页字距 <output id="page2SpacingOut">2</output><input id="page2Spacing" type="range" min="-14" max="42" value="2"></label>
           <div class="ink-color-grid"><label>第二页字色<input id="page2Color" type="color" value="#080808"></label></div>
           <label class="ink-range">跨页书写 <output id="bridgeDurationOut">0.90 秒</output><input id="bridgeDuration" type="range" min="55" max="160" value="90"></label>
+          <details class="ink-glyph-editor" open>
+            <summary>第二页独立节奏</summary>
+            <p class="ink-help">上方“跨页书写”控制总书写速度；以下只影响第二页，不改首页节奏。</p>
+            <label class="ink-field">书写节奏<select id="page2Rhythm"><option value="snake">快—慢—快</option><option value="smooth">柔和变速</option><option value="linear">清晰匀速</option></select></label>
+            <label class="ink-range">慢动作位置 <output id="page2SlowPositionOut">48%</output><input id="page2SlowPosition" type="range" min="25" max="75" value="48"></label>
+            <label class="ink-range">慢动作长度 <output id="page2SlowWidthOut">30%</output><input id="page2SlowWidth" type="range" min="10" max="50" value="30"></label>
+            <label class="ink-range">慢动作力度 <output id="page2SlowStrengthOut">82%</output><input id="page2SlowStrength" type="range" min="0" max="100" value="82"></label>
+            <label class="ink-range">收笔轻弹 <output id="page2FinishOut">0.36 秒</output><input id="page2Finish" type="range" min="28" max="50" value="36"></label>
+            <button class="ink-button" id="previewEnding" type="button">播放收笔结尾</button>
+            <p class="ink-help">短顿后加速收走笔尾，文字回弹落稳后留下。预览循环会在停留结束后重新开始。</p>
+          </details>
           <label class="ink-range">整字弹出 <output id="page2PopOut">0.42 秒</output><input id="page2Pop" type="range" min="20" max="65" value="42"></label>
-          <label class="ink-range">第二页停留 <output id="page2HoldOut">1.25 秒</output><input id="page2Hold" type="range" min="100" max="250" value="125"></label>
+          <label class="ink-range">结束文字停留 <output id="page2HoldOut">1.25 秒</output><input id="page2Hold" type="range" min="30" max="250" value="125"></label>
           <p class="ink-help">笔锋沿新路线继续书写，经过中心时整字弹出；已写下的笔迹不会整体搬动。穿插按实际字形合成。两页共用上方配色、粗细与背景。</p>
         </div>
       </section>
@@ -260,9 +271,9 @@
   <script src="js/continuation-gif.js?v=20260901-1"></script>
   <script src="js/h264-mp4-encoder.web.js?v=20260901-1"></script>
   <script src="ribbonink-freehand.js?v=20260904-5"></script>
-  <script src="ribbonink-sequence.js?v=20260904-10"></script>
+  <script src="ribbonink-sequence.js?v=20260905-13"></script>
   <script src="ribbonink-writing.js?v=20260905-12"></script>
-  <script src="ribbonink-glyphs.js?v=20260905-12"></script>
-  <script src="ribbonink.js?v=20260905-12"></script>
+  <script src="ribbonink-glyphs.js?v=20260905-13"></script>
+  <script src="ribbonink.js?v=20260905-13"></script>
 </body>
 </html>

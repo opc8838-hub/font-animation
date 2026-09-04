@@ -9,7 +9,7 @@
   const schemeStatus = $("#schemeStatus");
   const STORAGE_KEY = "me-ribbon-ink-autosave-v3";
   const EFFECT_ID = "ribbon-ink";
-  const SCHEME_VERSION = 7;
+  const SCHEME_VERSION = 8;
   const freehand = window.RibbonInkFreehand;
   let drawing = freehand.validate(null);
   let compiledDrawing = freehand.compile(drawing);
@@ -30,6 +30,7 @@
   };
 
   const inputIds = [
+    "page2Rhythm", "page2SlowPosition", "page2SlowWidth", "page2SlowStrength", "page2Finish",
     "sequenceMode", "page2Route", "page2Weave", "page2Text", "page2Font", "page2Size", "page2Spacing", "page2Color", "bridgeDuration", "page2Pop", "page2Hold",
     "drawingMode", "freehandWidth",
     "canvasPreset", "canvasWidth", "canvasHeight", "textInput", "fontSelect", "fontSize",
@@ -44,6 +45,7 @@
   const inputs = Object.fromEntries(inputIds.map((id) => [id, $(`#${id}`)]));
 
   const defaultValues = {
+    page2Rhythm: "snake", page2SlowPosition: "48", page2SlowWidth: "30", page2SlowStrength: "82", page2Finish: "36",
     sequenceMode: "single", page2Route: "loop", page2Weave: "weave", page2Text: "FLOW", page2Font: "stg:roboto-condensed", page2Size: "270", page2Spacing: "2", page2Color: "#080808", bridgeDuration: "90", page2Pop: "42", page2Hold: "125",
     drawingMode: "time", freehandWidth: "28",
     canvasPreset: "1920x1080", canvasWidth: "1920", canvasHeight: "1080",
@@ -206,9 +208,10 @@
     const hold = Number(inputs.holdDuration.value) / 100;
     if (twoPages()) {
       const bridge = Number(inputs.bridgeDuration.value) / 100;
-      const page2 = Number(inputs.page2Hold.value) / 100;
-      const reset = .28;
-      return { write, flow, erase, hold, bridge, page2, reset, total: write + flow + bridge + page2 + reset };
+      const finish = Number(inputs.page2Finish.value) / 100;
+      const endHold = Number(inputs.page2Hold.value) / 100;
+      const page2 = finish + endHold;
+      return { write, flow, erase, hold, bridge, page2, finish, endHold, reset: 0, total: write + flow + bridge + page2 };
     }
     return { write, flow, erase, hold, total: write + flow + erase + hold };
   }
@@ -221,8 +224,8 @@
     if (twoPages()) {
       const elapsed = time - span.write - span.flow;
       if (elapsed < span.bridge) return { name: "bridge", progress: elapsed / span.bridge, time, span };
-      if (elapsed < span.bridge + span.page2) return { name: "page2", progress: (elapsed - span.bridge) / span.page2, time, span };
-      return { name: "reset", progress: (elapsed - span.bridge - span.page2) / span.reset, time, span };
+      if (elapsed < span.bridge + span.finish) return { name: "page2", progress: (elapsed - span.bridge) / span.finish, time, span };
+      return { name: "settled", progress: (elapsed - span.bridge - span.finish) / span.endHold, time, span };
     }
     if (time < span.write + span.flow + span.erase) return { name: "erase", progress: (time - span.write - span.flow) / Math.max(.001, span.erase), time, span };
     return { name: "hold", progress: (time - span.write - span.flow - span.erase) / Math.max(.001, span.hold), time, span };
@@ -826,7 +829,7 @@
     const centerX = width * Number(inputs.positionX.value) / 100;
     const centerY = height * Number(inputs.positionY.value) / 100;
     const phase = phaseAt(rawTime);
-    const sequenceActive = twoPages() && ["bridge", "page2", "reset"].includes(phase.name);
+    const sequenceActive = twoPages() && ["bridge", "page2", "settled"].includes(phase.name);
     const elapsed = phase.time - phase.span.write - phase.span.flow;
     const visible = sequenceActive
       ? { start: 0, end: 1, phase: { ...phase, name: phase.name === "reset" ? "hold" : "flow", progress: 1 + elapsed / phase.span.flow } }
@@ -865,12 +868,11 @@
         sequenceRoute = window.RibbonInkSequence.compile(inputs.page2Route.value, width / unit, height / unit, [entry.x / unit, entry.y / unit]);
         sequenceRouteKey = routeKey;
       }
-      const motion = window.RibbonInkSequence.evaluate(elapsed, phase.span.bridge, Number(inputs.page2Pop.value) / 100, sequenceRoute, phase.span.page2);
-      if (phase.name === "reset") {
-        const fade = smoothstep(phase.progress);
+      const motion = window.RibbonInkSequence.evaluate(elapsed, phase.span.bridge, Number(inputs.page2Pop.value) / 100, sequenceRoute, phase.span.page2,
+        window.RibbonInkSequence.settings(Object.fromEntries(Object.entries(inputs).map(([key, input]) => [key, input.value]))));
+      if (phase.name === "settled") {
         const letters = secondPageFrame(width, height, { ...motion, camera: 1, scale: 1 }, elapsed, phase.span);
-        context.save(); context.globalAlpha = 1 - fade; context.drawImage(letters.base, 0, 0); context.restore();
-        context.save(); context.globalAlpha = fade; drawTextLayer(false); context.restore();
+        context.drawImage(letters.base, 0, 0);
       } else {
         if (motion.camera < 1) {
           context.save(); context.translate(-motion.camera * width, 0); drawTextLayer(false); context.restore();
@@ -959,8 +961,8 @@
       { id: "write", label: "首页写入", duration: span.write, color: PHASE_COLORS[0] },
       { id: "flow", label: "首页流动", duration: span.flow, color: PHASE_COLORS[1] },
       { id: "bridge", label: "续写·弹出", duration: span.bridge, color: PHASE_COLORS[2] },
-      { id: "page2", label: "收笔·停留", duration: span.page2, color: PHASE_COLORS[3] },
-      { id: "reset", label: "回首页", duration: span.reset, color: "#777780" }
+      { id: "page2", label: "收笔轻弹", duration: span.finish, color: PHASE_COLORS[3] },
+      { id: "settled", label: "文字停留", duration: span.endHold, color: "#777780" }
     ];
     return [
       { id: "write", label: "写入", duration: span.write, color: PHASE_COLORS[0] },
@@ -1055,6 +1057,10 @@
     document.body.classList.toggle("is-two-pages", twoPages());
     ["eraseDuration", "holdDuration"].forEach(id => { inputs[id].closest("label").hidden = twoPages(); });
     const map = {
+      page2SlowPositionOut: `${inputs.page2SlowPosition.value}%`,
+      page2SlowWidthOut: `${inputs.page2SlowWidth.value}%`,
+      page2SlowStrengthOut: `${inputs.page2SlowStrength.value}%`,
+      page2FinishOut: `${(Number(inputs.page2Finish.value) / 100).toFixed(2)} 秒`,
       page2SizeOut: inputs.page2Size.value,
       page2SpacingOut: inputs.page2Spacing.value,
       bridgeDurationOut: `${(Number(inputs.bridgeDuration.value) / 100).toFixed(2)} 秒`,
@@ -1079,6 +1085,8 @@
       holdDurationOut: `${(Number(inputs.holdDuration.value) / 100).toFixed(2)} 秒`
     };
     Object.entries(map).forEach(([id, value]) => { $(`#${id}`).textContent = value; });
+    ["page2SlowPosition", "page2SlowWidth"].forEach(id => { inputs[id].disabled = inputs.page2Rhythm.value === "linear"; });
+    inputs.page2SlowStrength.disabled = inputs.page2Rhythm.value !== "snake";
     $("#customSize").hidden = inputs.canvasPreset.value !== "custom";
     $("#customDuration").hidden = inputs.exportDuration.value !== "custom";
     renderTimeline();
@@ -1406,9 +1414,10 @@
       if (twoPages() && ["page2Route", "page2Weave"].includes(key)) {
         setPaused(true); setTime(timing().write + timing().flow + timing().bridge * .84);
       }
-      if (twoPages() && ["bridgeDuration", "page2Pop"].includes(key)) {
+      if (twoPages() && ["bridgeDuration", "page2Pop", "page2Rhythm", "page2SlowPosition", "page2SlowWidth", "page2SlowStrength"].includes(key)) {
         setTime(timing().write + timing().flow); setPaused(false);
       }
+      if (twoPages() && key === "page2Finish") playEnding();
       if (twoPages() && ["page2Text", "page2Font", "page2Size", "page2Spacing", "page2Color", "page2Hold"].includes(key)) {
         setPaused(true); setTime(timing().write + timing().flow + timing().bridge + timing().page2 - .05);
       }
@@ -1480,6 +1489,8 @@
   });
 
   $("#pauseButton").addEventListener("click", () => setPaused(!state.paused));
+  function playEnding() { setPaused(true); setTime(timing().write + timing().flow + timing().bridge - .08); setPaused(false); }
+  $("#previewEnding").addEventListener("click", playEnding);
   $("#editFirstPage").addEventListener("click", () => { setPaused(true); setTime(0); inputs.textInput.focus(); });
   $("#editSecondPage").addEventListener("click", () => { setPaused(true); setTime(timing().write + timing().flow + timing().bridge + timing().page2 - .05); inputs.page2Text.focus(); });
   $("#stagePauseButton").addEventListener("click", () => setPaused(!state.paused));
