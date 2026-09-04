@@ -60,24 +60,36 @@
       const motion = root.RibbonInkSequence.evaluate(time, bridge, pop, route, hold, rhythm);
       // Let the whole-word entrance become readable before local deformation.
       if (motion.pop < .65 || motion.scale <= 0) continue;
-      const tip = at(route, motion.head);
-      const radius = root.RibbonInkWriting.radius(tip, motion, brushWidth) / motion.scale;
-      const x = W / 2 + (tip.x - W * 1.5) / motion.scale;
-      const y = H / 2 + (tip.y - H / 2) / motion.scale;
+      if (motion.head <= motion.tail) { active.fill(null); continue; }
+      // The letters can pop into ink that was written before they appeared.
+      // Check the visible body as well as the tip, in the same world coordinates.
+      const samples = [];
+      const stride = Math.max(6, brushWidth * .32);
+      for (let d = motion.tail; d < motion.head; d += stride) samples.push(at(route, d));
+      samples.push(at(route, motion.head));
       layout.forEach((g, index) => {
-        if (inkContact(g, x, y, radius)) {
+        let hit;
+        for (let i = samples.length - 1; i >= 0; i--) {
+          const tip = samples[i];
+          const radius = root.RibbonInkWriting.radius(tip, motion, brushWidth) / motion.scale;
+          const x = W / 2 + (tip.x - W * 1.5) / motion.scale;
+          const y = H / 2 + (tip.y - H / 2) / motion.scale;
+          if (inkContact(g, x, y, radius)) { hit = tip; break; }
+        }
+        if (hit) {
           if (!active[index]) {
-            const event = { start: time, endDistance: motion.head, rear: tip.rear };
+            const event = { start: time, endDistance: hit.length, rear: hit.rear };
             events[index].push(event); active[index] = event;
           }
-          active[index].endDistance = motion.head;
+          active[index].endDistance = Math.max(active[index].endDistance, hit.length);
+          active[index].lastSeen = time;
         } else active[index] = null;
       });
     }
     return events.map(list => {
       const merged = [];
       list.forEach(event => {
-        event.release = root.RibbonInkSequence.releaseAt(event.endDistance / route.length, bridge, hold, rhythm);
+        event.release = Math.max(event.lastSeen, root.RibbonInkSequence.releaseAt(event.endDistance / route.length, bridge, hold, rhythm));
         const previous = merged.at(-1);
         if (previous && event.start < previous.release + .06) previous.release = Math.max(previous.release, event.release);
         else merged.push(event);
@@ -106,14 +118,14 @@
       sy: a.direction === 'down' ? Math.max(.03, 1 - squash) : 1 + .04 * value,
       dx: a.direction === 'down' ? 0 : sign * .12 * value, alpha };
   }
-  function renderer(fontSpec) {
+  function renderer(fontSpec, options = {}) {
     let layoutKey = '', eventKey = '', layout = [], events = [];
     const base = document.createElement('canvas'), inherit = document.createElement('canvas'), back = document.createElement('canvas');
     function frame(width, height, motion, elapsed, route, span, settings, annotations) {
       const unit = Math.min(width / 720, height / 405), W = width / unit, H = height / unit;
       const font = fontSpec(Number(settings.page2Size));
       const text = annotations.map(a => a.text).join('');
-      const key = JSON.stringify([W, H, unit, font, document.fonts.check(font, text || ' '), settings.page2Spacing, settings.page2Color, text]);
+      const key = JSON.stringify([W, H, unit, font, document.fonts.check(font, text || ' '), settings.page2Spacing, settings.page2Color, text, settings.centerX, settings.centerY]);
       if (layoutKey !== key) {
         const scratch = document.createElement('canvas'), ctx = scratch.getContext('2d', { willReadFrequently: true });
         let size = Number(settings.page2Size), gap = Number(settings.page2Spacing);
@@ -122,8 +134,8 @@
         const fit = Math.min(1, W * .76 / Math.max(1, total)); size *= fit; gap *= fit;
         ctx.font = fontSpec(size);
         const metrics = ctx.measureText(annotations.map(g => g.text).join('') || ' ');
-        const baseline = H / 2 + (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2;
-        let cursor = (W - total * fit) / 2;
+        const baseline = H * (settings.centerY ?? .5) + (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2;
+        let cursor = W * (settings.centerX ?? .5) - total * fit / 2;
         layout = annotations.map(g => {
           ctx.font = fontSpec(size);
           const m = ctx.measureText(g.text), pad = 3;
@@ -137,15 +149,15 @@
           sprite.width = Math.ceil(mw * raster); sprite.height = Math.ceil(mh * raster);
           const ink = sprite.getContext('2d'); ink.scale(raster, raster); ink.font = fontSpec(size); ink.fillStyle = settings.page2Color;
           ink.fillText(g.text, m.actualBoundingBoxLeft + pad, m.actualBoundingBoxAscent + pad);
-          const result = { left, top, mw, mh, mask, sprite, raster, cx: cursor + m.width / 2, baseline, height: m.actualBoundingBoxAscent + m.actualBoundingBoxDescent };
+          const result = { left, top, mw, mh, mask, sprite, raster, cx: cursor + m.width / 2, baseline, bottom: baseline + m.actualBoundingBoxDescent, height: m.actualBoundingBoxAscent + m.actualBoundingBoxDescent };
           cursor += m.width + gap; return result;
         });
         layoutKey = key; eventKey = '';
       }
       const rhythm = root.RibbonInkSequence.settings(settings);
-      const nextEventKey = JSON.stringify([W, H, font, settings.page2Spacing, annotations.map(a => a.text), route.parts[0].points[0], settings.page2Route, span.bridge, span.page2, settings.page2Pop, settings.brushWidth, rhythm]);
+      const nextEventKey = JSON.stringify([W, H, font, settings.page2Spacing, annotations.map(a => a.text), route?.parts[0].points[0], settings.page2Route, span.bridge, span.page2, settings.page2Pop, settings.brushWidth, rhythm, options.contactKey?.()]);
       if (eventKey !== nextEventKey) {
-        events = contacts(layout, route, { W, H, bridge: span.bridge, hold: span.page2, pop: Number(settings.page2Pop) / 100, brushWidth: 74 * Number(settings.brushWidth) / 100, rhythm });
+        events = options.contacts ? options.contacts(layout, W, H) : contacts(layout, route, { W, H, bridge: span.bridge, hold: span.page2, pop: Number(settings.page2Pop) / 100, brushWidth: 74 * Number(settings.brushWidth) / 100, rhythm });
         eventKey = nextEventKey;
       }
       for (const canvas of [base, inherit, back]) {
@@ -156,7 +168,7 @@
       if (motion.scale > 0) annotations.forEach((a, index) => {
         const g = layout[index], p = poses[index];
         if (p.alpha <= 0) return;
-        const pivotY = a.pivot === 'top' ? g.top + 3 : a.pivot === 'center' ? g.top + g.mh / 2 : g.baseline;
+        const pivotY = a.pivot === 'top' ? g.top + 3 : a.pivot === 'center' ? g.top + g.mh / 2 : g.bottom;
         const draw = canvas => {
           const ctx = canvas.getContext('2d'); ctx.save();
           ctx.scale(unit, unit); ctx.translate(W * (1 - motion.camera) + W / 2, H / 2); ctx.scale(motion.scale, motion.scale); ctx.translate(-W / 2, -H / 2);
@@ -167,9 +179,9 @@
         if (a.depth === 'inherit') draw(inherit);
         else if (a.depth === 'back') draw(back);
       });
-      return { base, inherit, back, events, poses, layout };
+      return { base, inherit, back, events, poses, layout, bottom: Math.max(0, ...layout.map(g => g.bottom)) * unit };
     }
     return { frame };
   }
-  root.RibbonInkGlyphs = { defaults, split, normalize, reconcile, contacts, pose, renderer };
+  root.RibbonInkGlyphs = { defaults, split, normalize, reconcile, contacts, inkContact, pose, renderer };
 })(typeof window === 'undefined' ? globalThis : window);

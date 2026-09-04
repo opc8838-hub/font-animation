@@ -9,7 +9,7 @@
   const schemeStatus = $("#schemeStatus");
   const STORAGE_KEY = "me-ribbon-ink-autosave-v3";
   const EFFECT_ID = "ribbon-ink";
-  const SCHEME_VERSION = 11;
+  const SCHEME_VERSION = 12;
   const freehand = window.RibbonInkFreehand;
   let drawing = freehand.validate(null);
   let compiledDrawing = freehand.compile(drawing);
@@ -30,6 +30,7 @@
   };
 
   const inputIds = [
+    "page1Weave", "page1Choreo",
     "singleTextExit", "singleEmptyHold",
     "page2PaletteMode", "page2PalettePreset", "page2InkColor1", "page2InkColor2", "page2InkColor3", "page2InkColor4", "page2InkColor5",
     "page2TextExit", "page2EmptyHold",
@@ -48,10 +49,11 @@
   const inputs = Object.fromEntries(inputIds.map((id) => [id, $(`#${id}`)]));
 
   const defaultValues = {
-    singleTextExit: "34", singleEmptyHold: "20",
+    page1Weave: "weave", page1Choreo: "auto",
+    singleTextExit: "20", singleEmptyHold: "20",
     page2PaletteMode: "inherit", page2PalettePreset: "reference",
     page2InkColor1: "#f34bd9", page2InkColor2: "#a40de4", page2InkColor3: "#ff78e9", page2InkColor4: "#7827d8", page2InkColor5: "#f33ccd",
-    page2TextExit: "24", page2EmptyHold: "20",
+    page2TextExit: "20", page2EmptyHold: "20",
     page2Rhythm: "snake", page2SlowPosition: "48", page2SlowWidth: "30", page2SlowStrength: "82", page2Finish: "36",
     sequenceMode: "single", page2Route: "loop", page2Weave: "weave", page2Text: "FLOW", page2Font: "stg:roboto-condensed", page2Size: "270", page2Spacing: "2", page2Color: "#080808", bridgeDuration: "90", page2Pop: "42", page2Hold: "35",
     drawingMode: "time", freehandWidth: "28",
@@ -95,6 +97,16 @@
   let sequenceRouteKey = "", sequenceRoute;
   const glyphEngine = window.RibbonInkGlyphs;
   const glyphRenderer = glyphEngine.renderer(page2FontSpec);
+  const firstGlyphRenderer = glyphEngine.renderer(fontSpec, {
+    contacts: firstGlyphContacts,
+    contactKey: () => [inputs.brushScale.value, inputs.brushWidth.value, inputs.positionX.value, inputs.positionY.value,
+      inputs.motionEase.value, inputs.snakeIntensity.value, timing(), twoPages()]
+  });
+  let page1Glyphs = glyphEngine.reconcile([], defaultValues.textInput);
+  let selectedFirstGlyphs = new Set([page1Glyphs[0].id]);
+  let lastFirstGlyphFrame;
+  const firstRearMask = document.createElement("canvas");
+  const firstOver = document.createElement("canvas");
   let page2Glyphs = glyphEngine.reconcile([], defaultValues.page2Text);
   let selectedGlyphs = new Set([page2Glyphs[0].id]);
   let lastGlyphFrame;
@@ -820,6 +832,63 @@
     return lastGlyphFrame;
   }
 
+  function authoredFirstText() {
+    return inputs.page1Choreo.value === "auto" && inputs.textInput.value === "TIME"
+      && inputs.fontSelect.value === defaultValues.fontSelect && inputs.fontSize.value === defaultValues.fontSize
+      && inputs.letterSpacing.value === defaultValues.letterSpacing && inputs.page1Weave.value === "weave";
+  }
+
+  function firstGlyphContacts(layout, W, H) {
+    const transform = exactTransform(W, H), span = timing();
+    const inverse = (s, phase) => {
+      let a = 0, b = 1;
+      for (let i = 0; i < 24; i++) { const m = (a + b) / 2; if (phaseEase(m, phase) < s) a = m; else b = m; }
+      return (a + b) / 2;
+    };
+    const radius = 43 * transform.scale * transform.widthScale;
+    return layout.map(g => {
+      let first = null, last = null;
+      for (const point of authored[0].samples) {
+        const p = transformPoint(point, transform);
+        if (glyphEngine.inkContact(g, p.x, p.y, radius)) { first ??= point.s; last = point.s; }
+      }
+      if (first == null) return [];
+      const release = twoPages() ? span.write + span.flow + span.bridge * .55
+        : span.write + span.flow + inverse(last * authored[0].end, "erase") * span.erase;
+      return [{ start: inverse(first * authored[0].end, "write") * span.write, release, rear: Math.floor(first * 4) % 2 === 0 }];
+    });
+  }
+
+  function firstPageFrame(width, height, time, span) {
+    const end = span.write + span.flow + (twoPages() ? span.bridge : span.erase);
+    lastFirstGlyphFrame = firstGlyphRenderer.frame(width, height, { camera: 1, scale: 1 }, time, null,
+      { ...span, bridge: end, finish: .001 }, {
+        page2Size: inputs.fontSize.value, page2Spacing: inputs.letterSpacing.value, page2Color: inputs.textColor.value,
+        page2Weave: inputs.page1Weave.value, centerX: Number(inputs.positionX.value) / 100,
+        centerY: Number(inputs.positionY.value) / 100, brushWidth: inputs.brushWidth.value
+      }, page1Glyphs);
+    return lastFirstGlyphFrame;
+  }
+
+  function drawFirstForeground(context, letters, width, height, visible) {
+    for (const c of [firstRearMask, firstOver]) {
+      if (c.width !== Math.ceil(width) || c.height !== Math.ceil(height)) { c.width = Math.ceil(width); c.height = Math.ceil(height); }
+    }
+    const mask = firstRearMask.getContext("2d"), over = firstOver.getContext("2d");
+    mask.clearRect(0, 0, width, height);
+    const weave = inputs.page1Weave.value, tr = exactTransform(width, height);
+    const rear = (i) => weave === "back" || (weave !== "front" && (weave === "reverse" ? i % 2 === 1 : i % 2 === 0));
+    for (let i = 0; i < 4; i++) if (rear(i)) {
+      drawSampledStroke(mask, authored[0], Math.max(visible.start, i * .22), Math.min(visible.end, (i + 1) * .22), tr, 112 * tr.scale * tr.widthScale);
+    }
+    over.clearRect(0, 0, width, height); over.drawImage(letters.inherit, 0, 0);
+    over.globalCompositeOperation = "destination-in"; over.drawImage(firstRearMask, 0, 0);
+    over.globalCompositeOperation = "source-over";
+    if (weave === "back") context.drawImage(letters.inherit, 0, 0);
+    else context.drawImage(firstOver, 0, 0);
+    context.drawImage(letters.back, 0, 0);
+  }
+
   function renderFrame(target, rawTime, width, height, backingWidth = width, backingHeight = height) {
     const targetWidth = Math.max(1, Math.round(backingWidth));
     const targetHeight = Math.max(1, Math.round(backingHeight));
@@ -858,9 +927,15 @@
     const visible = sequenceActive
       ? { start: 0, end: 1, phase: { ...phase, name: phase.name === "reset" ? "hold" : "flow", progress: 1 + elapsed / phase.span.flow } }
       : visibleWindow(rawTime);
+    const firstLetters = authoredFirstText() ? null : firstPageFrame(width, height, phase.time, phase.span);
     // Align the glyph ink box to the source baseline (not the font's em box).
     // Keep this in logical composition units for all preview/export sizes.
     const drawTextLayer = (foreground, targetContext = context) => {
+      if (firstLetters) {
+        if (foreground) drawFirstForeground(targetContext, firstLetters, width, height, visible);
+        else targetContext.drawImage(firstLetters.base, 0, 0);
+        return;
+      }
       const textCanvas = foreground ? foregroundTextCanvas : textLayerCanvas;
       const slot = foreground ? 1 : 0;
       const key = JSON.stringify([width, height, text, fontSpec(fit.size), fit.spacing, centerX, centerY,
@@ -896,7 +971,7 @@
         composed.font = fontSpec(fit.size);
         composed.textBaseline = "middle";
         const descent = Math.max(0, ...Array.from(text.toLocaleUpperCase(), glyph => composed.measureText(glyph).actualBoundingBoxDescent));
-        const exitPivotY = centerY + 16 * unit + .95 * descent;
+        const exitPivotY = firstLetters ? firstLetters.bottom : centerY + 16 * unit + .95 * descent;
         context.save(); context.globalAlpha = exit.alpha;
         context.translate(centerX, exitPivotY); context.scale(exit.sx, exit.sy); context.translate(-centerX, -exitPivotY);
         context.drawImage(singleExitCanvas, 0, 0); context.restore();
@@ -916,10 +991,10 @@
         window.RibbonInkSequence.settings(Object.fromEntries(Object.entries(inputs).map(([key, input]) => [key, input.value]))));
       if (["settled", "textExit", "empty"].includes(phase.name)) {
         const letters = secondPageFrame(width, height, { ...motion, camera: 1, scale: 1 }, elapsed, phase.span);
-        const exit = window.RibbonInkSequence.textExit(phase.name === "settled" ? 0 : phase.name === "empty" ? 1 : phase.progress);
+        const exit = window.RibbonInkSequence.singleTextExit(phase.name === "settled" ? 0 : phase.name === "empty" ? 1 : phase.progress);
         context.save(); context.globalAlpha = exit.alpha;
-        context.translate(width * (.5 + exit.dx), height * .62); context.scale(exit.sx, exit.sy);
-        context.drawImage(letters.base, -width * .5, -height * .62); context.restore();
+        context.translate(width * .5, letters.bottom); context.scale(exit.sx, exit.sy);
+        context.drawImage(letters.base, -width * .5, -letters.bottom); context.restore();
       } else {
         if (motion.camera < 1) {
           context.save(); context.translate(-motion.camera * width, 0); drawTextLayer(false); context.restore();
@@ -1041,68 +1116,94 @@
   }
 
   const glyphFields = { glyphDepth: 'depth', glyphMotion: 'motion', glyphAmount: 'amount', glyphDirection: 'direction', glyphPivot: 'pivot', glyphRebound: 'rebound' };
+  const glyphEditors = [true, false].map(first => ({
+    first,
+    element: id => $("#" + (first ? "first" + id[0].toUpperCase() + id.slice(1) : id)),
+    get glyphs() { return first ? page1Glyphs : page2Glyphs; },
+    set glyphs(value) { if (first) page1Glyphs = value; else page2Glyphs = value; },
+    get selected() { return first ? selectedFirstGlyphs : selectedGlyphs; },
+    set selected(value) { if (first) selectedFirstGlyphs = value; else selectedGlyphs = value; },
+    text: () => first ? inputs.textInput.value : inputs.page2Text.value,
+    rest: () => first ? 0 : secondPageRestTime(),
+    frame: () => first ? lastFirstGlyphFrame : lastGlyphFrame
+  }));
   function syncGlyphEditor() {
-    page2Glyphs = glyphEngine.reconcile(page2Glyphs, inputs.page2Text.value);
-    selectedGlyphs = new Set([...selectedGlyphs].filter(id => page2Glyphs.some(g => g.id === id)));
-    const list = $("#glyphChips"), signature = JSON.stringify(page2Glyphs.map(g => [g.id, g.text]));
-    if (list.dataset.signature !== signature) {
-      list.replaceChildren();
-      page2Glyphs.forEach((g, index) => {
-        const button = document.createElement('button'); button.type = 'button'; button.dataset.glyphId = g.id;
-        button.textContent = g.text.trim() ? g.text : '␣'; button.setAttribute('aria-label', `${index + 1}：${g.text.trim() ? g.text : '空格'}`);
-        button.addEventListener('click', () => {
-          if (selectedGlyphs.has(g.id)) selectedGlyphs.delete(g.id); else selectedGlyphs.add(g.id);
-          syncGlyphEditor();
-          setPaused(true); setTime(secondPageRestTime());
-          $("#glyphStatus").textContent = '已暂停在完整文字；点击“暂停看接触”检查穿插和动作。';
+    for (const editor of glyphEditors) {
+      editor.glyphs = glyphEngine.reconcile(editor.glyphs, editor.text());
+      editor.selected = new Set([...editor.selected].filter(id => editor.glyphs.some(g => g.id === id)));
+      const list = editor.element("glyphChips"), signature = JSON.stringify(editor.glyphs.map(g => [g.id, g.text]));
+      if (list.dataset.signature !== signature) {
+        list.replaceChildren();
+        editor.glyphs.forEach((g, index) => {
+          const button = document.createElement("button");
+          button.type = "button"; button.dataset.glyphId = g.id;
+          button.textContent = g.text.trim() ? g.text : "␣";
+          button.setAttribute("aria-label", `${index + 1}：${g.text.trim() ? g.text : "空格"}`);
+          button.addEventListener("click", () => {
+            if (editor.selected.has(g.id)) editor.selected.delete(g.id); else editor.selected.add(g.id);
+            syncGlyphEditor(); setPaused(true); setTime(editor.rest());
+            editor.element("glyphStatus").textContent = "已暂停在完整文字；点击“暂停看接触”检查穿插和动作。";
+          });
+          list.append(button);
         });
-        list.append(button);
-      });
-      list.dataset.signature = signature;
-    }
-    list.querySelectorAll('button').forEach(button => button.setAttribute('aria-pressed', String(selectedGlyphs.has(button.dataset.glyphId))));
-    const chosen = page2Glyphs.filter(g => selectedGlyphs.has(g.id));
-    $("#glyphSelection").textContent = chosen.length ? `已选 ${chosen.length} 字：${chosen.map(g => g.text).join('、')}` : '尚未选择文字';
-    $("#glyphFields").disabled = !chosen.length;
-    for (const [id, key] of Object.entries(glyphFields)) {
-      const input = $(`#${id}`), mixed = chosen.some(g => g[key] !== chosen[0][key]);
-      const value = chosen[0]?.[key] ?? glyphEngine.defaults[key];
-      if (input.type === 'range') {
-        input.value = Math.round(value * 100);
-        $(`#${id}Out`).textContent = mixed ? '多种设置' : key === 'amount' ? `${Math.round(value * 100)}%` : `${value.toFixed(2)} 秒`;
-      } else input.value = mixed ? '' : value;
+        list.dataset.signature = signature;
+      }
+      list.querySelectorAll("button").forEach(button => button.setAttribute("aria-pressed", String(editor.selected.has(button.dataset.glyphId))));
+      const chosen = editor.glyphs.filter(g => editor.selected.has(g.id));
+      editor.element("glyphSelection").textContent = chosen.length ? `已选 ${chosen.length} 字：${chosen.map(g => g.text).join("、")}` : "尚未选择文字";
+      editor.element("glyphFields").disabled = !chosen.length;
+      for (const [id, key] of Object.entries(glyphFields)) {
+        const input = editor.element(id), mixed = chosen.some(g => g[key] !== chosen[0][key]);
+        const value = chosen[0]?.[key] ?? glyphEngine.defaults[key];
+        if (input.type === "range") {
+          input.value = Math.round(value * 100);
+          editor.element(id + "Out").textContent = mixed ? "多种设置" : key === "amount" ? `${Math.round(value * 100)}%` : `${value.toFixed(2)} 秒`;
+        } else input.value = mixed ? "" : value;
+      }
     }
   }
-  function seekGlyphContact(play = false) {
-    if (!twoPages()) return;
-    const span = timing(), start = span.write + span.flow;
-    setPaused(true); renderPreview(start + span.bridge * .84);
-    const events = page2Glyphs.flatMap((g, i) => selectedGlyphs.has(g.id) ? lastGlyphFrame.events[i] : []);
+  function seekGlyphContact(editor, play = false) {
+    if (!editor.first && !twoPages()) return;
+    const span = timing(), start = editor.first ? 0 : span.write + span.flow;
+    setPaused(true);
+    if (editor.first) {
+      const [w, h] = canvasDimensions();
+      firstPageFrame(w, h, 0, span);
+    } else renderPreview(start + span.bridge * .84);
+    const events = editor.glyphs.flatMap((g, i) => editor.selected.has(g.id) ? editor.frame().events[i] : []);
     const event = events.sort((a, b) => a.start - b.start)[0];
     if (!event) {
-      setTime(secondPageRestTime());
-      $("#glyphStatus").textContent = '所选字没有被笔锋碰到，可换路线、字体或字号后再看。'; return;
+      setTime(editor.rest());
+      editor.element("glyphStatus").textContent = "所选字没有与笔迹相交，可调整笔迹大小、字体或字号后再看。";
+      return;
     }
-    setTime(start + (play ? Math.max(0, event.start - .08) : Math.min(event.release - .01, event.start + .13)));
+    setTime(start + (play ? Math.max(0, event.start - .08) : Math.max(event.start, Math.min(event.release - .01, event.start + .13))));
     if (play) setPaused(false);
-    $("#glyphStatus").textContent = `接触 ${event.start.toFixed(2)} 秒 · 笔尾释放 ${event.release.toFixed(2)} 秒（从跨页书写起算）`;
+    editor.element("glyphStatus").textContent = `接触 ${event.start.toFixed(2)} 秒 · 笔尾释放 ${event.release.toFixed(2)} 秒（从本页书写起算）`;
   }
-  $("#selectAllGlyphs").addEventListener('click', () => { selectedGlyphs = new Set(page2Glyphs.map(g => g.id)); syncGlyphEditor(); });
-  $("#deselectGlyphs").addEventListener('click', () => { selectedGlyphs.clear(); syncGlyphEditor(); });
-  $("#inspectGlyphContact").addEventListener('click', () => seekGlyphContact());
-  $("#playGlyphContact").addEventListener('click', () => seekGlyphContact(true));
-  for (const [id, key] of Object.entries(glyphFields)) $("#" + id).addEventListener('input', event => {
-    const value = event.target.type === 'range' ? Number(event.target.value) / 100 : event.target.value;
-    page2Glyphs = page2Glyphs.map(g => selectedGlyphs.has(g.id) ? { ...g, ...glyphEngine.normalize({ ...g, [key]: value }) } : g);
-    syncGlyphEditor(); queueAutosave();
-    const span = timing(), time = currentTime() % span.total, elapsed = time - span.write - span.flow;
-    const showingContact = state.paused && lastGlyphFrame && page2Glyphs.some((g, i) => selectedGlyphs.has(g.id) && lastGlyphFrame.events[i]?.some(e => elapsed >= e.start && elapsed <= e.release + g.rebound));
-    if (showingContact) renderPreview(); else seekGlyphContact();
-  });
-
+  for (const editor of glyphEditors) {
+    editor.element("selectAllGlyphs").addEventListener("click", () => { editor.selected = new Set(editor.glyphs.map(g => g.id)); syncGlyphEditor(); });
+    editor.element("deselectGlyphs").addEventListener("click", () => { editor.selected.clear(); syncGlyphEditor(); });
+    editor.element("inspectGlyphContact").addEventListener("click", () => seekGlyphContact(editor));
+    editor.element("playGlyphContact").addEventListener("click", () => seekGlyphContact(editor, true));
+    for (const [id, key] of Object.entries(glyphFields)) editor.element(id).addEventListener("input", event => {
+      const value = event.target.type === "range" ? Number(event.target.value) / 100 : event.target.value;
+      editor.glyphs = editor.glyphs.map(g => editor.selected.has(g.id) ? { ...g, ...glyphEngine.normalize({ ...g, [key]: value }) } : g);
+      if (editor.first) inputs.page1Choreo.value = "glyphs";
+      syncGlyphEditor(); queueAutosave();
+      const span = timing(), elapsed = currentTime() % span.total - (editor.first ? 0 : span.write + span.flow);
+      const frame = editor.frame();
+      const showingContact = state.paused && frame && editor.glyphs.some((g, i) => editor.selected.has(g.id) && frame.events[i]?.some(e => elapsed >= e.start && elapsed <= e.release + g.rebound));
+      if (showingContact) renderPreview(); else seekGlyphContact(editor);
+    });
+  }
   function updateOutputs() {
     syncGlyphEditor();
     updateDrawingUI();
+    $("#page1GlyphEditor").hidden = inputs.drawingMode.value === "freehand";
+    inputs.page1Weave.closest("label").hidden = inputs.drawingMode.value === "freehand";
+    inputs.page1Choreo.closest("label").hidden = inputs.drawingMode.value === "freehand";
+    inputs.letterImpact.closest("label").hidden = inputs.drawingMode.value === "freehand" || !authoredFirstText();
     $("#sequenceCard").hidden = inputs.drawingMode.value === "freehand";
     $("#secondPageTools").hidden = !twoPages();
     $("#page2PaletteTools").hidden = inputs.page2PaletteMode.value !== "custom";
@@ -1161,7 +1262,7 @@
   function schemeData() {
     const values = {};
     Object.entries(inputs).forEach(([key, input]) => { values[key] = input.value; });
-    return { version: SCHEME_VERSION, effect: EFFECT_ID, values, page2Glyphs: structuredClone(page2Glyphs), drawing: structuredClone(drawing), background: state.backgroundDataUrl || "" };
+    return { version: SCHEME_VERSION, effect: EFFECT_ID, values, page1Glyphs: structuredClone(page1Glyphs), page2Glyphs: structuredClone(page2Glyphs), drawing: structuredClone(drawing), background: state.backgroundDataUrl || "" };
   }
 
   function loadBackground(dataUrl) {
@@ -1179,11 +1280,14 @@
     if (!data || data.effect !== EFFECT_ID) throw new Error("不是流彩笔迹方案");
     const nextDrawing = freehand.validate(data.drawing);
     const nextGlyphs = glyphEngine.reconcile(data.page2Glyphs ?? [], String(data.values?.page2Text ?? defaultValues.page2Text));
+    const nextFirstGlyphs = glyphEngine.reconcile(data.page1Glyphs ?? [], String(data.values?.textInput ?? defaultValues.textInput));
     finishDrawing();
     drawing = nextDrawing;
     compiledDrawing = freehand.compile(drawing);
     redoStrokes = [];
     page2Glyphs = nextGlyphs;
+    page1Glyphs = nextFirstGlyphs;
+    selectedFirstGlyphs = new Set(nextFirstGlyphs.length ? [nextFirstGlyphs[0].id] : []);
     selectedGlyphs = new Set(nextGlyphs.length ? [nextGlyphs[0].id] : []);
     Object.entries({ ...defaultValues, ...data.values }).forEach(([key, value]) => {
       if (inputs[key] && value != null) inputs[key].value = String(value);
@@ -1253,6 +1357,7 @@
     ["textInput", "fontSelect", "fontSize", "letterSpacing", "textColor", "brushScale", "brushWidth", "positionX", "positionY", "dotScale", "dotDelay", "letterImpact"].forEach(id => {
       inputs[id].closest("label").hidden = enabled;
     });
+    inputs.letterImpact.closest("label").hidden = enabled || !authoredFirstText();
     $("#textTitle").textContent = enabled ? "笔迹与颜色" : twoPages() ? "第一页文字与配色" : "文字与颜色";
     inputs.holdDuration.closest("label").firstChild.textContent = enabled ? "留白停留 " : "笔迹消失后，文字停留 ";
     $("#drawingHint").hidden = !enabled || drawing.strokes.length > 0;
@@ -1471,10 +1576,11 @@
       }
       if (/^page2InkColor[1-5]$/.test(key)) inputs.page2PalettePreset.value = "custom";
       updateOutputs();
-      if (["fontSelect", "page2Font"].includes(key)) {
+      if (["fontSelect", "page2Font", "textInput", "page2Text"].includes(key)) {
         ensurePageFonts().then(() => { textLayerKeys.fill(""); renderPreview(); });
       }
       if (key === "sequenceMode") replay();
+      if (["page1Weave", "page1Choreo"].includes(key)) { setTime(0); setPaused(false); }
       if (twoPages() && ["page2Route", "page2Weave"].includes(key)) {
         setPaused(true); setTime(timing().write + timing().flow + timing().bridge * .84);
       }
@@ -1598,7 +1704,9 @@
   });
   if (urlParams.has("preview")) document.body.classList.add("is-preview");
 
-  window.RibbonInk = { renderFrame, timing, phaseAt, visibleWindow, schemeData, applyScheme, setTime, setPaused, canvasDimensions };
+  window.RibbonInk = { renderFrame, timing, phaseAt, visibleWindow, schemeData, applyScheme, setTime, setPaused, canvasDimensions,
+    glyphDiagnostics: () => ({ first: lastFirstGlyphFrame && { events: lastFirstGlyphFrame.events, poses: lastFirstGlyphFrame.poses },
+      second: lastGlyphFrame && { events: lastGlyphFrame.events, poses: lastGlyphFrame.poses }, authoredFirst: authoredFirstText() }) };
 
   async function initialize() {
     window.STGFontLibrary?.enhanceAll(document);

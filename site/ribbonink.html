@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="shared-fonts.css?v=20260901-1">
   <link rel="stylesheet" href="workspace-editor.css?v=20260901-1">
   <link rel="stylesheet" href="me-motion-editor.css?v=20260901-1">
-  <link rel="stylesheet" href="ribbonink.css?v=20260905-12">
+  <link rel="stylesheet" href="ribbonink.css?v=20260905-22">
 </head>
 <body data-editor-capabilities="text-only">
   <aside class="ink-panel" id="editorPanel" aria-label="流彩笔迹编辑器">
@@ -68,6 +68,26 @@
           <label>底字<input id="textColor" type="color" value="#080808"></label>
           <label>背景<input id="backgroundColor" type="color" value="#f7f7f5"></label>
         </div>
+        <label class="ink-field">文字编排<select id="page1Choreo"><option value="auto">自动编排</option><option value="glyphs">逐字自定义</option></select></label>
+        <label class="ink-field">文字穿插<select id="page1Weave"><option value="weave">前后交错</option><option value="reverse">反向交错</option><option value="front">笔迹全部在前</option><option value="back">笔迹全部在后</option></select></label>
+          <details class="ink-glyph-editor" id="page1GlyphEditor" open>
+            <summary>第一页逐字穿插与动作</summary>
+            <p class="ink-help">点选下方字块，可多选。设置只作用于选中字；整字动作不拆分内部笔画。</p>
+            <div id="firstGlyphChips" class="ink-glyph-chips" role="group" aria-label="选择第一页文字"></div>
+            <div class="ink-button-row"><button class="ink-button" id="firstSelectAllGlyphs" type="button">全选文字</button><button class="ink-button" id="firstDeselectGlyphs" type="button">取消选择</button></div>
+            <p id="firstGlyphSelection" class="ink-status" aria-live="polite"></p>
+            <fieldset id="firstGlyphFields">
+              <legend class="ink-page-heading">选中文字的设置</legend>
+              <label class="ink-field">所选字穿插<select id="firstGlyphDepth"><option value="" disabled>多种设置</option><option value="inherit">默认交错（跟随上方）</option><option value="front">笔迹在字前</option><option value="back">笔迹在字后</option></select></label>
+              <label class="ink-field">接触动作<select id="firstGlyphMotion"><option value="" disabled>多种设置</option><option value="auto">自动轻压</option><option value="none">不动</option><option value="press">下压回弹</option><option value="hide">压下隐藏后弹回</option><option value="lean">侧让回弹</option><option value="turn">轻转回弹</option></select></label>
+              <label class="ink-range">动作幅度 <output id="firstGlyphAmountOut">100%</output><input id="firstGlyphAmount" type="range" min="0" max="140" value="100"></label>
+              <label class="ink-field">动作方向<select id="firstGlyphDirection"><option value="" disabled>多种设置</option><option value="down">默认：下压 / 右让 / 顺时针</option><option value="left">向左 / 逆时针</option><option value="right">向右 / 顺时针</option></select></label>
+              <label class="ink-field">变形支点<select id="firstGlyphPivot"><option value="" disabled>多种设置</option><option value="bottom">字的底部</option><option value="center">字的中心</option><option value="top">字的顶部</option></select></label>
+              <label class="ink-range">回弹时长 <output id="firstGlyphReboundOut">0.36 秒</output><input id="firstGlyphRebound" type="range" min="16" max="65" value="36"></label>
+              <div class="ink-button-row"><button class="ink-button" id="firstInspectGlyphContact" type="button">暂停看接触</button><button class="ink-button" id="firstPlayGlyphContact" type="button">从接触处播放</button></div>
+            </fieldset>
+            <p class="ink-help" id="firstGlyphStatus" role="status">笔迹与字形相交时响应，笔尾离开后回弹。自动模式在笔迹从字后经过时响应较轻。</p>
+          </details>
         <label class="ink-field">笔迹配色
           <select id="palettePreset">
             <option value="reference" selected>玫紫流彩</option>
@@ -131,7 +151,7 @@
               <label class="ink-range">回弹时长 <output id="glyphReboundOut">0.36 秒</output><input id="glyphRebound" type="range" min="16" max="65" value="36"></label>
               <div class="ink-button-row"><button class="ink-button" id="inspectGlyphContact" type="button">暂停看接触</button><button class="ink-button" id="playGlyphContact" type="button">从接触处播放</button></div>
             </fieldset>
-            <p class="ink-help" id="glyphStatus" role="status">笔锋碰到才响应，笔尾离开后回弹。自动模式在笔迹从字后经过时响应较轻。</p>
+            <p class="ink-help" id="glyphStatus" role="status">笔迹与字形相交时响应，笔尾离开后回弹。自动模式在笔迹从字后经过时响应较轻。</p>
           </details>
           <label class="ink-field">第二页字体<select id="page2Font"><option value="stg:roboto-condensed">Roboto Condensed</option></select></label>
           <label class="ink-range">第二页字号 <output id="page2SizeOut">270</output><input id="page2Size" type="range" min="72" max="360" value="270"></label>
@@ -151,7 +171,7 @@
           </details>
           <label class="ink-range">整字弹出 <output id="page2PopOut">0.42 秒</output><input id="page2Pop" type="range" min="20" max="65" value="42"></label>
           <label class="ink-range">笔迹消失后，文字停留 <output id="page2HoldOut">0.35 秒</output><input id="page2Hold" type="range" min="0" max="250" value="35"></label>
-          <label class="ink-range">文字消失时长 <output id="page2TextExitOut">0.24 秒</output><input id="page2TextExit" type="range" min="10" max="80" value="24"></label>
+          <label class="ink-range">文字下压消失 <output id="page2TextExitOut">0.20 秒</output><input id="page2TextExit" type="range" min="10" max="80" value="20"></label>
           <label class="ink-range">结束留白 <output id="page2EmptyHoldOut">0.20 秒</output><input id="page2EmptyHold" type="range" min="0" max="150" value="20"></label>
           <p class="ink-help">笔锋沿新路线继续书写，经过中心时整字弹出；已写下的笔迹不会整体搬动。穿插按实际字形合成。两页共用粗细与背景，笔迹配色可独立设置。</p>
         </div>
@@ -199,8 +219,8 @@
         <label class="ink-range">底字停留 <output id="holdDurationOut">0.56 秒</output>
           <input id="holdDuration" type="range" min="10" max="160" value="56">
         </label>
-        <label class="ink-range" id="singleTextExitField">文字消失时长 <output id="singleTextExitOut">0.34 秒</output>
-          <input id="singleTextExit" type="range" min="10" max="80" value="34">
+        <label class="ink-range" id="singleTextExitField">文字下压消失 <output id="singleTextExitOut">0.20 秒</output>
+          <input id="singleTextExit" type="range" min="10" max="80" value="20">
         </label>
         <label class="ink-range" id="singleEmptyHoldField">结束留白 <output id="singleEmptyHoldOut">0.20 秒</output>
           <input id="singleEmptyHold" type="range" min="0" max="150" value="20">
@@ -297,7 +317,7 @@
   <script src="ribbonink-freehand.js?v=20260904-5"></script>
   <script src="ribbonink-sequence.js?v=20260905-20"></script>
   <script src="ribbonink-writing.js?v=20260905-15"></script>
-  <script src="ribbonink-glyphs.js?v=20260905-13"></script>
-  <script src="ribbonink.js?v=20260905-20"></script>
+  <script src="ribbonink-glyphs.js?v=20260905-22"></script>
+  <script src="ribbonink.js?v=20260905-22"></script>
 </body>
 </html>

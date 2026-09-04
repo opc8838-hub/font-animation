@@ -1,5 +1,7 @@
 # 单页结尾编辑
 
+后续通用字形与两页快速退场更新见 [ribbonink-universal-glyphs.md](ribbonink-universal-glyphs.md)。该更新将两页退场默认值统一为 0.20 秒；下方保留本阶段的验证记录。
+
 ## 契约
 
 - 单页与两页继续由“播放结构”选择，不强制新增第二页。
