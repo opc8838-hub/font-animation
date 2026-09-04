@@ -9,7 +9,7 @@
   const schemeStatus = $("#schemeStatus");
   const STORAGE_KEY = "me-ribbon-ink-autosave-v3";
   const EFFECT_ID = "ribbon-ink";
-  const SCHEME_VERSION = 5;
+  const SCHEME_VERSION = 6;
   const freehand = window.RibbonInkFreehand;
   let drawing = freehand.validate(null);
   let compiledDrawing = freehand.compile(drawing);
@@ -30,7 +30,7 @@
   };
 
   const inputIds = [
-    "sequenceMode", "page2Text", "page2Font", "page2Size", "page2Spacing", "page2Color", "bridgeDuration", "page2Pop", "page2Hold",
+    "sequenceMode", "page2Route", "page2Weave", "page2Text", "page2Font", "page2Size", "page2Spacing", "page2Color", "bridgeDuration", "page2Pop", "page2Hold",
     "drawingMode", "freehandWidth",
     "canvasPreset", "canvasWidth", "canvasHeight", "textInput", "fontSelect", "fontSize",
     "letterSpacing", "textColor", "backgroundColor", "palettePreset",
@@ -44,7 +44,7 @@
   const inputs = Object.fromEntries(inputIds.map((id) => [id, $(`#${id}`)]));
 
   const defaultValues = {
-    sequenceMode: "single", page2Text: "FLOW", page2Font: "stg:roboto-condensed", page2Size: "270", page2Spacing: "2", page2Color: "#080808", bridgeDuration: "90", page2Pop: "42", page2Hold: "125",
+    sequenceMode: "single", page2Route: "loop", page2Weave: "weave", page2Text: "FLOW", page2Font: "stg:roboto-condensed", page2Size: "270", page2Spacing: "2", page2Color: "#080808", bridgeDuration: "90", page2Pop: "42", page2Hold: "125",
     drawingMode: "time", freehandWidth: "28",
     canvasPreset: "1920x1080", canvasWidth: "1920", canvasHeight: "1080",
     textInput: "TIME", fontSelect: "stg:roboto-condensed", fontSize: "270", letterSpacing: "2",
@@ -82,6 +82,8 @@
   const textLayerKeys = ["", ""];
   const mEdgeCache = new Map();
   const page2Canvas = document.createElement("canvas");
+  const page2Occlusion = document.createElement("canvas");
+  let sequenceRouteKey = "", sequenceRoute;
   let page2Key = "";
   let mainToneKey = "";
 
@@ -880,8 +882,13 @@
     };
     if (sequenceActive) {
       const transform = exactTransform(width, height);
-      const tip = (transform.x + 720 * transform.scale) / width;
-      const motion = window.RibbonInkSequence.evaluate(elapsed, phase.span.bridge, Number(inputs.page2Pop.value) / 100, tip);
+      const entry = transformPoint({ x: 710, y: 195 }, transform);
+      const routeKey = JSON.stringify([width / unit, height / unit, entry.x / unit, entry.y / unit, inputs.page2Route.value]);
+      if (sequenceRouteKey !== routeKey) {
+        sequenceRoute = window.RibbonInkSequence.compile(inputs.page2Route.value, width / unit, height / unit, [entry.x / unit, entry.y / unit]);
+        sequenceRouteKey = routeKey;
+      }
+      const motion = window.RibbonInkSequence.evaluate(elapsed, phase.span.bridge, Number(inputs.page2Pop.value) / 100, sequenceRoute, phase.span.page2);
       if (phase.name === "reset") {
         const fade = smoothstep(phase.progress);
         drawSecondPage(context, width, height, { ...motion, camera: 1, scale: 1 }, 1 - fade);
@@ -891,15 +898,27 @@
           context.save(); context.translate(-motion.camera * width, 0); drawTextLayer(false); context.restore();
         }
         drawSecondPage(context, width, height, motion);
-        // Translate the same already-materialized ribbon; its phase and texture
-        // clock are never restarted when the camera crosses the page boundary.
-        if (motion.offset > -1 && motion.offset < 1) {
-          context.save(); context.translate(motion.offset * width, 0);
-          drawExactBrush(context, rawTime, width, height, visible);
-          context.restore();
-        }
+        const ribbon = window.RibbonInkWriting.draw(sequenceRoute, motion, width, height, unit,
+          74 * Number(inputs.brushWidth.value) / 100, paletteColors(), phase.time,
+          Number(inputs.textureSpeed.value) / 100, Number(inputs.textureDensity.value) / 100, inputs.page2Weave.value);
+        context.drawImage(ribbon.ink, 0, 0);
         if (motion.camera < 1) {
-          context.save(); context.translate(-motion.camera * width, 0); drawTextLayer(true); context.restore();
+          // Existing ink is stationary in the world: the ONLY transform is the camera.
+          context.save(); context.translate(-motion.camera * width, 0);
+          drawExactBrush(context, rawTime, width, height, visible);
+          drawTextLayer(true); context.restore();
+        }
+        if (motion.scale > 0 && motion.head > motion.tail) {
+          if (page2Occlusion.width !== Math.ceil(width) || page2Occlusion.height !== Math.ceil(height)) {
+            page2Occlusion.width = Math.ceil(width); page2Occlusion.height = Math.ceil(height);
+          }
+          const over = page2Occlusion.getContext("2d");
+          over.clearRect(0, 0, width, height);
+          drawSecondPage(over, width, height, motion);
+          over.globalCompositeOperation = "destination-in";
+          over.drawImage(ribbon.rear, 0, 0);
+          over.globalCompositeOperation = "source-over";
+          context.drawImage(page2Occlusion, 0, 0);
         }
       }
       if (target === canvas) updateTimelinePlayhead(phase);
@@ -955,8 +974,8 @@
     if (twoPages()) return [
       { id: "write", label: "首页写入", duration: span.write, color: PHASE_COLORS[0] },
       { id: "flow", label: "首页流动", duration: span.flow, color: PHASE_COLORS[1] },
-      { id: "bridge", label: "接力·弹出", duration: span.bridge, color: PHASE_COLORS[2] },
-      { id: "page2", label: "第二页", duration: span.page2, color: PHASE_COLORS[3] },
+      { id: "bridge", label: "续写·弹出", duration: span.bridge, color: PHASE_COLORS[2] },
+      { id: "page2", label: "收笔·停留", duration: span.page2, color: PHASE_COLORS[3] },
       { id: "reset", label: "回首页", duration: span.reset, color: "#777780" }
     ];
     return [
@@ -1334,6 +1353,9 @@
         ensurePageFonts().then(() => { page2Key = ""; textLayerKeys.fill(""); renderPreview(); });
       }
       if (key === "sequenceMode") replay();
+      if (twoPages() && ["page2Route", "page2Weave"].includes(key)) {
+        setPaused(true); setTime(timing().write + timing().flow + timing().bridge * .84);
+      }
       if (twoPages() && ["bridgeDuration", "page2Pop"].includes(key)) {
         setTime(timing().write + timing().flow); setPaused(false);
       }

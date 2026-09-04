@@ -97,15 +97,17 @@
         <div id="secondPageTools" hidden data-page-id="second">
           <div class="ink-button-row"><button class="ink-button" id="editFirstPage" type="button">第一页 · 暂停修改</button><button class="ink-button" id="editSecondPage" type="button">第二页 · 暂停修改</button></div>
           <h3 class="ink-page-heading">第二页</h3>
+          <label class="ink-field">第二页笔迹<select id="page2Route"><option value="loop">回环穿行</option><option value="arc">弧线绕行</option></select></label>
+          <label class="ink-field">文字穿插<select id="page2Weave"><option value="weave">前后交错</option><option value="reverse">反向交错</option><option value="front">笔迹全部在前</option><option value="back">笔迹全部在后</option></select></label>
           <label class="ink-field">第二页文字<input id="page2Text" type="text" value="FLOW" maxlength="28" autocomplete="off"></label>
           <label class="ink-field">第二页字体<select id="page2Font"><option value="stg:roboto-condensed">Roboto Condensed</option></select></label>
           <label class="ink-range">第二页字号 <output id="page2SizeOut">270</output><input id="page2Size" type="range" min="72" max="360" value="270"></label>
           <label class="ink-range">第二页字距 <output id="page2SpacingOut">2</output><input id="page2Spacing" type="range" min="-14" max="42" value="2"></label>
           <div class="ink-color-grid"><label>第二页字色<input id="page2Color" type="color" value="#080808"></label></div>
-          <label class="ink-range">向右接力 <output id="bridgeDurationOut">0.90 秒</output><input id="bridgeDuration" type="range" min="55" max="160" value="90"></label>
+          <label class="ink-range">跨页书写 <output id="bridgeDurationOut">0.90 秒</output><input id="bridgeDuration" type="range" min="55" max="160" value="90"></label>
           <label class="ink-range">整字弹出 <output id="page2PopOut">0.42 秒</output><input id="page2Pop" type="range" min="20" max="65" value="42"></label>
           <label class="ink-range">第二页停留 <output id="page2HoldOut">1.25 秒</output><input id="page2Hold" type="range" min="100" max="250" value="125"></label>
-          <p class="ink-help">两页共用上方的笔迹与背景。笔迹连续向右运动，笔锋到达第二页中心时触发整块文字弹出。第一页文字在上方编辑。</p>
+          <p class="ink-help">笔锋沿新路线继续书写，经过中心时整字弹出；已写下的笔迹不会整体搬动。穿插按实际字形合成。两页共用上方配色、粗细与背景。</p>
         </div>
       </section>
 
@@ -240,7 +242,8 @@
   <script src="js/continuation-gif.js?v=20260901-1"></script>
   <script src="js/h264-mp4-encoder.web.js?v=20260901-1"></script>
   <script src="ribbonink-freehand.js?v=20260904-5"></script>
-  <script src="ribbonink-sequence.js?v=20260904-9"></script>
-  <script src="ribbonink.js?v=20260904-9"></script>
+  <script src="ribbonink-sequence.js?v=20260904-10"></script>
+  <script src="ribbonink-writing.js?v=20260904-10"></script>
+  <script src="ribbonink.js?v=20260904-10"></script>
 </body>
 </html>
