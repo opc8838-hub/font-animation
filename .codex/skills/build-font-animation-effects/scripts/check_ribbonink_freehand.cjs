@@ -1,0 +1,27 @@
+const assert = require('node:assert/strict');
+const path = require('node:path');
+require(path.resolve(__dirname, '../../../../site/ribbonink-freehand.js'));
+const ink = globalThis.RibbonInkFreehand;
+const input = { width: 720, height: 405, strokes: [Array.from({ length: 81 }, (_, i) => [60 + i * 7, 200 + Math.sin(i / 9) * 80, .55 + i / 160]), [[50, 50]]] };
+const saved = JSON.stringify(input);
+const data = ink.validate(input), compiled = ink.compile(data);
+assert.equal(JSON.stringify(input), saved, 'sampling must not mutate recorded points');
+assert.equal(compiled.strokes.length, 2);
+assert.equal(compiled.strokes[1].start, compiled.strokes[0].length);
+const stroke = compiled.strokes[0];
+const radii = stroke.points.map(p => ink.radius(p, stroke, 28, 2.4));
+assert.ok(Math.max(...radii) / Math.min(...radii) > 1.8, 'handwriting needs nonuniform width');
+stroke.points.forEach((p, i) => {
+  assert.ok(Number.isFinite(p.angle) && p.pressure >= .55 && p.pressure <= 1.3);
+  assert.ok(Math.abs(ink.radius(p, stroke, 56, 2.4) - radii[i] * 2) < 1e-10, 'slider scales pressure profile without replacing it');
+});
+const cut = ink.section(stroke.points, 35, 95);
+assert.equal(cut[0].length, 35); assert.equal(cut.at(-1).length, 95);
+assert.deepEqual(ink.compile(data), compiled, 'replay geometry is deterministic');
+assert.equal(ink.noise(1.23, 4), ink.noise(1.23, 4));
+assert.throws(() => ink.validate({ ...data, strokes: [[[1, 2, NaN]]] }));
+assert.throws(() => ink.validate({ ...data, strokes: [[[1, 2, 8]]] }));
+assert.doesNotThrow(() => ink.validate({ ...data, strokes: [[[1, 2], [3, 4]]] }), 'legacy XY points still import');
+assert.deepEqual(ink.transform({ width: 720, height: 405 }, 1080, 1920), { scale: 1.5, x: 0, y: 656.25 });
+assert.equal(JSON.stringify(input), saved);
+console.log('PASS: freehand geometry, pressure, width scaling, legacy import and deterministic sampling');

@@ -1,0 +1,346 @@
+:root {
+  color-scheme: light;
+  --ink-panel-width: 420px;
+  --ink-panel-bg: #ececef;
+  --ink-card: #ffffff;
+  --ink-line: #d8d8dc;
+  --ink-text: #101014;
+  --ink-muted: #696970;
+  --ink-blue: #0b76e8;
+}
+
+* { box-sizing: border-box; }
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #101012;
+  color: var(--ink-text);
+  font-family: "STG Inter", "STG Noto Sans SC", system-ui, sans-serif;
+}
+
+button,
+input,
+select { font: inherit; }
+
+.ink-panel {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 20;
+  width: var(--ink-panel-width);
+  background: var(--ink-panel-bg);
+  border-right: 1px solid rgba(0, 0, 0, .14);
+  display: flex;
+  flex-direction: column;
+}
+
+.ink-panel-header {
+  flex: 0 0 auto;
+  min-height: 78px;
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, .86);
+  border-bottom: 1px solid var(--ink-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  backdrop-filter: blur(18px);
+}
+
+.ink-panel-header div { display: grid; gap: 2px; }
+.ink-panel-header span { color: var(--ink-muted); font-size: 11px; }
+.ink-panel-header strong { font-size: 20px; letter-spacing: -.04em; }
+.ink-panel-header a {
+  color: var(--ink-blue);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.ink-panel-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px 12px 40px;
+  scrollbar-width: thin;
+}
+
+.ink-card {
+  margin: 0 0 10px;
+  padding: 15px;
+  border: 1px solid rgba(0, 0, 0, .07);
+  border-radius: 16px;
+  background: var(--ink-card);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .8) inset;
+}
+
+.ink-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 14px;
+}
+
+.ink-card-heading > span {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: #efeff2;
+  color: #777780;
+  font: 700 10px/1 "STG Martian Mono", monospace;
+}
+
+.ink-card h2 { margin: 0; font-size: 14px; letter-spacing: -.02em; }
+
+.ink-field,
+.ink-range {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 7px 10px;
+  margin: 0 0 12px;
+  color: #36363b;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.ink-field input,
+.ink-field select {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  padding: 0 11px;
+  color: var(--ink-text);
+  background: #f6f6f8;
+  border: 1px solid #d6d6da;
+  border-radius: 10px;
+  outline: none;
+}
+
+.ink-field input:focus,
+.ink-field select:focus { border-color: var(--ink-blue); box-shadow: 0 0 0 3px rgba(11, 118, 232, .12); }
+
+.ink-range output {
+  color: var(--ink-muted);
+  font: 600 11px/1 "STG Martian Mono", monospace;
+}
+
+.ink-range input[type="range"] {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin: 0;
+  accent-color: var(--ink-blue);
+}
+
+.ink-size-grid,
+.ink-color-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.ink-color-grid { margin-bottom: 13px; }
+.ink-palette-grid label:last-child { grid-column: 1 / -1; }
+
+.ink-color-grid label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 38px;
+  padding: 8px 9px;
+  border: 1px solid #dedee2;
+  border-radius: 10px;
+  background: #f7f7f9;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.ink-color-grid input[type="color"] {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+}
+
+.ink-help,
+.ink-status {
+  margin: 8px 0 0;
+  color: var(--ink-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.ink-button-row,
+.ink-button-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ink-export-grid { grid-template-columns: 1fr 1fr; }
+.ink-export-grid .ink-button-primary { grid-column: 1 / -1; }
+
+.ink-button,
+.me-scheme-action {
+  min-height: 38px;
+  padding: 9px 11px;
+  border: 1px solid #d3d3d8;
+  border-radius: 10px;
+  background: #fff;
+  color: #17171b;
+  font-size: 12px;
+  font-weight: 750;
+  text-align: center;
+  cursor: pointer;
+}
+
+.ink-button:hover,
+.me-scheme-action:hover { border-color: #aaaab1; }
+.ink-button:disabled { opacity: .45; cursor: wait; }
+.ink-button-primary { border-color: #111; background: #111; color: #fff; }
+.ink-button-soft { background: #f2f2f5; }
+
+.me-scheme-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.me-choreo-scroll { overflow-x: auto; padding: 3px 0 6px; }
+.me-choreo-track {
+  position: relative;
+  min-width: 286px;
+  height: 56px;
+  border-radius: 11px;
+  background: #f1f1f4;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.me-choreo-bar { position: absolute; inset: 8px; display: flex; gap: 2px; }
+.me-choreo-block {
+  min-width: 34px;
+  height: 40px;
+  padding: 7px 6px;
+  border-radius: 7px;
+  color: #fff;
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  overflow: hidden;
+  font-size: 10px;
+  line-height: 1;
+}
+.me-choreo-block b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-choreo-block small { opacity: .76; font-size: 8px; }
+.me-choreo-block.is-active { box-shadow: inset 0 0 0 2px rgba(255,255,255,.82); }
+.me-choreo-playhead {
+  position: absolute;
+  z-index: 3;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  width: 2px;
+  border-radius: 2px;
+  background: #111;
+  pointer-events: none;
+}
+
+.me-choreo-legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 9px;
+  margin-top: 8px;
+}
+.me-choreo-legend span { display: flex; align-items: center; gap: 6px; color: #606068; font-size: 10px; }
+.me-choreo-legend i { width: 8px; height: 8px; border-radius: 3px; }
+
+.ink-workspace {
+  position: fixed;
+  inset: 0 0 0 var(--ink-panel-width);
+  display: grid;
+  place-items: center;
+  padding: 26px;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255, 255, 255, .08), transparent 46%),
+    #111114;
+}
+
+.ink-stage-shell {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #f4f1ee;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .38), 0 0 0 1px rgba(255,255,255,.08);
+}
+
+#stageCanvas { display: block; width: 100%; height: 100%; }
+
+[hidden] { display: none !important; }
+body.is-drawing #stageCanvas { cursor: crosshair; touch-action: none; }
+.ink-clear-drawing { width: 100%; margin-top: 8px; }
+.ink-drawing-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; text-align: center; color: #777780; font-size: 16px; line-height: 1.8; pointer-events: none; }
+.ink-drawing-hint small { font-size: 12px; }
+body.is-preview .ink-drawing-hint { display: none; }
+
+.ink-size-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 5px 8px;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, .62);
+  color: rgba(255, 255, 255, .86);
+  font: 600 9px/1 "STG Martian Mono", monospace;
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+
+.ink-stage-controls {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  bottom: 13px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 10px;
+  background: rgba(12, 12, 14, .76);
+  backdrop-filter: blur(12px);
+}
+
+.ink-stage-controls button {
+  min-width: 58px;
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ink-stage-controls button:hover { background: rgba(255,255,255,.14); }
+
+body.is-preview .ink-panel { display: none; }
+body.is-preview .ink-workspace { inset: 0; padding: 0; }
+body.is-preview .ink-stage-shell { width: 100% !important; height: 100% !important; border-radius: 0; }
+body.is-preview .ink-size-badge,
+body.is-preview .ink-stage-controls { display: none; }
+
+@media (max-width: 760px) {
+  body { display: flex; flex-direction: column; background: var(--ink-panel-bg); }
+  .ink-workspace { order: -1; position: relative; inset: auto; flex: 0 0 42%; width: 100%; min-height: 180px; padding: 14px; }
+  .ink-panel { position: relative; width: 100%; flex: 1 1 0; min-height: 0; }
+  .ink-panel-scroll { overflow: auto; overscroll-behavior: contain; }
+  body.is-preview .ink-workspace { flex: 1; padding: 0; }
+}
