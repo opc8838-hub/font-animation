@@ -39,3 +39,31 @@ const render = extract('renderFrame');
 assert.ok(render.indexOf('drawTextLayer(false)') < render.indexOf('drawExactBrush(context'));
 assert.ok(render.indexOf('drawTextLayer(true)') > render.indexOf('drawExactBrush(context'));
 console.log('PASS: I/E phase states, baseline pivot, layer order, monotone continuous velocity');
+
+let scans = 0;
+context.fontSpec = () => 'test M';
+context.mEdgeCache = new Map();
+context.document = {
+  fonts: { check: () => true },
+  createElement: () => ({
+    getContext: () => ({
+      measureText: () => ({ actualBoundingBoxLeft: 0, actualBoundingBoxRight: 100, actualBoundingBoxAscent: 100, actualBoundingBoxDescent: 0 }),
+      fillText() {},
+      getImageData() {
+        scans++;
+        const data = new Uint8ClampedArray(120 * 120 * 4);
+        for (let y = 0; y < 100; y++) for (let x = 50; x < 100; x++) {
+          if (x <= 90 - .3 * y || x >= 85) data[((y + 10) * 120 + x + 10) * 4 + 3] = 255;
+        }
+        return { data };
+      }
+    })
+  })
+};
+vm.runInContext(extract('mDiagonalEdge'), context);
+const edge = context.mDiagonalEdge();
+assert.ok(Math.abs(edge.top - .92) < .025, 'diagonal extends through the upper join');
+assert.ok(Math.abs(edge.bottom - .62) < .025, 'edge follows the glyph gap, not a vertical percentage');
+assert.equal(context.mDiagonalEdge(), edge);
+assert.equal(scans, 1, 'glyph readback is cached, not repeated each frame');
+console.log('PASS: glyph-derived diagonal contour and cached measurement');

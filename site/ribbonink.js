@@ -78,6 +78,7 @@
   const textLayerCanvas = document.createElement("canvas");
   const foregroundTextCanvas = document.createElement("canvas");
   const textLayerKeys = ["", ""];
+  const mEdgeCache = new Map();
   let mainToneKey = "";
 
   const authored = [
@@ -276,6 +277,51 @@
     return { alpha: 1, scaleX: 1 - .16 * squeeze * amount, scaleY: 1 - .22 * squeeze * amount };
   }
 
+  function mDiagonalEdge() {
+    const font = fontSpec(512);
+    const key = `${font}:${document.fonts.check(font, "M")}`;
+    if (mEdgeCache.has(key)) return mEdgeCache.get(key);
+    const scan = document.createElement("canvas");
+    const ctx = scan.getContext("2d", { willReadFrequently: true });
+    ctx.font = font;
+    const metrics = ctx.measureText("M");
+    const w = Math.ceil(metrics.actualBoundingBoxLeft + metrics.actualBoundingBoxRight);
+    const h = Math.ceil(metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent);
+    scan.width = w + 20;
+    scan.height = h + 20;
+    ctx.font = font;
+    ctx.fillText("M", 10 + metrics.actualBoundingBoxLeft, 10 + metrics.actualBoundingBoxAscent);
+    const pixels = ctx.getImageData(0, 0, scan.width, scan.height).data;
+    const points = [];
+    for (let y = 0; y < h; y += 1) {
+      let ink = false, gap = -1;
+      for (let x = Math.floor(w / 2); x < w; x += 1) {
+        const alpha = pixels[((y + 10) * scan.width + x + 10) * 4 + 3];
+        if (alpha > 128) {
+          if (gap >= 0 && x - gap > 2) {
+            if ((x + gap) / 2 > w * .6) points.push({ y: y / h, x: (gap + .5) / w });
+            break;
+          }
+          ink = true;
+        } else if (ink && gap < 0) gap = x;
+      }
+    }
+    // The gap's left edge is the diagonal's real outer contour. Extend its
+    // direction through the joined top, rather than slicing it vertically.
+    let edge = { top: 1, bottom: 1 };
+    if (points.length > 8) {
+      const meanY = points.reduce((sum, p) => sum + p.y, 0) / points.length;
+      const meanX = points.reduce((sum, p) => sum + p.x, 0) / points.length;
+      const slope = points.reduce((sum, p) => sum + (p.y - meanY) * (p.x - meanX), 0)
+        / points.reduce((sum, p) => sum + (p.y - meanY) ** 2, 0);
+      const top = meanX - slope * meanY + 1 / w;
+      edge = { top: clamp(top), bottom: clamp(top + slope) };
+    }
+    if (mEdgeCache.size >= 24) mEdgeCache.clear();
+    mEdgeCache.set(key, edge);
+    return edge;
+  }
+
   function drawSpacedText(context, text, centerX, centerY, size, spacing, color, visible, foreground = false) {
     const metrics = spacedTextMetrics(context, text, size, spacing);
     context.save();
@@ -297,12 +343,9 @@
           context.save();
           context.beginPath();
           context.moveTo(left + .24 * w, top);
-          // Reveal a little more of the upper-right stroke; taper back before
-          // the lower crossing so the accepted weave below stays unchanged.
-          context.lineTo(left + .82 * w, top);
-          context.lineTo(left + .82 * w, top + .35 * h);
-          context.lineTo(left + .77 * w, top + .57 * h);
-          context.lineTo(left + .77 * w, top + h);
+          const edge = mDiagonalEdge();
+          context.lineTo(left + edge.top * w, top);
+          context.lineTo(left + edge.bottom * w, top + h);
           context.lineTo(left + .24 * w, top + h);
           context.closePath();
           context.clip();
