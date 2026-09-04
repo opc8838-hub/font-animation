@@ -297,7 +297,11 @@
           context.save();
           context.beginPath();
           context.moveTo(left + .24 * w, top);
-          context.lineTo(left + .77 * w, top);
+          // Reveal a little more of the upper-right stroke; taper back before
+          // the lower crossing so the accepted weave below stays unchanged.
+          context.lineTo(left + .82 * w, top);
+          context.lineTo(left + .82 * w, top + .35 * h);
+          context.lineTo(left + .77 * w, top + .57 * h);
           context.lineTo(left + .77 * w, top + h);
           context.lineTo(left + .24 * w, top + h);
           context.closePath();
