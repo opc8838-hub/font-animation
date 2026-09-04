@@ -184,6 +184,20 @@ main { overflow: hidden; }
   z-index: 3;
 }
 
+/* Wide exports use the actual renderer at 16:9, not stretched square movies. */
+.effect-card.has-live-preview:is([data-effect="sproutshift"], [data-effect="mistlift"], [data-effect="typecascade"], [data-effect="glyphreveal"]) {
+  grid-column: span 2;
+  width: 100%;
+  max-width: 640px;
+  justify-self: start;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
+}
+.effect-card.has-live-preview[data-effect="glyphmorph"] { aspect-ratio: 1; min-height: 0; }
+@media (max-width: 700px) {
+  .effect-card.has-live-preview:is([data-effect="sproutshift"], [data-effect="mistlift"], [data-effect="typecascade"], [data-effect="glyphreveal"]) { grid-column: span 1; }
+}
+
 .effect-card.has-live-preview[data-effect="textswell"] {
   grid-column: span 2;
   aspect-ratio: 16 / 9;

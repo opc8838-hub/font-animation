@@ -1,8 +1,8 @@
 {
-  "version": 3,
+  "version": 4,
   "canvas": { "width": 1080, "height": 1080, "preset": "1080x1080" },
   "typography": { "fontFamily": "stg:inter", "fontSize": 174, "tracking": 0, "positionX": 0, "positionY": 0, "alignment": "center", "textColor": "#111111", "backgroundColor": "#ffffff" },
-  "motion": { "morphDuration": 600, "characterDelay": 0.026, "effectAmount": 1, "speed": 1, "loop": false },
+  "motion": { "morphDuration": 600, "characterDelay": 0.026, "effectAmount": 1, "speed": 1, "loop": true },
   "rows": [
     { "id": "mist-01", "text": "Pause and listen,", "hold": 800, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
     { "id": "mist-02", "text": "‘What moved first?’", "hold": 800, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },

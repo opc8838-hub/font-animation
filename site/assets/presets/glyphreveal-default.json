@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "canvas": { "width": 1080, "height": 1080, "preset": "1080x1080" },
   "typography": { "fontFamily": "stg:inter", "fontSize": 154, "tracking": 0, "positionX": 0, "positionY": 0, "alignment": "center", "textColor": "#111111", "backgroundColor": "#ffffff" },
   "motion": { "morphDuration": 600, "characterDelay": 0.026, "effectAmount": 0, "speed": 1, "loop": true },

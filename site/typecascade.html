@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="me-motion-editor.css?v=20260901-1">
   <link rel="stylesheet" href="shared-fonts.css?v=20260824-2">
   <link rel="stylesheet" href="stg-cn.css?v=20260824-1">
-  <link rel="stylesheet" href="glyphmorph.css?v=20260904-1">
+  <link rel="stylesheet" href="glyphmorph-reviewed.css?v=20260904-6">
 </head>
 <body class="glyphmorph-editor" data-morph-port="typecascade">
   <aside id="glyphMorphInspector" class="gm-inspector" aria-label="字倾编辑器">
@@ -58,7 +58,7 @@
 
     <section class="gm-card">
       <div class="gm-card-title"><span>04</span><h2>字体与构图</h2></div>
-      <label class="gm-field gm-field-wide">字体
+      <label class="gm-field gm-field-wide">全局默认字体
         <select id="fontFamily"><option value="stg:inter">Inter</option></select>
       </label>
       <div class="gm-grid-2">
@@ -78,7 +78,7 @@
       <div class="gm-card-title"><span>05</span><h2>倾倒节奏</h2></div>
       <p class="gm-help">旧字绕底部左右摆落，新字从基线长入；字符按正弦波错落。</p>
       <div class="gm-grid-2">
-        <label class="gm-field">倾倒时长 <input id="morphDuration" type="range" min="180" max="1400" step="10"><output for="morphDuration"></output></label>
+        <label class="gm-field">新字长入时长 <input id="morphDuration" type="range" min="180" max="1400" step="10"><output for="morphDuration"></output></label>
         <label class="gm-field">摆落错峰 <input id="characterDelay" type="range" min="0" max="0.12" step="0.001"><output for="characterDelay"></output></label>
         <label class="gm-field">倾倒角度 <input id="effectAmount" type="range" min="60" max="220" step="1"><output for="effectAmount"></output></label>
         <label class="gm-field">总速度 <input id="speed" type="range" min="0.25" max="2" step="0.05"><output for="speed"></output></label>
@@ -177,8 +177,9 @@
 
   <script src="js/continuation-gif.js?v=20260824-1"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
+  <script src="row-font-editor.js?v=20260904-4"></script>
   <script src="shared-icon-library.js?v=20260902-1"></script>
-  <script src="morphports.js?v=20260904-1"></script>
+  <script src="morphports-reviewed.js?v=20260904-6"></script>
   <script src="stg-cn.js?v=20260904-1"></script>
 </body>
 </html>

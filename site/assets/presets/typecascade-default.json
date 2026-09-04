@@ -1,15 +1,135 @@
 {
-  "version": 3,
-  "canvas": { "width": 1080, "height": 1080, "preset": "1080x1080" },
-  "typography": { "fontFamily": "stg:inter", "fontSize": 160, "tracking": 0, "positionX": 0, "positionY": 0, "alignment": "center", "textColor": "#111111", "backgroundColor": "#ffffff" },
-  "motion": { "morphDuration": 600, "characterDelay": 0.026, "effectAmount": 168, "speed": 1, "loop": false },
+  "version": 4,
+  "canvas": {
+    "width": 1080,
+    "height": 1080,
+    "preset": "1080x1080"
+  },
+  "typography": {
+    "fontFamily": "stg:inter",
+    "fontSize": 167,
+    "tracking": 0,
+    "positionX": 0,
+    "positionY": 0,
+    "alignment": "center",
+    "textColor": "#111111",
+    "backgroundColor": "#ffffff"
+  },
+  "motion": {
+    "morphDuration": 810,
+    "characterDelay": 0.052,
+    "speed": 1,
+    "loop": true,
+    "effectAmount": 168
+  },
   "rows": [
-    { "id": "cascade-01", "text": "Sketch", "hold": 450, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
-    { "id": "cascade-02", "text": "Frame", "hold": 450, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
-    { "id": "cascade-03", "text": "Rhythm", "hold": 450, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
-    { "id": "cascade-04", "text": "Keyframe", "hold": 450, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
-    { "id": "cascade-05", "text": "Timeline", "hold": 450, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
-    { "id": "cascade-06", "text": "Render", "hold": 600, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
-    { "id": "cascade-07", "text": "Create", "hold": 1278, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 }
+    {
+      "id": "cascade-01",
+      "text": "Sketch",
+      "hold": 450,
+      "icons": [
+        {
+          "id": "mp-mtn08rg8-op1v11",
+          "libraryId": "bot-08",
+          "boundary": 6,
+          "size": 110,
+          "gap": 15,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "fontFamily": "",
+      "tiltDuration": 300,
+      "hangDuration": 120,
+      "fallDuration": 450,
+      "backgroundColor": "#ffffff",
+      "backgroundMedia": null,
+      "backgroundTransition": "direct",
+      "backgroundTransitionDuration": 120
+    },
+    {
+      "id": "cascade-02",
+      "text": "Frame",
+      "hold": 450,
+      "icons": [],
+      "fontFamily": "",
+      "tiltDuration": 300,
+      "hangDuration": 120,
+      "fallDuration": 450,
+      "backgroundColor": "#ffffff",
+      "backgroundMedia": null,
+      "backgroundTransition": "direct",
+      "backgroundTransitionDuration": 120
+    },
+    {
+      "id": "cascade-03",
+      "text": "Rhythm",
+      "hold": 450,
+      "icons": [],
+      "fontFamily": "",
+      "tiltDuration": 300,
+      "hangDuration": 120,
+      "fallDuration": 450,
+      "backgroundColor": "#ffffff",
+      "backgroundMedia": null,
+      "backgroundTransition": "direct",
+      "backgroundTransitionDuration": 120
+    },
+    {
+      "id": "cascade-04",
+      "text": "Keyframe",
+      "hold": 450,
+      "icons": [],
+      "fontFamily": "",
+      "tiltDuration": 300,
+      "hangDuration": 120,
+      "fallDuration": 450,
+      "backgroundColor": "#ffffff",
+      "backgroundMedia": null,
+      "backgroundTransition": "direct",
+      "backgroundTransitionDuration": 120
+    },
+    {
+      "id": "cascade-05",
+      "text": "Timeline",
+      "hold": 450,
+      "icons": [],
+      "fontFamily": "",
+      "tiltDuration": 300,
+      "hangDuration": 120,
+      "fallDuration": 450,
+      "backgroundColor": "#ffffff",
+      "backgroundMedia": null,
+      "backgroundTransition": "direct",
+      "backgroundTransitionDuration": 120
+    },
+    {
+      "id": "cascade-06",
+      "text": "Render",
+      "hold": 600,
+      "icons": [],
+      "fontFamily": "",
+      "tiltDuration": 300,
+      "hangDuration": 120,
+      "fallDuration": 450,
+      "backgroundColor": "#ffffff",
+      "backgroundMedia": null,
+      "backgroundTransition": "direct",
+      "backgroundTransitionDuration": 120
+    },
+    {
+      "id": "cascade-07",
+      "text": "Create",
+      "hold": 1278,
+      "icons": [],
+      "fontFamily": "",
+      "tiltDuration": 300,
+      "hangDuration": 120,
+      "fallDuration": 450,
+      "backgroundColor": "#ffffff",
+      "backgroundMedia": null,
+      "backgroundTransition": "direct",
+      "backgroundTransitionDuration": 120
+    }
   ]
 }

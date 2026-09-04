@@ -5,7 +5,7 @@
   // LTMorphingLabel (MIT, lexrus/LTMorphingLabel). No Swift/UIKit source is embedded.
   const $ = (id) => document.getElementById(id);
   const STORAGE_KEY = "me-motion-glyphmorph-v1";
-  const VERSION = 2;
+  const VERSION = 3;
   const segmenter = typeof Intl.Segmenter === "function" ? new Intl.Segmenter(undefined, { granularity: "grapheme" }) : null;
   const split = (value) => segmenter ? Array.from(segmenter.segment(String(value)), ({ segment }) => segment) : Array.from(String(value));
   const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
@@ -55,8 +55,15 @@
   const controlIds = ["fontFamily", "fontSize", "tracking", "positionX", "positionY", "textColor", "backgroundColor", "morphDuration", "characterDelay", "scaleFloor", "speed", "loop"];
   const controls = Object.fromEntries(controlIds.map((id) => [id, $(id)]));
 
-  function fontPreset() {
-    return window.STGFontLibrary?.preset(state.scheme.typography.fontFamily) || { family: "STG Inter", weight: 500, style: "normal" };
+  function fontPreset(row) {
+    return window.MERowFonts.preset(row, state.scheme.typography);
+  }
+
+  async function refreshFonts() {
+    try {
+      await window.MERowFonts.loadRows(state.scheme.rows, state.scheme.typography);
+      resizePreview();
+    } catch (error) { $("exportStatus").textContent = `字体加载失败：${error.message}`; }
   }
 
   function timelineSegments() {
@@ -175,6 +182,7 @@
   }
 
   async function preloadInsertedAssets() {
+    await window.MERowFonts.loadRows(state.scheme.rows, state.scheme.typography);
     const ids = new Set(state.scheme.rows.flatMap((row) => (row.icons || []).map((icon) => icon.libraryId)));
     await Promise.all(Array.from(ids, (id) => loadAssetResource(libraryAsset(id))));
   }
@@ -185,7 +193,7 @@
     const unit = Math.min(width, height) / 1080;
     const baseSize = Math.max(1, typography.fontSize * unit);
     const tracking = typography.tracking * unit;
-    const preset = fontPreset();
+    const preset = fontPreset(row);
     const fallback = window.STGFontLibrary?.fallbackStack || "sans-serif";
     const family = `"${preset.family}",${fallback}`;
     const style = preset.style || "normal";
@@ -321,7 +329,11 @@
         iconOverride = { ...oldSlot.token.icon };
         ["size", "gap", "x", "y"].forEach((key) => { iconOverride[key] = Number(oldSlot.token.icon[key] || 0) + (Number(target.token.icon[key] || 0) - Number(oldSlot.token.icon[key] || 0)) * eased; });
       }
-      drawToken(ctx, { token: oldSlot.token, x: oldSlot.x + (target.x - oldSlot.x) * eased, y: oldSlot.y + (target.y - oldSlot.y) * eased }, fromLayout, 1, 1, timeSeconds, iconOverride);
+      const movingLayout = { ...fromLayout, fontSize: fromLayout.fontSize + (toLayout.fontSize - fromLayout.fontSize) * eased };
+      const movingSlot = { token: oldSlot.token, x: oldSlot.x + (target.x - oldSlot.x) * eased, y: oldSlot.y + (target.y - oldSlot.y) * eased };
+      const fontChanged = oldSlot.token.type === "glyph" && ["family", "style", "weight"].some((key) => fromLayout[key] !== toLayout[key]);
+      drawToken(ctx, movingSlot, movingLayout, 1, fontChanged ? 1 - eased : 1, timeSeconds, iconOverride);
+      if (fontChanged) drawToken(ctx, movingSlot, { ...toLayout, fontSize: movingLayout.fontSize }, 1, eased, timeSeconds);
     });
     toLayout.slots.forEach((newSlot, newIndex) => {
       if (claimed.has(newIndex)) return;
@@ -334,13 +346,21 @@
   }
 
   function resizePreview() {
-    const rect = frame.getBoundingClientRect();
     const ratio = state.scheme.canvas.width / state.scheme.canvas.height;
     frame.style.setProperty("--gm-aspect", String(ratio));
+    const stage = $("glyphMorphStage");
+    const stageStyle = getComputedStyle(stage);
+    const availableWidth = Math.max(1, stage.clientWidth - parseFloat(stageStyle.paddingLeft) - parseFloat(stageStyle.paddingRight));
+    const availableHeight = Math.max(1, stage.clientHeight - parseFloat(stageStyle.paddingTop) - parseFloat(stageStyle.paddingBottom));
+    const fittedWidth = Math.min(availableWidth, availableHeight * ratio);
+    frame.style.width = `${fittedWidth}px`;
+    frame.style.height = `${fittedWidth / ratio}px`;
+    frame.style.maxHeight = "none";
+    const rect = frame.getBoundingClientRect();
     const maxPixels = 1500;
     const scale = Math.min(window.devicePixelRatio || 1, 2, maxPixels / Math.max(rect.width, rect.height));
     canvas.width = Math.max(2, Math.round(rect.width * scale));
-    canvas.height = Math.max(2, Math.round(rect.height * scale));
+    canvas.height = Math.max(2, Math.round(canvas.width / ratio));
     renderFrame(canvas, state.elapsedMs / 1000, canvas.width, canvas.height);
   }
 
@@ -355,6 +375,7 @@
           <button data-action="down" type="button" aria-label="下移">↓</button>
           <button data-action="delete" type="button" aria-label="删除">×</button>
         </div>
+        <label class="gm-row-font">本行字体<select data-key="fontFamily" data-stg-font-library="true" aria-label="第 ${index + 1} 行字体">${window.MERowFonts.options(row.fontFamily)}</select></label>
         <div class="gm-row-meta">
           <button class="gm-row-target${state.activeRowId === row.id ? " is-active" : ""}" data-action="target" type="button">＋ 插入图标</button>
           <button class="gm-row-pause" data-action="pause-row" type="button">暂停修改</button>
@@ -532,7 +553,7 @@
           id: icon.id || uid(), libraryId: String(icon.libraryId || ""), boundary: clamp(Math.round(Number(icon.boundary) || 0), 0, glyphCount),
           size: clamp(Number(icon.size) || 90, 20, 220), gap: clamp(Number(icon.gap) || 12, 0, 80), x: clamp(Number(icon.x) || 0, -100, 100), y: clamp(Number(icon.y) || 0, -100, 100)
         })).filter((icon) => libraryAsset(icon.libraryId) && !seen.has(icon.libraryId) && seen.add(icon.libraryId));
-        return { id: row.id || uid(), text, hold: clamp(Number(row.hold) || 0, 0, 5000), icons };
+        return { id: row.id || uid(), text, hold: clamp(Number(row.hold) || 0, 0, 5000), icons, fontFamily: window.MERowFonts.normalize(row.fontFamily) };
       })
     };
     if (state.scheme.rows.length < 2) state.scheme.rows.push({ id: uid(), text: "", hold: 100, icons: [] });
@@ -600,18 +621,29 @@
     }
     changed({ restart: false });
   });
-  ["canvasWidth", "canvasHeight"].forEach((id) => $(id).addEventListener("change", () => {
+  ["canvasWidth", "canvasHeight"].forEach((id) => ["input", "change"].forEach((eventName) => $(id).addEventListener(eventName, () => {
     state.scheme.canvas[id === "canvasWidth" ? "width" : "height"] = clamp(Number($(id).value) || 1080, 320, 3840);
     changed();
+  })));
+  controlIds.forEach((id) => controls[id].addEventListener("input", () => {
+    changed({ restart: id === "morphDuration" || id === "characterDelay" || id === "speed" });
+    if (id === "fontFamily") refreshFonts();
   }));
-  controlIds.forEach((id) => controls[id].addEventListener("input", () => changed({ restart: id === "morphDuration" || id === "characterDelay" || id === "speed" })));
   document.querySelectorAll('input[name="alignment"]').forEach((input) => input.addEventListener("change", () => changed()));
 
   $("sequenceRows").addEventListener("input", (event) => {
     const rowElement = event.target.closest(".gm-row-shell");
     const row = state.scheme.rows.find((item) => item.id === rowElement?.dataset.rowId);
-    if (!row) return;
+    if (!row || !event.target.dataset.key) return;
     row[event.target.dataset.key] = event.target.dataset.key === "hold" ? clamp(Number(event.target.value) || 0, 0, 5000) : event.target.value;
+    if (event.target.dataset.key === "fontFamily") {
+      row.fontFamily = window.MERowFonts.normalize(event.target.value);
+      state.activeRowId = row.id;
+      seekToRowStart(state.scheme.rows.indexOf(row), true);
+      autoSave();
+      refreshFonts();
+      return;
+    }
     if (event.target.dataset.key === "text") {
       const glyphCount = split(row.text).length;
       (row.icons || []).forEach((icon) => { icon.boundary = clamp(icon.boundary, 0, glyphCount); });
@@ -619,6 +651,7 @@
       state.caretBoundary = split(row.text.slice(0, event.target.selectionStart ?? row.text.length)).length;
       updateInsertTargetLabel();
       renderSelectedAssets();
+      refreshFonts();
     }
     state.elapsedMs = 0;
     renderTimeline();
@@ -855,7 +888,8 @@
       const gif = new GIF({ workers: 2, quality: 10, width: output.width, height: output.height, workerScript: workerUrl });
       for (let index = 0; index < total; index += 1) {
         renderFrame(output, index / fps, output.width, output.height);
-        gif.addFrame(output, { copy: true, delay: 1000 / fps });
+        const delay = (Math.round((index + 1) * 100 / fps) - Math.round(index * 100 / fps)) * 10;
+        gif.addFrame(output, { copy: true, delay });
       }
       gif.on("progress", (progress) => $("exportStatus").textContent = `正在编码 GIF · ${Math.round(progress * 100)}%`);
       gif.on("finished", (blob) => { URL.revokeObjectURL(workerUrl); download(blob, `glyph-morph-${output.width}x${output.height}.gif`); setBusy(false, "GIF 已生成"); });
