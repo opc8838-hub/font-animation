@@ -9,7 +9,7 @@
   const schemeStatus = $("#schemeStatus");
   const STORAGE_KEY = "me-ribbon-ink-autosave-v3";
   const EFFECT_ID = "ribbon-ink";
-  const SCHEME_VERSION = 10;
+  const SCHEME_VERSION = 11;
   const freehand = window.RibbonInkFreehand;
   let drawing = freehand.validate(null);
   let compiledDrawing = freehand.compile(drawing);
@@ -30,6 +30,7 @@
   };
 
   const inputIds = [
+    "singleTextExit", "singleEmptyHold",
     "page2PaletteMode", "page2PalettePreset", "page2InkColor1", "page2InkColor2", "page2InkColor3", "page2InkColor4", "page2InkColor5",
     "page2TextExit", "page2EmptyHold",
     "page2Rhythm", "page2SlowPosition", "page2SlowWidth", "page2SlowStrength", "page2Finish",
@@ -47,6 +48,7 @@
   const inputs = Object.fromEntries(inputIds.map((id) => [id, $(`#${id}`)]));
 
   const defaultValues = {
+    singleTextExit: "24", singleEmptyHold: "20",
     page2PaletteMode: "inherit", page2PalettePreset: "reference",
     page2InkColor1: "#f34bd9", page2InkColor2: "#a40de4", page2InkColor3: "#ff78e9", page2InkColor4: "#7827d8", page2InkColor5: "#f33ccd",
     page2TextExit: "24", page2EmptyHold: "20",
@@ -86,6 +88,7 @@
   const mainToneCanvas = document.createElement("canvas");
   const textLayerCanvas = document.createElement("canvas");
   const foregroundTextCanvas = document.createElement("canvas");
+  const singleExitCanvas = document.createElement("canvas");
   const textLayerKeys = ["", ""];
   const mEdgeCache = new Map();
   const page2Occlusion = document.createElement("canvas");
@@ -220,7 +223,10 @@
       const page2 = finish + endHold + textExit + emptyHold;
       return { write, flow, erase, hold, bridge, page2, finish, endHold, textExit, emptyHold, reset: 0, total: write + flow + bridge + page2 };
     }
-    return { write, flow, erase, hold, total: write + flow + erase + hold };
+    if (inputs.drawingMode.value === "freehand") return { write, flow, erase, hold, total: write + flow + erase + hold };
+    const textExit = Number(inputs.singleTextExit.value) / 100;
+    const emptyHold = Number(inputs.singleEmptyHold.value) / 100;
+    return { write, flow, erase, hold, textExit, emptyHold, total: write + flow + erase + hold + textExit + emptyHold };
   }
 
   function phaseAt(rawTime) {
@@ -238,7 +244,11 @@
       return { name: "empty", progress: (afterInk - span.endHold - span.textExit) / Math.max(.001, span.emptyHold), time, span };
     }
     if (time < span.write + span.flow + span.erase) return { name: "erase", progress: (time - span.write - span.flow) / Math.max(.001, span.erase), time, span };
-    return { name: "hold", progress: (time - span.write - span.flow - span.erase) / Math.max(.001, span.hold), time, span };
+    const afterInk = time - span.write - span.flow - span.erase;
+    if (inputs.drawingMode.value === "freehand") return { name: "hold", progress: afterInk / Math.max(.001, span.hold), time, span };
+    if (afterInk < span.hold) return { name: "singleSettled", progress: afterInk / Math.max(.001, span.hold), time, span };
+    if (afterInk < span.hold + span.textExit) return { name: "singleTextExit", progress: (afterInk - span.hold) / Math.max(.001, span.textExit), time, span };
+    return { name: "singleEmpty", progress: (afterInk - span.hold - span.textExit) / Math.max(.001, span.emptyHold), time, span };
   }
 
   function visibleWindow(rawTime) {
@@ -850,7 +860,7 @@
       : visibleWindow(rawTime);
     // Align the glyph ink box to the source baseline (not the font's em box).
     // Keep this in logical composition units for all preview/export sizes.
-    const drawTextLayer = (foreground) => {
+    const drawTextLayer = (foreground, targetContext = context) => {
       const textCanvas = foreground ? foregroundTextCanvas : textLayerCanvas;
       const slot = foreground ? 1 : 0;
       const key = JSON.stringify([width, height, text, fontSpec(fit.size), fit.spacing, centerX, centerY,
@@ -872,8 +882,24 @@
         layer.restore();
         textLayerKeys[slot] = key;
       }
-      context.drawImage(textCanvas, 0, 0);
+      targetContext.drawImage(textCanvas, 0, 0);
     };
+    if (!twoPages() && ["singleSettled", "singleTextExit", "singleEmpty"].includes(phase.name)) {
+      if (phase.name !== "singleEmpty") {
+        const exit = window.RibbonInkSequence.textExit(phase.name === "singleSettled" ? 0 : phase.progress);
+        if (singleExitCanvas.width !== Math.ceil(width) || singleExitCanvas.height !== Math.ceil(height)) {
+          singleExitCanvas.width = Math.ceil(width); singleExitCanvas.height = Math.ceil(height);
+        }
+        const composed = singleExitCanvas.getContext("2d");
+        composed.setTransform(1, 0, 0, 1, 0, 0); composed.clearRect(0, 0, width, height);
+        drawTextLayer(false, composed); drawTextLayer(true, composed);
+        context.save(); context.globalAlpha = exit.alpha;
+        context.translate(centerX + width * exit.dx, centerY); context.scale(exit.sx, exit.sy); context.translate(-centerX, -centerY);
+        context.drawImage(singleExitCanvas, 0, 0); context.restore();
+      }
+      if (target === canvas) updateTimelinePlayhead(phase);
+      return;
+    }
     if (sequenceActive) {
       const transform = exactTransform(width, height);
       const entry = transformPoint({ x: 710, y: 195 }, transform);
@@ -987,8 +1013,10 @@
       { id: "write", label: "写入", duration: span.write, color: PHASE_COLORS[0] },
       { id: "flow", label: "流动", duration: span.flow, color: PHASE_COLORS[1] },
       { id: "erase", label: "擦除", duration: span.erase, color: PHASE_COLORS[2] },
-      { id: "hold", label: inputs.drawingMode.value === "freehand" ? "留白" : "底字", duration: span.hold, color: PHASE_COLORS[3] }
-    ];
+      { id: "hold", label: inputs.drawingMode.value === "freehand" ? "留白" : "文字停留", duration: span.hold, color: PHASE_COLORS[3] },
+      { id: "singleTextExit", label: "文字退场", duration: span.textExit || 0, color: "#9e499f" },
+      { id: "singleEmpty", label: "结束留白", duration: span.emptyHold || 0, color: "#657476" }
+    ].filter(phase => phase.duration > 0);
   }
 
   function renderTimeline() {
@@ -1076,9 +1104,15 @@
     $("#page2PaletteTools").hidden = inputs.page2PaletteMode.value !== "custom";
     document.body.classList.toggle("is-two-pages", twoPages());
     ["eraseDuration", "holdDuration"].forEach(id => { inputs[id].closest("label").hidden = twoPages(); });
+    const singleTextEnding = !twoPages() && inputs.drawingMode.value !== "freehand";
+    $("#singleTextExitField").hidden = !singleTextEnding;
+    $("#singleEmptyHoldField").hidden = !singleTextEnding;
+    $("#previewSingleEnding").hidden = !singleTextEnding;
     const map = {
       page2TextExitOut: `${(Number(inputs.page2TextExit.value) / 100).toFixed(2)} 秒`,
       page2EmptyHoldOut: `${(Number(inputs.page2EmptyHold.value) / 100).toFixed(2)} 秒`,
+      singleTextExitOut: `${(Number(inputs.singleTextExit.value) / 100).toFixed(2)} 秒`,
+      singleEmptyHoldOut: `${(Number(inputs.singleEmptyHold.value) / 100).toFixed(2)} 秒`,
       page2SlowPositionOut: `${inputs.page2SlowPosition.value}%`,
       page2SlowWidthOut: `${inputs.page2SlowWidth.value}%`,
       page2SlowStrengthOut: `${inputs.page2SlowStrength.value}%`,
@@ -1216,7 +1250,7 @@
       inputs[id].closest("label").hidden = enabled;
     });
     $("#textTitle").textContent = enabled ? "笔迹与颜色" : twoPages() ? "第一页文字与配色" : "文字与颜色";
-    inputs.holdDuration.closest("label").firstChild.textContent = enabled ? "留白停留 " : "底字停留 ";
+    inputs.holdDuration.closest("label").firstChild.textContent = enabled ? "留白停留 " : "笔迹消失后，文字停留 ";
     $("#drawingHint").hidden = !enabled || drawing.strokes.length > 0;
     $("#undoInk").disabled = !drawing.strokes.length;
     $("#redoInk").disabled = !redoStrokes.length;
@@ -1451,6 +1485,7 @@
         setPaused(true); setTime(timing().write + timing().flow + timing().bridge * .84);
       }
       if (twoPages() && ["page2TextExit", "page2Hold", "page2EmptyHold"].includes(key)) playEnding();
+      if (!twoPages() && ["eraseDuration", "holdDuration", "singleTextExit", "singleEmptyHold"].includes(key)) playSingleEnding();
       if (["canvasPreset", "canvasWidth", "canvasHeight"].includes(key)) updateStageLayout();
       if (drawingEnabled && inputs.drawingMode.value === "freehand") showWholeDrawing();
       queueAutosave();
@@ -1533,8 +1568,10 @@
 
   $("#pauseButton").addEventListener("click", () => setPaused(!state.paused));
   function playEnding() { setPaused(true); setTime(timing().write + timing().flow + timing().bridge - .08); setPaused(false); }
+  function playSingleEnding() { setPaused(true); setTime(timing().write + timing().flow - .08); setPaused(false); }
   function secondPageRestTime() { const s = timing(); return s.write + s.flow + s.bridge + s.finish + Math.min(.1, s.endHold / 2); }
   $("#previewEnding").addEventListener("click", playEnding);
+  $("#previewSingleEnding").addEventListener("click", playSingleEnding);
   $("#editFirstPage").addEventListener("click", () => { setPaused(true); setTime(0); inputs.textInput.focus(); });
   $("#editSecondPage").addEventListener("click", () => { setPaused(true); setTime(secondPageRestTime()); inputs.page2Text.focus(); });
   $("#stagePauseButton").addEventListener("click", () => setPaused(!state.paused));
