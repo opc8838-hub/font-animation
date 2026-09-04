@@ -1,6 +1,6 @@
 :root {
   color-scheme: light;
-  --ink-panel-width: 356px;
+  --ink-panel-width: 420px;
   --ink-panel-bg: #ececef;
   --ink-card: #ffffff;
   --ink-line: #d8d8dc;
@@ -283,6 +283,13 @@ select { font: inherit; }
 
 #stageCanvas { display: block; width: 100%; height: 100%; }
 
+[hidden] { display: none !important; }
+body.is-drawing #stageCanvas { cursor: crosshair; touch-action: none; }
+.ink-clear-drawing { width: 100%; margin-top: 8px; }
+.ink-drawing-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; text-align: center; color: #777780; font-size: 16px; line-height: 1.8; pointer-events: none; }
+.ink-drawing-hint small { font-size: 12px; }
+body.is-preview .ink-drawing-hint { display: none; }
+
 .ink-size-badge {
   position: absolute;
   top: 12px;
@@ -331,13 +338,9 @@ body.is-preview .ink-size-badge,
 body.is-preview .ink-stage-controls { display: none; }
 
 @media (max-width: 760px) {
-  :root { --ink-panel-width: min(86vw, 342px); }
-  .ink-workspace { padding: 14px; }
-}
-
-@media (max-width: 520px) {
-  body { overflow: auto; background: var(--ink-panel-bg); }
-  .ink-panel { position: relative; width: 100%; height: auto; min-height: 100vh; }
-  .ink-panel-scroll { overflow: visible; }
-  .ink-workspace { position: relative; inset: auto; height: 62vw; min-height: 300px; }
+  body { display: flex; flex-direction: column; background: var(--ink-panel-bg); }
+  .ink-workspace { order: -1; position: relative; inset: auto; flex: 0 0 42%; width: 100%; min-height: 180px; padding: 14px; }
+  .ink-panel { position: relative; width: 100%; flex: 1 1 0; min-height: 0; }
+  .ink-panel-scroll { overflow: auto; overscroll-behavior: contain; }
+  body.is-preview .ink-workspace { flex: 1; padding: 0; }
 }

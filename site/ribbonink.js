@@ -9,7 +9,14 @@
   const schemeStatus = $("#schemeStatus");
   const STORAGE_KEY = "me-ribbon-ink-autosave-v3";
   const EFFECT_ID = "ribbon-ink";
-  const SCHEME_VERSION = 3;
+  const SCHEME_VERSION = 4;
+  const freehand = window.RibbonInkFreehand;
+  let drawing = freehand.validate(null);
+  let compiledDrawing = freehand.compile(drawing);
+  let redoStrokes = [];
+  let activePointer = null;
+  let lastPointTime = 0;
+  let drawingEnabled = false;
   const PHASE_COLORS = ["#ef4d86", "#6a2f8c", "#ee7b34", "#2589d8"];
   const urlParams = new URLSearchParams(location.search);
   const BRUSH_MOTHER_SRC = "assets/ribbonink/ribbonink-brush-mother.png?v=20260902-1";
@@ -23,6 +30,7 @@
   };
 
   const inputIds = [
+    "drawingMode", "freehandWidth",
     "canvasPreset", "canvasWidth", "canvasHeight", "textInput", "fontSelect", "fontSize",
     "letterSpacing", "textColor", "backgroundColor", "palettePreset",
     "inkColor1", "inkColor2", "inkColor3", "inkColor4", "inkColor5",
@@ -35,6 +43,7 @@
   const inputs = Object.fromEntries(inputIds.map((id) => [id, $(`#${id}`)]));
 
   const defaultValues = {
+    drawingMode: "time", freehandWidth: "28",
     canvasPreset: "1920x1080", canvasWidth: "1920", canvasHeight: "1080",
     textInput: "TIME", fontSelect: "stg:roboto-condensed", fontSize: "270", letterSpacing: "2",
     textColor: "#080808", backgroundColor: "#f7f7f5", palettePreset: "reference",
@@ -651,6 +660,14 @@
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = "high";
     drawBackground(context, width, height);
+    if (inputs.drawingMode.value === "freehand") {
+      const visible = visibleWindow(rawTime);
+      freehand.draw(context, drawing, compiledDrawing, width, height, visible, visible.phase.time,
+        Number(inputs.freehandWidth.value), [1, 2, 3, 4, 5].map(i => inputs[`inkColor${i}`].value),
+        Number(inputs.textureSpeed.value) / 100, Number(inputs.textureDensity.value) / 100);
+      if (target === canvas) updateTimelinePlayhead(visible.phase);
+      return;
+    }
     const text = inputs.textInput.value.trim() || " ";
     const unit = Math.min(width / 720, height / 405);
     const fit = fitBaseText(context, text.toLocaleUpperCase(), width, height, unit);
@@ -707,7 +724,7 @@
       { id: "write", label: "写入", duration: span.write, color: PHASE_COLORS[0] },
       { id: "flow", label: "流动", duration: span.flow, color: PHASE_COLORS[1] },
       { id: "erase", label: "擦除", duration: span.erase, color: PHASE_COLORS[2] },
-      { id: "hold", label: "底字", duration: span.hold, color: PHASE_COLORS[3] }
+      { id: "hold", label: inputs.drawingMode.value === "freehand" ? "留白" : "底字", duration: span.hold, color: PHASE_COLORS[3] }
     ];
   }
 
@@ -729,7 +746,9 @@
   }
 
   function updateOutputs() {
+    updateDrawingUI();
     const map = {
+      freehandWidthOut: `${inputs.freehandWidth.value}`,
       fontSizeOut: `${inputs.fontSize.value}`,
       letterSpacingOut: `${inputs.letterSpacing.value}`,
       brushScaleOut: `${inputs.brushScale.value}%`,
@@ -762,7 +781,7 @@
   function schemeData() {
     const values = {};
     Object.entries(inputs).forEach(([key, input]) => { values[key] = input.value; });
-    return { version: SCHEME_VERSION, effect: EFFECT_ID, values, background: state.backgroundDataUrl || "" };
+    return { version: SCHEME_VERSION, effect: EFFECT_ID, values, drawing: structuredClone(drawing), background: state.backgroundDataUrl || "" };
   }
 
   function loadBackground(dataUrl) {
@@ -778,18 +797,27 @@
 
   async function applyScheme(data) {
     if (!data || data.effect !== EFFECT_ID) throw new Error("不是流彩笔迹方案");
-    Object.entries(data.values || {}).forEach(([key, value]) => {
+    const nextDrawing = freehand.validate(data.drawing);
+    finishDrawing();
+    drawing = nextDrawing;
+    compiledDrawing = freehand.compile(drawing);
+    redoStrokes = [];
+    Object.entries({ ...defaultValues, ...data.values }).forEach(([key, value]) => {
       if (inputs[key] && value != null) inputs[key].value = String(value);
     });
     await loadBackground(data.background || "");
     updateOutputs();
     updateStageLayout();
     setTime(0);
+    drawingEnabled = inputs.drawingMode.value === "freehand";
+    if (drawingEnabled) editDrawing();
+    else updateDrawingUI();
   }
 
   function queueAutosave() {
     clearTimeout(state.autosaveTimer);
     state.autosaveTimer = setTimeout(() => {
+      state.autosaveTimer = 0;
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(schemeData()));
         schemeStatus.textContent = "已自动保存当前方案。";
@@ -809,6 +837,9 @@
   }
 
   function setPaused(paused) {
+    if (!paused && inputs.drawingMode.value === "freehand") {
+      finishDrawing(); drawingEnabled = false; updateDrawingUI();
+    }
     if (paused === state.paused) return;
     if (paused) {
       state.pausedAt = currentTime() % timing().total;
@@ -823,10 +854,118 @@
   }
 
   function replay() {
+    finishDrawing(); drawingEnabled = false; updateDrawingUI();
     state.pausedAt = 0;
     state.startedAt = performance.now();
     if (state.paused) setPaused(false);
   }
+
+  function updateDrawingUI() {
+    const enabled = inputs.drawingMode.value === "freehand";
+    $("#freehandTools").hidden = !enabled;
+    document.body.classList.toggle("is-drawing", enabled && drawingEnabled);
+    ["textInput", "fontSelect", "fontSize", "letterSpacing", "textColor", "brushScale", "brushWidth", "positionX", "positionY", "dotScale", "dotDelay", "letterImpact"].forEach(id => {
+      inputs[id].closest("label").hidden = enabled;
+    });
+    $("#textTitle").textContent = enabled ? "笔迹与颜色" : "文字与颜色";
+    inputs.holdDuration.closest("label").firstChild.textContent = enabled ? "留白停留 " : "底字停留 ";
+    $("#drawingHint").hidden = !enabled || drawing.strokes.length > 0;
+    $("#undoInk").disabled = !drawing.strokes.length;
+    $("#redoInk").disabled = !redoStrokes.length;
+    $("#clearInk").disabled = !drawing.strokes.length;
+    $("#playInk").disabled = !drawing.strokes.length;
+    $("#drawInk").setAttribute("aria-pressed", String(drawingEnabled));
+    $("#drawingStatus").textContent = `${drawing.strokes.length} 笔 · ${drawingEnabled ? "绘画中，可继续落笔或调粗细" : "预览中，点继续绘画可修改"}`;
+  }
+
+  function showWholeDrawing() {
+    setPaused(true);
+    setTime(timing().write + timing().flow * .5);
+  }
+
+  function editDrawing() {
+    drawingEnabled = true;
+    showWholeDrawing(); updateDrawingUI();
+  }
+
+  function finishDrawing(event) {
+    if (activePointer === null || (event && event.pointerId !== activePointer)) return;
+    const pointer = activePointer; activePointer = null;
+    if (canvas.hasPointerCapture(pointer)) canvas.releasePointerCapture(pointer);
+    compiledDrawing = freehand.compile(drawing);
+    updateDrawingUI(); queueAutosave();
+  }
+
+  function appendPoint(event) {
+    const rect = canvas.getBoundingClientRect();
+    const [width, height] = canvasDimensions();
+    const fit = freehand.transform(drawing, width, height);
+    const point = [clamp(((event.clientX - rect.left) / rect.width * width - fit.x) / fit.scale, 0, drawing.width),
+      clamp(((event.clientY - rect.top) / rect.height * height - fit.y) / fit.scale, 0, drawing.height)];
+    const stroke = drawing.strokes[drawing.strokes.length - 1];
+    const last = stroke[stroke.length - 1];
+    if (!last || Math.hypot(point[0] - last[0], point[1] - last[1]) >= 1.4) {
+      if (drawing.strokes.reduce((n, s) => n + s.length, 0) >= 60000) return;
+      const distance = last ? Math.hypot(point[0] - last[0], point[1] - last[1]) : 0;
+      const velocity = distance / Math.max(4, event.timeStamp - lastPointTime);
+      const targetPressure = event.pointerType === "pen" && event.pressure > 0
+        ? .3 + event.pressure * .95 : .5 + .65 / (1 + velocity * 2);
+      point.push(last ? (last[2] ?? .8) * .75 + targetPressure * .25 : .8);
+      stroke.push(point);
+      lastPointTime = event.timeStamp;
+    }
+  }
+
+  canvas.addEventListener("pointerdown", event => {
+    if (event.button !== 0 || activePointer !== null || !drawingEnabled || inputs.drawingMode.value !== "freehand") return;
+    if (drawing.strokes.length >= 300) { schemeStatus.textContent = "已达 300 笔，请保存方案后新建绘画。"; return; }
+    if (drawing.strokes.reduce((n, s) => n + s.length, 0) >= 60000) { schemeStatus.textContent = "已达手绘点数上限，请保存方案后新建绘画。"; return; }
+    event.preventDefault();
+    if (!drawing.strokes.length) {
+      const [width, height] = canvasDimensions();
+      const scale = Math.min(width, height) / 405;
+      drawing.width = width / scale; drawing.height = height / scale;
+    } else {
+      // Expand the drawing document when drawing into a new aspect ratio's margins.
+      // Existing centerlines keep their visible positions and proportions.
+      const [width, height] = canvasDimensions();
+      const fit = freehand.transform(drawing, width, height);
+      if (fit.x > .01 || fit.y > .01) {
+        const shift = stroke => stroke.map(p => [p[0] + fit.x / fit.scale, p[1] + fit.y / fit.scale, ...p.slice(2)]);
+        drawing.strokes = drawing.strokes.map(shift);
+        redoStrokes = redoStrokes.map(shift);
+        drawing.width = width / fit.scale; drawing.height = height / fit.scale;
+      }
+    }
+    activePointer = event.pointerId; canvas.setPointerCapture(activePointer);
+    redoStrokes = []; drawing.strokes.push([]); appendPoint(event);
+    compiledDrawing = freehand.compile(drawing); showWholeDrawing(); updateDrawingUI();
+  });
+  canvas.addEventListener("pointermove", event => {
+    if (event.pointerId !== activePointer) return;
+    for (const sample of (event.getCoalescedEvents?.().length ? event.getCoalescedEvents() : [event])) appendPoint(sample);
+    compiledDrawing = freehand.compile(drawing); renderPreview();
+  });
+  canvas.addEventListener("pointerup", event => {
+    if (event.pointerId !== activePointer) return;
+    appendPoint(event); finishDrawing(event);
+  });
+  canvas.addEventListener("pointercancel", finishDrawing);
+  canvas.addEventListener("lostpointercapture", finishDrawing);
+  $("#drawInk").addEventListener("click", editDrawing);
+  $("#playInk").addEventListener("click", replay);
+  $("#undoInk").addEventListener("click", () => {
+    finishDrawing(); if (drawing.strokes.length) redoStrokes.push(drawing.strokes.pop());
+    compiledDrawing = freehand.compile(drawing); editDrawing(); queueAutosave();
+  });
+  $("#redoInk").addEventListener("click", () => {
+    if (redoStrokes.length) drawing.strokes.push(redoStrokes.pop());
+    compiledDrawing = freehand.compile(drawing); editDrawing(); queueAutosave();
+  });
+  $("#clearInk").addEventListener("click", () => {
+    finishDrawing(); redoStrokes = [...drawing.strokes].reverse(); drawing.strokes = [];
+    compiledDrawing = freehand.compile(drawing); editDrawing(); queueAutosave();
+  });
 
   function exportDurationSeconds() {
     if (inputs.exportDuration.value === "full") return timing().total;
@@ -845,6 +984,8 @@
 
   const exportButtons = [$("#exportPng"), $("#exportGif"), $("#exportVideo")];
   function setExportBusy(busy, message) {
+    $("#editorPanel").inert = busy;
+    workspace.inert = busy;
     exportButtons.forEach((button) => { button.disabled = busy; });
     exportStatus.textContent = message;
   }
@@ -928,10 +1069,16 @@
   Object.entries(inputs).forEach(([key, input]) => {
     if (!input) return;
     const handler = () => {
+      if (key === "drawingMode") {
+        finishDrawing();
+        if (input.value === "freehand") editDrawing();
+        else { drawingEnabled = false; replay(); }
+      }
       if (key === "palettePreset") applyPalettePreset(input.value);
-      if (/^inkColor[1-5]$/.test(key) && document.activeElement === input) inputs.palettePreset.value = "custom";
+      if (/^inkColor[1-5]$/.test(key)) inputs.palettePreset.value = "custom";
       updateOutputs();
       if (["canvasPreset", "canvasWidth", "canvasHeight"].includes(key)) updateStageLayout();
+      if (drawingEnabled && inputs.drawingMode.value === "freehand") showWholeDrawing();
       queueAutosave();
     };
     input.addEventListener("input", handler);
@@ -990,9 +1137,10 @@
   });
 
   $("#clearScheme").addEventListener("click", async () => {
-    const cleared = { ...defaultValues, textInput: "" };
+    const cleared = { ...defaultValues, textInput: "", drawingMode: inputs.drawingMode.value };
     await applyScheme({ version: SCHEME_VERSION, effect: EFFECT_ID, values: cleared, background: "" });
     localStorage.removeItem(STORAGE_KEY);
+    clearTimeout(state.autosaveTimer); state.autosaveTimer = 0;
     schemeStatus.textContent = "已清空内容，可重新编辑。";
   });
 
@@ -1009,7 +1157,12 @@
   });
 
   window.addEventListener("resize", updateStageLayout);
-  window.addEventListener("beforeunload", () => cancelAnimationFrame(state.raf));
+  window.addEventListener("beforeunload", () => {
+    cancelAnimationFrame(state.raf);
+    if (state.autosaveTimer) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(schemeData())); } catch (_) {}
+    }
+  });
   if (urlParams.has("preview")) document.body.classList.add("is-preview");
 
   window.RibbonInk = { renderFrame, timing, phaseAt, visibleWindow, schemeData, applyScheme, setTime, setPaused, canvasDimensions };
@@ -1019,6 +1172,7 @@
     await loadBrushMother();
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch (_) {}
+    if (urlParams.get("from") === "gallery") saved = null;
     try {
       await applyScheme(saved?.effect === EFFECT_ID ? saved : { version: SCHEME_VERSION, effect: EFFECT_ID, values: defaultValues, background: "" });
       schemeStatus.textContent = saved?.effect === EFFECT_ID ? "已恢复上次自动保存的方案。" : "已载入默认方案。";
