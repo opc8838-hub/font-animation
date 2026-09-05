@@ -49,3 +49,19 @@ or long text entirely inside the frame.
 Regression helper: `check_ribbonink_seam_browser.cjs` exports an async function
 accepting the active Playwright page. It checks real canvas pixels and restores
 the incoming scheme afterward. Artifacts stay under ignored `output/playwright/`.
+
+## Entry extension refinement (2026-09-05)
+
+At small brush scales the mother image's source `x=0` can land inside the canvas,
+exposing the original asset's straight crop. Preserve every source pixel of the
+approved mother image and prepend a generated cubic centerline underneath it.
+Its far end is well outside the full editor position range; the final tangent and
+normal width match the measured mother edge. A lightly irregular outline and
+short, moving pigment lobes prevent the added area from reading as a geometric
+bar. The reveal head traverses the extension first, then catches the original
+timeline by 22% progress; erase traverses the same geometry in the same order.
+
+The extension must reach a composition boundary for landscape, square and
+portrait canvases across brush scale 55/100/150, horizontal position 8/50/92 and
+width 55/160. The existing browser regression checks these 54 combinations in
+addition to the previously locked cross-page seam and typography checks.
