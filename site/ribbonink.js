@@ -475,6 +475,11 @@
       }
       return null;
     });
+    let entryEdge = 0;
+    for (let x = 0; x < scan.width / 5; x++) {
+      if (source.data[((scan.height - 1) * scan.width + x) * 4 + 3] > 128) entryEdge = x + 1;
+    }
+    state.motherEntryEdge = entryEdge / scan.width * 720;
     const detail = scanContext.createImageData(scan.width, scan.height);
     const highlight = scanContext.createImageData(scan.width, scan.height);
     for (let index = 0; index < source.data.length; index += 4) {
@@ -738,12 +743,43 @@
     return { x: x / MOTHER_FRAME.width * 720, y: y / MOTHER_FRAME.height * 405 };
   }
 
+  function motherCropCap(transform, canvasHeight) {
+    const edge = state.motherEntryEdge, profile = state.motherExitProfile;
+    if (!edge || !profile) return null;
+    const at = x => profile[Math.round(x)];
+    const a = at(edge + 5), b = at(edge + 15);
+    if (!a || !b) return null;
+    const slope = ((b.y + b.thickness / 2) - (a.y + a.thickness / 2)) / 10 * transform.widthScale;
+    if (slope >= -.1) return null;
+    const end = transformPoint({ x: edge, y: 405 }, transform);
+    if (end.y >= canvasHeight) return null;
+    // Complete only the missing circular underside of the cropped mother.
+    // The circle is tangent to its measured lower boundary at the source cut.
+    const normalX = -slope / Math.hypot(1, slope);
+    const normalY = 1 / Math.hypot(1, slope);
+    const radius = edge * transform.scale / normalX;
+    return { x: transform.x, y: end.y - radius * normalY, radius,
+      cutY: end.y, width: edge * transform.scale, depth: radius * (1 - normalY) };
+  }
+
+  function finishMotherCrop(context, transform) {
+    const cap = motherCropCap(transform, context.canvas.height);
+    if (!cap) return;
+    context.save();
+    const overlap = .5 * transform.scale;
+    context.beginPath(); context.rect(cap.x, cap.cutY - overlap, cap.width, cap.depth + overlap + 1); context.clip();
+    context.fillStyle = "#fff";
+    context.beginPath(); context.arc(cap.x, cap.y, cap.radius, 0, Math.PI * 2); context.fill();
+    context.restore();
+  }
+
   function drawMotherSilhouette(context, transform, omitDot) {
     const image = state.brushMother;
     const top = transform.y + (210 - 210 * transform.widthScale) * transform.scale;
     if (image?.complete && image.naturalWidth) {
       drawEntryExtension(context, transform);
       context.drawImage(image, transform.x, top, 720 * transform.scale, 405 * transform.scale * transform.widthScale);
+      finishMotherCrop(context, transform);
     } else {
       const fallbackWidth = 92 * transform.scale * transform.widthScale;
       authored.filter((stroke) => !stroke.dot).forEach((stroke) => drawSampledStroke(context, stroke, 0, 1, transform, fallbackWidth));
@@ -761,6 +797,11 @@
     layer.clearRect(0, 0, detailLayerCanvas.width, detailLayerCanvas.height);
     const top = transform.y + (210 - 210 * transform.widthScale) * transform.scale;
     layer.drawImage(toneMask, transform.x, top, 720 * transform.scale, 405 * transform.scale * transform.widthScale);
+    const cap = motherCropCap(transform, layer.canvas.height);
+    if (cap) {
+      layer.drawImage(toneMask, 0, toneMask.height - 1, state.motherEntryEdge / 720 * toneMask.width, 1,
+        cap.x, cap.cutY - .5 * transform.scale, cap.width, cap.depth + .5 * transform.scale + 1);
+    }
     layer.globalCompositeOperation = "source-in";
     layer.fillStyle = color;
     layer.fillRect(0, 0, detailLayerCanvas.width, detailLayerCanvas.height);
