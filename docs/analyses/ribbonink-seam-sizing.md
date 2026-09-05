@@ -50,38 +50,18 @@ Regression helper: `check_ribbonink_seam_browser.cjs` exports an async function
 accepting the active Playwright page. It checks real canvas pixels and restores
 the incoming scheme afterward. Artifacts stay under ignored `output/playwright/`.
 
-## Native entry-cap refinement (2026-09-05)
+## Entry extension refinement (2026-09-05)
 
-Contract: the left terminal reaches the LEFT canvas edge with a circular end.
-Reducing the brush or changing aspect ratio must not create a white left margin,
-a separate covering stroke, or an extension toward the bottom of the canvas.
-The rest of the approved mother geometry, palette, letter reactions and page
-handoff remain frozen.
+At small brush scales the mother image's source `x=0` can land inside the canvas,
+exposing the original asset's straight crop. Preserve every source pixel of the
+approved mother image and prepend a generated cubic centerline underneath it.
+Its far end is well outside the full editor position range; the final tangent and
+normal width match the measured mother edge. A lightly irregular outline and
+short, moving pigment lobes prevent the added area from reading as a geometric
+bar. The reveal head traverses the extension first, then catches the original
+timeline by 22% progress; erase traverses the same geometry in the same order.
 
-The original PNG is cropped at both x=0 and y=405. Its authored reveal centerline
-does not match the actual local silhouette center, so placing an oversized round
-mask on that line produced a pointed intersection rather than a circular end.
-Read the existing opaque-run profile at source columns 55–75: it provides the
-true center, normal thickness and both boundary tangents.
-
-Replace only the entry outline before source x=70 with a semicircle joined to
-those measured upper/lower boundaries. Its leftmost pixel meets the left frame.
-Keep the native entry height when the brush is reduced or moved right; extend
-laterally and shorten the join handles to avoid a downward hook. Continue the
-existing pigment masks into that lateral span. No bottom-of-canvas coordinate
-defines an extension path. The mother image beyond x=70 and its source bytes
-are unchanged. Enlarged artwork whose entry is already outside the frame retains
-normal canvas clipping.
-
-The browser regression checks 27 aspect/scale/width combinations, requires
-visible ink at the first left column, checks default curved cap growth and rejects
-the former portrait vertical tail. Dense opening frames and three-aspect views
-are inspected in the shared renderer. PNG, GIF and MP4 exports use that renderer.
-
-Verification: all 27 configurations reach column 0. The default semicircle is
-visible in 16:9, 1:1 and 9:16; reduced brush size extends left at the original
-entry height. Dense 0.001–0.92 s frames were inspected. Real 360×640 PNG,
-36-frame GIF and 1.2 s / 30 fps H.264 MP4 were generated through the editor;
-decoded frames show the same cap. The existing 27-configuration page seam
-regression covered 2,376 join samples, and glyph/material/motion/ending checks
-passed. Export execution reported zero application exceptions.
+The extension must reach a composition boundary for landscape, square and
+portrait canvases across brush scale 55/100/150, horizontal position 8/50/92 and
+width 55/160. The existing browser regression checks these 54 combinations in
+addition to the previously locked cross-page seam and typography checks.

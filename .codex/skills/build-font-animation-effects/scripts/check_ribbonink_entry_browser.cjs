@@ -1,45 +1,36 @@
-(function () {
-  const check = async function checkRibbonEntry(page) {
-    return page.evaluate(async () => {
-      const saved = RibbonInk.schemeData(), results = [];
-      const set = (id, value) => { document.querySelector('#' + id).value = String(value); };
-      try {
-        RibbonInk.setPaused(true);
-        set('sequenceMode', 'double'); set('textInput', 'TIME'); set('positionX', 50); set('positionY', 52);
-        for (const [width, height] of [[640,360],[640,640],[360,640]]) {
-          for (const scale of [55,100,150]) for (const thickness of [55,100,160]) {
-            set('brushScale', scale); set('brushWidth', thickness);
-            const canvas=document.createElement('canvas');
-            RibbonInk.renderFrame(canvas,.92,width,height);
-            const data=canvas.getContext('2d').getImageData(0,0,width,height).data;
-            const ink=(x,y)=> {
-              const i=(y*width+x)*4;
-              return data[i]>70 && data[i+2]>90 && data[i+1]<190;
-            };
-            const columns=[];
-            for(let x=0;x<30;x++) {
-              const rows=[];for(let y=0;y<height;y++) if(ink(x,y)) rows.push(y);
-              columns.push(rows);
-            }
-            const first=columns.findIndex(rows=>rows.length);
-            if(first<0 || first>1) throw Error('Left gutter: '+JSON.stringify({width,height,scale,thickness,first}));
-            // A visible default cap must curve away from the edge, not be a
-            // straight source crop. Enlarged art is intentionally canvas-clipped.
-            const round=columns[Math.min(29,first+8)].length>columns[first].length+3;
-            if(scale===100 && thickness===100 && !round)
-              throw Error('Flat default terminal: '+JSON.stringify({width,height,columns:columns.map(r=>r.length)}));
-            // In portrait the default entry must not run vertically to the bottom.
-            if(width===360 && scale===100 && thickness===100) {
-              for(let x=0;x<80;x++) for(let y=height-130;y<height;y++)
-                if(ink(x,y)) throw Error('Unexpected vertical extension at '+x+','+y);
-            }
-            results.push({width,height,scale,thickness,firstInkColumn:first,round});
-          }
+/* Invoke this exported function with the current Playwright page. */
+module.exports = async function checkRibbonEntry(page) {
+  return page.evaluate(async () => {
+    const saved = RibbonInk.schemeData(), failures = [], canvas = document.createElement('canvas');
+    let configurations = 0;
+    const set = (id, value) => { document.querySelector(`#${id}`).value = String(value); };
+    const inkAt = (data, width, x, y) => {
+      const i = (y * width + x) * 4;
+      return data[i] > 70 && data[i + 2] > 90 && data[i + 1] < 180;
+    };
+    try {
+      set('sequenceMode', 'double'); set('textInput', ''); set('page2Text', ''); set('positionY', 52);
+      set('inkColor1', '#f34bd9'); set('inkColor2', '#a40de4'); set('inkColor3', '#ff78e9');
+      set('inkColor4', '#7827d8'); set('inkColor5', '#f33ccd');
+      RibbonInk.setPaused(true);
+      // The prepended ink must carry the old cropped edge through a composition
+      // boundary for every editor extreme, regardless of canvas aspect.
+      for (const [w, h] of [[640, 360], [640, 640], [360, 640]]) {
+        for (const scale of [55, 100, 150]) for (const position of [8, 50, 92]) for (const thickness of [55, 160]) {
+          set('brushScale', scale); set('brushWidth', thickness); set('positionX', position);
+          RibbonInk.renderFrame(canvas, .92, w, h);
+          const ctx = canvas.getContext('2d'), data = ctx.getImageData(0, 0, w, h).data, edge = [];
+          for (let x = 0; x < w; x++) edge.push([x, 1], [x, h - 2]);
+          for (let y = 0; y < h; y++) edge.push([1, y], [w - 2, y]);
+          if (!edge.some(([x, y]) => inkAt(data, w, x, y)))
+            failures.push({ w, h, scale, position, thickness });
+          configurations++;
         }
-        return {configurations:results.length,results};
-      } finally {await RibbonInk.applyScheme(saved);RibbonInk.setPaused(true);}
-    });
-  };
-  if(typeof module!=='undefined') module.exports=check;
-  return check;
-})()
+      }
+      if (failures.length) throw new Error(`flat entry crop exposed: ${JSON.stringify(failures)}`);
+      return { configurations };
+    } finally {
+      await RibbonInk.applyScheme(saved); RibbonInk.setPaused(true);
+    }
+  });
+};

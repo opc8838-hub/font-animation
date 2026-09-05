@@ -534,73 +534,101 @@
     };
   }
 
-  function motherEntryGeometry(transform, height) {
-    const profile = state.motherExitProfile;
-    if (!profile?.[70] || transform.x + 70 * transform.scale <= 0) return null;
-    const centerSlope = (profile[65].y - profile[55].y) / 10 * transform.widthScale;
-    const radius = profile[60].thickness * transform.scale * transform.widthScale /
-      (2 * Math.hypot(1, centerSlope));
-    const joinX = transform.x + 70 * transform.scale;
-    if (joinX <= radius * 1.85) return null;
-    const centerX = radius - .25;
-    const anchor = transformPoint({ x: 60, y: profile[60].y }, transform);
-    // Extend laterally when the artwork is reduced or moved right. Its native
-    // entry height stays fixed; the left margin must never create a downward tail.
-    const centerY = clamp(anchor.y + (radius - 60 * transform.scale) * centerSlope, radius, height - radius);
-    const join = transformPoint({ x: 70, y: profile[70].y }, transform);
-    const angle = Math.atan2(join.y - centerY, joinX - centerX);
-    const upper = transformPoint({ x: 70, y: profile[70].y - profile[70].thickness / 2 }, transform);
-    const lower = transformPoint({ x: 70, y: profile[70].y + profile[70].thickness / 2 }, transform);
-    const slope = side => ((profile[75].y + side * profile[75].thickness / 2) -
-      (profile[65].y + side * profile[65].thickness / 2)) / 10 * transform.widthScale;
-    return { centerX, centerY, radius, angle, upper, lower, joinX,
-      upperSlope: slope(-1), lowerSlope: slope(1) };
+  const ENTRY_EXTENSION_CURVE = [
+    [-1100, 620], [-780, 600], [-80, 428], [12, 368]
+  ];
+
+  function entryExtensionPoints(transform, from = 0, to = 1, offset = 0) {
+    const points = [];
+    const count = Math.max(2, Math.ceil((to - from) * 96));
+    const at = (t) => {
+      const u = 1 - t, p = ENTRY_EXTENSION_CURVE;
+      return {
+        x: u ** 3 * p[0][0] + 3 * u * u * t * p[1][0] + 3 * u * t * t * p[2][0] + t ** 3 * p[3][0],
+        y: u ** 3 * p[0][1] + 3 * u * u * t * p[1][1] + 3 * u * t * t * p[2][1] + t ** 3 * p[3][1]
+      };
+    };
+    for (let index = 0; index <= count; index += 1) {
+      const t = mix(from, to, index / count), p = at(t);
+      const q = at(clamp(t + .002));
+      const angle = Math.atan2((q.y - p.y) * transform.widthScale, q.x - p.x);
+      const point = transformPoint(p, transform);
+      const lateral = typeof offset === "function" ? offset(t, index / count) : offset;
+      const hand = (Math.sin(t * 19.7 + .8) * 3.1 + Math.sin(t * 43.1) * 1.4) *
+        transform.scale * transform.widthScale * smoothstep(clamp((1 - t) / .18));
+      points.push({ x: point.x - Math.sin(angle) * (lateral + hand),
+        y: point.y + Math.cos(angle) * (lateral + hand), t });
+    }
+    return points;
   }
 
-  function traceMotherEntry(context, entry) {
-    const { centerX: x, centerY: y, radius: r, angle, upper, lower } = entry;
-    const ax = x + Math.sin(angle) * r, ay = y - Math.cos(angle) * r;
-    const bx = x - Math.sin(angle) * r, by = y + Math.cos(angle) * r;
-    const tangentX = Math.cos(angle), tangentY = Math.sin(angle);
-    const upperReach = Math.max(1, upper.x - ax) / 3;
-    const lowerReach = Math.max(1, lower.x - bx) / 3;
-    const upperJoinReach = Math.min(upperReach, r * .45);
-    const lowerJoinReach = Math.min(lowerReach, r * .45);
+  function traceEntryExtension(context, transform, from = 0, to = 1, offset = 0) {
+    const points = entryExtensionPoints(transform, from, to, offset);
     context.beginPath();
-    context.moveTo(ax, ay);
-    context.bezierCurveTo(ax + upperReach, ay + upperReach * tangentY / tangentX,
-      upper.x - upperJoinReach, upper.y - upperJoinReach * entry.upperSlope, upper.x, upper.y);
-    context.lineTo(lower.x, lower.y);
-    context.bezierCurveTo(lower.x - lowerJoinReach, lower.y - lowerJoinReach * entry.lowerSlope,
-      bx + lowerReach, by + lowerReach * tangentY / tangentX, bx, by);
-    context.arc(x, y, r, angle + Math.PI / 2, angle + Math.PI * 1.5);
-    context.closePath();
+    points.forEach((point, index) => index ? context.lineTo(point.x, point.y) : context.moveTo(point.x, point.y));
   }
 
-  function replaceMotherEntry(context, transform) {
-    const entry = motherEntryGeometry(transform, context.canvas.height);
-    if (!entry) return;
+  function drawEntryExtension(context, transform) {
+    context.strokeStyle = "#fff";
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    const points = entryExtensionPoints(transform);
+    points.slice(1).forEach((point, index) => {
+      const previous = points[index];
+      const organic = 1 + smoothstep(clamp((1 - point.t) / .13)) *
+        (.11 * Math.sin(point.t * 26.4) + .045 * Math.sin(point.t * 61.7 + .6));
+      context.lineWidth = 58 * transform.scale * transform.widthScale * organic;
+      context.beginPath(); context.moveTo(previous.x, previous.y); context.lineTo(point.x, point.y); context.stroke();
+    });
+  }
+
+  function drawEntryExtensionFlow(context, rawTime, transform) {
+    const colors = paletteColors();
+    const speed = Number(inputs.textureSpeed.value) / 100;
+    const baseWidth = 58 * transform.scale * transform.widthScale;
     context.save();
-    context.beginPath(); context.rect(0, 0, entry.joinX, context.canvas.height); context.clip();
-    context.clearRect(0, 0, entry.joinX, context.canvas.height);
-    traceMotherEntry(context, entry);
-    context.fillStyle = "#fff"; context.fill();
+    // The generated continuation ends under the untouched mother image.
+    context.beginPath();
+    context.rect(0, 0, Math.max(0, transform.x + 2 * transform.scale), context.canvas.height);
+    context.clip();
+    context.globalCompositeOperation = "source-atop";
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    for (let index = 0; index < 8; index += 1) {
+      const seed = fract(Math.sin((index + 5) * 41.31) * 928.13);
+      const head = fract(index / 8 + rawTime * .082 * speed + seed * .04);
+      const length = .022 + seed * .042;
+      const from = clamp(head - length), to = clamp(head + length * .18);
+      if (to <= from) continue;
+      const wave = Math.sin(index * 1.93 + rawTime * 1.4 * speed);
+      traceEntryExtension(context, transform, from, to,
+        (t, local) => (wave + Math.sin(local * Math.PI * 2 + index) * .5) * baseWidth * .15);
+      context.globalAlpha = .46 + seed * .18;
+      context.strokeStyle = colors[(index + 1) % colors.length];
+      context.lineWidth = baseWidth * mix(.22, .48, seed);
+      context.stroke();
+    }
     context.restore();
   }
 
-  function revealMotherEntry(context, transform, start, end) {
-    const entry = motherEntryGeometry(transform, context.canvas.height);
-    if (!entry || start >= .075 || end <= 0) return;
-    const progress = clamp(end / .075), tail = clamp(start / .075);
-    const point = t => ({ x: mix(entry.centerX, entry.joinX, t),
-      y: mix(entry.centerY, (entry.upper.y + entry.lower.y) / 2, t) });
-    const a = point(tail), b = point(progress);
-    context.save();
-    traceMotherEntry(context, entry); context.clip();
-    context.strokeStyle = "#fff"; context.lineCap = "round";
-    context.lineWidth = entry.radius * 2;
-    context.beginPath(); context.moveTo(a.x, a.y); context.lineTo(b.x, b.y); context.stroke();
-    context.restore();
+  function mainProgressWithEntry(progress) {
+    const boundary = .075, catchAt = .22;
+    if (progress <= boundary) return 0;
+    if (progress >= catchAt) return progress;
+    const q = (progress - boundary) / (catchAt - boundary);
+    return (-2 * q ** 3 + 3 * q ** 2) * catchAt + (q ** 3 - q ** 2) * (catchAt - boundary);
+  }
+
+  function drawEntryExtensionReveal(context, start, end, transform, width) {
+    const boundary = .075;
+    const from = clamp(start / boundary), to = clamp(end / boundary);
+    if (to <= from) return;
+    traceEntryExtension(context, transform, from, to);
+    context.strokeStyle = "#fff";
+    context.lineWidth = width;
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    context.stroke();
   }
 
   function sequenceJoin(width, height, unit) {
@@ -714,8 +742,8 @@
     const image = state.brushMother;
     const top = transform.y + (210 - 210 * transform.widthScale) * transform.scale;
     if (image?.complete && image.naturalWidth) {
+      drawEntryExtension(context, transform);
       context.drawImage(image, transform.x, top, 720 * transform.scale, 405 * transform.scale * transform.widthScale);
-      replaceMotherEntry(context, transform);
     } else {
       const fallbackWidth = 92 * transform.scale * transform.widthScale;
       authored.filter((stroke) => !stroke.dot).forEach((stroke) => drawSampledStroke(context, stroke, 0, 1, transform, fallbackWidth));
@@ -733,15 +761,6 @@
     layer.clearRect(0, 0, detailLayerCanvas.width, detailLayerCanvas.height);
     const top = transform.y + (210 - 210 * transform.widthScale) * transform.scale;
     layer.drawImage(toneMask, transform.x, top, 720 * transform.scale, 405 * transform.scale * transform.widthScale);
-    const entry = motherEntryGeometry(transform, layer.canvas.height);
-    if (entry && transform.x > 0) {
-      layer.save();
-      layer.beginPath(); layer.rect(0, 0, entry.joinX, layer.canvas.height); layer.clip();
-      layer.clearRect(0, 0, entry.joinX, layer.canvas.height);
-      layer.drawImage(toneMask, 0, 0, toneMask.width * 70 / 720, toneMask.height,
-        0, top, entry.joinX, 405 * transform.scale * transform.widthScale);
-      layer.restore();
-    }
     layer.globalCompositeOperation = "source-in";
     layer.fillStyle = color;
     layer.fillRect(0, 0, detailLayerCanvas.width, detailLayerCanvas.height);
@@ -817,14 +836,16 @@
     paint.drawImage(mainToneCanvas, 0, 0);
     if (visible.start > .0001 || visible.end < .9999) {
       const revealWidth = 128 * transform.scale * transform.widthScale;
-      revealMotherEntry(reveal, transform, visible.start, visible.end);
-      authored.filter((stroke) => !stroke.dot).forEach((stroke) => drawSampledStroke(reveal, stroke,
-        visible.start, visible.end, transform, revealWidth));
+      drawEntryExtensionReveal(reveal, visible.start, visible.end, transform, revealWidth);
+      authored.filter((stroke) => !stroke.dot).forEach((stroke, index) => drawSampledStroke(reveal, stroke,
+        index ? visible.start : mainProgressWithEntry(visible.start),
+        index ? visible.end : mainProgressWithEntry(visible.end), transform, revealWidth));
       paint.globalCompositeOperation = "destination-in";
       paint.drawImage(revealCanvas, 0, 0);
       paint.globalCompositeOperation = "source-over";
     }
     drawInkFlow(paint, rawTime, transform);
+    drawEntryExtensionFlow(paint, rawTime, transform);
     context.drawImage(paintCanvas, 0, 0);
   }
 
