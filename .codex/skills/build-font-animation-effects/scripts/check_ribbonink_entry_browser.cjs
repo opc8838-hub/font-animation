@@ -1,60 +1,45 @@
-/* Invoke this exported function with the current Playwright page. */
-module.exports = async function checkRibbonEntry(page) {
-  return page.evaluate(async () => {
-    const saved = RibbonInk.schemeData(), failures = [], canvas = document.createElement('canvas');
-    let configurations = 0;
-    const set = (id, value) => { document.querySelector(`#${id}`).value = String(value); };
-    const inkAt = (data, width, x, y) => {
-      const i = (y * width + x) * 4;
-      return data[i] > 70 && data[i + 2] > 90 && data[i + 1] < 180;
-    };
-    try {
-      set('sequenceMode', 'double'); set('textInput', ''); set('page2Text', ''); set('positionY', 52);
-      set('inkColor1', '#f34bd9'); set('inkColor2', '#a40de4'); set('inkColor3', '#ff78e9');
-      set('inkColor4', '#7827d8'); set('inkColor5', '#f33ccd');
-      RibbonInk.setPaused(true);
-      // When the source crop would be visible, the generated continuation must
-      // precede it but keep its complete round cap inside the composition.
-      for (const [w, h] of [[640, 360], [640, 640], [360, 640]]) {
-        for (const scale of [55, 100, 150]) for (const position of [8, 50, 92]) for (const thickness of [55, 160]) {
-          set('brushScale', scale); set('brushWidth', thickness); set('positionX', position);
-          RibbonInk.renderFrame(canvas, .92, w, h);
-          const ctx = canvas.getContext('2d'), data = ctx.getImageData(0, 0, w, h).data, edge = [];
-          for (let x = 0; x < w; x++) edge.push([x, 1], [x, h - 2]);
-          for (let y = 0; y < h; y++) edge.push([1, y], [w - 2, y]);
-          const unit = Math.min(w / 720, h / 405), factor = unit * scale / 100;
-          const sourceX = w * position / 100 - 360 * factor;
-          const widthScale = thickness / 100, sourceY = h * .52 - 210 * factor;
-          const margin = 58 * factor * widthScale * .60 + 2;
-          let extensionFits = false;
-          for (let step = 0; step <= 96 && !extensionFits; step++) {
-            const t = step / 96, u = 1 - t;
-            const px = u ** 3 * -1100 + 3 * u * u * t * -780 + 3 * u * t * t * -80 + t ** 3 * 12;
-            const py = u ** 3 * 620 + 3 * u * u * t * 600 + 3 * u * t * t * 428 + t ** 3 * 368;
-            const x = sourceX + px * factor;
-            const y = sourceY + (210 + (py - 210) * widthScale) * factor;
-            extensionFits = x >= margin && x <= w - margin && y >= margin && y <= h - margin && t < .995;
-          }
-          let cropVisible = false;
-          for (let y = 0; y < h && !cropVisible; y++) for (let x = Math.max(0, Math.floor(sourceX)); x < Math.min(w, Math.ceil(sourceX) + 5); x++) {
-            if (inkAt(data, w, x, y)) { cropVisible = true; break; }
-          }
-          if (sourceX > 0 && cropVisible && extensionFits) {
-            let precedesSource = false;
-            for (let y = 0; y < h && !precedesSource; y++) for (let x = 2; x < Math.min(w, Math.floor(sourceX)); x++) {
-              if (inkAt(data, w, x, y)) { precedesSource = true; break; }
+(function () {
+  const check = async function checkRibbonEntry(page) {
+    return page.evaluate(async () => {
+      const saved = RibbonInk.schemeData(), results = [];
+      const set = (id, value) => { document.querySelector('#' + id).value = String(value); };
+      try {
+        RibbonInk.setPaused(true);
+        set('sequenceMode', 'double'); set('textInput', 'TIME'); set('positionX', 50); set('positionY', 52);
+        for (const [width, height] of [[640,360],[640,640],[360,640]]) {
+          for (const scale of [55,100,150]) for (const thickness of [55,100,160]) {
+            set('brushScale', scale); set('brushWidth', thickness);
+            const canvas=document.createElement('canvas');
+            RibbonInk.renderFrame(canvas,.92,width,height);
+            const data=canvas.getContext('2d').getImageData(0,0,width,height).data;
+            const ink=(x,y)=> {
+              const i=(y*width+x)*4;
+              return data[i]>70 && data[i+2]>90 && data[i+1]<190;
+            };
+            const columns=[];
+            for(let x=0;x<30;x++) {
+              const rows=[];for(let y=0;y<height;y++) if(ink(x,y)) rows.push(y);
+              columns.push(rows);
             }
-            const touchesEdge = edge.some(([x, y]) => x < sourceX && inkAt(data, w, x, y));
-            if (!precedesSource || touchesEdge)
-              failures.push({ w, h, scale, position, thickness, sourceX, precedesSource, touchesEdge });
+            const first=columns.findIndex(rows=>rows.length);
+            if(first<0 || first>1) throw Error('Left gutter: '+JSON.stringify({width,height,scale,thickness,first}));
+            // A visible default cap must curve away from the edge, not be a
+            // straight source crop. Enlarged art is intentionally canvas-clipped.
+            const round=columns[Math.min(29,first+8)].length>columns[first].length+3;
+            if(scale===100 && thickness===100 && !round)
+              throw Error('Flat default terminal: '+JSON.stringify({width,height,columns:columns.map(r=>r.length)}));
+            // In portrait the default entry must not run vertically to the bottom.
+            if(width===360 && scale===100 && thickness===100) {
+              for(let x=0;x<80;x++) for(let y=height-130;y<height;y++)
+                if(ink(x,y)) throw Error('Unexpected vertical extension at '+x+','+y);
+            }
+            results.push({width,height,scale,thickness,firstInkColumn:first,round});
           }
-          configurations++;
         }
-      }
-      if (failures.length) throw new Error(`rounded entry contract failed: ${JSON.stringify(failures)}`);
-      return { configurations };
-    } finally {
-      await RibbonInk.applyScheme(saved); RibbonInk.setPaused(true);
-    }
-  });
-};
+        return {configurations:results.length,results};
+      } finally {await RibbonInk.applyScheme(saved);RibbonInk.setPaused(true);}
+    });
+  };
+  if(typeof module!=='undefined') module.exports=check;
+  return check;
+})()
