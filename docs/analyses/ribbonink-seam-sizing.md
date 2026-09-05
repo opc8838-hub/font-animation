@@ -61,7 +61,19 @@ short, moving pigment lobes prevent the added area from reading as a geometric
 bar. The reveal head traverses the extension first, then catches the original
 timeline by 22% progress; erase traverses the same geometry in the same order.
 
-The extension must reach a composition boundary for landscape, square and
-portrait canvases across brush scale 55/100/150, horizontal position 8/50/92 and
-width 55/160. The existing browser regression checks these 54 combinations in
-addition to the previously locked cross-page seam and typography checks.
+The mathematical extension remains long enough for every responsive layout, but
+its visible start is now selected dynamically. When the mother source crop would
+land inside the frame, the start center is inset by the current stroke radius so
+the complete round cap stays visible and joins the unchanged mother silhouette.
+When the mother crop is already outside the frame, its approved silhouette and
+timing remain untouched. The browser regression checks 54 landscape, square and
+portrait combinations at brush scale 55/100/150, horizontal position 8/50/92 and
+width 55/160: applicable extensions must precede the source crop and must not
+touch an outer composition edge.
+
+Dense 0.00–0.45 s browser frames and a decoded real 640×640 H.264 export confirm
+that the inset cap stays round throughout write-in rather than popping from a
+flat crop. The 54-combination entry check, 27-combination cross-page seam check,
+all existing Ribbon Ink motion/material/glyph/ending/freehand checks, shared
+editor contract, syntax, diff and a clean browser console pass. Direct 640-square
+rendering measured 0.3 ms median and 0.6 ms p95 across 48 sampled frames.

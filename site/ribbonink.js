@@ -568,11 +568,24 @@
     points.forEach((point, index) => index ? context.lineTo(point.x, point.y) : context.moveTo(point.x, point.y));
   }
 
-  function drawEntryExtension(context, transform) {
+  function entryExtensionVisibleStart(context, transform) {
+    // When the mother source edge is already outside the frame, keep its approved
+    // silhouette and timing untouched. Otherwise place a complete round cap just
+    // inside the composition instead of letting the canvas crop it into a flat end.
+    if (transform.x <= 0) return null;
+    const margin = 58 * transform.scale * transform.widthScale * .60 + 2;
+    const points = entryExtensionPoints(transform, 0, 1);
+    const first = points.find(point => point.x >= margin && point.x <= context.canvas.width - margin &&
+      point.y >= margin && point.y <= context.canvas.height - margin);
+    return first && first.t < .995 ? first.t : null;
+  }
+
+  function drawEntryExtension(context, transform, entryStart = entryExtensionVisibleStart(context, transform)) {
+    if (entryStart == null) return;
     context.strokeStyle = "#fff";
     context.lineCap = "round";
     context.lineJoin = "round";
-    const points = entryExtensionPoints(transform);
+    const points = entryExtensionPoints(transform, entryStart, 1);
     points.slice(1).forEach((point, index) => {
       const previous = points[index];
       const organic = 1 + smoothstep(clamp((1 - point.t) / .13)) *
@@ -582,7 +595,8 @@
     });
   }
 
-  function drawEntryExtensionFlow(context, rawTime, transform) {
+  function drawEntryExtensionFlow(context, rawTime, transform, entryStart = entryExtensionVisibleStart(context, transform)) {
+    if (entryStart == null) return;
     const colors = paletteColors();
     const speed = Number(inputs.textureSpeed.value) / 100;
     const baseWidth = 58 * transform.scale * transform.widthScale;
@@ -598,7 +612,7 @@
       const seed = fract(Math.sin((index + 5) * 41.31) * 928.13);
       const head = fract(index / 8 + rawTime * .082 * speed + seed * .04);
       const length = .022 + seed * .042;
-      const from = clamp(head - length), to = clamp(head + length * .18);
+      const from = Math.max(entryStart, clamp(head - length)), to = clamp(head + length * .18);
       if (to <= from) continue;
       const wave = Math.sin(index * 1.93 + rawTime * 1.4 * speed);
       traceEntryExtension(context, transform, from, to,
@@ -611,7 +625,8 @@
     context.restore();
   }
 
-  function mainProgressWithEntry(progress) {
+  function mainProgressWithEntry(progress, entryStart) {
+    if (entryStart == null) return progress;
     const boundary = .075, catchAt = .22;
     if (progress <= boundary) return 0;
     if (progress >= catchAt) return progress;
@@ -619,9 +634,11 @@
     return (-2 * q ** 3 + 3 * q ** 2) * catchAt + (q ** 3 - q ** 2) * (catchAt - boundary);
   }
 
-  function drawEntryExtensionReveal(context, start, end, transform, width) {
+  function drawEntryExtensionReveal(context, start, end, transform, width, entryStart) {
+    if (entryStart == null) return;
     const boundary = .075;
-    const from = clamp(start / boundary), to = clamp(end / boundary);
+    const from = mix(entryStart, 1, clamp(start / boundary));
+    const to = mix(entryStart, 1, clamp(end / boundary));
     if (to <= from) return;
     traceEntryExtension(context, transform, from, to);
     context.strokeStyle = "#fff";
@@ -816,6 +833,7 @@
     paint.setTransform(1, 0, 0, 1, 0, 0);
     reveal.clearRect(0, 0, width, height);
     paint.clearRect(0, 0, width, height);
+    const entryStart = entryExtensionVisibleStart(shape, transform);
     const colors = paletteColors();
     const key = JSON.stringify([width, height, transform, colors.slice(0, 3), !!state.motherDetail, !!state.motherHighlight]);
     if (key !== mainToneKey) {
@@ -836,16 +854,16 @@
     paint.drawImage(mainToneCanvas, 0, 0);
     if (visible.start > .0001 || visible.end < .9999) {
       const revealWidth = 128 * transform.scale * transform.widthScale;
-      drawEntryExtensionReveal(reveal, visible.start, visible.end, transform, revealWidth);
+      drawEntryExtensionReveal(reveal, visible.start, visible.end, transform, revealWidth, entryStart);
       authored.filter((stroke) => !stroke.dot).forEach((stroke, index) => drawSampledStroke(reveal, stroke,
-        index ? visible.start : mainProgressWithEntry(visible.start),
-        index ? visible.end : mainProgressWithEntry(visible.end), transform, revealWidth));
+        index ? visible.start : mainProgressWithEntry(visible.start, entryStart),
+        index ? visible.end : mainProgressWithEntry(visible.end, entryStart), transform, revealWidth));
       paint.globalCompositeOperation = "destination-in";
       paint.drawImage(revealCanvas, 0, 0);
       paint.globalCompositeOperation = "source-over";
     }
     drawInkFlow(paint, rawTime, transform);
-    drawEntryExtensionFlow(paint, rawTime, transform);
+    drawEntryExtensionFlow(paint, rawTime, transform, entryStart);
     context.drawImage(paintCanvas, 0, 0);
   }
 
