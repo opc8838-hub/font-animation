@@ -25,10 +25,11 @@
     return { x: u ** 3 * segment[0][0] + 3 * u * u * t * segment[1][0] + 3 * u * t * t * segment[2][0] + t ** 3 * segment[3][0],
       y: u ** 3 * segment[0][1] + 3 * u * u * t * segment[1][1] + 3 * u * t * t * segment[2][1] + t ** 3 * segment[3][1] };
   }
-  function compile(shape, W, H, entry) {
+  function compile(shape, W, H, entry, join) {
     const cx = W * 1.5, cy = H / 2;
     const p = (x, y) => [cx + x, cy + y];
     const segments = [[entry, [entry[0] + 105, entry[1] - 36], p(-135, -100), p(0, 0)]];
+    if (join) segments[0][1] = [entry[0] + 110 * Math.cos(join.angle), entry[1] + 110 * Math.sin(join.angle)];
     if (shape === 'arc') segments.push(
       [p(0, 0), p(120, 90), p(255, 110), p(270, 5)],
       [p(270, 5), p(288, -140), p(42, -168), p(-155, -72)],
@@ -75,7 +76,8 @@
       points.forEach((q, i) => { const a = points[Math.max(0, i - 1)], b = points[Math.min(points.length - 1, i + 1)]; q.angle = Math.atan2(b.y - a.y, b.x - a.x); });
       return { points, start: points[0].length, end: length, rear: index % 2 === 0 };
     });
-    return { parts, length, contactDistance: parts[0].end };
+    return { parts, length, contactDistance: parts[0].end,
+      ...(join ? { join: { ...join, blend: Math.min(160, parts[0].end * .65) } } : {}) };
   }
   function settings(values) {
     return { rhythm: values.page2Rhythm, position: Number(values.page2SlowPosition) / 100,

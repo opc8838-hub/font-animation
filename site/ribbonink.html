@@ -59,8 +59,9 @@
           <select id="fontSelect"><option value="stg:roboto-condensed">Roboto Condensed</option></select>
         </label>
         <label class="ink-range">字号 <output id="fontSizeOut">270</output>
-          <input id="fontSize" type="range" min="72" max="360" value="270">
+          <input id="fontSize" type="range" min="72" max="540" value="270">
         </label>
+        <p class="ink-help">270 为适配基准，继续拉大可做满幅大字；超出画布的部分会裁切。</p>
         <label class="ink-range">字距 <output id="letterSpacingOut">2</output>
           <input id="letterSpacing" type="range" min="-14" max="42" value="2">
         </label>
@@ -154,7 +155,8 @@
             <p class="ink-help" id="glyphStatus" role="status">笔迹与字形相交时响应，笔尾离开后回弹。自动模式在笔迹从字后经过时响应较轻。</p>
           </details>
           <label class="ink-field">第二页字体<select id="page2Font"><option value="stg:roboto-condensed">Roboto Condensed</option></select></label>
-          <label class="ink-range">第二页字号 <output id="page2SizeOut">270</output><input id="page2Size" type="range" min="72" max="360" value="270"></label>
+          <label class="ink-range">第二页字号 <output id="page2SizeOut">270</output><input id="page2Size" type="range" min="72" max="540" value="270"></label>
+          <p class="ink-help">第二页独立缩放，270 为适配基准；继续拉大可满幅或超出画布。</p>
           <label class="ink-range">第二页字距 <output id="page2SpacingOut">2</output><input id="page2Spacing" type="range" min="-14" max="42" value="2"></label>
           <div class="ink-color-grid"><label>第二页字色<input id="page2Color" type="color" value="#080808"></label></div>
           <label class="ink-range">跨页书写 <output id="bridgeDurationOut">0.90 秒</output><input id="bridgeDuration" type="range" min="55" max="160" value="90"></label>
@@ -320,9 +322,9 @@
   <script src="js/continuation-gif.js?v=20260901-1"></script>
   <script src="js/h264-mp4-encoder.web.js?v=20260901-1"></script>
   <script src="ribbonink-freehand.js?v=20260904-5"></script>
-  <script src="ribbonink-sequence.js?v=20260905-20"></script>
-  <script src="ribbonink-writing.js?v=20260905-15"></script>
-  <script src="ribbonink-glyphs.js?v=20260905-22"></script>
-  <script src="ribbonink.js?v=20260905-24"></script>
+  <script src="ribbonink-sequence.js?v=20260905-25"></script>
+  <script src="ribbonink-writing.js?v=20260905-25"></script>
+  <script src="ribbonink-glyphs.js?v=20260905-25"></script>
+  <script src="ribbonink.js?v=20260905-25"></script>
 </body>
 </html>

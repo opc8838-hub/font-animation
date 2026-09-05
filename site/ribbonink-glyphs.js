@@ -71,7 +71,7 @@
         let hit;
         for (let i = samples.length - 1; i >= 0; i--) {
           const tip = samples[i];
-          const radius = root.RibbonInkWriting.radius(tip, motion, brushWidth) / motion.scale;
+          const radius = root.RibbonInkWriting.radius(tip, motion, brushWidth, route.join) / motion.scale;
           const x = W / 2 + (tip.x - W * 1.5) / motion.scale;
           const y = H / 2 + (tip.y - H / 2) / motion.scale;
           if (inkContact(g, x, y, radius)) { hit = tip; break; }
@@ -128,10 +128,13 @@
       const key = JSON.stringify([W, H, unit, font, document.fonts.check(font, text || ' '), settings.page2Spacing, settings.page2Color, text, settings.centerX, settings.centerY]);
       if (layoutKey !== key) {
         const scratch = document.createElement('canvas'), ctx = scratch.getContext('2d', { willReadFrequently: true });
-        let size = Number(settings.page2Size), gap = Number(settings.page2Spacing);
+        const requested = Number(settings.page2Size), zoom = Math.max(1, requested / 270);
+        let size = Math.min(requested, 270), gap = Number(settings.page2Spacing);
         ctx.font = fontSpec(size);
         const total = annotations.reduce((n, g) => n + ctx.measureText(g.text).width, 0) + gap * Math.max(0, annotations.length - 1);
-        const fit = Math.min(1, W * .76 / Math.max(1, total)); size *= fit; gap *= fit;
+        // Fit once at the default size; further enlargement is an intentional
+        // composition zoom, not another fit that cancels the editor slider.
+        const fit = Math.min(1, W * .76 / Math.max(1, total)) * zoom; size *= fit; gap *= fit;
         ctx.font = fontSpec(size);
         const metrics = ctx.measureText(annotations.map(g => g.text).join('') || ' ');
         const baseline = H * (settings.centerY ?? .5) + (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2;
@@ -155,7 +158,7 @@
         layoutKey = key; eventKey = '';
       }
       const rhythm = root.RibbonInkSequence.settings(settings);
-      const nextEventKey = JSON.stringify([W, H, font, settings.page2Spacing, annotations.map(a => a.text), route?.parts[0].points[0], settings.page2Route, span.bridge, span.page2, settings.page2Pop, settings.brushWidth, rhythm, options.contactKey?.()]);
+      const nextEventKey = JSON.stringify([W, H, font, settings.page2Spacing, annotations.map(a => a.text), route?.parts[0].points[0], route?.join, settings.page2Route, span.bridge, span.page2, settings.page2Pop, settings.brushWidth, rhythm, options.contactKey?.()]);
       if (eventKey !== nextEventKey) {
         events = options.contacts ? options.contacts(layout, W, H) : contacts(layout, route, { W, H, bridge: span.bridge, hold: span.page2, pop: Number(settings.page2Pop) / 100, brushWidth: 74 * Number(settings.brushWidth) / 100, rhythm });
         eventKey = nextEventKey;

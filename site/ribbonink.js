@@ -431,11 +431,12 @@
   }
 
   function fitBaseText(context, text, width, height, unit) {
-    const desired = Number(inputs.fontSize.value) * unit;
+    const requested = Number(inputs.fontSize.value);
+    const desired = Math.min(requested, 270) * unit;
     const spacing = Number(inputs.letterSpacing.value) * unit;
     const maxWidth = width * .76;
     const metrics = spacedTextMetrics(context, text, desired, spacing);
-    const scale = metrics.total > maxWidth ? maxWidth / metrics.total : 1;
+    const scale = Math.min(1, maxWidth / Math.max(1, metrics.total)) * Math.max(1, requested / 270);
     return { size: desired * scale, spacing: spacing * scale };
   }
 
@@ -457,6 +458,23 @@
     const scanContext = scan.getContext("2d", { willReadFrequently: true });
     scanContext.drawImage(image, 0, 0, scan.width, scan.height);
     const source = scanContext.getImageData(0, 0, scan.width, scan.height);
+    // Read the final visible ink run in each column once. A scaled/cropped
+    // first page must hand off at its actual silhouette, not a guessed tip.
+    state.motherExitProfile = Array.from({ length: 721 }, (_, x) => {
+      const column = Math.min(scan.width - 1, Math.round(x / 720 * scan.width));
+      let end = -1;
+      for (let y = scan.height - 1; y >= 0; y--) {
+        const opaque = source.data[(y * scan.width + column) * 4 + 3] > 128;
+        if (opaque && end < 0) end = y;
+        if ((!opaque || y === 0) && end >= 0) {
+          const start = opaque ? y : y + 1;
+          if (end - start >= 8) return { y: (start + end) / 2 / scan.height * 405,
+            thickness: (end - start + 1) / scan.height * 405 };
+          end = -1;
+        }
+      }
+      return null;
+    });
     const detail = scanContext.createImageData(scan.width, scan.height);
     const highlight = scanContext.createImageData(scan.width, scan.height);
     for (let index = 0; index < source.data.length; index += 4) {
@@ -514,6 +532,22 @@
       y: transform.y + (210 + (point.y - 210) * transform.widthScale) * transform.scale,
       angle: point.angle || 0
     };
+  }
+
+  function sequenceJoin(width, height, unit) {
+    const transform = exactTransform(width, height);
+    // The original layer is clipped to page one before the camera moves.
+    // Begin a few source pixels inside that visible boundary, never beyond it.
+    const x = clamp((width - transform.x) / transform.scale - 4, 1, 716);
+    const profile = state.motherExitProfile;
+    const sample = at => profile?.[Math.round(clamp(at, 0, 720))];
+    const center = sample(x) || { y: 195, thickness: 74 };
+    const before = sample(x - 4) || center, after = sample(x + 4) || center;
+    const slope = clamp((after.y - before.y) / 8, -1.5, 1.5) * transform.widthScale;
+    const angle = Math.atan(slope);
+    const entry = transformPoint({ x, y: center.y }, transform);
+    return { entry: [entry.x / unit, entry.y / unit], angle,
+      radius: center.thickness * .5 * transform.scale / unit * transform.widthScale * Math.cos(angle) };
   }
 
   function strokeLocalWindow(stroke, start, end) {
@@ -980,11 +1014,10 @@
       return;
     }
     if (sequenceActive) {
-      const transform = exactTransform(width, height);
-      const entry = transformPoint({ x: 710, y: 195 }, transform);
-      const routeKey = JSON.stringify([width / unit, height / unit, entry.x / unit, entry.y / unit, inputs.page2Route.value]);
+      const join = sequenceJoin(width, height, unit);
+      const routeKey = JSON.stringify([width / unit, height / unit, join, inputs.page2Route.value]);
       if (sequenceRouteKey !== routeKey) {
-        sequenceRoute = window.RibbonInkSequence.compile(inputs.page2Route.value, width / unit, height / unit, [entry.x / unit, entry.y / unit]);
+        sequenceRoute = window.RibbonInkSequence.compile(inputs.page2Route.value, width / unit, height / unit, join.entry, join);
         sequenceRouteKey = routeKey;
       }
       const motion = window.RibbonInkSequence.evaluate(elapsed, phase.span.bridge, Number(inputs.page2Pop.value) / 100, sequenceRoute, phase.span.page2,
@@ -1713,7 +1746,7 @@
   });
   if (urlParams.has("preview")) document.body.classList.add("is-preview");
 
-  window.RibbonInk = { renderFrame, timing, phaseAt, visibleWindow, schemeData, applyScheme, setTime, setPaused, canvasDimensions,
+  window.RibbonInk = { renderFrame, timing, phaseAt, visibleWindow, schemeData, applyScheme, setTime, setPaused, canvasDimensions, sequenceJoin,
     glyphDiagnostics: () => ({ first: lastFirstGlyphFrame && { events: lastFirstGlyphFrame.events, poses: lastFirstGlyphFrame.poses },
       second: lastGlyphFrame && { events: lastGlyphFrame.events, poses: lastGlyphFrame.poses }, authoredFirst: authoredFirstText() }) };
 

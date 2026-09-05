@@ -20,7 +20,7 @@
     path.arc(a.x, a.y, a.r, a.angle - Math.PI / 2, a.angle + Math.PI / 2, true);
     path.closePath(); return path;
   }
-  function radius(p, motion, brushWidth) {
+  function radius(p, motion, brushWidth, join) {
     const organic = .96 + .12 * Math.sin(p.length / 84) + .10 * root.RibbonInkFreehand.noise(p.length / 135, 7);
     const pressure = .89 + .11 * Math.cos(p.angle * 2 - .4);
     // A broad, rounded brush end, not a tapered pen nib. Keep the existing
@@ -28,7 +28,9 @@
     // Near-full radius also makes the side meet the semicircular cap gently.
     const tail = motion.tail > 0 ? .94 + .06 * smooth((p.length - motion.tail) / 46) : 1;
     const head = .96 + .04 * smooth((motion.head - p.length) / 32);
-    return brushWidth * .5 * organic * pressure * Math.min(head, tail);
+    const body = brushWidth * .5 * organic * pressure;
+    const blend = join ? smooth(p.length / join.blend) : 1;
+    return ((join?.radius ?? body) * (1 - blend) + body * blend) * Math.min(head, tail);
   }
   function pigmentBounds(length, drift, density) {
     const u = (length - drift) * density * 1.65;
@@ -134,7 +136,7 @@
     }
     return result;
   }
-  function dyeContours(points, brushWidth, drift, density, rings, part) {
+  function dyeContours(points, brushWidth, drift, density, rings, part, join) {
     const path=new Path2D(),accents=[new Path2D(),new Path2D(),new Path2D()];
     const start=points[0].length,length=points.at(-1).length;
     const mapped=([u,v])=>{
@@ -144,7 +146,7 @@
       const a=points[lo],b=points[hi],t=Math.max(0,Math.min(1,(s-a.length)/Math.max(1e-8,b.length-a.length)));
       const angle=a.angle+Math.atan2(Math.sin(b.angle-a.angle),Math.cos(b.angle-a.angle))*t;
       const extra=s<start?s-start:s>length?s-length:0;
-      const r=radius({length:Math.max(start,Math.min(length,s)),angle},{head:Infinity,tail:0},brushWidth);
+      const r=radius({length:Math.max(start,Math.min(length,s)),angle},{head:Infinity,tail:0},brushWidth,join);
       return [a.x+(b.x-a.x)*t+Math.cos(angle)*extra-Math.sin(angle)*r*v,
         a.y+(b.y-a.y)*t+Math.sin(angle)*extra+Math.cos(angle)*r*v];
     };
@@ -183,9 +185,9 @@
     for (const part of route.parts) {
       const from = Math.max(part.start, motion.tail), to = Math.min(part.end, motion.head);
       if (to <= from) continue;
-      const points = root.RibbonInkSequence.section(part.points, from, to).map(p => ({ ...p, r: radius(p, motion, brushWidth) }));
+      const points = root.RibbonInkSequence.section(part.points, from, to).map(p => ({ ...p, r: radius(p, motion, brushWidth, route.join) }));
       if (points.length < 2) continue;
-      const dye = dyeContours(routePoints,brushWidth,drift,density,rings,part);
+      const dye = dyeContours(routePoints,brushWidth,drift,density,rings,part,route.join);
       paint.setTransform(1, 0, 0, 1, 0, 0); paint.clearRect(0, 0, w, h);
       paint.save(); paint.scale(unit, unit); paint.translate(-motion.camera * w / unit, 0);
       const body = outline(points);
