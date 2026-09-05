@@ -5,7 +5,7 @@
   const smooth = x => { x = clamp(x); return x * x * (3 - 2 * x); };
   const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
   const split = text => Array.from(segmenter.segment(String(text).normalize('NFC')), p => p.segment);
-  const defaults = { depth: 'inherit', motion: 'auto', amount: 1, pivot: 'bottom', direction: 'down', rebound: .36 };
+  const defaults = { depth: 'inherit', motion: 'auto', amount: .4, pivot: 'bottom', direction: 'down', rebound: .36 };
   function normalize(item = {}) {
     const option = (key, values) => values.includes(item[key]) ? item[key] : defaults[key];
     const number = (key, a, b) => Number.isFinite(Number(item[key])) ? clamp(Number(item[key]), a, b) : defaults[key];

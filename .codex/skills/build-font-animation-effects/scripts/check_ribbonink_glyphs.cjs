@@ -15,6 +15,11 @@ assert.deepEqual(G.reconcile(JSON.parse(JSON.stringify(glyphs)), 'X中한Z'), gl
 assert.deepEqual(G.reconcile(glyphs, ''), []);
 assert.throws(() => G.reconcile({}, 'X'));
 const events = [{ start: .3, release: 1.1, rear: false }];
+assert.equal(G.reconcile([], '中文')[0].amount, .4, 'new text starts with gentle pressure');
+const pressure = [0, .15, .4, .85].map(amount => G.pose({ ...G.defaults, motion: 'press', amount }, events, .7, 2, 'weave').sy);
+assert.equal(pressure[0], 1, 'zero pressure leaves the glyph unchanged');
+assert.ok(pressure[0] > pressure[1] && pressure[1] > pressure[2] && pressure[2] > pressure[3], 'pressure increases continuously from shallow to deep');
+assert.equal(G.reconcile([{ ...G.defaults, id: 'saved', text: '文', amount: 1.2 }], '文')[0].amount, 1.2, 'existing saved strength is not replaced by the new default');
 const annotation = { ...G.defaults, motion: 'hide' };
 const neutral = G.pose(annotation, events, 0, 2, 'weave');
 assert.equal(G.pose(annotation, [], .7, 2, 'weave').sy, 1, 'no contact means no movement');

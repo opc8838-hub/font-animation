@@ -1328,6 +1328,11 @@
       const chosen = editor.glyphs.filter(g => editor.selected.has(g.id));
       editor.element("glyphSelection").textContent = chosen.length ? `已选 ${chosen.length} 字：${chosen.map(g => g.text).join("、")}` : "尚未选择文字";
       editor.element("glyphFields").disabled = !chosen.length;
+      const sideMotion = chosen.length && chosen.every(g => g.motion === "lean" || g.motion === "turn");
+      editor.element("glyphAmountLabel").textContent = sideMotion ? "动作幅度" : "下压力度";
+      editor.element("glyphAmountHelp").textContent = sideMotion
+        ? "往左幅度更小，往右幅度更大。只调整选中的字。"
+        : "往左更轻、压得浅；往右更强、压得低。0 为不下压，默认 40%。只调整选中的字。";
       for (const [id, key] of Object.entries(glyphFields)) {
         const input = editor.element(id), mixed = chosen.some(g => g[key] !== chosen[0][key]);
         const value = chosen[0]?.[key] ?? glyphEngine.defaults[key];
@@ -1360,6 +1365,21 @@
   for (const editor of glyphEditors) {
     editor.element("selectAllGlyphs").addEventListener("click", () => { editor.selected = new Set(editor.glyphs.map(g => g.id)); syncGlyphEditor(); });
     editor.element("deselectGlyphs").addEventListener("click", () => { editor.selected.clear(); syncGlyphEditor(); });
+    editor.element("pressSelectedGlyphs").addEventListener("click", () => {
+      if (!editor.selected.size) return;
+      editor.glyphs = editor.glyphs.map(g => editor.selected.has(g.id)
+        ? { ...g, motion: "press", direction: "down", pivot: "bottom",
+          amount: g.amount > 0 ? g.amount : glyphEngine.defaults.amount }
+        : { ...g, motion: "none" });
+      if (editor.first) inputs.page1Choreo.value = "glyphs";
+      updateOutputs(); queueAutosave(); seekGlyphContact(editor);
+    });
+    editor.element("stopSelectedGlyphs").addEventListener("click", () => {
+      editor.glyphs = editor.glyphs.map(g => editor.selected.has(g.id) ? { ...g, motion: "none" } : g);
+      if (editor.first) inputs.page1Choreo.value = "glyphs";
+      updateOutputs(); queueAutosave(); setPaused(true); setTime(editor.rest());
+      editor.element("glyphStatus").textContent = "所选字已设为不动；其他字的设置保持不变。";
+    });
     editor.element("inspectGlyphContact").addEventListener("click", () => seekGlyphContact(editor));
     editor.element("playGlyphContact").addEventListener("click", () => seekGlyphContact(editor, true));
     for (const [id, key] of Object.entries(glyphFields)) editor.element(id).addEventListener("input", event => {
@@ -1376,7 +1396,7 @@
   function updateOutputs() {
     syncGlyphEditor();
     updateDrawingUI();
-    $("#page1GlyphEditor").hidden = inputs.drawingMode.value === "freehand" || inputs.page1Choreo.value !== "glyphs";
+    $("#page1GlyphEditor").hidden = inputs.drawingMode.value === "freehand";
     inputs.page1Weave.closest("label").hidden = inputs.drawingMode.value === "freehand";
     inputs.page1Choreo.closest("label").hidden = inputs.drawingMode.value === "freehand";
     inputs.letterImpact.closest("label").hidden = inputs.drawingMode.value === "freehand" || !authoredFirstText();
@@ -1761,6 +1781,8 @@
       }
       if (/^page2InkColor[1-5]$/.test(key)) inputs.page2PalettePreset.value = "custom";
       updateOutputs();
+      if (key === "textInput") $("#page1GlyphEditor").open = true;
+      if (key === "page2Text") $("#page2GlyphEditor").open = true;
       if (["fontSelect", "page2Font", "textInput", "page2Text"].includes(key)) {
         ensurePageFonts().then(() => { textLayerKeys.fill(""); renderPreview(); });
       }
