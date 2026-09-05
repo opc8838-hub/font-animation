@@ -4,7 +4,7 @@
   // Independent Canvas ports of five observable per-glyph motion contracts from
   // LTMorphingLabel (MIT, lexrus/LTMorphingLabel). No Swift/UIKit source is embedded.
   const $ = (id) => document.getElementById(id);
-  const VERSION = 3;
+  const VERSION = 6;
   const segmenter = typeof Intl.Segmenter === "function" ? new Intl.Segmenter(undefined, { granularity: "grapheme" }) : null;
   const split = (value) => segmenter ? Array.from(segmenter.segment(String(value)), ({ segment }) => segment) : Array.from(String(value));
   const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
@@ -20,7 +20,7 @@
 
   const BASE_CANVAS = { width: 1080, height: 1080, preset: "1080x1080" };
   const BASE_TYPE = { fontFamily: "stg:inter", fontSize: 174, tracking: 0, positionX: 0, positionY: 0, alignment: "center", textColor: "#111111", backgroundColor: "#ffffff" };
-  const BASE_MOTION = { morphDuration: 600, characterDelay: 0.026, speed: 1, loop: false };
+  const BASE_MOTION = { morphDuration: 600, characterDelay: 0.026, speed: 1, loop: true };
   const row = (id, text, hold, extra = {}) => ({ id, text, hold, icons: [], backgroundColor: "#ffffff", backgroundMedia: null, backgroundTransition: "direct", backgroundTransitionDuration: 120, ...extra });
   const PORTS = {
     sproutshift: {
@@ -57,9 +57,9 @@
       mode: "cascade", slug: "typecascade", zh: "字倾", en: "Type Cascade", amountLabel: "倾倒角度", amountUnit: "°", amountMin: 60, amountMax: 220, amountStep: 1,
       phaseLabel: "倾倒坠落", enterLabel: "基线长入", exitLabel: "倾倒坠落",
       scheme: {
-        version: VERSION, canvas: BASE_CANVAS, typography: { ...BASE_TYPE, fontSize: 160 }, motion: { ...BASE_MOTION, effectAmount: 168 },
+        version: VERSION, canvas: BASE_CANVAS, typography: { ...BASE_TYPE, fontSize: 167 }, motion: { ...BASE_MOTION, morphDuration: 810, characterDelay: 0.052, effectAmount: 168 },
         rows: [
-          row("cascade-01", "Sketch", 450),
+          row("cascade-01", "Sketch", 450, { icons: [{ id: "mp-mtn08rg8-op1v11", libraryId: "bot-08", boundary: 6, size: 110, gap: 15, x: 0, y: 0 }] }),
           row("cascade-02", "Frame", 450),
           row("cascade-03", "Rhythm", 450),
           row("cascade-04", "Keyframe", 450),
@@ -73,7 +73,7 @@
       mode: "dots", slug: "dotresolve", zh: "点解", en: "Dot Resolve", amountLabel: "像素半径", amountUnit: "×", amountMin: 2, amountMax: 12, amountStep: 0.5,
       phaseLabel: "像素解析", enterLabel: "颗粒解析", exitLabel: "像素消散",
       scheme: {
-        version: VERSION, canvas: BASE_CANVAS, typography: BASE_TYPE, motion: { ...BASE_MOTION, loop: true, effectAmount: 6 },
+        version: VERSION, canvas: BASE_CANVAS, typography: BASE_TYPE, motion: { ...BASE_MOTION, loop: true, effectAmount: 6, introEnabled: true, introDuration: 380, introCharacterDelay: 28 },
         rows: [
           row("dots-01", "Signal", 650),
           row("dots-02", "Frame", 650),
@@ -120,9 +120,30 @@
   const canvas = $("glyphMorphCanvas");
   const frame = $("compositionFrame");
   const context = canvas.getContext("2d");
-  const controlIds = ["fontFamily", "fontSize", "tracking", "positionX", "positionY", "textColor", "backgroundColor", "morphDuration", "characterDelay", "effectAmount", "speed", "loop"];
+  const controlIds = ["fontFamily", "fontSize", "tracking", "positionX", "positionY", "textColor", "backgroundColor", "introEnabled", "introDuration", "introCharacterDelay", "morphDuration", "characterDelay", "effectAmount", "speed", "loop"];
   const controls = Object.fromEntries(controlIds.map((id) => [id, $(id)]));
   const normalizeColor = (value, fallback = "#ffffff") => /^#[0-9a-f]{6}$/i.test(String(value || "")) ? String(value) : fallback;
+  const dotPalette = ["#ff375f", "#ff9f0a", "#32d74b", "#00c7be", "#0a84ff", "#bf5af2"];
+  function dotColors(row) {
+    return {
+      initialColor: normalizeColor(row.initialColor, state.scheme.typography.textColor),
+      colorMode: ["single", "multi"].includes(row.colorMode) ? row.colorMode : "off",
+      effectColor: normalizeColor(row.effectColor, "#ff375f"),
+      effectColors: split(row.text).map((_, index) => normalizeColor(row.effectColors?.[index], dotPalette[index % dotPalette.length])),
+      sweepEnabled: row.sweepEnabled === true
+    };
+  }
+  // Paint the outgoing row only. The next row enters in its own initial color.
+  // No extra phase or reset is added to the approved pixelation choreography.
+  function dotTokenColor(row, token, progress = -1) {
+    const colors = dotColors(row);
+    if (colors.colorMode === "off" || progress < 0) return colors.initialColor;
+    const index = token.characterIndex ?? 0;
+    const count = Math.max(1, split(row.text).length);
+    const visibleWindow = Math.max(0.05, 1 - state.scheme.motion.characterDelay * Math.max(0, rowTokens(row).length - 1));
+    if (colors.sweepEnabled && clamp(progress) < index / count * visibleWindow) return colors.initialColor;
+    return colors.colorMode === "multi" ? colors.effectColors[index] : colors.effectColor;
+  }
   const normalizeBackgroundTransition = (value) => value === "crossfade" ? "crossfade" : "direct";
   const normalizeBackgroundTransitionDuration = (value) => clamp(Number.isFinite(Number(value)) ? Number(value) : 120, 10, 2000);
   const normalizeBackgroundMedia = (media) => media && typeof media === "object" && media.url ? {
@@ -145,8 +166,40 @@
     return Math.min(clip.end - 0.001, clip.start + (((localTime % clip.duration) + clip.duration) % clip.duration));
   };
 
-  function fontPreset() {
-    return window.STGFontLibrary?.preset(state.scheme.typography.fontFamily) || { family: "STG Inter", weight: 500, style: "normal" };
+  function fontPreset(row) {
+    return window.MERowFonts.preset(row, state.scheme.typography);
+  }
+
+  async function refreshFonts() {
+    try {
+      await window.MERowFonts.loadRows(state.scheme.rows, state.scheme.typography);
+      fitCache.key = "";
+      resizePreview();
+    } catch (error) { $("exportStatus").textContent = `字体加载失败：${error.message}`; }
+  }
+
+  function cascadeTiming(row) {
+    return {
+      tilt: clamp(Number(row.tiltDuration ?? 300), 50, 5000),
+      hang: clamp(Number(row.hangDuration ?? 120), 0, 5000),
+      drop: clamp(Number(row.fallDuration ?? 450), 50, 5000)
+    };
+  }
+
+  function cascadePose(row, index, elapsedMs, slot, layout, height) {
+    const timing = cascadeTiming(row);
+    const delay = state.scheme.motion.morphDuration * state.scheme.motion.characterDelay * index;
+    const local = Math.max(0, elapsedMs - delay);
+    const dropProgress = clamp((local - timing.tilt - timing.hang) / timing.drop);
+    const sign = index % 2 ? 1 : -1;
+    // Include the full rotated glyph/icon envelope, not a fixed pixel offset.
+    const distance = Math.max(0, height - slot.y) + layout.fontSize * 5;
+    return {
+      offsetY: distance * dropProgress * dropProgress,
+      pivotY: layout.fontSize * 0.46,
+      rotation: easeOutBack(local / timing.tilt) * sign * state.scheme.motion.effectAmount * Math.PI / 180,
+      complete: dropProgress >= 1 - 1e-9
+    };
   }
 
   function timelineSegments() {
@@ -155,9 +208,17 @@
       const terminal = !state.scheme.motion.loop && index === rows.length - 1;
       const to = terminal ? row : rows[(index + 1) % rows.length];
       const morphMs = terminal ? 0 : state.scheme.motion.morphDuration;
-      const tailMs = terminal ? 0 : morphMs * state.scheme.motion.characterDelay * Math.max(0, rowTokens(to).length - 1);
+      const count = rowTokens(to).length;
+      const staggerMs = morphMs * state.scheme.motion.characterDelay;
+      const tailMs = terminal ? 0 : staggerMs * Math.max(0, count - 1);
+      const timing = cascadeTiming(row);
+      const exitMs = port.mode === "cascade" && !terminal ? timing.tilt + timing.hang + timing.drop + staggerMs * Math.max(0, rowTokens(row).length - 1) : 0;
+      const transitionMs = Math.max(morphMs + tailMs, exitMs);
       const holdMs = Math.max(0, Number(row.hold) || 0);
-      return { from: row, to, morphMs, tailMs, holdMs, durationMs: holdMs + morphMs + tailMs, terminal };
+      const introMs = port.mode === "dots" && index === 0 && state.scheme.motion.introEnabled
+        ? Math.max(1, Number(state.scheme.motion.introDuration) || 380) + Math.max(0, Number(state.scheme.motion.introCharacterDelay) || 0) * Math.max(0, rowTokens(row).length - 1)
+        : 0;
+      return { from: row, to, morphMs, tailMs, holdMs, introMs, transitionMs, durationMs: introMs + holdMs + transitionMs, terminal };
     });
   }
   function rowStartElapsed(rowIndex) {
@@ -167,7 +228,7 @@
     const index = ((rowIndex % length) + length) % length;
     let rawStart = 0;
     for (let cursor = 0; cursor < index; cursor += 1) rawStart += segments[cursor].durationMs;
-    return rawStart / Math.max(0.01, state.scheme.motion.speed);
+    return (rawStart + (segments[index].introMs || 0)) / Math.max(0.01, state.scheme.motion.speed);
   }
 
   function seekToRowStart(rowIdOrIndex, pause = true) {
@@ -197,7 +258,9 @@
       const segment = segments[index];
       if (local < cursor + segment.durationMs || index === segments.length - 1) {
         const segmentTime = local - cursor;
-        return { segment, index, segmentTime, rawLocal: local, rawCycle, progress: Math.max(0, (segmentTime - segment.holdMs) / Math.max(1, segment.morphMs)), inHold: segment.terminal || segmentTime < segment.holdMs };
+        const contentTime = Math.max(0, segmentTime - (segment.introMs || 0));
+        const inIntro = segment.introMs > 0 && segmentTime < segment.introMs;
+        return { segment, index, segmentTime, contentTime, rawLocal: local, rawCycle, introProgress: segment.introMs ? clamp(segmentTime / segment.introMs) : 1, progress: Math.max(0, (contentTime - segment.holdMs) / Math.max(1, segment.morphMs)), inIntro, inHold: segment.terminal || inIntro || contentTime < segment.holdMs };
       }
       cursor += segment.durationMs;
     }
@@ -219,7 +282,7 @@
     const tokens = [];
     for (let boundary = 0; boundary <= glyphs.length; boundary += 1) {
       (buckets.get(boundary) || []).forEach((icon) => tokens.push({ type: "icon", key: `i:${icon.libraryId}`, icon }));
-      if (boundary < glyphs.length) tokens.push({ type: "glyph", key: `g:${glyphs[boundary]}`, glyph: glyphs[boundary] });
+      if (boundary < glyphs.length) tokens.push({ type: "glyph", key: `g:${glyphs[boundary]}`, glyph: glyphs[boundary], characterIndex: boundary });
     }
     return tokens;
   }
@@ -266,6 +329,7 @@
   }
 
   async function preloadInsertedAssets() {
+    await window.MERowFonts.loadRows(state.scheme.rows, state.scheme.typography);
     const ids = new Set(state.scheme.rows.flatMap((row) => (row.icons || []).map((icon) => icon.libraryId)));
     await Promise.all(Array.from(ids, (id) => loadAssetResource(libraryAsset(id))));
   }
@@ -482,21 +546,22 @@
     await seekRuntimeBackground(incoming, 0, true);
   }
 
+  let fitCache = { key: "", size: 0 };
   function glyphLayout(ctx, row, width, height) {
     const sourceTokens = rowTokens(row);
     const typography = state.scheme.typography;
     const unit = Math.min(width, height) / 1080;
     const baseSize = Math.max(1, typography.fontSize * unit);
     const tracking = typography.tracking * unit;
-    const preset = fontPreset();
+    const preset = fontPreset(row);
     const fallback = window.STGFontLibrary?.fallbackStack || "sans-serif";
     const family = `"${preset.family}",${fallback}`;
     const style = preset.style || "normal";
     const weight = preset.weight || 500;
-    const measure = (size) => {
-      ctx.font = `${style} ${weight} ${size}px ${family}`;
+    const measure = (size, inputTokens = sourceTokens, inputPreset = preset) => {
+      ctx.font = `${inputPreset.style || "normal"} ${inputPreset.weight || 500} ${size}px "${inputPreset.family}",${fallback}`;
       const fitScale = size / baseSize;
-      const tokens = sourceTokens.map((token) => {
+      const tokens = inputTokens.map((token) => {
         if (token.type === "glyph") return { ...token, width: ctx.measureText(token.glyph).width };
         const iconSize = size * clamp(Number(token.icon.size) || 90, 20, 220) / 100;
         const gap = clamp(Number(token.icon.gap) || 0, 0, 80) * unit * fitScale;
@@ -504,13 +569,14 @@
       });
       return { tokens, total: tokens.reduce((sum, token) => sum + token.width, 0) + Math.max(0, tokens.length - 1) * tracking * fitScale };
     };
-    let fontSize = baseSize;
-    let metrics = measure(fontSize);
+    const fitKey = JSON.stringify([width, height, typography, state.scheme.rows.map((item) => [item.text, item.icons, item.fontFamily])]);
     const maxWidth = width * 0.88;
-    if (metrics.total > maxWidth) {
-      fontSize *= maxWidth / metrics.total;
-      metrics = measure(fontSize);
+    if (fitCache.key !== fitKey) {
+      const widest = Math.max(1, ...state.scheme.rows.map((item) => measure(baseSize, rowTokens(item), fontPreset(item)).total));
+      fitCache = { key: fitKey, size: baseSize * Math.min(1, maxWidth / widest) };
     }
+    const fontSize = fitCache.size;
+    const metrics = measure(fontSize);
     const appliedTracking = tracking * (fontSize / baseSize);
     const anchor = width * (0.5 + typography.positionX / 100);
     const baseline = height * (0.5 + typography.positionY / 100);
@@ -523,7 +589,7 @@
       cursor += token.width + appliedTracking;
       return slot;
     });
-    return { tokens: metrics.tokens, slots, fontSize, family, style, weight, unit };
+    return { tokens: metrics.tokens, slots, fontSize, family, style, weight, unit, row };
   }
 
   function matchGlyphs(from, to) {
@@ -560,7 +626,7 @@
     const pivotY = Number(options.pivotY) || 0;
     if (token.type === "glyph") {
       if (!token.glyph.trim()) { ctx.restore(); return; }
-      ctx.fillStyle = state.scheme.typography.textColor;
+      ctx.fillStyle = options.color || (port.mode === "dots" ? dotTokenColor(layout.row, token) : state.scheme.typography.textColor);
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.font = `${layout.style} ${layout.weight} ${layout.fontSize}px ${layout.family}`;
@@ -603,11 +669,11 @@
 
   const pixelSourceCanvas = document.createElement("canvas");
   const pixelSampleCanvas = document.createElement("canvas");
-  function drawPixelatedToken(ctx, slot, layout, alpha, pixelProgress, timeSeconds, iconOverride = null) {
+  function drawPixelatedToken(ctx, slot, layout, alpha, pixelProgress, timeSeconds, iconOverride = null, options = {}) {
     const radius = Math.max(0.0001, clamp(pixelProgress) * Math.max(0.1, state.scheme.motion.effectAmount));
     const sampleScale = Math.min(1, 1 / radius);
     if (sampleScale >= 0.985) {
-      drawToken(ctx, slot, layout, 1, alpha, timeSeconds, iconOverride);
+      drawToken(ctx, slot, layout, 1, alpha, timeSeconds, iconOverride, options);
       return;
     }
     const side = Math.max(8, Math.ceil(layout.fontSize * 4.8));
@@ -615,7 +681,7 @@
     pixelSourceCanvas.height = side;
     const source = pixelSourceCanvas.getContext("2d");
     source.clearRect(0, 0, side, side);
-    drawToken(source, { ...slot, x: side / 2, y: side / 2 }, layout, 1, 1, timeSeconds, iconOverride);
+    drawToken(source, { ...slot, x: side / 2, y: side / 2 }, layout, 1, 1, timeSeconds, iconOverride, options);
     pixelSampleCanvas.width = Math.max(1, Math.round(side * sampleScale));
     pixelSampleCanvas.height = Math.max(1, Math.round(side * sampleScale));
     const sample = pixelSampleCanvas.getContext("2d");
@@ -650,6 +716,24 @@
     renderBackground(ctx, timeline, width, height, targetCanvas === canvas);
     const fromLayout = glyphLayout(ctx, timeline.segment.from, width, height);
     const toLayout = glyphLayout(ctx, timeline.segment.to, width, height);
+    if (timeline.inIntro) {
+      const duration = Math.max(1, Number(state.scheme.motion.introDuration) || 380);
+      const delay = Math.max(0, Number(state.scheme.motion.introCharacterDelay) || 0);
+      fromLayout.slots.forEach((slot, index) => {
+        const progress = clamp((timeline.segmentTime - delay * index) / duration);
+        const eased = easeOutQuint(progress);
+        const scatter = 1 - eased;
+        const angle = index * 2.399963229728653;
+        const movingSlot = {
+          ...slot,
+          x: slot.x + Math.cos(angle) * fromLayout.fontSize * 0.22 * scatter,
+          y: slot.y + Math.sin(angle) * fromLayout.fontSize * 0.16 * scatter
+        };
+        drawPixelatedToken(ctx, movingSlot, fromLayout, progress, scatter, timeSeconds, null, { color: dotTokenColor(timeline.segment.from, slot.token) });
+      });
+      ctx.restore();
+      return timeline;
+    }
     if (timeline.inHold) {
       fromLayout.slots.forEach((slot) => drawToken(ctx, slot, fromLayout, 1, 1, timeSeconds));
       ctx.restore();
@@ -668,15 +752,10 @@
         } else if (port.mode === "mist") {
           drawToken(ctx, oldSlot, fromLayout, 1, 1 - eased, timeSeconds, null, { offsetY: -fromLayout.fontSize * 0.8 * eased * amount });
         } else if (port.mode === "cascade") {
-          const sign = Math.sin(oldSlot.x / Math.max(0.001, fromLayout.unit)) > 0.5 ? 1 : -1;
-          const fall = glyphProgress > 0.5 ? easeInQuint((glyphProgress - 0.4) / 0.5) * 10 * fromLayout.unit : 0;
-          drawToken(ctx, oldSlot, fromLayout, 1, clamp(glyphProgress * -2 + 2.01), timeSeconds, null, {
-            offsetY: fall,
-            pivotY: fromLayout.fontSize * 0.46,
-            rotation: easeOutBack(glyphProgress) * sign * amount * Math.PI / 180
-          });
+          const pose = cascadePose(timeline.segment.from, oldIndex, timeline.segmentTime - timeline.segment.holdMs, oldSlot, fromLayout, height);
+          if (!pose.complete) drawToken(ctx, oldSlot, fromLayout, 1, 1, timeSeconds, null, pose);
         } else {
-          drawPixelatedToken(ctx, oldSlot, fromLayout, clamp(glyphProgress * -2 + 2.01), glyphProgress, timeSeconds);
+          drawPixelatedToken(ctx, oldSlot, fromLayout, clamp(glyphProgress * -2 + 2.01), glyphProgress, timeSeconds, null, { color: dotTokenColor(timeline.segment.from, oldSlot.token, timeline.progress) });
         }
         return;
       }
@@ -686,7 +765,14 @@
         iconOverride = { ...oldSlot.token.icon };
         ["size", "gap", "x", "y"].forEach((key) => { iconOverride[key] = Number(oldSlot.token.icon[key] || 0) + (Number(target.token.icon[key] || 0) - Number(oldSlot.token.icon[key] || 0)) * eased; });
       }
-      drawToken(ctx, { token: oldSlot.token, x: oldSlot.x + (target.x - oldSlot.x) * eased, y: oldSlot.y + (target.y - oldSlot.y) * eased }, fromLayout, 1, 1, timeSeconds, iconOverride);
+      const movingLayout = { ...fromLayout, fontSize: fromLayout.fontSize + (toLayout.fontSize - fromLayout.fontSize) * eased };
+      const movingSlot = { token: oldSlot.token, x: oldSlot.x + (target.x - oldSlot.x) * eased, y: oldSlot.y + (target.y - oldSlot.y) * eased };
+      const fontChanged = oldSlot.token.type === "glyph" && ["family", "style", "weight"].some((key) => fromLayout[key] !== toLayout[key]);
+      const color = port.mode === "dots" ? dotTokenColor(timeline.segment.from, oldSlot.token, timeline.progress) : null;
+      const colorChanged = port.mode === "dots" && color !== dotTokenColor(timeline.segment.to, target.token);
+      const blend = colorChanged ? clamp((timeline.progress - 0.8) / 0.2) : eased;
+      drawToken(ctx, movingSlot, movingLayout, 1, fontChanged || colorChanged ? 1 - blend : 1, timeSeconds, iconOverride, { color });
+      if (fontChanged || colorChanged) drawToken(ctx, { ...movingSlot, token: target.token }, { ...toLayout, fontSize: movingLayout.fontSize }, 1, blend, timeSeconds);
     });
     toLayout.slots.forEach((newSlot, newIndex) => {
       if (claimed.has(newIndex)) return;
@@ -708,13 +794,21 @@
   }
 
   function resizePreview() {
-    const rect = frame.getBoundingClientRect();
     const ratio = state.scheme.canvas.width / state.scheme.canvas.height;
     frame.style.setProperty("--gm-aspect", String(ratio));
+    const stage = $("glyphMorphStage");
+    const stageStyle = getComputedStyle(stage);
+    const availableWidth = Math.max(1, stage.clientWidth - parseFloat(stageStyle.paddingLeft) - parseFloat(stageStyle.paddingRight));
+    const availableHeight = Math.max(1, stage.clientHeight - parseFloat(stageStyle.paddingTop) - parseFloat(stageStyle.paddingBottom));
+    const fittedWidth = Math.min(availableWidth, availableHeight * ratio);
+    frame.style.width = `${fittedWidth}px`;
+    frame.style.height = `${fittedWidth / ratio}px`;
+    frame.style.maxHeight = "none";
+    const rect = frame.getBoundingClientRect();
     const maxPixels = 1500;
     const scale = Math.min(window.devicePixelRatio || 1, 2, maxPixels / Math.max(rect.width, rect.height));
     canvas.width = Math.max(2, Math.round(rect.width * scale));
-    canvas.height = Math.max(2, Math.round(rect.height * scale));
+    canvas.height = Math.max(2, Math.round(canvas.width / ratio));
     renderFrame(canvas, state.elapsedMs / 1000, canvas.width, canvas.height);
   }
 
@@ -729,11 +823,19 @@
           <button data-action="down" type="button" aria-label="下移">↓</button>
           <button data-action="delete" type="button" aria-label="删除">×</button>
         </div>
+        <label class="gm-row-font">本行字体<select data-key="fontFamily" data-stg-font-library="true" aria-label="第 ${index + 1} 行字体">${window.MERowFonts.options(row.fontFamily)}</select></label>
+        ${port.mode === "dots" ? `<div class="gm-dot-colors">${dotColorControls(row)}</div>` : ""}
         <div class="gm-row-meta">
           <button class="gm-row-target${state.activeRowId === row.id ? " is-active" : ""}" data-action="target" type="button">＋ 插入图标</button>
           <button class="gm-row-pause" data-action="pause-row" type="button">暂停修改</button>
           <span class="gm-row-icon-count">${(row.icons || []).length} 个图标</span>
         </div>
+        ${port.mode === "cascade" ? `<details class="gm-row-background gm-row-motion"><summary><span>本行倾倒与下落</span><b>调整快慢 / 悬停</b></summary><div class="gm-row-background-grid">
+          <label>倾倒时长（毫秒）<input data-key="tiltDuration" type="number" min="50" max="5000" step="10" value="${cascadeTiming(row).tilt}"></label>
+          <label>悬停时长（毫秒）<input data-key="hangDuration" type="number" min="0" max="5000" step="10" value="${cascadeTiming(row).hang}"></label>
+          <label>下落时长（毫秒）<input data-key="fallDuration" type="number" min="50" max="5000" step="10" value="${cascadeTiming(row).drop}"></label>
+          <p class="gm-help">下落时长越短越快；悬停设为 0 可直接落下。修改后从本行倾倒开始播放。</p>
+        </div></details>` : ""}
         <details class="gm-row-background">
           <summary><span>本行背景</span><b>${escapeHtml(row.backgroundMedia?.name || "纯色")}</b></summary>
           <div class="gm-row-background-grid">
@@ -763,6 +865,20 @@
     updateInsertTargetLabel();
   }
 
+  function dotColorControls(row) {
+    const colors = dotColors(row);
+    return `<div class="gm-grid-2">
+      <label class="gm-field">开头颜色<input data-dot-key="initialColor" type="color" value="${colors.initialColor}"></label>
+      <label class="gm-field">动效换色<select data-dot-key="colorMode"><option value="off"${colors.colorMode === "off" ? " selected" : ""}>不换色</option><option value="single"${colors.colorMode === "single" ? " selected" : ""}>单色</option><option value="multi"${colors.colorMode === "multi" ? " selected" : ""}>多色 · 逐字设置</option></select></label>
+    </div>
+    <div${colors.colorMode === "off" ? " hidden" : ""}>
+      <label class="gm-check"><input data-dot-key="sweepEnabled" type="checkbox"${colors.sweepEnabled ? " checked" : ""}><span>从左到右扫色</span></label>
+      ${colors.colorMode === "multi" ? `<div class="gm-letter-colors">${split(row.text).map((glyph, index) => /\s/u.test(glyph) ? "" : `<label><span>${escapeHtml(glyph)}</span><input type="color" data-dot-key="effectColors" data-color-index="${index}" value="${colors.effectColors[index]}" aria-label="第 ${index + 1} 字 ${escapeHtml(glyph)} 的动效颜色"></label>`).join("")}</div>` : `<label class="gm-field">动效颜色<input data-dot-key="effectColor" type="color" value="${colors.effectColor}"></label>`}
+      <p class="gm-help">${colors.sweepEnabled ? "扫色与像素化同步，扫过后不恢复原色。" : "像素化开始时同步换色，不逐字扫过。"} 下一行使用自己的开头颜色。</p>
+      <button class="gm-text-button" type="button" data-action="preview-color">▶ 预览本行换色</button>
+    </div>`;
+  }
+
   const fileAsDataUrl = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
@@ -784,7 +900,7 @@
       const timeline = rowElement.querySelector(".gm-video-timeline");
       const selection = rowElement.querySelector(".gm-video-selection");
       const filmstripCanvas = rowElement.querySelector("[data-video-filmstrip]");
-      const summary = rowElement.querySelector(".gm-row-background summary b");
+      const summary = rowElement.querySelector(".gm-row-background:not(.gm-row-motion) summary b");
       const durationLabel = rowElement.querySelector("[data-video-duration]");
       let draggedEdge = "";
 
@@ -988,9 +1104,21 @@
 
   function renderTimeline() {
     const segments = timelineSegments();
-    $("timeline").innerHTML = segments.map(({ from, to, durationMs, terminal }) => {
+    const speed = Math.max(0.01, state.scheme.motion.speed);
+    let cursor = 0;
+    $("timeline").innerHTML = segments.map(({ from, to, durationMs, holdMs, introMs, transitionMs, terminal }) => {
       const phase = terminal ? "结束停留" : from.text && !to.text ? port.exitLabel : !from.text && to.text ? port.enterLabel : port.phaseLabel;
-      return `<div class="gm-timeline-block me-choreo-block" role="listitem"><strong>${escapeHtml(phase)}</strong><small>${escapeHtml(from.text || "留白")} → ${escapeHtml(to.text || "留白")} · ${(durationMs / 1000).toFixed(2)}s</small></div>`;
+      const timing = cascadeTiming(from);
+      const phases = port.mode === "cascade" && !terminal
+        ? [["停留", holdMs], ["倾倒", timing.tilt], ["悬停", timing.hang], ["下落", transitionMs - timing.tilt - timing.hang]]
+        : port.mode === "dots" && introMs > 0
+          ? [["聚合显字", introMs], [phase, durationMs - introMs]]
+          : [[phase, durationMs]];
+      return phases.filter(([, ms]) => ms > 0).map(([label, ms], index) => {
+        const start = cursor / speed;
+        cursor += ms;
+        return `<button type="button" data-seek-ms="${start}" class="gm-timeline-block me-choreo-block" style="flex:${ms};border-top:3px solid ${["#d9ee84", "#8bbdff", "#d8b3ff", "#ffb98b"][index % 4]}" role="listitem"><strong>${escapeHtml(label)}</strong><small>${escapeHtml(from.text || "留白")} · ${(ms / speed / 1000).toFixed(2)}s</small></button>`;
+      }).join("");
     }).join("");
     const total = cycleDurationMs();
     $("scrubber").max = String(Math.max(0.001, total));
@@ -999,7 +1127,7 @@
 
   function updateOutputs() {
     const amountFormat = (value) => port.amountUnit === "%" ? `${Math.round(value * 100)}%` : `${Number(value).toFixed(port.amountStep < 1 ? 1 : 0)}${port.amountUnit}`;
-    const formats = { fontSize: (v) => `${v}px`, tracking: (v) => `${v}px`, positionX: (v) => `${v}%`, positionY: (v) => `${v}%`, morphDuration: (v) => `${v}ms`, characterDelay: (v) => `${(v * 100).toFixed(1)}%`, effectAmount: amountFormat, speed: (v) => `${Number(v).toFixed(2)}×` };
+    const formats = { fontSize: (v) => `${v}px`, tracking: (v) => `${v}px`, positionX: (v) => `${v}%`, positionY: (v) => `${v}%`, introDuration: (v) => `${v}ms`, introCharacterDelay: (v) => `${v}ms`, morphDuration: (v) => `${v}ms`, characterDelay: (v) => `${(v * 100).toFixed(1)}%`, effectAmount: amountFormat, speed: (v) => `${Number(v).toFixed(2)}×` };
     Object.entries(formats).forEach(([id, format]) => {
       const output = document.querySelector(`output[for="${id}"]`);
       if (output) output.value = format(Number(controls[id].value));
@@ -1022,16 +1150,19 @@
     renderSelectedAssets();
     renderTimeline();
     updateOutputs();
+    controls.introDuration.disabled = !controls.introEnabled.checked;
+    controls.introCharacterDelay.disabled = !controls.introEnabled.checked;
     resizePreview();
   }
 
   function collectControls() {
     const typographyNumbers = ["fontSize", "tracking", "positionX", "positionY"];
-    const motionNumbers = ["morphDuration", "characterDelay", "effectAmount", "speed"];
+    const motionNumbers = ["introDuration", "introCharacterDelay", "morphDuration", "characterDelay", "effectAmount", "speed"];
     typographyNumbers.forEach((id) => { state.scheme.typography[id] = Number(controls[id].value); });
     ["fontFamily", "textColor", "backgroundColor"].forEach((id) => { state.scheme.typography[id] = controls[id].value; });
     state.scheme.typography.alignment = document.querySelector('input[name="alignment"]:checked')?.value || "center";
     motionNumbers.forEach((id) => { state.scheme.motion[id] = Number(controls[id].value); });
+    state.scheme.motion.introEnabled = controls.introEnabled.checked;
     state.scheme.motion.loop = controls.loop.checked;
   }
 
@@ -1066,6 +1197,9 @@
         })).filter((icon) => libraryAsset(icon.libraryId) && !seen.has(icon.libraryId) && seen.add(icon.libraryId));
         return {
           id: row.id || uid(), text, hold: clamp(Number(row.hold) || 0, 0, 5000), icons,
+          fontFamily: window.MERowFonts.normalize(row.fontFamily),
+          ...(port.mode === "dots" ? { ...dotColors({ ...row, text }), initialColor: normalizeColor(row.initialColor, scheme.typography?.textColor || DEFAULT_SCHEME.typography.textColor) } : {}),
+          ...(port.mode === "cascade" ? { tiltDuration: cascadeTiming(row).tilt, hangDuration: cascadeTiming(row).hang, fallDuration: cascadeTiming(row).drop } : {}),
           backgroundColor: normalizeColor(row.backgroundColor, scheme.typography?.backgroundColor || DEFAULT_SCHEME.typography.backgroundColor),
           backgroundMedia: normalizeBackgroundMedia(row.backgroundMedia),
           backgroundTransition: normalizeBackgroundTransition(row.backgroundTransition),
@@ -1073,6 +1207,9 @@
         };
       })
     };
+    // Migrate the former default single-shot setting without discarding edited rows.
+    // Version 4 explicit loop-off remains an intentional user choice.
+    if (Number(scheme.version || 1) < 4) state.scheme.motion.loop = true;
     if (state.scheme.rows.length < 2) state.scheme.rows.push(row(uid(), "", 100, { backgroundColor: state.scheme.typography.backgroundColor }));
     const liveRowIds = new Set(state.scheme.rows.map((item) => item.id));
     state.backgroundCache.forEach((runtime, rowId) => {
@@ -1085,6 +1222,10 @@
     state.caretBoundary = clamp(state.caretBoundary, 0, split(state.scheme.rows.find((row) => row.id === state.activeRowId)?.text || "").length);
     state.activeIconId = "";
     state.elapsedMs = 0;
+    state.playing = !state.reducedMotion;
+    state.lastFrame = performance.now();
+    fitCache.key = "";
+    updatePlaybackButton();
     syncControlsFromState();
     Promise.all([preloadInsertedAssets(), preloadRowBackgrounds()]).then(() => { renderRows(); resizePreview(); });
     autoSave();
@@ -1096,8 +1237,12 @@
     const anchor = document.createElement("a");
     anchor.href = url;
     anchor.download = filename;
+    anchor.className = "gm-download-ready";
+    anchor.textContent = `下载 ${filename}`;
+    const previous = document.querySelector(".gm-download-ready");
+    if (previous) { URL.revokeObjectURL(previous.href); previous.remove(); }
+    $("exportStatus").after(anchor);
     anchor.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   function exportCanvas() {
@@ -1150,19 +1295,59 @@
     changed({ restart: false });
   })));
   controlIds.forEach((id) => controls[id].addEventListener("input", () => {
+    if (id === "textColor" && port.mode === "dots") {
+      state.scheme.rows.forEach((item) => { item.initialColor = controls.textColor.value; });
+      renderRows();
+    }
     if (id === "backgroundColor") {
       state.scheme.rows.forEach((item) => { item.backgroundColor = controls.backgroundColor.value; });
       renderRows();
     }
-    changed({ restart: id === "morphDuration" || id === "characterDelay" || id === "speed" });
+    if (id === "introEnabled") {
+      controls.introDuration.disabled = !controls.introEnabled.checked;
+      controls.introCharacterDelay.disabled = !controls.introEnabled.checked;
+    }
+    changed({ restart: id === "introEnabled" || id === "introDuration" || id === "introCharacterDelay" || id === "morphDuration" || id === "characterDelay" || id === "speed" });
+    if (id === "fontFamily") refreshFonts();
+    if (id === "loop" && controls.loop.checked && !state.playing && state.elapsedMs >= cycleDurationMs()) {
+      seekToRowStart(0, false);
+    }
   }));
   document.querySelectorAll('input[name="alignment"]').forEach((input) => input.addEventListener("change", () => changed()));
 
-  $("sequenceRows").addEventListener("input", (event) => {
+  function handleRowInput(event) {
     const rowElement = event.target.closest(".gm-row-shell");
     const row = state.scheme.rows.find((item) => item.id === rowElement?.dataset.rowId);
-    if (!row || !event.target.dataset.key) return;
-    row[event.target.dataset.key] = event.target.dataset.key === "hold" ? clamp(Number(event.target.value) || 0, 0, 5000) : event.target.value;
+    if (!row) return;
+    if (event.target.dataset.dotKey) {
+      const key = event.target.dataset.dotKey;
+      if (key === "effectColors") {
+        row.effectColors = dotColors(row).effectColors;
+        row.effectColors[Number(event.target.dataset.colorIndex)] = normalizeColor(event.target.value);
+      } else row[key] = key === "sweepEnabled" ? event.target.checked : event.target.value;
+      state.activeRowId = row.id;
+      seekToRowStart(state.scheme.rows.indexOf(row), true);
+      if (key !== "initialColor") {
+        state.elapsedMs += (row.hold + state.scheme.motion.morphDuration * 0.35) / Math.max(0.01, state.scheme.motion.speed);
+        resizePreview();
+      }
+      if (["colorMode", "sweepEnabled"].includes(key)) rowElement.querySelector(".gm-dot-colors").innerHTML = dotColorControls(row);
+      autoSave();
+      return;
+    }
+    if (!event.target.dataset.key) return;
+    const key = event.target.dataset.key;
+    const phaseTiming = ["tiltDuration", "hangDuration", "fallDuration"].includes(key);
+    row[key] = key === "hold" || phaseTiming ? clamp(Number(event.target.value) || 0, ["tiltDuration", "fallDuration"].includes(key) ? 50 : 0, 5000) : event.target.value;
+    if (key === "fontFamily") {
+      row.fontFamily = window.MERowFonts.normalize(event.target.value);
+      state.activeRowId = row.id;
+      seekToRowStart(state.scheme.rows.indexOf(row), true);
+      autoSave();
+      refreshFonts();
+      if (port.mode === "dots") rowElement.querySelector(".gm-dot-colors").innerHTML = dotColorControls(row);
+      return;
+    }
     if (event.target.dataset.key === "text") {
       const glyphCount = split(row.text).length;
       (row.icons || []).forEach((icon) => { icon.boundary = clamp(icon.boundary, 0, glyphCount); });
@@ -1170,10 +1355,22 @@
       state.caretBoundary = split(row.text.slice(0, event.target.selectionStart ?? row.text.length)).length;
       updateInsertTargetLabel();
       renderSelectedAssets();
+      refreshFonts();
+      if (port.mode === "dots") rowElement.querySelector(".gm-dot-colors").innerHTML = dotColorControls(row);
     }
     state.elapsedMs = 0;
+    if (phaseTiming) {
+      state.elapsedMs = rowStartElapsed(state.scheme.rows.indexOf(row)) + row.hold / Math.max(0.01, state.scheme.motion.speed);
+      state.playing = true;
+      state.lastFrame = performance.now();
+      updatePlaybackButton();
+    }
     renderTimeline();
     autoSave();
+  }
+  $("sequenceRows").addEventListener("input", handleRowInput);
+  $("sequenceRows").addEventListener("change", (event) => {
+    if (event.target.type === "color" && event.target.dataset.dotKey) handleRowInput(event);
   });
   function captureCaret(input) {
     const rowElement = input.closest(".gm-row-shell");
@@ -1192,6 +1389,10 @@
     const rowElement = button?.closest(".gm-row-shell");
     if (!button || !rowElement) return;
     const index = state.scheme.rows.findIndex((item) => item.id === rowElement.dataset.rowId);
+    if (button.dataset.action === "preview-color") {
+      seekToRowStart(index, false);
+      return;
+    }
     if (button.dataset.action === "edit-icon") { openIconEditor(button.dataset.iconId); return; }
     if (button.dataset.action === "pause-row") {
       const row = state.scheme.rows[index];
@@ -1350,8 +1551,16 @@
     updatePlaybackButton();
     resizePreview();
   });
-  $("togglePlayback").addEventListener("click", () => { state.playing = !state.playing; state.lastFrame = performance.now(); updatePlaybackButton(); });
-  $("restartPreview").addEventListener("click", () => { seekToRowStart(0, false); });
+  $("timeline").addEventListener("click", (event) => {
+    const block = event.target.closest("[data-seek-ms]");
+    if (!block) return;
+    state.elapsedMs = Number(block.dataset.seekMs);
+    state.playing = false;
+    updatePlaybackButton();
+    resizePreview();
+  });
+  $("togglePlayback").addEventListener("click", () => { if (!state.playing && state.elapsedMs >= cycleDurationMs()) state.elapsedMs = 0; state.playing = !state.playing; state.lastFrame = performance.now(); updatePlaybackButton(); });
+  $("restartPreview").addEventListener("click", () => { state.elapsedMs = 0; state.playing = true; state.lastFrame = performance.now(); updatePlaybackButton(); resizePreview(); });
   $("toggleInspector").addEventListener("click", () => {
     if (!document.body.classList.contains("gm-inspector-hidden")) setIconLibraryDrawer(false);
     document.body.classList.toggle("gm-inspector-hidden");
@@ -1412,7 +1621,8 @@
       for (let index = 0; index < total; index += 1) {
         await prepareBackgroundFrame(index / fps);
         renderFrame(output, index / fps, output.width, output.height);
-        gif.addFrame(output, { copy: true, delay: 1000 / fps });
+        const delay = (Math.round((index + 1) * 100 / fps) - Math.round(index * 100 / fps)) * 10;
+        gif.addFrame(output, { copy: true, delay });
       }
       gif.on("progress", (progress) => $("exportStatus").textContent = `正在编码 GIF · ${Math.round(progress * 100)}%`);
       gif.on("finished", (blob) => { URL.revokeObjectURL(workerUrl); download(blob, `${port.slug}-${output.width}x${output.height}.gif`); setBusy(false, "GIF 已生成"); });
@@ -1481,12 +1691,14 @@
     controls.effectAmount.step = String(port.amountStep);
     let stored = null;
     try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch (_) {}
-    const useDefault = new URLSearchParams(location.search).has("preview");
+    const params = new URLSearchParams(location.search);
+    const useDefault = params.has("preview") || params.get("from") === "gallery";
     renderIconLibrary();
     applyScheme(useDefault || !stored?.rows || Number(stored.version || 1) > VERSION ? clone(DEFAULT_SCHEME) : stored);
     if (state.reducedMotion) { state.playing = false; state.elapsedMs = state.scheme.motion.morphDuration; updatePlaybackButton(); }
     new ResizeObserver(resizePreview).observe(frame);
-    document.fonts?.ready.then(resizePreview);
+    document.fonts?.ready.then(() => { fitCache.key = ""; resizePreview(); });
+    document.fonts?.addEventListener("loadingdone", () => { fitCache.key = ""; resizePreview(); });
     window.addEventListener("resize", resizePreview, { passive: true });
     window.__morphPortTest = { port: clone({ mode: port.mode, slug: port.slug, zh: port.zh, en: port.en }), renderFrame, resolveTimeline, matchGlyphs, getScheme: () => clone(state.scheme), getElapsedMs: () => state.elapsedMs, isPlaying: () => state.playing, cycleDurationMs, rowStartElapsed, preloadInsertedAssets, setTime: (seconds) => { state.elapsedMs = seconds * 1000; resizePreview(); } };
     requestAnimationFrame(animationLoop);

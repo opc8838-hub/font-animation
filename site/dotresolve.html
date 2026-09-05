@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="me-motion-editor.css?v=20260901-1">
   <link rel="stylesheet" href="shared-fonts.css?v=20260824-2">
   <link rel="stylesheet" href="stg-cn.css?v=20260824-1">
-  <link rel="stylesheet" href="glyphmorph.css?v=20260904-1">
+  <link rel="stylesheet" href="glyphmorph.css?v=20260904-4">
 </head>
 <body class="glyphmorph-editor" data-morph-port="dotresolve">
   <aside id="glyphMorphInspector" class="gm-inspector" aria-label="点解编辑器">
@@ -45,7 +45,7 @@
       <p class="gm-help">默认按 4 个文字节拍循环完整像素解析；每段可独立停留、插入图标并设置背景视频。</p>
       <div id="sequenceRows" class="gm-sequence"></div>
       <div class="gm-grid-2 gm-text-colors">
-        <label class="gm-field">文字色 <input id="textColor" type="color"></label>
+        <label class="gm-field">全部行开头颜色 <input id="textColor" type="color"></label>
         <label class="gm-field">全部行背景色 <input id="backgroundColor" type="color"></label>
       </div>
     </section>
@@ -58,7 +58,7 @@
 
     <section class="gm-card">
       <div class="gm-card-title"><span>04</span><h2>字体与构图</h2></div>
-      <label class="gm-field gm-field-wide">字体
+      <label class="gm-field gm-field-wide">全局默认字体
         <select id="fontFamily"><option value="stg:inter">Inter</option></select>
       </label>
       <div class="gm-grid-2">
@@ -76,8 +76,11 @@
 
     <section class="gm-card">
       <div class="gm-card-title"><span>05</span><h2>解析节奏</h2></div>
-      <p class="gm-help">旧字降低采样并消散，新字从粗像素逐步恢复清晰。</p>
+      <p class="gm-help">开场先由离散像素聚合成清晰文字，再进入原有的像素解析与可选扫色。</p>
+      <label class="gm-check"><input id="introEnabled" type="checkbox"><span>像素聚合开场</span></label>
       <div class="gm-grid-2">
+        <label class="gm-field">聚合时长 <input id="introDuration" type="range" min="160" max="900" step="10"><output for="introDuration"></output></label>
+        <label class="gm-field">开场逐字错峰 <input id="introCharacterDelay" type="range" min="0" max="80" step="1"><output for="introCharacterDelay"></output></label>
         <label class="gm-field">像素化时长 <input id="morphDuration" type="range" min="180" max="1400" step="10"><output for="morphDuration"></output></label>
         <label class="gm-field">解析错峰 <input id="characterDelay" type="range" min="0" max="0.12" step="0.001"><output for="characterDelay"></output></label>
         <label class="gm-field">像素半径 <input id="effectAmount" type="range" min="2" max="12" step="0.5"><output for="effectAmount"></output></label>
@@ -177,8 +180,9 @@
 
   <script src="js/continuation-gif.js?v=20260824-1"></script>
   <script src="shared-font-library.js?v=20260824-2"></script>
+  <script src="row-font-editor.js?v=20260904-4"></script>
   <script src="shared-icon-library.js?v=20260902-1"></script>
-  <script src="morphports.js?v=20260904-1"></script>
+  <script src="morphports.js?v=20260905-1"></script>
   <script src="stg-cn.js?v=20260904-1"></script>
 </body>
 </html>

@@ -185,7 +185,7 @@ main { overflow: hidden; }
 }
 
 /* Wide exports use the actual renderer at 16:9, not stretched square movies. */
-.effect-card.has-live-preview:is([data-effect="sproutshift"], [data-effect="mistlift"], [data-effect="typecascade"], [data-effect="glyphreveal"]) {
+.effect-card.has-live-preview:is([data-effect="sproutshift"], [data-effect="mistlift"], [data-effect="typecascade"], [data-effect="dotresolve"], [data-effect="glyphreveal"]) {
   grid-column: span 2;
   width: 100%;
   max-width: 640px;
@@ -195,7 +195,7 @@ main { overflow: hidden; }
 }
 .effect-card.has-live-preview[data-effect="glyphmorph"] { aspect-ratio: 1; min-height: 0; }
 @media (max-width: 700px) {
-  .effect-card.has-live-preview:is([data-effect="sproutshift"], [data-effect="mistlift"], [data-effect="typecascade"], [data-effect="glyphreveal"]) { grid-column: span 1; }
+  .effect-card.has-live-preview:is([data-effect="sproutshift"], [data-effect="mistlift"], [data-effect="typecascade"], [data-effect="dotresolve"], [data-effect="glyphreveal"]) { grid-column: span 1; }
 }
 
 .effect-card.has-live-preview[data-effect="textswell"] {

@@ -96,6 +96,7 @@
   };
   const portKey = document.body.dataset.morphPort;
   const port = PORTS[portKey] || PORTS.sproutshift;
+  const minimumRows = port.mode === "cascade" ? 1 : 2;
   const STORAGE_KEY = `me-motion-${port.slug}-v3`;
 
   // Frozen approved example. Keep synchronized with assets/presets/{slug}-default.json.
@@ -203,9 +204,10 @@
   }
 
   function timelineSegments() {
-    const rows = state.scheme.rows.length > 1 ? state.scheme.rows : [{ id: "blank-a", text: "", hold: 100 }, { id: "blank-b", text: "", hold: 100 }];
+    const rows = state.scheme.rows.length ? state.scheme.rows : [{ id: "blank-a", text: "", hold: 100 }];
     return rows.map((row, index) => {
-      const terminal = !state.scheme.motion.loop && index === rows.length - 1;
+      const singleRowCascade = port.mode === "cascade" && rows.length === 1;
+      const terminal = !state.scheme.motion.loop && index === rows.length - 1 && !singleRowCascade;
       const to = terminal ? row : rows[(index + 1) % rows.length];
       const morphMs = terminal ? 0 : state.scheme.motion.morphDuration;
       const count = rowTokens(to).length;
@@ -229,7 +231,7 @@
   }
 
   function seekToRowStart(rowIdOrIndex, pause = true) {
-    const rows = state.scheme.rows.length > 1 ? state.scheme.rows : [{ id: "blank-a", text: "", hold: 100 }, { id: "blank-b", text: "", hold: 100 }];
+    const rows = state.scheme.rows.length ? state.scheme.rows : [{ id: "blank-a", text: "", hold: 100 }];
     const index = typeof rowIdOrIndex === "number" ? rowIdOrIndex : rows.findIndex((row) => row.id === rowIdOrIndex);
     const total = cycleDurationMs();
     const elapsedMs = Math.min(total, rowStartElapsed(index));
@@ -716,7 +718,12 @@
       ctx.restore();
       return timeline;
     }
-    const { matches, claimed } = matchGlyphs(fromLayout.tokens, toLayout.tokens);
+    // A one-row cascade is still a full effect cycle. Do not match the row back
+    // onto itself or draw a duplicate incoming copy while the visible row falls.
+    const singleRowCascade = port.mode === "cascade" && state.scheme.rows.length === 1;
+    const { matches, claimed } = singleRowCascade
+      ? { matches: new Map(), claimed: new Set(toLayout.tokens.map((_, index) => index)) }
+      : matchGlyphs(fromLayout.tokens, toLayout.tokens);
     const amount = state.scheme.motion.effectAmount;
     fromLayout.slots.forEach((oldSlot, oldIndex) => {
       const glyphProgress = tokenProgress("old", timeline.progress, oldIndex);
@@ -798,7 +805,7 @@
           <input data-key="hold" type="number" min="0" max="5000" step="10" value="${row.hold}" aria-label="第 ${index + 1} 行停留毫秒">
           <button data-action="up" type="button" aria-label="上移">↑</button>
           <button data-action="down" type="button" aria-label="下移">↓</button>
-          <button data-action="delete" type="button" aria-label="删除">×</button>
+          <button data-action="delete" type="button" aria-label="删除"${state.scheme.rows.length <= minimumRows ? " disabled title=\"至少保留一段文字\"" : ""}>×</button>
         </div>
         <label class="gm-row-font">本行字体<select data-key="fontFamily" data-stg-font-library="true" aria-label="第 ${index + 1} 行字体">${window.MERowFonts.options(row.fontFamily)}</select></label>
         ${port.mode === "dots" ? `<div class="gm-dot-colors">${dotColorControls(row)}</div>` : ""}
@@ -1182,7 +1189,7 @@
     // Migrate the former default single-shot setting without discarding edited rows.
     // Version 4 explicit loop-off remains an intentional user choice.
     if (Number(scheme.version || 1) < 4) state.scheme.motion.loop = true;
-    if (state.scheme.rows.length < 2) state.scheme.rows.push(row(uid(), "", 100, { backgroundColor: state.scheme.typography.backgroundColor }));
+    while (state.scheme.rows.length < minimumRows) state.scheme.rows.push(row(uid(), "", 100, { backgroundColor: state.scheme.typography.backgroundColor }));
     const liveRowIds = new Set(state.scheme.rows.map((item) => item.id));
     state.backgroundCache.forEach((runtime, rowId) => {
       if (liveRowIds.has(rowId)) return;
@@ -1379,7 +1386,7 @@
       setIconLibraryDrawer(true);
       return;
     }
-    if (button.dataset.action === "delete" && state.scheme.rows.length > 2) {
+    if (button.dataset.action === "delete" && state.scheme.rows.length > minimumRows) {
       const [removed] = state.scheme.rows.splice(index, 1);
       const runtime = state.backgroundCache.get(removed?.id);
       runtime?.video?.pause();
@@ -1557,7 +1564,7 @@
   $("restoreScheme").addEventListener("click", () => { localStorage.removeItem(STORAGE_KEY); applyScheme(clone(DEFAULT_SCHEME), "已恢复不可变默认方案。" ); });
   $("clearScheme").addEventListener("click", () => {
     const cleared = clone(state.scheme);
-    cleared.rows = [{ id: uid(), text: "", hold: 100, icons: [] }, { id: uid(), text: "", hold: 100, icons: [] }];
+    cleared.rows = Array.from({ length: minimumRows }, () => ({ id: uid(), text: "", hold: 100, icons: [] }));
     applyScheme(cleared, "全部文字内容已清空，当前样式与画布保持不变。" );
   });
 
