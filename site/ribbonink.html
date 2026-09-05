@@ -170,7 +170,8 @@
             <p class="ink-help">先收走笔迹、回弹落稳，再按下方停留与退场时间让文字跟着消失。</p>
           </details>
           <label class="ink-range">整字弹出 <output id="page2PopOut">0.42 秒</output><input id="page2Pop" type="range" min="20" max="65" value="42"></label>
-          <label class="ink-range">笔迹消失后，文字停留 <output id="page2HoldOut">0.35 秒</output><input id="page2Hold" type="range" min="0" max="250" value="35"></label>
+          <label class="ink-range">动作结束后停留 <output id="page2HoldOut">直接衔接 · 0 秒</output><input id="page2Hold" type="range" min="0" max="250" value="0"></label>
+          <p class="ink-help">设为 0，收笔与字的小动作结束后立即下压；往右拉可增加停顿，下方单独调整下压速度。</p>
           <label class="ink-range">文字下压消失 <output id="page2TextExitOut">0.16 秒</output><input id="page2TextExit" type="range" min="10" max="80" value="16"></label>
           <label class="ink-range">结束留白 <output id="page2EmptyHoldOut">0.20 秒</output><input id="page2EmptyHold" type="range" min="0" max="150" value="20"></label>
           <p class="ink-help">笔锋沿新路线继续书写，经过中心时整字弹出；已写下的笔迹不会整体搬动。穿插按实际字形合成。两页共用粗细与背景，笔迹配色可独立设置。</p>
@@ -219,6 +220,10 @@
         <label class="ink-range">底字停留 <output id="holdDurationOut">0.56 秒</output>
           <input id="holdDuration" type="range" min="10" max="160" value="56">
         </label>
+        <label class="ink-range" id="singleEndHoldField">动作结束后停留 <output id="singleEndHoldOut">直接衔接 · 0 秒</output>
+          <input id="singleEndHold" type="range" min="0" max="250" value="0">
+        </label>
+        <p class="ink-help" id="singleEndingHelp">设为 0，收笔与字的小动作结束后立即下压；往右拉可增加停顿，下方单独调整下压速度。</p>
         <label class="ink-range" id="singleTextExitField">文字下压消失 <output id="singleTextExitOut">0.16 秒</output>
           <input id="singleTextExit" type="range" min="10" max="80" value="16">
         </label>
@@ -318,6 +323,6 @@
   <script src="ribbonink-sequence.js?v=20260905-20"></script>
   <script src="ribbonink-writing.js?v=20260905-15"></script>
   <script src="ribbonink-glyphs.js?v=20260905-22"></script>
-  <script src="ribbonink.js?v=20260905-23"></script>
+  <script src="ribbonink.js?v=20260905-24"></script>
 </body>
 </html>

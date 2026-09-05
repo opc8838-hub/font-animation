@@ -9,7 +9,7 @@
   const schemeStatus = $("#schemeStatus");
   const STORAGE_KEY = "me-ribbon-ink-autosave-v3";
   const EFFECT_ID = "ribbon-ink";
-  const SCHEME_VERSION = 12;
+  const SCHEME_VERSION = 13;
   const freehand = window.RibbonInkFreehand;
   let drawing = freehand.validate(null);
   let compiledDrawing = freehand.compile(drawing);
@@ -31,7 +31,7 @@
 
   const inputIds = [
     "page1Weave", "page1Choreo",
-    "singleTextExit", "singleEmptyHold",
+    "singleEndHold", "singleTextExit", "singleEmptyHold",
     "page2PaletteMode", "page2PalettePreset", "page2InkColor1", "page2InkColor2", "page2InkColor3", "page2InkColor4", "page2InkColor5",
     "page2TextExit", "page2EmptyHold",
     "page2Rhythm", "page2SlowPosition", "page2SlowWidth", "page2SlowStrength", "page2Finish",
@@ -50,12 +50,12 @@
 
   const defaultValues = {
     page1Weave: "weave", page1Choreo: "auto",
-    singleTextExit: "16", singleEmptyHold: "20",
+    singleEndHold: "0", singleTextExit: "16", singleEmptyHold: "20",
     page2PaletteMode: "inherit", page2PalettePreset: "reference",
     page2InkColor1: "#f34bd9", page2InkColor2: "#a40de4", page2InkColor3: "#ff78e9", page2InkColor4: "#7827d8", page2InkColor5: "#f33ccd",
     page2TextExit: "16", page2EmptyHold: "20",
     page2Rhythm: "snake", page2SlowPosition: "48", page2SlowWidth: "30", page2SlowStrength: "82", page2Finish: "36",
-    sequenceMode: "single", page2Route: "loop", page2Weave: "weave", page2Text: "FLOW", page2Font: "stg:roboto-condensed", page2Size: "270", page2Spacing: "2", page2Color: "#080808", bridgeDuration: "90", page2Pop: "42", page2Hold: "35",
+    sequenceMode: "single", page2Route: "loop", page2Weave: "weave", page2Text: "FLOW", page2Font: "stg:roboto-condensed", page2Size: "270", page2Spacing: "2", page2Color: "#080808", bridgeDuration: "90", page2Pop: "42", page2Hold: "0",
     drawingMode: "time", freehandWidth: "28",
     canvasPreset: "1920x1080", canvasWidth: "1920", canvasHeight: "1080",
     textInput: "TIME", fontSelect: "stg:roboto-condensed", fontSize: "270", letterSpacing: "2",
@@ -225,7 +225,7 @@
     const write = Number(inputs.writeDuration.value) / 100;
     const flow = Number(inputs.flowDuration.value) / 100;
     const erase = Number(inputs.eraseDuration.value) / 100;
-    const hold = Number(inputs.holdDuration.value) / 100;
+    const hold = Number(inputs.drawingMode.value === "freehand" ? inputs.holdDuration.value : inputs.singleEndHold.value) / 100;
     if (twoPages()) {
       const bridge = Number(inputs.bridgeDuration.value) / 100;
       const finish = Number(inputs.page2Finish.value) / 100;
@@ -1084,7 +1084,7 @@
       { id: "flow", label: "首页流动", duration: span.flow, color: PHASE_COLORS[1] },
       { id: "bridge", label: "续写·弹出", duration: span.bridge, color: PHASE_COLORS[2] },
       { id: "page2", label: "收笔轻弹", duration: span.finish, color: PHASE_COLORS[3] },
-      { id: "settled", label: "文字停留", duration: span.endHold, color: "#777780" },
+      { id: "settled", label: "动作后停留", duration: span.endHold, color: "#777780" },
       { id: "textExit", label: "文字退场", duration: span.textExit, color: "#9e499f" },
       { id: "empty", label: "结束留白", duration: span.emptyHold, color: "#657476" }
     ].filter(phase => phase.duration > 0);
@@ -1092,7 +1092,7 @@
       { id: "write", label: "写入", duration: span.write, color: PHASE_COLORS[0] },
       { id: "flow", label: "流动", duration: span.flow, color: PHASE_COLORS[1] },
       { id: "erase", label: "擦除", duration: span.erase, color: PHASE_COLORS[2] },
-      { id: "hold", label: inputs.drawingMode.value === "freehand" ? "留白" : "文字停留", duration: span.hold, color: PHASE_COLORS[3] },
+      { id: inputs.drawingMode.value === "freehand" ? "hold" : "singleSettled", label: inputs.drawingMode.value === "freehand" ? "留白" : "动作后停留", duration: span.hold, color: PHASE_COLORS[3] },
       { id: "singleTextExit", label: "文字退场", duration: span.textExit || 0, color: "#9e499f" },
       { id: "singleEmpty", label: "结束留白", duration: span.emptyHold || 0, color: "#657476" }
     ].filter(phase => phase.duration > 0);
@@ -1208,14 +1208,18 @@
     $("#secondPageTools").hidden = !twoPages();
     $("#page2PaletteTools").hidden = inputs.page2PaletteMode.value !== "custom";
     document.body.classList.toggle("is-two-pages", twoPages());
-    ["eraseDuration", "holdDuration"].forEach(id => { inputs[id].closest("label").hidden = twoPages(); });
+    inputs.eraseDuration.closest("label").hidden = twoPages();
+    inputs.holdDuration.closest("label").hidden = inputs.drawingMode.value !== "freehand";
     const singleTextEnding = !twoPages() && inputs.drawingMode.value !== "freehand";
+    $("#singleEndHoldField").hidden = !singleTextEnding;
+    $("#singleEndingHelp").hidden = !singleTextEnding;
     $("#singleTextExitField").hidden = !singleTextEnding;
     $("#singleEmptyHoldField").hidden = !singleTextEnding;
     $("#previewSingleEnding").hidden = !singleTextEnding;
     const map = {
       page2TextExitOut: `${(Number(inputs.page2TextExit.value) / 100).toFixed(2)} 秒`,
       page2EmptyHoldOut: `${(Number(inputs.page2EmptyHold.value) / 100).toFixed(2)} 秒`,
+      singleEndHoldOut: Number(inputs.singleEndHold.value) ? `${(Number(inputs.singleEndHold.value) / 100).toFixed(2)} 秒` : "直接衔接 · 0 秒",
       singleTextExitOut: `${(Number(inputs.singleTextExit.value) / 100).toFixed(2)} 秒`,
       singleEmptyHoldOut: `${(Number(inputs.singleEmptyHold.value) / 100).toFixed(2)} 秒`,
       page2SlowPositionOut: `${inputs.page2SlowPosition.value}%`,
@@ -1226,7 +1230,7 @@
       page2SpacingOut: inputs.page2Spacing.value,
       bridgeDurationOut: `${(Number(inputs.bridgeDuration.value) / 100).toFixed(2)} 秒`,
       page2PopOut: `${(Number(inputs.page2Pop.value) / 100).toFixed(2)} 秒`,
-      page2HoldOut: `${(Number(inputs.page2Hold.value) / 100).toFixed(2)} 秒`,
+      page2HoldOut: Number(inputs.page2Hold.value) ? `${(Number(inputs.page2Hold.value) / 100).toFixed(2)} 秒` : "直接衔接 · 0 秒",
       freehandWidthOut: `${inputs.freehandWidth.value}`,
       fontSizeOut: `${inputs.fontSize.value}`,
       letterSpacingOut: `${inputs.letterSpacing.value}`,
@@ -1289,7 +1293,12 @@
     page1Glyphs = nextFirstGlyphs;
     selectedFirstGlyphs = new Set(nextFirstGlyphs.length ? [nextFirstGlyphs[0].id] : []);
     selectedGlyphs = new Set(nextGlyphs.length ? [nextGlyphs[0].id] : []);
-    Object.entries({ ...defaultValues, ...data.values }).forEach(([key, value]) => {
+    const values = { ...defaultValues, ...data.values };
+    // Old text schemes stored their post-motion pause in the freehand hold field.
+    if (data.values?.singleEndHold == null && data.values?.holdDuration != null && Number(data.version || 0) < 13) {
+      values.singleEndHold = data.values.holdDuration;
+    }
+    Object.entries(values).forEach(([key, value]) => {
       if (inputs[key] && value != null) inputs[key].value = String(value);
     });
     await loadBackground(data.background || "");
@@ -1595,7 +1604,7 @@
         setPaused(true); setTime(timing().write + timing().flow + timing().bridge * .84);
       }
       if (twoPages() && ["page2TextExit", "page2Hold", "page2EmptyHold"].includes(key)) playEnding();
-      if (!twoPages() && ["eraseDuration", "holdDuration", "singleTextExit", "singleEmptyHold"].includes(key)) playSingleEnding();
+      if (!twoPages() && ["eraseDuration", "holdDuration", "singleEndHold", "singleTextExit", "singleEmptyHold"].includes(key)) playSingleEnding();
       if (["canvasPreset", "canvasWidth", "canvasHeight"].includes(key)) updateStageLayout();
       if (drawingEnabled && inputs.drawingMode.value === "freehand") showWholeDrawing();
       queueAutosave();
