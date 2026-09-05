@@ -97,6 +97,9 @@ select { font: inherit; }
 
 .ink-card h2 { margin: 0; font-size: 14px; letter-spacing: -.02em; }
 .ink-page-heading { margin: 16px 0 12px; font-size: 13px; }
+.ink-page-primary { margin: 12px 0 14px; padding: 14px; border: 1px solid #9fc9f3; border-radius: 13px; background: #f3f8fe; box-shadow: inset 3px 0 0 #0b76e8; }
+.ink-page-primary .ink-page-heading { margin: 0 0 12px; color: #0759a8; }
+.ink-page-primary .ink-button-row { margin-top: 10px; }
 .ink-glyph-editor { margin: 10px 0 16px; padding: 12px; border: 1px solid var(--ink-line); border-radius: 12px; background: #fafafb; }
 .ink-glyph-editor summary { font-size: 12px; font-weight: 750; cursor: pointer; }
 .ink-glyph-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }

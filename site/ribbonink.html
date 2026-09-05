@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="shared-fonts.css?v=20260901-1">
   <link rel="stylesheet" href="workspace-editor.css?v=20260901-1">
   <link rel="stylesheet" href="me-motion-editor.css?v=20260901-1">
-  <link rel="stylesheet" href="ribbonink.css?v=20260905-22">
+  <link rel="stylesheet" href="ribbonink.css?v=20260905-29">
 </head>
 <body data-editor-capabilities="text-only">
   <aside class="ink-panel" id="editorPanel" aria-label="流彩笔迹编辑器">
@@ -71,7 +71,7 @@
         </div>
         <label class="ink-field">文字编排<select id="page1Choreo"><option value="auto">自动编排</option><option value="glyphs">逐字自定义</option></select></label>
         <label class="ink-field">文字穿插<select id="page1Weave"><option value="weave">前后交错</option><option value="reverse">反向交错</option><option value="front">笔迹全部在前</option><option value="back">笔迹全部在后</option></select></label>
-          <details class="ink-glyph-editor" id="page1GlyphEditor" open>
+          <details class="ink-glyph-editor" id="page1GlyphEditor">
             <summary>第一页逐字穿插与动作</summary>
             <p class="ink-help">点选下方字块，可多选。设置只作用于选中字；整字动作不拆分内部笔画。</p>
             <div id="firstGlyphChips" class="ink-glyph-chips" role="group" aria-label="选择第一页文字"></div>
@@ -116,28 +116,38 @@
         <div class="ink-card-heading"><span>→</span><h2 id="sequenceTitle">连续页面</h2></div>
         <label class="ink-field">播放结构<select id="sequenceMode"><option value="single">单页原动效</option><option value="double">两页连续</option></select></label>
         <div id="secondPageTools" hidden data-page-id="second">
-          <div class="ink-button-row"><button class="ink-button" id="editFirstPage" type="button">第一页 · 暂停修改</button><button class="ink-button" id="editSecondPage" type="button">第二页 · 暂停修改</button></div>
-          <h3 class="ink-page-heading">第二页</h3>
-          <label class="ink-field">第二页笔迹配色<select id="page2PaletteMode"><option value="inherit">沿用首页配色</option><option value="custom">独立配色</option></select></label>
-          <div id="page2PaletteTools" hidden>
-            <label class="ink-field">第二页配色预设<select id="page2PalettePreset"><option value="reference">粉紫流彩</option><option value="apple">缤纷彩色</option><option value="ocean">海洋蓝绿</option><option value="sunset">日落暖色</option><option value="custom">自定义</option></select></label>
-            <div class="ink-color-grid">
-              <label>第二页主色<input id="page2InkColor1" type="color" value="#f34bd9"></label>
-              <label>第二页墨纹<input id="page2InkColor2" type="color" value="#a40de4"></label>
-              <label>第二页辅色一<input id="page2InkColor3" type="color" value="#ff78e9"></label>
-              <label>第二页辅色二<input id="page2InkColor4" type="color" value="#7827d8"></label>
-              <label>第二页辅色三<input id="page2InkColor5" type="color" value="#f33ccd"></label>
-            </div>
-            <button class="ink-button" id="copyPage1Palette" type="button">复制首页配色</button>
-            <p class="ink-help">新颜色随跨页续写逐步带入，到达第二页文字前完成换色。原有笔迹不会整条突然变色。</p>
+          <div class="ink-page-primary">
+            <h3 class="ink-page-heading">第二页文字</h3>
+            <label class="ink-field">输入内容<input id="page2Text" type="text" value="FLOW" maxlength="28" autocomplete="off"></label>
+            <label class="ink-field">字体<select id="page2Font"><option value="stg:roboto-condensed">Roboto Condensed</option></select></label>
+            <label class="ink-range">字号 <output id="page2SizeOut">270</output><input id="page2Size" type="range" min="72" max="540" value="270"></label>
+            <label class="ink-range">字距 <output id="page2SpacingOut">2</output><input id="page2Spacing" type="range" min="-14" max="42" value="2"></label>
+            <div class="ink-color-grid"><label>文字颜色<input id="page2Color" type="color" value="#080808"></label></div>
+            <p class="ink-help">这里直接编辑第二页文字；修改后画布会暂停到第二页完整可见的位置。</p>
+            <div class="ink-button-row"><button class="ink-button" id="editFirstPage" type="button">查看第一页</button><button class="ink-button ink-button-primary" id="editSecondPage" type="button">暂停查看第二页</button></div>
           </div>
-          <button class="ink-button" id="previewPage2Palette" type="button">播放跨页换色</button>
-          <label class="ink-field">第二页笔迹<select id="page2Route"><option value="loop">回环穿行</option><option value="arc">弧线绕行</option><option value="wave">横向波浪</option><option value="eight">八字回旋</option><option value="spiral">螺旋展开</option></select></label>
-          <button class="ink-button" id="previewPage2Route" type="button">播放这条笔迹</button>
-          <label class="ink-field">文字穿插<select id="page2Weave"><option value="weave">前后交错</option><option value="reverse">反向交错</option><option value="front">笔迹全部在前</option><option value="back">笔迹全部在后</option></select></label>
-          <label class="ink-field">第二页文字<input id="page2Text" type="text" value="FLOW" maxlength="28" autocomplete="off"></label>
-          <details class="ink-glyph-editor" open>
-            <summary>逐字穿插与动作</summary>
+          <details class="ink-glyph-editor">
+            <summary>第二页笔迹、配色与穿插（可选）</summary>
+            <label class="ink-field">笔迹配色<select id="page2PaletteMode"><option value="inherit">沿用首页配色</option><option value="custom">独立配色</option></select></label>
+            <div id="page2PaletteTools" hidden>
+              <label class="ink-field">配色预设<select id="page2PalettePreset"><option value="reference">粉紫流彩</option><option value="apple">缤纷彩色</option><option value="ocean">海洋蓝绿</option><option value="sunset">日落暖色</option><option value="custom">自定义</option></select></label>
+              <div class="ink-color-grid">
+                <label>主色<input id="page2InkColor1" type="color" value="#f34bd9"></label>
+                <label>墨纹<input id="page2InkColor2" type="color" value="#a40de4"></label>
+                <label>辅色一<input id="page2InkColor3" type="color" value="#ff78e9"></label>
+                <label>辅色二<input id="page2InkColor4" type="color" value="#7827d8"></label>
+                <label>辅色三<input id="page2InkColor5" type="color" value="#f33ccd"></label>
+              </div>
+              <button class="ink-button" id="copyPage1Palette" type="button">复制首页配色</button>
+              <p class="ink-help">新颜色随跨页续写逐步带入，到达第二页文字前完成换色。</p>
+            </div>
+            <button class="ink-button" id="previewPage2Palette" type="button">播放跨页换色</button>
+            <label class="ink-field">笔迹形状<select id="page2Route"><option value="loop">回环穿行</option><option value="arc">弧线绕行</option><option value="wave">横向波浪</option><option value="eight">八字回旋</option><option value="spiral">螺旋展开</option></select></label>
+            <button class="ink-button" id="previewPage2Route" type="button">播放这条笔迹</button>
+            <label class="ink-field">文字穿插<select id="page2Weave"><option value="weave">前后交错</option><option value="reverse">反向交错</option><option value="front">笔迹全部在前</option><option value="back">笔迹全部在后</option></select></label>
+          </details>
+          <details class="ink-glyph-editor">
+            <summary>第二页逐字动作（可选）</summary>
             <p class="ink-help">点选下方字块，可多选。设置只作用于选中字；整字动作不拆分内部笔画。</p>
             <div id="glyphChips" class="ink-glyph-chips" role="group" aria-label="选择第二页文字"></div>
             <div class="ink-button-row"><button class="ink-button" id="selectAllGlyphs" type="button">全选文字</button><button class="ink-button" id="deselectGlyphs" type="button">取消选择</button></div>
@@ -154,13 +164,8 @@
             </fieldset>
             <p class="ink-help" id="glyphStatus" role="status">笔迹与字形相交时响应，笔尾离开后回弹。自动模式在笔迹从字后经过时响应较轻。</p>
           </details>
-          <label class="ink-field">第二页字体<select id="page2Font"><option value="stg:roboto-condensed">Roboto Condensed</option></select></label>
-          <label class="ink-range">第二页字号 <output id="page2SizeOut">270</output><input id="page2Size" type="range" min="72" max="540" value="270"></label>
-          <p class="ink-help">第二页独立缩放，270 为适配基准；继续拉大可满幅或超出画布。</p>
-          <label class="ink-range">第二页字距 <output id="page2SpacingOut">2</output><input id="page2Spacing" type="range" min="-14" max="42" value="2"></label>
-          <div class="ink-color-grid"><label>第二页字色<input id="page2Color" type="color" value="#080808"></label></div>
           <label class="ink-range">跨页书写 <output id="bridgeDurationOut">0.90 秒</output><input id="bridgeDuration" type="range" min="55" max="160" value="90"></label>
-          <details class="ink-glyph-editor" open>
+          <details class="ink-glyph-editor">
             <summary>第二页独立节奏</summary>
             <p class="ink-help">上方“跨页书写”控制总书写速度；以下只影响第二页，不改首页节奏。</p>
             <label class="ink-field">书写节奏<select id="page2Rhythm"><option value="snake">快—慢—快</option><option value="smooth">柔和变速</option><option value="linear">清晰匀速</option></select></label>
@@ -325,6 +330,6 @@
   <script src="ribbonink-sequence.js?v=20260905-25"></script>
   <script src="ribbonink-writing.js?v=20260905-25"></script>
   <script src="ribbonink-glyphs.js?v=20260905-25"></script>
-  <script src="ribbonink.js?v=20260905-28"></script>
+  <script src="ribbonink.js?v=20260905-29"></script>
 </body>
 </html>

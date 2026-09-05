@@ -1353,7 +1353,7 @@
   function updateOutputs() {
     syncGlyphEditor();
     updateDrawingUI();
-    $("#page1GlyphEditor").hidden = inputs.drawingMode.value === "freehand";
+    $("#page1GlyphEditor").hidden = inputs.drawingMode.value === "freehand" || inputs.page1Choreo.value !== "glyphs";
     inputs.page1Weave.closest("label").hidden = inputs.drawingMode.value === "freehand";
     inputs.page1Choreo.closest("label").hidden = inputs.drawingMode.value === "freehand";
     inputs.letterImpact.closest("label").hidden = inputs.drawingMode.value === "freehand" || !authoredFirstText();
