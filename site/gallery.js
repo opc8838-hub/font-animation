@@ -1,6 +1,7 @@
 const effects = [
   ["coil", "线圈", "Coil", "flow", "波形流动"],
   ["continuation", "续句", "Continuation", "type", "匹配切换"],
+  ["split-flip", "上下翻转", "Split Flip", "space", "整块旋转 · 覆盖层上下扫"],
   ["currentwall", "水流", "Water Flow", "flow", "多行水流"],
   ["verticalwall", "纵跃", "Vertical Rise", "flow", "纵向弹出"],
   ["creatorstudio", "汇聚", "Creator Merge", "type", "字位重组"],
@@ -74,7 +75,7 @@ const emptyState = document.querySelector("#emptyState");
 const filterButtons = [...document.querySelectorAll(".filter")];
 let activeFilter = "all";
 const livePreviews = new Set(["textswell"]);
-const featuredPreviews = new Set(["textswell", "impactbuild", "currentwall", "verticalwall", "iconburst", "glyphmorph", "sproutshift", "mistlift", "typecascade", "dotresolve", "glyphreveal", "continuation", "beforeafter", "shutterafter", "pathwriter", "ribbonink", "scrapbin"]);
+const featuredPreviews = new Set(["textswell", "impactbuild", "currentwall", "verticalwall", "iconburst", "glyphmorph", "sproutshift", "mistlift", "typecascade", "dotresolve", "glyphreveal", "continuation", "split-flip", "beforeafter", "shutterafter", "pathwriter", "ribbonink", "scrapbin"]);
 const liveObserver = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
     const frame = entry.target;
@@ -99,9 +100,11 @@ function render() {
   grid.innerHTML = visible.map(([slug, zh, en, , categoryName]) => {
     const index = effects.findIndex((effect) => effect[0] === slug) + 1;
     const imageName = slug === "crashclock" ? "final_crashclock.png" : ["iconburst", "focuswheel", "gradienttype", "glyphrelay", "glyphmorph", "wordgather", "focusportal", "rapidsequence", "citystack", "colorcanvas", "liquidtype", "scrapbin", "terminalbrand", "slotstories", "mediacascade", "colorrecompose", "phrasebuild", "switchdrop", "searchtyping", "beforeafter", "shutterafter", "assemble", "verbcue", "tighten", "titlecard", "lockup", "promptcue", "pullback", "textswell", "impactbuild", "wordflip", "textbuild", "textswap", "textreveal", "phoneframe", "laptopframe", "orbitgallery", "followerrush", "logoassemble", "moodboard"].includes(slug) ? `final_${slug}.svg` : `final_${slug}.png`;
-    const target = slug === "flash" ? "flash-scenes.html" : slug === "iconburst" ? "iconburst.html?from=gallery&v=20260824-37" : slug === "glyphmorph" ? "glyphmorph.html?from=gallery&v=20260904-4" : slug === "dotresolve" ? "dotresolve.html?from=gallery&v=20260905-1" : slug === "typecascade" ? "typecascade.html?from=gallery&v=20260905-3" : ["sproutshift", "mistlift", "glyphreveal"].includes(slug) ? `${slug}.html?from=gallery&v=20260904-4` : slug === "continuation" ? "continuation.html?from=gallery&v=20260904-center1" : slug === "currentwall" ? "currentwall.html?from=gallery&v=20260830-28" : slug === "verticalwall" ? "verticalwall.html?from=gallery&v=20260901-57" : slug === "beforeafter" ? "beforeafter.html?from=gallery&v=20260825-latest1" : slug === "shutterafter" ? "shutterafter.html?from=gallery&v=20260827-1" : slug === "pathwriter" ? "pathwriter.html?from=gallery&v=20260827-default2" : slug === "ribbonink" ? "ribbonink.html?from=gallery&v=20260904-8" : slug === "impactbuild" ? "impactbuild.html?from=gallery&v=20260901-final2" : slug === "scrapbin" ? "scrapbin.html?from=gallery&v=20260826-delete11" : slug === "liquidtype" ? "liquidtype.html?from=gallery&v=20260824-scatter3" : `${slug}.html`;
+    const target = slug === "flash" ? "flash-scenes.html" : slug === "iconburst" ? "iconburst.html?from=gallery&v=20260824-37" : slug === "glyphmorph" ? "glyphmorph.html?from=gallery&v=20260904-4" : slug === "dotresolve" ? "dotresolve.html?from=gallery&v=20260905-1" : slug === "typecascade" ? "typecascade.html?from=gallery&v=20260905-3" : ["sproutshift", "mistlift", "glyphreveal"].includes(slug) ? `${slug}.html?from=gallery&v=20260904-4` : slug === "continuation" ? "continuation.html?from=gallery&v=20260904-center1" : slug === "split-flip" ? "split-flip.html?from=gallery&v=20260907-1" : slug === "currentwall" ? "currentwall.html?from=gallery&v=20260830-28" : slug === "verticalwall" ? "verticalwall.html?from=gallery&v=20260901-57" : slug === "beforeafter" ? "beforeafter.html?from=gallery&v=20260825-latest1" : slug === "shutterafter" ? "shutterafter.html?from=gallery&v=20260827-1" : slug === "pathwriter" ? "pathwriter.html?from=gallery&v=20260827-default2" : slug === "ribbonink" ? "ribbonink.html?from=gallery&v=20260904-8" : slug === "impactbuild" ? "impactbuild.html?from=gallery&v=20260901-final2" : slug === "scrapbin" ? "scrapbin.html?from=gallery&v=20260826-delete11" : slug === "liquidtype" ? "liquidtype.html?from=gallery&v=20260824-scatter3" : `${slug}.html`;
     const detail = slug === "flash" ? "13 个独立子风格" : categoryName;
-    const preview = slug === "continuation"
+    const preview = slug === "split-flip"
+      ? `<video class="effect-loop" src="assets/previews/split-flip-card.mp4?v=20260907-1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
+      : slug === "continuation"
       ? `<video class="effect-loop" src="assets/previews/continuation-card-centered.mp4?v=20260904-center1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
       : slug === "iconburst"
       ? `<video class="effect-loop" src="assets/previews/iconburst-card.mp4?v=20260824-1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
