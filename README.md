@@ -2,8 +2,6 @@
 
 **让创意，自由生长。** CellMotion 是一个持续演进的独立动效创作项目，目前收录 67 个可编辑动效，支持中文与多语种字体、文字和图标混排、图片 / GIF / 视频背景、响应式画布，以及浏览器内的预览与导出。
 
-本仓库不是 [Space Type Generator](https://spacetypegenerator.com/) 的整体中文镜像，也不是对其全部动效的照搬。仓库中的大部分产品界面、编辑器能力、资源系统与新增动效由 CellMotion 独立设计和实现；只有部分带明确来源标记的动效基于开源项目进行二次开发。
-
 在线浏览：[CellMotion](https://opc8838-hub.github.io/font-animation/cellmotion.html)
 
 ## 开源来源与 CellMotion 贡献
