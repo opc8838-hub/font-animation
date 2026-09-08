@@ -2,7 +2,7 @@ const $ = (selector) => document.querySelector(selector);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 const categoryNames = {all:'全部动效',type:'文字排版',graphic:'图标与图形',media:'图片与媒体',flow:'流动与路径',space:'立体空间',physics:'物理粒子'};
 const escapeHTML = (text) => String(text).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-const mediaURL = (url) => `${url}?v=20260907-1`;
+const mediaURL = (url) => `${url}?v=20260909-1`;
 const play = async (video) => { try { await video.play(); return true; } catch { return false; } };
 let effects = [], featured = [], activeCategory = 'all', limit = 12;
 let activeUsage = 'all';
@@ -221,14 +221,21 @@ document.addEventListener('visibilitychange',()=>{
   if(document.hidden){hero?.pause();featureVideo?.pause();$('#story-video')?.pause();stopAllCards();}
   else{if(heroIntent&&heroVisible&&hero)play(hero);if(featuredIntent&&featureVisible&&featureVideo)play(featureVideo);if(storyIntent&&storyVisible&&$('#story-video'))play($('#story-video'));document.querySelectorAll('.catalog-preview[data-visible="true"]').forEach(preview=>startCard(preview));}
 });
+async function loadCatalogData() {
+  try {
+    const response=await fetch('cellmotion-catalog.json?v=20260909-1');
+    if(!response.ok)throw new Error(`Catalog HTTP ${response.status}`);
+    const catalog=await response.json();
+    effects=catalog.effects;
+    featured=catalog.featured.map(id=>effects.find(effect=>effect.id===id)).filter(effect=>effect?.video);
+    // This is editorial ordering only, never a claim that all effects passed review.
+    effects.sort((a,b)=>{const ai=catalog.featured.indexOf(a.id),bi=catalog.featured.indexOf(b.id);return(ai<0?999:ai)-(bi<0?999:bi);});
+    initCatalog();initFeatured();initStory();
+  } catch(error) {
+    if($('#catalog-error'))$('#catalog-error').hidden=false;
+    console.error('CellMotion catalog:',error);
+  }
+}
+
 initRibbon();
-try {
-  const response=await fetch('cellmotion-catalog.json?v=20260907-2');
-  if(!response.ok)throw new Error(`Catalog HTTP ${response.status}`);
-  const catalog=await response.json();
-  effects=catalog.effects;
-  featured=catalog.featured.map(id=>effects.find(effect=>effect.id===id)).filter(effect=>effect?.video);
-  // This is editorial ordering only, never a claim that all effects passed review.
-  effects.sort((a,b)=>{const ai=catalog.featured.indexOf(a.id),bi=catalog.featured.indexOf(b.id);return(ai<0?999:ai)-(bi<0?999:bi);});
-  initCatalog();initFeatured();initStory();
-} catch(error) {if($('#catalog-error'))$('#catalog-error').hidden=false;console.error('CellMotion catalog:',error);}
+loadCatalogData();

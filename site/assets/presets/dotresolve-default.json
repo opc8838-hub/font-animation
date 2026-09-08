@@ -1,12 +1,126 @@
 {
   "version": 6,
-  "canvas": { "width": 1080, "height": 1080, "preset": "1080x1080" },
-  "typography": { "fontFamily": "stg:inter", "fontSize": 174, "tracking": 0, "positionX": 0, "positionY": 0, "alignment": "center", "textColor": "#111111", "backgroundColor": "#ffffff" },
-  "motion": { "morphDuration": 600, "characterDelay": 0.026, "effectAmount": 6, "speed": 1, "loop": true, "introEnabled": true, "introDuration": 380, "introCharacterDelay": 28 },
+  "canvas": {
+    "width": 1080,
+    "height": 1080,
+    "preset": "1080x1080"
+  },
+  "typography": {
+    "fontFamily": "stg:inter",
+    "fontSize": 174,
+    "tracking": 0,
+    "positionX": 0,
+    "positionY": 0,
+    "alignment": "center",
+    "textColor": "#111111",
+    "backgroundColor": "#ffffff"
+  },
+  "motion": {
+    "morphDuration": 600,
+    "characterDelay": 0.026,
+    "speed": 1,
+    "loop": true,
+    "effectAmount": 6,
+    "introEnabled": true,
+    "introDuration": 380,
+    "introCharacterDelay": 28
+  },
   "rows": [
-    { "id": "dots-01", "text": "Signal", "hold": 650, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
-    { "id": "dots-02", "text": "Frame", "hold": 650, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
-    { "id": "dots-03", "text": "Composition", "hold": 650, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
-    { "id": "dots-04", "text": "Motion", "hold": 750, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 }
+    {
+      "id": "dots-01",
+      "text": "Signal",
+      "hold": 650,
+      "icons": [],
+      "fontFamily": "",
+      "initialColor": "#111111",
+      "colorMode": "off",
+      "effectColor": "#ff375f",
+      "effectColors": [
+        "#ff375f",
+        "#ff9f0a",
+        "#32d74b",
+        "#00c7be",
+        "#0a84ff",
+        "#bf5af2"
+      ],
+      "sweepEnabled": false,
+      "backgroundColor": "#ffffff",
+      "backgroundMedia": null,
+      "backgroundTransition": "direct",
+      "backgroundTransitionDuration": 120
+    },
+    {
+      "id": "dots-02",
+      "text": "Frame",
+      "hold": 650,
+      "icons": [],
+      "fontFamily": "",
+      "initialColor": "#1e5f0c",
+      "colorMode": "off",
+      "effectColor": "#ff375f",
+      "effectColors": [
+        "#ff375f",
+        "#ff9f0a",
+        "#32d74b",
+        "#00c7be",
+        "#0a84ff"
+      ],
+      "sweepEnabled": false,
+      "backgroundColor": "#ffffff",
+      "backgroundMedia": null,
+      "backgroundTransition": "direct",
+      "backgroundTransitionDuration": 120
+    },
+    {
+      "id": "dots-03",
+      "text": "Composition",
+      "hold": 650,
+      "icons": [],
+      "fontFamily": "",
+      "initialColor": "#111111",
+      "colorMode": "single",
+      "effectColor": "#ff375f",
+      "effectColors": [
+        "#ff375f",
+        "#ff9f0a",
+        "#32d74b",
+        "#00c7be",
+        "#0a84ff",
+        "#bf5af2",
+        "#ff375f",
+        "#ff9f0a",
+        "#32d74b",
+        "#00c7be",
+        "#0a84ff"
+      ],
+      "sweepEnabled": false,
+      "backgroundColor": "#ffffff",
+      "backgroundMedia": null,
+      "backgroundTransition": "direct",
+      "backgroundTransitionDuration": 120
+    },
+    {
+      "id": "dots-04",
+      "text": "Motion",
+      "hold": 750,
+      "icons": [],
+      "fontFamily": "",
+      "initialColor": "#1b8881",
+      "colorMode": "off",
+      "effectColor": "#ff375f",
+      "effectColors": [
+        "#ff375f",
+        "#ff9f0a",
+        "#32d74b",
+        "#00c7be",
+        "#0a84ff",
+        "#bf5af2"
+      ],
+      "sweepEnabled": false,
+      "backgroundColor": "#ffffff",
+      "backgroundMedia": null,
+      "backgroundTransition": "direct",
+      "backgroundTransitionDuration": 120
+    }
   ]
 }

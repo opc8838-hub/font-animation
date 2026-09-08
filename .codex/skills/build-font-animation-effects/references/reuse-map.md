@@ -2,9 +2,11 @@
 
 Choose the closest source by capability and copy only the relevant pattern.
 
-## Current ME Motion Studio shell
+## Approved CellMotion editor shell
 
-Use `site/workspace-editor.css`, `site/me-motion-editor.css`, `site/me-motion-editor.js`, `site/media-layer.css`, and `site/media-layer.js` for the current shared editor layout and media model. New effects should extend this product language instead of reviving the old STG panel.
+Use Type Cascade as the approved visual and interaction reference: `site/typecascade.html`, `site/typecascade-workspace.css`, `site/typecascade-workspace.js`, `site/typecascade-polish.css`, `site/typecascade-polish.js`, `site/typecascade-selects.js`, and `site/typecascade-locale.js`. Its renderer remains effect-specific; reuse or extract only shell behavior. The cross-effect rules are in [cellmotion-editor-standard.md](cellmotion-editor-standard.md).
+
+Continue using `site/workspace-editor.css`, `site/me-motion-editor.css`, `site/me-motion-editor.js`, `site/media-layer.css`, and `site/media-layer.js` for existing shared primitives and the media model. When another editor adopts a Type Cascade behavior, promote the stable shell piece into a shared CellMotion module or parameterized adapter rather than copying Type Cascade state logic. Never revive the old STG panel or ME Motion Studio branding.
 
 ## Shared font catalog
 
@@ -41,7 +43,9 @@ Do not copy its small fixed `iconOptions` when the task needs the full current l
 
 ## Row text and inline-icon editing
 
-Use `site/glyphmorph.html`, `site/glyphmorph.css`, and `site/glyphmorph.js` for:
+Use `site/glyphmorph.html`, `site/glyphmorph.css`, and `site/glyphmorph.js` for the canonical interaction pattern. Use `site/sproutshift.html`, `site/mistlift.html`, `site/typecascade.html`, `site/glyphreveal.html`, and their shared `site/morphports-reviewed.js` as the current compact implementation of that pattern with per-row fonts, page backgrounds, optional openings, responsive canvas presets, and deterministic H.264 export.
+
+Reuse these capabilities rather than copying an entire effect renderer:
 
 - Stable text rows with grapheme-aware caret boundaries and row-owned inline icons.
 - Per-row `插入图标` and `暂停修改`, where pause seeks to the row's complete readable hold frame.
@@ -50,8 +54,12 @@ Use `site/glyphmorph.html`, `site/glyphmorph.css`, and `site/glyphmorph.js` for:
 - Selection-only candidate tiles plus adjacent one-step `插入` buttons that avoid reverse scrolling through a long library.
 - Focused editing of icon row, character boundary, size, text gap, X, and Y while the owning row stays paused.
 - One deterministic Canvas layout for live preview, PNG, GIF, and H.264 MP4 at 24/30/60 FPS.
+- Optional opening motion whose enable, duration, and per-character stagger stay separate from the core transition; Replay includes it while row pause lands on the stable row.
+- A semantic single-row mode, demonstrated by Type Cascade, where deleting to one row keeps the full fall/reset cycle rather than becoming static.
 
 The approved default is `site/assets/presets/glyphmorph-default.json`; the gallery loop is `site/assets/previews/glyphmorph-card.mp4`. Do not regenerate either after unrelated refinements.
+
+For an existing-effect editor upgrade, follow [editor-migration-playbook.md](editor-migration-playbook.md). The files above are implementation references, not permission to replace another effect's choreography or approved defaults.
 
 ## Per-page background and video editing
 

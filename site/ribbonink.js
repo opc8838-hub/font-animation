@@ -9,7 +9,7 @@
   const schemeStatus = $("#schemeStatus");
   const STORAGE_KEY = "me-ribbon-ink-autosave-v3";
   const EFFECT_ID = "ribbon-ink";
-  const SCHEME_VERSION = 13;
+  const SCHEME_VERSION = 14;
   const freehand = window.RibbonInkFreehand;
   let drawing = freehand.validate(null);
   let compiledDrawing = freehand.compile(drawing);
@@ -75,8 +75,8 @@
     startedAt: performance.now(),
     raf: 0,
     autosaveTimer: 0,
-    background: null,
-    backgroundDataUrl: "",
+    backgroundMedia: null,
+    backgroundRuntime: null,
     brushMother: null,
     motherDetail: null,
     motherHighlight: null,
@@ -440,14 +440,104 @@
     return { size: desired * scale, spacing: spacing * scale };
   }
 
-  function drawBackground(context, width, height) {
+  function normalizeBackgroundMedia(media) {
+    if (!media || typeof media !== "object" || !media.url) return null;
+    return {
+      name: String(media.name || "上传素材"),
+      url: String(media.url),
+      fileType: String(media.fileType || "image/png"),
+      videoStart: Math.max(0, Number.isFinite(Number(media.videoStart)) ? Number(media.videoStart) : 0),
+      videoEnd: Number.isFinite(Number(media.videoEnd)) && Number(media.videoEnd) > 0 ? Number(media.videoEnd) : null
+    };
+  }
+
+  function isVideoMedia(media = state.backgroundMedia) {
+    return Boolean(media && /^video\//i.test(media.fileType));
+  }
+
+  function videoClipBounds(media, duration) {
+    const safeDuration = Math.max(.1, Number(duration) || .1);
+    const start = clamp(Number(media?.videoStart) || 0, 0, Math.max(0, safeDuration - .1));
+    const requestedEnd = Number(media?.videoEnd);
+    const end = clamp(requestedEnd > start ? requestedEnd : safeDuration, start + .1, safeDuration);
+    return { start, end, duration: Math.max(.1, end - start) };
+  }
+
+  function backgroundVideoTime(rawTime, runtime = state.backgroundRuntime, media = state.backgroundMedia) {
+    const clip = videoClipBounds(media, runtime?.duration || 0);
+    const local = ((Number(rawTime) || 0) % clip.duration + clip.duration) % clip.duration;
+    return clip.start + Math.min(local, Math.max(0, clip.duration - .001));
+  }
+
+  function backgroundFrameAt(rawTime, preview) {
+    const runtime = state.backgroundRuntime;
+    if (!runtime) return null;
+    if (runtime.frames?.length && runtime.duration > 0) {
+      const local = ((Number(rawTime) || 0) % runtime.duration + runtime.duration) % runtime.duration;
+      return (runtime.frames.find((frame) => local >= frame.start && local < frame.start + frame.duration) || runtime.frames.at(-1)).image;
+    }
+    if (runtime.video) {
+      if (!preview) return runtime.exportImage || (runtime.video.readyState >= 2 ? runtime.video : null);
+      const video = runtime.video;
+      const target = backgroundVideoTime(rawTime, runtime);
+      const clip = videoClipBounds(state.backgroundMedia, runtime.duration);
+      if (!runtime.previewImage && video.readyState >= 2) capturePreviewVideoFrame(runtime);
+      if (runtime.previewNeedsSync && !runtime.previewSeeking && !video.seeking) requestPreviewVideoSeek(runtime, target);
+      if (!runtime.previewSeeking && !video.seeking) {
+        if (state.paused || state.exporting) video.pause();
+        else if (video.currentTime < clip.start - .03 || video.currentTime >= clip.end - Math.min(.04, clip.duration / 4)) {
+          requestPreviewVideoSeek(runtime, target);
+        } else video.play().catch(() => {});
+      }
+      return runtime.previewSeeking || video.seeking || video.readyState < 2 ? runtime.previewImage : video;
+    }
+    return runtime.image;
+  }
+
+  function capturePreviewVideoFrame(runtime) {
+    const video = runtime?.video;
+    if (!video || video.readyState < 2 || !video.videoWidth || !video.videoHeight) return runtime?.previewImage || null;
+    const scale = Math.min(1, 1280 / video.videoWidth, 720 / video.videoHeight);
+    const frame = runtime.previewImage || document.createElement("canvas");
+    frame.width = Math.max(2, Math.round(video.videoWidth * scale));
+    frame.height = Math.max(2, Math.round(video.videoHeight * scale));
+    frame.getContext("2d").drawImage(video, 0, 0, frame.width, frame.height);
+    runtime.previewImage = frame;
+    runtime.previewTime = video.currentTime;
+    return frame;
+  }
+
+  function requestPreviewVideoSeek(runtime, target) {
+    const video = runtime?.video;
+    if (!video || runtime.previewSeeking || video.seeking || video.readyState < 1) return;
+    capturePreviewVideoFrame(runtime);
+    runtime.previewNeedsSync = false;
+    runtime.previewSeeking = true;
+    video.pause();
+    let settled = false;
+    const done = () => {
+      if (settled) return;
+      settled = true;
+      runtime.previewSeeking = false;
+      capturePreviewVideoFrame(runtime);
+      if (!state.paused && !state.exporting && state.backgroundRuntime === runtime) video.play().catch(() => {});
+    };
+    video.addEventListener("seeked", done, { once: true });
+    video.currentTime = clamp(target, 0, Math.max(0, (runtime.duration || video.duration || .1) - .001));
+    setTimeout(done, 900);
+  }
+
+  function drawBackground(context, width, height, rawTime, preview) {
     context.fillStyle = inputs.backgroundColor.value;
     context.fillRect(0, 0, width, height);
-    const image = state.background;
-    if (!image || !image.complete || !image.naturalWidth) return;
-    const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
-    const drawWidth = image.naturalWidth * scale;
-    const drawHeight = image.naturalHeight * scale;
+    const image = backgroundFrameAt(rawTime, preview);
+    if (!image) return;
+    const sourceWidth = image.videoWidth || image.naturalWidth || image.width || 0;
+    const sourceHeight = image.videoHeight || image.naturalHeight || image.height || 0;
+    if (!sourceWidth || !sourceHeight) return;
+    const scale = Math.max(width / sourceWidth, height / sourceHeight);
+    const drawWidth = sourceWidth * scale;
+    const drawHeight = sourceHeight * scale;
     context.drawImage(image, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
   }
 
@@ -1084,7 +1174,7 @@
     context.setTransform(targetWidth / width, 0, 0, targetHeight / height, 0, 0);
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = "high";
-    drawBackground(context, width, height);
+    drawBackground(context, width, height, rawTime, target === canvas);
     if (inputs.drawingMode.value === "freehand") {
       const visible = visibleWindow(rawTime);
       freehand.draw(context, drawing, compiledDrawing, width, height, visible, visible.phase.time,
@@ -1221,6 +1311,7 @@
     const total = timing().total;
     state.pausedAt = ((value % total) + total) % total;
     state.startedAt = performance.now() - state.pausedAt * 1000;
+    if (state.backgroundRuntime) state.backgroundRuntime.previewNeedsSync = true;
     renderPreview(state.pausedAt);
   }
 
@@ -1462,18 +1553,208 @@
   function schemeData() {
     const values = {};
     Object.entries(inputs).forEach(([key, input]) => { values[key] = input.value; });
-    return { version: SCHEME_VERSION, effect: EFFECT_ID, values, page1Glyphs: structuredClone(page1Glyphs), page2Glyphs: structuredClone(page2Glyphs), drawing: structuredClone(drawing), background: state.backgroundDataUrl || "" };
+    return { version: SCHEME_VERSION, effect: EFFECT_ID, values, page1Glyphs: structuredClone(page1Glyphs), page2Glyphs: structuredClone(page2Glyphs), drawing: structuredClone(drawing), backgroundMedia: state.backgroundMedia ? structuredClone(state.backgroundMedia) : null };
   }
 
-  function loadBackground(dataUrl) {
-    state.backgroundDataUrl = dataUrl || "";
-    if (!dataUrl) { state.background = null; return Promise.resolve(); }
-    return new Promise((resolve, reject) => {
-      const image = new Image();
-      image.onload = () => { state.background = image; resolve(); };
-      image.onerror = reject;
-      image.src = dataUrl;
+  function backgroundTypeLabel(media) {
+    if (!media) return "";
+    if (isVideoMedia(media)) return "视频";
+    if (/gif/i.test(media.fileType || media.name)) return "GIF 动图";
+    return "图片";
+  }
+
+  function updateBackgroundControls() {
+    const media = state.backgroundMedia;
+    const runtime = state.backgroundRuntime;
+    const panel = $("#backgroundMediaPanel");
+    const empty = $("#backgroundEmpty");
+    const trim = $("#backgroundVideoTrim");
+    panel.hidden = !media;
+    empty.hidden = Boolean(media);
+    $("#clearBackground").disabled = !media;
+    if (!media) { trim.hidden = true; return; }
+    $("#backgroundFileName").textContent = media.name;
+    $("#backgroundFileType").textContent = backgroundTypeLabel(media);
+    const videoMedia = isVideoMedia(media);
+    trim.hidden = !videoMedia;
+    if (!videoMedia) return;
+    const duration = runtime?.duration || 0;
+    const clip = videoClipBounds(media, duration || Math.max(.1, Number(media.videoEnd) || .1));
+    $("#backgroundVideoStart").max = duration > 0 ? String(Math.max(0, duration - .1)) : "3600";
+    $("#backgroundVideoEnd").max = duration > 0 ? String(duration) : "3600";
+    $("#backgroundVideoStart").value = String(clip.start.toFixed(1));
+    $("#backgroundVideoEnd").value = String(clip.end.toFixed(1));
+    $("#backgroundVideoDurationOut").textContent = duration > 0 ? `· 已选 ${clip.duration.toFixed(1)} 秒` : "· 读取中…";
+    $("#backgroundVideoSourceDuration").textContent = duration > 0 ? `${duration.toFixed(1)} 秒` : "";
+    const selection = $("#backgroundVideoSelection");
+    selection.style.left = `${duration > 0 ? clip.start / duration * 100 : 0}%`;
+    selection.style.width = `${duration > 0 ? clip.duration / duration * 100 : 100}%`;
+    selection.querySelector(".is-start").setAttribute("aria-valuetext", `${clip.start.toFixed(1)} 秒`);
+    selection.querySelector(".is-end").setAttribute("aria-valuetext", `${clip.end.toFixed(1)} 秒`);
+  }
+
+  function disposeBackgroundRuntime() {
+    const runtime = state.backgroundRuntime;
+    runtime?.video?.pause();
+    runtime?.exportVideo?.pause();
+    runtime?.frames?.forEach((frame) => frame.image?.close?.());
+    state.backgroundRuntime = null;
+  }
+
+  function loadVideoElement(url) {
+    return new Promise((resolve) => {
+      const video = document.createElement("video");
+      video.muted = true;
+      video.loop = false;
+      video.playsInline = true;
+      video.preload = "auto";
+      const finish = () => resolve(video);
+      video.addEventListener("loadeddata", finish, { once: true });
+      video.addEventListener("error", () => resolve(null), { once: true });
+      video.src = url;
+      video.load();
     });
+  }
+
+  async function decodeGifFrames(runtime, media) {
+    if (!("ImageDecoder" in window) || !/gif/i.test(media.fileType || media.name)) return;
+    try {
+      const data = await (await fetch(media.url)).arrayBuffer();
+      const decoder = new ImageDecoder({ data, type: media.fileType || "image/gif" });
+      await decoder.tracks.ready;
+      const count = Math.min(180, decoder.tracks.selectedTrack?.frameCount || 1);
+      const frames = [];
+      let duration = 0;
+      for (let frameIndex = 0; frameIndex < count; frameIndex += 1) {
+        const decoded = await decoder.decode({ frameIndex });
+        const frameDuration = Math.max(1 / 60, Number(decoded.image.duration || 100000) / 1000000);
+        const bitmap = await createImageBitmap(decoded.image);
+        decoded.image.close();
+        frames.push({ image: bitmap, start: duration, duration: frameDuration });
+        duration += frameDuration;
+      }
+      runtime.frames = frames;
+      runtime.duration = duration;
+      decoder.close();
+    } catch (error) {
+      console.warn("GIF 背景逐帧解码不可用，已使用浏览器动画回退。", error);
+    }
+  }
+
+  async function prepareBackgroundFilmstrip(runtime) {
+    if (!runtime?.url || runtime.filmstripPromise) return runtime?.filmstripPromise;
+    runtime.filmstripPromise = (async () => {
+      const video = await loadVideoElement(runtime.url);
+      if (!video) return null;
+      const duration = Number(video.duration) || runtime.duration;
+      if (!(duration > 0)) return null;
+      const filmstrip = document.createElement("canvas");
+      filmstrip.width = 720;
+      filmstrip.height = 96;
+      const context = filmstrip.getContext("2d");
+      const frameCount = 8;
+      const frameWidth = filmstrip.width / frameCount;
+      const seek = (time) => new Promise((resolve) => {
+        let settled = false;
+        const done = () => {
+          if (settled) return;
+          settled = true;
+          if (typeof video.requestVideoFrameCallback === "function") {
+            const fallback = setTimeout(resolve, 160);
+            video.requestVideoFrameCallback(() => { clearTimeout(fallback); resolve(); });
+          } else requestAnimationFrame(resolve);
+        };
+        video.addEventListener("seeked", done, { once: true });
+        video.currentTime = clamp(time, 0, Math.max(0, duration - .001));
+        setTimeout(done, 800);
+      });
+      for (let index = 0; index < frameCount; index += 1) {
+        await seek((index + .5) / frameCount * duration);
+        const sourceWidth = video.videoWidth || 1;
+        const sourceHeight = video.videoHeight || 1;
+        const scale = Math.max(frameWidth / sourceWidth, filmstrip.height / sourceHeight);
+        const drawWidth = sourceWidth * scale;
+        const drawHeight = sourceHeight * scale;
+        context.save();
+        context.beginPath();
+        context.rect(index * frameWidth, 0, frameWidth, filmstrip.height);
+        context.clip();
+        context.drawImage(video, index * frameWidth + (frameWidth - drawWidth) / 2, (filmstrip.height - drawHeight) / 2, drawWidth, drawHeight);
+        context.restore();
+      }
+      video.pause();
+      runtime.filmstrip = filmstrip;
+      const target = $("#backgroundVideoFilmstrip");
+      if (state.backgroundRuntime === runtime && target) {
+        const targetContext = target.getContext("2d");
+        targetContext.clearRect(0, 0, target.width, target.height);
+        targetContext.drawImage(filmstrip, 0, 0, target.width, target.height);
+      }
+      return filmstrip;
+    })().catch((error) => { console.warn("视频缩略图生成失败。", error); return null; });
+    return runtime.filmstripPromise;
+  }
+
+  async function loadBackgroundMedia(value) {
+    disposeBackgroundRuntime();
+    const media = normalizeBackgroundMedia(value);
+    state.backgroundMedia = media;
+    updateBackgroundControls();
+    if (!media) { renderPreview(); return null; }
+    const runtime = { url: media.url, image: null, video: null, exportVideo: null, exportPromise: null, exportImage: null, exportTime: -1, previewImage: null, previewTime: -1, previewNeedsSync: true, previewSeeking: false, frames: null, duration: 0, filmstrip: null, filmstripPromise: null };
+    state.backgroundRuntime = runtime;
+    if (isVideoMedia(media)) {
+      const previewPromise = loadVideoElement(media.url);
+      runtime.exportPromise = loadVideoElement(media.url).then((video) => { runtime.exportVideo = video; return video; });
+      runtime.video = await previewPromise;
+      runtime.duration = Number(runtime.video?.duration) || 0;
+      if (runtime.duration > 0 && media.videoEnd == null) media.videoEnd = runtime.duration;
+      capturePreviewVideoFrame(runtime);
+      updateBackgroundControls();
+      prepareBackgroundFilmstrip(runtime);
+    } else {
+      runtime.image = await new Promise((resolve) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => resolve(null);
+        image.src = media.url;
+      });
+      await decodeGifFrames(runtime, media);
+      updateBackgroundControls();
+    }
+    renderPreview();
+    return runtime;
+  }
+
+  async function prepareBackgroundFrame(rawTime) {
+    const runtime = state.backgroundRuntime;
+    if (!runtime || !isVideoMedia()) return;
+    await runtime.exportPromise;
+    const video = runtime.exportVideo;
+    if (!video || video.readyState < 2) return;
+    const target = backgroundVideoTime(rawTime, runtime);
+    if (Math.abs(video.currentTime - target) > 1 / 240) {
+      await new Promise((resolve) => {
+        let settled = false;
+        const done = () => {
+          if (settled) return;
+          settled = true;
+          if (typeof video.requestVideoFrameCallback === "function") {
+            const fallback = setTimeout(resolve, 200);
+            video.requestVideoFrameCallback(() => { clearTimeout(fallback); resolve(); });
+          } else requestAnimationFrame(resolve);
+        };
+        video.addEventListener("seeked", done, { once: true });
+        video.currentTime = target;
+        setTimeout(done, 900);
+      });
+    }
+    const frame = runtime.exportImage || document.createElement("canvas");
+    frame.width = video.videoWidth || 2;
+    frame.height = video.videoHeight || 2;
+    frame.getContext("2d").drawImage(video, 0, 0, frame.width, frame.height);
+    runtime.exportImage = frame;
+    runtime.exportTime = target;
   }
 
   async function applyScheme(data) {
@@ -1497,7 +1778,8 @@
     Object.entries(values).forEach(([key, value]) => {
       if (inputs[key] && value != null) inputs[key].value = String(value);
     });
-    await loadBackground(data.background || "");
+    const legacyBackground = data.background ? { name: "背景图片", url: data.background, fileType: "image/png", videoStart: 0, videoEnd: null } : null;
+    await loadBackgroundMedia(data.backgroundMedia || legacyBackground);
     await ensurePageFonts();
     updateOutputs();
     updateStageLayout();
@@ -1534,6 +1816,7 @@
       finishDrawing(); drawingEnabled = false; updateDrawingUI();
     }
     if (paused === state.paused) return;
+    if (state.backgroundRuntime) state.backgroundRuntime.previewNeedsSync = true;
     if (paused) {
       state.pausedAt = currentTime() % timing().total;
       state.paused = true;
@@ -1551,6 +1834,7 @@
     if (twoPages()) renderPreview(timing().write + timing().flow + timing().bridge * .84);
     state.pausedAt = 0;
     state.startedAt = performance.now();
+    if (state.backgroundRuntime) state.backgroundRuntime.previewNeedsSync = true;
     if (state.paused) setPaused(false);
     renderPreview(0);
   }
@@ -1681,6 +1965,7 @@
   const exportButtons = [$("#exportPng"), $("#exportGif"), $("#exportVideo")];
   function setExportBusy(busy, message) {
     state.exporting = busy;
+    if (!busy && state.backgroundRuntime) state.backgroundRuntime.previewNeedsSync = true;
     $("#editorPanel").inert = busy;
     workspace.inert = busy;
     exportButtons.forEach((button) => { button.disabled = busy; });
@@ -1690,7 +1975,9 @@
   $("#exportPng").addEventListener("click", async () => {
     await ensurePageFonts();
     const output = makeExportCanvas();
-    renderFrame(output, currentTime(), output.width, output.height);
+    const frameTime = currentTime();
+    await prepareBackgroundFrame(frameTime);
+    renderFrame(output, frameTime, output.width, output.height);
     output.toBlob((blob) => {
       if (!blob) return;
       downloadBlob(blob, `ribbon-ink-${output.width}x${output.height}.png`);
@@ -1709,7 +1996,9 @@
     try {
       const gif = new GIF({ workers: 2, quality: 10, width: output.width, height: output.height, workerScript: "js/continuation-gif.worker.js" });
       for (let frame = 0; frame < frames; frame += 1) {
-        renderFrame(output, frame / fps, output.width, output.height);
+        const frameTime = frame / fps;
+        await prepareBackgroundFrame(frameTime);
+        renderFrame(output, frameTime, output.width, output.height);
         const centisecondStart = Math.round(frame * duration * 100 / frames);
         const centisecondEnd = Math.round((frame + 1) * duration * 100 / frames);
         gif.addFrame(output, { copy: true, delay: Math.max(10, (centisecondEnd - centisecondStart) * 10) });
@@ -1747,7 +2036,9 @@
       encoder.groupOfPictures = Math.max(12, Math.round(fps / 2));
       encoder.initialize();
       for (let frame = 0; frame < frames; frame += 1) {
-        renderFrame(output, frame / fps, output.width, output.height);
+        const frameTime = frame / fps;
+        await prepareBackgroundFrame(frameTime);
+        renderFrame(output, frameTime, output.width, output.height);
         encoder.addFrameRgba(context.getImageData(0, 0, output.width, output.height).data);
         if (frame % 2 === 0 || frame === frames - 1) {
           exportStatus.textContent = `正在逐帧导出 MP4 · ${frame + 1} / ${frames}`;
@@ -1824,31 +2115,99 @@
     setTime(timing().write + timing().flow - .15); setPaused(false);
   });
 
-  $("#backgroundUpload").addEventListener("change", (event) => {
+  $("#backgroundUpload").addEventListener("change", async (event) => {
     const file = event.currentTarget.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      schemeStatus.textContent = "当前版本仅接收图片背景。";
+    if (!/^(image|video)\//i.test(file.type)) {
+      schemeStatus.textContent = "请选择 PNG、JPG、WebP、GIF、MP4 或 WebM 素材。";
       event.currentTarget.value = "";
       return;
     }
-    const reader = new FileReader();
-    reader.onload = async () => {
-      await loadBackground(String(reader.result));
+    try {
+      schemeStatus.textContent = `正在载入背景：${file.name}`;
+      const url = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      await loadBackgroundMedia({ name: file.name, url, fileType: file.type, videoStart: 0, videoEnd: null });
       queueAutosave();
       renderPreview();
-      schemeStatus.textContent = `已载入背景：${file.name}`;
-    };
-    reader.readAsDataURL(file);
+      schemeStatus.textContent = `已载入${backgroundTypeLabel(state.backgroundMedia)}背景：${file.name}`;
+    } catch (error) {
+      console.error(error);
+      schemeStatus.textContent = "背景素材读取失败，请换一个文件重试。";
+    }
     event.currentTarget.value = "";
   });
 
   $("#clearBackground").addEventListener("click", () => {
-    loadBackground("");
+    loadBackgroundMedia(null);
     queueAutosave();
     renderPreview();
-    schemeStatus.textContent = "已清除背景图片。";
+    schemeStatus.textContent = "已移除背景素材，保留当前纯色背景。";
   });
+
+  function commitBackgroundVideoTrim() {
+    const media = state.backgroundMedia;
+    const runtime = state.backgroundRuntime;
+    if (!media || !isVideoMedia(media) || !(runtime?.duration > 0)) return;
+    const rawStart = $("#backgroundVideoStart").value;
+    const rawEnd = $("#backgroundVideoEnd").value;
+    if (rawStart === "" || rawEnd === "" || !Number.isFinite(Number(rawStart)) || !Number.isFinite(Number(rawEnd))) return;
+    const clip = videoClipBounds({ ...media, videoStart: rawStart, videoEnd: rawEnd }, runtime.duration);
+    media.videoStart = clip.start;
+    media.videoEnd = clip.end;
+    runtime.exportImage = null;
+    runtime.exportTime = -1;
+    runtime.previewNeedsSync = true;
+    updateBackgroundControls();
+    queueAutosave();
+    renderPreview();
+  }
+
+  ["#backgroundVideoStart", "#backgroundVideoEnd"].forEach((selector) => {
+    $(selector).addEventListener("input", commitBackgroundVideoTrim);
+    $(selector).addEventListener("change", commitBackgroundVideoTrim);
+  });
+
+  const videoTimeline = $("#backgroundVideoTimeline");
+  let draggedVideoEdge = null;
+  function videoTimeFromPointer(event) {
+    const rect = videoTimeline.getBoundingClientRect();
+    return clamp((event.clientX - rect.left) / Math.max(1, rect.width), 0, 1) * (state.backgroundRuntime?.duration || 0);
+  }
+  function setVideoBoundary(edge, value) {
+    const runtime = state.backgroundRuntime;
+    const media = state.backgroundMedia;
+    if (!runtime?.duration || !media) return;
+    const clip = videoClipBounds(media, runtime.duration);
+    const seconds = Math.round(Number(value) * 10) / 10;
+    if (edge === "start") $("#backgroundVideoStart").value = String(clamp(seconds, 0, clip.end - .1));
+    else $("#backgroundVideoEnd").value = String(clamp(seconds, clip.start + .1, runtime.duration));
+    commitBackgroundVideoTrim();
+  }
+  videoTimeline.addEventListener("pointerdown", (event) => {
+    const runtime = state.backgroundRuntime;
+    if (!runtime?.duration || !isVideoMedia()) return;
+    const clip = videoClipBounds(state.backgroundMedia, runtime.duration);
+    const pointerTime = videoTimeFromPointer(event);
+    draggedVideoEdge = event.target.closest("[data-edge]")?.dataset.edge || (Math.abs(pointerTime - clip.start) <= Math.abs(pointerTime - clip.end) ? "start" : "end");
+    videoTimeline.setPointerCapture(event.pointerId);
+    setVideoBoundary(draggedVideoEdge, pointerTime);
+    event.preventDefault();
+  });
+  videoTimeline.addEventListener("pointermove", (event) => {
+    if (draggedVideoEdge && videoTimeline.hasPointerCapture(event.pointerId)) setVideoBoundary(draggedVideoEdge, videoTimeFromPointer(event));
+  });
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach((eventName) => videoTimeline.addEventListener(eventName, () => { draggedVideoEdge = null; }));
+  $("#backgroundVideoSelection").querySelectorAll("[data-edge]").forEach((handle) => handle.addEventListener("keydown", (event) => {
+    if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+    const current = handle.dataset.edge === "start" ? Number($("#backgroundVideoStart").value) : Number($("#backgroundVideoEnd").value);
+    setVideoBoundary(handle.dataset.edge, current + (event.key === "ArrowLeft" ? -.1 : .1));
+    event.preventDefault();
+  }));
 
   $("#saveScheme").addEventListener("click", () => {
     downloadBlob(new Blob([JSON.stringify(schemeData(), null, 2)], { type: "application/json" }), "ribbon-ink-scheme.json");
@@ -1870,14 +2229,14 @@
   });
 
   $("#resetScheme").addEventListener("click", async () => {
-    await applyScheme({ version: SCHEME_VERSION, effect: EFFECT_ID, values: defaultValues, background: "" });
+    await applyScheme({ version: SCHEME_VERSION, effect: EFFECT_ID, values: defaultValues, backgroundMedia: null });
     queueAutosave();
     schemeStatus.textContent = "已恢复默认方案。";
   });
 
   $("#clearScheme").addEventListener("click", async () => {
     const cleared = { ...defaultValues, textInput: "", page2Text: "", drawingMode: inputs.drawingMode.value, sequenceMode: inputs.sequenceMode.value };
-    await applyScheme({ version: SCHEME_VERSION, effect: EFFECT_ID, values: cleared, background: "" });
+    await applyScheme({ version: SCHEME_VERSION, effect: EFFECT_ID, values: cleared, backgroundMedia: null });
     localStorage.removeItem(STORAGE_KEY);
     clearTimeout(state.autosaveTimer); state.autosaveTimer = 0;
     schemeStatus.textContent = "已清空内容，可重新编辑。";
@@ -1922,7 +2281,7 @@
     try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch (_) {}
     if (urlParams.get("from") === "gallery") saved = null;
     try {
-      await applyScheme(saved?.effect === EFFECT_ID ? saved : { version: SCHEME_VERSION, effect: EFFECT_ID, values: defaultValues, background: "" });
+      await applyScheme(saved?.effect === EFFECT_ID ? saved : { version: SCHEME_VERSION, effect: EFFECT_ID, values: defaultValues, backgroundMedia: null });
       if (!saved && urlParams.get("sequence") === "2") {
         inputs.sequenceMode.value = "double"; updateOutputs(); replay();
       }

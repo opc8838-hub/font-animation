@@ -1,4 +1,4 @@
-# ME Motion Studio development rules
+# CellMotion development rules
 
 These rules apply to the whole repository and are intended for both human contributors and coding agents.
 
@@ -13,11 +13,12 @@ These rules apply to the whole repository and are intended for both human contri
 
 ## UI and rendering baseline
 
-- The current product baseline is **ME Motion Studio**, not the old STG panel.
+- The current product baseline is **CellMotion**, not ME Motion Studio or the old STG panel.
+- The approved editor standard is the current Type Cascade three-column editor. Read [`.codex/skills/build-font-animation-effects/references/cellmotion-editor-standard.md`](.codex/skills/build-font-animation-effects/references/cellmotion-editor-standard.md) before creating or migrating an editor. Standardize the shell, visual language, interaction, timeline, and export surfaces; preserve each effect's own composition model and allow its `动效设置` panel to contain the controls it genuinely needs.
 - Reuse the shared editor layers where possible: `site/workspace-editor.css`, `site/media-layer.js`, `site/media-layer.css`, `site/me-motion-editor.css`, and `site/me-motion-editor.js`.
-- Desktop editors use a 420px left inspector and an independent right-hand stage. Mobile uses the stage above the inspector.
+- Desktop editors use the approved three-column structure: left content/page navigation, center stage and timeline, and right properties. Mobile uses the stage above compact navigation and properties.
 - Calculate preview geometry from the actual stage or canvas client size, never blindly from `window.innerWidth`. Text and compositions must stay centered in the stage after the editor width is excluded.
-- The inspector must scroll independently and expose every control.
+- Working columns must scroll independently and expose every control without turning ordinary editing into a long page scroll.
 - New effects should support Chinese text and the repository font library where applicable.
 
 ## Expected editing and export capability

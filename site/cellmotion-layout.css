@@ -12,7 +12,7 @@
 .hero-immersive .button.outline{background:#faf9f7d9}
 .hero-immersive>.round-button{position:absolute;right:32px;bottom:27px;width:34px;height:34px}
 .hero-scroll{position:absolute;left:32px;bottom:34px;color:#79736e;font-size:11px;display:flex;gap:20px;align-items:center}
-.motion-showcase{padding-top:26px;overflow:hidden}
+.motion-showcase{position:relative;z-index:2;margin-top:-36px;padding-top:26px;overflow:hidden}
 .motion-showcase .motion-ribbon{margin-top:0}
 .library-intro{font-size:14px;color:var(--muted);margin:-10px 0 24px;line-height:1.8}
 .category-links{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:30px}
@@ -73,7 +73,7 @@
  .hero-immersive .hero-description{font-size:12px;line-height:1.9}
  .hero-immersive>.round-button{right:20px;bottom:21px;width:30px;height:30px}
  .hero-scroll{left:20px;bottom:28px;font-size:10px}
- .motion-showcase{padding-top:8px}
+ .motion-showcase{margin-top:-24px;padding-top:8px}
  .library-intro{font-size:12px;margin:0 0 20px}
  .category-links{gap:7px;margin-bottom:24px}
  .category-links a{font-size:11px;padding:8px 11px}

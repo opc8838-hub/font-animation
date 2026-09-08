@@ -15,10 +15,12 @@ for(const page of pages){
     const target=new URL(value,site);target.search='';target.hash='';
     assert((await stat(target)).isFile(),`${page}: missing ${value}`);checked++;
   }
-  scripts.add(html.match(/<script type="module" src="([^"]+)"/)[1]);
+  const sharedScript = html.match(/<script(?:\s+type="module")?\s+defer\s+src="([^"]+)"/);
+  assert(sharedScript, `${page}: missing deferred shared script`);
+  scripts.add(sharedScript[1]);
   assert(html.includes('assets/cellmotion/logo-original.png'),`${page}: original logo required`);
 }
-assert.equal(scripts.size,1,'Pages should load the same current shared module');
+assert.equal(scripts.size,1,'Pages should load the same current shared script');
 const home=await readFile(new URL(pages[0],site),'utf8');
 assert(home.includes('data-home-preview="true"'),'Homepage must remain a small preview, not full catalog');
 assert(home.includes('hero-immersive'),'Full-screen Hero missing');

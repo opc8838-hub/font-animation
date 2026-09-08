@@ -4,19 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="color-scheme" content="dark">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'></svg>">
+  <link rel="icon" href="favicon.svg">
   <title>字倾 Type Cascade | CellMotion</title>
   <link rel="stylesheet" href="workspace-editor.css?v=20260901-1">
   <link rel="stylesheet" href="me-motion-editor.css?v=20260901-1">
   <link rel="stylesheet" href="shared-fonts.css?v=20260824-2">
   <link rel="stylesheet" href="stg-cn.css?v=20260824-1">
   <link rel="stylesheet" href="glyphmorph-reviewed.css?v=20260904-6">
+  <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-1">
+  <link rel="stylesheet" href="typecascade-polish.css?v=20260909-1">
 </head>
 <body class="glyphmorph-editor" data-morph-port="typecascade">
   <aside id="glyphMorphInspector" class="gm-inspector" aria-label="字倾编辑器">
     <header class="gm-header">
-      <a href="gallery.html" aria-label="返回效果库">ME</a>
-      <div><small>ME MOTION STUDIO</small><h1>字倾 <span>Type Cascade</span></h1></div>
+      <a class="tc-brand" href="cellmotion.html" aria-label="CellMotion 首页"><img src="assets/cellmotion/logo-original.png" alt="CellMotion"></a>
+      <div><small>让创意，自由生长</small><h1>字倾 <span>Type Cascade</span></h1></div>
     </header>
 
     <section class="gm-card gm-canvas-card">
@@ -42,7 +44,7 @@
 
     <section class="gm-card">
       <div class="gm-card-title"><span>02</span><h2>文字段落</h2><button id="addRow" class="gm-text-button" type="button">＋ 添加段落</button></div>
-      <p class="gm-help">默认按 7 个文字节拍演示完整倾落变形；每段可独立停留、插入图标并设置背景视频。</p>
+      <p class="gm-help">默认按 7 个文字节拍演示完整倾落变形；每段可独立停留、插入图标并设置图片、GIF 或视频背景。</p>
       <div id="sequenceRows" class="gm-sequence"></div>
       <div class="gm-grid-2 gm-text-colors">
         <label class="gm-field">文字色 <input id="textColor" type="color"></label>
@@ -76,8 +78,11 @@
 
     <section class="gm-card">
       <div class="gm-card-title"><span>05</span><h2>倾倒节奏</h2></div>
-      <p class="gm-help">旧字绕底部左右摆落，新字从基线长入；字符按正弦波错落。</p>
+      <p class="gm-help">开场先让字符从左右倾斜中立稳；之后旧字绕底部摆落、新字从基线长入。</p>
+      <label class="gm-check"><input id="introEnabled" type="checkbox"><span>立字开场</span></label>
       <div class="gm-grid-2">
+        <label class="gm-field">开场时长 <input id="introDuration" type="range" min="160" max="900" step="10"><output for="introDuration"></output></label>
+        <label class="gm-field">开场逐字错峰 <input id="introCharacterDelay" type="range" min="0" max="80" step="1"><output for="introCharacterDelay"></output></label>
         <label class="gm-field">新字长入时长 <input id="morphDuration" type="range" min="180" max="1400" step="10"><output for="morphDuration"></output></label>
         <label class="gm-field">摆落错峰 <input id="characterDelay" type="range" min="0" max="0.12" step="0.001"><output for="characterDelay"></output></label>
         <label class="gm-field">倾倒角度 <input id="effectAmount" type="range" min="60" max="220" step="1"><output for="effectAmount"></output></label>
@@ -136,6 +141,21 @@
         </div>
         <div id="selectedIconItems" class="gm-layer-items me-layer-items"></div>
       </div>
+      <details id="customAssetPanel" class="gm-custom-assets">
+        <summary><span>上传自己的图片</span><b>本地抠图</b></summary>
+        <div class="gm-custom-assets-body">
+          <p class="gm-help">适合 Logo、商品图和纯色背景图片。上传只会加入图库，不会自动插入文字。</p>
+          <label class="gm-custom-upload">上传图片 / GIF
+            <input id="customAssetFile" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif">
+          </label>
+          <label class="gm-check"><input id="customAssetRemoveBackground" type="checkbox" checked><span>自动去除四角连通背景</span></label>
+          <div class="gm-grid-2 gm-custom-process-grid">
+            <label class="gm-field">容差<input id="customAssetTolerance" type="range" min="0" max="120" step="1" value="32"><output for="customAssetTolerance">32</output></label>
+            <label class="gm-field">边缘羽化<input id="customAssetFeather" type="range" min="0" max="24" step="1" value="4"><output for="customAssetFeather">4</output></label>
+          </div>
+          <p id="customAssetStatus" class="gm-status" aria-live="polite">图片在浏览器本地处理，不会上传服务器。</p>
+        </div>
+      </details>
       <div class="gm-library-selection">
         <div id="librarySelectionPreview" class="gm-library-selection-preview" aria-hidden="true">＋</div>
         <div><small>当前候选</small><strong id="librarySelectionName">请先选择图标</strong><span id="insertTargetLabel">目标：第 01 行 · 文字末尾</span></div>
@@ -158,6 +178,20 @@
           <label class="gm-field">水平左右位置<input id="iconX" type="range" min="-100" max="100" step="1"><output for="iconX"></output></label>
           <label class="gm-field">垂直位置<input id="iconY" type="range" min="-100" max="100" step="1"><output for="iconY"></output></label>
         </div>
+        <div id="customAssetEditor" class="gm-custom-asset-editor" hidden>
+          <div class="gm-custom-asset-heading"><strong>自定义图片</strong><span>可更换原图或重新抠图</span></div>
+          <label class="gm-custom-upload">更换图片
+            <input id="replaceCustomAssetFile" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif">
+          </label>
+          <label class="gm-check"><input id="activeCustomRemoveBackground" type="checkbox"><span>自动去除四角连通背景</span></label>
+          <div class="gm-grid-2 gm-custom-process-grid">
+            <label class="gm-field">容差<input id="activeCustomTolerance" type="range" min="0" max="120" step="1"><output for="activeCustomTolerance"></output></label>
+            <label class="gm-field">边缘羽化<input id="activeCustomFeather" type="range" min="0" max="24" step="1"><output for="activeCustomFeather"></output></label>
+          </div>
+          <button id="reprocessCustomAsset" type="button">按当前参数重新抠图</button>
+          <button id="deleteCustomAsset" class="gm-remove-active" type="button">从图库删除这张图片</button>
+          <p id="activeCustomStatus" class="gm-status" aria-live="polite"></p>
+        </div>
         <button id="removeActiveIcon" class="gm-remove-active" type="button">删除这个图标</button>
       </div>
     </section>
@@ -179,7 +213,12 @@
   <script src="shared-font-library.js?v=20260824-2"></script>
   <script src="row-font-editor.js?v=20260904-4"></script>
   <script src="shared-icon-library.js?v=20260902-1"></script>
-  <script src="morphports-reviewed.js?v=20260905-3"></script>
+  <script src="token-asset-tools.js?v=20260908-1"></script>
+  <script src="morphports-reviewed.js?v=20260909-1"></script>
   <script src="stg-cn.js?v=20260904-1"></script>
+  <script src="typecascade-workspace.js?v=20260909-1"></script>
+  <script src="typecascade-polish.js?v=20260909-1"></script>
+  <script src="typecascade-selects.js?v=20260909-1"></script>
+  <script src="typecascade-locale.js?v=20260909-1"></script>
 </body>
 </html>

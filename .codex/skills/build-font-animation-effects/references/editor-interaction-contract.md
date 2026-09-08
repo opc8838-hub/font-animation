@@ -1,12 +1,13 @@
 # Editor interaction contract
 
-Read this contract whenever an effect adds or changes text, asset, scheme, timeline, playback, or export UI. “Looks similar” is not sufficient; the behavior below is the compatibility boundary.
+Read this contract together with [cellmotion-editor-standard.md](cellmotion-editor-standard.md) whenever an effect adds or changes text, asset, scheme, timeline, playback, or export UI. “Looks similar” is not sufficient; the behavior below is the compatibility boundary.
 
 ## Text card
 
 - Keep the text input, text color, and background color in the same text-editing card. Do not place the two color fields after advanced motion controls.
 - Content edits immediately rebuild derived rows, selected assets, replacement targets, and choreography labels.
 - In row-based sequences, put `插入图标` and `暂停修改` directly on every row. `暂停修改` seeks to the row's deterministic hold frame where the whole row is readable; it must not stop on an outgoing transition, a partial glyph state, or the next row.
+- Set the deletion minimum from the effect's semantics. A sequence may keep one row when that row can still perform a complete entrance, exit, reset, fall, or loop; do not force a second placeholder row merely to make the renderer animate.
 - Show every inserted inline icon as a compact row-owned chip with preview/name, character-boundary position, and a small explicit `编辑` button. Editing that chip invokes the same row seek-and-pause behavior before opening its controls.
 - Track the text caret by grapheme boundary on focus, click, selection, and keyboard edits. Clamp existing icon boundaries after text changes so Chinese, emoji, and combined characters cannot strand an icon outside the row.
 
@@ -36,6 +37,7 @@ Required interaction:
 - Choreography uses the shared colored `me-choreo-*` blocks, legend, playhead, and click-to-seek behavior. Phase labels and widths derive from the same timing model as preview/export.
 - A timing control updates that same timing model and seeks to or replays the phase it controls so the change is immediately observable. A control labeled as total speed or total duration must include every delay, stagger, hold, and transition inside the named phase; unrelated hidden waits must not make the control appear ineffective.
 - The stage contains synchronized Pause/Play and Replay controls using `me-stage-controls`.
+- Replay resets the shared deterministic clock to zero and plays any enabled opening. Row pause and icon edit seek past the opening to a stable, fully readable row frame. An optional opening uses its own enable, duration, and stagger state instead of silently changing the core morph timing.
 
 ## Page-owned sequence editing
 
@@ -83,5 +85,7 @@ Test these observable behaviors in a real browser:
 16. Change each timing control and confirm the active phase/playhead previews the affected beat and the shared preview/export duration model changes by the displayed amount, without an unrelated static interval.
 17. In every row, click `暂停修改` and confirm the complete row is visible. Open each row icon's small `编辑` button and confirm the same row/frame remains visible while size, gap, X/Y, row, and boundary controls are changed.
 18. Select a candidate without inserting, then use its adjacent `插入` button. Confirm exactly one icon appears at the active grapheme boundary and no reverse scroll is needed.
+19. If the effect permits one row, delete to one row and confirm Replay still shows its complete entrance/exit/reset cycle; row pause must still show the whole readable row.
+20. If an opening is supported, disable it and confirm the original core transition is restored; enable it, Replay from time zero, and confirm row pause skips the partial opening frame.
 
 Run `scripts/check_editor_contract.py` for a fast structural check, then perform the browser checks above. Static success does not replace interaction testing.

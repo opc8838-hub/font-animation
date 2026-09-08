@@ -75,10 +75,10 @@
       scheme: {
         version: VERSION, canvas: BASE_CANVAS, typography: BASE_TYPE, motion: { ...BASE_MOTION, loop: true, effectAmount: 6, introEnabled: true, introDuration: 380, introCharacterDelay: 28 },
         rows: [
-          row("dots-01", "Signal", 650),
-          row("dots-02", "Frame", 650),
-          row("dots-03", "Composition", 650),
-          row("dots-04", "Motion", 750)
+          row("dots-01", "Signal", 650, { fontFamily: "", initialColor: "#111111", colorMode: "off", effectColor: "#ff375f", effectColors: ["#ff375f", "#ff9f0a", "#32d74b", "#00c7be", "#0a84ff", "#bf5af2"], sweepEnabled: false }),
+          row("dots-02", "Frame", 650, { fontFamily: "", initialColor: "#1e5f0c", colorMode: "off", effectColor: "#ff375f", effectColors: ["#ff375f", "#ff9f0a", "#32d74b", "#00c7be", "#0a84ff"], sweepEnabled: false }),
+          row("dots-03", "Composition", 650, { fontFamily: "", initialColor: "#111111", colorMode: "single", effectColor: "#ff375f", effectColors: ["#ff375f", "#ff9f0a", "#32d74b", "#00c7be", "#0a84ff", "#bf5af2", "#ff375f", "#ff9f0a", "#32d74b", "#00c7be", "#0a84ff"], sweepEnabled: false }),
+          row("dots-04", "Motion", 750, { fontFamily: "", initialColor: "#1b8881", colorMode: "off", effectColor: "#ff375f", effectColors: ["#ff375f", "#ff9f0a", "#32d74b", "#00c7be", "#0a84ff", "#bf5af2"], sweepEnabled: false })
         ]
       }
     },

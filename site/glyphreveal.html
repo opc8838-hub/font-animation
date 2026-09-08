@@ -76,8 +76,11 @@
 
     <section class="gm-card">
       <div class="gm-card-title"><span>05</span><h2>显现节奏</h2></div>
-      <p class="gm-help">字符从近零尺寸逐字长入，整句停留后清空，再按参考节奏重新出现。</p>
+      <p class="gm-help">开场从左向右逐字扫显；整句停留后清空，再按参考节奏重新出现。</p>
+      <label class="gm-check"><input id="introEnabled" type="checkbox"><span>扫显开场</span></label>
       <div class="gm-grid-2">
+        <label class="gm-field">开场时长 <input id="introDuration" type="range" min="160" max="900" step="10"><output for="introDuration"></output></label>
+        <label class="gm-field">开场逐字错峰 <input id="introCharacterDelay" type="range" min="0" max="80" step="1"><output for="introCharacterDelay"></output></label>
         <label class="gm-field">显现时长 <input id="morphDuration" type="range" min="180" max="1400" step="10"><output for="morphDuration"></output></label>
         <label class="gm-field">逐字错峰 <input id="characterDelay" type="range" min="0" max="0.12" step="0.001"><output for="characterDelay"></output></label>
         <label class="gm-field">最小缩放 <input id="effectAmount" type="range" min="0" max="0.35" step="0.01"><output for="effectAmount"></output></label>
@@ -179,7 +182,7 @@
   <script src="shared-font-library.js?v=20260824-2"></script>
   <script src="row-font-editor.js?v=20260904-4"></script>
   <script src="shared-icon-library.js?v=20260902-1"></script>
-  <script src="morphports-reviewed.js?v=20260904-6"></script>
+  <script src="morphports-reviewed.js?v=20260909-1"></script>
   <script src="stg-cn.js?v=20260904-1"></script>
 </body>
 </html>

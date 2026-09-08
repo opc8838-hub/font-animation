@@ -4,7 +4,7 @@
   // Independent Canvas ports of five observable per-glyph motion contracts from
   // LTMorphingLabel (MIT, lexrus/LTMorphingLabel). No Swift/UIKit source is embedded.
   const $ = (id) => document.getElementById(id);
-  const VERSION = 5;
+  const VERSION = 7;
   const segmenter = typeof Intl.Segmenter === "function" ? new Intl.Segmenter(undefined, { granularity: "grapheme" }) : null;
   const split = (value) => segmenter ? Array.from(segmenter.segment(String(value)), ({ segment }) => segment) : Array.from(String(value));
   const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
@@ -20,12 +20,12 @@
 
   const BASE_CANVAS = { width: 1080, height: 1080, preset: "1080x1080" };
   const BASE_TYPE = { fontFamily: "stg:inter", fontSize: 174, tracking: 0, positionX: 0, positionY: 0, alignment: "center", textColor: "#111111", backgroundColor: "#ffffff" };
-  const BASE_MOTION = { morphDuration: 600, characterDelay: 0.026, speed: 1, loop: true };
+  const BASE_MOTION = { morphDuration: 600, characterDelay: 0.026, introEnabled: true, introDuration: 440, introCharacterDelay: 34, speed: 1, loop: true };
   const row = (id, text, hold, extra = {}) => ({ id, text, hold, icons: [], backgroundColor: "#ffffff", backgroundMedia: null, backgroundTransition: "direct", backgroundTransitionDuration: 120, ...extra });
   const PORTS = {
     sproutshift: {
       mode: "sprout", slug: "sproutshift", zh: "字芽", en: "Sprout Shift", amountLabel: "最小缩放", amountUnit: "%", amountMin: 0, amountMax: 0.35, amountStep: 0.01,
-      phaseLabel: "缩放生长", enterLabel: "放大出现", exitLabel: "缩小退出",
+      phaseLabel: "缩放生长", enterLabel: "放大出现", exitLabel: "缩小退出", introMode: "seed", introLabel: "萌发开场",
       scheme: {
         version: VERSION, canvas: BASE_CANVAS, typography: BASE_TYPE, motion: { ...BASE_MOTION, effectAmount: 0 },
         rows: [
@@ -41,9 +41,9 @@
     },
     mistlift: {
       mode: "mist", slug: "mistlift", zh: "雾升", en: "Mist Lift", amountLabel: "升散幅度", amountUnit: "×", amountMin: 0.4, amountMax: 1.6, amountStep: 0.05,
-      phaseLabel: "升散浮入", enterLabel: "下方浮入", exitLabel: "向上升散",
+      phaseLabel: "升散浮入", enterLabel: "下方浮入", exitLabel: "向上升散", introMode: "condense", introLabel: "雾凝开场",
       scheme: {
-        version: VERSION, canvas: BASE_CANVAS, typography: BASE_TYPE, motion: { ...BASE_MOTION, effectAmount: 1 },
+        version: VERSION, canvas: BASE_CANVAS, typography: BASE_TYPE, motion: { ...BASE_MOTION, introDuration: 520, introCharacterDelay: 24, effectAmount: 1 },
         rows: [
           row("mist-01", "Pause and listen,", 800),
           row("mist-02", "‘What moved first?’", 800),
@@ -55,9 +55,9 @@
     },
     typecascade: {
       mode: "cascade", slug: "typecascade", zh: "字倾", en: "Type Cascade", amountLabel: "倾倒角度", amountUnit: "°", amountMin: 60, amountMax: 220, amountStep: 1,
-      phaseLabel: "倾倒坠落", enterLabel: "基线长入", exitLabel: "倾倒坠落",
+      phaseLabel: "倾倒坠落", enterLabel: "基线长入", exitLabel: "倾倒坠落", introMode: "stand", introLabel: "立字开场",
       scheme: {
-        version: VERSION, canvas: BASE_CANVAS, typography: { ...BASE_TYPE, fontSize: 167 }, motion: { ...BASE_MOTION, morphDuration: 810, characterDelay: 0.052, effectAmount: 168 },
+        version: VERSION, canvas: BASE_CANVAS, typography: { ...BASE_TYPE, fontSize: 167 }, motion: { ...BASE_MOTION, morphDuration: 810, characterDelay: 0.052, introDuration: 520, introCharacterDelay: 36, effectAmount: 168 },
         rows: [
           row("cascade-01", "Sketch", 450, { icons: [{ id: "mp-mtn08rg8-op1v11", libraryId: "bot-08", boundary: 6, size: 110, gap: 15, x: 0, y: 0 }] }),
           row("cascade-02", "Frame", 450),
@@ -84,9 +84,9 @@
     },
     glyphreveal: {
       mode: "sprout", slug: "glyphreveal", zh: "字现", en: "Glyph Reveal", amountLabel: "最小缩放", amountUnit: "%", amountMin: 0, amountMax: 0.35, amountStep: 0.01,
-      phaseLabel: "逐字显现", enterLabel: "逐字显现", exitLabel: "逐字隐去",
+      phaseLabel: "逐字显现", enterLabel: "逐字显现", exitLabel: "逐字隐去", introMode: "scan", introLabel: "扫显开场",
       scheme: {
-        version: VERSION, canvas: BASE_CANVAS, typography: { ...BASE_TYPE, fontSize: 154 }, motion: { ...BASE_MOTION, loop: true, effectAmount: 0 },
+        version: VERSION, canvas: BASE_CANVAS, typography: { ...BASE_TYPE, fontSize: 154 }, motion: { ...BASE_MOTION, introDuration: 460, introCharacterDelay: 42, loop: true, effectAmount: 0 },
         rows: [
           row("reveal-blank", "", 50),
           row("reveal-title", "Words come alive", 884)
@@ -121,9 +121,10 @@
   const canvas = $("glyphMorphCanvas");
   const frame = $("compositionFrame");
   const context = canvas.getContext("2d");
-  const controlIds = ["fontFamily", "fontSize", "tracking", "positionX", "positionY", "textColor", "backgroundColor", "morphDuration", "characterDelay", "effectAmount", "speed", "loop"];
+  const controlIds = ["fontFamily", "fontSize", "tracking", "positionX", "positionY", "textColor", "backgroundColor", "introEnabled", "introDuration", "introCharacterDelay", "morphDuration", "characterDelay", "effectAmount", "speed", "loop"];
   const controls = Object.fromEntries(controlIds.map((id) => [id, $(id)]));
   const normalizeColor = (value, fallback = "#ffffff") => /^#[0-9a-f]{6}$/i.test(String(value || "")) ? String(value) : fallback;
+  const rowTextColor = (rowState) => normalizeColor(rowState?.textColor, state.scheme.typography.textColor);
   const dotPalette = ["#ff375f", "#ff9f0a", "#32d74b", "#00c7be", "#0a84ff", "#bf5af2"];
   function dotColors(row) {
     return {
@@ -148,13 +149,28 @@
   const normalizeBackgroundTransition = (value) => value === "crossfade" ? "crossfade" : "direct";
   const normalizeBackgroundTransitionDuration = (value) => clamp(Number.isFinite(Number(value)) ? Number(value) : 120, 10, 2000);
   const normalizeBackgroundMedia = (media) => media && typeof media === "object" && media.url ? {
-    name: String(media.name || "背景视频"),
+    name: String(media.name || "背景素材"),
     url: String(media.url),
-    fileType: String(media.fileType || "video/mp4"),
+    fileType: String(media.fileType || "image/png"),
     videoStart: Math.max(0, Number.isFinite(Number(media.videoStart)) ? Number(media.videoStart) : 0),
     videoEnd: Number.isFinite(Number(media.videoEnd)) && Number(media.videoEnd) > 0 ? Number(media.videoEnd) : null
   } : null;
   const isVideoMedia = (media) => /^video\//i.test(media?.fileType || "");
+  const isGifMedia = (media) => /gif/i.test(media?.fileType || "");
+  const normalizeCustomAsset = (asset) => asset && typeof asset === "object" && asset.url ? {
+    libraryId: String(asset.libraryId || uid()),
+    name: String(asset.name || "自定义图片"),
+    url: String(asset.url),
+    originalDataUrl: String(asset.originalDataUrl || asset.url),
+    fileType: String(asset.fileType || "image/png"),
+    originalFileType: String(asset.originalFileType || asset.fileType || "image/png"),
+    kind: "image",
+    uploaded: true,
+    removeBackground: asset.removeBackground !== false,
+    tolerance: clamp(Number.isFinite(Number(asset.tolerance)) ? Number(asset.tolerance) : 32, 0, 120),
+    feather: clamp(Number.isFinite(Number(asset.feather)) ? Number(asset.feather) : 4, 0, 24),
+    status: String(asset.status || "")
+  } : null;
   const videoClipBounds = (media, duration) => {
     const safeDuration = Math.max(0.1, Number(duration) || 0.1);
     const start = clamp(Number(media?.videoStart) || 0, 0, Math.max(0, safeDuration - 0.1));
@@ -209,15 +225,20 @@
       const singleRowCascade = port.mode === "cascade" && rows.length === 1;
       const terminal = !state.scheme.motion.loop && index === rows.length - 1 && !singleRowCascade;
       const to = terminal ? row : rows[(index + 1) % rows.length];
-      const morphMs = terminal ? 0 : state.scheme.motion.morphDuration;
+      const openingTransition = state.scheme.motion.introEnabled && port.introMode === "scan" && index === 0 && !rowTokens(row).length && rowTokens(to).length > 0 && !terminal;
+      const morphMs = terminal ? 0 : openingTransition ? state.scheme.motion.introDuration : state.scheme.motion.morphDuration;
       const count = rowTokens(to).length;
-      const staggerMs = morphMs * state.scheme.motion.characterDelay;
+      const staggerMs = openingTransition ? state.scheme.motion.introCharacterDelay : morphMs * state.scheme.motion.characterDelay;
       const tailMs = terminal ? 0 : staggerMs * Math.max(0, count - 1);
       const timing = cascadeTiming(row);
       const exitMs = port.mode === "cascade" && !terminal ? timing.tilt + timing.hang + timing.drop + staggerMs * Math.max(0, rowTokens(row).length - 1) : 0;
       const transitionMs = Math.max(morphMs + tailMs, exitMs);
       const holdMs = Math.max(0, Number(row.hold) || 0);
-      return { from: row, to, morphMs, tailMs, holdMs, transitionMs, durationMs: holdMs + transitionMs, terminal };
+      const introCount = rowTokens(row).length;
+      const introMs = state.scheme.motion.introEnabled && port.introMode !== "scan" && index === 0 && introCount
+        ? state.scheme.motion.introDuration + state.scheme.motion.introCharacterDelay * Math.max(0, introCount - 1)
+        : 0;
+      return { from: row, to, morphMs, tailMs, holdMs, transitionMs, introMs, openingTransition, durationMs: introMs + holdMs + transitionMs, terminal };
     });
   }
   function rowStartElapsed(rowIndex) {
@@ -227,7 +248,7 @@
     const index = ((rowIndex % length) + length) % length;
     let rawStart = 0;
     for (let cursor = 0; cursor < index; cursor += 1) rawStart += segments[cursor].durationMs;
-    return rawStart / Math.max(0.01, state.scheme.motion.speed);
+    return (rawStart + (segments[index].introMs || 0)) / Math.max(0.01, state.scheme.motion.speed);
   }
 
   function seekToRowStart(rowIdOrIndex, pause = true) {
@@ -257,15 +278,25 @@
       const segment = segments[index];
       if (local < cursor + segment.durationMs || index === segments.length - 1) {
         const segmentTime = local - cursor;
-        return { segment, index, segmentTime, rawLocal: local, rawCycle, progress: Math.max(0, (segmentTime - segment.holdMs) / Math.max(1, segment.morphMs)), inHold: segment.terminal || segmentTime < segment.holdMs };
+        const inIntro = segment.introMs > 0 && segmentTime < segment.introMs;
+        const contentTime = Math.max(0, segmentTime - segment.introMs);
+        return {
+          segment, index, segmentTime, contentTime, rawLocal: local, rawCycle,
+          introProgress: inIntro ? clamp(segmentTime / Math.max(1, segment.introMs)) : 1,
+          progress: Math.max(0, (contentTime - segment.holdMs) / Math.max(1, segment.morphMs)),
+          inIntro,
+          inHold: !inIntro && (segment.terminal || contentTime < segment.holdMs)
+        };
       }
       cursor += segment.durationMs;
     }
-    return { segment: segments[0], index: 0, segmentTime: 0, rawLocal: 0, rawCycle, progress: 0, inHold: true };
+    return { segment: segments[0], index: 0, segmentTime: 0, contentTime: 0, rawLocal: 0, rawCycle, introProgress: 0, progress: 0, inIntro: Boolean(segments[0].introMs), inHold: !segments[0].introMs };
   }
 
   function libraryAsset(libraryId) {
-    return window.STGIconLibrary?.byId?.get(libraryId) || null;
+    return (state.scheme.customAssets || []).find((asset) => asset.libraryId === libraryId)
+      || window.STGIconLibrary?.byId?.get(libraryId)
+      || null;
   }
 
   function rowTokens(row) {
@@ -333,16 +364,28 @@
 
   async function prepareRowBackground(row) {
     const media = normalizeBackgroundMedia(row?.backgroundMedia);
-    if (!row?.id || !isVideoMedia(media)) {
-      if (row?.id) state.backgroundCache.delete(row.id);
+    if (!row?.id || !media) {
+      if (row?.id) {
+        state.backgroundCache.get(row.id)?.video?.pause();
+        state.backgroundCache.get(row.id)?.exportVideo?.pause();
+        state.backgroundCache.delete(row.id);
+        state.imageCache.delete(`background:${row.id}`);
+      }
       return null;
     }
     const existing = state.backgroundCache.get(row.id);
     if (existing?.url === media.url) return existing.promise;
     existing?.video?.pause();
     existing?.exportVideo?.pause();
-    const runtime = { url: media.url, video: null, exportVideo: null, duration: 0, previewImage: null, exportImage: null, exportTime: -1, filmstrip: null, filmstripPromise: null, promise: null, exportPromise: null };
+    state.imageCache.delete(`background:${row.id}`);
+    const runtime = { url: media.url, kind: isVideoMedia(media) ? "video" : "image", resource: null, video: null, exportVideo: null, duration: 0, previewImage: null, exportImage: null, exportTime: -1, filmstrip: null, filmstripPromise: null, promise: null, exportPromise: null };
     state.backgroundCache.set(row.id, runtime);
+    if (!isVideoMedia(media)) {
+      runtime.promise = loadAssetResource({ libraryId: `background:${row.id}`, name: media.name, url: media.url, fileType: media.fileType, kind: "image" })
+        .then((resource) => { runtime.resource = resource; return runtime; });
+      runtime.exportPromise = runtime.promise;
+      return runtime.promise;
+    }
     const loadVideo = (key) => new Promise((resolve) => {
       const video = document.createElement("video");
       video.muted = true;
@@ -446,11 +489,13 @@
     const media = normalizeBackgroundMedia(row?.backgroundMedia);
     const runtime = state.backgroundCache.get(row?.id);
     if (!media || !runtime) return null;
+    if (!isVideoMedia(media)) return drawableImage(runtime.resource, freeze ? 0 : localTime);
     if (!preview) return runtime.exportImage || runtime.previewImage || (runtime.exportVideo?.readyState >= 2 ? runtime.exportVideo : null);
     const video = runtime.video;
     if (!video || video.readyState < 2) return runtime.previewImage;
     const duration = runtime.duration || Number(video.duration) || 0;
     const target = freeze ? videoClipBounds(media, duration).start : videoClipTime(media, duration, localTime);
+    cachePreviewVideoFrame(runtime);
     if (!video.seeking && Math.abs(video.currentTime - target) > 0.16) video.currentTime = target;
     if (state.playing && !freeze && !state.exportBusy && !video.seeking) {
       video.playbackRate = clamp(Number(state.scheme.motion.speed) || 1, 0.25, 2);
@@ -465,6 +510,11 @@
     const runtime = state.backgroundCache.get(row?.id);
     if (!media || !runtime) return;
     await runtime.exportPromise;
+    if (!isVideoMedia(media)) {
+      runtime.exportImage = drawableImage(runtime.resource, freeze ? 0 : localTime);
+      runtime.exportTime = localTime;
+      return;
+    }
     const video = runtime.exportVideo;
     const duration = runtime.duration || Number(video?.duration) || 0;
     if (!video || !(duration > 0)) return;
@@ -511,10 +561,10 @@
   }
 
   function renderBackground(ctx, timeline, width, height, preview) {
-    const morphElapsed = Math.max(0, timeline.segmentTime - timeline.segment.holdMs) / 1000;
-    if (timeline.inHold) {
+    const morphElapsed = Math.max(0, timeline.contentTime - timeline.segment.holdMs) / 1000;
+    if (timeline.inIntro || timeline.inHold) {
       activatePreviewBackgrounds(preview ? [timeline.segment.from.id] : []);
-      drawBackgroundLayer(ctx, width, height, timeline.segment.from, backgroundImageAt(timeline.segment.from, timeline.segmentTime / 1000, preview));
+      drawBackgroundLayer(ctx, width, height, timeline.segment.from, backgroundImageAt(timeline.segment.from, timeline.contentTime / 1000, preview));
       return;
     }
     const incoming = timeline.segment.to;
@@ -623,7 +673,7 @@
     const pivotY = Number(options.pivotY) || 0;
     if (token.type === "glyph") {
       if (!token.glyph.trim()) { ctx.restore(); return; }
-      ctx.fillStyle = options.color || (port.mode === "dots" ? dotTokenColor(layout.row, token) : state.scheme.typography.textColor);
+      ctx.fillStyle = options.color || (port.mode === "dots" ? dotTokenColor(layout.row, token) : rowTextColor(layout.row));
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.font = `${layout.style} ${layout.weight} ${layout.fontSize}px ${layout.family}`;
@@ -656,7 +706,7 @@
         const fit = size / Math.max(naturalWidth, naturalHeight);
         ctx.drawImage(image, -naturalWidth * fit / 2, -naturalHeight * fit / 2, naturalWidth * fit, naturalHeight * fit);
       } else {
-        ctx.strokeStyle = state.scheme.typography.textColor;
+        ctx.strokeStyle = rowTextColor(layout.row);
         ctx.lineWidth = Math.max(1, size * 0.05);
         ctx.strokeRect(-size * 0.32, -size * 0.32, size * 0.64, size * 0.64);
       }
@@ -705,6 +755,31 @@
     return clamp(kind === "old" ? globalProgress + delay * index : globalProgress - delay * index);
   }
 
+  function introTokenProgress(timeline, index) {
+    const elapsed = timeline.segmentTime - index * Math.max(0, Number(state.scheme.motion.introCharacterDelay) || 0);
+    return clamp(elapsed / Math.max(1, Number(state.scheme.motion.introDuration) || 1));
+  }
+
+  function renderOpening(ctx, layout, timeline, timeSeconds) {
+    layout.slots.forEach((slot, index) => {
+      const progress = introTokenProgress(timeline, index);
+      const eased = easeOutQuint(progress);
+      if (port.introMode === "seed") {
+        drawToken(ctx, slot, layout, Math.max(0.0001, 0.18 + 0.82 * easeOutBack(progress)), eased, timeSeconds, null, { offsetY: layout.fontSize * 0.18 * (1 - eased) });
+      } else if (port.introMode === "condense") {
+        const drift = Math.sin((index + 1) * 2.37) * layout.fontSize * 0.16 * (1 - eased);
+        drawToken(ctx, slot, layout, 0.94 + 0.06 * eased, eased, timeSeconds, null, { offsetX: drift, offsetY: layout.fontSize * 0.62 * (1 - eased) });
+      } else {
+        const sign = index % 2 ? 1 : -1;
+        drawToken(ctx, slot, layout, 1, eased, timeSeconds, null, {
+          offsetY: layout.fontSize * 0.12 * (1 - eased),
+          pivotY: layout.fontSize * 0.46,
+          rotation: sign * (1 - eased) * 68 * Math.PI / 180
+        });
+      }
+    });
+  }
+
   function renderFrame(targetCanvas, timeSeconds, width = targetCanvas.width, height = targetCanvas.height) {
     const ctx = targetCanvas.getContext("2d", { willReadFrequently: true });
     ctx.save();
@@ -713,6 +788,11 @@
     renderBackground(ctx, timeline, width, height, targetCanvas === canvas);
     const fromLayout = glyphLayout(ctx, timeline.segment.from, width, height);
     const toLayout = glyphLayout(ctx, timeline.segment.to, width, height);
+    if (timeline.inIntro) {
+      renderOpening(ctx, fromLayout, timeline, timeSeconds);
+      ctx.restore();
+      return timeline;
+    }
     if (timeline.inHold) {
       fromLayout.slots.forEach((slot) => drawToken(ctx, slot, fromLayout, 1, 1, timeSeconds));
       ctx.restore();
@@ -736,7 +816,7 @@
         } else if (port.mode === "mist") {
           drawToken(ctx, oldSlot, fromLayout, 1, 1 - eased, timeSeconds, null, { offsetY: -fromLayout.fontSize * 0.8 * eased * amount });
         } else if (port.mode === "cascade") {
-          const pose = cascadePose(timeline.segment.from, oldIndex, timeline.segmentTime - timeline.segment.holdMs, oldSlot, fromLayout, height);
+          const pose = cascadePose(timeline.segment.from, oldIndex, timeline.contentTime - timeline.segment.holdMs, oldSlot, fromLayout, height);
           if (!pose.complete) drawToken(ctx, oldSlot, fromLayout, 1, 1, timeSeconds, null, pose);
         } else {
           drawPixelatedToken(ctx, oldSlot, fromLayout, clamp(glyphProgress * -2 + 2.01), glyphProgress, timeSeconds, null, { color: dotTokenColor(timeline.segment.from, oldSlot.token, timeline.progress) });
@@ -762,7 +842,12 @@
       if (claimed.has(newIndex)) return;
       const glyphProgress = tokenProgress("new", timeline.progress, newIndex);
       const eased = easeOutQuint(glyphProgress);
-      if (port.mode === "sprout") {
+      if (timeline.segment.openingTransition) {
+        const transitionElapsed = timeline.contentTime - timeline.segment.holdMs;
+        const progress = clamp((transitionElapsed - newIndex * state.scheme.motion.introCharacterDelay) / Math.max(1, state.scheme.motion.introDuration));
+        const reveal = easeOutQuint(progress);
+        drawToken(ctx, newSlot, toLayout, 1, reveal, timeSeconds, null, { offsetX: toLayout.fontSize * 0.28 * (1 - reveal) });
+      } else if (port.mode === "sprout") {
         const floor = clamp(amount, 0, 0.35);
         drawToken(ctx, newSlot, toLayout, Math.max(0.0001, floor + (1 - floor) * eased), clamp(timeline.progress), timeSeconds);
       } else if (port.mode === "mist") {
@@ -808,37 +893,48 @@
           <button data-action="delete" type="button" aria-label="删除"${state.scheme.rows.length <= minimumRows ? " disabled title=\"至少保留一段文字\"" : ""}>×</button>
         </div>
         <label class="gm-row-font">本行字体<select data-key="fontFamily" data-stg-font-library="true" aria-label="第 ${index + 1} 行字体">${window.MERowFonts.options(row.fontFamily)}</select></label>
+        ${port.slug === "typecascade" ? `<div class="gm-row-text-color">
+          <label>本段文字颜色<input data-row-text-color type="color" value="${rowTextColor(row)}"></label>
+          <button data-action="apply-text-color-all" type="button">应用到全部段落</button>
+        </div>` : ""}
         ${port.mode === "dots" ? `<div class="gm-dot-colors">${dotColorControls(row)}</div>` : ""}
         <div class="gm-row-meta">
           <button class="gm-row-target${state.activeRowId === row.id ? " is-active" : ""}" data-action="target" type="button">＋ 插入图标</button>
           <button class="gm-row-pause" data-action="pause-row" type="button">暂停修改</button>
           <span class="gm-row-icon-count">${(row.icons || []).length} 个图标</span>
         </div>
+        <details class="gm-row-background">
+          <summary><span>${port.slug === "typecascade" ? "背景 · 图片 / GIF / 视频" : "本行背景"}</span>${port.slug === "typecascade"
+            ? `<i class="gm-row-background-swatch" data-background-summary-swatch style="background-color:${normalizeColor(row.backgroundColor, state.scheme.typography.backgroundColor)}" aria-label="当前背景颜色 ${normalizeColor(row.backgroundColor, state.scheme.typography.backgroundColor)}"></i>`
+            : `<b>${escapeHtml(row.backgroundMedia?.name || "纯色")}</b>`}</summary>
+          <div class="gm-row-background-grid">
+            <label>背景颜色<input data-background-key="backgroundColor" type="color" value="${normalizeColor(row.backgroundColor, state.scheme.typography.backgroundColor)}"></label>
+            <label class="gm-background-upload">${port.slug === "typecascade" ? "上传 / 更换背景" : "上传背景视频"}<input data-background-file type="file" accept="${port.slug === "typecascade" ? "image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime" : "video/mp4,video/webm,video/quicktime"}"></label>
+            ${port.slug === "typecascade" ? `<button class="gm-apply-background-all" data-action="apply-background-color-all" type="button">将背景颜色应用到全部段落</button>` : ""}
+            <label>背景转场<select data-background-key="backgroundTransition"><option value="direct"${row.backgroundTransition === "direct" ? " selected" : ""}>直接切换</option><option value="crossfade"${row.backgroundTransition === "crossfade" ? " selected" : ""}>柔和叠化</option></select></label>
+            <label>叠化时长<input data-background-key="backgroundTransitionDuration" type="number" min="10" max="2000" step="10" value="${normalizeBackgroundTransitionDuration(row.backgroundTransitionDuration)}"><small>毫秒</small></label>
+            <div class="gm-background-video"${row.backgroundMedia ? "" : " hidden"}>
+              <div class="gm-background-video-head"><strong>${escapeHtml(row.backgroundMedia?.name || "")}</strong><span data-background-type>${isVideoMedia(row.backgroundMedia) ? "视频" : isGifMedia(row.backgroundMedia) ? "GIF" : "图片"}</span><button data-background-remove type="button">移除素材</button></div>
+              <div class="gm-background-video-trim"${isVideoMedia(row.backgroundMedia) ? "" : " hidden"}>
+                <div class="gm-video-timeline" aria-label="拖动两侧把手裁剪视频片段">
+                  <canvas data-video-filmstrip width="720" height="96"></canvas>
+                  <div class="gm-video-selection"><span class="gm-video-handle is-start" data-video-edge="start" role="slider" tabindex="0"></span><span class="gm-video-handle is-end" data-video-edge="end" role="slider" tabindex="0"></span></div>
+                </div>
+                <div class="gm-video-scale"><span>0.0 秒</span><span data-video-duration>读取中…</span></div>
+                <div class="gm-video-time-fields">
+                  <label>开始秒数<input data-video-start type="number" min="0" step="0.1" value="${Number(row.backgroundMedia?.videoStart || 0)}"></label>
+                  <label>结束秒数<input data-video-end type="number" min="0.1" step="0.1" value="${row.backgroundMedia?.videoEnd == null ? "" : Number(row.backgroundMedia.videoEnd)}"></label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
         ${port.mode === "cascade" ? `<details class="gm-row-background gm-row-motion"><summary><span>本行倾倒与下落</span><b>调整快慢 / 悬停</b></summary><div class="gm-row-background-grid">
           <label>倾倒时长（毫秒）<input data-key="tiltDuration" type="number" min="50" max="5000" step="10" value="${cascadeTiming(row).tilt}"></label>
           <label>悬停时长（毫秒）<input data-key="hangDuration" type="number" min="0" max="5000" step="10" value="${cascadeTiming(row).hang}"></label>
           <label>下落时长（毫秒）<input data-key="fallDuration" type="number" min="50" max="5000" step="10" value="${cascadeTiming(row).drop}"></label>
           <p class="gm-help">下落时长越短越快；悬停设为 0 可直接落下。修改后从本行倾倒开始播放。</p>
         </div></details>` : ""}
-        <details class="gm-row-background">
-          <summary><span>本行背景</span><b>${escapeHtml(row.backgroundMedia?.name || "纯色")}</b></summary>
-          <div class="gm-row-background-grid">
-            <label>背景颜色<input data-background-key="backgroundColor" type="color" value="${normalizeColor(row.backgroundColor, state.scheme.typography.backgroundColor)}"></label>
-            <label class="gm-background-upload">上传背景视频<input data-background-file type="file" accept="video/mp4,video/webm,video/quicktime"></label>
-            <label>背景转场<select data-background-key="backgroundTransition"><option value="direct"${row.backgroundTransition === "direct" ? " selected" : ""}>直接切换</option><option value="crossfade"${row.backgroundTransition === "crossfade" ? " selected" : ""}>柔和叠化</option></select></label>
-            <label>叠化时长<input data-background-key="backgroundTransitionDuration" type="number" min="10" max="2000" step="10" value="${normalizeBackgroundTransitionDuration(row.backgroundTransitionDuration)}"><small>毫秒</small></label>
-            <div class="gm-background-video"${row.backgroundMedia ? "" : " hidden"}>
-              <div class="gm-background-video-head"><strong>${escapeHtml(row.backgroundMedia?.name || "")}</strong><button data-background-remove type="button">移除视频</button></div>
-              <div class="gm-video-timeline" aria-label="拖动两侧把手裁剪视频片段">
-                <canvas data-video-filmstrip width="720" height="96"></canvas>
-                <div class="gm-video-selection"><span class="gm-video-handle is-start" data-video-edge="start" role="slider" tabindex="0"></span><span class="gm-video-handle is-end" data-video-edge="end" role="slider" tabindex="0"></span></div>
-              </div>
-              <div class="gm-video-scale"><span>0.0 秒</span><span data-video-duration>读取中…</span></div>
-              <label>开始秒数<input data-video-start type="number" min="0" step="0.1" value="${Number(row.backgroundMedia?.videoStart || 0)}"></label>
-              <label>结束秒数<input data-video-end type="number" min="0.1" step="0.1" value="${row.backgroundMedia?.videoEnd == null ? "" : Number(row.backgroundMedia.videoEnd)}"></label>
-            </div>
-          </div>
-        </details>
         <div class="gm-row-icons">${(row.icons || []).map((icon) => {
           const asset = libraryAsset(icon.libraryId);
           const name = escapeHtml(asset?.name || "图标");
@@ -870,21 +966,73 @@
     reader.readAsDataURL(file);
   });
 
+  async function dataUrlAsFile(dataUrl, name, fileType) {
+    const blob = await (await fetch(dataUrl)).blob();
+    return new File([blob], name || "custom-image", { type: fileType || blob.type || "image/png" });
+  }
+
+  async function processCustomAssetFile(file, settings = {}, current = null) {
+    if (!window.TokenAssetTools?.processFile) throw new Error("本地抠图组件未加载");
+    const removeBackground = settings.removeBackground !== false;
+    const tolerance = clamp(Number.isFinite(Number(settings.tolerance)) ? Number(settings.tolerance) : 32, 0, 120);
+    const feather = clamp(Number.isFinite(Number(settings.feather)) ? Number(settings.feather) : 4, 0, 24);
+    const originalDataUrl = await fileAsDataUrl(file);
+    const result = await window.TokenAssetTools.processFile(file, { removeBackground, tolerance, feather });
+    return normalizeCustomAsset({
+      ...current,
+      libraryId: current?.libraryId || `custom-${uid()}`,
+      name: file.name || current?.name || "自定义图片",
+      url: result.src,
+      originalDataUrl,
+      fileType: /gif/i.test(file.type || "") ? (file.type || "image/gif") : "image/png",
+      originalFileType: file.type || "image/png",
+      removeBackground,
+      tolerance,
+      feather,
+      status: result.status
+    });
+  }
+
+  async function reprocessCustomAsset(asset, settings = {}) {
+    if (!asset?.originalDataUrl) throw new Error("没有可重新处理的原图");
+    const source = await dataUrlAsFile(asset.originalDataUrl, asset.name, asset.originalFileType);
+    const result = await window.TokenAssetTools.processFile(source, settings);
+    asset.url = result.src;
+    asset.fileType = /gif/i.test(asset.originalFileType || "") ? asset.originalFileType : "image/png";
+    asset.removeBackground = settings.removeBackground !== false;
+    asset.tolerance = clamp(Number(settings.tolerance) || 0, 0, 120);
+    asset.feather = clamp(Number(settings.feather) || 0, 0, 24);
+    asset.status = result.status;
+    state.imageCache.delete(asset.libraryId);
+    await loadAssetResource(asset);
+    fitCache.key = "";
+    renderIconLibrary();
+    renderRows();
+    renderSelectedAssets();
+    autoSave();
+    resizePreview();
+    return asset;
+  }
+
   function bindRowBackgroundControls() {
     document.querySelectorAll(".gm-row-shell").forEach((rowElement) => {
       const rowState = state.scheme.rows.find((item) => item.id === rowElement.dataset.rowId);
       if (!rowState) return;
+      const textColor = rowElement.querySelector("[data-row-text-color]");
       const color = rowElement.querySelector('[data-background-key="backgroundColor"]');
       const transition = rowElement.querySelector('[data-background-key="backgroundTransition"]');
       const transitionDuration = rowElement.querySelector('[data-background-key="backgroundTransitionDuration"]');
       const fileInput = rowElement.querySelector("[data-background-file]");
       const mediaPanel = rowElement.querySelector(".gm-background-video");
+      const videoTrim = rowElement.querySelector(".gm-background-video-trim");
       const startInput = rowElement.querySelector("[data-video-start]");
       const endInput = rowElement.querySelector("[data-video-end]");
       const timeline = rowElement.querySelector(".gm-video-timeline");
       const selection = rowElement.querySelector(".gm-video-selection");
       const filmstripCanvas = rowElement.querySelector("[data-video-filmstrip]");
       const summary = rowElement.querySelector(".gm-row-background:not(.gm-row-motion) summary b");
+      const summarySwatch = rowElement.querySelector("[data-background-summary-swatch]");
+      const mediaType = rowElement.querySelector("[data-background-type]");
       const durationLabel = rowElement.querySelector("[data-video-duration]");
       let draggedEdge = "";
 
@@ -897,11 +1045,19 @@
       const refreshMediaUi = async () => {
         const media = normalizeBackgroundMedia(rowState.backgroundMedia);
         mediaPanel.hidden = !media;
-        summary.textContent = media ? media.name : "纯色";
+        if (summary) summary.textContent = media ? media.name : "纯色";
+        if (summarySwatch) {
+          const backgroundColor = normalizeColor(rowState.backgroundColor, state.scheme.typography.backgroundColor);
+          summarySwatch.style.backgroundColor = backgroundColor;
+          summarySwatch.setAttribute("aria-label", `当前背景颜色 ${backgroundColor}`);
+        }
         if (!media) return;
         mediaPanel.querySelector("strong").textContent = media.name;
+        mediaType.textContent = isVideoMedia(media) ? "视频" : isGifMedia(media) ? "GIF" : "图片";
+        videoTrim.hidden = !isVideoMedia(media);
         const runtime = await prepareRowBackground(rowState);
         if (!rowElement.isConnected || !runtime) return;
+        if (!isVideoMedia(media)) return;
         const duration = runtime.duration || 0;
         if (!(duration > 0)) return;
         const clip = videoClipBounds(media, duration);
@@ -921,7 +1077,7 @@
       };
       const commitTrim = () => {
         const runtime = state.backgroundCache.get(rowState.id);
-        if (!rowState.backgroundMedia || !(runtime?.duration > 0)) return;
+        if (!isVideoMedia(rowState.backgroundMedia) || !(runtime?.duration > 0)) return;
         const draft = { ...rowState.backgroundMedia, videoStart: Number(startInput.value), videoEnd: Number(endInput.value) };
         const clip = videoClipBounds(draft, runtime.duration);
         rowState.backgroundMedia.videoStart = clip.start;
@@ -947,14 +1103,34 @@
         commitTrim();
       };
 
-      color.addEventListener("input", () => { rowState.backgroundColor = color.value; autoSave(); resizePreview(); });
+      textColor?.addEventListener("input", () => {
+        rowState.textColor = textColor.value;
+        state.activeRowId = rowState.id;
+        autoSave();
+        resizePreview();
+      });
+      color.addEventListener("input", () => {
+        rowState.backgroundColor = color.value;
+        state.activeRowId = rowState.id;
+        if (summarySwatch) {
+          summarySwatch.style.backgroundColor = color.value;
+          summarySwatch.setAttribute("aria-label", `当前背景颜色 ${color.value}`);
+        }
+        autoSave();
+        resizePreview();
+      });
       transition.addEventListener("change", () => { rowState.backgroundTransition = normalizeBackgroundTransition(transition.value); autoSave(); resizePreview(); });
       transitionDuration.addEventListener("input", () => { rowState.backgroundTransitionDuration = normalizeBackgroundTransitionDuration(transitionDuration.value); autoSave(); resizePreview(); });
       [startInput, endInput].forEach((input) => input.addEventListener("change", commitTrim));
       fileInput.addEventListener("change", async () => {
         const file = fileInput.files?.[0];
         if (!file) return;
-        rowState.backgroundMedia = normalizeBackgroundMedia({ name: file.name, url: await fileAsDataUrl(file), fileType: file.type || "video/mp4", videoStart: 0, videoEnd: null });
+        if (!/^(image|video)\//i.test(file.type || "")) {
+          $("exportStatus").textContent = "请选择图片、GIF 或视频文件。";
+          fileInput.value = "";
+          return;
+        }
+        rowState.backgroundMedia = normalizeBackgroundMedia({ name: file.name, url: await fileAsDataUrl(file), fileType: file.type || "image/png", videoStart: 0, videoEnd: null });
         rowState.backgroundTransition = "crossfade";
         rowState.backgroundTransitionDuration = 120;
         transition.value = "crossfade";
@@ -964,11 +1140,13 @@
         await refreshMediaUi();
         autoSave();
         resizePreview();
+        $("exportStatus").textContent = `${file.name} 已设为本行背景。`;
       });
       rowElement.querySelector("[data-background-remove]").addEventListener("click", () => {
         state.backgroundCache.get(rowState.id)?.video?.pause();
         state.backgroundCache.get(rowState.id)?.exportVideo?.pause();
         state.backgroundCache.delete(rowState.id);
+        state.imageCache.delete(`background:${rowState.id}`);
         rowState.backgroundMedia = null;
         autoSave();
         refreshMediaUi();
@@ -1020,10 +1198,10 @@
 
   function renderIconLibrary() {
     const groups = window.STGIconLibrary?.groups || {};
-    const labels = { flow: "流动图标", gifMotion: "GIF 动图", animals: "透明动物", bots: "Bot 动态图标" };
-    $("iconLibrary").innerHTML = ["flow", "gifMotion", "animals", "bots"].map((groupName, groupIndex) => {
+    const labels = { flow: "原始图标", gifMotion: "GIF 动图", animals: "透明动物", bots: "Bot 动态图标" };
+    const builtIn = ["flow", "gifMotion", "animals", "bots"].map((groupName) => {
       const assets = groups[groupName] || [];
-      return `<details class="gm-icon-group"${groupIndex === 0 ? " open" : ""}><summary>${labels[groupName]} · ${assets.length}</summary><div class="gm-asset-library me-asset-library">${assets.map((asset) => {
+      return `<details class="gm-icon-group"><summary>${labels[groupName]} · ${assets.length}</summary><div class="gm-asset-library me-asset-library">${assets.map((asset) => {
         const selected = state.librarySelectionId === asset.libraryId;
         return `<div class="gm-asset-choice-wrap${selected ? " is-selected" : ""}" data-library-id="${asset.libraryId}">
           <button class="gm-asset-choice me-asset-choice${selected ? " is-selected" : ""}" data-library-id="${asset.libraryId}" type="button"><img src="${escapeHtml(asset.url)}" alt=""><span>${escapeHtml(asset.name)}</span></button>
@@ -1031,6 +1209,15 @@
         </div>`;
       }).join("")}</div></details>`;
     }).join("");
+    const customAssets = port.slug === "typecascade" ? (state.scheme.customAssets || []) : [];
+    const custom = port.slug === "typecascade" ? `<details class="gm-icon-group gm-custom-icon-group"${customAssets.length ? " open" : ""}><summary>我的图片 · ${customAssets.length}</summary><div class="gm-asset-library me-asset-library">${customAssets.length ? customAssets.map((asset) => {
+      const selected = state.librarySelectionId === asset.libraryId;
+      return `<div class="gm-asset-choice-wrap${selected ? " is-selected" : ""}" data-library-id="${escapeHtml(asset.libraryId)}">
+        <button class="gm-asset-choice me-asset-choice${selected ? " is-selected" : ""}" data-library-id="${escapeHtml(asset.libraryId)}" type="button"><img src="${escapeHtml(asset.url)}" alt=""><span>${escapeHtml(asset.name)}</span></button>
+        <button class="gm-asset-quick-insert" data-quick-insert="${escapeHtml(asset.libraryId)}" type="button" aria-label="插入${escapeHtml(asset.name)}">＋ 插入</button>
+      </div>`;
+    }).join("") : '<p class="gm-help">上传后会出现在这里，再由你决定插入哪一行。</p>'}</div></details>` : "";
+    $("iconLibrary").innerHTML = custom + builtIn;
     renderLibrarySelection();
   }
 
@@ -1080,6 +1267,18 @@
     $("iconRow").innerHTML = state.scheme.rows.map((item, index) => `<option value="${item.id}"${item.id === row.id ? " selected" : ""}>第 ${String(index + 1).padStart(2, "0")} 行 · ${escapeHtml(item.text || "空白")}</option>`).join("");
     $("iconBoundary").innerHTML = boundaryOptions(row, icon.boundary);
     [["iconSize", icon.size, "%"], ["iconGap", icon.gap, "px"], ["iconX", icon.x, "%"], ["iconY", icon.y, "%"]].forEach(([id, value, suffix]) => { $(id).value = String(value); const output = document.querySelector(`output[for="${id}"]`); if (output) output.value = `${value}${suffix}`; });
+    const customEditor = $("customAssetEditor");
+    if (customEditor) {
+      customEditor.hidden = !asset?.uploaded;
+      if (asset?.uploaded) {
+        $("activeCustomRemoveBackground").checked = asset.removeBackground !== false;
+        $("activeCustomTolerance").value = String(asset.tolerance ?? 32);
+        $("activeCustomFeather").value = String(asset.feather ?? 4);
+        document.querySelector('output[for="activeCustomTolerance"]').value = String(asset.tolerance ?? 32);
+        document.querySelector('output[for="activeCustomFeather"]').value = String(asset.feather ?? 4);
+        $("activeCustomStatus").textContent = asset.status || "这张图片保存在当前方案中。";
+      }
+    }
   }
 
   function escapeHtml(value) {
@@ -1090,12 +1289,13 @@
     const segments = timelineSegments();
     const speed = Math.max(0.01, state.scheme.motion.speed);
     let cursor = 0;
-    $("timeline").innerHTML = segments.map(({ from, to, durationMs, holdMs, transitionMs, terminal }) => {
-      const phase = terminal ? "结束停留" : from.text && !to.text ? port.exitLabel : !from.text && to.text ? port.enterLabel : port.phaseLabel;
+    $("timeline").innerHTML = segments.map(({ from, to, durationMs, holdMs, transitionMs, introMs, openingTransition, terminal }) => {
+      const phase = openingTransition ? port.introLabel : terminal ? "结束停留" : from.text && !to.text ? port.exitLabel : !from.text && to.text ? port.enterLabel : port.phaseLabel;
       const timing = cascadeTiming(from);
-      const phases = port.mode === "cascade" && !terminal
+      const contentPhases = port.mode === "cascade" && !terminal
         ? [["停留", holdMs], ["倾倒", timing.tilt], ["悬停", timing.hang], ["下落", transitionMs - timing.tilt - timing.hang]]
-        : [[phase, durationMs]];
+        : [[phase, durationMs - introMs]];
+      const phases = introMs > 0 ? [[port.introLabel, introMs], ...contentPhases] : contentPhases;
       return phases.filter(([, ms]) => ms > 0).map(([label, ms], index) => {
         const start = cursor / speed;
         cursor += ms;
@@ -1109,7 +1309,7 @@
 
   function updateOutputs() {
     const amountFormat = (value) => port.amountUnit === "%" ? `${Math.round(value * 100)}%` : `${Number(value).toFixed(port.amountStep < 1 ? 1 : 0)}${port.amountUnit}`;
-    const formats = { fontSize: (v) => `${v}px`, tracking: (v) => `${v}px`, positionX: (v) => `${v}%`, positionY: (v) => `${v}%`, morphDuration: (v) => `${v}ms`, characterDelay: (v) => `${(v * 100).toFixed(1)}%`, effectAmount: amountFormat, speed: (v) => `${Number(v).toFixed(2)}×` };
+    const formats = { fontSize: (v) => `${v}px`, tracking: (v) => `${v}px`, positionX: (v) => `${v}%`, positionY: (v) => `${v}%`, introDuration: (v) => `${v}ms`, introCharacterDelay: (v) => `${v}ms`, morphDuration: (v) => `${v}ms`, characterDelay: (v) => `${(v * 100).toFixed(1)}%`, effectAmount: amountFormat, speed: (v) => `${Number(v).toFixed(2)}×` };
     Object.entries(formats).forEach(([id, format]) => {
       const output = document.querySelector(`output[for="${id}"]`);
       if (output) output.value = format(Number(controls[id].value));
@@ -1137,17 +1337,18 @@
 
   function collectControls() {
     const typographyNumbers = ["fontSize", "tracking", "positionX", "positionY"];
-    const motionNumbers = ["morphDuration", "characterDelay", "effectAmount", "speed"];
+    const motionNumbers = ["introDuration", "introCharacterDelay", "morphDuration", "characterDelay", "effectAmount", "speed"];
     typographyNumbers.forEach((id) => { state.scheme.typography[id] = Number(controls[id].value); });
     ["fontFamily", "textColor", "backgroundColor"].forEach((id) => { state.scheme.typography[id] = controls[id].value; });
     state.scheme.typography.alignment = document.querySelector('input[name="alignment"]:checked')?.value || "center";
     motionNumbers.forEach((id) => { state.scheme.motion[id] = Number(controls[id].value); });
+    state.scheme.motion.introEnabled = controls.introEnabled.checked;
     state.scheme.motion.loop = controls.loop.checked;
   }
 
   function autoSave() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.scheme)); }
-    catch (_) { if ($("exportStatus")) $("exportStatus").textContent = "背景视频较大，当前编辑仍可使用；请保存 JSON 方案以长期保留。"; }
+    catch (_) { if ($("exportStatus")) $("exportStatus").textContent = "上传素材较大，当前编辑仍可使用；请下载 JSON 方案以长期保留。"; }
   }
 
   function changed({ restart = false } = {}) {
@@ -1161,11 +1362,18 @@
 
   function applyScheme(scheme, status = "") {
     if (!scheme || !Array.isArray(scheme.rows)) return;
+    const customAssets = port.slug === "typecascade"
+      ? (Array.isArray(scheme.customAssets) ? scheme.customAssets : []).map(normalizeCustomAsset).filter(Boolean)
+      : [];
+    const availableAsset = (libraryId) => customAssets.find((asset) => asset.libraryId === libraryId)
+      || window.STGIconLibrary?.byId?.get(libraryId)
+      || null;
     state.scheme = {
       version: VERSION,
       canvas: { ...clone(DEFAULT_SCHEME.canvas), ...(scheme.canvas || {}) },
       typography: { ...clone(DEFAULT_SCHEME.typography), ...(scheme.typography || {}) },
       motion: { ...clone(DEFAULT_SCHEME.motion), ...(scheme.motion || {}) },
+      customAssets,
       rows: scheme.rows.map((row) => {
         const text = String(row.text ?? "");
         const glyphCount = split(text).length;
@@ -1173,12 +1381,13 @@
         const icons = (Array.isArray(row.icons) ? row.icons : []).map((icon) => ({
           id: icon.id || uid(), libraryId: String(icon.libraryId || ""), boundary: clamp(Math.round(Number(icon.boundary) || 0), 0, glyphCount),
           size: clamp(Number(icon.size) || 90, 20, 220), gap: clamp(Number(icon.gap) || 12, 0, 80), x: clamp(Number(icon.x) || 0, -100, 100), y: clamp(Number(icon.y) || 0, -100, 100)
-        })).filter((icon) => libraryAsset(icon.libraryId) && !seen.has(icon.libraryId) && seen.add(icon.libraryId));
+        })).filter((icon) => availableAsset(icon.libraryId) && !seen.has(icon.libraryId) && seen.add(icon.libraryId));
         return {
           id: row.id || uid(), text, hold: clamp(Number(row.hold) || 0, 0, 5000), icons,
           fontFamily: window.MERowFonts.normalize(row.fontFamily),
           ...(port.mode === "dots" ? { ...dotColors({ ...row, text }), initialColor: normalizeColor(row.initialColor, scheme.typography?.textColor || DEFAULT_SCHEME.typography.textColor) } : {}),
           ...(port.mode === "cascade" ? { tiltDuration: cascadeTiming(row).tilt, hangDuration: cascadeTiming(row).hang, fallDuration: cascadeTiming(row).drop } : {}),
+          ...(port.slug === "typecascade" ? { textColor: normalizeColor(row.textColor, scheme.typography?.textColor || DEFAULT_SCHEME.typography.textColor) } : {}),
           backgroundColor: normalizeColor(row.backgroundColor, scheme.typography?.backgroundColor || DEFAULT_SCHEME.typography.backgroundColor),
           backgroundMedia: normalizeBackgroundMedia(row.backgroundMedia),
           backgroundTransition: normalizeBackgroundTransition(row.backgroundTransition),
@@ -1189,7 +1398,10 @@
     // Migrate the former default single-shot setting without discarding edited rows.
     // Version 4 explicit loop-off remains an intentional user choice.
     if (Number(scheme.version || 1) < 4) state.scheme.motion.loop = true;
-    while (state.scheme.rows.length < minimumRows) state.scheme.rows.push(row(uid(), "", 100, { backgroundColor: state.scheme.typography.backgroundColor }));
+    while (state.scheme.rows.length < minimumRows) state.scheme.rows.push(row(uid(), "", 100, {
+      ...(port.slug === "typecascade" ? { textColor: state.scheme.typography.textColor } : {}),
+      backgroundColor: state.scheme.typography.backgroundColor
+    }));
     const liveRowIds = new Set(state.scheme.rows.map((item) => item.id));
     state.backgroundCache.forEach((runtime, rowId) => {
       if (liveRowIds.has(rowId)) return;
@@ -1200,6 +1412,7 @@
     if (!state.scheme.rows.some((row) => row.id === state.activeRowId)) state.activeRowId = state.scheme.rows[0].id;
     state.caretBoundary = clamp(state.caretBoundary, 0, split(state.scheme.rows.find((row) => row.id === state.activeRowId)?.text || "").length);
     state.activeIconId = "";
+    if (!availableAsset(state.librarySelectionId)) state.librarySelectionId = "";
     state.elapsedMs = 0;
     state.playing = !state.reducedMotion;
     state.lastFrame = performance.now();
@@ -1278,11 +1491,11 @@
       state.scheme.rows.forEach((item) => { item.initialColor = controls.textColor.value; });
       renderRows();
     }
-    if (id === "backgroundColor") {
+    if (id === "backgroundColor" && port.slug !== "typecascade") {
       state.scheme.rows.forEach((item) => { item.backgroundColor = controls.backgroundColor.value; });
       renderRows();
     }
-    changed({ restart: id === "morphDuration" || id === "characterDelay" || id === "speed" });
+    changed({ restart: id === "introEnabled" || id === "introDuration" || id === "introCharacterDelay" || id === "morphDuration" || id === "characterDelay" || id === "speed" });
     if (id === "fontFamily") refreshFonts();
     if (id === "loop" && controls.loop.checked && !state.playing && state.elapsedMs >= cycleDurationMs()) {
       seekToRowStart(0, false);
@@ -1386,6 +1599,36 @@
       setIconLibraryDrawer(true);
       return;
     }
+    if (button.dataset.action === "apply-text-color-all") {
+      const source = state.scheme.rows[index];
+      if (!source) return;
+      const value = rowTextColor(source);
+      state.scheme.rows.forEach((item) => { item.textColor = value; });
+      state.scheme.typography.textColor = value;
+      controls.textColor.value = value;
+      document.querySelectorAll("[data-row-text-color]").forEach((input) => { input.value = value; });
+      $("exportStatus").textContent = "文字颜色已应用到全部段落。";
+      autoSave();
+      resizePreview();
+      return;
+    }
+    if (button.dataset.action === "apply-background-color-all") {
+      const source = state.scheme.rows[index];
+      if (!source) return;
+      const value = normalizeColor(source.backgroundColor, state.scheme.typography.backgroundColor);
+      state.scheme.rows.forEach((item) => { item.backgroundColor = value; });
+      state.scheme.typography.backgroundColor = value;
+      controls.backgroundColor.value = value;
+      document.querySelectorAll('[data-background-key="backgroundColor"]').forEach((input) => { input.value = value; });
+      document.querySelectorAll("[data-background-summary-swatch]").forEach((swatch) => {
+        swatch.style.backgroundColor = value;
+        swatch.setAttribute("aria-label", `当前背景颜色 ${value}`);
+      });
+      $("exportStatus").textContent = "背景颜色已应用到全部段落；图片、GIF 和视频保持独立。";
+      autoSave();
+      resizePreview();
+      return;
+    }
     if (button.dataset.action === "delete" && state.scheme.rows.length > minimumRows) {
       const [removed] = state.scheme.rows.splice(index, 1);
       const runtime = state.backgroundCache.get(removed?.id);
@@ -1400,10 +1643,20 @@
     renderRows(); renderSelectedAssets(); renderTimeline(); autoSave(); resizePreview();
   });
   $("addRow").addEventListener("click", () => {
-    const nextRow = row(uid(), "新文字", 100, { backgroundColor: state.scheme.typography.backgroundColor });
+    const previous = state.scheme.rows[state.scheme.rows.length - 1];
+    const inherited = port.slug === "typecascade" && previous ? {
+      fontFamily: previous.fontFamily,
+      textColor: rowTextColor(previous),
+      backgroundColor: normalizeColor(previous.backgroundColor, state.scheme.typography.backgroundColor),
+      backgroundMedia: clone(previous.backgroundMedia),
+      backgroundTransition: normalizeBackgroundTransition(previous.backgroundTransition),
+      backgroundTransitionDuration: normalizeBackgroundTransitionDuration(previous.backgroundTransitionDuration)
+    } : { backgroundColor: state.scheme.typography.backgroundColor };
+    const nextRow = row(uid(), "新文字", 100, inherited);
     state.scheme.rows.push(nextRow);
     state.activeRowId = nextRow.id; state.caretBoundary = split(nextRow.text).length;
     renderRows(); renderSelectedAssets(); renderTimeline(); autoSave();
+    prepareRowBackground(nextRow).then(resizePreview);
     $("sequenceRows").lastElementChild?.querySelector('input[data-key="text"]')?.select();
   });
 
@@ -1513,6 +1766,94 @@
     });
     $(id).addEventListener("change", () => { renderRows(); renderSelectedAssets(); });
   });
+  if ($("customAssetFile")) {
+    [["customAssetTolerance", ""], ["customAssetFeather", ""], ["activeCustomTolerance", ""], ["activeCustomFeather", ""]].forEach(([id]) => {
+      $(id).addEventListener("input", () => { const output = document.querySelector(`output[for="${id}"]`); if (output) output.value = $(id).value; });
+    });
+    $("customAssetFile").addEventListener("change", async () => {
+      const file = $("customAssetFile").files?.[0];
+      if (!file) return;
+      $("customAssetStatus").textContent = "正在浏览器本地处理图片…";
+      try {
+        const asset = await processCustomAssetFile(file, {
+          removeBackground: $("customAssetRemoveBackground").checked,
+          tolerance: Number($("customAssetTolerance").value),
+          feather: Number($("customAssetFeather").value)
+        });
+        state.scheme.customAssets = [...(state.scheme.customAssets || []), asset];
+        state.librarySelectionId = asset.libraryId;
+        await loadAssetResource(asset);
+        renderIconLibrary();
+        renderLibrarySelection();
+        autoSave();
+        $("customAssetStatus").textContent = `${asset.status} · 已加入“我的图片”，尚未自动插入。`;
+      } catch (error) {
+        console.error(error);
+        $("customAssetStatus").textContent = `图片处理失败：${error.message}`;
+      } finally {
+        $("customAssetFile").value = "";
+      }
+    });
+    $("replaceCustomAssetFile").addEventListener("change", async () => {
+      const file = $("replaceCustomAssetFile").files?.[0];
+      const entry = activeIconEntry();
+      const asset = entry ? libraryAsset(entry.icon.libraryId) : null;
+      if (!file || !asset?.uploaded) return;
+      $("activeCustomStatus").textContent = "正在更换并处理图片…";
+      try {
+        const replacement = await processCustomAssetFile(file, {
+          removeBackground: $("activeCustomRemoveBackground").checked,
+          tolerance: Number($("activeCustomTolerance").value),
+          feather: Number($("activeCustomFeather").value)
+        }, asset);
+        Object.assign(asset, replacement);
+        state.imageCache.delete(asset.libraryId);
+        await loadAssetResource(asset);
+        fitCache.key = "";
+        renderIconLibrary();
+        renderRows();
+        renderSelectedAssets();
+        autoSave();
+        resizePreview();
+      } catch (error) {
+        console.error(error);
+        $("activeCustomStatus").textContent = `更换失败：${error.message}`;
+      } finally {
+        $("replaceCustomAssetFile").value = "";
+      }
+    });
+    $("reprocessCustomAsset").addEventListener("click", async () => {
+      const entry = activeIconEntry();
+      const asset = entry ? libraryAsset(entry.icon.libraryId) : null;
+      if (!asset?.uploaded) return;
+      $("activeCustomStatus").textContent = "正在按当前参数重新抠图…";
+      try {
+        await reprocessCustomAsset(asset, {
+          removeBackground: $("activeCustomRemoveBackground").checked,
+          tolerance: Number($("activeCustomTolerance").value),
+          feather: Number($("activeCustomFeather").value)
+        });
+      } catch (error) {
+        console.error(error);
+        $("activeCustomStatus").textContent = `重新处理失败：${error.message}`;
+      }
+    });
+    $("deleteCustomAsset").addEventListener("click", () => {
+      const entry = activeIconEntry();
+      const asset = entry ? libraryAsset(entry.icon.libraryId) : null;
+      if (!asset?.uploaded) return;
+      state.scheme.rows.forEach((item) => { item.icons = (item.icons || []).filter((icon) => icon.libraryId !== asset.libraryId); });
+      state.scheme.customAssets = (state.scheme.customAssets || []).filter((item) => item.libraryId !== asset.libraryId);
+      state.imageCache.delete(asset.libraryId);
+      if (state.librarySelectionId === asset.libraryId) state.librarySelectionId = "";
+      state.activeIconId = "";
+      renderIconLibrary();
+      renderRows();
+      renderSelectedAssets();
+      autoSave();
+      resizePreview();
+    });
+  }
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
     if (state.activeIconId) { state.activeIconId = ""; renderAssetEditor(); renderSelectedAssets(); return; }
@@ -1535,7 +1876,13 @@
     resizePreview();
   });
   $("togglePlayback").addEventListener("click", () => { if (!state.playing && state.elapsedMs >= cycleDurationMs()) state.elapsedMs = 0; state.playing = !state.playing; state.lastFrame = performance.now(); updatePlaybackButton(); });
-  $("restartPreview").addEventListener("click", () => { seekToRowStart(0, false); });
+  $("restartPreview").addEventListener("click", () => {
+    state.elapsedMs = 0;
+    state.playing = true;
+    state.lastFrame = performance.now();
+    updatePlaybackButton();
+    resizePreview();
+  });
   $("toggleInspector").addEventListener("click", () => {
     if (!document.body.classList.contains("gm-inspector-hidden")) setIconLibraryDrawer(false);
     document.body.classList.toggle("gm-inspector-hidden");
@@ -1565,6 +1912,8 @@
   $("clearScheme").addEventListener("click", () => {
     const cleared = clone(state.scheme);
     cleared.rows = Array.from({ length: minimumRows }, () => ({ id: uid(), text: "", hold: 100, icons: [] }));
+    if (port.slug === "typecascade") cleared.customAssets = [];
+    state.imageCache.clear();
     applyScheme(cleared, "全部文字内容已清空，当前样式与画布保持不变。" );
   });
 

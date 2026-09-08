@@ -1,6 +1,6 @@
 # Reference video → editable motion effect
 
-This is the repeatable workflow used to turn a reference recording into a new ME Motion Studio effect. It records the methods learned while building Continuation, Current Wall, Vertical Rise, Creator Merge, Path Writer, Prism, and the Icon Burst refinements.
+This is the repeatable workflow used to turn a reference recording into a new CellMotion effect. It records the methods learned while building Continuation, Current Wall, Vertical Rise, Creator Merge, Path Writer, Prism, and the Icon Burst refinements.
 
 The goal is not to copy a few screenshots. The goal is to reconstruct the motion logic, timing, spatial relationships, and editable parameters closely enough that the result still feels right with different text, fonts, icons, and output sizes.
 
@@ -147,7 +147,8 @@ rg -n "Bezier|path|timeline|MediaRecorder|continuation-gif|media-layer|workspace
 
 Reusable project systems include:
 
-- `site/workspace-editor.css`: latest ME Motion Studio workspace shell.
+- `.codex/skills/build-font-animation-effects/references/cellmotion-editor-standard.md`: approved CellMotion editor shell and migration boundary.
+- `site/workspace-editor.css`: shared workspace primitive used by existing editors.
 - `site/media-layer.js` / `site/media-layer.css`: multiple images, shapes, per-resource editing, background removal, and inline image tokens.
 - `site/me-motion-editor.css` / `site/me-motion-editor.js`: shared modern shell for the six newer standalone effects.
 - `site/js/continuation-gif.js` and worker: GIF encoding.

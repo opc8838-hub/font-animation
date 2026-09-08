@@ -18,6 +18,9 @@
   "motion": {
     "morphDuration": 810,
     "characterDelay": 0.052,
+    "introEnabled": true,
+    "introDuration": 520,
+    "introCharacterDelay": 36,
     "speed": 1,
     "loop": true,
     "effectAmount": 168

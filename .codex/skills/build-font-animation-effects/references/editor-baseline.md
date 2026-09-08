@@ -4,9 +4,9 @@ Apply this baseline to new effect pages unless the user explicitly removes a cap
 
 ## Canvas and content
 
-- Use the Icon Burst editor as the canonical project visual and interaction language: scrollable light-gray left editor, sticky header, rounded white section cards, consistent fields/buttons, and a large right stage. Reuse the shared `me-*` scheme, choreography, asset, and stage-control classes from `site/me-motion-editor.css`; do not give each effect an unrelated editor shell.
-- Put Pause/Play and Replay in the stage itself, horizontally centered near the bottom with the same compact dark translucent control used by Icon Burst. Any duplicate controls in the editor must share one playback state and stay synchronized.
-- Put the canvas-size card first in the scrollable editor. Offer 1:1 1080×1080, 4:5 1080×1350, 9:16 1080×1920, 16:9 1920×1080, and custom dimensions there so the user chooses the composition before editing.
+- Use the approved CellMotion editor as the canonical project visual and interaction language. Read [cellmotion-editor-standard.md](cellmotion-editor-standard.md) and use Type Cascade as the current reference: left content navigation, center stage/timeline, right properties, independent column scrolling, rounded surfaces, light/dark themes, and Chinese/English switching. Mobile places the stage above compact navigation and properties. Reuse shared `me-*` primitives where applicable; do not give each effect an unrelated shell.
+- Put Pause/Play and Replay in the stage itself, horizontally centered near the bottom with the same compact control used by the approved Type Cascade editor. Any duplicate controls in the editor must share one playback state and stay synchronized.
+- Put the canvas-size card first in the scrollable editor. Offer 1:1 1080×1080, 4:5 1080×1350, 3:4 1080×1440, 2:3 1080×1620, 9:16 1080×1920, 16:9 1920×1080, 4:3 1440×1080, 3:2 1620×1080, and custom dimensions so the user chooses the composition before editing.
 - Refit the right-side stage immediately when size changes. Preserve the selected output aspect ratio inside the available workspace and derive preview layout from the same logical width/height used by export; never wait until export to reveal portrait or landscape composition changes.
 - Text must accept Chinese and Latin content and remain centered by default. Expose alignment or X/Y positioning when the choreography benefits from it.
 - Populate every font selector from `site/shared-font-library.js` and load faces from `site/shared-fonts.css`. The catalog consolidates the project fonts and provides Latin, Chinese, Japanese, and Korean choices; do not copy a reduced option list or a private font map into a new effect.
@@ -17,6 +17,7 @@ Apply this baseline to new effect pages unless the user explicitly removes a cap
 - For row/page sequences, use stable page ids and keep page-specific controls inside the corresponding row. When the effect exposes them, font family, font sizes, text/punctuation colors, letter/segment spacing, reveal style, phase durations, page hold, order, and assigned assets are independent per page.
 - Rebuild order options and all dependent page/asset controls after add or delete. Reordering moves the complete page state rather than copying visible text into a different page object.
 - When inline icons are supported, let the user insert each icon at a meaningful grapheme boundary and edit its text-to-icon gap; do not automatically add the same icon to every page. Keep `插入图标` and `暂停修改` on the owning row, and show a small `编辑` action on every inserted icon chip.
+- Derive the minimum row count from the effect. Allow one row whenever its entrance, exit, reset, fall, or loop remains meaningful, and keep that single-row motion complete instead of rendering a permanent still.
 
 ## Shared icon and media library
 
@@ -67,7 +68,7 @@ Each effect needs a unique, versioned scheme key and a serializable state model.
 
 Required actions:
 
-- Present exactly Save, Import, Restore Default, and Clear/Rebuild as the same two-column large-button scheme card used by Icon Burst; keep status copy directly below it and do not append Undo/Redo or effect-specific actions inside this card.
+- Present exactly Save, Import, Restore Default, and Clear/Rebuild in the approved CellMotion scheme surface; keep status copy with the actions and do not append Undo/Redo or effect-specific actions there.
 - Save the current scheme to local storage and download JSON.
 - Import JSON and rebuild dynamic rows, assets, targets, and timeline beats.
 - Automatically persist meaningful edits after a short debounce.
@@ -79,10 +80,11 @@ Uploaded project media must survive scheme export/import when browser storage li
 
 ## Timeline and motion controls
 
-- Every effect editor includes the same colored Icon Burst choreography blocks and legend by default; do not substitute gray pill rows, a static arrow diagram, or a paragraph of phase names.
+- Every effect editor includes the approved rounded colored choreography blocks, detail rows, and playhead by default; do not substitute generic gray blocks, a static arrow diagram, or a paragraph of phase names.
 - Each beat displays its name and start/end or duration, and the track includes a moving playhead driven by the same clock as the preview.
 - Clicking a beat seeks to that part. Timing edits rebuild the beat widths, labels, total duration, active state, and seek points immediately.
 - Expose master playback speed plus the phase-specific durations, delays, stagger, rhythm/easing, hold, and direction that materially change the reference motion.
+- When an effect has an optional opening, expose a clear enable switch plus meaningful opening duration and stagger controls. Keep the opening separate from the approved core transition: Replay starts at time zero, while row pause skips to the complete stable row.
 - Use plain Chinese labels. Prefer “图标大小” over implementation terms such as “图标比例”.
 - Keep advanced controls grouped or collapsible so the basic editor remains understandable.
 - Describe the product motion directly, for example “铺满画面”, “向左水流”, and “逐行回收”. Never show “参考视频”, “参考编舞”, “原片复刻”, or analysis provenance in the end-user interface.

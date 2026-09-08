@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="shared-fonts.css?v=20260901-1">
   <link rel="stylesheet" href="workspace-editor.css?v=20260901-1">
   <link rel="stylesheet" href="me-motion-editor.css?v=20260901-1">
-  <link rel="stylesheet" href="ribbonink.css?v=20260905-29">
+  <link rel="stylesheet" href="ribbonink.css?v=20260909-1">
 </head>
 <body data-editor-capabilities="text-only">
   <aside class="ink-panel" id="editorPanel" aria-label="流彩笔迹编辑器">
@@ -69,6 +69,34 @@
           <label>底字<input id="textColor" type="color" value="#080808"></label>
           <label>背景<input id="backgroundColor" type="color" value="#f7f7f5"></label>
         </div>
+        <div class="ink-background-editor" aria-labelledby="backgroundMediaTitle">
+          <div class="ink-background-head">
+            <div><strong id="backgroundMediaTitle">背景素材</strong><small>铺满整个画布，不改变文字与图标尺寸</small></div>
+            <span>图片 · GIF · 视频</span>
+          </div>
+          <div class="ink-button-row ink-background-actions">
+            <label class="ink-button ink-button-primary">上传背景素材<input id="backgroundUpload" type="file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime" hidden></label>
+            <button class="ink-button ink-button-soft" id="clearBackground" type="button" disabled>移除素材</button>
+          </div>
+          <p class="ink-background-empty" id="backgroundEmpty">当前使用纯色背景。可上传 PNG、JPG、WebP、GIF、MP4 或 WebM。</p>
+          <div class="ink-background-media" id="backgroundMediaPanel" hidden>
+            <div class="ink-background-file-row"><strong id="backgroundFileName"></strong><span id="backgroundFileType"></span></div>
+            <fieldset class="ink-background-video-trim" id="backgroundVideoTrim" hidden>
+              <legend>视频片段 <output id="backgroundVideoDurationOut">读取中…</output></legend>
+              <div class="ink-video-timeline" id="backgroundVideoTimeline" aria-label="拖动两侧把手裁剪视频片段">
+                <canvas id="backgroundVideoFilmstrip" width="720" height="96"></canvas>
+                <div class="ink-video-selection" id="backgroundVideoSelection">
+                  <span class="ink-video-handle is-start" data-edge="start" role="slider" tabindex="0" aria-label="视频片段开始"></span>
+                  <span class="ink-video-handle is-end" data-edge="end" role="slider" tabindex="0" aria-label="视频片段结束"></span>
+                </div>
+              </div>
+              <div class="ink-video-scale"><span>0.0 秒</span><span id="backgroundVideoSourceDuration"></span></div>
+              <label>开始秒数<input id="backgroundVideoStart" type="number" min="0" step="0.1" value="0" inputmode="decimal"></label>
+              <label>结束秒数<input id="backgroundVideoEnd" type="number" min="0.1" step="0.1" inputmode="decimal"></label>
+              <p>拖动把手或输入秒数；实时预览、PNG、GIF 与 MP4 导出使用同一片段。</p>
+            </fieldset>
+          </div>
+        </div>
         <label class="ink-field">文字编排<select id="page1Choreo"><option value="auto">自动编排</option><option value="glyphs">逐字自定义</option></select></label>
         <label class="ink-field">文字穿插<select id="page1Weave"><option value="weave">前后交错</option><option value="reverse">反向交错</option><option value="front">笔迹全部在前</option><option value="back">笔迹全部在后</option></select></label>
           <details class="ink-glyph-editor" id="page1GlyphEditor">
@@ -106,10 +134,6 @@
           <label>浅色点缀<input id="inkColor3" type="color" value="#ff78e9"></label>
           <label>流动辅色 1<input id="inkColor4" type="color" value="#7827d8"></label>
           <label>流动辅色 2<input id="inkColor5" type="color" value="#f33ccd"></label>
-        </div>
-        <div class="ink-button-row">
-          <label class="ink-button ink-button-soft">上传背景<input id="backgroundUpload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden></label>
-          <button class="ink-button ink-button-soft" id="clearBackground" type="button">清除背景</button>
         </div>
         <p class="ink-help">主色与墨纹可单独改色，也可切换整组配色。换色不改变路线、粗细起伏或动作节奏。</p>
       </section>
@@ -334,6 +358,6 @@
   <script src="ribbonink-sequence.js?v=20260905-25"></script>
   <script src="ribbonink-writing.js?v=20260905-25"></script>
   <script src="ribbonink-glyphs.js?v=20260905-41"></script>
-  <script src="ribbonink.js?v=20260905-41"></script>
+  <script src="ribbonink.js?v=20260909-1"></script>
 </body>
 </html>

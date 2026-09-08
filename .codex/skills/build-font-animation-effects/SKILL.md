@@ -1,6 +1,6 @@
 ---
 name: build-font-animation-effects
-description: Build or upgrade effects in opc8838-hub/font-animation using the project's reusable editor, icon library, scheme, timeline, canvas, and export baseline. Use for new effect pages or shared-editor changes in this repository; do not use for unrelated websites.
+description: Build or migrate CellMotion effects in opc8838-hub/font-animation using the approved Type Cascade editor standard, shared assets, deterministic timeline, and export stack. Use for new effects or editor upgrades in this repository; do not use for unrelated websites.
 ---
 
 # Build Font Animation Effects
@@ -9,13 +9,14 @@ Create the effect-specific motion while reusing the site's established editing a
 
 ## Start here
 
-1. For any editor UI or interaction work, read [references/editor-interaction-contract.md](references/editor-interaction-contract.md). It defines observable compatibility with Icon Burst; matching only colors or card shapes does not satisfy it.
+1. For any editor UI or interaction work, read [references/cellmotion-editor-standard.md](references/cellmotion-editor-standard.md) and [references/editor-interaction-contract.md](references/editor-interaction-contract.md). Type Cascade is the approved shell reference; matching only its colors or card shapes does not satisfy the standard.
 2. Read [references/editor-baseline.md](references/editor-baseline.md) before creating or substantially upgrading an effect page.
 3. Read [references/reuse-map.md](references/reuse-map.md) to choose the closest existing implementation instead of rebuilding common systems.
-4. When the user supplies a reference video or asks to refine a reference-driven effect, read [references/video-analysis-workflow.md](references/video-analysis-workflow.md) before changing motion. It defines the evidence workflow, motion-contract and regression protocol, and the boundary for optional Oil Motion use.
-5. When rows or pages can use different colors, images, GIFs, or videos, read [references/per-page-backgrounds.md](references/per-page-backgrounds.md).
-6. When importing, replacing, or expanding the shared icon collection, read [references/icon-library-maintenance.md](references/icon-library-maintenance.md).
-7. Preserve the user's unrelated work and commit only the effect or shared baseline files placed in scope.
+4. When adapting the current editor to an existing effect, read [references/editor-migration-playbook.md](references/editor-migration-playbook.md). Migrate one effect at a time; standardize the shell without flattening effect-specific motion controls.
+5. When the user supplies a reference video or asks to refine a reference-driven effect, read [references/video-analysis-workflow.md](references/video-analysis-workflow.md) before changing motion. It defines the evidence workflow, motion-contract and regression protocol, and the boundary for optional Oil Motion use.
+6. When rows or pages can use different colors, images, GIFs, or videos, read [references/per-page-backgrounds.md](references/per-page-backgrounds.md).
+7. When importing, replacing, or expanding the shared icon collection, read [references/icon-library-maintenance.md](references/icon-library-maintenance.md).
+8. Preserve the user's unrelated work and commit only the effect or shared baseline files placed in scope.
 
 If the task includes a reference video, use the available video-analysis workflow to inspect both normal-speed rhythm and slowed detail before choosing motion phases. Treat the user's video as visual evidence, not as permission to copy unrelated scene framing. Do not invoke `oil-motion` by default: ordinary kinetic typography, path following, color, icon, layout, Canvas, SVG, CSS, or GSAP work should stay in this skill unless the decision boundary in the video-analysis reference is actually met.
 
@@ -24,6 +25,10 @@ For repeated motion refinement, freeze already approved phases and write a compa
 ## Working rules
 
 - Separate the unique choreography from the reusable editor shell.
+- Treat the approved CellMotion Type Cascade editor—not a legacy page—as the visual and interaction baseline. Reuse its three-column workspace, row-owned font/background/icon controls, full-row pause, adjacent library drawer, explicit candidate insert action, compact icon edit action, stage playback controls, responsive canvas, colored timeline, bilingual/theme behavior, and real export path. The implementation routes are in the reuse map.
+- Standardize the editor shell, not the choreography. An effect may expose more motion settings, different phase groups, or a different composition model; keep those capabilities inside the shared `动效设置` surface with the approved spacing, disclosures, and control language.
+- Preserve the effect's own motion model. Shared editor adoption standardizes how users edit and preview an effect; it does not authorize replacing specialized particle, 3D, physics, path, media, or multi-layer choreography with a simpler row morph.
+- Migrate existing effects one at a time on focused branches. Freeze the current default, approved choreography, entry behavior, and gallery artifact before changing the editor; verify that effect before starting the next one.
 - Reuse shared fonts and icon/media assets by path; do not duplicate them into each effect.
 - Treat a user-approved default scheme, gallery image, or preview video as a frozen artifact. Unrelated refinements must not regenerate or rewrite its bytes unless the user explicitly requests a replacement.
 - Use the project-wide `site/shared-font-library.js` and `site/shared-fonts.css` catalog for every font selector and renderer. New effects must not maintain a private reduced font list.
@@ -32,12 +37,14 @@ For repeated motion refinement, freeze already approved phases and write a compa
 - Support arbitrary user text and asset counts. Rebuild dependent controls, timelines, and replacement targets when content changes.
 - Whenever an icon can sit beside or replace text, expose a dedicated plain-language `图标与文字间距` control in addition to positional X/Y offsets. Apply it to inline, repeated-row, and final replacement layouts, and keep its normalized spacing identical in preview and export.
 - In sequence effects, keep page-owned editing on the page: stable id, order, hold, typography, color, spacing, motion timing, assigned icons, and background/media. Adding, deleting, or reordering pages must rebuild dependent controls without applying one page's values to the others.
-- Give every effect editor the Icon Burst choreography UI, not merely a functional timeline. Reuse `me-choreo-track`, `me-choreo-scroll`, `me-choreo-bar`, `me-choreo-block`, `me-choreo-playhead`, and `me-choreo-legend`; preserve the colored phase blocks, visible playhead, legend rows, and click-to-seek behavior.
-- Use Icon Burst as the canonical editor UI and interaction language across effects. Implement the state transitions and surface separation in the editor interaction contract, not a lookalike custom hierarchy.
+- Give every effect the approved CellMotion choreography UI, not merely a functional timeline. Reuse `me-choreo-track`, `me-choreo-scroll`, `me-choreo-bar`, `me-choreo-block`, `me-choreo-playhead`, and `me-choreo-legend`; preserve rounded colored phase blocks, the visible playhead, legend/detail rows, and click-to-seek behavior while naming phases for that effect.
+- Use the CellMotion Type Cascade standard as the canonical editor UI and interaction language across effects. Implement the state transitions and surface separation in the editor interaction contract, not a lookalike custom hierarchy.
 - Treat selected assets, the candidate library, and the single-asset drawer as three different surfaces backed by one state model. Do not auto-expand on add and do not duplicate the single-asset editor under the compact library.
 - For row-based text with inline icons, use Glyph Morph as the canonical interaction pattern: each row owns `插入图标` and `暂停修改`; each inserted icon chip has an explicit small `编辑` action; both row pause and icon edit seek to that row's stable, fully readable frame before pausing.
+- Let row deletion follow the effect's semantic minimum instead of enforcing two rows universally. If a one-row composition still has a meaningful entrance, exit, fall, reset, or loop, keep that complete motion cycle when only one row remains.
 - Open large candidate libraries in an adjacent responsive drawer instead of scrolling the inspector to a library at its bottom. Keep the composition canvas unobscured, and give each candidate an adjacent explicit `插入` button so selection and commit never require a return scroll.
-- Put a compact Pause/Play and Replay control group at the horizontal center near the bottom of the live stage, matching Icon Burst. Keep editor-panel playback controls synchronized when both are present.
+- Put a compact Pause/Play and Replay control group at the horizontal center near the bottom of the live stage, matching the approved Type Cascade editor. Keep editor-panel playback controls synchronized when both are present.
+- Replay always starts at deterministic time zero and includes any enabled opening motion. Row pause and icon edit instead seek past that opening to the selected row's complete readable hold frame.
 - Make canvas size the first card in the editor. Selecting 1:1, 4:5, 9:16, 16:9, or custom dimensions must immediately refit the right-side live stage to that exact aspect ratio and composition geometry; keep duration, FPS, and export actions lower in the export card without duplicating size there.
 - Keep the selected canvas centered and responsive inside the available right-side workspace. The framed stage is the actual composition, not a decorative mockup, and typography, icons, spacing, and positions must match the selected export dimensions.
 - Drive preview and export from the same deterministic timeline and geometry functions. Never maintain a visually similar second renderer with independent constants.
@@ -63,7 +70,7 @@ Before handing off an effect:
 - Test at least one Latin, Chinese, Japanese, and Korean font from the shared catalog in preview and export.
 - Check that timeline blocks, durations, active beat, playhead, and click-to-seek all stay synchronized after timing edits.
 - Test save, reload, JSON export/import, reset, and clear. If undo/redo exists internally, do not add extra visible scheme-card buttons that make the canonical four-action card inconsistent.
-- Check that the scheme card shows exactly the shared four Icon Burst actions, choreography uses the colored Icon Burst blocks and legend, library-card clicks do not insert content, and stage Pause/Play and Replay work without desynchronizing the timeline.
+- Check that the scheme surface shows exactly the shared four actions, choreography uses the approved rounded colored blocks and detail rows, library-card clicks do not insert content, and stage Pause/Play and Replay work without desynchronizing the timeline.
 - For row-based inline icons, verify that every row can pause on its complete readable state; row-chip `编辑` opens that exact icon without covering the canvas; a candidate's adjacent `插入` commits at the current grapheme boundary without scrolling back to another control.
 - Switch among 1:1, 9:16, and 16:9 before export; confirm the live frame changes aspect immediately while the inspector keeps its bounds, then compare the normalized live composition with a real export at the selected size.
 - Run `python .codex/skills/build-font-animation-effects/scripts/check_editor_contract.py <effect.html> <effect.js>` for pages using the shared editor, then test every acceptance check in the editor interaction contract in a real browser.

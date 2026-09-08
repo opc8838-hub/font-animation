@@ -1,6 +1,6 @@
 # Low-token effect-development continuation
 
-This is the short entry point for continuing ME Motion Studio work in a fresh chat or on another computer. Repository-wide rules remain in [`../AGENTS.md`](../AGENTS.md); reusable editor and export behavior remains in [`../.codex/skills/build-font-animation-effects/SKILL.md`](../.codex/skills/build-font-animation-effects/SKILL.md).
+This is the short entry point for continuing CellMotion work in a fresh chat or on another computer. Repository-wide rules remain in [`../AGENTS.md`](../AGENTS.md); reusable editor and export behavior remains in [`../.codex/skills/build-font-animation-effects/SKILL.md`](../.codex/skills/build-font-animation-effects/SKILL.md).
 
 ## Start without scanning the repository
 
@@ -11,7 +11,7 @@ This is the short entry point for continuing ME Motion Studio work in a fresh ch
    - for a new effect, the HTML/CSS/JS of only the closest existing effect; for a refinement, the requested effect's `site/<slug>.html`, `site/<slug>.css`, and `site/<slug>.js`;
    - files directly imported by that effect.
 3. Load skill references conditionally:
-   - editor UI or icon interaction: `references/editor-interaction-contract.md`;
+   - editor UI or icon interaction: `references/cellmotion-editor-standard.md` and `references/editor-interaction-contract.md`;
    - new effect or substantial editor upgrade: `references/editor-baseline.md` and `references/reuse-map.md`;
    - reference video: `references/video-analysis-workflow.md` plus a focused video analysis note.
 4. Do not read the full README changelog, all effects, or old chat history unless a concrete dependency or conflict requires it.
@@ -23,8 +23,12 @@ This is the short entry point for continuing ME Motion Studio work in a fresh ch
 - Gallery: `site/gallery.html`, `site/gallery.js`, and `site/gallery.css`.
 - Shared effect skill: `.codex/skills/build-font-animation-effects/`.
 - Shared fonts: `site/shared-font-library.js` and `site/shared-fonts.css`.
-- Shared editor baseline: `site/me-motion-editor.js`, `site/me-motion-editor.css`, `site/workspace-editor.css`.
+- Approved editor reference: Type Cascade — `site/typecascade.html`, `site/typecascade-workspace.css`, `site/typecascade-workspace.js`, `site/typecascade-polish.css`, `site/typecascade-polish.js`, `site/typecascade-selects.js`, and `site/typecascade-locale.js`. Reuse the shell; preserve effect-specific renderers and motion controls.
+- Shared editor primitives: `site/me-motion-editor.js`, `site/me-motion-editor.css`, `site/workspace-editor.css`.
 - Shared assets/media: `site/shared-icon-library.js`, `site/media-layer.js`, `site/media-layer.css`, and the icon paths documented by the project skill.
+- CellMotion website preview: `site/cellmotion.html`; independent component-library shell: `site/cellmotion-components.html`; editor directory: `site/cellmotion-editors.html`; shared website behavior/styles: `site/cellmotion.js`, `site/cellmotion.css`, `site/cellmotion-hero.css`, `site/cellmotion-type.css`, and `site/cellmotion-layout.css`. Website scope and verification notes are in [`CELLMOTION_WEBSITE_PREVIEW.md`](CELLMOTION_WEBSITE_PREVIEW.md).
+- External protocol planning: [`CELLMOTION_EXTERNAL_PROTOCOL_PLAN.md`](CELLMOTION_EXTERNAL_PROTOCOL_PLAN.md). It is a future-facing plan, not a released schema, SDK, MCP contract, or claim that current effects are installable web components.
+- Split Flip (`上下翻转`): `site/split-flip.html`, `site/split-flip.css`, `site/split-flip.js`; default preset `site/assets/presets/split-flip-default.json`; approved gallery video `site/assets/previews/split-flip-card.mp4`. It was introduced by commit `deb32ab` and is listed in both the original gallery and the generated CellMotion catalog.
 - Path Writer (`轨书`): `site/pathwriter.html`, `site/pathwriter.css`, `site/pathwriter.js`; default preset `site/assets/presets/pathwriter-default.json`; gallery video `site/assets/previews/pathwriter-card.mp4`.
 - Glyph Morph (`字融`): `site/glyphmorph.html`, `site/glyphmorph.css`, `site/glyphmorph.js`; canonical row/caret inline-icon editor; default preset `site/assets/presets/glyphmorph-default.json`; gallery video `site/assets/previews/glyphmorph-card.mp4`.
 
@@ -36,6 +40,8 @@ This is the short entry point for continuing ME Motion Studio work in a fresh ch
 - Generate and inspect one real export when export code or rendering changed.
 - Bump cache query versions for changed JS, presets, or gallery videos.
 - Commit only after incorporating the latest remote branch without dropping another agent's effect or gallery entry.
+
+For the isolated CellMotion website shell, run `node scripts/check-cellmotion-website.mjs` and preview `http://127.0.0.1:4177/cellmotion.html` from `python -m http.server 4177 --bind 127.0.0.1 --directory site`. The homepage currently shows a small selection; the full searchable directory lives in `cellmotion-components.html`. Video stitching, distributable web components, SDK, MCP, persistence, and Figma integration are intentionally not implemented yet.
 
 ## Prompt template for a fresh chat
 
