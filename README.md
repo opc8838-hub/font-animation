@@ -1,6 +1,12 @@
 # CellMotion —— 可编辑动效与视频创作平台
 
-**让创意，自由生长。** CellMotion 是一个持续演进的独立动效创作项目，目前收录 67 个可编辑动效，支持中文与多语种字体、文字和图标混排、图片 / GIF / 视频背景、响应式画布，以及浏览器内的预览与导出。
+**Design that moves like life. 让设计像生命一样运动。**
+
+CellMotion 是一个自由、灵活的动态设计系统。字体、图标、图片与图形都是独立的 Cell（设计单元）；它们通过运动彼此连接、拆解与重组，从最小单元生长出新的视觉表达。
+
+**Move · Connect · Recombine · Grow.** 运动 · 连接 · 重组 · 生长。
+
+目前收录 67 个可编辑动效，支持中文与多语种字体、字图混排、图片 / GIF / 视频背景、响应式画布，以及浏览器内的预览与导出。
 
 在线浏览：[CellMotion](https://opc8838-hub.github.io/font-animation/cellmotion.html)
 
