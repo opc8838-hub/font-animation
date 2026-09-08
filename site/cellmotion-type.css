@@ -1,0 +1,41 @@
+/* Website typography only: the original logo and every effect's fonts are untouched. */
+@font-face{font-family:"CellMotion Sans";src:url("assets/fonts/Manrope-Variable.ttf") format("truetype");font-weight:200 800;font-display:swap}
+@font-face{font-family:"CellMotion Han";src:url("assets/cellmotion/ui-han.woff?v=20260907-5") format("woff");font-weight:100 900;font-display:swap}
+:root{--font:"CellMotion Sans","CellMotion Han","Microsoft YaHei",sans-serif}
+body{font-family:var(--font);font-synthesis:none}
+button,input,.button{font-family:var(--font)}
+.button{font-size:14px;font-weight:500;letter-spacing:.01em;border-radius:10px;line-height:1.5}
+.button.small{font-size:13px;font-weight:500}
+.hero-center-actions .button{font-size:14px;font-weight:500;min-width:151px;padding:13px 23px}
+.header nav{font-size:14px}
+.hero.hero-centered .hero-center-copy{padding-top:12px}
+.hero-inline-film{position:relative;width:100%;height:clamp(220px,34vw,450px);margin:0 auto 20px;max-width:1040px;background:transparent}
+.hero-inline-film video{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
+.hero-inline-film .round-button{position:absolute;right:16px;bottom:12px;width:32px;height:32px;font-size:13px;background:#fffd}
+.hero.hero-centered h1{font-family:var(--font);font-weight:400;font-size:32px;line-height:1.5;letter-spacing:.01em;margin:0}
+.hero-english{font-family:var(--font);font-size:16px;font-weight:400;margin:7px 0 14px;letter-spacing:0}
+.hero-description{font-size:14px;line-height:1.85;color:#78736d}
+.hero-center-actions{margin-top:22px}
+.motion-ribbon{margin-top:25px}
+.section h2,.editor-heading h1,.editor-invitation h2{letter-spacing:-.025em;font-weight:400}
+.eyebrow{font-size:11px;letter-spacing:1.5px}
+.filter{font-size:13px;font-weight:400}
+.search input{font-size:13px}
+.story-type em,.footer-top>p{font-family:var(--font);font-style:normal}
+.story-copy>p,.heading-note,.featured-caption p,.hero-bottom p{font-size:14px}
+.rail-note{font-size:12px}
+.text-link{font-size:14px}
+@media(max-width:760px){
+  .hero.hero-centered .hero-center-copy{padding-top:6px}
+  .hero-inline-film{height:auto;aspect-ratio:16/10;margin-bottom:16px}
+  .hero-inline-film .round-button{right:3px;bottom:3px;width:27px;height:27px}
+  .hero.hero-centered h1{font-size:26px;letter-spacing:0}
+  .hero-english{font-size:13px;margin:7px 0 13px}
+  .hero-description{font-size:12px;line-height:1.9}
+  .hero-center-actions .button{font-size:13px;padding:12px 18px;min-width:132px}
+  .header .button{font-size:12px}
+  .filter{font-size:12px;padding:9px 10px}
+  .search input{font-size:13px}
+  .eyebrow{font-size:9px}
+  .story-copy>p,.featured-caption p{font-size:12px}
+}

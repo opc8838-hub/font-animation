@@ -1,9 +1,27 @@
-# ME Motion Studio —— 文字 × 图像动效工作室
+# CellMotion —— 可编辑动效与视频创作平台
 
-原站 [spacetypegenerator.com](https://spacetypegenerator.com)（kielm 开源项目，p5.js 实现）的本地中文版。
-**67 个字体动效 + 中文渲染 + 多图片与文字混排 + 浏览器本地抠图 + 响应式创作工作台。**
+**让创意，自由生长。** CellMotion 是一个持续演进的独立动效创作项目，目前收录 67 个可编辑动效，支持中文与多语种字体、文字和图标混排、图片 / GIF / 视频背景、响应式画布，以及浏览器内的预览与导出。
 
-在线浏览：[GitHub Pages](https://opc8838-hub.github.io/font-animation/gallery.html)
+本仓库不是 [Space Type Generator](https://spacetypegenerator.com/) 的整体中文镜像，也不是对其全部动效的照搬。仓库中的大部分产品界面、编辑器能力、资源系统与新增动效由 CellMotion 独立设计和实现；只有部分带明确来源标记的动效基于开源项目进行二次开发。
+
+在线浏览：[CellMotion](https://opc8838-hub.github.io/font-animation/cellmotion.html)
+
+## 开源来源与 CellMotion 贡献
+
+感谢以下项目为部分动效提供了开放源码、算法或运动方式参考：
+
+- [Space Type Generator](https://spacetypegenerator.com/) — Kiel Mutschelknaus 创作的生成式字体实验。CellMotion 的个别早期 p5.js 动效在其开源代码基础上进行了中文支持、编辑器重构与功能扩展；这些衍生部分继续保留原作者署名和对应许可。
+- [LTMorphingLabel](https://github.com/lexrus/LTMorphingLabel#uikit) — Lex Tang 的 UILabel 字符变形库。字芽、雾升、字倾、点解等逐字形变动效参考其公开效果与 MIT 源码，并面向浏览器画布、独立时间轴和可视化编辑重新实现。
+
+CellMotion 在这些来源之外持续完成的工作包括：
+
+- CellMotion 品牌网站、分类动效库与响应式创作工作台；
+- 行级文字编辑、完整字体库、图标 / GIF / 透明动物资源库及字图混排；
+- 主流画幅、逐行背景、视频裁剪、确定性时间轴与 PNG / GIF / 视频导出；
+- 大量基于独立参考视频、产品需求或原创编排开发的新动效；
+- 面向后续网页组件、AI / MCP 与视频拼接工作流的统一编辑器基础。
+
+具体第三方许可与资源来源见文末“许可”及仓库内对应许可文件。
 
 开发新动效前请阅读：[参考视频拆解与动效开发工作流](docs/REFERENCE_VIDEO_WORKFLOW.md)。分析结果可从 [`docs/analyses/TEMPLATE.md`](docs/analyses/TEMPLATE.md) 创建；编码代理还会自动读取根目录 [`AGENTS.md`](AGENTS.md) 中的项目约束。
 
@@ -16,7 +34,7 @@
 # 或手动：
 cd C:\Users\Administrator\font-animation\site
 python -m http.server 8080
-# 浏览器打开 http://127.0.0.1:8080/gallery.html
+# 浏览器打开 http://127.0.0.1:8080/cellmotion.html
 # 搜写：http://127.0.0.1:8080/searchtyping.html
 ```
 
@@ -27,7 +45,7 @@ python -m http.server 8080
 ## 目录结构
 
 ```
-stg_cn/
+font-animation/
 ├── README.md              # 本文件
 ├── 启动中文版.bat          # 一键启动
 ├── mirror.py               # 原站镜像脚本（可重跑补齐）
@@ -35,7 +53,9 @@ stg_cn/
 ├── NotoSansSC-vf.ttf       # 中文字体源（可变字体，供重新实例化）
 ├── _scratch/               # 临时验证截图，可删
 └── site/                   # ★ 网站本体（67 张画廊卡片及补充子场景页）
-    ├── gallery.html        # 效果画廊入口（67 张卡片，链接各效果）
+    ├── cellmotion.html     # CellMotion 品牌首页
+    ├── cellmotion-components.html # 67 个动效的分类组件库
+    ├── gallery.html        # 旧画廊兼容入口（自动转到新组件库）
     ├── index.html ~ moodboard.html  # 各独立效果页
     ├── sketch_*.js          # 各效果的 p5.js 主程序
     ├── *_script/ *_res/     # 复杂效果的子模块与资源
@@ -69,7 +89,7 @@ stg_cn/
    - 补齐 Snap 缺失样式和 Construct 缺失的 12 个 GIF 素材
    - 移除失效透明背景图引用，以及原站遗留的 Google Analytics / Cloudflare 统计代码
 4. **各页面输入框默认文字**设为「中文渲染测试」（可改任意文字实时看动画）
-5. **官网与效果画廊重做**：ME Motion Studio 品牌首页、产品主视觉、搜索与筛选、统一卡片系统、桌面与手机布局
+5. **官网与效果画廊重做**：CellMotion 品牌首页、产品主视觉、搜索与筛选、统一卡片系统、桌面与手机布局
 6. **统一效果工具栏**：每页可返回画廊、切换上一个/下一个效果，触屏设备可点击打开完整菜单
 7. **编辑器交互重做**：
    - 11 个旧版 p5 效果由共享编辑层接管散落在画布上的控件，按“文字 / 形态 / 动效 / 颜色 / 操作”分组，滑杆显示实时数值
@@ -77,7 +97,7 @@ stg_cn/
    - 代理控件只同步原始参数和事件，不改动画算法；原控件仍是实际状态源
 8. **全量中文实测**：24 个效果均已在浏览器中输入“中文”验证，全部创建画布且最终审计无脚本错误
 
-9. **2026-08-12 最终整合**：以 AL8788 的 ME Motion Studio 首页、双栏工作台与共享媒体组件为最新版 UI 基线，新增续句、流墙、纵跃、汇聚、轨书、棱镜 6 个效果；这 6 个编辑器统一使用 `me-motion-editor.css` / `me-motion-editor.js`，桌面为 420px 左侧编辑器与独立右侧画布，移动端为画布上置、编辑器下置。网站现共 30 个效果。
+9. **2026-08-12 最终整合**：以 AL8788 的前身首页、双栏工作台与共享媒体组件为当时的 UI 基线，新增续句、流墙、纵跃、汇聚、轨书、棱镜 6 个效果；这 6 个编辑器统一使用 `me-motion-editor.css` / `me-motion-editor.js`，桌面为 420px 左侧编辑器与独立右侧画布，移动端为画布上置、编辑器下置。网站当时共 30 个效果。
 
 10. **2026-08-13 协作整合**：合入 AL8788 的彩组（Color Recompose）、组句（Phrase Build）、降临（Switch Drop）3 个新效果，并同步续句、流墙、纵跃、图标/图片编辑与高清视频导出改进。网站当时共 33 个效果。
 
@@ -162,7 +182,7 @@ Flash、Snap、Construct 新增共享媒体层，支持上传 PNG、JPG、WebP�
 
 ### 2026-08-08 视觉、字体与清晰度补强
 
-- 官网首页、Flash 场景库、全站浮动导航、旧版代理编辑器和 Flash / Snap / Construct 工作台统一为 ME Motion Studio 的系统灰与蓝色视觉语言。
+- 官网首页、Flash 场景库、全站浮动导航、旧版代理编辑器和 Flash / Snap / Construct 工作台当时统一为前身工作台的系统灰与蓝色视觉语言，现行品牌为 CellMotion。
 - 展开/收起图标改为 CSS 绘制的等宽箭头，不再依赖字体字符基线，保证水平与垂直居中。
 - Flash 与 Snap 的字体菜单已连接真实字体文件：思源黑体 Regular / Black、Space Grotesk、Lora、Martian Mono、Fenix；中日韩字符会自动回退到思源黑体，英文保留所选字体造型。
 - 图片附加动效在内联模式重新显示；Snap 内联图片可叠加弹入、滑入、旋转、呼吸、漂浮和环绕，Flash / Construct 的图片继续继承各自文字场景的整体变形。
@@ -431,7 +451,9 @@ Flash、Snap、Construct 新增共享媒体层，支持上传 PNG、JPG、WebP�
 
 ## 许可
 
-- 原站作者 kielm 声明开源；镜像仅供学习/个人改造
+- CellMotion 会在引用或改造第三方动效时保留对应的作者署名与许可。仓库根许可证目前覆盖包含 Space Type Generator 衍生代码的发行版本；未来若拆分可独立授权的原创组件，应先完成逐文件来源审计。
+- 部分早期 p5.js 动效基于 Space Type Generator，由 Kiel Mutschelknaus 创作；对应衍生代码遵循其标注的 CC BY-NC-SA 4.0。
+- 字芽、雾升、字倾、点解等效果参考 LTMorphingLabel；原项目由 Lex Tang 开发并采用 MIT License。
 - 中文字体 Noto Sans SC：SIL Open Font License 1.1，可免费商用
 - Space Grotesk、Lora、Martian Mono、Fenix、Work Sans、Space Mono、Vollkorn、Roboto Condensed、Cairo、Aguafina Script：SIL Open Font License 1.1；对应许可文本保存在 `site/assets/fonts/licenses/`
 - 可选复杂背景抠图组件 `@imgly/background-removal`：AGPL-3.0，许可文本保存在 `site/assets/licenses/`

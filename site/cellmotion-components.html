@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="探索 CellMotion 可编辑动效，按内容分类浏览，区分视频创作与网页组件适配状态。">
+  <meta name="theme-color" content="#faf9f7">
+  <title>组件库 — CellMotion</title>
+  <link rel="icon" href="assets/cellmotion/logo-original.png">
+  <link rel="stylesheet" href="cellmotion.css?v=20260907-2">
+  <link rel="stylesheet" href="cellmotion-hero.css?v=20260907-3">
+  <link rel="stylesheet" href="cellmotion-type.css?v=20260907-5">
+  <link rel="stylesheet" href="cellmotion-layout.css?v=20260907-5">
+</head>
+<body class="components-page">
+  <a class="skip-link" href="#main">跳到内容</a>
+  <header class="header wrap">
+    <a class="brand original-brand" href="cellmotion.html" aria-label="CellMotion 首页"><img class="logo-source" src="assets/cellmotion/logo-original.png" alt="CellMotion"></a>
+    <nav aria-label="主导航"><a href="cellmotion-components.html" aria-current="page">组件库</a><a href="cellmotion.html#featured">精选动效</a><a href="cellmotion.html#stories">成片案例</a></nav>
+    <a class="button dark small" href="cellmotion-editors.html">打开编辑器 ↗</a>
+  </header>
+  <div class="component-layout">
+    <aside class="component-sidebar" aria-label="组件搜索与分类">
+      <a class="sidebar-home" href="cellmotion.html">← 返回首页</a>
+      <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="搜索名称、关键词" aria-label="搜索动效"></label>
+      <p class="sidebar-label">内容分类</p>
+      <div id="filters" class="filters" role="group" aria-label="动效分类"></div>
+      <div class="sidebar-note"><span class="status-dot"></span><p>每种运动，都有自己的工作台。</p><a href="cellmotion-editors.html">前往编辑器目录 ↗</a></div>
+    </aside>
+    <main id="main" class="component-main">
+      <div class="component-heading"><p class="eyebrow">THE MOTION LIBRARY</p><h1>从一个动效，开始。</h1><p>找到喜欢的运动，再让它变成你的表达。</p></div>
+      <div class="component-toolbar"><div id="usage-filters" class="usage-filters" role="group" aria-label="使用用途"><button data-usage="all" aria-pressed="true">全部</button><button data-usage="video" aria-pressed="false">视频创作</button><button data-usage="web" aria-pressed="false">网页使用 <span>规划中</span></button></div><span id="result-count" class="result-count" role="status"></span></div>
+      <p id="usage-note" class="usage-note">当前提供动效预览与独立编辑器；具体导出格式以各编辑器为准。网页组件正在规划，尚未提供代码安装。</p>
+      <div id="catalog-grid" class="catalog-grid" data-capability-labels="true"></div>
+      <p id="catalog-empty" class="empty" hidden>没有匹配的动效，试试其他分类或关键词。</p>
+      <section id="web-planned" class="web-planned" hidden aria-labelledby="web-planned-title"><span class="planned-symbol" aria-hidden="true">&lt; / &gt;</span><p class="eyebrow">WEB COMPONENTS / COMING NEXT</p><h2 id="web-planned-title">同一种运动，另一种可能。</h2><p>未来可把动效作为网页组件使用。我们会逐个适配，再标注可用，<br>不会把一段预览视频当作已经完成的网页组件。</p><div class="planned-details"><span>可配置的内容与样式</span><span>网页播放与交互</span><span>独立接入文档</span></div><button id="show-video-effects" class="button dark">先看现有动效 →</button></section>
+      <button id="load-more" class="button outline load-more" hidden>继续探索 ↓</button>
+      <p id="catalog-error" class="empty" hidden>动效目录加载失败，请刷新页面重试。</p>
+      <footer class="component-footer"><span>让创意，自由生长。</span><a href="cellmotion.html">返回首页 ↗</a></footer>
+    </main>
+  </div>
+  <script type="module" src="cellmotion.js?v=20260907-9"></script>
+</body>
+</html>

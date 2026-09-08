@@ -1,0 +1,684 @@
+{
+  "schemaVersion": 1,
+  "source": "gallery.js",
+  "featured": [
+    "sproutshift",
+    "typecascade",
+    "dotresolve",
+    "glyphmorph",
+    "iconburst",
+    "pathwriter"
+  ],
+  "effects": [
+    {
+      "id": "coil",
+      "name": "线圈",
+      "english": "Coil",
+      "description": "波形流动",
+      "category": "flow",
+      "href": "coil.html",
+      "poster": "final_coil.png",
+      "video": null
+    },
+    {
+      "id": "continuation",
+      "name": "续句",
+      "english": "Continuation",
+      "description": "匹配切换",
+      "category": "type",
+      "href": "continuation.html",
+      "poster": "assets/cellmotion/poster-continuation.jpg",
+      "video": "assets/previews/continuation-card-centered.mp4"
+    },
+    {
+      "id": "split-flip",
+      "name": "上下翻转",
+      "english": "Split Flip",
+      "description": "整块旋转 · 覆盖层上下扫",
+      "category": "space",
+      "href": "split-flip.html",
+      "poster": "assets/cellmotion/poster-split-flip.jpg",
+      "video": "assets/previews/split-flip-card.mp4"
+    },
+    {
+      "id": "currentwall",
+      "name": "水流",
+      "english": "Water Flow",
+      "description": "多行水流",
+      "category": "flow",
+      "href": "currentwall.html",
+      "poster": "assets/cellmotion/poster-currentwall.jpg",
+      "video": "assets/previews/water-flow-card.mp4"
+    },
+    {
+      "id": "verticalwall",
+      "name": "纵跃",
+      "english": "Vertical Rise",
+      "description": "纵向弹出",
+      "category": "flow",
+      "href": "verticalwall.html",
+      "poster": "final_verticalwall.png",
+      "video": "assets/previews/vertical-rise-card.mp4"
+    },
+    {
+      "id": "creatorstudio",
+      "name": "汇聚",
+      "english": "Creator Merge",
+      "description": "字位重组",
+      "category": "type",
+      "href": "creatorstudio.html",
+      "poster": "final_creatorstudio.png",
+      "video": null
+    },
+    {
+      "id": "focuswheel",
+      "name": "焦轮",
+      "english": "Focus Wheel",
+      "description": "纵向焦点滚轮",
+      "category": "flow",
+      "href": "focuswheel.html",
+      "poster": "final_focuswheel.svg",
+      "video": null
+    },
+    {
+      "id": "gradienttype",
+      "name": "渐字",
+      "english": "Gradient Type",
+      "description": "流动渐变逐字输入",
+      "category": "type",
+      "href": "gradienttype.html",
+      "poster": "final_gradienttype.svg",
+      "video": null
+    },
+    {
+      "id": "glyphrelay",
+      "name": "字标接力",
+      "english": "Glyph Relay",
+      "description": "字位图标与颜色接力",
+      "category": "type",
+      "href": "glyphrelay.html",
+      "poster": "final_glyphrelay.svg",
+      "video": null
+    },
+    {
+      "id": "wordgather",
+      "name": "词序汇聚",
+      "english": "Word Gather",
+      "description": "分散词组汇合与彩幕收尾",
+      "category": "type",
+      "href": "wordgather.html",
+      "poster": "final_wordgather.svg",
+      "video": null
+    },
+    {
+      "id": "focusportal",
+      "name": "焦点转场",
+      "english": "Focus Portal",
+      "description": "字母或图标放大旋转转场",
+      "category": "type",
+      "href": "focusportal.html",
+      "poster": "final_focusportal.svg",
+      "video": null
+    },
+    {
+      "id": "rapidsequence",
+      "name": "速序轮播",
+      "english": "Rapid Sequence",
+      "description": "逐行滚入与快速文字轮播",
+      "category": "flow",
+      "href": "rapidsequence.html",
+      "poster": "final_rapidsequence.svg",
+      "video": null
+    },
+    {
+      "id": "citystack",
+      "name": "城市字塔",
+      "english": "City Stack",
+      "description": "港版黑体中英文字逐项点亮叠满",
+      "category": "type",
+      "href": "citystack.html",
+      "poster": "final_citystack.svg",
+      "video": null
+    },
+    {
+      "id": "colorcanvas",
+      "name": "彩幕组句",
+      "english": "Color Canvas",
+      "description": "逐行弹出与彩色弧面",
+      "category": "type",
+      "href": "colorcanvas.html",
+      "poster": "final_colorcanvas.svg",
+      "video": null
+    },
+    {
+      "id": "liquidtype",
+      "name": "散",
+      "english": "Scatter",
+      "description": "花粒 · 蓝胶 · 横向散尘",
+      "category": "type",
+      "href": "liquidtype.html",
+      "poster": "final_liquidtype.svg",
+      "video": null
+    },
+    {
+      "id": "scrapbin",
+      "name": "Delete 删除",
+      "english": "Delete",
+      "description": "真实揉纸与重力入桶",
+      "category": "physics",
+      "href": "scrapbin.html",
+      "poster": "assets/cellmotion/poster-scrapbin.jpg",
+      "video": "assets/previews/delete-card.mp4"
+    },
+    {
+      "id": "terminalbrand",
+      "name": "终端署名",
+      "english": "Terminal Brand",
+      "description": "输入回删与图标签名",
+      "category": "type",
+      "href": "terminalbrand.html",
+      "poster": "final_terminalbrand.svg",
+      "video": null
+    },
+    {
+      "id": "slotstories",
+      "name": "字位剧场",
+      "english": "Slot Stories",
+      "description": "字位图标与角色表演",
+      "category": "graphic",
+      "href": "slotstories.html",
+      "poster": "final_slotstories.svg",
+      "video": null
+    },
+    {
+      "id": "mediacascade",
+      "name": "镜头铺展",
+      "english": "Media Cascade",
+      "description": "媒体复制与全屏展开",
+      "category": "media",
+      "href": "mediacascade.html",
+      "poster": "final_mediacascade.svg",
+      "video": null
+    },
+    {
+      "id": "colorrecompose",
+      "name": "彩组",
+      "english": "Color Recompose",
+      "description": "彩色重组",
+      "category": "type",
+      "href": "colorrecompose.html",
+      "poster": "final_colorrecompose.svg",
+      "video": "assets/previews/color-recompose-card.mp4"
+    },
+    {
+      "id": "glyphmorph",
+      "name": "字融",
+      "english": "Glyph Morph",
+      "description": "逐字匹配变形",
+      "category": "type",
+      "href": "glyphmorph.html",
+      "poster": "assets/cellmotion/poster-glyphmorph.jpg",
+      "video": "assets/previews/glyphmorph-card.mp4"
+    },
+    {
+      "id": "sproutshift",
+      "name": "字芽",
+      "english": "Sprout Shift",
+      "description": "逐字生长变形",
+      "category": "type",
+      "href": "sproutshift.html",
+      "poster": "assets/cellmotion/poster-sproutshift.jpg",
+      "video": "assets/previews/sproutshift-wide-card.mp4"
+    },
+    {
+      "id": "mistlift",
+      "name": "雾升",
+      "english": "Mist Lift",
+      "description": "升散浮入",
+      "category": "type",
+      "href": "mistlift.html",
+      "poster": "assets/cellmotion/poster-mistlift.jpg",
+      "video": "assets/previews/mistlift-wide-card.mp4"
+    },
+    {
+      "id": "typecascade",
+      "name": "字倾",
+      "english": "Type Cascade",
+      "description": "倾倒坠落",
+      "category": "type",
+      "href": "typecascade.html",
+      "poster": "assets/cellmotion/poster-typecascade.jpg",
+      "video": "assets/previews/typecascade-wide-card.mp4"
+    },
+    {
+      "id": "dotresolve",
+      "name": "点解",
+      "english": "Dot Resolve",
+      "description": "像素解析",
+      "category": "type",
+      "href": "dotresolve.html",
+      "poster": "assets/cellmotion/poster-dotresolve.jpg",
+      "video": "assets/previews/dotresolve-wide-card.mp4"
+    },
+    {
+      "id": "glyphreveal",
+      "name": "字现",
+      "english": "Glyph Reveal",
+      "description": "逐字缩放显现",
+      "category": "type",
+      "href": "glyphreveal.html",
+      "poster": "assets/cellmotion/poster-glyphreveal.jpg",
+      "video": "assets/previews/glyphreveal-wide-card.mp4"
+    },
+    {
+      "id": "phrasebuild",
+      "name": "组句",
+      "english": "Phrase Build",
+      "description": "累计组词",
+      "category": "type",
+      "href": "phrasebuild.html",
+      "poster": "final_phrasebuild.svg",
+      "video": null
+    },
+    {
+      "id": "switchdrop",
+      "name": "降临",
+      "english": "Switch Drop",
+      "description": "主体降临 × 明暗开关",
+      "category": "graphic",
+      "href": "switchdrop.html",
+      "poster": "final_switchdrop.svg",
+      "video": null
+    },
+    {
+      "id": "searchtyping",
+      "name": "搜写",
+      "english": "Search Typing",
+      "description": "搜索框逐字打入",
+      "category": "type",
+      "href": "searchtyping.html",
+      "poster": "final_searchtyping.svg",
+      "video": null
+    },
+    {
+      "id": "beforeafter",
+      "name": "图片对比",
+      "english": "Before After",
+      "description": "原图对比 · 生成切成片",
+      "category": "media",
+      "href": "beforeafter.html",
+      "poster": "assets/cellmotion/poster-beforeafter.jpg",
+      "video": "assets/previews/beforeafter-card.mp4"
+    },
+    {
+      "id": "shutterafter",
+      "name": "快门对比",
+      "english": "Shutter After",
+      "description": "原图快门 · 划过成片",
+      "category": "media",
+      "href": "shutterafter.html",
+      "poster": "assets/cellmotion/poster-shutterafter.jpg",
+      "video": "assets/previews/shutterafter-card.mp4"
+    },
+    {
+      "id": "verbcue",
+      "name": "动令",
+      "english": "Verb Cue",
+      "description": "短句打散 · 像素扫清",
+      "category": "type",
+      "href": "verbcue.html",
+      "poster": "final_verbcue.svg",
+      "video": null
+    },
+    {
+      "id": "tighten",
+      "name": "收距",
+      "english": "Tighten",
+      "description": "词距先松后紧",
+      "category": "type",
+      "href": "tighten.html",
+      "poster": "final_tighten.svg",
+      "video": null
+    },
+    {
+      "id": "titlecard",
+      "name": "标卡",
+      "english": "Title Card",
+      "description": "主副标题再切标志",
+      "category": "type",
+      "href": "titlecard.html",
+      "poster": "final_titlecard.svg",
+      "video": null
+    },
+    {
+      "id": "lockup",
+      "name": "夹图",
+      "english": "Lockup",
+      "description": "左右字夹中间物",
+      "category": "type",
+      "href": "lockup.html",
+      "poster": "final_lockup.svg",
+      "video": null
+    },
+    {
+      "id": "pullback",
+      "name": "退远",
+      "english": "Pullback",
+      "description": "标题缓慢退远",
+      "category": "type",
+      "href": "pullback.html",
+      "poster": "final_pullback.svg",
+      "video": null
+    },
+    {
+      "id": "textswell",
+      "name": "胀句",
+      "english": "Text Swell",
+      "description": "首词推近 · 后词顶入",
+      "category": "type",
+      "href": "textswell.html",
+      "poster": "final_textswell.svg",
+      "video": null
+    },
+    {
+      "id": "impactbuild",
+      "name": "冲击接句",
+      "english": "Impact Build",
+      "description": "巨字冲击 · 横向拖影接句",
+      "category": "type",
+      "href": "impactbuild.html",
+      "poster": "final_impactbuild.svg",
+      "video": "assets/previews/impactbuild-card.mp4"
+    },
+    {
+      "id": "wordflip",
+      "name": "翻词",
+      "english": "Word Flip",
+      "description": "打字后立体翻词",
+      "category": "type",
+      "href": "wordflip.html",
+      "poster": "final_wordflip.svg",
+      "video": null
+    },
+    {
+      "id": "textbuild",
+      "name": "垒词",
+      "english": "Text Build",
+      "description": "一词入场 · 让位居中",
+      "category": "type",
+      "href": "textbuild.html",
+      "poster": "final_textbuild.svg",
+      "video": null
+    },
+    {
+      "id": "textswap",
+      "name": "换句",
+      "english": "Text Swap",
+      "description": "旧句冲镜换新句",
+      "category": "type",
+      "href": "textswap.html",
+      "poster": "final_textswap.svg",
+      "video": null
+    },
+    {
+      "id": "textreveal",
+      "name": "显句",
+      "english": "Text Reveal",
+      "description": "首词特写再组句",
+      "category": "type",
+      "href": "textreveal.html",
+      "poster": "final_textreveal.svg",
+      "video": null
+    },
+    {
+      "id": "phoneframe",
+      "name": "机框",
+      "english": "Phone Frame",
+      "description": "手机框摆正亮屏",
+      "category": "media",
+      "href": "phoneframe.html",
+      "poster": "final_phoneframe.svg",
+      "video": null
+    },
+    {
+      "id": "laptopframe",
+      "name": "本框",
+      "english": "Laptop Frame",
+      "description": "笔记本打开钻屏",
+      "category": "media",
+      "href": "laptopframe.html",
+      "poster": "final_laptopframe.svg",
+      "video": null
+    },
+    {
+      "id": "orbitgallery",
+      "name": "旋廊",
+      "english": "Orbit Gallery",
+      "description": "照片螺旋进中心",
+      "category": "media",
+      "href": "orbitgallery.html",
+      "poster": "final_orbitgallery.svg",
+      "video": null
+    },
+    {
+      "id": "followerrush",
+      "name": "涌粉",
+      "english": "Follower Rush",
+      "description": "关注通知叠头像",
+      "category": "graphic",
+      "href": "followerrush.html",
+      "poster": "final_followerrush.svg",
+      "video": null
+    },
+    {
+      "id": "logoassemble",
+      "name": "标聚",
+      "english": "Logo Assemble",
+      "description": "卡片塌成品牌",
+      "category": "graphic",
+      "href": "logoassemble.html",
+      "poster": "final_logoassemble.svg",
+      "video": null
+    },
+    {
+      "id": "moodboard",
+      "name": "图墙",
+      "english": "Moodboard",
+      "description": "散图推进主图",
+      "category": "media",
+      "href": "moodboard.html",
+      "poster": "final_moodboard.svg",
+      "video": null
+    },
+    {
+      "id": "pathwriter",
+      "name": "轨书",
+      "english": "Path Writer",
+      "description": "路径书写",
+      "category": "type",
+      "href": "pathwriter.html",
+      "poster": "assets/cellmotion/poster-pathwriter.jpg",
+      "video": "assets/previews/pathwriter-card.mp4"
+    },
+    {
+      "id": "ribbonink",
+      "name": "流彩笔迹",
+      "english": "Ribbon Ink",
+      "description": "手写彩带纹理",
+      "category": "flow",
+      "href": "ribbonink.html",
+      "poster": "assets/cellmotion/poster-ribbonink.jpg",
+      "video": "assets/previews/ribbon-ink-card.mp4"
+    },
+    {
+      "id": "construct",
+      "name": "构筑",
+      "english": "Construct",
+      "description": "图形系统",
+      "category": "graphic",
+      "href": "construct.html",
+      "poster": "final_construct.png",
+      "video": null
+    },
+    {
+      "id": "crash",
+      "name": "碰撞",
+      "english": "Crash",
+      "description": "物理粒子",
+      "category": "physics",
+      "href": "crash.html",
+      "poster": "final_crash.png",
+      "video": null
+    },
+    {
+      "id": "crashclock",
+      "name": "碰撞时钟",
+      "english": "Crash Clock",
+      "description": "物理粒子",
+      "category": "physics",
+      "href": "crashclock.html",
+      "poster": "final_crashclock.png",
+      "video": null
+    },
+    {
+      "id": "danger",
+      "name": "警示",
+      "english": "Danger",
+      "description": "排版实验",
+      "category": "type",
+      "href": "danger.html",
+      "poster": "final_danger.png",
+      "video": null
+    },
+    {
+      "id": "field",
+      "name": "场域",
+      "english": "Field",
+      "description": "波形流动",
+      "category": "flow",
+      "href": "field.html",
+      "poster": "final_field.png",
+      "video": null
+    },
+    {
+      "id": "iconburst",
+      "name": "图标爆发",
+      "english": "Icon Burst",
+      "description": "文字 × 图标 × 硬切换色",
+      "category": "graphic",
+      "href": "iconburst.html",
+      "poster": "assets/cellmotion/poster-iconburst.jpg",
+      "video": "assets/previews/iconburst-card.mp4"
+    },
+    {
+      "id": "flash",
+      "name": "闪光",
+      "english": "Flash",
+      "description": "排版实验",
+      "category": "type",
+      "href": "flash-scenes.html",
+      "poster": "final_flash.png",
+      "video": null
+    },
+    {
+      "id": "index",
+      "name": "圆柱",
+      "english": "Cylinder",
+      "description": "立体空间",
+      "category": "space",
+      "href": "index.html",
+      "poster": "final_index.png",
+      "video": null
+    },
+    {
+      "id": "layers",
+      "name": "层叠",
+      "english": "Layers",
+      "description": "排版实验",
+      "category": "type",
+      "href": "layers.html",
+      "poster": "final_layers.png",
+      "video": null
+    },
+    {
+      "id": "morisawa",
+      "name": "森泽",
+      "english": "Morisawa",
+      "description": "排版实验",
+      "category": "type",
+      "href": "morisawa.html",
+      "poster": "final_morisawa.png",
+      "video": null
+    },
+    {
+      "id": "pow",
+      "name": "砰",
+      "english": "Pow",
+      "description": "图形系统",
+      "category": "graphic",
+      "href": "pow.html",
+      "poster": "final_pow.png",
+      "video": null
+    },
+    {
+      "id": "prism",
+      "name": "棱镜",
+      "english": "Prism",
+      "description": "色散纵深",
+      "category": "space",
+      "href": "prism.html",
+      "poster": "final_prism.png",
+      "video": null
+    },
+    {
+      "id": "ribbon",
+      "name": "丝带",
+      "english": "Ribbon",
+      "description": "波形流动",
+      "category": "flow",
+      "href": "ribbon.html",
+      "poster": "final_ribbon.png",
+      "video": null
+    },
+    {
+      "id": "shine",
+      "name": "闪耀",
+      "english": "Shine",
+      "description": "图形系统",
+      "category": "graphic",
+      "href": "shine.html",
+      "poster": "final_shine.png",
+      "video": null
+    },
+    {
+      "id": "snap",
+      "name": "吸附",
+      "english": "Snap",
+      "description": "物理粒子",
+      "category": "physics",
+      "href": "snap.html",
+      "poster": "final_snap.png",
+      "video": null
+    },
+    {
+      "id": "string",
+      "name": "琴弦",
+      "english": "String",
+      "description": "波形流动",
+      "category": "flow",
+      "href": "string.html",
+      "poster": "final_string.png",
+      "video": null
+    },
+    {
+      "id": "vessel",
+      "name": "器皿",
+      "english": "Vessel",
+      "description": "立体空间",
+      "category": "space",
+      "href": "vessel.html",
+      "poster": "final_vessel.png",
+      "video": null
+    }
+  ]
+}
