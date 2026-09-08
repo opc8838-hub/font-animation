@@ -43,7 +43,7 @@ function updateFlashSceneUI(){
   var shuffleControls = document.getElementById("flashShuffleControls");
   if(title) title.textContent = sceneMode >= 0 ? flashScenes[sceneMode].label : "随机混合";
   if(shuffleControls) shuffleControls.style.display = sceneMode >= 0 ? "none" : "block";
-  document.title = sceneMode >= 0 ? "Flash · " + flashScenes[sceneMode].label + " | ME Motion Studio" : "Flash | ME Motion Studio";
+  document.title = sceneMode >= 0 ? "Flash · " + flashScenes[sceneMode].label + " | CellMotion" : "Flash | CellMotion";
 }
 
 function setFont(val){

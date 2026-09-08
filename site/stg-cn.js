@@ -99,7 +99,7 @@
     }, { once: true });
   }
 
-  document.title = `${current[1]} ${current[2]} | ME Motion Studio`;
+  document.title = `${current[1]} ${current[2]} | CellMotion`;
 
   const toolbar = document.createElement("nav");
   toolbar.className = "stg-cn-toolbar";

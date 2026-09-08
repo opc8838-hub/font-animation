@@ -37,19 +37,9 @@ button, a, input { -webkit-tap-highlight-color: transparent; }
   backdrop-filter: saturate(180%) blur(22px);
 }
 .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; }
-.brand-mark {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border-radius: 10px;
-  background: var(--ink);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 720;
-  letter-spacing: -.03em;
-}
 .brand-copy { font-size: 14px; font-weight: 650; letter-spacing: -.015em; }
+.brand-lockup { position: relative; display: block; width: 144px; height: 31px; overflow: hidden; flex-shrink: 0; mix-blend-mode: multiply; }
+.brand-lockup img { position: absolute; max-width: none; width: 283px; height: auto; left: -71px; top: -64px; }
 .site-nav { display: flex; align-items: center; gap: 26px; }
 .site-nav a { color: #424245; text-decoration: none; font-size: 12px; transition: color 160ms ease; }
 .site-nav a:hover { color: var(--blue); }

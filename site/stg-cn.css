@@ -508,7 +508,7 @@ body:has(.stg-canvas-stage) {
   .stg-cn-toolbar *, .stg-cn-drawer * { scroll-behavior: auto !important; }
 }
 
-/* ME Motion Studio — shared visual language for every effect page. */
+/* CellMotion — shared visual language for every effect page. */
 .stg-cn-toolbar,
 .stg-cn-drawer,
 .stg-editor-panel {
