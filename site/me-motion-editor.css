@@ -7,6 +7,12 @@
   --me-line: #d2d2d7;
   --me-soft: #e8e8ed;
   --me-blue: #0071e3;
+  --me-phase-lime: #d7ff2f;
+  --me-phase-sky: #8ec8ff;
+  --me-phase-violet: #d4b8ff;
+  --me-phase-coral: #ffc4d6;
+  --me-phase-amber: #ffd27d;
+  --me-phase-mint: #9de7d7;
 }
 
 body.me-motion-editor {
@@ -229,7 +235,8 @@ body.me-motion-editor .me-choreo-block {
   min-height: 92px !important;
   padding: 8px !important;
   border: 1px solid #1d1d1f !important;
-  border-radius: 0 !important;
+  border-radius: 12px !important;
+  background: var(--me-phase-violet) !important;
   display: grid;
   align-content: space-between;
   justify-items: start;
@@ -241,23 +248,23 @@ body.me-motion-editor .me-choreo-block {
 body.me-motion-editor .me-choreo-block em { font-size: 18px; line-height: 1; font-style: normal; font-weight: 800; }
 body.me-motion-editor .me-choreo-block strong { font-size: 11px; line-height: 1.2; }
 body.me-motion-editor .me-choreo-block small { color: #111 !important; font-size: 9px; }
-body.me-motion-editor .me-choreo-block.is-intro { background: #d7ff2f !important; }
-body.me-motion-editor .me-choreo-block.is-orbit { background: #8ec8ff !important; }
-body.me-motion-editor .me-choreo-block.is-hold { background: #e7e7ea !important; }
-body.me-motion-editor .me-choreo-block.is-contact { background: #ffc4d6 !important; }
-body.me-motion-editor .me-choreo-block.is-color { background: #d4b8ff !important; }
-body.me-motion-editor .me-choreo-block.is-replace { background: #ffd27d !important; }
+body.me-motion-editor .me-choreo-block:is(.is-intro, .is-phase-1) { background: var(--me-phase-lime) !important; }
+body.me-motion-editor .me-choreo-block:is(.is-orbit, .is-phase-2) { background: var(--me-phase-sky) !important; }
+body.me-motion-editor .me-choreo-block:is(.is-hold, .is-phase-3) { background: var(--me-phase-mint) !important; }
+body.me-motion-editor .me-choreo-block:is(.is-contact, .is-phase-4) { background: var(--me-phase-coral) !important; }
+body.me-motion-editor .me-choreo-block:is(.is-color, .is-phase-5) { background: var(--me-phase-violet) !important; }
+body.me-motion-editor .me-choreo-block:is(.is-replace, .is-phase-6) { background: var(--me-phase-amber) !important; }
 body.me-motion-editor .me-choreo-block.is-active { outline: 3px solid #0071e3; outline-offset: -3px; }
 body.me-motion-editor .me-choreo-playhead { position: absolute; z-index: 3; top: 0; bottom: 0; width: 2px; background: #ff375f; pointer-events: none; }
 body.me-motion-editor .me-choreo-legend { margin: 0; padding: 0; display: grid; gap: 6px; list-style: none; }
 body.me-motion-editor .me-choreo-legend li { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; align-items: center; gap: 8px; font-size: 10px; }
-body.me-motion-editor .me-choreo-legend i { width: 12px; height: 12px; border: 1px solid #111; }
-body.me-motion-editor .me-choreo-legend i.is-intro { background: #d7ff2f; }
-body.me-motion-editor .me-choreo-legend i.is-orbit { background: #8ec8ff; }
-body.me-motion-editor .me-choreo-legend i.is-hold { background: #e7e7ea; }
-body.me-motion-editor .me-choreo-legend i.is-contact { background: #ffc4d6; }
-body.me-motion-editor .me-choreo-legend i.is-color { background: #d4b8ff; }
-body.me-motion-editor .me-choreo-legend i.is-replace { background: #ffd27d; }
+body.me-motion-editor .me-choreo-legend i { width: 12px; height: 12px; border: 1px solid #111; border-radius: 4px; background: var(--me-phase-violet); }
+body.me-motion-editor .me-choreo-legend i:is(.is-intro, .is-phase-1) { background: var(--me-phase-lime); }
+body.me-motion-editor .me-choreo-legend i:is(.is-orbit, .is-phase-2) { background: var(--me-phase-sky); }
+body.me-motion-editor .me-choreo-legend i:is(.is-hold, .is-phase-3) { background: var(--me-phase-mint); }
+body.me-motion-editor .me-choreo-legend i:is(.is-contact, .is-phase-4) { background: var(--me-phase-coral); }
+body.me-motion-editor .me-choreo-legend i:is(.is-color, .is-phase-5) { background: var(--me-phase-violet); }
+body.me-motion-editor .me-choreo-legend i:is(.is-replace, .is-phase-6) { background: var(--me-phase-amber); }
 body.me-motion-editor .me-choreo-legend span { color: #6e6e73; font-variant-numeric: tabular-nums; }
 body.me-motion-editor .me-choreo-track.is-continuous { opacity: .45; }
 

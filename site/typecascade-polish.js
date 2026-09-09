@@ -128,7 +128,7 @@
   details.innerHTML = '<summary>阶段详情 <span>名称与起止时间</span></summary><ol class="me-choreo-legend"></ol>';
   document.querySelector('.tc-timeline').append(details);
   const legend = details.querySelector('ol');
-  const phaseColors = { '立字开场': '#d7ff2f', '停留': '#8ec8ff', '倾倒': '#e7e7ea', '悬停': '#ffc4d6', '下落': '#ffd27d', '结束停留': '#d4b8ff' };
+  const phaseColors = { '立字开场': '#d7ff2f', '停留': '#8ec8ff', '倾倒': '#9de7d7', '悬停': '#ffc4d6', '下落': '#ffd27d', '结束停留': '#d4b8ff' };
   let phases = [];
   let total = 1;
   let width = 1;

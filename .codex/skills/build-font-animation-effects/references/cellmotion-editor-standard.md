@@ -35,7 +35,7 @@ Use this reference for every new editor and every migration of an existing effec
 
 ## Timeline, playback, and export
 
-- The timeline uses rounded colored blocks, readable effect-specific phase names, real phase durations, a visible playhead, click-to-seek, and synchronized stage Pause/Play and Replay controls. Do not replace it with generic gray blocks or reuse another effect's phase copy.
+- The timeline follows the global [timeline color contract](timeline-color-contract.md): filled rounded blocks, multiple semantic chromatic colors, readable effect-specific phase names, real phase durations, a visible playhead, click-to-seek, and synchronized stage Pause/Play and Replay controls. Neutral gray is not an enabled phase fill, fluorescent lime is only one palette member, and an effect with three or more distinct phase types uses at least three distinguishable fills. Never reuse another effect's phase copy or describe one effect as following another effect's timeline.
 - Preview, seek, PNG, GIF, and MP4 share the effect's deterministic clock, renderer, logical dimensions, and geometry. Editor theme, language, panel layout, and presentation backdrop never enter exported composition state.
 - Export keeps duration, FPS, format actions, progress, and status together without repeating the canvas-size selector.
 

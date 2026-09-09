@@ -87,7 +87,7 @@ Uploaded project media must survive scheme export/import when browser storage li
 - When an effect has an optional opening, expose a clear enable switch plus meaningful opening duration and stagger controls. Keep the opening separate from the approved core transition: Replay starts at time zero, while row pause skips to the complete stable row.
 - Use plain Chinese labels. Prefer “图标大小” over implementation terms such as “图标比例”.
 - Keep advanced controls grouped or collapsible so the basic editor remains understandable.
-- Describe the product motion directly, for example “铺满画面”, “向左水流”, and “逐行回收”. Never show “参考视频”, “参考编舞”, “原片复刻”, or analysis provenance in the end-user interface.
+- Describe the product motion directly with labels derived from the current effect, for example “逐字进入”, “稳定停留”, and “分段退出”. These are writing examples, not universal phase names. Never copy labels from another effect or show “参考视频”, “参考编舞”, “原片复刻”, or analysis provenance in the end-user interface.
 
 ## Export
 

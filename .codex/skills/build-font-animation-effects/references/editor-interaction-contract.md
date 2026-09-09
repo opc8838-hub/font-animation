@@ -34,7 +34,7 @@ Required interaction:
 
 - The scheme card contains exactly Save, Import, Restore Default, and Clear/Rebuild in the shared two-column layout.
 - Define scheme-loading precedence explicitly. The approved default is the immutable Reset source; imported or edited state may become the working autosave. Decide whether each entry path (for example gallery entry versus ordinary refresh) opens the approved default or the autosave, and encode that choice directly instead of inheriting accidental `localStorage` precedence.
-- Choreography uses the shared colored `me-choreo-*` blocks, legend, playhead, and click-to-seek behavior. Phase labels and widths derive from the same timing model as preview/export.
+- Choreography uses the shared `me-choreo-*` blocks, legend, playhead, and click-to-seek behavior and follows [timeline-color-contract.md](timeline-color-contract.md). Enabled phases use effect-mapped chromatic fills rather than gray; fluorescent lime is one option rather than a universal fallback. Phase labels and widths derive from the current effect's timing model as preview/export and never inherit another effect's wording.
 - A timing control updates that same timing model and seeks to or replays the phase it controls so the change is immediately observable. A control labeled as total speed or total duration must include every delay, stagger, hold, and transition inside the named phase; unrelated hidden waits must not make the control appear ineffective.
 - The stage contains synchronized Pause/Play and Replay controls using `me-stage-controls`.
 - Replay resets the shared deterministic clock to zero and plays any enabled opening. Row pause and icon edit seek past the opening to a stable, fully readable row frame. An optional opening uses its own enable, duration, and stagger state instead of silently changing the core morph timing.
@@ -87,5 +87,6 @@ Test these observable behaviors in a real browser:
 18. Select a candidate without inserting, then use its adjacent `插入` button. Confirm exactly one icon appears at the active grapheme boundary and no reverse scroll is needed.
 19. If the effect permits one row, delete to one row and confirm Replay still shows its complete entrance/exit/reset cycle; row pause must still show the whole readable row.
 20. If an opening is supported, disable it and confirm the original core transition is restored; enable it, Replay from time zero, and confirm row pause skips the partial opening frame.
+21. Confirm the timeline passes the global color contract: the number of distinct non-gray fills matches the phase-type requirement, lime is not paired with gray as a fallback system, and every block label names the current effect's own motion.
 
 Run `scripts/check_editor_contract.py` for a fast structural check, then perform the browser checks above. Static success does not replace interaction testing.
