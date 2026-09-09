@@ -28,6 +28,7 @@ These rules apply to the whole repository and are intended for both human contri
 - When images or icons participate in the animation, reuse the shared media/resource model instead of creating a second incompatible uploader.
 - Provide PNG, GIF, and video export when the effect uses the modern canvas export stack. GIF/video duration and output size must be selectable.
 - Verify export rendering from output dimensions, not the browser viewport.
+- When an effect exposes “用于 AI”, follow [`.codex/skills/build-font-animation-effects/references/ai-component-manifest.md`](.codex/skills/build-font-animation-effects/references/ai-component-manifest.md): generate the Manifest from current editor state and reuse the authoritative renderer through the shared player bridge.
 
 ## Git scope
 
@@ -45,6 +46,7 @@ These rules apply to the whole repository and are intended for both human contri
 - Browser console is clean.
 - Relevant PNG/GIF/video exports are actually generated at least once.
 - The gallery card, global navigation, effect count, and README are updated.
+- Any AI component handoff is verified with edited live state, media/trim data, the real demo player controls, desktop/mobile header fit, and a clean console.
 
 ## Reusable project skill
 

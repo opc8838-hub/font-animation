@@ -115,7 +115,8 @@
     activeIconId: "",
     imageCache: new Map(),
     backgroundCache: new Map(),
-    activeBackgroundRowId: ""
+    activeBackgroundRowId: "",
+    previewMode: false
   };
 
   const canvas = $("glyphMorphCanvas");
@@ -1347,6 +1348,7 @@
   }
 
   function autoSave() {
+    if (state.previewMode) return;
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.scheme)); }
     catch (_) { if ($("exportStatus")) $("exportStatus").textContent = "上传素材较大，当前编辑仍可使用；请下载 JSON 方案以长期保留。"; }
   }
@@ -2016,6 +2018,8 @@
     let stored = null;
     try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch (_) {}
     const params = new URLSearchParams(location.search);
+    state.previewMode = params.has("preview") || params.has("embed");
+    if (state.previewMode) document.body.classList.add("is-preview");
     const useDefault = params.has("preview") || params.get("from") === "gallery";
     renderIconLibrary();
     applyScheme(useDefault || !stored?.rows || Number(stored.version || 1) > VERSION ? clone(DEFAULT_SCHEME) : stored);
@@ -2024,7 +2028,50 @@
     document.fonts?.ready.then(() => { fitCache.key = ""; resizePreview(); });
     document.fonts?.addEventListener("loadingdone", () => { fitCache.key = ""; resizePreview(); });
     window.addEventListener("resize", resizePreview, { passive: true });
-    window.__morphPortTest = { port: clone({ mode: port.mode, slug: port.slug, zh: port.zh, en: port.en }), renderFrame, resolveTimeline, matchGlyphs, getScheme: () => clone(state.scheme), getElapsedMs: () => state.elapsedMs, isPlaying: () => state.playing, cycleDurationMs, rowStartElapsed, preloadInsertedAssets, setTime: (seconds) => { state.elapsedMs = seconds * 1000; resizePreview(); } };
+    const setPlaying = (playing) => {
+      state.playing = Boolean(playing) && !state.reducedMotion;
+      state.lastFrame = performance.now();
+      updatePlaybackButton();
+      resizePreview();
+    };
+    const restart = () => {
+      state.elapsedMs = 0;
+      setPlaying(true);
+    };
+    const setTime = (seconds) => {
+      state.elapsedMs = clamp(Number(seconds) || 0, 0, cycleDurationMs() / 1000) * 1000;
+      setPlaying(false);
+    };
+    window.CellMotionEffectBridge = {
+      version: "1.0.0",
+      effectId: port.slug,
+      getScheme: () => clone(state.scheme),
+      applyScheme: (scheme, options = {}) => {
+        applyScheme(clone(scheme));
+        if (options.autoplay === false) setPlaying(false);
+      },
+      play: () => setPlaying(true),
+      pause: () => setPlaying(false),
+      restart,
+      seek: setTime,
+      durationMs: cycleDurationMs
+    };
+    window.addEventListener("message", (event) => {
+      const message = event.data || {};
+      if (typeof message.type !== "string" || !message.type.startsWith("cellmotion:")) return;
+      if (message.type === "cellmotion:configure") {
+        const manifest = message.manifest;
+        if (manifest?.effect?.id && manifest.effect.id !== port.slug) return;
+        const composition = manifest?.composition || message.composition;
+        if (composition) window.CellMotionEffectBridge.applyScheme(composition, { autoplay: manifest?.presentation?.autoplay });
+      }
+      if (message.type === "cellmotion:play") window.CellMotionEffectBridge.play();
+      if (message.type === "cellmotion:pause") window.CellMotionEffectBridge.pause();
+      if (message.type === "cellmotion:restart") window.CellMotionEffectBridge.restart();
+      if (message.type === "cellmotion:seek") window.CellMotionEffectBridge.seek(message.seconds);
+    });
+    window.__morphPortTest = { port: clone({ mode: port.mode, slug: port.slug, zh: port.zh, en: port.en }), renderFrame, resolveTimeline, matchGlyphs, getScheme: () => clone(state.scheme), getElapsedMs: () => state.elapsedMs, isPlaying: () => state.playing, cycleDurationMs, rowStartElapsed, preloadInsertedAssets, setTime };
+    if (window.parent !== window) window.parent.postMessage({ type: "cellmotion:ready", effectId: port.slug, bridgeVersion: "1.0.0" }, "*");
     requestAnimationFrame(animationLoop);
   }
 

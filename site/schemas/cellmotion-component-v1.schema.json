@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opc8838-hub.github.io/font-animation/schemas/cellmotion-component-v1.schema.json",
+  "title": "CellMotion Component Manifest v1",
+  "type": "object",
+  "required": ["schemaVersion", "effect", "runtime", "composition"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "effect": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "object" },
+        "version": { "type": "string" }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "required": ["kind", "entry"],
+      "properties": {
+        "kind": { "const": "iframe-bridge" },
+        "entry": { "type": "string" },
+        "bridgeVersion": { "type": "string" }
+      }
+    },
+    "composition": {
+      "type": "object",
+      "required": ["canvas", "motion", "rows"],
+      "properties": {
+        "canvas": { "type": "object" },
+        "typography": { "type": "object" },
+        "motion": { "type": "object" },
+        "rows": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "parameterDefinitions": { "type": "array" },
+    "assets": { "type": "object" },
+    "presentation": { "type": "object" }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>字倾组件演示 | CellMotion</title>
+  <link rel="icon" href="favicon.svg">
+  <link rel="stylesheet" href="shared-fonts.css?v=20260824-2">
+  <link rel="stylesheet" href="typecascade-component-demo.css?v=20260909-ai-manifest">
+  <script src="cellmotion-ai-manifest.js?v=20260909-ai-manifest" defer></script>
+  <script src="cellmotion-player.js?v=20260909-ai-manifest" defer></script>
+  <script src="typecascade-component-demo.js?v=20260909-ai-manifest" defer></script>
+</head>
+<body>
+  <header class="demo-header">
+    <a href="typecascade.html">← 返回字倾编辑器</a>
+    <span>CELLMOTION COMPONENT / V1</span>
+  </header>
+  <main>
+    <section class="demo-intro">
+      <p>AI FRONTEND HANDOFF</p>
+      <h1>一个配置，继续播放<br>编辑器里的真实动效。</h1>
+      <p class="demo-lead">演示页加载字倾默认方案与动效描述文件，实时生成 Manifest，再交给通用播放器。预览仍使用原来的 Canvas 渲染器。</p>
+    </section>
+
+    <section class="demo-card" aria-labelledby="demoTitle">
+      <div class="demo-card-head">
+        <div><small>LIVE COMPONENT</small><h2 id="demoTitle">字倾 · Type Cascade</h2></div>
+        <nav class="demo-tabs" aria-label="演示视图">
+          <button type="button" data-tab="preview" aria-pressed="true">Preview</button>
+          <button type="button" data-tab="code" aria-pressed="false">Code</button>
+        </nav>
+      </div>
+      <div class="demo-panel" data-panel="preview">
+        <div class="demo-stage"><cellmotion-player id="demoPlayer"></cellmotion-player></div>
+        <div class="demo-controls" aria-label="播放器控制">
+          <button type="button" data-player-action="play">播放</button>
+          <button type="button" data-player-action="pause">暂停</button>
+          <button type="button" data-player-action="restart">重播</button>
+          <label>定位 <input id="demoSeek" type="range" min="0" max="10" step="0.05" value="0"></label>
+        </div>
+      </div>
+      <div class="demo-panel" data-panel="code" hidden>
+        <div class="demo-code-head"><span>Configured HTML</span><button id="copyDemoCode" type="button">复制代码</button></div>
+        <pre><code id="demoCode">正在构造组件配置…</code></pre>
+      </div>
+      <p id="demoStatus" class="demo-status" role="status">正在加载默认方案…</p>
+    </section>
+  </main>
+</body>
+</html>

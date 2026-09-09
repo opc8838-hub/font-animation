@@ -1,0 +1,59 @@
+{
+  "effect": {
+    "id": "typecascade",
+    "name": { "zh": "字倾", "en": "Type Cascade" },
+    "version": "1.0.0",
+    "category": "kinetic-typography"
+  },
+  "runtime": {
+    "kind": "iframe-bridge",
+    "entry": "typecascade.html?preview=1&embed=1",
+    "bridgeVersion": "1.0.0",
+    "renderer": "canvas2d"
+  },
+  "capabilities": {
+    "editableTextRows": true,
+    "rowFonts": true,
+    "inlineIcons": true,
+    "customImageAssets": true,
+    "localBackgroundRemoval": true,
+    "rowBackgrounds": ["color", "image", "gif", "video"],
+    "videoTrim": true,
+    "timeline": true,
+    "responsiveCanvas": true,
+    "exports": ["png", "gif", "mp4"]
+  },
+  "behavior": {
+    "summary": {
+      "zh": "字符先保持稳定，再向一侧倾斜、悬停并逐字下落；段落可循环切换。",
+      "en": "Characters hold, tilt to one side, hang briefly, then fall in sequence while text rows cycle."
+    },
+    "phases": [
+      { "id": "intro", "name": { "zh": "入场", "en": "Intro" }, "colorToken": "phase.intro" },
+      { "id": "hold", "name": { "zh": "停留", "en": "Hold" }, "colorToken": "phase.hold" },
+      { "id": "tilt", "name": { "zh": "倾斜", "en": "Tilt" }, "colorToken": "phase.action" },
+      { "id": "hang", "name": { "zh": "悬停", "en": "Hang" }, "colorToken": "phase.accent" },
+      { "id": "fall", "name": { "zh": "下落", "en": "Fall" }, "colorToken": "phase.exit" }
+    ]
+  },
+  "parameters": [
+    { "path": "composition.canvas.width", "scope": "global", "type": "integer", "unit": "px", "minimum": 320, "maximum": 4096, "name": { "zh": "画布宽度", "en": "Canvas width" } },
+    { "path": "composition.canvas.height", "scope": "global", "type": "integer", "unit": "px", "minimum": 320, "maximum": 4096, "name": { "zh": "画布高度", "en": "Canvas height" } },
+    { "path": "composition.typography.fontFamily", "scope": "global", "type": "font", "name": { "zh": "全局字体", "en": "Global font" } },
+    { "path": "composition.typography.fontSize", "scope": "global", "type": "number", "unit": "px", "minimum": 12, "maximum": 420, "name": { "zh": "字号", "en": "Font size" } },
+    { "path": "composition.typography.tracking", "scope": "global", "type": "number", "unit": "px", "minimum": -40, "maximum": 160, "name": { "zh": "字距", "en": "Tracking" } },
+    { "path": "composition.motion.morphDuration", "scope": "effect", "type": "number", "unit": "ms", "minimum": 120, "maximum": 4000, "name": { "zh": "倾倒时长", "en": "Cascade duration" } },
+    { "path": "composition.motion.characterDelay", "scope": "effect", "type": "number", "unit": "s", "minimum": 0, "maximum": 0.3, "name": { "zh": "逐字延迟", "en": "Character delay" } },
+    { "path": "composition.motion.effectAmount", "scope": "effect", "type": "number", "unit": "%", "minimum": 0, "maximum": 200, "name": { "zh": "倾斜强度", "en": "Tilt amount" } },
+    { "path": "composition.motion.speed", "scope": "global", "type": "number", "unit": "x", "minimum": 0.1, "maximum": 4, "name": { "zh": "播放速度", "en": "Playback speed" } },
+    { "path": "composition.rows[].text", "scope": "row", "type": "string", "name": { "zh": "段落文字", "en": "Row text" } },
+    { "path": "composition.rows[].fontFamily", "scope": "row", "type": "font", "name": { "zh": "本段字体", "en": "Row font" } },
+    { "path": "composition.rows[].textColor", "scope": "row", "type": "color", "name": { "zh": "本段文字颜色", "en": "Row text color" } },
+    { "path": "composition.rows[].hold", "scope": "row", "type": "number", "unit": "ms", "minimum": 0, "maximum": 10000, "name": { "zh": "段落停留", "en": "Row hold" } },
+    { "path": "composition.rows[].backgroundColor", "scope": "row", "type": "color", "name": { "zh": "段落背景颜色", "en": "Row background color" } },
+    { "path": "composition.rows[].backgroundMedia", "scope": "row", "type": "media", "accept": ["image", "gif", "video"], "name": { "zh": "段落背景素材", "en": "Row background media" } },
+    { "path": "composition.rows[].backgroundMedia.videoStart", "scope": "row", "type": "number", "unit": "s", "minimum": 0, "name": { "zh": "视频起点", "en": "Video trim start" } },
+    { "path": "composition.rows[].backgroundMedia.videoEnd", "scope": "row", "type": "number", "unit": "s", "minimum": 0, "name": { "zh": "视频终点", "en": "Video trim end" } },
+    { "path": "composition.rows[].icons", "scope": "row", "type": "array", "name": { "zh": "行内图标", "en": "Inline icons" } }
+  ]
+}
