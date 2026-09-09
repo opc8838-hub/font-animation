@@ -57,7 +57,11 @@
   function loadImage(url) {
     if (!url) return Promise.resolve(null);
     if (imageCache.has(url)) return imageCache.get(url);
-    const promise = new Promise((resolve, reject) => { const img = new Image(); img.onload = () => { promise.image = img; resolve(img); }; img.onerror = reject; img.src = url; });
+    const nativeImage = new Promise((resolve, reject) => { const img = new Image(); img.onload = () => resolve(img); img.onerror = reject; img.src = url; });
+    const animatedImage = /gif/i.test(url) && window.CellMotionAnimatedImage
+      ? window.CellMotionAnimatedImage.decode({ url, type: "image/gif" }).catch((error) => { console.warn("Animated asset decode failed", url, error); return null; })
+      : Promise.resolve(null);
+    const promise = Promise.all([nativeImage, animatedImage]).then(([image, animated]) => { promise.image = image; promise.animated = animated; return image; });
     imageCache.set(url, promise); return promise;
   }
   function hydrateImages() { [...state.assets, ...allLibrary].filter((asset) => asset.kind !== "vector").forEach((asset) => loadImage(asset.url).catch(() => null)); }
@@ -106,10 +110,10 @@
     context.save(); context.globalAlpha = alpha; context.translate(x, y); context.rotate(rotation); context.scale(scale * flipX, scale);
     if (item.kind === "glyph") { const preset = fontPreset(), weight = Number(controls.fontWeight.value) || preset.weight; context.font = `${preset.style} ${weight} ${fontPx}px "${preset.family}",${window.STGFontLibrary?.fallbackStack || "sans-serif"}`; context.fillStyle = item.color; context.textAlign = "center"; context.textBaseline = "middle"; context.fillText(item.glyph, 0, 0); }
     else {
-      const asset = item.asset, promise = imageCache.get(asset.url), image = promise?.image;
+      const asset = item.asset, promise = imageCache.get(asset.url), image = window.CellMotionAnimatedImage?.frameAt(promise?.animated, time) || promise?.image;
       const base = fontPx * Number(controls.iconSize.value) / 100 * (asset.size || 100) / 100; context.globalAlpha *= (asset.opacity || 100) / 100; context.translate((asset.x || 0) + Number(controls.iconGap.value), (asset.y || 0) + Number(controls.iconY.value)); context.rotate((asset.rotation || 0) * Math.PI / 180 + time * Number(controls.iconSpin.value) * (asset.spin ?? 1) * Math.PI * 2);
       if (asset.kind === "vector") drawVector(context, asset, base, time);
-      else if (image) { const ratio = image.naturalWidth && image.naturalHeight ? image.naturalWidth / image.naturalHeight : 1, dw = ratio >= 1 ? base : base * ratio, dh = ratio >= 1 ? base / ratio : base; context.drawImage(image, -dw / 2, -dh / 2, dw, dh); }
+      else if (image) { const ratio = (image.naturalWidth || image.width || 1) / Math.max(1, image.naturalHeight || image.height || 1), dw = ratio >= 1 ? base : base * ratio, dh = ratio >= 1 ? base / ratio : base; context.drawImage(image, -dw / 2, -dh / 2, dw, dh); }
     }
     context.restore();
   }

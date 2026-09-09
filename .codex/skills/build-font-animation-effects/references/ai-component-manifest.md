@@ -31,6 +31,21 @@ Read this reference when an effect adds or changes the “用于 AI / For AI” 
 - v1 may use `"*"` for the local/static same-origin pilot. Document that production integration must restrict target and accepted origins; do not imply that wildcard messaging is the production security posture.
 - Preview mode hides all editor chrome but does not change renderer geometry, deterministic timing, or composition pixels.
 
+## Adoption levels
+
+Use these labels in reviews and documentation; do not call an effect “AI ready” merely because a descriptor or demo page exists.
+
+1. **Described** — a versioned effect descriptor declares capabilities, behavior, and editable parameters.
+2. **Connected** — the editor generates the Manifest from its current live scheme and exposes it through the approved “用于 AI / For AI” menu.
+3. **Playable** — the existing authoritative renderer implements ready, configure, play, pause, restart, seek, duration reporting, and live composition updates through the versioned bridge.
+4. **Verified** — changed state, animated media, desktop/mobile layout, player controls, origin policy, and a clean console have been checked in the real player.
+
+Type Cascade is the v1 pilot and is the only effect that may currently be labelled Verified. For another effect, add a small effect-owned adapter to the shared bridge/player modules; do not copy `typecascade-ai.js` or claim compatibility after adding only a JSON file.
+
+The v1 schema models Type Cascade's stable rows. Before adapting an effect whose natural composition is scenes, layers, glyphs, or another structure, generalize the shared schema deliberately and preserve that effect's native model. Do not force unrelated effects into row-shaped data.
+
+Animated images must use the shared `CellMotionAnimatedImage` runtime and the source file's frame delays. AI playback, editor preview, paused seek frames, and export must select the same frame from the same composition time.
+
 ## Verification
 
-Generate a Manifest after changing text, font, text color, row background color, an inline icon, and a motion parameter. Test an uploaded image/GIF and a trimmed video background and confirm their data remains attached to the correct stable row. Validate the Manifest, load it in the real demo player, exercise play/pause/restart/seek, switch languages and themes, check desktop and mobile header layout, and keep the browser console clean.
+Generate a Manifest after changing text, font, text color, row background color, an inline icon, and a motion parameter. Test an uploaded image/GIF and a trimmed video background and confirm their data remains attached to the correct stable row. Validate the Manifest, load it in the real demo player, exercise play/pause/restart/seek/live update, confirm duration and ready messages, switch languages and themes, check desktop and mobile header layout, and keep the browser console clean. The static contract checker is a gate, not a substitute for this live verification.

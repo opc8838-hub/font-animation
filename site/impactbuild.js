@@ -148,7 +148,15 @@
   function ensureIconImage(asset) {
     if (!asset || asset.kind === "vector") return null;
     if (!iconImages.has(asset.libraryId)) {
-      const image = new Image(); image.src = asset.url; iconImages.set(asset.libraryId, image);
+      const image = new Image();
+      const resource = { image, animated: null };
+      image.src = asset.url;
+      iconImages.set(asset.libraryId, resource);
+      if (/gif/i.test(`${asset.type || ""} ${asset.url || ""}`) && window.CellMotionAnimatedImage) {
+        window.CellMotionAnimatedImage.decode({ url: asset.url, type: asset.type || "image/gif" })
+          .then((animated) => { resource.animated = animated; })
+          .catch((error) => console.warn("Animated icon decode failed", asset.url, error));
+      }
     }
     return iconImages.get(asset.libraryId);
   }
@@ -204,8 +212,9 @@
     ctx.save(); ctx.translate(x + item.width / 2 + fontPx * tune.offsetX / 100, y + fontPx * tune.offsetY / 100);
     if (item.asset.kind === "vector") window.STGIconLibrary.drawVector(ctx, item.asset, size, time);
     else {
-      const image = ensureIconImage(item.asset);
-      if (image?.complete) ctx.drawImage(image, -size / 2, -size / 2, size, size);
+      const resource = ensureIconImage(item.asset);
+      const image = window.CellMotionAnimatedImage?.frameAt(resource?.animated, time) || resource?.image;
+      if (image && (resource?.animated || image.complete)) ctx.drawImage(image, -size / 2, -size / 2, size, size);
     }
     ctx.restore();
   }

@@ -7,6 +7,7 @@
       this.attachShadow({ mode: "open" });
       this._manifest = null;
       this._ready = false;
+      this._durationMs = 0;
       this._onMessage = this._onMessage.bind(this);
       this.shadowRoot.innerHTML = `<style>:host{display:block;position:relative;overflow:hidden;border-radius:inherit;background:#f6f6f8}iframe{display:block;width:100%;height:100%;border:0;background:transparent}</style><iframe title="CellMotion animation" loading="eager" allow="autoplay"></iframe>`;
       this.iframe = this.shadowRoot.querySelector("iframe");
@@ -20,6 +21,7 @@
     disconnectedCallback() { window.removeEventListener("message", this._onMessage); }
     set manifest(value) { this._manifest = value; this._mount(); }
     get manifest() { return this._manifest; }
+    get duration() { return this._durationMs / 1000; }
 
     _mount() {
       if (!this.isConnected || !this._manifest?.runtime?.entry) return;
@@ -37,10 +39,23 @@
     }
 
     _onMessage(event) {
-      if (event.source !== this.iframe.contentWindow || event.data?.type !== "cellmotion:ready") return;
+      if (event.source !== this.iframe.contentWindow) return;
+      if (event.data?.type === "cellmotion:duration") {
+        this._setDuration(event.data.durationMs);
+        return;
+      }
+      if (event.data?.type !== "cellmotion:ready") return;
       this._ready = true;
+      this._setDuration(event.data.durationMs);
       this._post("cellmotion:configure", { manifest: this._manifest });
-      this.dispatchEvent(new CustomEvent("cellmotion-ready"));
+      this.dispatchEvent(new CustomEvent("cellmotion-ready", { detail: { duration: this.duration } }));
+    }
+
+    _setDuration(value) {
+      const next = Math.max(0, Number(value) || 0);
+      if (next === this._durationMs) return;
+      this._durationMs = next;
+      this.dispatchEvent(new CustomEvent("cellmotion-durationchange", { detail: { duration: this.duration } }));
     }
 
     _post(type, detail = {}) { this.iframe.contentWindow?.postMessage({ type, ...detail }, "*"); }

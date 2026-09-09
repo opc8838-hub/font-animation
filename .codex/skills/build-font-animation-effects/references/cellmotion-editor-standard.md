@@ -29,7 +29,7 @@ Use this reference for every new editor and every migration of an existing effec
 - Row/page text, font, color, hold, assigned assets, effect-specific timing, and background/media remain owned by a stable row/page id. Reorder, add, delete, save, import, and reload move the complete state together.
 - Each applicable row/page exposes its own text color and background. An explicit apply-to-all action may copy a color, but it must not silently replace independent images, GIFs, videos, trim values, or transitions.
 - Backgrounds accept solid color, image, GIF, and video. Video exposes filmstrip trimming with start/end values. Local image processing may remove a simple connected background without an AI dependency.
-- The optional `铺满背景` presentation mode extends the active composition background through the stage for recording or presentation. It must not change canvas size, typography, icon geometry, saved composition, or export pixels.
+- The optional `铺满背景` presentation mode extends the active row/page background color through the stage and follows page changes and background crossfades. It must not change canvas size, typography, icon geometry, saved composition, or export pixels. The collapsed toolbar shows one compact pale-lime button only; clicking it opens the follow-current-page switch and independent stage-color control. The color swatch never appears as a second toolbar button. When follow mode is off, the stage uses its independently saved neutral-gray/custom color.
 - Use the shared font catalog and icon/media model. Candidate selection is separate from insertion; inserted assets have an explicit focused editor and row/page ownership.
 - Keep exactly Save, Import, Restore Default, and Clear/Rebuild in the shared scheme surface.
 

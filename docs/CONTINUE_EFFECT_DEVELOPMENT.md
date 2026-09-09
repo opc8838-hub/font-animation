@@ -12,6 +12,8 @@ This is the short entry point for continuing CellMotion work in a fresh chat or 
    - files directly imported by that effect.
 3. Load skill references conditionally:
    - editor UI or icon interaction: `references/cellmotion-editor-standard.md` and `references/editor-interaction-contract.md`;
+   - GIF icons or GIF canvas backgrounds: `references/animated-image-runtime.md`;
+   - “用于 AI”, component Manifest, or player bridge: `references/ai-component-manifest.md`;
    - new effect or substantial editor upgrade: `references/editor-baseline.md` and `references/reuse-map.md`;
    - reference video: `references/video-analysis-workflow.md` plus a focused video analysis note.
 4. Do not read the full README changelog, all effects, or old chat history unless a concrete dependency or conflict requires it.
@@ -25,7 +27,7 @@ This is the short entry point for continuing CellMotion work in a fresh chat or 
 - Shared fonts: `site/shared-font-library.js` and `site/shared-fonts.css`.
 - Approved editor reference: Type Cascade — `site/typecascade.html`, `site/typecascade-workspace.css`, `site/typecascade-workspace.js`, `site/typecascade-polish.css`, `site/typecascade-polish.js`, `site/typecascade-selects.js`, and `site/typecascade-locale.js`. Reuse the shell; preserve effect-specific renderers and motion controls.
 - Shared editor primitives: `site/me-motion-editor.js`, `site/me-motion-editor.css`, `site/workspace-editor.css`.
-- Shared assets/media: `site/shared-icon-library.js`, `site/media-layer.js`, `site/media-layer.css`, and the icon paths documented by the project skill.
+- Shared assets/media: `site/shared-icon-library.js`, `site/cellmotion-animated-image.js`, `site/media-layer.js`, `site/media-layer.css`, and the icon paths documented by the project skill. Effect renderers must not instantiate their own `ImageDecoder`.
 - CellMotion website preview: `site/cellmotion.html`; independent component-library shell: `site/cellmotion-components.html`; editor directory: `site/cellmotion-editors.html`; shared website behavior/styles: `site/cellmotion.js`, `site/cellmotion.css`, `site/cellmotion-hero.css`, `site/cellmotion-type.css`, and `site/cellmotion-layout.css`. Website scope and verification notes are in [`CELLMOTION_WEBSITE_PREVIEW.md`](CELLMOTION_WEBSITE_PREVIEW.md).
 - External protocol planning: [`CELLMOTION_EXTERNAL_PROTOCOL_PLAN.md`](CELLMOTION_EXTERNAL_PROTOCOL_PLAN.md). It is a future-facing plan, not a released schema, SDK, MCP contract, or claim that current effects are installable web components.
 - Split Flip (`上下翻转`): `site/split-flip.html`, `site/split-flip.css`, `site/split-flip.js`; default preset `site/assets/presets/split-flip-default.json`; approved gallery video `site/assets/previews/split-flip-card.mp4`. It was introduced by commit `deb32ab` and is listed in both the original gallery and the generated CellMotion catalog.
@@ -35,6 +37,7 @@ This is the short entry point for continuing CellMotion work in a fresh chat or 
 ## Minimal verification before handoff
 
 - Run syntax checks on changed JavaScript and `git diff --check`.
+- Run `python .codex/skills/build-font-animation-effects/scripts/check_shared_contracts.py` after GIF runtime or AI bridge changes.
 - For editor UI changes, run the skill's `check_editor_contract.py` against the effect page.
 - Test the requested behavior in the real browser at one desktop and one portrait/square size.
 - Generate and inspect one real export when export code or rendering changed.

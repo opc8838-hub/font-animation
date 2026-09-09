@@ -175,25 +175,16 @@
       image.src = media.url;
       runtime.image = image;
       runtime.promise = new Promise((resolve) => { image.addEventListener("load", () => resolve(runtime), { once: true }); image.addEventListener("error", () => resolve(runtime), { once: true }); });
-      if (/gif/i.test(media.type || media.url) && "ImageDecoder" in window) decodeAnimatedImage(media.url, media.type, runtime);
+      if (/gif/i.test(media.type || media.url) && window.CellMotionAnimatedImage) decodeAnimatedImage(media.url, media.type, runtime);
     }
     return runtime;
   }
 
   async function decodeAnimatedImage(url, type, runtime) {
     try {
-      const data = await (await fetch(url)).arrayBuffer();
-      const decoder = new ImageDecoder({ data, type: type || "image/gif" });
-      await decoder.tracks.ready;
-      const frames = []; let duration = 0;
-      const count = Math.min(180, decoder.tracks.selectedTrack?.frameCount || 1);
-      for (let index = 0; index < count; index += 1) {
-        const decoded = await decoder.decode({ frameIndex: index });
-        const frameDuration = Math.max(1 / 60, Number(decoded.image.duration || 100000) / 1000000);
-        const image = await createImageBitmap(decoded.image); decoded.image.close();
-        frames.push({ image, start: duration, duration: frameDuration }); duration += frameDuration;
-      }
-      runtime.frames = frames; runtime.duration = duration; decoder.close();
+      const animated = await window.CellMotionAnimatedImage.decode({ url, type });
+      runtime.frames = animated.frames.map((frame) => ({ image: frame.image, start: frame.startMs / 1000, duration: frame.durationMs / 1000 }));
+      runtime.duration = animated.totalMs / 1000;
     } catch (_) {}
   }
 
@@ -498,7 +489,7 @@
     runtime.image.src = asset.url;
     runtimes.set(key, runtime);
     runtime.promise = new Promise((resolve) => { runtime.image.addEventListener("load", () => resolve(runtime), { once: true }); runtime.image.addEventListener("error", () => resolve(runtime), { once: true }); });
-    if (/gif/i.test(asset.type || asset.url) && "ImageDecoder" in window) decodeAnimatedImage(asset.url, asset.type, runtime);
+    if (/gif/i.test(asset.type || asset.url) && window.CellMotionAnimatedImage) decodeAnimatedImage(asset.url, asset.type, runtime);
     return runtime;
   }
 

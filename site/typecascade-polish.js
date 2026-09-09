@@ -33,11 +33,11 @@
     syncBackdropColor();
   });
 
-  // The editor-stage backdrop is an editor preference. It never follows a row
-  // background and never enters composition state or exported pixels.
+  // The editor-stage backdrop is presentation-only. In fill mode it follows the
+  // active row background; otherwise it uses an independent editor preference.
   const backdropControl = document.createElement('div');
   backdropControl.className = 'tc-backdrop-control';
-  backdropControl.innerHTML = '<button class="tc-backdrop-toggle" id="tcBackdropToggle" type="button" aria-haspopup="true" aria-expanded="false">▧ <span>铺满背景</span></button><div class="tc-backdrop-popover" hidden><label><input id="tcBackdropEnabled" type="checkbox"><span data-backdrop-enabled>启用铺满背景</span></label><label class="tc-backdrop-color"><span data-backdrop-color>预览舞台颜色</span><input id="tcBackdropColor" type="color"></label><button id="tcBackdropReset" type="button">恢复默认灰色</button></div>';
+  backdropControl.innerHTML = '<button class="tc-backdrop-toggle" id="tcBackdropToggle" type="button" aria-haspopup="true" aria-expanded="false" aria-pressed="false">▧ <span>铺满背景</span></button><div class="tc-backdrop-popover" hidden><label><span data-backdrop-enabled>跟随当前页背景</span><input id="tcBackdropEnabled" type="checkbox"></label><label><span data-backdrop-color>独立画布背景</span><input id="tcBackdropColor" type="color"></label><button id="tcBackdropReset" type="button">恢复默认灰色</button></div>';
   document.querySelector('.tc-canvas-toolbar .gm-canvas-card').before(backdropControl);
   const backdropButton = $('tcBackdropToggle');
   const backdropPopover = backdropControl.querySelector('.tc-backdrop-popover');
@@ -54,7 +54,7 @@
   function syncBackdropColor() {
     const color = /^#[0-9a-f]{6}$/i.test(storedBackdropColor) ? storedBackdropColor : defaultBackdropColor();
     backdropColor.value = color;
-    document.querySelector('.gm-stage').style.setProperty('--tc-showcase-bg', color);
+    document.querySelector('.gm-stage').style.setProperty('--tc-user-stage-bg', color);
   }
   function setBackdrop(enabled, persist = true) {
     storedBackdropEnabled = Boolean(enabled);
@@ -71,8 +71,8 @@
   function renderBackdropLanguage() {
     const english = body.dataset.editorLanguage === 'en';
     backdropButton.querySelector('span').textContent = english ? 'Stage fill' : '铺满背景';
-    backdropControl.querySelector('[data-backdrop-enabled]').textContent = english ? 'Enable stage fill' : '启用铺满背景';
-    backdropControl.querySelector('[data-backdrop-color]').textContent = english ? 'Preview stage color' : '预览舞台颜色';
+    backdropControl.querySelector('[data-backdrop-enabled]').textContent = english ? 'Follow current page background' : '跟随当前页背景';
+    backdropControl.querySelector('[data-backdrop-color]').textContent = english ? 'Independent canvas background' : '独立画布背景';
     backdropReset.textContent = english ? 'Reset neutral gray' : '恢复默认灰色';
   }
   backdropButton.addEventListener('click', () => setBackdropPopover(backdropPopover.hidden));
@@ -87,8 +87,8 @@
     try { localStorage.removeItem('cellmotion-stage-backdrop-color'); } catch (_) {}
     syncBackdropColor();
   });
-  document.addEventListener('click', event => { if (!backdropControl.contains(event.target)) setBackdropPopover(false); });
-  document.addEventListener('keydown', event => { if (event.key === 'Escape') setBackdropPopover(false); });
+  document.addEventListener('click', (event) => { if (!backdropControl.contains(event.target)) setBackdropPopover(false); });
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape') setBackdropPopover(false); });
   document.addEventListener('tc-languagechange', renderBackdropLanguage);
   setBackdrop(storedBackdropEnabled, false);
   renderBackdropLanguage();

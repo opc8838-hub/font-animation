@@ -52,6 +52,14 @@ The player preserves the composition aspect ratio, opens the effect's existing p
 
 The iframe bridge accepts the matching `cellmotion:play`, `cellmotion:pause`, `cellmotion:restart`, and `cellmotion:seek` messages. Preview and exported media therefore continue to use the effect's deterministic Canvas timeline and geometry.
 
+## AI adoption status
+
+AI compatibility is graduated: **Described** (descriptor), **Connected** (live editor Manifest), **Playable** (ready/configure/play/pause/restart/seek/duration/live-update bridge), then **Verified** (real player and media checks). A descriptor or standalone demonstration page alone is not an AI-ready integration.
+
+Type Cascade is the v1 pilot and currently the only effect represented as Verified. Other effects should reuse the shared Manifest/player/bridge modules and add a small effect-owned adapter; they must not copy the Type Cascade bridge into parallel implementations. The v1 composition schema is row-oriented because it reflects Type Cascade. Before onboarding scene-, layer-, or glyph-oriented effects, generalize the shared schema without coercing their native state into rows.
+
+System and uploaded GIFs use `CellMotionAnimatedImage`; source frame delays are authoritative. Preview, pause/seek, export, and AI player playback must derive the displayed frame from the same composition time.
+
 ## Paths, assets, and trust boundary
 
 `runtime.entry` in an effect descriptor is relative to the editor/site base used by `createManifest`; generated Manifests contain an absolute URL. Built-in fonts and icons use stable library ids. Uploaded images and background media may be embedded as data URLs in `composition` and `assets`, so consumers must treat Manifest content as untrusted user data and avoid inserting names or strings as HTML.
@@ -65,7 +73,8 @@ The v1 pilot sends iframe messages with `"*"` so same-origin local and static-si
 - Parameter phase names belong to the effect. Shared timeline colors are semantic UI tokens, not universal choreography names.
 - Reduced-motion handling may pause the component, but must not mutate the saved composition.
 - A frontend tool should integrate the player when exact motion parity matters; recreating the animation from the prose summary is not equivalent.
+- An effect may be labelled AI ready only after all four adoption levels pass; static schema checks do not replace live player verification.
 
 ## Verification
 
-For every effect descriptor, generate a Manifest from changed live state and verify text, fonts, colors, icons, custom assets, background image/GIF/video data, trim values, transitions, motion parameters, and canvas size. Open the component demo, confirm there is no editor chrome inside the iframe, and exercise play, pause, restart, and seek with a clean console at desktop and mobile widths.
+For every effect descriptor, generate a Manifest from changed live state and verify text, fonts, colors, icons, custom assets, background image/GIF/video data, trim values, transitions, motion parameters, and canvas size. Open the component demo, confirm there is no editor chrome inside the iframe, and exercise play, pause, restart, seek, live update, ready, and duration reporting with a clean console at desktop and mobile widths.

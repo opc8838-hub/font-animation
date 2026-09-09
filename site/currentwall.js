@@ -79,7 +79,7 @@
   function addAsset(id, label, src, removable = false, metadata = {}) {
     const image = new Image();
     const asset = {
-      id, label, src, image, ratio: 1, ready: false, removable,
+      id, label, src, image, animated: null, ratio: 1, ready: false, removable,
       scale: 1, offsetX: 0, offsetY: 0, gapBefore: 0, gapAfter: 0,
       libraryId: metadata.libraryId || "", groupKey: metadata.groupKey || (removable ? "uploads" : "current"),
       kind: metadata.kind || "image", vectorType: metadata.vectorType || "", vectorStyle: metadata.vectorStyle || ""
@@ -91,6 +91,11 @@
       layoutCache.clear();
     };
     image.src = src;
+    if (/gif/i.test(`${metadata.type || ""} ${src || ""}`) && window.CellMotionAnimatedImage) {
+      window.CellMotionAnimatedImage.decode({ url: src, type: metadata.type || "image/gif" })
+        .then((animated) => { asset.animated = animated; })
+        .catch((error) => console.warn("Animated asset decode failed", src, error));
+    }
     assets.set(id, asset);
     assetRevision += 1;
     layoutCache.clear();
@@ -119,6 +124,10 @@
   }
 
   ensureSharedAssets();
+
+  function assetDrawable(asset, time) {
+    return window.CellMotionAnimatedImage?.frameAt(asset?.animated, time) || asset?.image || null;
+  }
 
   function parseRows() {
     const rows = inputs.rows.value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
@@ -586,6 +595,7 @@
   function removeAsset(id) {
     const asset = assets.get(id);
     if (!asset?.removable) return;
+    window.CellMotionAnimatedImage?.dispose(asset.animated);
     assets.delete(id);
     if (selectedAssetId === id) selectedAssetId = "music";
     assetRevision += 1;
@@ -684,7 +694,7 @@
     return layout;
   }
 
-  function drawSequence(context, layout, x, y, color, assetRotation = 0) {
+  function drawSequence(context, layout, x, y, color, assetRotation = 0, time = 0) {
     let cursor = x;
     context.fillStyle = color;
     layout.items.forEach((item) => {
@@ -698,10 +708,10 @@
           context.save();
           context.translate(drawX + item.drawWidth / 2, drawY);
           context.rotate(assetRotation);
-          context.drawImage(item.asset.image, -item.drawWidth / 2, -item.height / 2, item.drawWidth, item.height);
+          context.drawImage(assetDrawable(item.asset, time), -item.drawWidth / 2, -item.height / 2, item.drawWidth, item.height);
           context.restore();
         } else {
-          context.drawImage(item.asset.image, drawX, drawY - item.height / 2, item.drawWidth, item.height);
+          context.drawImage(assetDrawable(item.asset, time), drawX, drawY - item.height / 2, item.drawWidth, item.height);
         }
       } else {
         context.save();
@@ -714,12 +724,12 @@
     });
   }
 
-  function drawRepeatedLine(context, layout, y, width, color, shift, alpha = 1, assetRotation = 0) {
+  function drawRepeatedLine(context, layout, y, width, color, shift, alpha = 1, assetRotation = 0, time = 0) {
     let x = -mod(shift, layout.width) - layout.width;
     context.save();
     context.globalAlpha *= clamp01(alpha);
     while (x < width + layout.width) {
-      drawSequence(context, layout, x, y, color, assetRotation);
+      drawSequence(context, layout, x, y, color, assetRotation, time);
       x += layout.width;
     }
     context.restore();
@@ -769,7 +779,7 @@
       context.restore();
       return;
     }
-    context.drawImage(asset.image, centerX - width / 2, centerY - height / 2, width, height);
+    context.drawImage(assetDrawable(asset, time), centerX - width / 2, centerY - height / 2, width, height);
   }
 
   function drawFinalLine(context, text, centerX, y, color, assetHeight, sequenceElapsed, scanTiming, unitScale) {
@@ -1026,7 +1036,7 @@
       context.globalAlpha *= easeOut(rangeProgress(introEnter, 0, .55));
       context.translate(w / 2 + drift, h / 2 + introLift);
       context.scale(introScale, introScale);
-      drawSequence(context, introLayout, -introLayout.width / 2, 0, inputs.foreground.value);
+      drawSequence(context, introLayout, -introLayout.width / 2, 0, inputs.foreground.value, 0, localTime);
       context.restore();
       context.font = `${activePreset.style || "normal"} ${activePreset.weight} ${fontPx}px ${activeFamily}`;
     }
@@ -1209,11 +1219,11 @@
 
       const shift = signedTravel + setting.phase / 100 * layout.width + xWave - groupRight;
       if (choreography && localTime >= timing.fullEnd && laneIndex === 0) {
-        drawRepeatedLine(context, layout, y, localWidth, inputs.foreground.value, exitEntryShift - groupRight, rowAlpha * wallAlpha);
+        drawRepeatedLine(context, layout, y, localWidth, inputs.foreground.value, exitEntryShift - groupRight, rowAlpha * wallAlpha, 0, localTime);
       } else if (choreography && localTime >= timing.fullEnd && localTime < timing.exitEnd && laneIndex !== 0) {
-        drawRepeatedLine(context, layout, y, localWidth, inputs.foreground.value, exitEntryShift - groupRight, rowAlpha * wallAlpha);
+        drawRepeatedLine(context, layout, y, localWidth, inputs.foreground.value, exitEntryShift - groupRight, rowAlpha * wallAlpha, 0, localTime);
       } else {
-        drawRepeatedLine(context, layout, y, localWidth, inputs.foreground.value, shift, rowAlpha * wallAlpha);
+        drawRepeatedLine(context, layout, y, localWidth, inputs.foreground.value, shift, rowAlpha * wallAlpha, 0, localTime);
       }
     }
     context.restore();

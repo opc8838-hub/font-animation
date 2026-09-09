@@ -17,7 +17,8 @@ Create the effect-specific motion while reusing the site's established editing a
 6. When rows or pages can use different colors, images, GIFs, or videos, read [references/per-page-backgrounds.md](references/per-page-backgrounds.md).
 7. When importing, replacing, or expanding the shared icon collection, read [references/icon-library-maintenance.md](references/icon-library-maintenance.md).
 8. When adding or changing the “用于 AI” handoff, an effect component descriptor, Manifest, or player bridge, read [references/ai-component-manifest.md](references/ai-component-manifest.md).
-9. Preserve the user's unrelated work and commit only the effect or shared baseline files placed in scope.
+9. When an effect renders GIF icons or GIF backgrounds into Canvas, read [references/animated-image-runtime.md](references/animated-image-runtime.md). Do not create a private decoder or fixed icon FPS.
+10. Preserve the user's unrelated work and commit only the effect or shared baseline files placed in scope.
 
 If the task includes a reference video, use the available video-analysis workflow to inspect both normal-speed rhythm and slowed detail before choosing motion phases. Treat the user's video as visual evidence, not as permission to copy unrelated scene framing. Do not invoke `oil-motion` by default: ordinary kinetic typography, path following, color, icon, layout, Canvas, SVG, CSS, or GSAP work should stay in this skill unless the decision boundary in the video-analysis reference is actually met.
 
@@ -84,3 +85,4 @@ Before handing off an effect:
 - After unrelated refinements, verify approved schemes and gallery assets by scoped diff or checksum before handoff.
 - Run syntax checks and `git diff --check`, bump cache versions, and avoid staging unrelated files.
 - For AI component handoff changes, generate a Manifest from edited live state and verify the real demo player, all bridge controls, theme/language UI, mobile header fit, media/trim ownership, and a clean console.
+- Run `python .codex/skills/build-font-animation-effects/scripts/check_shared_contracts.py` whenever animated images or AI handoff files change.

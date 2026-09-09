@@ -44,6 +44,7 @@ Unless genuinely irrelevant to the selected effect, the migrated page provides:
 - Exactly Save, Import, Restore Default, and Clear/Rebuild in the scheme card.
 - Colored choreography blocks, playhead, click-to-seek, stage Pause/Play, and Replay.
 - One deterministic clock and geometry path shared by live preview and real PNG/GIF/video export.
+- GIF icons and GIF backgrounds decoded through `cellmotion-animated-image.js`, preserving source frame delays instead of a fixed per-effect FPS.
 
 Keep advanced or effect-specific controls inside compact disclosures near the row, page, layer, or phase they affect. Do not hide useful complexity by deleting it, and do not dump every low-level value into the default view.
 
@@ -71,3 +72,4 @@ Run the editor interaction contract and the normal effect completion gate, then 
 6. At least 1:1, 9:16, and 16:9 live layouts match real export geometry.
 7. The browser console is clean and at least one real GIF and MP4 have been inspected.
 8. Only after approval, update that effect's preset/gallery artifact and move to the next migration.
+9. Run `check_shared_contracts.py`; private `ImageDecoder` ownership or a missing shared-runtime script is a migration failure.

@@ -319,20 +319,6 @@
     return tokens;
   }
 
-  async function readGifFrameDurations(blob) {
-    if (!blob || !/gif/i.test(blob.type || "")) return [];
-    const bytes = new Uint8Array(await blob.arrayBuffer());
-    const durations = [];
-    for (let index = 0; index <= bytes.length - 8; index += 1) {
-      if (bytes[index] !== 0x21 || bytes[index + 1] !== 0xf9 || bytes[index + 2] !== 0x04) continue;
-      const delayHundredths = bytes[index + 4] | (bytes[index + 5] << 8);
-      // A zero delay is unspecified by GIF89a; 100 ms matches native browser fallback.
-      durations.push(delayHundredths > 0 ? delayHundredths * 10 : 100);
-      index += 7;
-    }
-    return durations;
-  }
-
   async function loadAssetResource(asset) {
     if (!asset || asset.kind === "vector") return null;
     if (state.imageCache.has(asset.libraryId)) return state.imageCache.get(asset.libraryId);
@@ -345,29 +331,9 @@
         image.onerror = () => resolve(null);
         image.src = asset.url;
       });
-      if (/gif/i.test(asset.fileType || "") && "ImageDecoder" in window) {
+      if (/gif/i.test(asset.fileType || "") && window.CellMotionAnimatedImage) {
         try {
-          const response = await fetch(asset.url);
-          if (!response.ok) throw new Error(`asset ${response.status}`);
-          const blob = await response.blob();
-          const sourceFrameDurations = await readGifFrameDurations(blob);
-          const decoder = new ImageDecoder({ data: blob.stream(), type: asset.fileType });
-          await decoder.tracks.ready;
-          const frameCount = decoder.tracks.selectedTrack?.frameCount || 1;
-          const frames = [];
-          let totalMs = 0;
-          for (let index = 0; index < frameCount; index += 1) {
-            const decoded = await decoder.decode({ frameIndex: index, completeFramesOnly: true });
-            // Use the GIF's own centisecond delays as the authority. Some Chromium
-            // builds expose a missing/rounded VideoFrame.duration, which otherwise
-            // makes system GIFs play at a visibly different frequency than <img>.
-            const decodedDurationMs = Number(decoded.image.duration) / 1000;
-            const durationMs = sourceFrameDurations[index]
-              || (Number.isFinite(decodedDurationMs) && decodedDurationMs > 0 ? decodedDurationMs : 100);
-            frames.push({ image: decoded.image, startMs: totalMs, durationMs });
-            totalMs += durationMs;
-          }
-          return { kind: "frames", frames, totalMs, decoder, fallbackImage: await fallbackPromise };
+          return { ...await window.CellMotionAnimatedImage.decode({ url: asset.url, type: asset.fileType }), fallbackImage: await fallbackPromise };
         } catch (error) {
           console.warn(`动态图标解码回退：${asset.name}`, error);
         }
@@ -587,6 +553,32 @@
     ctx.restore();
   }
 
+  function mixBackgroundColor(from, to, progress) {
+    const parse = (value) => {
+      const color = normalizeColor(value, state.scheme.typography.backgroundColor).slice(1);
+      return [0, 2, 4].map((offset) => parseInt(color.slice(offset, offset + 2), 16));
+    };
+    const a = parse(from);
+    const b = parse(to);
+    return `#${a.map((channel, index) => Math.round(channel + (b[index] - channel) * clamp(progress)).toString(16).padStart(2, "0")).join("")}`;
+  }
+
+  function syncPresentationBackdrop(timeline) {
+    const stage = document.querySelector(".gm-stage");
+    if (!stage) return;
+    let color = normalizeColor(timeline.segment.from.backgroundColor, state.scheme.typography.backgroundColor);
+    if (!timeline.inIntro && !timeline.inHold) {
+      const incoming = timeline.segment.to;
+      if (normalizeBackgroundTransition(incoming.backgroundTransition) === "crossfade") {
+        const elapsed = Math.max(0, timeline.contentTime - timeline.segment.holdMs);
+        const progress = clamp(elapsed / Math.max(10, normalizeBackgroundTransitionDuration(incoming.backgroundTransitionDuration)));
+        const eased = progress * progress * (3 - 2 * progress);
+        color = mixBackgroundColor(timeline.segment.from.backgroundColor, incoming.backgroundColor, eased);
+      } else color = normalizeColor(incoming.backgroundColor, state.scheme.typography.backgroundColor);
+    }
+    stage.style.setProperty("--tc-active-composition-bg", color);
+  }
+
   function renderBackground(ctx, timeline, width, height, preview) {
     const morphElapsed = Math.max(0, timeline.contentTime - timeline.segment.holdMs) / 1000;
     if (timeline.inIntro || timeline.inHold) {
@@ -682,10 +674,7 @@
   function drawableImage(resource, timeSeconds) {
     if (!resource) return null;
     if (resource.kind === "image") return resource.image;
-    if (resource.kind === "frames" && resource.frames.length) {
-      const timeMs = ((timeSeconds * 1000) % resource.totalMs + resource.totalMs) % resource.totalMs;
-      return (resource.frames.find((frame) => timeMs >= frame.startMs && timeMs < frame.startMs + frame.durationMs) || resource.frames[0]).image;
-    }
+    if (resource.kind === "frames") return window.CellMotionAnimatedImage?.frameAt(resource, timeSeconds) || resource.frames[0]?.image;
     return resource.fallbackImage || null;
   }
 
@@ -812,6 +801,7 @@
     ctx.save();
     ctx.clearRect(0, 0, width, height);
     const timeline = resolveTimeline(timeSeconds * 1000);
+    if (targetCanvas === canvas) syncPresentationBackdrop(timeline);
     renderBackground(ctx, timeline, width, height, targetCanvas === canvas);
     const fromLayout = glyphLayout(ctx, timeline.segment.from, width, height);
     const toLayout = glyphLayout(ctx, timeline.segment.to, width, height);
@@ -2173,6 +2163,9 @@
       seek: setTime,
       durationMs: cycleDurationMs
     };
+    const postDuration = () => {
+      if (window.parent !== window) window.parent.postMessage({ type: "cellmotion:duration", effectId: port.slug, durationMs: cycleDurationMs() }, "*");
+    };
     window.addEventListener("message", (event) => {
       const message = event.data || {};
       if (typeof message.type !== "string" || !message.type.startsWith("cellmotion:")) return;
@@ -2181,14 +2174,16 @@
         if (manifest?.effect?.id && manifest.effect.id !== port.slug) return;
         const composition = manifest?.composition || message.composition;
         if (composition) window.CellMotionEffectBridge.applyScheme(composition, { autoplay: manifest?.presentation?.autoplay });
+        postDuration();
       }
       if (message.type === "cellmotion:play") window.CellMotionEffectBridge.play();
       if (message.type === "cellmotion:pause") window.CellMotionEffectBridge.pause();
       if (message.type === "cellmotion:restart") window.CellMotionEffectBridge.restart();
       if (message.type === "cellmotion:seek") window.CellMotionEffectBridge.seek(message.seconds);
+      if (message.type === "cellmotion:request-duration") postDuration();
     });
     window.__morphPortTest = { port: clone({ mode: port.mode, slug: port.slug, zh: port.zh, en: port.en }), renderFrame, resolveTimeline, matchGlyphs, getScheme: () => clone(state.scheme), getElapsedMs: () => state.elapsedMs, isPlaying: () => state.playing, cycleDurationMs, rowStartElapsed, preloadInsertedAssets, setTime };
-    if (window.parent !== window) window.parent.postMessage({ type: "cellmotion:ready", effectId: port.slug, bridgeVersion: "1.0.0" }, "*");
+    if (window.parent !== window) window.parent.postMessage({ type: "cellmotion:ready", effectId: port.slug, bridgeVersion: "1.0.0", durationMs: cycleDurationMs() }, "*");
     requestAnimationFrame(animationLoop);
   }
 

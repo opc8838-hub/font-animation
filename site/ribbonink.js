@@ -1617,25 +1617,11 @@
   }
 
   async function decodeGifFrames(runtime, media) {
-    if (!("ImageDecoder" in window) || !/gif/i.test(media.fileType || media.name)) return;
+    if (!window.CellMotionAnimatedImage || !/gif/i.test(media.fileType || media.name)) return;
     try {
-      const data = await (await fetch(media.url)).arrayBuffer();
-      const decoder = new ImageDecoder({ data, type: media.fileType || "image/gif" });
-      await decoder.tracks.ready;
-      const count = Math.min(180, decoder.tracks.selectedTrack?.frameCount || 1);
-      const frames = [];
-      let duration = 0;
-      for (let frameIndex = 0; frameIndex < count; frameIndex += 1) {
-        const decoded = await decoder.decode({ frameIndex });
-        const frameDuration = Math.max(1 / 60, Number(decoded.image.duration || 100000) / 1000000);
-        const bitmap = await createImageBitmap(decoded.image);
-        decoded.image.close();
-        frames.push({ image: bitmap, start: duration, duration: frameDuration });
-        duration += frameDuration;
-      }
-      runtime.frames = frames;
-      runtime.duration = duration;
-      decoder.close();
+      const animated = await window.CellMotionAnimatedImage.decode({ url: media.url, type: media.fileType });
+      runtime.frames = animated.frames.map((frame) => ({ image: frame.image, start: frame.startMs / 1000, duration: frame.durationMs / 1000 }));
+      runtime.duration = animated.totalMs / 1000;
     } catch (error) {
       console.warn("GIF 背景逐帧解码不可用，已使用浏览器动画回退。", error);
     }

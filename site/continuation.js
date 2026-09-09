@@ -794,26 +794,11 @@
       image.src = asset.url;
     });
     await runtime.promise;
-    if (/gif/i.test(asset.fileType || asset.url) && "ImageDecoder" in window) {
+    if (/gif/i.test(asset.fileType || asset.url) && window.CellMotionAnimatedImage) {
       try {
-        const response = await fetch(asset.url);
-        const data = await response.arrayBuffer();
-        const decoder = new ImageDecoder({ data, type: asset.fileType || "image/gif" });
-        await decoder.tracks.ready;
-        const count = Math.min(180, decoder.tracks.selectedTrack?.frameCount || 1);
-        const frames = [];
-        let duration = 0;
-        for (let index = 0; index < count; index += 1) {
-          const decoded = await decoder.decode({ frameIndex: index });
-          const frameDuration = Math.max(1 / 60, Number(decoded.image.duration || 100000) / 1000000);
-          const bitmap = await createImageBitmap(decoded.image);
-          decoded.image.close();
-          frames.push({ image: bitmap, start: duration, duration: frameDuration });
-          duration += frameDuration;
-        }
-        runtime.frames = frames;
-        runtime.duration = duration;
-        decoder.close();
+        const animated = await window.CellMotionAnimatedImage.decode({ url: asset.url, type: asset.fileType });
+        runtime.frames = animated.frames.map((frame) => ({ image: frame.image, start: frame.startMs / 1000, duration: frame.durationMs / 1000 }));
+        runtime.duration = animated.totalMs / 1000;
       } catch (_) {}
     }
     return runtime;
@@ -852,26 +837,11 @@
       image.src = media.url;
     });
     await runtime.promise;
-    if (/gif/i.test(media.fileType || media.url) && "ImageDecoder" in window) {
+    if (/gif/i.test(media.fileType || media.url) && window.CellMotionAnimatedImage) {
       try {
-        const response = await fetch(media.url);
-        const data = await response.arrayBuffer();
-        const decoder = new ImageDecoder({ data, type: media.fileType || "image/gif" });
-        await decoder.tracks.ready;
-        const count = Math.min(180, decoder.tracks.selectedTrack?.frameCount || 1);
-        const frames = [];
-        let duration = 0;
-        for (let frameIndex = 0; frameIndex < count; frameIndex += 1) {
-          const decoded = await decoder.decode({ frameIndex });
-          const frameDuration = Math.max(1 / 60, Number(decoded.image.duration || 100000) / 1000000);
-          const bitmap = await createImageBitmap(decoded.image);
-          decoded.image.close();
-          frames.push({ image: bitmap, start: duration, duration: frameDuration });
-          duration += frameDuration;
-        }
-        runtime.frames = frames;
-        runtime.duration = duration;
-        decoder.close();
+        const animated = await window.CellMotionAnimatedImage.decode({ url: media.url, type: media.fileType });
+        runtime.frames = animated.frames.map((frame) => ({ image: frame.image, start: frame.startMs / 1000, duration: frame.durationMs / 1000 }));
+        runtime.duration = animated.totalMs / 1000;
       } catch (_) {}
     }
     return runtime;

@@ -88,5 +88,6 @@ Test these observable behaviors in a real browser:
 19. If the effect permits one row, delete to one row and confirm Replay still shows its complete entrance/exit/reset cycle; row pause must still show the whole readable row.
 20. If an opening is supported, disable it and confirm the original core transition is restored; enable it, Replay from time zero, and confirm row pause skips the partial opening frame.
 21. Confirm the timeline passes the global color contract: the number of distinct non-gray fills matches the phase-type requirement, lime is not paired with gray as a fallback system, and every block label names the current effect's own motion.
+22. Open `铺满背景` and verify its single collapsed toolbar button reveals both follow-current-page and independent stage-color controls. With follow enabled, page colors and crossfades extend through the stage; with it disabled, changing the stage color does not mutate any page or exported pixel.
 
 Run `scripts/check_editor_contract.py` for a fast structural check, then perform the browser checks above. Static success does not replace interaction testing.

@@ -152,23 +152,9 @@
         image.onerror = () => resolve(null);
         image.src = asset.url;
       });
-      if (/gif/i.test(asset.fileType || "") && "ImageDecoder" in window) {
+      if (/gif/i.test(asset.fileType || "") && window.CellMotionAnimatedImage) {
         try {
-          const response = await fetch(asset.url);
-          if (!response.ok) throw new Error(`asset ${response.status}`);
-          const blob = await response.blob();
-          const decoder = new ImageDecoder({ data: blob.stream(), type: asset.fileType });
-          await decoder.tracks.ready;
-          const frameCount = decoder.tracks.selectedTrack?.frameCount || 1;
-          const frames = [];
-          let totalMs = 0;
-          for (let index = 0; index < frameCount; index += 1) {
-            const decoded = await decoder.decode({ frameIndex: index, completeFramesOnly: true });
-            const durationMs = Math.max(20, Number(decoded.image.duration || 100000) / 1000);
-            frames.push({ image: decoded.image, startMs: totalMs, durationMs });
-            totalMs += durationMs;
-          }
-          return { kind: "frames", frames, totalMs, decoder, fallbackImage: await fallbackPromise };
+          return { ...await window.CellMotionAnimatedImage.decode({ url: asset.url, type: asset.fileType }), fallbackImage: await fallbackPromise };
         } catch (error) {
           console.warn(`动态图标解码回退：${asset.name}`, error);
         }
@@ -247,10 +233,7 @@
   function drawableImage(resource, timeSeconds) {
     if (!resource) return null;
     if (resource.kind === "image") return resource.image;
-    if (resource.kind === "frames" && resource.frames.length) {
-      const timeMs = ((timeSeconds * 1000) % resource.totalMs + resource.totalMs) % resource.totalMs;
-      return (resource.frames.find((frame) => timeMs >= frame.startMs && timeMs < frame.startMs + frame.durationMs) || resource.frames[0]).image;
-    }
+    if (resource.kind === "frames") return window.CellMotionAnimatedImage?.frameAt(resource, timeSeconds) || resource.frames[0]?.image;
     return resource.fallbackImage || null;
   }
 

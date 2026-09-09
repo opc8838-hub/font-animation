@@ -11,6 +11,8 @@ Read this reference when importing, replacing, or expanding assets in `site/shar
 
 Never copy these arrays into an effect or freeze a group count in editor code. Render the current group, name, `libraryId`, URL, and file type from `STGIconLibrary`.
 
+Canvas consumers load `site/cellmotion-animated-image.js` and use its deterministic interface for GIF icons. The GIF file's own frame delays are the timing authority; do not add another `ImageDecoder`, clamp every frame to a local minimum, or assign an editor-specific icon FPS.
+
 ## Adding transparent animal assets
 
 1. Inspect every source file for dimensions, format, and a real alpha channel. A checkerboard shown by an image viewer is not evidence; inspect pixel alpha and confirm the background contains transparent pixels.

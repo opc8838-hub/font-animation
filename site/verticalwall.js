@@ -86,7 +86,7 @@
   function addAsset(id, label, src, removable = false, metadata = {}) {
     const image = new Image();
     const asset = {
-      id, label, src, image, ratio: 1, ready: false, removable,
+      id, label, src, image, animated: null, ratio: 1, ready: false, removable,
       scale: 1, offsetX: 0, offsetY: 0, gapBefore: 0, gapAfter: 0,
       libraryId: metadata.libraryId || "", groupKey: metadata.groupKey || (removable ? "uploads" : "current"),
       kind: metadata.kind || "image", vectorType: metadata.vectorType || "", vectorStyle: metadata.vectorStyle || ""
@@ -99,6 +99,11 @@
       renderRowOverview(currentTime());
     };
     image.src = src;
+    if (/gif/i.test(`${metadata.type || ""} ${src || ""}`) && window.CellMotionAnimatedImage) {
+      window.CellMotionAnimatedImage.decode({ url: src, type: metadata.type || "image/gif" })
+        .then((animated) => { asset.animated = animated; })
+        .catch((error) => console.warn("Animated asset decode failed", src, error));
+    }
     assets.set(id, asset);
     assetRevision += 1;
     layoutCache.clear();
@@ -120,6 +125,10 @@
   }
 
   ensureSharedAssets();
+
+  function assetDrawable(asset, time) {
+    return window.CellMotionAnimatedImage?.frameAt(asset?.animated, time) || asset?.image || null;
+  }
 
   function parseRows() {
     const rows = inputs.rows.value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
@@ -685,6 +694,7 @@
   function removeAsset(id) {
     const asset = assets.get(id);
     if (!asset?.removable) return;
+    window.CellMotionAnimatedImage?.dispose(asset.animated);
     assets.delete(id);
     if (selectedAssetId === id) selectedAssetId = "music";
     assetRevision += 1;
@@ -872,7 +882,7 @@
       context.shadowBlur = Math.max(2, item.height * .10);
       context.shadowOffsetX = Math.sin(yawRadians) * item.height * .06;
       context.shadowOffsetY = Math.sin(Math.abs(pitchRadians)) * item.height * .08 + item.height * .025;
-      context.drawImage(item.asset.image, -item.width / 2 + drawX, -item.height / 2 + drawY, item.width, item.height);
+      context.drawImage(assetDrawable(item.asset, options.time || 0), -item.width / 2 + drawX, -item.height / 2 + drawY, item.width, item.height);
       context.restore();
     } else {
       context.strokeStyle = color;
@@ -980,7 +990,7 @@
       context.scale(width / Math.max(1, height), 1);
       window.STGIconLibrary.drawVector(context, asset, height, time);
     } else if (asset.ready) {
-      context.drawImage(asset.image, -width / 2, -height / 2, width, height);
+      context.drawImage(assetDrawable(asset, time), -width / 2, -height / 2, width, height);
     }
     context.restore();
   }
