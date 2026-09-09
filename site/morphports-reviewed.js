@@ -154,7 +154,10 @@
     url: String(media.url),
     fileType: String(media.fileType || "image/png"),
     videoStart: Math.max(0, Number.isFinite(Number(media.videoStart)) ? Number(media.videoStart) : 0),
-    videoEnd: Number.isFinite(Number(media.videoEnd)) && Number(media.videoEnd) > 0 ? Number(media.videoEnd) : null
+    videoEnd: Number.isFinite(Number(media.videoEnd)) && Number(media.videoEnd) > 0 ? Number(media.videoEnd) : null,
+    cropX: clamp(Number.isFinite(Number(media.cropX)) ? Number(media.cropX) : 0.5),
+    cropY: clamp(Number.isFinite(Number(media.cropY)) ? Number(media.cropY) : 0.5),
+    cropZoom: clamp(Number.isFinite(Number(media.cropZoom)) ? Number(media.cropZoom) : 1, 1, 4)
   } : null;
   const isVideoMedia = (media) => /^video\//i.test(media?.fileType || "");
   const isGifMedia = (media) => /gif/i.test(media?.fileType || "");
@@ -551,12 +554,15 @@
     ctx.fillStyle = normalizeColor(rowState?.backgroundColor, state.scheme.typography.backgroundColor);
     ctx.fillRect(0, 0, width, height);
     if (image) {
+      const media = normalizeBackgroundMedia(rowState?.backgroundMedia);
       const sourceWidth = image.videoWidth || image.width || image.naturalWidth || width;
       const sourceHeight = image.videoHeight || image.height || image.naturalHeight || height;
-      const cover = Math.max(width / Math.max(1, sourceWidth), height / Math.max(1, sourceHeight));
+      const cover = Math.max(width / Math.max(1, sourceWidth), height / Math.max(1, sourceHeight)) * (media?.cropZoom || 1);
       const drawWidth = sourceWidth * cover;
       const drawHeight = sourceHeight * cover;
-      ctx.drawImage(image, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
+      const cropX = media?.cropX ?? 0.5;
+      const cropY = media?.cropY ?? 0.5;
+      ctx.drawImage(image, -(drawWidth - width) * cropX, -(drawHeight - height) * cropY, drawWidth, drawHeight);
     }
     ctx.restore();
   }
@@ -863,6 +869,24 @@
     return timeline;
   }
 
+  function refreshBackgroundCropPreviews() {
+    document.querySelectorAll("[data-background-crop-preview]").forEach((cropCanvas) => {
+      const rowElement = cropCanvas.closest(".gm-row-shell");
+      const row = state.scheme.rows.find((item) => item.id === rowElement?.dataset.rowId);
+      const runtime = row ? state.backgroundCache.get(row.id) : null;
+      if (!row?.backgroundMedia || !runtime) return;
+      const ratio = state.scheme.canvas.width / Math.max(1, state.scheme.canvas.height);
+      cropCanvas.width = 720;
+      cropCanvas.height = Math.max(180, Math.round(720 / ratio));
+      cropCanvas.style.aspectRatio = `${state.scheme.canvas.width} / ${state.scheme.canvas.height}`;
+      const cropContext = cropCanvas.getContext("2d");
+      const image = isVideoMedia(row.backgroundMedia)
+        ? (runtime.previewImage || (runtime.video?.readyState >= 2 ? runtime.video : null))
+        : drawableImage(runtime.resource, state.elapsedMs / 1000);
+      drawBackgroundLayer(cropContext, cropCanvas.width, cropCanvas.height, row, image);
+    });
+  }
+
   function resizePreview() {
     const ratio = state.scheme.canvas.width / state.scheme.canvas.height;
     frame.style.setProperty("--gm-aspect", String(ratio));
@@ -880,6 +904,7 @@
     canvas.width = Math.max(2, Math.round(rect.width * scale));
     canvas.height = Math.max(2, Math.round(canvas.width / ratio));
     renderFrame(canvas, state.elapsedMs / 1000, canvas.width, canvas.height);
+    refreshBackgroundCropPreviews();
   }
 
   function renderRows() {
@@ -916,6 +941,15 @@
             <label>叠化时长<input data-background-key="backgroundTransitionDuration" type="number" min="10" max="2000" step="10" value="${normalizeBackgroundTransitionDuration(row.backgroundTransitionDuration)}"><small>毫秒</small></label>
             <div class="gm-background-video"${row.backgroundMedia ? "" : " hidden"}>
               <div class="gm-background-video-head"><strong>${escapeHtml(row.backgroundMedia?.name || "")}</strong><span data-background-type>${isVideoMedia(row.backgroundMedia) ? "视频" : isGifMedia(row.backgroundMedia) ? "GIF" : "图片"}</span><button data-background-remove type="button">移除素材</button></div>
+              <div class="gm-background-crop"${row.backgroundMedia ? "" : " hidden"}>
+                <div class="gm-background-crop-head"><strong>画面裁剪</strong><span>在画面中拖动选择保留区域</span></div>
+                <canvas data-background-crop-preview width="720" height="405" aria-label="背景画面裁剪预览"></canvas>
+                <label class="gm-background-crop-zoom">画面缩放
+                  <input data-background-crop-zoom type="range" min="1" max="4" step="0.01" value="${row.backgroundMedia?.cropZoom || 1}">
+                  <output data-background-crop-output>${Number(row.backgroundMedia?.cropZoom || 1).toFixed(2)}×</output>
+                </label>
+                <button data-background-crop-reset type="button">居中并恢复原始缩放</button>
+              </div>
               <div class="gm-background-video-trim"${isVideoMedia(row.backgroundMedia) ? "" : " hidden"}>
                 <div class="gm-video-timeline" aria-label="拖动两侧把手裁剪视频片段">
                   <canvas data-video-filmstrip width="720" height="96"></canvas>
@@ -1035,7 +1069,13 @@
       const summarySwatch = rowElement.querySelector("[data-background-summary-swatch]");
       const mediaType = rowElement.querySelector("[data-background-type]");
       const durationLabel = rowElement.querySelector("[data-video-duration]");
+      const cropPanel = rowElement.querySelector(".gm-background-crop");
+      const cropCanvas = rowElement.querySelector("[data-background-crop-preview]");
+      const cropZoom = rowElement.querySelector("[data-background-crop-zoom]");
+      const cropOutput = rowElement.querySelector("[data-background-crop-output]");
+      const cropReset = rowElement.querySelector("[data-background-crop-reset]");
       let draggedEdge = "";
+      let cropDrag = null;
 
       const drawFilmstrip = (filmstrip) => {
         if (!filmstrip || !filmstripCanvas.isConnected) return;
@@ -1043,9 +1083,22 @@
         filmstripContext.clearRect(0, 0, filmstripCanvas.width, filmstripCanvas.height);
         filmstripContext.drawImage(filmstrip, 0, 0, filmstripCanvas.width, filmstripCanvas.height);
       };
+      const drawCropPreview = (runtime) => {
+        if (!cropCanvas?.isConnected || !rowState.backgroundMedia || !runtime) return;
+        const ratio = state.scheme.canvas.width / Math.max(1, state.scheme.canvas.height);
+        cropCanvas.width = 720;
+        cropCanvas.height = Math.max(180, Math.round(720 / ratio));
+        cropCanvas.style.aspectRatio = `${state.scheme.canvas.width} / ${state.scheme.canvas.height}`;
+        const cropContext = cropCanvas.getContext("2d");
+        const image = isVideoMedia(rowState.backgroundMedia)
+          ? (runtime.previewImage || (runtime.video?.readyState >= 2 ? runtime.video : null))
+          : drawableImage(runtime.resource, state.elapsedMs / 1000);
+        drawBackgroundLayer(cropContext, cropCanvas.width, cropCanvas.height, rowState, image);
+      };
       const refreshMediaUi = async () => {
         const media = normalizeBackgroundMedia(rowState.backgroundMedia);
         mediaPanel.hidden = !media;
+        cropPanel.hidden = !media;
         if (summary) summary.textContent = media ? media.name : "纯色";
         if (summarySwatch) {
           const backgroundColor = normalizeColor(rowState.backgroundColor, state.scheme.typography.backgroundColor);
@@ -1056,8 +1109,11 @@
         mediaPanel.querySelector("strong").textContent = media.name;
         mediaType.textContent = isVideoMedia(media) ? "视频" : isGifMedia(media) ? "GIF" : "图片";
         videoTrim.hidden = !isVideoMedia(media);
+        cropZoom.value = String(media.cropZoom);
+        cropOutput.textContent = `${media.cropZoom.toFixed(2)}×`;
         const runtime = await prepareRowBackground(rowState);
         if (!rowElement.isConnected || !runtime) return;
+        drawCropPreview(runtime);
         if (!isVideoMedia(media)) return;
         const duration = runtime.duration || 0;
         if (!(duration > 0)) return;
@@ -1123,6 +1179,47 @@
       transition.addEventListener("change", () => { rowState.backgroundTransition = normalizeBackgroundTransition(transition.value); autoSave(); resizePreview(); });
       transitionDuration.addEventListener("input", () => { rowState.backgroundTransitionDuration = normalizeBackgroundTransitionDuration(transitionDuration.value); autoSave(); resizePreview(); });
       [startInput, endInput].forEach((input) => input.addEventListener("change", commitTrim));
+      cropZoom.addEventListener("input", () => {
+        if (!rowState.backgroundMedia) return;
+        rowState.backgroundMedia.cropZoom = clamp(Number(cropZoom.value) || 1, 1, 4);
+        cropOutput.textContent = `${rowState.backgroundMedia.cropZoom.toFixed(2)}×`;
+        drawCropPreview(state.backgroundCache.get(rowState.id));
+        autoSave();
+        resizePreview();
+      });
+      cropReset.addEventListener("click", () => {
+        if (!rowState.backgroundMedia) return;
+        rowState.backgroundMedia.cropX = 0.5;
+        rowState.backgroundMedia.cropY = 0.5;
+        rowState.backgroundMedia.cropZoom = 1;
+        cropZoom.value = "1";
+        cropOutput.textContent = "1.00×";
+        drawCropPreview(state.backgroundCache.get(rowState.id));
+        autoSave();
+        resizePreview();
+      });
+      cropCanvas.addEventListener("pointerdown", (event) => {
+        if (!rowState.backgroundMedia) return;
+        cropDrag = {
+          pointerId: event.pointerId,
+          clientX: event.clientX,
+          clientY: event.clientY,
+          cropX: Number(rowState.backgroundMedia.cropX ?? 0.5),
+          cropY: Number(rowState.backgroundMedia.cropY ?? 0.5)
+        };
+        cropCanvas.setPointerCapture(event.pointerId);
+        event.preventDefault();
+      });
+      cropCanvas.addEventListener("pointermove", (event) => {
+        if (!cropDrag || cropDrag.pointerId !== event.pointerId || !rowState.backgroundMedia) return;
+        const rect = cropCanvas.getBoundingClientRect();
+        rowState.backgroundMedia.cropX = clamp(cropDrag.cropX - (event.clientX - cropDrag.clientX) / Math.max(1, rect.width));
+        rowState.backgroundMedia.cropY = clamp(cropDrag.cropY - (event.clientY - cropDrag.clientY) / Math.max(1, rect.height));
+        drawCropPreview(state.backgroundCache.get(rowState.id));
+        autoSave();
+        resizePreview();
+      });
+      ["pointerup", "pointercancel", "lostpointercapture"].forEach((eventName) => cropCanvas.addEventListener(eventName, () => { cropDrag = null; }));
       fileInput.addEventListener("change", async () => {
         const file = fileInput.files?.[0];
         if (!file) return;
@@ -1131,7 +1228,7 @@
           fileInput.value = "";
           return;
         }
-        rowState.backgroundMedia = normalizeBackgroundMedia({ name: file.name, url: await fileAsDataUrl(file), fileType: file.type || "image/png", videoStart: 0, videoEnd: null });
+        rowState.backgroundMedia = normalizeBackgroundMedia({ name: file.name, url: await fileAsDataUrl(file), fileType: file.type || "image/png", videoStart: 0, videoEnd: null, cropX: 0.5, cropY: 0.5, cropZoom: 1 });
         rowState.backgroundTransition = "crossfade";
         rowState.backgroundTransitionDuration = 120;
         transition.value = "crossfade";
@@ -1493,10 +1590,8 @@
       state.scheme.rows.forEach((item) => { item.initialColor = controls.textColor.value; });
       renderRows();
     }
-    if (id === "backgroundColor" && port.slug !== "typecascade") {
-      state.scheme.rows.forEach((item) => { item.backgroundColor = controls.backgroundColor.value; });
-      renderRows();
-    }
+    // Global background is only the default for subsequently added rows.
+    // Existing rows remain independent unless the explicit apply-to-all action is used.
     changed({ restart: id === "introEnabled" || id === "introDuration" || id === "introCharacterDelay" || id === "morphDuration" || id === "characterDelay" || id === "speed" });
     if (id === "fontFamily") refreshFonts();
     if (id === "loop" && controls.loop.checked && !state.playing && state.elapsedMs >= cycleDurationMs()) {
@@ -1998,7 +2093,7 @@
 
   function animationLoop(now) {
     const total = cycleDurationMs();
-    if (state.playing && !state.reducedMotion) {
+    if (state.playing) {
       state.elapsedMs += Math.min(80, now - state.lastFrame);
       if (!state.scheme.motion.loop && state.elapsedMs >= total) { state.elapsedMs = total; state.playing = false; updatePlaybackButton(); }
     }
@@ -2029,7 +2124,9 @@
     document.fonts?.addEventListener("loadingdone", () => { fitCache.key = ""; resizePreview(); });
     window.addEventListener("resize", resizePreview, { passive: true });
     const setPlaying = (playing) => {
-      state.playing = Boolean(playing) && !state.reducedMotion;
+      // Reduced-motion prevents autoplay, but an explicit Play/Replay action must
+      // still advance the deterministic clock (including GIF/vector icon frames).
+      state.playing = Boolean(playing);
       state.lastFrame = performance.now();
       updatePlaybackButton();
       resizePreview();

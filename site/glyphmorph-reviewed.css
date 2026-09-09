@@ -69,6 +69,17 @@ body.gm-library-open { grid-template-columns: 420px clamp(320px, 27vw, 390px) mi
 .gm-background-video-head { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; }
 .gm-background-video-head strong { flex: 1; min-width: 0; overflow: hidden; color: #aaa; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 .gm-background-video-head button { min-height: 25px; padding: 0 7px; border: 1px solid #5a3333; border-radius: 5px; background: #251717; color: #ff9d91; font-size: 8px; cursor: pointer; }
+.gm-background-crop { grid-column: 1 / -1; display: grid; gap: 7px; padding: 8px; border: 1px solid #343434; border-radius: 8px; background: #101010; }
+.gm-background-crop[hidden] { display: none; }
+.gm-background-crop-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.gm-background-crop-head strong { color: #bbb; font-size: 9px; }
+.gm-background-crop-head span { color: #717171; font-size: 8px; }
+.gm-background-crop canvas { display: block; width: 100%; max-height: 190px; border: 1px solid #444; border-radius: 7px; background: #090909; cursor: grab; touch-action: none; object-fit: contain; }
+.gm-background-crop canvas:active { cursor: grabbing; }
+.gm-background-crop-zoom { display: grid; grid-template-columns: auto minmax(0, 1fr) 42px; align-items: center; gap: 8px; color: #858585; font-size: 8px; }
+.gm-background-crop-zoom input { min-height: 22px; padding: 0; }
+.gm-background-crop-zoom output { color: #ddd; font: 600 8px/1 ui-monospace, monospace; text-align: right; }
+.gm-background-crop [data-background-crop-reset] { min-height: 28px; border: 1px solid #3b3b3b; border-radius: 6px; background: #202020; color: #bbb; font-size: 8px; cursor: pointer; }
 .gm-video-timeline { position: relative; grid-column: 1 / -1; height: 50px; overflow: hidden; border: 1px solid #44505b; border-radius: 6px; background: #090b0d; cursor: ew-resize; touch-action: none; }
 .gm-video-timeline canvas { display: block; width: 100%; height: 100%; }
 .gm-video-selection { position: absolute; top: 0; bottom: 0; min-width: 3%; border: 2px solid #b9ff52; background: rgba(185,255,82,.08); box-shadow: 0 0 0 999px rgba(0,0,0,.58); pointer-events: none; }
@@ -144,10 +155,11 @@ body.gm-library-open { grid-template-columns: 420px clamp(320px, 27vw, 390px) mi
 .gm-time-readout { display: flex; justify-content: space-between; color: #737373; font: 600 9px/1 ui-monospace, monospace; }
 .gm-actions { display: grid; gap: 6px; }
 .gm-actions-3 { grid-template-columns: repeat(3, 1fr); }
+.gm-card .gm-grid-2 + .gm-actions-3 { margin-top: 12px; }
 .gm-actions-4 { grid-template-columns: repeat(2, 1fr); }
 .gm-actions button { min-height: 34px; border: 1px solid #363636; border-radius: 7px; background: #222; color: #d7d7d7; font-size: 10px; cursor: pointer; }
 .gm-actions button:hover { border-color: #777; background: #292929; }
-.gm-status { margin: 9px 0 0; }
+.gm-status { margin: 12px 0 0; }
 .gm-stage { grid-column: 2; grid-row: 1; position: relative; min-width: 0; height: 100dvh; display: grid; place-items: center; overflow: hidden; padding: 38px 38px 78px; background: #080808; }
 body.gm-library-open .gm-stage { grid-column: 3; }
 .gm-composition-frame { position: relative; width: min(100%, calc((100dvh - 116px) * var(--gm-aspect, 1))); max-height: calc(100dvh - 116px); aspect-ratio: var(--gm-aspect, 1); overflow: hidden; background: white; box-shadow: 0 20px 80px rgba(0,0,0,.55); }

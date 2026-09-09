@@ -77,9 +77,16 @@ body.tc-workspace[data-editor-theme="light"] {
 .tc-workspace .tc-canvas-toolbar .gm-card, .tc-workspace .tc-properties[data-panel="row"] .gm-card { background: transparent; }
 /* The legacy canvas card adds an inset ring behind its child select. */
 .tc-workspace .tc-canvas-toolbar .gm-canvas-card { box-shadow: none; }
-.tc-workspace .tc-backdrop-toggle { width: 118px; flex: 0 0 118px; height: 38px; padding: 0 12px; border: 1px solid var(--tc-line); border-radius: var(--tc-radius-control); background: var(--tc-surface); color: var(--tc-text); white-space: nowrap; }
+.tc-workspace .tc-backdrop-control { position: relative; width: 118px; flex: 0 0 118px; }
+.tc-workspace .tc-backdrop-toggle { width: 100%; height: 38px; padding: 0 12px; border: 1px solid var(--tc-line); border-radius: var(--tc-radius-control); background: var(--tc-surface); color: var(--tc-text); white-space: nowrap; }
 .tc-workspace .tc-backdrop-toggle[aria-pressed="true"] { border-color: var(--tc-growth); background: var(--tc-growth); color: var(--tc-growth-ink); }
-.tc-workspace.tc-stage-backdrop-on .gm-stage { background-color: var(--tc-showcase-bg, #fff); border-color: var(--tc-showcase-bg, #fff); }
+.tc-workspace .tc-backdrop-popover { position: absolute; z-index: 20; top: calc(100% + 8px); left: 0; width: 224px; display: grid; gap: 10px; padding: 12px; border: 1px solid var(--tc-line); border-radius: var(--tc-radius-card); background: var(--tc-panel); color: var(--tc-text); box-shadow: 0 16px 45px #0005; }
+.tc-workspace .tc-backdrop-popover[hidden] { display: none; }
+.tc-workspace .tc-backdrop-popover label { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--tc-text); font-size: 12px; }
+.tc-workspace .tc-backdrop-popover input[type="checkbox"] { accent-color: var(--tc-accent-solid); }
+.tc-workspace .tc-backdrop-popover input[type="color"] { width: 54px; height: 34px; padding: 3px; border: 1px solid var(--tc-line); border-radius: var(--tc-radius-control); background: var(--tc-input); }
+.tc-workspace .tc-backdrop-popover button { min-height: 34px; border: 1px solid var(--tc-line); border-radius: var(--tc-radius-control); background: var(--tc-surface); color: var(--tc-text); }
+.tc-workspace.tc-stage-backdrop-on .gm-stage { background-color: var(--tc-showcase-bg, var(--tc-canvas-surround)); border-color: var(--tc-showcase-bg, var(--tc-canvas-surround)); }
 .tc-workspace.tc-stage-backdrop-on .gm-composition-frame { box-shadow: none; }
 .tc-workspace .gm-card-title h2, .tc-workspace .gm-library-drawer h2 { color: var(--tc-text); }
 .tc-workspace .tc-tabs { border-color: var(--tc-line); }
@@ -298,6 +305,12 @@ body.tc-workspace[data-editor-theme="light"] {
 .tc-workspace .gm-background-video-head span { flex: 0 0 auto; padding: 3px 7px; border-radius: 999px; background: var(--tc-growth-soft); color: var(--tc-growth-line); font-size: 10px; }
 .tc-workspace .gm-background-video-trim { grid-column: 1 / -1; display: grid; gap: 7px; }
 .tc-workspace .gm-background-video-trim[hidden] { display: none; }
+.tc-workspace .gm-background-crop { border-color: var(--tc-line); background: var(--tc-input); }
+.tc-workspace .gm-background-crop-head strong { color: var(--tc-text); font-size: 12px; }
+.tc-workspace .gm-background-crop-head span { color: var(--tc-muted); font-size: 10px; }
+.tc-workspace .gm-background-crop canvas { border-color: var(--tc-line); background: var(--tc-canvas-surround); }
+.tc-workspace .gm-background-crop-zoom { grid-template-columns: 84px minmax(0, 1fr) 46px; color: var(--tc-text); font-size: 11px; }
+.tc-workspace .gm-background-crop [data-background-crop-reset] { border-color: var(--tc-line); border-radius: var(--tc-radius-control); background: var(--tc-surface); color: var(--tc-text); font-size: 11px; }
 .tc-workspace .gm-video-time-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .tc-workspace .gm-video-time-fields label { display: grid; gap: 4px; color: var(--tc-text); font-size: 11px; }
 
@@ -448,7 +461,8 @@ body.tc-workspace,
 }
 @media (min-width: 861px) and (max-width: 1200px) {
   .tc-workspace .tc-canvas-toolbar .gm-canvas-card { margin-inline: auto; }
-  .tc-workspace .tc-backdrop-toggle { width: 110px; flex-basis: 110px; font-size: 12px; padding-inline: 8px; }
+  .tc-workspace .tc-backdrop-control { width: 110px; flex-basis: 110px; }
+  .tc-workspace .tc-backdrop-toggle { font-size: 12px; padding-inline: 8px; }
   .tc-workspace .tc-row-description { min-height: 36px; }
   .tc-workspace #addRow { white-space: nowrap; font-size: 12px; }
   .tc-workspace .tc-panel-heading { gap: 4px; }

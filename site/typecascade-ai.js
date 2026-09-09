@@ -11,6 +11,7 @@
   const words = {
     zh: {
       trigger: "用于 AI",
+      preview: "预览 AI 组件",
       prompt: "复制 AI 提示词",
       code: "复制配置代码",
       json: "下载组件 JSON",
@@ -25,6 +26,7 @@
     },
     en: {
       trigger: "For AI",
+      preview: "Preview AI component",
       prompt: "Copy AI prompt",
       code: "Copy configured code",
       json: "Download component JSON",
@@ -41,7 +43,7 @@
 
   const root = document.createElement("div");
   root.className = "tc-ai-actions";
-  root.innerHTML = '<button class="tc-ai-trigger" type="button" aria-haspopup="menu" aria-expanded="false"><span></span><b aria-hidden="true">⌄</b></button><div class="tc-ai-menu" role="menu" hidden><button type="button" data-ai-action="prompt"></button><button type="button" data-ai-action="code"></button><button type="button" data-ai-action="json"></button><i></i><button type="button" data-ai-action="params"></button></div>';
+  root.innerHTML = '<button class="tc-ai-trigger" type="button" aria-haspopup="menu" aria-expanded="false"><span></span><b aria-hidden="true">⌄</b></button><div class="tc-ai-menu" role="menu" hidden><button type="button" data-ai-action="preview"></button><i></i><button type="button" data-ai-action="prompt"></button><button type="button" data-ai-action="code"></button><button type="button" data-ai-action="json"></button><i></i><button type="button" data-ai-action="params"></button></div>';
   header.insertBefore(root, exportButton);
   const trigger = root.querySelector(".tc-ai-trigger");
   const menu = root.querySelector(".tc-ai-menu");
@@ -95,6 +97,7 @@
   function renderLanguage() {
     const t = words[language];
     trigger.querySelector("span").textContent = t.trigger;
+    root.querySelector('[data-ai-action="preview"]').textContent = t.preview;
     root.querySelector('[data-ai-action="prompt"]').textContent = t.prompt;
     root.querySelector('[data-ai-action="code"]').textContent = t.code;
     root.querySelector('[data-ai-action="json"]').textContent = t.json;
@@ -126,17 +129,30 @@
   root.addEventListener("click", async (event) => {
     const button = event.target.closest("[data-ai-action]");
     if (!button) return;
+    const action = button.dataset.aiAction;
+    const previewWindow = action === "preview" ? window.open("about:blank", "_blank") : null;
     closeMenu();
     try {
       const current = await manifest();
-      if (button.dataset.aiAction === "prompt") await copy(window.CellMotionAI.aiPrompt(current, language));
-      if (button.dataset.aiAction === "code") await copy(window.CellMotionAI.configuredCode(current));
-      if (button.dataset.aiAction === "json") {
+      if (action === "preview") {
+        if (!previewWindow) throw new Error(language === "en" ? "Allow pop-ups to open the preview" : "请允许弹出窗口后再打开预览");
+        const receiveReady = (messageEvent) => {
+          if (messageEvent.source !== previewWindow || messageEvent.data?.type !== "cellmotion:demo-ready") return;
+          previewWindow.postMessage({ type: "cellmotion:demo-manifest", manifest: current }, location.origin);
+          window.removeEventListener("message", receiveReady);
+        };
+        window.addEventListener("message", receiveReady);
+        previewWindow.location.href = "typecascade-component-demo.html?live=1";
+      }
+      if (action === "prompt") await copy(window.CellMotionAI.aiPrompt(current, language));
+      if (action === "code") await copy(window.CellMotionAI.configuredCode(current));
+      if (action === "json") {
         window.CellMotionAI.downloadJson(current, "typecascade-component.json");
         notify(words[language].downloaded);
       }
-      if (button.dataset.aiAction === "params") showParameters(await definition());
+      if (action === "params") showParameters(await definition());
     } catch (error) {
+      if (previewWindow && !previewWindow.closed) previewWindow.close();
       console.error(error);
       notify(language === "en" ? error.message : "生成失败：" + error.message);
     }

@@ -28,39 +28,70 @@
   let savedTheme;
   try { savedTheme = localStorage.getItem('cellmotion-editor-theme'); } catch (_) { /* Use dark by default. */ }
   setTheme(savedTheme === 'light' ? 'light' : 'dark');
-  themeButton.addEventListener('click', () => setTheme(body.dataset.editorTheme === 'dark' ? 'light' : 'dark'));
+  themeButton.addEventListener('click', () => {
+    setTheme(body.dataset.editorTheme === 'dark' ? 'light' : 'dark');
+    syncBackdropColor();
+  });
 
-  // Optional recording backdrop: expand only the selected artwork background
-  // across the stage. The composition frame remains the renderer's exact size.
-  const backdropButton = document.createElement('button');
-  backdropButton.type = 'button';
-  backdropButton.className = 'tc-backdrop-toggle';
-  backdropButton.id = 'tcBackdropToggle';
-  backdropButton.textContent = '▧ 铺满背景';
-  backdropButton.setAttribute('aria-pressed', 'false');
-  backdropButton.setAttribute('aria-label', '开启背景铺满');
-  document.querySelector('.tc-canvas-toolbar .gm-canvas-card').before(backdropButton);
-  function selectedBackgroundColor() {
-    return document.querySelector('#sequenceRows > .gm-row-shell:not([hidden]) [data-background-key="backgroundColor"]')?.value
-      || $('backgroundColor')?.value
-      || '#ffffff';
-  }
+  // The editor-stage backdrop is an editor preference. It never follows a row
+  // background and never enters composition state or exported pixels.
+  const backdropControl = document.createElement('div');
+  backdropControl.className = 'tc-backdrop-control';
+  backdropControl.innerHTML = '<button class="tc-backdrop-toggle" id="tcBackdropToggle" type="button" aria-haspopup="true" aria-expanded="false">▧ <span>铺满背景</span></button><div class="tc-backdrop-popover" hidden><label><input id="tcBackdropEnabled" type="checkbox"><span data-backdrop-enabled>启用铺满背景</span></label><label class="tc-backdrop-color"><span data-backdrop-color>预览舞台颜色</span><input id="tcBackdropColor" type="color"></label><button id="tcBackdropReset" type="button">恢复默认灰色</button></div>';
+  document.querySelector('.tc-canvas-toolbar .gm-canvas-card').before(backdropControl);
+  const backdropButton = $('tcBackdropToggle');
+  const backdropPopover = backdropControl.querySelector('.tc-backdrop-popover');
+  const backdropEnabled = $('tcBackdropEnabled');
+  const backdropColor = $('tcBackdropColor');
+  const backdropReset = $('tcBackdropReset');
+  const defaultBackdropColor = () => body.dataset.editorTheme === 'light' ? '#e7e7ec' : '#121214';
+  let storedBackdropColor = '';
+  let storedBackdropEnabled = false;
+  try {
+    storedBackdropColor = localStorage.getItem('cellmotion-stage-backdrop-color') || '';
+    storedBackdropEnabled = localStorage.getItem('cellmotion-stage-backdrop-enabled') === 'true';
+  } catch (_) { /* Keep theme defaults when storage is unavailable. */ }
   function syncBackdropColor() {
-    document.querySelector('.gm-stage').style.setProperty('--tc-showcase-bg', selectedBackgroundColor());
+    const color = /^#[0-9a-f]{6}$/i.test(storedBackdropColor) ? storedBackdropColor : defaultBackdropColor();
+    backdropColor.value = color;
+    document.querySelector('.gm-stage').style.setProperty('--tc-showcase-bg', color);
   }
-  function setBackdrop(enabled) {
-    body.classList.toggle('tc-stage-backdrop-on', enabled);
-    backdropButton.setAttribute('aria-pressed', String(enabled));
-    backdropButton.setAttribute('aria-label', enabled ? '关闭背景铺满' : '开启背景铺满');
+  function setBackdrop(enabled, persist = true) {
+    storedBackdropEnabled = Boolean(enabled);
+    body.classList.toggle('tc-stage-backdrop-on', storedBackdropEnabled);
+    backdropEnabled.checked = storedBackdropEnabled;
+    backdropButton.setAttribute('aria-pressed', String(storedBackdropEnabled));
+    if (persist) try { localStorage.setItem('cellmotion-stage-backdrop-enabled', String(storedBackdropEnabled)); } catch (_) {}
     syncBackdropColor();
   }
-  backdropButton.addEventListener('click', () => setBackdrop(!body.classList.contains('tc-stage-backdrop-on')));
-  document.addEventListener('input', event => {
-    if (event.target.matches('#backgroundColor,[data-background-key="backgroundColor"]')) syncBackdropColor();
+  function setBackdropPopover(open) {
+    backdropPopover.hidden = !open;
+    backdropButton.setAttribute('aria-expanded', String(open));
+  }
+  function renderBackdropLanguage() {
+    const english = body.dataset.editorLanguage === 'en';
+    backdropButton.querySelector('span').textContent = english ? 'Stage fill' : '铺满背景';
+    backdropControl.querySelector('[data-backdrop-enabled]').textContent = english ? 'Enable stage fill' : '启用铺满背景';
+    backdropControl.querySelector('[data-backdrop-color]').textContent = english ? 'Preview stage color' : '预览舞台颜色';
+    backdropReset.textContent = english ? 'Reset neutral gray' : '恢复默认灰色';
+  }
+  backdropButton.addEventListener('click', () => setBackdropPopover(backdropPopover.hidden));
+  backdropEnabled.addEventListener('change', () => setBackdrop(backdropEnabled.checked));
+  backdropColor.addEventListener('input', () => {
+    storedBackdropColor = backdropColor.value;
+    try { localStorage.setItem('cellmotion-stage-backdrop-color', storedBackdropColor); } catch (_) {}
+    syncBackdropColor();
   });
-  document.getElementById('tcRowList').addEventListener('click', () => requestAnimationFrame(syncBackdropColor));
-  new MutationObserver(syncBackdropColor).observe(document.getElementById('sequenceRows'), { childList: true });
-  syncBackdropColor();
+  backdropReset.addEventListener('click', () => {
+    storedBackdropColor = '';
+    try { localStorage.removeItem('cellmotion-stage-backdrop-color'); } catch (_) {}
+    syncBackdropColor();
+  });
+  document.addEventListener('click', event => { if (!backdropControl.contains(event.target)) setBackdropPopover(false); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') setBackdropPopover(false); });
+  document.addEventListener('tc-languagechange', renderBackdropLanguage);
+  setBackdrop(storedBackdropEnabled, false);
+  renderBackdropLanguage();
 
   // Keep original range controls/listeners and outputs; add precise, separate numeric inputs.
   const ranges = [...document.querySelectorAll('.gm-field input[type="range"]')];
