@@ -8,6 +8,12 @@
   let configuredCode = "";
   let livePreview = false;
 
+  try {
+    document.body.dataset.editorTheme = localStorage.getItem("cellmotion-editor-theme") === "light" ? "light" : "dark";
+  } catch (_) {
+    document.body.dataset.editorTheme = "dark";
+  }
+
   function applyManifest(manifest, sourceLabel = "默认方案") {
     const validation = window.CellMotionAI.validate(manifest);
     if (!validation.valid) throw new Error(validation.errors.join("；"));

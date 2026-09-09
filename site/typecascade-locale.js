@@ -4,7 +4,7 @@
   const body = document.body;
   const dictionary = new Map(Object.entries({
     '字倾': 'Type Cascade', '字倾编辑器': 'Type Cascade editor', 'CellMotion 首页': 'CellMotion home',
-    '让创意，自由生长': 'Let creativity grow freely', '← 动效库': '← Effects', '导出作品 ↗': 'Export ↗',
+    '让创意，自由生长': 'Let creativity grow freely', '动效库': 'Effects', '导出作品': 'Export',
     '☀ 浅色': '☀ Light', '☾ 深色': '☾ Dark', '切换为浅色编辑器': 'Switch to light theme', '切换为深色编辑器': 'Switch to dark theme',
     '▧ 铺满背景': '▧ Fill backdrop', '开启背景铺满': 'Enable full backdrop', '关闭背景铺满': 'Disable full backdrop',
     '文字段落': 'Text blocks', '＋ 添加段落': '＋ Add', '添加文字段落': 'Add text block', '选择一段文字，在右侧编辑': 'Select a block to edit on the right',

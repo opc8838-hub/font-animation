@@ -319,6 +319,20 @@
     return tokens;
   }
 
+  async function readGifFrameDurations(blob) {
+    if (!blob || !/gif/i.test(blob.type || "")) return [];
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    const durations = [];
+    for (let index = 0; index <= bytes.length - 8; index += 1) {
+      if (bytes[index] !== 0x21 || bytes[index + 1] !== 0xf9 || bytes[index + 2] !== 0x04) continue;
+      const delayHundredths = bytes[index + 4] | (bytes[index + 5] << 8);
+      // A zero delay is unspecified by GIF89a; 100 ms matches native browser fallback.
+      durations.push(delayHundredths > 0 ? delayHundredths * 10 : 100);
+      index += 7;
+    }
+    return durations;
+  }
+
   async function loadAssetResource(asset) {
     if (!asset || asset.kind === "vector") return null;
     if (state.imageCache.has(asset.libraryId)) return state.imageCache.get(asset.libraryId);
@@ -336,6 +350,7 @@
           const response = await fetch(asset.url);
           if (!response.ok) throw new Error(`asset ${response.status}`);
           const blob = await response.blob();
+          const sourceFrameDurations = await readGifFrameDurations(blob);
           const decoder = new ImageDecoder({ data: blob.stream(), type: asset.fileType });
           await decoder.tracks.ready;
           const frameCount = decoder.tracks.selectedTrack?.frameCount || 1;
@@ -343,7 +358,12 @@
           let totalMs = 0;
           for (let index = 0; index < frameCount; index += 1) {
             const decoded = await decoder.decode({ frameIndex: index, completeFramesOnly: true });
-            const durationMs = Math.max(20, Number(decoded.image.duration || 100000) / 1000);
+            // Use the GIF's own centisecond delays as the authority. Some Chromium
+            // builds expose a missing/rounded VideoFrame.duration, which otherwise
+            // makes system GIFs play at a visibly different frequency than <img>.
+            const decodedDurationMs = Number(decoded.image.duration) / 1000;
+            const durationMs = sourceFrameDurations[index]
+              || (Number.isFinite(decodedDurationMs) && decodedDurationMs > 0 ? decodedDurationMs : 100);
             frames.push({ image: decoded.image, startMs: totalMs, durationMs });
             totalMs += durationMs;
           }

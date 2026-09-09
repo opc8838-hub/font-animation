@@ -6,21 +6,25 @@
   <title>字倾组件演示 | CellMotion</title>
   <link rel="icon" href="favicon.svg">
   <link rel="stylesheet" href="shared-fonts.css?v=20260824-2">
-  <link rel="stylesheet" href="typecascade-component-demo.css?v=20260909-ai-manifest">
+  <link rel="stylesheet" href="typecascade-component-demo.css?v=20260909-editor-shell">
   <script src="cellmotion-ai-manifest.js?v=20260909-ai-manifest" defer></script>
   <script src="cellmotion-player.js?v=20260909-ai-manifest" defer></script>
-  <script src="typecascade-component-demo.js?v=20260909-live-preview" defer></script>
+  <script src="typecascade-component-demo.js?v=20260909-editor-shell" defer></script>
 </head>
 <body>
   <header class="demo-header">
-    <a href="typecascade.html">← 返回字倾编辑器</a>
-    <span>CELLMOTION COMPONENT / V1</span>
+    <a class="demo-brand" href="cellmotion.html" aria-label="CellMotion 首页">
+      <img class="demo-logo-dark" src="assets/cellmotion/logo-dark-original.png" alt="CellMotion">
+      <img class="demo-logo-light" src="assets/cellmotion/logo-original.png" alt="" aria-hidden="true">
+    </a>
+    <span>COMPONENT / V1</span>
+    <a class="demo-back" href="typecascade.html">返回编辑器</a>
   </header>
   <main>
     <section class="demo-intro">
-      <p>AI FRONTEND HANDOFF</p>
-      <h1>一个配置，继续播放<br>编辑器里的真实动效。</h1>
-      <p class="demo-lead">从编辑器进入时会接收当前实时配置；直接打开时加载默认方案。两种方式都交给通用播放器，并继续使用原来的 Canvas 渲染器。</p>
+      <p>AI COMPONENT PREVIEW</p>
+      <h1>字倾 · Type Cascade</h1>
+      <p class="demo-lead">这里展示可交给 AI 前端继续使用的真实组件。从编辑器进入时读取当前配置；直接打开时使用默认方案。</p>
     </section>
 
     <section class="demo-card" aria-labelledby="demoTitle">

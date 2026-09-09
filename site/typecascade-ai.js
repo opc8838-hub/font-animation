@@ -43,7 +43,7 @@
 
   const root = document.createElement("div");
   root.className = "tc-ai-actions";
-  root.innerHTML = '<button class="tc-ai-trigger" type="button" aria-haspopup="menu" aria-expanded="false"><span></span><b aria-hidden="true">⌄</b></button><div class="tc-ai-menu" role="menu" hidden><button type="button" data-ai-action="preview"></button><i></i><button type="button" data-ai-action="prompt"></button><button type="button" data-ai-action="code"></button><button type="button" data-ai-action="json"></button><i></i><button type="button" data-ai-action="params"></button></div>';
+  root.innerHTML = '<button class="tc-ai-trigger" type="button" aria-haspopup="menu" aria-expanded="false"><span></span><b aria-hidden="true"></b></button><div class="tc-ai-menu" role="menu" hidden><button type="button" data-ai-action="preview"></button><i></i><button type="button" data-ai-action="prompt"></button><button type="button" data-ai-action="code"></button><button type="button" data-ai-action="json"></button><i></i><button type="button" data-ai-action="params"></button></div>';
   header.insertBefore(root, exportButton);
   const trigger = root.querySelector(".tc-ai-trigger");
   const menu = root.querySelector(".tc-ai-menu");

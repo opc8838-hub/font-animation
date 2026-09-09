@@ -16,9 +16,9 @@
   const header = inspector.querySelector('.gm-header');
   header.classList.add('tc-header');
   body.prepend(header);
-  header.append(make('a', 'tc-back', '← 动效库'));
+  header.append(make('a', 'tc-back', '动效库'));
   header.lastChild.href = 'cellmotion-components.html';
-  const exportShortcut = make('button', 'tc-export-shortcut', '导出作品 ↗');
+  const exportShortcut = make('button', 'tc-export-shortcut', '导出作品');
   exportShortcut.type = 'button';
   header.append(exportShortcut);
 
