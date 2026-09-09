@@ -3,6 +3,7 @@ var stgMedia = {
   enabled: false,
   source: "shape",
   image: null,
+  animated: null,
   processedCanvas: null,
   processedWidth: 0,
   processedHeight: 0,
@@ -50,7 +51,7 @@ var stgMedia = {
 };
 
 var stgMediaAssetKeys = [
-  "source", "image", "processedCanvas", "processedWidth", "processedHeight",
+  "source", "image", "animated", "processedCanvas", "processedWidth", "processedHeight",
   "animationTextureWidth", "animationTextureHeight", "originalElement", "originalDataUrl",
   "fileType", "imageName", "removeBackground", "backgroundColor", "backgroundTolerance",
   "backgroundFeather", "imageQuality", "protectSubjectWhite", "backgroundPreviewMode",
@@ -135,6 +136,7 @@ function stgMediaCreateAsset(file, original, dataUrl) {
   asset.slot = slot;
   asset.source = "image";
   asset.image = null;
+  asset.animated = null;
   asset.processedCanvas = null;
   asset.processedWidth = 0;
   asset.processedHeight = 0;
@@ -148,6 +150,11 @@ function stgMediaCreateAsset(file, original, dataUrl) {
   asset.backgroundPreviewCanvases = null;
   asset.backgroundMaskStats = null;
   asset.backgroundRemoved = false;
+  if (/gif/i.test(asset.fileType) && window.CellMotionAnimatedImage) {
+    window.CellMotionAnimatedImage.decode({ url: dataUrl, type: asset.fileType })
+      .then(function(animated) { asset.animated = animated; if (stgMedia.activeAssetId === asset.id) stgMedia.animated = animated; })
+      .catch(function(error) { console.warn("Animated media decode failed", file.name, error); });
+  }
   stgMedia.assets.push(asset);
   return asset;
 }
@@ -231,6 +238,7 @@ function stgMediaRemoveAsset(assetId) {
   var index = stgMedia.assets.findIndex(function(asset) { return asset.id === assetId; });
   if (index < 0) return;
   var removed = stgMedia.assets[index];
+  window.CellMotionAnimatedImage?.dispose(removed.animated);
   stgMedia.assets.splice(index, 1);
   var textarea = document.getElementById("textArea");
   if (textarea) {
@@ -1275,16 +1283,21 @@ function stgMediaDrawShape(shapeName, drawWidth, drawHeight, alpha, asset) {
   }
 }
 
-function stgMediaDrawAsset(drawWidth, drawHeight, alpha, asset) {
+function stgMediaDrawable(state, timeSeconds) {
+  return window.CellMotionAnimatedImage?.frameAt(state && state.animated, timeSeconds || 0) || (state && state.image) || null;
+}
+
+function stgMediaDrawAsset(drawWidth, drawHeight, alpha, asset, timeSeconds) {
   var state = asset || stgMedia;
   if (state.source === "image") {
-    if (!state.image) return;
-    var nativeAspect = state.image.width / Math.max(1, state.image.height);
+    var drawable = stgMediaDrawable(state, timeSeconds);
+    if (!drawable) return;
+    var nativeAspect = drawable.width / Math.max(1, drawable.height);
     var targetWidth = drawWidth * nativeAspect;
     var useWebglTint = typeof _renderer !== "undefined" && _renderer && _renderer.isP3D && alpha != null && alpha < 0.999;
     if (useWebglTint) tint(255, 255 * alpha);
     imageMode(CENTER);
-    image(state.image, 0, 0, targetWidth, drawHeight);
+    image(drawable, 0, 0, targetWidth, drawHeight);
     if (useWebglTint) noTint();
   } else {
     stgMediaDrawShape(state.shape, drawWidth, drawHeight, alpha, state);
@@ -1299,6 +1312,7 @@ function stgDrawMediaLayer(options) {
   var canvasWidth = options.width || width;
   var canvasHeight = options.height || height;
   var phase = options.phase == null ? ((frameCount % 90) / 90) : options.phase;
+  var timeSeconds = options.timeSeconds == null ? (typeof frameCount === "number" ? frameCount / 30 : 0) : options.timeSeconds;
   var states = stgMedia.assets.length ? stgMedia.assets : [stgMedia];
   states.forEach(function(state) {
     if (state.layer === "inline" || state.layer !== requestedLayer) return;
@@ -1323,7 +1337,7 @@ function stgDrawMediaLayer(options) {
       if (typeof drawingContext.save === "function") drawingContext.save();
       if ("globalAlpha" in drawingContext) drawingContext.globalAlpha = alpha;
     }
-    stgMediaDrawAsset(drawWidth, drawHeight, alpha, state);
+    stgMediaDrawAsset(drawWidth, drawHeight, alpha, state, timeSeconds);
     if (typeof drawingContext !== "undefined" && drawingContext && typeof drawingContext.restore === "function") {
       drawingContext.restore();
     }
@@ -1348,9 +1362,10 @@ function stgDrawInlineMedia(drawWidth, drawHeight, asset) {
   var contentHeight = drawHeight * state.inlineScale;
   var contentWidth = contentHeight * state.aspect;
   if (state.source === "image") {
-    contentWidth *= state.image.width / Math.max(1, state.image.height);
+    var drawable = stgMediaDrawable(state, typeof frameCount === "number" ? frameCount / 30 : 0);
+    contentWidth *= drawable.width / Math.max(1, drawable.height);
     imageMode(CENTER);
-    image(state.image, 0, 0, contentWidth, contentHeight);
+    image(drawable, 0, 0, contentWidth, contentHeight);
   } else {
     stgMediaDrawShape(state.shape, contentWidth, contentHeight, state.opacity / 100 * motion.alpha, state);
   }
@@ -1375,9 +1390,10 @@ function stgDrawInlineMediaToGraphics(target, lineHeightValue, asset) {
   target.translate(0, lineHeightValue * state.inlineOffsetY / 100);
   target.rotate(state.rotation * Math.PI / 180);
   if (state.source === "image") {
+    var drawable = stgMediaDrawable(state, typeof frameCount === "number" ? frameCount / 30 : 0);
     target.tint(255, 255 * state.opacity / 100);
     target.imageMode(CENTER);
-    target.image(state.image, 0, 0, contentWidth, contentHeight);
+    target.image(drawable, 0, 0, contentWidth, contentHeight);
     target.noTint();
   } else {
     var shapeColor = color(state.color);
@@ -1419,7 +1435,7 @@ function stgMediaInlineAsset(asset) {
   var state = asset || stgMedia;
   if (!stgMedia.enabled || state.layer !== "inline") return null;
   if (state.source === "image" && !state.image) return null;
-  if (state.source === "image" && /gif/i.test(state.fileType)) return state.image;
+  if (state.source === "image" && /gif/i.test(state.fileType)) return stgMediaDrawable(state, typeof frameCount === "number" ? frameCount / 30 : 0);
 
   var baseHeight = 512;
   var contentHeight = baseHeight * Math.min(1, state.inlineScale);

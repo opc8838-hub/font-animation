@@ -16,6 +16,7 @@ consumers = {
     "currentwall.js": ("currentwall.html",),
     "glyphmorph.js": ("glyphmorph.html",),
     "impactbuild.js": ("impactbuild.html",),
+    "media-layer.js": ("construct.html", "flash.html", "snap.html"),
     "morphports-reviewed.js": ("typecascade.html", "glyphreveal.html", "mistlift.html", "sproutshift.html"),
     "morphports.js": ("dotresolve.html",),
     "ribbonink.js": ("ribbonink.html",),
