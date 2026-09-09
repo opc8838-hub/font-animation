@@ -1107,7 +1107,7 @@
       { id: "orbit", kind: "orbit", label: "文字接入 · 图标聚拢", start: markers.wordsEnterStart, end: markers.settleEnd },
       { id: "hold", kind: "hold", label: "图标滞空继续流动", start: markers.settleEnd, end: markers.contactStartSeconds },
       { id: "contact", kind: "contact", label: `${markers.pairCount} 对字体逐对靠拢并同步换色`, start: markers.contactStartSeconds, end: markers.contactSeconds },
-      { id: "color", kind: "color", label: "换色完成与复位", start: markers.contactSeconds, end: markers.replaceStartSeconds },
+      { id: "color", kind: "replace", label: "换色完成与复位", start: markers.contactSeconds, end: markers.replaceStartSeconds },
       { id: "replace", kind: "replace", label: replacementEnabled() ? "文字切换图标 / 图片" : "紧凑标题停留", start: markers.replaceStartSeconds, end: total }
     ].filter((beat) => beat.end > beat.start + .001);
   }

@@ -1408,7 +1408,7 @@
       { kind: "replace", name: "立即收束", start: timing.spreadEnd, end: timing.collapseEnd },
       { kind: "contact", name: "字母图标扫变", start: timing.collapseEnd, end: timing.scanEnd },
       { kind: "hold", name: "恢复后停留", start: timing.scanEnd, end: timing.holdEnd },
-      { kind: "intro", name: "快速消失", start: timing.holdEnd, end: timing.exitEnd }
+      { kind: "replace", name: "快速消失", start: timing.holdEnd, end: timing.exitEnd }
     ].map((beat, index) => ({ ...beat, index, duration: Math.max(0, beat.end - beat.start) }));
   }
 

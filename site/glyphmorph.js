@@ -54,6 +54,9 @@
   const context = canvas.getContext("2d");
   const controlIds = ["fontFamily", "fontSize", "tracking", "positionX", "positionY", "textColor", "backgroundColor", "morphDuration", "characterDelay", "scaleFloor", "speed", "loop"];
   const controls = Object.fromEntries(controlIds.map((id) => [id, $(id)]));
+  const normalizeColor = (value, fallback = "#ffffff") => /^#[0-9a-f]{6}$/i.test(String(value || "")) ? String(value) : fallback;
+  const rowTextColor = (rowState) => normalizeColor(rowState?.textColor, state.scheme.typography.textColor);
+  const rowBackgroundColor = (rowState) => normalizeColor(rowState?.backgroundColor, state.scheme.typography.backgroundColor);
 
   function fontPreset(row) {
     return window.MERowFonts.preset(row, state.scheme.typography);
@@ -214,7 +217,7 @@
       cursor += token.width + appliedTracking;
       return slot;
     });
-    return { tokens: metrics.tokens, slots, fontSize, family, style, weight, unit };
+    return { tokens: metrics.tokens, slots, fontSize, family, style, weight, unit, row };
   }
 
   function matchGlyphs(from, to) {
@@ -237,14 +240,14 @@
     return resource.fallbackImage || null;
   }
 
-  function drawToken(ctx, slot, layout, scale, alpha, timeSeconds, iconOverride = null) {
+  function drawToken(ctx, slot, layout, scale, alpha, timeSeconds, iconOverride = null, options = {}) {
     const token = slot.token;
     if (alpha <= 0 || scale <= 0) return;
     ctx.save();
     ctx.globalAlpha = clamp(alpha);
     if (token.type === "glyph") {
       if (!token.glyph.trim()) { ctx.restore(); return; }
-      ctx.fillStyle = state.scheme.typography.textColor;
+      ctx.fillStyle = options.color || rowTextColor(layout.row);
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.font = `${layout.style} ${layout.weight} ${layout.fontSize}px ${layout.family}`;
@@ -273,7 +276,7 @@
         const fit = size / Math.max(naturalWidth, naturalHeight);
         ctx.drawImage(image, -naturalWidth * fit / 2, -naturalHeight * fit / 2, naturalWidth * fit, naturalHeight * fit);
       } else {
-        ctx.strokeStyle = state.scheme.typography.textColor;
+        ctx.strokeStyle = options.color || rowTextColor(layout.row);
         ctx.lineWidth = Math.max(1, size * 0.05);
         ctx.strokeRect(-size * 0.32, -size * 0.32, size * 0.64, size * 0.64);
       }
@@ -285,9 +288,9 @@
     const ctx = targetCanvas.getContext("2d", { willReadFrequently: true });
     ctx.save();
     ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = state.scheme.typography.backgroundColor;
-    ctx.fillRect(0, 0, width, height);
     const timeline = resolveTimeline(timeSeconds * 1000);
+    ctx.fillStyle = rowBackgroundColor(timeline.segment.from);
+    ctx.fillRect(0, 0, width, height);
     const fromLayout = glyphLayout(ctx, timeline.segment.from, width, height);
     const toLayout = glyphLayout(ctx, timeline.segment.to, width, height);
     if (timeline.inHold) {
@@ -315,8 +318,11 @@
       const movingLayout = { ...fromLayout, fontSize: fromLayout.fontSize + (toLayout.fontSize - fromLayout.fontSize) * eased };
       const movingSlot = { token: oldSlot.token, x: oldSlot.x + (target.x - oldSlot.x) * eased, y: oldSlot.y + (target.y - oldSlot.y) * eased };
       const fontChanged = oldSlot.token.type === "glyph" && ["family", "style", "weight"].some((key) => fromLayout[key] !== toLayout[key]);
-      drawToken(ctx, movingSlot, movingLayout, 1, fontChanged ? 1 - eased : 1, timeSeconds, iconOverride);
-      if (fontChanged) drawToken(ctx, movingSlot, { ...toLayout, fontSize: movingLayout.fontSize }, 1, eased, timeSeconds);
+      const fromColor = rowTextColor(fromLayout.row);
+      const toColor = rowTextColor(toLayout.row);
+      const colorChanged = fromColor !== toColor;
+      drawToken(ctx, movingSlot, movingLayout, 1, fontChanged || colorChanged ? 1 - eased : 1, timeSeconds, iconOverride, { color: fromColor });
+      if (fontChanged || colorChanged) drawToken(ctx, movingSlot, { ...toLayout, fontSize: movingLayout.fontSize }, 1, eased, timeSeconds, null, { color: toColor });
     });
     toLayout.slots.forEach((newSlot, newIndex) => {
       if (claimed.has(newIndex)) return;
@@ -359,6 +365,14 @@
           <button data-action="delete" type="button" aria-label="删除">×</button>
         </div>
         <label class="gm-row-font">本行字体<select data-key="fontFamily" data-stg-font-library="true" aria-label="第 ${index + 1} 行字体">${window.MERowFonts.options(row.fontFamily)}</select></label>
+        <div class="gm-row-text-color">
+          <label>本段文字颜色<input data-row-text-color type="color" value="${rowTextColor(row)}"></label>
+          <button data-action="apply-text-color-all" type="button">应用到全部段落</button>
+        </div>
+        <div class="gm-row-text-color">
+          <label>本段背景颜色<input data-row-background-color type="color" value="${rowBackgroundColor(row)}"></label>
+          <button data-action="apply-background-color-all" type="button">将背景颜色应用到全部段落</button>
+        </div>
         <div class="gm-row-meta">
           <button class="gm-row-target${state.activeRowId === row.id ? " is-active" : ""}" data-action="target" type="button">＋ 插入图标</button>
           <button class="gm-row-pause" data-action="pause-row" type="button">暂停修改</button>
@@ -370,7 +384,29 @@
           return `<div class="gm-inline-icon-chip"><img src="${escapeHtml(asset?.url || "")}" alt=""><strong>${name}</strong><span>位置 ${icon.boundary}</span><button class="gm-inline-icon-edit" data-action="edit-icon" data-icon-id="${icon.id}" type="button" aria-label="编辑${name}">编辑</button></div>`;
         }).join("")}</div>
       </div>`).join("");
+    bindRowColorControls();
     updateInsertTargetLabel();
+  }
+
+  function bindRowColorControls() {
+    document.querySelectorAll(".gm-row-shell").forEach((rowElement) => {
+      const rowState = state.scheme.rows.find((item) => item.id === rowElement.dataset.rowId);
+      if (!rowState) return;
+      const textColor = rowElement.querySelector("[data-row-text-color]");
+      const backgroundColor = rowElement.querySelector("[data-row-background-color]");
+      textColor?.addEventListener("input", () => {
+        rowState.textColor = textColor.value;
+        state.activeRowId = rowState.id;
+        autoSave();
+        resizePreview();
+      });
+      backgroundColor?.addEventListener("input", () => {
+        rowState.backgroundColor = backgroundColor.value;
+        state.activeRowId = rowState.id;
+        autoSave();
+        resizePreview();
+      });
+    });
   }
 
   function allInsertedIcons() {
@@ -465,7 +501,16 @@
 
   function renderTimeline() {
     const segments = timelineSegments();
-    $("timeline").innerHTML = segments.map(({ from, to, durationMs }) => `<div class="gm-timeline-block me-choreo-block" role="listitem"><strong>${escapeHtml(from.text || "空白")} → ${escapeHtml(to.text || "空白")}</strong><small>${(durationMs / 1000).toFixed(2)}s</small></div>`).join("");
+    const speed = Math.max(0.01, state.scheme.motion.speed);
+    let cursor = 0;
+    $("timeline").innerHTML = segments.map(({ from, holdMs, morphMs }, index) => {
+      const parts = [[index === 0 ? "开场停留" : "停留", holdMs], ["原位缩小", morphMs * 0.4], ["基线迁移", morphMs * 0.2], ["原位长大", morphMs * 0.4]];
+      return parts.filter(([, ms]) => ms > 0).map(([label, ms]) => {
+        const start = cursor / speed;
+        cursor += ms;
+        return `<button type="button" data-seek-ms="${start}" class="gm-timeline-block me-choreo-block" role="listitem"><strong>${escapeHtml(label)}</strong><small>${escapeHtml(from.text || "空白")} · ${(ms / speed / 1000).toFixed(2)}s</small></button>`;
+      }).join("");
+    }).join("");
     const total = cycleDurationMs();
     $("scrubber").max = String(Math.max(0.001, total));
     $("timeTotal").textContent = `${(total / 1000).toFixed(2)}s`;
@@ -536,10 +581,19 @@
           id: icon.id || uid(), libraryId: String(icon.libraryId || ""), boundary: clamp(Math.round(Number(icon.boundary) || 0), 0, glyphCount),
           size: clamp(Number(icon.size) || 90, 20, 220), gap: clamp(Number(icon.gap) || 12, 0, 80), x: clamp(Number(icon.x) || 0, -100, 100), y: clamp(Number(icon.y) || 0, -100, 100)
         })).filter((icon) => libraryAsset(icon.libraryId) && !seen.has(icon.libraryId) && seen.add(icon.libraryId));
-        return { id: row.id || uid(), text, hold: clamp(Number(row.hold) || 0, 0, 5000), icons, fontFamily: window.MERowFonts.normalize(row.fontFamily) };
+        return {
+          id: row.id || uid(), text, hold: clamp(Number(row.hold) || 0, 0, 5000), icons,
+          fontFamily: window.MERowFonts.normalize(row.fontFamily),
+          textColor: normalizeColor(row.textColor, scheme.typography?.textColor || DEFAULT_SCHEME.typography.textColor),
+          backgroundColor: normalizeColor(row.backgroundColor, scheme.typography?.backgroundColor || DEFAULT_SCHEME.typography.backgroundColor)
+        };
       })
     };
-    if (state.scheme.rows.length < 2) state.scheme.rows.push({ id: uid(), text: "", hold: 100, icons: [] });
+    if (state.scheme.rows.length < 2) state.scheme.rows.push({
+      id: uid(), text: "", hold: 100, icons: [],
+      textColor: state.scheme.typography.textColor,
+      backgroundColor: state.scheme.typography.backgroundColor
+    });
     if (!state.scheme.rows.some((row) => row.id === state.activeRowId)) state.activeRowId = state.scheme.rows[0].id;
     state.caretBoundary = clamp(state.caretBoundary, 0, split(state.scheme.rows.find((row) => row.id === state.activeRowId)?.text || "").length);
     state.activeIconId = "";
@@ -666,6 +720,32 @@
       }
       return;
     }
+    if (button.dataset.action === "apply-text-color-all") {
+      const source = state.scheme.rows[index];
+      if (!source) return;
+      const value = rowTextColor(source);
+      state.scheme.rows.forEach((item) => { item.textColor = value; });
+      state.scheme.typography.textColor = value;
+      if (controls.textColor) controls.textColor.value = value;
+      document.querySelectorAll("[data-row-text-color]").forEach((input) => { input.value = value; });
+      $("exportStatus").textContent = "文字颜色已应用到全部段落。";
+      autoSave();
+      resizePreview();
+      return;
+    }
+    if (button.dataset.action === "apply-background-color-all") {
+      const source = state.scheme.rows[index];
+      if (!source) return;
+      const value = rowBackgroundColor(source);
+      state.scheme.rows.forEach((item) => { item.backgroundColor = value; });
+      state.scheme.typography.backgroundColor = value;
+      if (controls.backgroundColor) controls.backgroundColor.value = value;
+      document.querySelectorAll("[data-row-background-color]").forEach((input) => { input.value = value; });
+      $("exportStatus").textContent = "背景颜色已应用到全部段落；图片、GIF 和视频保持独立。";
+      autoSave();
+      resizePreview();
+      return;
+    }
     if (button.dataset.action === "target") {
       const row = state.scheme.rows[index];
       const input = rowElement.querySelector('input[data-key="text"]');
@@ -685,7 +765,12 @@
     renderRows(); renderSelectedAssets(); renderTimeline(); autoSave(); resizePreview();
   });
   $("addRow").addEventListener("click", () => {
-    const row = { id: uid(), text: "新文字", hold: 100, icons: [] };
+    const previous = state.scheme.rows.find((item) => item.id === state.activeRowId) || state.scheme.rows[state.scheme.rows.length - 1];
+    const row = {
+      id: uid(), text: "新文字", hold: 100, icons: [],
+      textColor: rowTextColor(previous),
+      backgroundColor: rowBackgroundColor(previous)
+    };
     state.scheme.rows.push(row);
     state.activeRowId = row.id; state.caretBoundary = split(row.text).length;
     renderRows(); renderSelectedAssets(); renderTimeline(); autoSave();
@@ -841,7 +926,10 @@
   $("restoreScheme").addEventListener("click", () => { localStorage.removeItem(STORAGE_KEY); applyScheme(clone(DEFAULT_SCHEME), "已恢复不可变默认方案。" ); });
   $("clearScheme").addEventListener("click", () => {
     const cleared = clone(state.scheme);
-    cleared.rows = [{ id: uid(), text: "", hold: 100, icons: [] }, { id: uid(), text: "", hold: 100, icons: [] }];
+    cleared.rows = [
+      { id: uid(), text: "", hold: 100, icons: [], textColor: state.scheme.typography.textColor, backgroundColor: state.scheme.typography.backgroundColor },
+      { id: uid(), text: "", hold: 100, icons: [], textColor: state.scheme.typography.textColor, backgroundColor: state.scheme.typography.backgroundColor }
+    ];
     applyScheme(cleared, "全部文字内容已清空，当前样式与画布保持不变。" );
   });
 

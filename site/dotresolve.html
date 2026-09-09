@@ -4,19 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="color-scheme" content="dark">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'></svg>">
+  <link rel="icon" href="favicon.svg">
   <title>点解 Dot Resolve | CellMotion</title>
   <link rel="stylesheet" href="workspace-editor.css?v=20260901-1">
-  <link rel="stylesheet" href="me-motion-editor.css?v=20260901-1">
+  <link rel="stylesheet" href="me-motion-editor.css?v=20260909-timeline-color">
   <link rel="stylesheet" href="shared-fonts.css?v=20260824-2">
   <link rel="stylesheet" href="stg-cn.css?v=20260824-1">
   <link rel="stylesheet" href="glyphmorph.css?v=20260904-4">
+  <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-coloriso">
+  <link rel="stylesheet" href="typecascade-polish.css?v=20260909-coloriso">
 </head>
 <body class="glyphmorph-editor" data-morph-port="dotresolve">
   <aside id="glyphMorphInspector" class="gm-inspector" aria-label="点解编辑器">
     <header class="gm-header">
-      <a href="gallery.html" aria-label="返回效果库">ME</a>
-      <div><small>ME MOTION STUDIO</small><h1>点解 <span>Dot Resolve</span></h1></div>
+      <a class="tc-brand" href="cellmotion.html" aria-label="CellMotion 首页"><img src="assets/cellmotion/logo-original.png" alt="CellMotion"></a>
+      <div><small>让创意，自由生长</small><h1>点解 <span>Dot Resolve</span></h1></div>
     </header>
 
     <section class="gm-card gm-canvas-card">
@@ -45,8 +47,8 @@
       <p class="gm-help">默认按 4 个文字节拍循环完整像素解析；每段可独立停留、插入图标并设置背景视频。</p>
       <div id="sequenceRows" class="gm-sequence"></div>
       <div class="gm-grid-2 gm-text-colors">
-        <label class="gm-field">全部行开头颜色 <input id="textColor" type="color"></label>
-        <label class="gm-field">全部行背景色 <input id="backgroundColor" type="color"></label>
+        <label class="gm-field">新段落默认开头颜色 <input id="textColor" type="color"></label>
+        <label class="gm-field">新段落默认背景 <input id="backgroundColor" type="color"></label>
       </div>
     </section>
 
@@ -183,7 +185,11 @@
   <script src="row-font-editor.js?v=20260904-4"></script>
   <script src="shared-icon-library.js?v=20260902-1"></script>
   <script src="cellmotion-animated-image.js?v=20260909-1"></script>
-  <script src="morphports.js?v=20260909-gif-runtime"></script>
+  <script src="morphports.js?v=20260909-coloriso2"></script>
   <script src="stg-cn.js?v=20260904-1"></script>
+  <script src="typecascade-workspace.js?v=20260909-standard"></script>
+  <script src="typecascade-polish.js?v=20260909-coloriso"></script>
+  <script src="typecascade-selects.js?v=20260909-1"></script>
+  <script src="typecascade-locale.js?v=20260909-coloriso2"></script>
 </body>
 </html>

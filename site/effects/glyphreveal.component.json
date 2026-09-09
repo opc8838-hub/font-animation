@@ -1,0 +1,38 @@
+{
+  "effect": {
+    "id": "glyphreveal",
+    "name": { "zh": "字现", "en": "Glyph Reveal" },
+    "version": "1.0.0",
+    "category": "kinetic-typography"
+  },
+  "runtime": {
+    "kind": "iframe-bridge",
+    "entry": "glyphreveal.html?preview=1&embed=1",
+    "bridgeVersion": "1.0.0",
+    "renderer": "canvas2d"
+  },
+  "capabilities": {
+    "editableTextRows": true,
+    "rowFonts": true,
+    "inlineIcons": true,
+    "customImageAssets": true,
+    "rowBackgrounds": ["color", "image", "gif", "video"],
+    "timeline": true,
+    "responsiveCanvas": true,
+    "exports": ["png", "gif", "mp4"]
+  },
+  "behavior": {
+    "summary": {
+      "zh": "字符以扫显方式显现，随后在段落之间切换。",
+      "en": "Glyphs wipe into view, then transition between rows."
+    },
+    "phases": [
+      { "id": "intro", "name": { "zh": "扫显开场", "en": "Reveal intro" }, "colorToken": "phase.intro" },
+      { "id": "morph", "name": { "zh": "扫显切换", "en": "Reveal morph" }, "colorToken": "phase.hold" }
+    ]
+  },
+  "parameters": [
+    { "path": "composition.motion.morphDuration", "scope": "effect", "type": "number", "unit": "ms", "name": { "zh": "扫显时长", "en": "Reveal duration" } },
+    { "path": "composition.rows[].text", "scope": "row", "type": "string", "name": { "zh": "段落文字", "en": "Row text" } }
+  ]
+}

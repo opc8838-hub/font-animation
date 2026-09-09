@@ -34,8 +34,7 @@
           row("sprout-03", "what the eye can see", 650),
           row("sprout-04", "and scroll past.", 650),
           row("sprout-05", "Motion", 650),
-          row("sprout-06", "is how ideas speak.", 750),
-          row("sprout-07", "— ME Studio", 1200)
+          row("sprout-06", "is how ideas speak.", 750)
         ]
       }
     },
@@ -849,11 +848,12 @@
       const movingLayout = { ...fromLayout, fontSize: fromLayout.fontSize + (toLayout.fontSize - fromLayout.fontSize) * eased };
       const movingSlot = { token: oldSlot.token, x: oldSlot.x + (target.x - oldSlot.x) * eased, y: oldSlot.y + (target.y - oldSlot.y) * eased };
       const fontChanged = oldSlot.token.type === "glyph" && ["family", "style", "weight"].some((key) => fromLayout[key] !== toLayout[key]);
-      const color = port.mode === "dots" ? dotTokenColor(timeline.segment.from, oldSlot.token, timeline.progress) : null;
-      const colorChanged = port.mode === "dots" && color !== dotTokenColor(timeline.segment.to, target.token);
+      const fromColor = port.mode === "dots" ? dotTokenColor(timeline.segment.from, oldSlot.token, timeline.progress) : rowTextColor(fromLayout.row);
+      const toColor = port.mode === "dots" ? dotTokenColor(timeline.segment.to, target.token) : rowTextColor(toLayout.row);
+      const colorChanged = fromColor !== toColor;
       const blend = colorChanged ? clamp((timeline.progress - 0.8) / 0.2) : eased;
-      drawToken(ctx, movingSlot, movingLayout, 1, fontChanged || colorChanged ? 1 - blend : 1, timeSeconds, iconOverride, { color });
-      if (fontChanged || colorChanged) drawToken(ctx, { ...movingSlot, token: target.token }, { ...toLayout, fontSize: movingLayout.fontSize }, 1, blend, timeSeconds);
+      drawToken(ctx, movingSlot, movingLayout, 1, fontChanged || colorChanged ? 1 - blend : 1, timeSeconds, iconOverride, { color: fromColor });
+      if (fontChanged || colorChanged) drawToken(ctx, { ...movingSlot, token: target.token }, { ...toLayout, fontSize: movingLayout.fontSize }, 1, blend, timeSeconds, null, { color: toColor });
     });
     toLayout.slots.forEach((newSlot, newIndex) => {
       if (claimed.has(newIndex)) return;
@@ -929,10 +929,10 @@
           <button data-action="delete" type="button" aria-label="删除"${state.scheme.rows.length <= minimumRows ? " disabled title=\"至少保留一段文字\"" : ""}>×</button>
         </div>
         <label class="gm-row-font">本行字体<select data-key="fontFamily" data-stg-font-library="true" aria-label="第 ${index + 1} 行字体">${window.MERowFonts.options(row.fontFamily)}</select></label>
-        ${port.slug === "typecascade" ? `<div class="gm-row-text-color">
+        ${port.mode === "dots" ? "" : `<div class="gm-row-text-color">
           <label>本段文字颜色<input data-row-text-color type="color" value="${rowTextColor(row)}"></label>
           <button data-action="apply-text-color-all" type="button">应用到全部段落</button>
-        </div>` : ""}
+        </div>`}
         ${port.mode === "dots" ? `<div class="gm-dot-colors">${dotColorControls(row)}</div>` : ""}
         <div class="gm-row-meta">
           <button class="gm-row-target${state.activeRowId === row.id ? " is-active" : ""}" data-action="target" type="button">＋ 插入图标</button>
@@ -940,13 +940,11 @@
           <span class="gm-row-icon-count">${(row.icons || []).length} 个图标</span>
         </div>
         <details class="gm-row-background">
-          <summary><span>${port.slug === "typecascade" ? "背景 · 图片 / GIF / 视频" : "本行背景"}</span>${port.slug === "typecascade"
-            ? `<i class="gm-row-background-swatch" data-background-summary-swatch style="background-color:${normalizeColor(row.backgroundColor, state.scheme.typography.backgroundColor)}" aria-label="当前背景颜色 ${normalizeColor(row.backgroundColor, state.scheme.typography.backgroundColor)}"></i>`
-            : `<b>${escapeHtml(row.backgroundMedia?.name || "纯色")}</b>`}</summary>
+          <summary><span>背景 · 图片 / GIF / 视频</span><i class="gm-row-background-swatch" data-background-summary-swatch style="background-color:${normalizeColor(row.backgroundColor, state.scheme.typography.backgroundColor)}" aria-label="当前背景颜色 ${normalizeColor(row.backgroundColor, state.scheme.typography.backgroundColor)}"></i></summary>
           <div class="gm-row-background-grid">
             <label>背景颜色<input data-background-key="backgroundColor" type="color" value="${normalizeColor(row.backgroundColor, state.scheme.typography.backgroundColor)}"></label>
-            <label class="gm-background-upload">${port.slug === "typecascade" ? "上传 / 更换背景" : "上传背景视频"}<input data-background-file type="file" accept="${port.slug === "typecascade" ? "image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime" : "video/mp4,video/webm,video/quicktime"}"></label>
-            ${port.slug === "typecascade" ? `<button class="gm-apply-background-all" data-action="apply-background-color-all" type="button">将背景颜色应用到全部段落</button>` : ""}
+            <label class="gm-background-upload">上传 / 更换背景<input data-background-file type="file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime"></label>
+            <button class="gm-apply-background-all" data-action="apply-background-color-all" type="button">将背景颜色应用到全部段落</button>
             <label>背景转场<select data-background-key="backgroundTransition"><option value="direct"${row.backgroundTransition === "direct" ? " selected" : ""}>直接切换</option><option value="crossfade"${row.backgroundTransition === "crossfade" ? " selected" : ""}>柔和叠化</option></select></label>
             <label>叠化时长<input data-background-key="backgroundTransitionDuration" type="number" min="10" max="2000" step="10" value="${normalizeBackgroundTransitionDuration(row.backgroundTransitionDuration)}"><small>毫秒</small></label>
             <div class="gm-background-video"${row.backgroundMedia ? "" : " hidden"}>
@@ -1317,14 +1315,14 @@
         </div>`;
       }).join("")}</div></details>`;
     }).join("");
-    const customAssets = port.slug === "typecascade" ? (state.scheme.customAssets || []) : [];
-    const custom = port.slug === "typecascade" ? `<details class="gm-icon-group gm-custom-icon-group"${customAssets.length ? " open" : ""}><summary>我的图片 · ${customAssets.length}</summary><div class="gm-asset-library me-asset-library">${customAssets.length ? customAssets.map((asset) => {
+    const customAssets = state.scheme.customAssets || [];
+    const custom = `<details class="gm-icon-group gm-custom-icon-group"${customAssets.length ? " open" : ""}><summary>我的图片 · ${customAssets.length}</summary><div class="gm-asset-library me-asset-library">${customAssets.length ? customAssets.map((asset) => {
       const selected = state.librarySelectionId === asset.libraryId;
       return `<div class="gm-asset-choice-wrap${selected ? " is-selected" : ""}" data-library-id="${escapeHtml(asset.libraryId)}">
         <button class="gm-asset-choice me-asset-choice${selected ? " is-selected" : ""}" data-library-id="${escapeHtml(asset.libraryId)}" type="button"><img src="${escapeHtml(asset.url)}" alt=""><span>${escapeHtml(asset.name)}</span></button>
         <button class="gm-asset-quick-insert" data-quick-insert="${escapeHtml(asset.libraryId)}" type="button" aria-label="插入${escapeHtml(asset.name)}">＋ 插入</button>
       </div>`;
-    }).join("") : '<p class="gm-help">上传后会出现在这里，再由你决定插入哪一行。</p>'}</div></details>` : "";
+    }).join("") : '<p class="gm-help">上传后会出现在这里，再由你决定插入哪一行。</p>'}</div></details>`;
     $("iconLibrary").innerHTML = custom + builtIn;
     renderLibrarySelection();
   }
@@ -1397,17 +1395,44 @@
     const segments = timelineSegments();
     const speed = Math.max(0.01, state.scheme.motion.speed);
     let cursor = 0;
-    $("timeline").innerHTML = segments.map(({ from, to, durationMs, holdMs, transitionMs, introMs, openingTransition, terminal }) => {
+    const phaseFill = {
+      "立字开场": "#d7ff2f", "萌发开场": "#d7ff2f", "雾凝开场": "#d7ff2f", "扫显开场": "#d7ff2f", "像素聚合开场": "#d7ff2f",
+      "停留": "#8ec8ff", "结束停留": "#8ec8ff",
+      "倾倒": "#9de7d7", "缩小退出": "#9de7d7", "向上升散": "#9de7d7", "像素消散": "#9de7d7", "逐字隐去": "#9de7d7",
+      "悬停": "#ffc4d6", "缩放生长": "#ffc4d6", "升散浮入": "#ffc4d6", "像素解析": "#ffc4d6", "逐字显现": "#ffc4d6",
+      "下落": "#ffd27d", "放大出现": "#ffd27d", "下方浮入": "#ffd27d", "颗粒解析": "#ffd27d", "基线长入": "#ffd27d", "显现站稳": "#ffd27d"
+    };
+    const seenFills = new Map();
+    const nextFill = (label) => {
+      if (phaseFill[label]) return phaseFill[label];
+      if (seenFills.has(label)) return seenFills.get(label);
+      const palette = ["#d7ff2f", "#8ec8ff", "#9de7d7", "#ffc4d6", "#ffd27d", "#d4b8ff"];
+      const used = new Set([...Object.values(phaseFill), ...seenFills.values()]);
+      const color = palette.find((item) => !used.has(item)) || palette[seenFills.size % palette.length];
+      seenFills.set(label, color);
+      return color;
+    };
+    $("timeline").innerHTML = segments.map(({ from, to, durationMs, holdMs, transitionMs, introMs, openingTransition, terminal }, index) => {
       const phase = openingTransition ? port.introLabel : terminal ? "结束停留" : from.text && !to.text ? port.exitLabel : !from.text && to.text ? port.enterLabel : port.phaseLabel;
       const timing = cascadeTiming(from);
       const contentPhases = port.mode === "cascade" && !terminal
         ? [["停留", holdMs], ["倾倒", timing.tilt], ["悬停", timing.hang], ["下落", transitionMs - timing.tilt - timing.hang]]
-        : [[phase, durationMs - introMs]];
+        : terminal
+          ? [["结束停留", holdMs || durationMs - introMs]]
+          : (() => {
+              const exitMs = transitionMs * 0.4;
+              const midMs = transitionMs * 0.2;
+              const enterMs = Math.max(0, transitionMs - exitMs - midMs);
+              const enterName = port.enterLabel === port.phaseLabel || port.enterLabel === port.exitLabel ? "显现站稳" : port.enterLabel;
+              const holdLabel = index === 0 && introMs <= 0 && port.introLabel ? port.introLabel : "停留";
+              return [[holdLabel, holdMs], [port.exitLabel, exitMs], [port.phaseLabel, midMs], [enterName, enterMs]];
+            })();
       const phases = introMs > 0 ? [[port.introLabel, introMs], ...contentPhases] : contentPhases;
-      return phases.filter(([, ms]) => ms > 0).map(([label, ms], index) => {
+      return phases.filter(([, ms]) => ms > 0).map(([label, ms]) => {
         const start = cursor / speed;
         cursor += ms;
-        return `<button type="button" data-seek-ms="${start}" class="gm-timeline-block me-choreo-block" style="flex:${ms};border-top:3px solid ${["#d9ee84", "#8bbdff", "#d8b3ff", "#ffb98b"][index % 4]}" role="listitem"><strong>${escapeHtml(label)}</strong><small>${escapeHtml(from.text || "留白")} · ${(ms / speed / 1000).toFixed(2)}s</small></button>`;
+        const color = nextFill(label);
+        return `<button type="button" data-seek-ms="${start}" class="gm-timeline-block me-choreo-block" style="background:${color} !important" role="listitem"><strong>${escapeHtml(label)}</strong><small>${escapeHtml(from.text || "留白")} · ${(ms / speed / 1000).toFixed(2)}s</small></button>`;
       }).join("");
     }).join("");
     const total = cycleDurationMs();
@@ -1471,9 +1496,7 @@
 
   function applyScheme(scheme, status = "") {
     if (!scheme || !Array.isArray(scheme.rows)) return;
-    const customAssets = port.slug === "typecascade"
-      ? (Array.isArray(scheme.customAssets) ? scheme.customAssets : []).map(normalizeCustomAsset).filter(Boolean)
-      : [];
+    const customAssets = (Array.isArray(scheme.customAssets) ? scheme.customAssets : []).map(normalizeCustomAsset).filter(Boolean);
     const availableAsset = (libraryId) => customAssets.find((asset) => asset.libraryId === libraryId)
       || window.STGIconLibrary?.byId?.get(libraryId)
       || null;
@@ -1496,7 +1519,7 @@
           fontFamily: window.MERowFonts.normalize(row.fontFamily),
           ...(port.mode === "dots" ? { ...dotColors({ ...row, text }), initialColor: normalizeColor(row.initialColor, scheme.typography?.textColor || DEFAULT_SCHEME.typography.textColor) } : {}),
           ...(port.mode === "cascade" ? { tiltDuration: cascadeTiming(row).tilt, hangDuration: cascadeTiming(row).hang, fallDuration: cascadeTiming(row).drop } : {}),
-          ...(port.slug === "typecascade" ? { textColor: normalizeColor(row.textColor, scheme.typography?.textColor || DEFAULT_SCHEME.typography.textColor) } : {}),
+          textColor: normalizeColor(row.textColor, scheme.typography?.textColor || DEFAULT_SCHEME.typography.textColor),
           backgroundColor: normalizeColor(row.backgroundColor, scheme.typography?.backgroundColor || DEFAULT_SCHEME.typography.backgroundColor),
           backgroundMedia: normalizeBackgroundMedia(row.backgroundMedia),
           backgroundTransition: normalizeBackgroundTransition(row.backgroundTransition),
@@ -1507,8 +1530,12 @@
     // Migrate the former default single-shot setting without discarding edited rows.
     // Version 4 explicit loop-off remains an intentional user choice.
     if (Number(scheme.version || 1) < 4) state.scheme.motion.loop = true;
+    if (port.slug === "sproutshift") {
+      const signature = (item) => item.id === "sprout-07" || /^[-–—]\s*ME Studio$/i.test(String(item.text || "").replace(/\s+/g, " ").trim());
+      state.scheme.rows = state.scheme.rows.filter((item) => !signature(item));
+    }
     while (state.scheme.rows.length < minimumRows) state.scheme.rows.push(row(uid(), "", 100, {
-      ...(port.slug === "typecascade" ? { textColor: state.scheme.typography.textColor } : {}),
+      textColor: state.scheme.typography.textColor,
       backgroundColor: state.scheme.typography.backgroundColor
     }));
     const liveRowIds = new Set(state.scheme.rows.map((item) => item.id));
@@ -1596,11 +1623,7 @@
     changed({ restart: false });
   })));
   controlIds.forEach((id) => controls[id].addEventListener("input", () => {
-    if (id === "textColor" && port.mode === "dots") {
-      state.scheme.rows.forEach((item) => { item.initialColor = controls.textColor.value; });
-      renderRows();
-    }
-    // Global background is only the default for subsequently added rows.
+    // Global text/background colors are only defaults for subsequently added rows.
     // Existing rows remain independent unless the explicit apply-to-all action is used.
     changed({ restart: id === "introEnabled" || id === "introDuration" || id === "introCharacterDelay" || id === "morphDuration" || id === "characterDelay" || id === "speed" });
     if (id === "fontFamily") refreshFonts();
@@ -1750,15 +1773,18 @@
     renderRows(); renderSelectedAssets(); renderTimeline(); autoSave(); resizePreview();
   });
   $("addRow").addEventListener("click", () => {
-    const previous = state.scheme.rows[state.scheme.rows.length - 1];
-    const inherited = port.slug === "typecascade" && previous ? {
+    const previous = state.scheme.rows.find((item) => item.id === state.activeRowId) || state.scheme.rows[state.scheme.rows.length - 1];
+    const inherited = previous ? {
       fontFamily: previous.fontFamily,
       textColor: rowTextColor(previous),
       backgroundColor: normalizeColor(previous.backgroundColor, state.scheme.typography.backgroundColor),
-      backgroundMedia: clone(previous.backgroundMedia),
-      backgroundTransition: normalizeBackgroundTransition(previous.backgroundTransition),
-      backgroundTransitionDuration: normalizeBackgroundTransitionDuration(previous.backgroundTransitionDuration)
-    } : { backgroundColor: state.scheme.typography.backgroundColor };
+      ...(port.mode === "dots" ? { initialColor: dotColors(previous).initialColor } : {}),
+      ...(port.slug === "typecascade" ? {
+        backgroundMedia: clone(previous.backgroundMedia),
+        backgroundTransition: normalizeBackgroundTransition(previous.backgroundTransition),
+        backgroundTransitionDuration: normalizeBackgroundTransitionDuration(previous.backgroundTransitionDuration)
+      } : {})
+    } : { textColor: state.scheme.typography.textColor, backgroundColor: state.scheme.typography.backgroundColor };
     const nextRow = row(uid(), "新文字", 100, inherited);
     state.scheme.rows.push(nextRow);
     state.activeRowId = nextRow.id; state.caretBoundary = split(nextRow.text).length;

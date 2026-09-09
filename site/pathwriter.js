@@ -949,9 +949,9 @@
     const syncStart = Number(inputs.trackSync.value) / 100;
     return [
       ["光标预备", "intro", span.lead],
-      ["输入起步", "intro", span.type * syncStart],
-      ["输入＋轨道滑行", "contact", span.type * (1 - syncStart)],
-      ["连续贴轨滑出", "orbit", span.bend + span.hold + span.ride],
+      ["输入起步", "orbit", span.type * syncStart],
+      ["输入＋轨道滑行", "hold", span.type * (1 - syncStart)],
+      ["连续贴轨滑出", "contact", span.bend + span.hold + span.ride],
       ["淡出切换", "replace", span.fade]
     ].map(([label, kind, duration], index) => {
       const beat = { index, label, kind, duration, start: cursor, end: cursor + duration };

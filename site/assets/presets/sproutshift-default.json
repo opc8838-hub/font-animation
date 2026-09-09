@@ -9,7 +9,6 @@
     { "id": "sprout-03", "text": "what the eye can see", "hold": 650, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
     { "id": "sprout-04", "text": "and scroll past.", "hold": 650, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
     { "id": "sprout-05", "text": "Motion", "hold": 650, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
-    { "id": "sprout-06", "text": "is how ideas speak.", "hold": 750, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 },
-    { "id": "sprout-07", "text": "— ME Studio", "hold": 1200, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 }
+    { "id": "sprout-06", "text": "is how ideas speak.", "hold": 750, "icons": [], "backgroundColor": "#ffffff", "backgroundMedia": null, "backgroundTransition": "direct", "backgroundTransitionDuration": 120 }
   ]
 }

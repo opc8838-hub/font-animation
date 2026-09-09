@@ -177,6 +177,22 @@ body.tc-workspace[data-editor-theme="light"] {
 .tc-workspace .gm-inline-icon-chip strong { color: var(--tc-text); }
 .tc-workspace .gm-inline-icon-edit, .tc-workspace .gm-text-button,
 .tc-workspace .gm-row-target, .tc-workspace .gm-row-target.is-active { color: var(--tc-accent); }
+.tc-workspace .pair-color-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+.tc-workspace .pair-apply-text-color-all,
+.tc-workspace .pair-apply-background-color-all {
+  min-height: 38px;
+  border: 1px solid var(--tc-line);
+  border-radius: var(--tc-radius-control);
+  background: var(--tc-input);
+  color: var(--tc-accent);
+  font-size: 12px;
+}
+.tc-workspace .pair-color-options .pair-apply-text-color-all { grid-column: 1 / -1; }
 .tc-workspace .gm-row-text-color {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -350,7 +366,8 @@ body.tc-workspace[data-editor-theme="light"] {
 .tc-workspace .tc-phase-scroll { position: relative; padding-top: 16px; padding-bottom: 4px; overflow-y: hidden; }
 .tc-phase-surface { position: relative; height: 112px; }
 .tc-workspace #timeline { position: relative; height: 78px; min-height: 0; overflow: visible; padding: 0; display: block; }
-.tc-workspace #timeline .gm-timeline-block { position: absolute; top: 0; min-width: 0; height: 78px; padding: 10px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 5px; border: 0 !important; border-radius: 13px; color: #22212b; background: var(--tc-phase-color); overflow: hidden; text-align: left; }
+.tc-workspace #timeline .gm-timeline-block { position: absolute; top: 0; min-width: 0; height: 78px; padding: 10px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 5px; border: 0 !important; border-radius: 13px; color: #22212b; background: var(--tc-phase-color, #d4b8ff) !important; overflow: hidden; text-align: left; }
+.tc-workspace #choreoBar .me-choreo-block[style*="--tc-phase-color"] { background: var(--tc-phase-color) !important; }
 .tc-workspace #timeline .gm-timeline-block strong { font-size: 14px; line-height: 1.3; font-weight: 600; width: 100%; }
 .tc-workspace #timeline .gm-timeline-block small { font-size: 11px; color: #3e3b48; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; max-width: 100%; }
 .tc-workspace #timeline .gm-timeline-block.tc-phase-medium small { display: none; }

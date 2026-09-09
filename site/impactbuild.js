@@ -374,11 +374,11 @@
   function beats() {
     const time = timeline(); const words = wordsOf();
     const result = [
-      { label: "首词冲击", start: 0, end: time.impactEnd, kind: "impact" },
-      { label: "收稳", start: time.impactEnd, end: time.settleEnd, kind: "hold" }
+      { label: "首词冲击", start: 0, end: time.impactEnd, kind: "intro" },
+      { label: "收稳", start: time.impactEnd, end: time.settleEnd, kind: "orbit" }
     ];
-    words.slice(1).forEach((word, index) => result.push({ label: `接入 ${word}`, start: wordStart(index + 1), end: wordStart(index + 1) + ms("#appendDuration"), kind: "append" }));
-    result.push({ label: "整句停留", start: time.appendEnd, end: time.finalEnd, kind: "final" }, { label: "模糊收尾", start: time.finalEnd, end: time.finalEnd + time.tail, kind: "contact" });
+    words.slice(1).forEach((word, index) => result.push({ label: `接入 ${word}`, start: wordStart(index + 1), end: wordStart(index + 1) + ms("#appendDuration"), kind: "hold" }));
+    result.push({ label: "整句停留", start: time.appendEnd, end: time.finalEnd, kind: "contact" }, { label: "模糊收尾", start: time.finalEnd, end: time.finalEnd + time.tail, kind: "replace" });
     return result;
   }
 
@@ -409,8 +409,16 @@
     ensureWordSettings(); const box = $("#wordRows"); box.replaceChildren();
     wordsOf().forEach((word, index) => {
       const setting = wordSettings[index]; const row = document.createElement("div"); row.className = "word-row";
-      row.innerHTML = `<div><strong>${word}</strong><small>${index === 0 ? "首词 · 大幅冲击" : `第 ${index + 1} 拍接入`}</small></div><input type="color" value="${setting.color}" aria-label="${word}颜色"><div class="word-controls">${index ? `<label>节拍微调 <output>${setting.offset}ms</output><input data-key="offset" type="range" min="-300" max="600" value="${setting.offset}"></label>` : ""}<label>冲击强度 <output>${setting.strength}%</output><input data-key="strength" type="range" min="35" max="180" value="${setting.strength}"></label></div>`;
+      row.innerHTML = `<div><strong>${word}</strong><small>${index === 0 ? "首词 · 大幅冲击" : `第 ${index + 1} 拍接入`}</small></div><div class="gm-row-text-color"><input type="color" value="${setting.color}" aria-label="${word}颜色"><button type="button" data-action="apply-text-color-all">应用到全部段落</button></div><div class="word-controls">${index ? `<label>节拍微调 <output>${setting.offset}ms</output><input data-key="offset" type="range" min="-300" max="600" value="${setting.offset}"></label>` : ""}<label>冲击强度 <output>${setting.strength}%</output><input data-key="strength" type="range" min="35" max="180" value="${setting.strength}"></label></div>`;
       row.querySelector('input[type="color"]').addEventListener("input", (event) => { setting.color = event.target.value; schedulePersist(); });
+      row.querySelector('[data-action="apply-text-color-all"]').addEventListener("click", () => {
+        const value = setting.color;
+        wordSettings.forEach((item) => { item.color = value; });
+        $("#textColor").value = value;
+        renderWordRows();
+        schedulePersist();
+        $("#schemeStatus").textContent = "文字颜色已应用到全部段落。";
+      });
       row.querySelectorAll('input[type="range"]').forEach((input) => input.addEventListener("input", () => { setting[input.dataset.key] = Number(input.value); input.previousElementSibling.textContent = input.dataset.key === "offset" ? `${input.value}ms` : `${input.value}%`; renderTimeline(); schedulePersist(); }));
       box.append(row);
     });

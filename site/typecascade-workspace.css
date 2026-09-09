@@ -125,3 +125,50 @@ body.tc-workspace.gm-inspector-hidden { grid-template-columns: 0 minmax(260px,1f
   .tc-workspace .gm-library-drawer { position: fixed; top: 64px; right: 0; bottom: 0; width: min(100%,380px); height: auto; z-index: 30; }
   .tc-workspace.gm-inspector-hidden .tc-content, .tc-workspace.gm-inspector-hidden .gm-inspector { display: none; }
 }
+
+.tc-workspace .tc-header { position: relative; z-index: 8; }
+.tc-workspace.me-motion-editor { --editor-width: 0px; --me-panel-width: 0px; }
+body.tc-workspace.me-motion-editor :is(#glyphMorphStage.stage-shell, #currentStage, #cellmotionStage, #ibStage, main.current-stage, main.impact-stage, main.split-flip-stage) {
+  position: relative !important; inset: auto !important; width: 100% !important; height: 100% !important; z-index: auto !important;
+  display: flex !important; align-items: center; justify-content: center;
+}
+.tc-workspace .design-frame.gm-composition-frame { position: absolute !important; max-width: 100%; max-height: 100%; }
+.tc-workspace #previewCanvas { width: 100%; height: 100%; }
+.tc-workspace .pair-editor-row[hidden],
+.tc-workspace .gm-row-shell[hidden],
+.tc-workspace .gm-text-colors[hidden],
+.tc-workspace .continuation-colors[hidden] { display: none !important; }
+.tc-workspace .pair-editor-row { display: grid; gap: 10px; grid-template-columns: 68px minmax(0,1fr) 22px minmax(0,1fr) 30px; padding: 0; border: 0; background: transparent; }
+.tc-workspace .pair-row-arrange, .tc-workspace .pair-motion-options, .tc-workspace .pair-timing-options, .tc-workspace .pair-background-options, .tc-workspace .pair-page-controls { grid-column: 1 / -1; }
+.tc-workspace .icon-section, .tc-workspace .font-picker, .tc-workspace .motion-section, .tc-workspace .export-panel { display: grid; gap: 10px; }
+.tc-workspace .me-scheme-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tc-workspace .me-asset-drawer { position: fixed; top: 84px; right: 20px; bottom: 20px; width: min(360px, calc(100vw - 40px)); z-index: 40; }
+.tc-workspace .choreo-section.tc-timeline { max-height: 168px; overflow: hidden; }
+.tc-workspace #choreoBar { display: flex; gap: 8px; min-height: 78px; height: 78px; align-items: stretch; }
+.tc-workspace .me-choreo-block { flex: 1; min-width: 0; border: 0; border-radius: 13px; padding: 10px; text-align: left; color: #22212b; }
+.tc-workspace .me-choreo-block.is-intro { background: var(--me-phase-lime, #d7ff2f); }
+.tc-workspace .me-choreo-block.is-orbit { background: var(--me-phase-sky, #8ec8ff); }
+.tc-workspace .me-choreo-block.is-hold { background: var(--me-phase-mint, #9de7d7); }
+.tc-workspace .me-choreo-block.is-contact { background: var(--me-phase-coral, #ffc4d6); }
+.tc-workspace .me-choreo-block.is-replace { background: var(--me-phase-amber, #ffd27d); }
+.tc-workspace .me-choreo-block.is-color, .tc-workspace .me-choreo-block.is-extra { background: var(--me-phase-violet, #d4b8ff); }
+.tc-workspace .ib-choreo-block.is-intro { background: var(--me-phase-lime, #d7ff2f); }
+.tc-workspace .ib-choreo-block.is-orbit { background: var(--me-phase-sky, #8ec8ff); }
+.tc-workspace .ib-choreo-block.is-hold { background: var(--me-phase-mint, #9de7d7); }
+.tc-workspace .ib-choreo-block.is-contact { background: var(--me-phase-coral, #ffc4d6); }
+.tc-workspace .ib-choreo-block.is-replace { background: var(--me-phase-amber, #ffd27d) !important; }
+.tc-workspace .ib-choreo-block.is-hold { background: var(--me-phase-mint, #9de7d7) !important; }
+.tc-workspace .ib-choreo-block.is-intro { background: var(--me-phase-lime, #d7ff2f) !important; }
+.tc-workspace .ib-choreo-block.is-orbit { background: var(--me-phase-sky, #8ec8ff) !important; }
+.tc-workspace .ib-choreo-block.is-contact { background: var(--me-phase-coral, #ffc4d6) !important; }
+.tc-workspace .me-choreo-legend, .tc-workspace #choreoLegend, .tc-workspace #flowTimelineList, .tc-workspace #pathwriterChoreoLegend, .tc-workspace #deleteChoreoLegend { display: none !important; }
+.tc-workspace .flow-timeline.tc-timeline, .tc-workspace .me-choreo-track { max-height: 120px; }
+body.tc-workspace .tc-export-shortcut, body.tc-workspace.me-motion-editor .tc-export-shortcut {
+  background: var(--tc-growth, #d7ff2f) !important; color: var(--tc-growth-ink, #222610) !important; border-color: var(--tc-growth, #d7ff2f) !important;
+}
+body.tc-workspace .tc-tabs button[aria-pressed="true"], body.tc-workspace.me-motion-editor .tc-tabs button[aria-pressed="true"] {
+  background: var(--tc-growth, #d7ff2f) !important; color: var(--tc-growth-ink, #222610) !important;
+}
+body.tc-workspace #ibStage { position: relative !important; inset: auto !important; width: 100% !important; height: 100% !important; }
+body.tc-workspace .ib-app { display: contents; }
+.tc-workspace .ib-choreo-section.tc-timeline, .tc-workspace #ibChoreoTrack { max-height: 140px; }

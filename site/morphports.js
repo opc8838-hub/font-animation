@@ -807,7 +807,8 @@
           <button data-action="delete" type="button" aria-label="删除">×</button>
         </div>
         <label class="gm-row-font">本行字体<select data-key="fontFamily" data-stg-font-library="true" aria-label="第 ${index + 1} 行字体">${window.MERowFonts.options(row.fontFamily)}</select></label>
-        ${port.mode === "dots" ? `<div class="gm-dot-colors">${dotColorControls(row)}</div>` : ""}
+        ${port.mode === "dots" ? `<div class="gm-dot-colors">${dotColorControls(row)}</div>
+        <div class="gm-row-text-color"><button data-action="apply-text-color-all" type="button">应用到全部段落</button></div>` : ""}
         <div class="gm-row-meta">
           <button class="gm-row-target${state.activeRowId === row.id ? " is-active" : ""}" data-action="target" type="button">＋ 插入图标</button>
           <button class="gm-row-pause" data-action="pause-row" type="button">暂停修改</button>
@@ -823,6 +824,7 @@
           <summary><span>本行背景</span><b>${escapeHtml(row.backgroundMedia?.name || "纯色")}</b></summary>
           <div class="gm-row-background-grid">
             <label>背景颜色<input data-background-key="backgroundColor" type="color" value="${normalizeColor(row.backgroundColor, state.scheme.typography.backgroundColor)}"></label>
+            <button class="gm-apply-background-all" data-action="apply-background-color-all" type="button">将背景颜色应用到全部段落</button>
             <label class="gm-background-upload">上传背景视频<input data-background-file type="file" accept="video/mp4,video/webm,video/quicktime"></label>
             <label>背景转场<select data-background-key="backgroundTransition"><option value="direct"${row.backgroundTransition === "direct" ? " selected" : ""}>直接切换</option><option value="crossfade"${row.backgroundTransition === "crossfade" ? " selected" : ""}>柔和叠化</option></select></label>
             <label>叠化时长<input data-background-key="backgroundTransitionDuration" type="number" min="10" max="2000" step="10" value="${normalizeBackgroundTransitionDuration(row.backgroundTransitionDuration)}"><small>毫秒</small></label>
@@ -1090,17 +1092,23 @@
     const speed = Math.max(0.01, state.scheme.motion.speed);
     let cursor = 0;
     $("timeline").innerHTML = segments.map(({ from, to, durationMs, holdMs, introMs, transitionMs, terminal }) => {
-      const phase = terminal ? "结束停留" : from.text && !to.text ? port.exitLabel : !from.text && to.text ? port.enterLabel : port.phaseLabel;
       const timing = cascadeTiming(from);
+      const enterName = port.enterLabel === port.phaseLabel || port.enterLabel === port.exitLabel ? "显现站稳" : port.enterLabel;
       const phases = port.mode === "cascade" && !terminal
         ? [["停留", holdMs], ["倾倒", timing.tilt], ["悬停", timing.hang], ["下落", transitionMs - timing.tilt - timing.hang]]
-        : port.mode === "dots" && introMs > 0
-          ? [["聚合显字", introMs], [phase, durationMs - introMs]]
-          : [[phase, durationMs]];
-      return phases.filter(([, ms]) => ms > 0).map(([label, ms], index) => {
+        : terminal
+          ? [["结束停留", holdMs || durationMs - (introMs || 0)]]
+          : [
+              ...(introMs > 0 ? [["聚合显字", introMs]] : []),
+              ["停留", holdMs],
+              [port.exitLabel, transitionMs * 0.4],
+              [port.phaseLabel, transitionMs * 0.2],
+              [enterName, Math.max(0, transitionMs * 0.4)]
+            ];
+      return phases.filter(([, ms]) => ms > 0).map(([label, ms]) => {
         const start = cursor / speed;
         cursor += ms;
-        return `<button type="button" data-seek-ms="${start}" class="gm-timeline-block me-choreo-block" style="flex:${ms};border-top:3px solid ${["#d9ee84", "#8bbdff", "#d8b3ff", "#ffb98b"][index % 4]}" role="listitem"><strong>${escapeHtml(label)}</strong><small>${escapeHtml(from.text || "留白")} · ${(ms / speed / 1000).toFixed(2)}s</small></button>`;
+        return `<button type="button" data-seek-ms="${start}" class="gm-timeline-block me-choreo-block" role="listitem"><strong>${escapeHtml(label)}</strong><small>${escapeHtml(from.text || "留白")} · ${(ms / speed / 1000).toFixed(2)}s</small></button>`;
       }).join("");
     }).join("");
     const total = cycleDurationMs();
@@ -1278,14 +1286,8 @@
     changed({ restart: false });
   })));
   controlIds.forEach((id) => controls[id].addEventListener("input", () => {
-    if (id === "textColor" && port.mode === "dots") {
-      state.scheme.rows.forEach((item) => { item.initialColor = controls.textColor.value; });
-      renderRows();
-    }
-    if (id === "backgroundColor") {
-      state.scheme.rows.forEach((item) => { item.backgroundColor = controls.backgroundColor.value; });
-      renderRows();
-    }
+    // Global text/background colors are only defaults for subsequently added rows.
+    // Existing rows remain independent unless the user edits that row.
     if (id === "introEnabled") {
       controls.introDuration.disabled = !controls.introEnabled.checked;
       controls.introCharacterDelay.disabled = !controls.introEnabled.checked;
@@ -1385,6 +1387,35 @@
       }
       return;
     }
+    if (button.dataset.action === "apply-text-color-all") {
+      const source = state.scheme.rows[index];
+      if (!source) return;
+      const value = port.mode === "dots" ? dotColors(source).initialColor : normalizeColor(source.textColor, state.scheme.typography.textColor);
+      state.scheme.rows.forEach((item) => {
+        if (port.mode === "dots") item.initialColor = value;
+        else item.textColor = value;
+      });
+      state.scheme.typography.textColor = value;
+      if (controls.textColor) controls.textColor.value = value;
+      document.querySelectorAll('[data-dot-key="initialColor"]').forEach((input) => { input.value = value; });
+      $("exportStatus").textContent = "文字颜色已应用到全部段落。";
+      autoSave();
+      resizePreview();
+      return;
+    }
+    if (button.dataset.action === "apply-background-color-all") {
+      const source = state.scheme.rows[index];
+      if (!source) return;
+      const value = normalizeColor(source.backgroundColor, state.scheme.typography.backgroundColor);
+      state.scheme.rows.forEach((item) => { item.backgroundColor = value; });
+      state.scheme.typography.backgroundColor = value;
+      if (controls.backgroundColor) controls.backgroundColor.value = value;
+      document.querySelectorAll('[data-background-key="backgroundColor"]').forEach((input) => { input.value = value; });
+      $("exportStatus").textContent = "背景颜色已应用到全部段落；图片、GIF 和视频保持独立。";
+      autoSave();
+      resizePreview();
+      return;
+    }
     if (button.dataset.action === "target") {
       const row = state.scheme.rows[index];
       const input = rowElement.querySelector('input[data-key="text"]');
@@ -1408,7 +1439,11 @@
     renderRows(); renderSelectedAssets(); renderTimeline(); autoSave(); resizePreview();
   });
   $("addRow").addEventListener("click", () => {
-    const nextRow = row(uid(), "新文字", 100, { backgroundColor: state.scheme.typography.backgroundColor });
+    const previous = state.scheme.rows.find((item) => item.id === state.activeRowId) || state.scheme.rows[state.scheme.rows.length - 1];
+    const nextRow = row(uid(), "新文字", 100, {
+      backgroundColor: normalizeColor(previous?.backgroundColor, state.scheme.typography.backgroundColor),
+      initialColor: previous ? dotColors(previous).initialColor : state.scheme.typography.textColor
+    });
     state.scheme.rows.push(nextRow);
     state.activeRowId = nextRow.id; state.caretBoundary = split(nextRow.text).length;
     renderRows(); renderSelectedAssets(); renderTimeline(); autoSave();

@@ -1,0 +1,38 @@
+{
+  "effect": {
+    "id": "mistlift",
+    "name": { "zh": "雾升", "en": "Mist Lift" },
+    "version": "1.0.0",
+    "category": "kinetic-typography"
+  },
+  "runtime": {
+    "kind": "iframe-bridge",
+    "entry": "mistlift.html?preview=1&embed=1",
+    "bridgeVersion": "1.0.0",
+    "renderer": "canvas2d"
+  },
+  "capabilities": {
+    "editableTextRows": true,
+    "rowFonts": true,
+    "inlineIcons": true,
+    "customImageAssets": true,
+    "rowBackgrounds": ["color", "image", "gif", "video"],
+    "timeline": true,
+    "responsiveCanvas": true,
+    "exports": ["png", "gif", "mp4"]
+  },
+  "behavior": {
+    "summary": {
+      "zh": "字形先凝聚站稳，随后旧字向上升散、新字从下方浮入。",
+      "en": "Letters condense into place, then outgoing glyphs evaporate upward as new ones float in."
+    },
+    "phases": [
+      { "id": "intro", "name": { "zh": "雾凝开场", "en": "Mist intro" }, "colorToken": "phase.intro" },
+      { "id": "lift", "name": { "zh": "升散浮入", "en": "Lift in" }, "colorToken": "phase.hold" }
+    ]
+  },
+  "parameters": [
+    { "path": "composition.motion.morphDuration", "scope": "effect", "type": "number", "unit": "ms", "name": { "zh": "升散时长", "en": "Lift duration" } },
+    { "path": "composition.rows[].text", "scope": "row", "type": "string", "name": { "zh": "段落文字", "en": "Row text" } }
+  ]
+}

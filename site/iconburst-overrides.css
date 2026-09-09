@@ -858,7 +858,7 @@ body .ib-orbit-layer .ib-icon .ib-geom {
 .ib-choreo-block small { font-size: 9px; }
 .ib-choreo-block.is-intro { background: #d7ff2f; }
 .ib-choreo-block.is-orbit { background: #8ec8ff; }
-.ib-choreo-block.is-hold { background: #e7e7ea; }
+.ib-choreo-block.is-hold { background: #9de7d7; }
 .ib-choreo-block.is-contact { background: #ffc4d6; }
 .ib-choreo-block.is-color { background: #d4b8ff; }
 .ib-choreo-block.is-replace { background: #ffd27d; }
@@ -869,7 +869,7 @@ body .ib-orbit-layer .ib-icon .ib-geom {
 .ib-choreo-legend i { width: 12px; height: 12px; border: 1px solid #111; }
 .ib-choreo-legend i.is-intro { background: #d7ff2f; }
 .ib-choreo-legend i.is-orbit { background: #8ec8ff; }
-.ib-choreo-legend i.is-hold { background: #e7e7ea; }
+.ib-choreo-legend i.is-hold { background: #9de7d7; }
 .ib-choreo-legend i.is-contact { background: #ffc4d6; }
 .ib-choreo-legend i.is-color { background: #d4b8ff; }
 .ib-choreo-legend i.is-replace { background: #ffd27d; }

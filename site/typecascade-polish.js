@@ -139,8 +139,11 @@
     sync();
   });
 
-  const timeline = $('timeline');
+  const restartControl = $('restartPreview') || $('stageReplayButton');
+  const playbackControl = $('togglePlayback') || $('stagePauseButton');
+  const timeline = $('timeline') || $('choreoBar') || document.querySelector('.me-choreo-bar, .ib-choreo-track, #flowTimelineTrack');
   const scrubber = $('scrubber');
+  if (!timeline || !scrubber || !document.querySelector('.tc-timeline')) return;
   const scroll = timeline.parentElement;
   scroll.classList.add('tc-phase-scroll');
   const surface = document.createElement('div');
@@ -159,7 +162,27 @@
   details.innerHTML = '<summary>阶段详情 <span>名称与起止时间</span></summary><ol class="me-choreo-legend"></ol>';
   document.querySelector('.tc-timeline').append(details);
   const legend = details.querySelector('ol');
-  const phaseColors = { '立字开场': '#d7ff2f', '停留': '#8ec8ff', '倾倒': '#9de7d7', '悬停': '#ffc4d6', '下落': '#ffd27d', '结束停留': '#d4b8ff' };
+  const palette = ['#d7ff2f', '#8ec8ff', '#9de7d7', '#ffc4d6', '#ffd27d'];
+  const phaseColors = {
+    '立字开场': '#d7ff2f', '萌发开场': '#d7ff2f', '雾凝开场': '#d7ff2f', '扫显开场': '#d7ff2f', '像素聚合开场': '#d7ff2f', '聚合显字': '#d7ff2f', '主词入场': '#d7ff2f', '开场弹入与停留': '#d7ff2f', '电视开机展开': '#d7ff2f', '中央标题与图标起步': '#d7ff2f', '中心跳出': '#d7ff2f', '光标预备': '#d7ff2f', '首词冲击': '#d7ff2f', '文字柔现': '#d7ff2f',
+    '停留': '#8ec8ff', '开场停留': '#d7ff2f', '主词停顿': '#8ec8ff', '结束停留': '#8ec8ff', '切入并铺满': '#8ec8ff', '收稳': '#8ec8ff', '输入起步': '#8ec8ff',
+    '倾倒': '#9de7d7', '缩小退出': '#9de7d7', '向上升散': '#9de7d7', '像素消散': '#9de7d7', '逐字隐去': '#9de7d7', '原位缩小': '#9de7d7', '铺满后继续向左': '#9de7d7', '居中预备': '#9de7d7', '快门': '#9de7d7',
+    '悬停': '#ffc4d6', '缩放生长': '#ffc4d6', '升散浮入': '#ffc4d6', '像素解析': '#ffc4d6', '逐字显现': '#ffc4d6', '基线迁移': '#ffc4d6', '向右带动并回收': '#ffc4d6', '后句接入': '#ffc4d6',
+    '下落': '#ffd27d', '放大出现': '#ffd27d', '下方浮入': '#ffd27d', '颗粒解析': '#ffd27d', '基线长入': '#ffd27d', '显现站稳': '#ffd27d', '原位长大': '#ffd27d', '双向扫变并收尾': '#ffd27d', '本页停留': '#ffd27d'
+  };
+  const assigned = new Map();
+  function colorForLabel(label) {
+    if (phaseColors[label]) return phaseColors[label];
+    const named = Object.keys(phaseColors).sort((a, b) => b.length - a.length).find(key => label.includes(key));
+    if (named) return phaseColors[named];
+    if (/Before/.test(label)) return '#8ec8ff';
+    if (/After/.test(label)) return '#ffd27d';
+    if (assigned.has(label)) return assigned.get(label);
+    const used = new Set([...Object.values(phaseColors), ...assigned.values()]);
+    const color = palette.find(item => !used.has(item)) || palette[assigned.size % palette.length];
+    assigned.set(label, color);
+    return color;
+  }
   let phases = [];
   let total = 1;
   let width = 1;
@@ -168,14 +191,15 @@
   let lastTime = -1;
   function rebuildTrack() {
     total = Math.max(1, Number(scrubber.max));
-    const blocks = [...timeline.children];
+    const blocks = [...timeline.children].filter(block => block.querySelector?.('strong'));
     phases = blocks.map((block, index) => {
       const start = Number(block.dataset.seekMs);
       const end = index + 1 < blocks.length ? Number(blocks[index + 1].dataset.seekMs) : total;
-      const label = block.querySelector('strong').textContent;
-      const info = block.querySelector('small').textContent;
-      const color = phaseColors[label] || '#d4b8ff';
+      const label = blocks[index].querySelector('strong').textContent;
+      const info = block.querySelector('small')?.textContent || '';
+      const color = colorForLabel(label);
       block.style.setProperty('--tc-phase-color', color);
+      block.style.setProperty('background', color, 'important');
       block.title = `${label} · ${info} · ${(start / 1000).toFixed(2)}–${(end / 1000).toFixed(2)}s`;
       block.setAttribute('aria-label', block.title);
       // Retain the shared listitem role and native button keyboard behavior.
@@ -241,8 +265,8 @@
   scroll.addEventListener('wheel', () => { followPlayback = false; }, { passive: true });
   scroll.addEventListener('touchstart', () => { followPlayback = false; }, { passive: true });
   timeline.addEventListener('click', () => { followPlayback = true; lastTime = -1; });
-  $('restartPreview').addEventListener('click', () => { followPlayback = true; scroll.scrollLeft = 0; });
-  $('togglePlayback').addEventListener('click', () => { followPlayback = true; });
+  restartControl?.addEventListener('click', () => { followPlayback = true; scroll.scrollLeft = 0; });
+  playbackControl?.addEventListener('click', () => { followPlayback = true; });
   function updatePlayhead() {
     // The existing renderer writes this value from its deterministic clock.
     const time = Number(scrubber.value);

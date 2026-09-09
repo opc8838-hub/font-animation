@@ -1,0 +1,44 @@
+{
+  "effect": {
+    "id": "sproutshift",
+    "name": { "zh": "字芽", "en": "Sprout Shift" },
+    "version": "1.0.0",
+    "category": "kinetic-typography"
+  },
+  "runtime": {
+    "kind": "iframe-bridge",
+    "entry": "sproutshift.html?preview=1&embed=1",
+    "bridgeVersion": "1.0.0",
+    "renderer": "canvas2d"
+  },
+  "capabilities": {
+    "editableTextRows": true,
+    "rowFonts": true,
+    "inlineIcons": true,
+    "customImageAssets": true,
+    "localBackgroundRemoval": true,
+    "rowBackgrounds": ["color", "image", "gif", "video"],
+    "videoTrim": true,
+    "timeline": true,
+    "responsiveCanvas": true,
+    "exports": ["png", "gif", "mp4"]
+  },
+  "behavior": {
+    "summary": {
+      "zh": "字符先从种子态萌发站稳，随后旧字缩小退出、新字放大出现。",
+      "en": "Letters sprout from a seed pose, then outgoing glyphs shrink while incoming glyphs grow in."
+    },
+    "phases": [
+      { "id": "intro", "name": { "zh": "萌发开场", "en": "Sprout intro" }, "colorToken": "phase.intro" },
+      { "id": "grow", "name": { "zh": "缩放生长", "en": "Scale grow" }, "colorToken": "phase.hold" }
+    ]
+  },
+  "parameters": [
+    { "path": "composition.canvas.width", "scope": "global", "type": "integer", "unit": "px", "minimum": 320, "maximum": 4096, "name": { "zh": "画布宽度", "en": "Canvas width" } },
+    { "path": "composition.canvas.height", "scope": "global", "type": "integer", "unit": "px", "minimum": 320, "maximum": 4096, "name": { "zh": "画布高度", "en": "Canvas height" } },
+    { "path": "composition.motion.morphDuration", "scope": "effect", "type": "number", "unit": "ms", "minimum": 120, "maximum": 4000, "name": { "zh": "缩放时长", "en": "Morph duration" } },
+    { "path": "composition.motion.speed", "scope": "global", "type": "number", "unit": "x", "minimum": 0.1, "maximum": 4, "name": { "zh": "播放速度", "en": "Playback speed" } },
+    { "path": "composition.rows[].text", "scope": "row", "type": "string", "name": { "zh": "段落文字", "en": "Row text" } },
+    { "path": "composition.rows[].hold", "scope": "row", "type": "number", "unit": "ms", "minimum": 0, "maximum": 10000, "name": { "zh": "段落停留", "en": "Row hold" } }
+  ]
+}

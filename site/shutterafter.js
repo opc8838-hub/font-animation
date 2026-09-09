@@ -270,22 +270,22 @@
     let t = 0;
     for (let index = 0; index < line.count; index += 1) {
       const title = `第${index + 1}组`;
-      beats.push({ kind: "hold", name: `${title} · Before`, start: t, end: t + options.beforeHold });
+      beats.push({ kind: index === 0 ? "intro" : "orbit", name: `${title} · Before`, start: t, end: t + options.beforeHold });
       t += options.beforeHold;
-      beats.push({ kind: "contact", name: `${title} · 快门`, start: t, end: t + options.shutterDuration });
+      beats.push({ kind: "hold", name: `${title} · 快门`, start: t, end: t + options.shutterDuration });
       t += options.shutterDuration;
       if (options.wipeDuration > 0.001) {
         beats.push({ kind: "replace", name: `${title} · 切到 After`, start: t, end: t + options.wipeDuration });
         t += options.wipeDuration;
       }
-      beats.push({ kind: "color", name: `${title} · After`, start: t, end: t + options.afterHold });
+      beats.push({ kind: "contact", name: `${title} · After`, start: t, end: t + options.afterHold });
       t += options.afterHold;
       if (index < line.count - 1) {
         beats.push({ kind: "orbit", name: "滑向下组", start: t, end: t + options.scrollDuration });
         t += options.scrollDuration;
       }
     }
-    if (options.tvOffEnabled) beats.push({ kind: "fade", name: "电视熄屏", start: line.contentEnd, end: line.tvOffEnd });
+    if (options.tvOffEnabled) beats.push({ kind: "replace", name: "电视熄屏", start: line.contentEnd, end: line.tvOffEnd });
     if (options.tvOffEnabled && options.tvOffHold > 0) beats.push({ kind: "hold", name: "熄屏停留", start: line.tvOffEnd, end: line.tvOffHoldEnd });
     return beats.map((beat, index) => ({ ...beat, index, duration: Math.max(0, beat.end - beat.start) }));
   }

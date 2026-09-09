@@ -63,7 +63,7 @@
     return [
       ["文字柔现", "intro", "titleReveal", span.titleReveal], ["文字停留", "hold", "title", span.title],
       ["垃圾桶渐显", "contact", "bin", span.bin], ["准备停留", "hold", "ready", span.ready],
-      ["纸面形成", "replace", "sheet", span.sheet], ["连续揉皱", "color", "crumple", span.crumple],
+      ["纸面形成", "replace", "sheet", span.sheet], ["连续揉皱", "hold", "crumple", span.crumple],
       ["自然落入", "orbit", "throw", span.throw], ["空桶停留", "hold", "result", span.result],
       ["快速消失", "replace", "exit", span.exit], ["消失后停留", "hold", "blank", span.blank]
     ].map(([label, kind, phase, duration], index) => {

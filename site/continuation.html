@@ -6,9 +6,11 @@
   <meta name="description" content="续句：文字与图标整体居中，支持逐字扫入、弹出与图标续接。">
   <title>续句 Continuation | CellMotion</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="me-motion-editor.css?v=20260828-1">
+  <link rel="stylesheet" href="me-motion-editor.css?v=20260909-timeline-color">
   <link rel="stylesheet" href="continuation.css?v=20260829-editor24">
   <link rel="stylesheet" href="stg-cn.css?v=20260828-1">
+  <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-coloriso">
+  <link rel="stylesheet" href="typecascade-polish.css?v=20260909-coloriso">
 </head>
 <body class="me-motion-editor">
   <main class="stage-shell" aria-label="续句动效预览">
@@ -35,7 +37,7 @@
         <div class="section-heading"><div><p class="section-label">句组编辑</p><p class="section-kicker">固定前半句 <span aria-hidden="true">→</span> 接入后半句</p></div><button class="add-pair-button" id="addPairButton" type="button">＋ 新增</button></div>
         <div class="pair-editor-head" aria-hidden="true"><span>排序</span><span>前半句</span><i>接入</i><span>后半句</span></div>
         <div class="pair-editor" id="pairEditor"></div>
-        <div class="continuation-colors"><label><span>新增行默认文字色</span><input id="textColor" type="color" value="#ffffff"></label><label><span>全部行背景色</span><input id="backgroundColor" type="color" value="#000000"></label></div>
+        <div class="continuation-colors"><label><span>新增行默认文字色</span><input id="textColor" type="color" value="#ffffff"></label><label><span>新增行默认背景色</span><input id="backgroundColor" type="color" value="#000000"></label></div>
       </section>
 
       <section class="font-picker">
@@ -80,6 +82,10 @@
 
   <aside class="me-asset-drawer" id="assetDrawer" hidden aria-label="单个图标编辑器"><header><div><small>单独编辑</small><strong id="drawerAssetName">图标</strong></div><button id="closeAssetDrawer" type="button" aria-label="关闭">×</button></header><div class="me-asset-editor"><label>所属行<select id="assetRowAssignment"></select></label><label>插入位置<select id="assetInsertionPoint"></select></label><label>图文间距 <output id="assetSpacingOut">6</output><input id="assetSpacing" type="range" min="0" max="96" step="1" value="6"></label><label>大小 <output id="assetSizeOut">100%</output><input id="assetSize" type="range" min="25" max="250" value="100"></label><label>透明度 <output id="assetOpacityOut">100%</output><input id="assetOpacity" type="range" min="0" max="100" value="100"></label><label>水平偏移 <output id="assetXOut">0</output><input id="assetX" type="range" min="-160" max="160" value="0"></label><label>垂直偏移 <output id="assetYOut">0</output><input id="assetY" type="range" min="-160" max="160" value="0"></label><label>旋转 <output id="assetRotationOut">0°</output><input id="assetRotation" type="range" min="-180" max="180" value="0"></label></div></aside>
 
-  <script src="shared-font-library.js?v=20260824-2"></script><script src="shared-icon-library.js?v=20260902-1"></script><script src="cellmotion-animated-image.js?v=20260909-1"></script><script src="js/continuation-gif.js"></script><script src="js/h264-mp4-encoder.web.js"></script><script src="continuation.js?v=20260909-gif-timing"></script><script src="me-motion-editor.js?v=20260828-1"></script><script src="stg-cn.js?v=20260828-1"></script>
+  <script src="shared-font-library.js?v=20260824-2"></script><script src="shared-icon-library.js?v=20260902-1"></script><script src="cellmotion-animated-image.js?v=20260909-1"></script><script src="js/continuation-gif.js"></script><script src="js/h264-mp4-encoder.web.js"></script><script src="continuation.js?v=20260909-coloriso2"></script><script src="me-motion-editor.js?v=20260828-1"></script><script src="stg-cn.js?v=20260828-1"></script>
+  <script src="continuation-workspace.js?v=20260909-standard"></script>
+  <script src="typecascade-polish.js?v=20260909-coloriso"></script>
+  <script src="typecascade-selects.js?v=20260909-1"></script>
+  <script src="typecascade-locale.js?v=20260909-coloriso2"></script>
 </body>
 </html>
