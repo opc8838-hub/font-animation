@@ -11,7 +11,8 @@
     node.innerHTML = html;
     return node;
   };
-  body.classList.add('tc-workspace');
+  body.classList.add('tc-workspace', 'glyphmorph-editor');
+  body.classList.remove('me-motion-editor');
   panel.open = true;
   const header = make('header', 'gm-header tc-header', '<a class="tc-brand" href="cellmotion.html" aria-label="CellMotion 首页"><img src="assets/cellmotion/logo-original.png" alt="CellMotion"></a><div><small>让创意，自由生长</small><h1>续句 <span>Continuation</span></h1></div>');
   body.prepend(header);
@@ -24,7 +25,7 @@
   const pairSection = document.querySelector('.pair-editor-section');
   const addRowButton = $('addPairButton');
   addRowButton.setAttribute('aria-label', '添加文字段落');
-  const left = make('aside', 'tc-content', '<div class="tc-panel-heading"><div><small>CONTENT</small><h2>文字段落 <span id="tcRowCount"></span></h2></div></div><p class="tc-hint">选择一段文字，在右侧编辑</p><div class="tc-row-list" id="tcRowList" aria-label="选择文字段落"></div>');
+  const left = make('aside', 'tc-content', '<div class="tc-panel-heading"><div><small>内容</small><h2>文字段落 <span id="tcRowCount"></span></h2></div></div><p class="tc-hint">选择一段文字，在右侧编辑</p><div class="tc-row-list" id="tcRowList" aria-label="选择文字段落"></div>');
   left.setAttribute('aria-label', '段落导航');
   left.querySelector('.tc-panel-heading').append(addRowButton);
   const schemeSection = document.querySelector('.scheme-section');
@@ -37,13 +38,13 @@
   inspector.setAttribute('aria-label', '续句编辑器');
   const tabs = make('nav', 'tc-tabs', '<button type="button" data-panel="row" aria-pressed="true">当前段落</button><button type="button" data-panel="global" aria-pressed="false">动效设置</button><button type="button" data-panel="export" aria-pressed="false">导出</button>');
   tabs.setAttribute('aria-label', '属性分类');
-  const rowPanel = make('section', 'tc-properties', '<div class="tc-panel-heading"><div><small>SELECTED CELL</small><h2 id="tcSelectedTitle">段落 01</h2></div></div>');
+  const rowPanel = make('section', 'tc-properties', '<div class="tc-panel-heading"><div><small>当前编辑</small><h2 id="tcSelectedTitle">段落 01</h2></div></div>');
   rowPanel.dataset.panel = 'row';
-  pairSection.querySelector('.section-heading')?.remove();
+  pairSection.querySelector('.gm-card-title, .section-heading')?.remove();
   pairSection.querySelector('.pair-editor-head')?.remove();
   const inheritedColors = pairSection.querySelector('.continuation-colors');
   if (inheritedColors) inheritedColors.hidden = true;
-  rowPanel.append(pairSection, document.querySelector('.icon-section'));
+  rowPanel.append(pairSection);
   const globalPanel = make('section', 'tc-properties');
   globalPanel.dataset.panel = 'global';
   globalPanel.hidden = true;
@@ -58,35 +59,59 @@
   inspector.append(tabs, rowPanel, globalPanel, exportPanel);
   body.append(inspector);
 
+  const library = $('iconLibraryDrawer');
+  if (library) {
+    library.classList.add('gm-library-drawer');
+    library.hidden = true;
+    body.append(library);
+  }
+
   const toolbar = make('section', 'tc-canvas-toolbar', '<span class="tc-preview-label">画布预览</span>');
-  const canvasCard = make('section', 'gm-card gm-canvas-card');
-  canvasCard.append(document.querySelector('.canvas-size-section .full-field'), $('customSize'));
-  document.querySelector('.canvas-size-section')?.remove();
+  const canvasCard = document.querySelector('.gm-canvas-card') || document.querySelector('.canvas-size-section');
+  canvasCard.classList.add('gm-card', 'gm-canvas-card');
+  canvasCard.querySelector('.gm-card-title')?.remove();
   toolbar.append(canvasCard);
   const center = make('section', 'tc-center');
   center.setAttribute('aria-label', '画布与播放');
-  const stage = document.querySelector('.stage-shell');
+  const stage = document.querySelector('.stage-shell') || $('glyphMorphStage');
   stage.id = 'glyphMorphStage';
-  stage.classList.add('gm-stage');
+  stage.classList.add('gm-stage', 'stage-shell');
   document.querySelector('.design-frame')?.classList.add('gm-composition-frame');
   const timeline = document.querySelector('.choreo-section');
   timeline.classList.add('tc-timeline', 'gm-card');
-  const controls = stage.querySelector('.me-stage-controls');
+  const controls = stage.querySelector('.gm-stage-controls, .me-stage-controls');
   controls.classList.add('gm-stage-controls');
-  timeline.querySelector('.section-label')?.replaceWith(controls);
+  const title = timeline.querySelector('.gm-card-title, .section-label');
+  if (title) title.replaceWith(controls);
+  else timeline.prepend(controls);
   center.append(toolbar, stage, timeline);
   body.append(center);
   panel.remove();
 
+  function setLibraryOpen(open) {
+    if (!library) return;
+    library.hidden = !open;
+    body.classList.toggle('gm-library-open', open);
+    if (!open) $('closeAssetDrawer')?.click();
+    window.CellMotionContinuation?.setLibraryOpen?.(open);
+    requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+  }
+  $('closeIconLibrary')?.addEventListener('click', () => setLibraryOpen(false));
+
   function setPanel(name) {
     [rowPanel, globalPanel, exportPanel].forEach(section => section.hidden = section.dataset.panel !== name);
     tabs.querySelectorAll('button').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.panel === name)));
+    if (name !== 'row') setLibraryOpen(false);
   }
   tabs.addEventListener('click', e => {
     const button = e.target.closest('button[data-panel]');
     if (button) setPanel(button.dataset.panel);
   });
-  exportShortcut.addEventListener('click', () => setPanel('export'));
+  exportShortcut.addEventListener('click', () => {
+    body.classList.remove('gm-inspector-hidden');
+    setLibraryOpen(false);
+    setPanel('export');
+  });
 
   const pairEditor = $('pairEditor');
   const rowList = $('tcRowList');
@@ -117,17 +142,27 @@
       button.setAttribute('aria-pressed', String(selected));
       const number = make('span', 'tc-row-number');
       number.textContent = String(index + 1).padStart(2, '0');
-      const title = make('strong', 'tc-row-text');
-      title.textContent = `${lead} → ${suffix}`;
+      const titleNode = make('strong', 'tc-row-text');
+      titleNode.textContent = `${lead} → ${suffix}`;
       const meta = make('small', 'tc-row-description');
-      meta.textContent = row.querySelector('.pair-timing-summary')?.textContent || '句组';
-      button.append(number, title, meta);
+      meta.textContent = row.querySelector('.pair-timing-summary')?.textContent || '独立段落';
+      button.append(number, titleNode, meta);
       return button;
     }));
   }
   rowList.addEventListener('click', e => {
     const button = e.target.closest('[data-row-index]');
     if (button) selectRow(Number(button.dataset.rowIndex), true);
+  });
+  pairEditor.addEventListener('click', e => {
+    if (e.target.closest('[data-action="insert-icon"]')) {
+      const row = e.target.closest('.pair-editor-row');
+      const index = pairRows().indexOf(row);
+      if (index >= 0) {
+        selectedIndex = index;
+        setLibraryOpen(true);
+      }
+    }
   });
   new MutationObserver(syncRows).observe(pairEditor, { childList: true });
   pairEditor.addEventListener('input', syncRows);
@@ -138,6 +173,12 @@
     if (index >= 0 && index !== selectedIndex) selectRow(index);
   });
   addRowButton.addEventListener('click', () => requestAnimationFrame(() => selectRow(pairRows().length - 1, true)));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && library && !library.hidden) {
+      setLibraryOpen(false);
+      e.stopPropagation();
+    }
+  }, true);
   syncRows();
   window.dispatchEvent(new Event('resize'));
 })();

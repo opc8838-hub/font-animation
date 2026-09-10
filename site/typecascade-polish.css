@@ -332,6 +332,20 @@ body.tc-workspace[data-editor-theme="light"] {
 .tc-workspace .gm-stage-controls { gap: 8px; margin-bottom: 4px; }
 .tc-workspace .gm-stage-controls i { background: var(--tc-line); }
 .tc-workspace .gm-stage-controls button { padding: 0 14px; }
+.tc-workspace .pair-editor-row > i { color: var(--tc-accent); }
+.tc-workspace .type-side-card { background: var(--tc-surface); border-color: var(--tc-line); }
+.tc-workspace .type-side-card > b { color: var(--tc-text); }
+.tc-workspace .pair-timing-options,
+.tc-workspace .pair-background-options,
+.tc-workspace .pair-sweep-options { background: var(--tc-surface); border-color: var(--tc-line); color: var(--tc-text); }
+.tc-workspace .pair-timing-options > summary,
+.tc-workspace .pair-background-options > summary { color: var(--tc-text); }
+.tc-workspace .pair-size-options label,
+.tc-workspace .pair-spacing-options label,
+.tc-workspace .pair-color-options label,
+.tc-workspace .pair-font-label { background: var(--tc-input); border-color: var(--tc-line); color: var(--tc-text); }
+.tc-workspace .export-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; }
+.tc-workspace .scheme-section .hint { min-height: 18px; margin-top: 8px; font-size: 12px; color: var(--tc-muted); }
 .tc-workspace .tc-scheme { background: transparent; border: 0; border-top: 1px solid var(--tc-line); border-radius: 0; padding: 14px 0 0; margin-bottom: 0; }
 .tc-workspace :is(.tc-properties,.tc-row-list,.gm-library-browse,.tc-phase-scroll,.tc-phase-details ol) { scrollbar-width: thin; scrollbar-color: var(--tc-track) transparent; }
 .tc-workspace .gm-background-video-head { align-items: center; }

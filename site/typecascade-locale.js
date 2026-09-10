@@ -20,6 +20,7 @@
     '让创意，自由生长': 'Let creativity grow freely', '动效库': 'Effects', '导出作品': 'Export',
     '☀ 浅色': '☀ Light', '☾ 深色': '☾ Dark', '切换为浅色编辑器': 'Switch to light theme', '切换为深色编辑器': 'Switch to dark theme',
     '▧ 铺满背景': '▧ Fill backdrop', '开启背景铺满': 'Enable full backdrop', '关闭背景铺满': 'Disable full backdrop',
+    '内容': 'Content', '当前编辑': 'Selected',
     '文字段落': 'Text blocks', '＋ 添加段落': '＋ Add', '添加文字段落': 'Add text block', '选择一段文字，在右侧编辑': 'Select a block to edit on the right',
     '选择文字段落': 'Select a text block', '段落导航': 'Text navigation', '当前段落': 'Text block', '动效设置': 'Motion',
     '属性分类': 'Settings tabs', '导出': 'Export', '画布预览': 'Preview', '画布与播放': 'Canvas and playback',
@@ -52,6 +53,23 @@
     '方案': 'Project', '保存方案': 'Save', '导入方案': 'Import', '恢复默认': 'Reset', '清理重做': 'Clear', '清空所有行': 'Clear all blocks',
     '真实导出': 'Export', '时长': 'Duration', '完整循环': 'Full cycle', '帧率': 'Frame rate',
     '输出将严格使用当前画布尺寸。': 'Exports use the selected canvas dimensions.',
+    '画布尺寸': 'Canvas size', '插入到当前段落': 'Insert into this block', '插入到': 'Insert into',
+    '前半句默认': 'Lead defaults', '后半句默认': 'Suffix defaults', '字重': 'Weight',
+    '前后句间距': 'Lead–suffix gap', '收束起点': 'Settle start', '播放速度': 'Speed',
+    '整体动效': 'Motion', '本行水平位置': 'Horizontal position', '本页停留': 'Page hold', '本页停留 / 秒': 'Page hold / s',
+    '素材透明度': 'Media opacity', '染色强度': 'Tint strength', '染色颜色': 'Tint color',
+    '拖动左右把手选择片段，也可输入精确秒数；预览和导出使用同一区间。': 'Drag the handles to trim the clip, or type exact seconds. Preview and export use the same range.',
+    '前半句入场': 'Lead entrance', '后半句形式': 'Suffix reveal', '原有入场': 'Original entrance',
+    '轻弹出现': 'Soft pop', '整体快速出现': 'Appear together', '逐字快速扫入': 'Type on',
+    '向右弹出': 'Pop right', '本行动效节奏 · 独立': 'This block’s timing', '本行背景 / 元素': 'Background / media',
+    '主词入场': 'Lead in', '主词停顿': 'Lead hold', '居中预备': 'Center prep', '后句接入': 'Suffix join',
+    '前半句': 'Lead', '后半句': 'Suffix', '标点': 'Punctuation', '逐字扫色': 'Color sweep',
+    '重新随机': 'Shuffle', '扫色快慢': 'Sweep speed', '前半句字号': 'Lead size', '后半句字号': 'Suffix size',
+    '前半句字间距': 'Lead tracking', '后半句字间距': 'Suffix tracking', '前后两段间距': 'Pair gap',
+    '方案已保存并下载 JSON。': 'Project saved and downloaded as JSON.',
+    '已恢复默认方案。': 'Default project restored.', '方案已导入。': 'Project imported.',
+    '独立段落': 'Independent block', '句组': 'Phrase pair',
+    '每个色块对应后半句一个字；扫过后恢复原文字颜色。': 'Each swatch is one suffix character; color returns after the sweep.',
     '图标库': 'Icon library', '图标库侧窗': 'Icon library drawer', '右侧展开': 'Open drawer', '打开图标库': 'Open library',
     '当前文字行的图标': 'Icons for this block', '关闭图标库': 'Close icon library', '已插入图标': 'Added icons',
     '展开已选': 'Show added', '收起已选': 'Hide added', '当前候选': 'Selected asset', '请先选择图标': 'Select an icon',
@@ -85,7 +103,7 @@
     '彩色粗线': 'Color strokes', '渐变粗条': 'Gradient bars', '流光波线': 'Glowing waves', '双层飘带': 'Twin ribbons',
     '旋转线圈': 'Spinning coil', '旋转线圈 · 透明底黑线': 'Spinning coil · black / alpha', '脉冲线束': 'Pulsing lines', '鲸鱼': 'Whale'
   }));
-  const phaseNames = ['立字开场', '结束停留', '倾倒坠落', '基线长入', '停留', '倾倒', '悬停', '下落'];
+  const phaseNames = ['立字开场', '结束停留', '倾倒坠落', '基线长入', '停留', '倾倒', '悬停', '下落', '主词入场', '主词停顿', '居中预备', '后句接入', '本页停留'];
   const languageButton = document.createElement('button');
   languageButton.type = 'button';
   languageButton.id = 'tcLanguageToggle';
@@ -122,6 +140,9 @@
           .replace(/^目标：第 (\d+) 行 · /, 'Target: block $1 · ')
           .replace(/文字开头$/, 'Start of text').replace(/文字末尾$/, 'End of text').replace(/第 (\d+) 字后$/, 'After character $1')
           .replace(/^([\d.]+) 秒$/, '$1 s')
+          .replace(/^(整体快速出现|逐字快速扫入|向右弹出) ([\d.]+) 秒$/, (_, kind, n) => `${{整体快速出现:'Appear together',逐字快速扫入:'Type on',向右弹出:'Pop right'}[kind]} ${n}s`)
+          .replace(/^纯色 · 直接切换$/, 'Solid color · Cut')
+          .replace(/^纯色 · 柔和叠化(?: ([\d.]+) 秒)?$/, (_, n) => n ? `Solid color · Crossfade ${n}s` : 'Solid color · Crossfade')
           .replace(/ · 中文$/, ' · Chinese').replace(/ · 日文$/, ' · Japanese').replace(/ · 韩文$/, ' · Korean');
         if (s.endsWith('数值')) out = `${dictionary.get(s.slice(0, -2)) || s.slice(0, -2)} value`;
         // Built-in asset names only. User-uploaded filenames are excluded above.

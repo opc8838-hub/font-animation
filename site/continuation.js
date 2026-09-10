@@ -18,6 +18,7 @@
   const segmenter = typeof Intl.Segmenter === "function" ? new Intl.Segmenter(undefined, { granularity: "grapheme" }) : null;
   const splitText = (value) => segmenter ? [...segmenter.segment(String(value || ""))].map((part) => part.segment) : Array.from(String(value || ""));
   const isPunctuation = (character) => /^\p{P}+$/u.test(character);
+  const escapeHtml = (value) => String(value || "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
   const normalizeColor = (value, fallback = "#ffffff") => /^#[0-9a-f]{6}$/i.test(String(value || "")) ? String(value) : fallback;
   const normalizeFontSize = (value, fallback = 48) => clamp(Number(value) || Number(fallback) || 48, 18, 180);
   const normalizeLetterSpacing = (value, fallback = 0) => clamp(Number.isFinite(Number(value)) ? Number(value) : Number(fallback) || 0, -20, 60);
@@ -58,6 +59,7 @@
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const clamp01 = (value) => clamp(value, 0, 1);
   const isVideoMedia = (media) => /^video\//i.test(media?.fileType || "");
+  const isGifMedia = (media) => /gif/i.test(media?.fileType || media?.url || "");
   const videoClipBounds = (media, duration) => {
     const safeDuration = Math.max(.1, Number(duration) || .1);
     const start = clamp(Number(media?.videoStart) || 0, 0, Math.max(0, safeDuration - .1));
@@ -293,12 +295,45 @@
     if (uploadText) uploadText.textContent = `上传图片到第 ${assetTargetRow + 1} 行`;
   }
 
+  function rowIconChips(pairId) {
+    return assets.filter((asset) => asset.rowId === pairId).map((asset) => `
+      <div class="gm-inline-icon-chip">
+        <img src="${escapeHtml(asset.url || "")}" alt="">
+        <strong>${escapeHtml(asset.name || "图标")}</strong>
+        <button class="gm-inline-icon-edit" type="button" data-edit-asset="${escapeHtml(asset.id)}">编辑</button>
+      </div>`).join("");
+  }
+
   function updatePairAssetCounts() {
-    document.querySelectorAll(".pair-asset-button").forEach((button) => {
-      const count = assets.filter((asset) => asset.rowId === button.dataset.rowId).length;
-      button.textContent = `本行图标 ${count} 个 · 添加 / 管理`;
+    document.querySelectorAll(".pair-editor-row").forEach((row) => {
+      const pairId = row.dataset.pairId;
+      const count = assets.filter((asset) => asset.rowId === pairId).length;
+      const countLabel = row.querySelector(".gm-row-icon-count");
+      if (countLabel) countLabel.textContent = `${count} 个图标`;
+      const chips = row.querySelector(".gm-row-icons");
+      if (chips) chips.innerHTML = rowIconChips(pairId);
     });
   }
+
+  function seekRow(index, pause = true) {
+    const timeline = timelineValues();
+    const row = timeline.rows[clamp(index, 0, Math.max(0, timeline.rows.length - 1))];
+    if (!row) return;
+    activeTimelineRow = row.index;
+    simulationTime = row.start + row.timing.finish;
+    playing = !pause;
+    syncPlayButtons();
+  }
+
+  function setLibraryOpen(open) {
+    const drawer = $("#iconLibraryDrawer");
+    if (!drawer) return;
+    drawer.hidden = !open;
+    document.body.classList.toggle("gm-library-open", open);
+    if (!open) closeAssetDrawer();
+  }
+
+  window.CellMotionContinuation = { seekRow, setLibraryOpen };
 
   function movePhrasePairToIndex(sourceId, targetIndex) {
     const sourceIndex = phrasePairs.findIndex((pair) => pair.id === sourceId);
@@ -326,7 +361,7 @@
       const row = document.createElement("div");
       row.className = "pair-editor-row";
       row.dataset.pairId = pair.id;
-      row.innerHTML = `<label class="pair-order-field"><span class="sr-only">第 ${index + 1} 行播放顺序</span><select class="pair-order-select" aria-label="选择当前句子的播放行号">${phrasePairs.map((_, orderIndex) => `<option value="${orderIndex}"${orderIndex === index ? " selected" : ""}>第${orderIndex + 1}行</option>`).join("")}</select></label><label><span class="sr-only">第 ${index + 1} 组前半句</span><input class="pair-lead-input" type="text" spellcheck="false"></label><i aria-hidden="true">→</i><label><span class="sr-only">第 ${index + 1} 组后半句</span><input class="pair-suffix-input" type="text" spellcheck="false"></label><button class="remove-pair-button" type="button" aria-label="删除第 ${index + 1} 组">×</button><div class="pair-row-arrange"><div class="row-position-head"><span>本行水平位置</span><output class="row-position-output"></output></div><div class="row-position-tools"><div class="row-position-presets"><button type="button" data-position="25">左</button><button type="button" data-position="50">中</button><button type="button" data-position="75">右</button></div><input class="row-position-range" type="range" min="10" max="90" value="${rowPositions[index]}" aria-label="第 ${index + 1} 行水平位置"></div><div class="pair-page-controls"><label>本页停留<span><input class="pair-page-hold" type="number" min="0" max="300" step="0.1" inputmode="decimal" aria-label="第 ${index + 1} 页停留秒数"><b>秒</b></span></label></div></div><label class="pair-reveal-label">后半句形式<select class="pair-reveal-style" aria-label="第 ${index + 1} 行后半句接入形式"><option value="whole">整体快速出现</option><option value="type">逐字快速扫入</option><option value="rightPop">向右弹出</option></select></label><div class="pair-sweep-options"><div class="pair-sweep-head"><label class="pair-sweep-toggle"><input class="pair-sweep-enabled" type="checkbox">逐字扫色</label><button class="pair-sweep-random" type="button">重新随机</button></div><label class="pair-sweep-speed"><span>扫色快慢 <output class="pair-sweep-duration-out"></output></span><input class="pair-sweep-duration" type="range" min="40" max="600" step="10" aria-label="第 ${index + 1} 行扫色快慢"></label><div class="pair-sweep-colors" aria-label="第 ${index + 1} 行逐字扫色颜色"></div><p>每个色块对应后半句一个字；扫过后恢复原文字颜色。</p></div><div class="pair-size-options"><label><span>前半句字号 <output class="pair-lead-size-out"></output></span><input class="pair-lead-size" type="range" min="18" max="180" step="1" aria-label="第 ${index + 1} 行前半句字号"></label><label><span>后半句字号 <output class="pair-suffix-size-out"></output></span><input class="pair-suffix-size" type="range" min="18" max="180" step="1" aria-label="第 ${index + 1} 行后半句字号"></label></div><div class="pair-spacing-options"><label><span>前半句字间距 <output class="pair-lead-spacing-out"></output></span><input class="pair-lead-spacing" type="range" min="-20" max="60" step="1" aria-label="第 ${index + 1} 行前半句字间距"></label><label><span>后半句字间距 <output class="pair-suffix-spacing-out"></output></span><input class="pair-suffix-spacing" type="range" min="-20" max="60" step="1" aria-label="第 ${index + 1} 行后半句字间距"></label><label class="pair-gap-field"><span>前后两段间距 <output class="pair-gap-out"></output></span><input class="pair-gap" type="range" min="0" max="96" step="1" aria-label="第 ${index + 1} 行前后两段间距"></label></div><div class="pair-color-options"><label>前半句<input class="pair-lead-color" type="color" aria-label="第 ${index + 1} 行前半句文字颜色"></label><label>后半句<input class="pair-suffix-color" type="color" aria-label="第 ${index + 1} 行后半句文字颜色"></label><label>标点<input class="pair-punctuation-color" type="color" aria-label="第 ${index + 1} 行标点颜色"></label><button class="pair-apply-text-color-all" type="button">应用到全部段落</button></div><button class="pair-asset-button" type="button" data-row-id="${pair.id}"></button>`;
+      row.innerHTML = `<div class="pair-text-block"><label class="gm-field pair-lead-field">前半句<input class="pair-lead-input" type="text" spellcheck="false" placeholder="前半句" aria-label="第 ${index + 1} 行前半句"></label><label class="gm-field pair-suffix-field">后半句<input class="pair-suffix-input" type="text" spellcheck="false" placeholder="后半句" aria-label="第 ${index + 1} 行后半句"></label><div class="pair-hold-row"><label class="gm-field">本页停留 / 秒<input class="pair-page-hold" type="number" min="0" max="300" step="0.1" inputmode="decimal" aria-label="第 ${index + 1} 页停留秒数"></label><div class="pair-row-actions"><button class="pair-move-up" data-action="up" type="button" aria-label="上移"${index === 0 ? " disabled" : ""}>↑</button><button class="pair-move-down" data-action="down" type="button" aria-label="下移"${index === phrasePairs.length - 1 ? " disabled" : ""}>↓</button><button class="remove-pair-button" type="button" aria-label="删除第 ${index + 1} 组">×</button></div></div></div><div class="pair-row-arrange"><div class="row-position-head"><span>本行水平位置</span><output class="row-position-output"></output></div><div class="row-position-tools"><div class="row-position-presets"><button type="button" data-position="25">左</button><button type="button" data-position="50">中</button><button type="button" data-position="75">右</button></div><input class="row-position-range" type="range" min="10" max="90" value="${rowPositions[index]}" aria-label="第 ${index + 1} 行水平位置"></div></div><label class="pair-reveal-label">后半句形式<select class="pair-reveal-style" aria-label="第 ${index + 1} 行后半句接入形式"><option value="whole">整体快速出现</option><option value="type">逐字快速扫入</option><option value="rightPop">向右弹出</option></select></label><div class="pair-sweep-options"><div class="pair-sweep-head"><label class="pair-sweep-toggle"><input class="pair-sweep-enabled" type="checkbox">逐字扫色</label><button class="pair-sweep-random" type="button">重新随机</button></div><label class="pair-sweep-speed"><span>扫色快慢 <output class="pair-sweep-duration-out"></output></span><input class="pair-sweep-duration" type="range" min="40" max="600" step="10" aria-label="第 ${index + 1} 行扫色快慢"></label><div class="pair-sweep-colors" aria-label="第 ${index + 1} 行逐字扫色颜色"></div><p>每个色块对应后半句一个字；扫过后恢复原文字颜色。</p></div><div class="pair-size-options"><label><span>前半句字号 <output class="pair-lead-size-out"></output></span><input class="pair-lead-size" type="range" min="18" max="180" step="1" aria-label="第 ${index + 1} 行前半句字号"></label><label><span>后半句字号 <output class="pair-suffix-size-out"></output></span><input class="pair-suffix-size" type="range" min="18" max="180" step="1" aria-label="第 ${index + 1} 行后半句字号"></label></div><div class="pair-spacing-options"><label><span>前半句字间距 <output class="pair-lead-spacing-out"></output></span><input class="pair-lead-spacing" type="range" min="-20" max="60" step="1" aria-label="第 ${index + 1} 行前半句字间距"></label><label><span>后半句字间距 <output class="pair-suffix-spacing-out"></output></span><input class="pair-suffix-spacing" type="range" min="-20" max="60" step="1" aria-label="第 ${index + 1} 行后半句字间距"></label><label class="pair-gap-field"><span>前后两段间距 <output class="pair-gap-out"></output></span><input class="pair-gap" type="range" min="0" max="96" step="1" aria-label="第 ${index + 1} 行前后两段间距"></label></div><div class="pair-color-options"><label><span>前半句</span><input class="pair-lead-color" type="color" aria-label="第 ${index + 1} 行前半句文字颜色"></label><label><span>后半句</span><input class="pair-suffix-color" type="color" aria-label="第 ${index + 1} 行后半句文字颜色"></label><label><span>标点</span><input class="pair-punctuation-color" type="color" aria-label="第 ${index + 1} 行标点颜色"></label><button class="pair-apply-text-color-all" type="button">应用到全部段落</button></div><div class="gm-row-meta"><button class="gm-row-target" data-action="insert-icon" type="button">＋ 插入图标</button><button class="gm-row-pause" data-action="pause-row" type="button">暂停修改</button><span class="gm-row-icon-count">${assets.filter((asset) => asset.rowId === pair.id).length} 个图标</span></div><div class="gm-row-icons">${rowIconChips(pair.id)}</div>`;
       const motionOptions = document.createElement("div");
       motionOptions.className = "pair-motion-options";
       const leadIntroLabel = document.createElement("label");
@@ -340,9 +375,9 @@
       timingOptions.innerHTML = `<summary><span>本行动效节奏 · 独立</span><b class="pair-timing-summary"></b></summary><div class="pair-timing-grid"><label><span>前半句入场 <output class="pair-intro-duration-out"></output></span><input class="pair-intro-duration" type="range" min="50" max="1000" step="10"></label><label><span>前半句停顿 <output class="pair-root-hold-out"></output></span><input class="pair-root-hold" type="range" min="0" max="1500" step="10"></label><label><span>居中预备 <output class="pair-anticipation-duration-out"></output></span><input class="pair-anticipation-duration" type="range" min="30" max="800" step="10"></label><label><span class="pair-reveal-duration-label">后半句接入</span> <output class="pair-reveal-duration-out"></output><input class="pair-reveal-duration" type="range" min="50" max="3000" step="10"></label><label><span>组合结束停留 <output class="pair-settle-duration-out"></output></span><input class="pair-settle-duration" type="range" min="100" max="1500" step="10"></label><label class="pair-pop-only"><span>弹出距离 <output class="pair-pop-distance-out"></output></span><input class="pair-pop-distance" type="range" min="0" max="220" step="1"></label><label class="pair-pop-only"><span>弹性感 <output class="pair-pop-bounce-out"></output></span><input class="pair-pop-bounce" type="range" min="0" max="100" step="1"></label></div></details>`;
       row.querySelector(".pair-sweep-options").before(timingOptions);
       const backgroundOptions = document.createElement("details");
-      backgroundOptions.className = "pair-background-options";
-      backgroundOptions.innerHTML = `<summary><span>本行背景 / 元素</span><b class="pair-background-summary"></b></summary><div class="pair-background-grid"><div class="pair-background-transition"><label>背景转场<select class="pair-background-transition-style"><option value="direct">直接切换</option><option value="crossfade">柔和叠化</option></select></label><label class="pair-background-transition-duration-label">叠化时长<span><input class="pair-background-transition-duration" type="number" min="0.01" max="2" step="0.01" inputmode="decimal"><b>秒</b></span></label></div><label class="pair-background-color-label">背景颜色<input class="pair-background-color" type="color"></label><button class="pair-apply-background-color-all" type="button">将背景颜色应用到全部段落</button><label class="pair-background-upload">上传图片 / GIF / 视频 / 元素<input class="pair-background-file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif,video/mp4,video/webm"></label><div class="pair-background-media"><div><strong class="pair-background-name"></strong><button class="pair-background-remove" type="button">移除素材</button></div><label><span>素材透明度 <output class="pair-background-opacity-out"></output></span><input class="pair-background-opacity" type="range" min="0" max="100" step="1"></label><label><span>染色强度 <output class="pair-background-tint-strength-out"></output></span><input class="pair-background-tint-strength" type="range" min="0" max="100" step="1"></label><label class="pair-background-tint-label">染色颜色<input class="pair-background-tint" type="color"></label><fieldset class="pair-background-video-trim"><legend>视频片段 <output class="pair-background-video-duration-out"></output></legend><div class="pair-video-timeline" aria-label="拖动两侧把手裁剪视频片段"><canvas class="pair-video-filmstrip" width="720" height="96"></canvas><div class="pair-video-selection"><span class="pair-video-handle is-start" data-edge="start" role="slider" tabindex="0" aria-label="视频片段开始"></span><span class="pair-video-handle is-end" data-edge="end" role="slider" tabindex="0" aria-label="视频片段结束"></span></div></div><div class="pair-video-timeline-scale"><span>0.0 秒</span><span class="pair-video-source-duration"></span></div><label>开始秒数<input class="pair-background-video-start" type="number" min="0" step="0.1" inputmode="decimal"></label><label>结束秒数<input class="pair-background-video-end" type="number" min="0.1" step="0.1" inputmode="decimal"></label><p>拖动左右把手选择片段，也可输入精确秒数；预览和导出使用同一区间。</p></fieldset></div></div></details>`;
-      row.querySelector(".pair-asset-button").before(backgroundOptions);
+      backgroundOptions.className = "pair-background-options gm-row-background";
+      backgroundOptions.innerHTML = `<summary><span>背景 · 图片 / GIF / 视频</span><i class="gm-row-background-swatch pair-background-swatch" aria-hidden="true"></i></summary><div class="gm-row-background-grid pair-background-grid"><label>背景颜色<input class="pair-background-color" type="color"></label><label class="gm-background-upload pair-background-upload">上传 / 更换背景<input class="pair-background-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime"></label><button class="pair-apply-background-color-all gm-apply-background-all" type="button">将背景颜色应用到全部段落</button><label>背景转场<select class="pair-background-transition-style"><option value="direct">直接切换</option><option value="crossfade">柔和叠化</option></select></label><label class="pair-background-transition-duration-label">叠化时长<input class="pair-background-transition-duration" type="number" min="0.01" max="2" step="0.01" inputmode="decimal"><small>秒</small></label><div class="pair-background-media gm-background-video" hidden><div class="gm-background-video-head"><strong class="pair-background-name"></strong><span class="pair-background-type" data-background-type></span><button class="pair-background-remove" type="button">移除素材</button></div><label><span>素材透明度 <output class="pair-background-opacity-out"></output></span><input class="pair-background-opacity" type="range" min="0" max="100" step="1"></label><label><span>染色强度 <output class="pair-background-tint-strength-out"></output></span><input class="pair-background-tint-strength" type="range" min="0" max="100" step="1"></label><label class="pair-background-tint-label">染色颜色<input class="pair-background-tint" type="color"></label><div class="pair-background-video-trim gm-background-video-trim"><div class="pair-video-timeline gm-video-timeline" aria-label="拖动两侧把手裁剪视频片段"><canvas class="pair-video-filmstrip" width="720" height="96"></canvas><div class="pair-video-selection gm-video-selection"><span class="pair-video-handle gm-video-handle is-start" data-edge="start" role="slider" tabindex="0" aria-label="视频片段开始"></span><span class="pair-video-handle gm-video-handle is-end" data-edge="end" role="slider" tabindex="0" aria-label="视频片段结束"></span></div></div><div class="pair-video-timeline-scale gm-video-scale"><span>0.0 秒</span><span class="pair-video-source-duration"></span></div><div class="gm-video-time-fields"><label>开始秒数<input class="pair-background-video-start" type="number" min="0" step="0.1" inputmode="decimal"></label><label>结束秒数<input class="pair-background-video-end" type="number" min="0.1" step="0.1" inputmode="decimal"></label></div><p>拖动左右把手选择片段，也可输入精确秒数；预览和导出使用同一区间。</p></div></div></div>`;
+      row.querySelector(".gm-row-meta").after(backgroundOptions);
       const rowFontLabel = document.createElement("label");
       rowFontLabel.className = "pair-font-label";
       rowFontLabel.innerHTML = `<span>本行字体</span><select class="pair-font-family" aria-label="第 ${index + 1} 行字体"><option value="inherit">跟随全局字体</option></select>`;
@@ -374,7 +409,6 @@
       const revealDuration = row.querySelector(".pair-reveal-duration");
       const settleDuration = row.querySelector(".pair-settle-duration");
       const phraseHold = row.querySelector(".pair-page-hold");
-      const orderSelect = row.querySelector(".pair-order-select");
       const popDistance = row.querySelector(".pair-pop-distance");
       const popBounce = row.querySelector(".pair-pop-bounce");
       const backgroundColor = row.querySelector(".pair-background-color");
@@ -400,7 +434,14 @@
       positionRange.addEventListener("input", () => setRowPosition(positionRange.value));
       row.querySelectorAll("button[data-position]").forEach((button) => button.addEventListener("click", () => setRowPosition(button.dataset.position)));
       updatePositionItem(row, rowPositions[index]);
-      orderSelect.addEventListener("change", () => movePhrasePairToIndex(pair.id, Number(orderSelect.value)));
+      row.querySelector("[data-action='up']")?.addEventListener("click", () => {
+        if (index === 0) return;
+        movePhrasePairToIndex(pair.id, index - 1);
+      });
+      row.querySelector("[data-action='down']")?.addEventListener("click", () => {
+        if (index >= phrasePairs.length - 1) return;
+        movePhrasePairToIndex(pair.id, index + 1);
+      });
       let currentBackgroundMedia = normalizeBackgroundMedia(pair.backgroundMedia);
       lead.value = pair.lead;
       suffix.value = pair.suffix;
@@ -479,15 +520,21 @@
         const mediaPanel = row.querySelector(".pair-background-media");
         mediaPanel.hidden = !currentBackgroundMedia;
         const videoMedia = isVideoMedia(currentBackgroundMedia);
+        const gifMedia = isGifMedia(currentBackgroundMedia);
         const runtime = runtimeBackgrounds.get(pair.id);
         const duration = runtime?.duration || 0;
         const clip = videoMedia && duration > 0 ? videoClipBounds(currentBackgroundMedia, duration) : null;
-        const transitionText = backgroundTransition.value === "crossfade" ? `柔和叠化 ${backgroundTransitionDuration.value} 秒` : "直接切换";
-        row.querySelector(".pair-background-summary").textContent = `${currentBackgroundMedia ? `${currentBackgroundMedia.name}${clip ? ` · ${clip.start.toFixed(1)}–${clip.end.toFixed(1)} 秒` : ""}` : "纯色"} · ${transitionText}`;
+        const swatch = row.querySelector(".pair-background-swatch");
+        if (swatch) {
+          swatch.style.backgroundColor = backgroundColor.value;
+          swatch.setAttribute("aria-label", `当前背景颜色 ${backgroundColor.value}`);
+        }
         row.querySelector(".pair-background-transition-duration-label").classList.toggle("is-disabled", backgroundTransition.value === "direct");
         backgroundTransitionDuration.disabled = backgroundTransition.value === "direct";
         if (!currentBackgroundMedia) return;
         row.querySelector(".pair-background-name").textContent = currentBackgroundMedia.name;
+        const typeLabel = row.querySelector(".pair-background-type");
+        if (typeLabel) typeLabel.textContent = videoMedia ? "视频" : gifMedia ? "GIF" : "图片";
         backgroundOpacity.value = String(currentBackgroundMedia.opacity);
         backgroundTint.value = currentBackgroundMedia.tintColor;
         backgroundTintStrength.value = String(currentBackgroundMedia.tintStrength);
@@ -497,7 +544,8 @@
           backgroundVideoEnd.max = duration > 0 ? String(duration) : "3600";
           backgroundVideoStart.value = String(clip?.start ?? currentBackgroundMedia.videoStart ?? 0);
           backgroundVideoEnd.value = String(clip?.end ?? currentBackgroundMedia.videoEnd ?? "");
-          row.querySelector(".pair-background-video-duration-out").textContent = clip ? `· ${clip.duration.toFixed(1)} 秒` : "· 读取中…";
+          const sourceDuration = row.querySelector(".pair-video-source-duration");
+          if (sourceDuration) sourceDuration.textContent = clip ? `${clip.end.toFixed(1)} 秒` : "读取中…";
           renderVideoTimeline();
         }
       };
@@ -673,14 +721,17 @@
           update();
         });
       }
-      const assetButton = row.querySelector(".pair-asset-button");
-      assetButton.textContent = `本行图标 ${assets.filter((asset) => asset.rowId === pair.id).length} 个 · 添加 / 管理`;
-      assetButton.addEventListener("click", () => {
+      row.querySelector("[data-action='insert-icon']")?.addEventListener("click", () => {
         assetTargetRow = index;
         refreshAssetTargetOptions();
-        $(".icon-section").scrollIntoView({ behavior: "smooth", block: "start" });
-        setTimeout(() => $("#assetTargetRow")?.focus(), 250);
+        seekRow(index);
+        setLibraryOpen(true);
       });
+      row.querySelector("[data-action='pause-row']")?.addEventListener("click", () => seekRow(index));
+      row.querySelectorAll("[data-edit-asset]").forEach((button) => button.addEventListener("click", () => {
+        seekRow(index);
+        openAssetDrawer(button.dataset.editAsset);
+      }));
       const remove = row.querySelector(".remove-pair-button");
       remove.disabled = phrasePairs.length === 1;
       remove.addEventListener("click", () => {
@@ -735,27 +786,31 @@
     { key: "phraseHold", index: "05", label: "本页停留", className: "is-replace" }
   ];
 
-  function renderChoreoTrack(rowIndex = activeTimelineRow) {
-    const timeline = timelineValues();
-    activeTimelineRow = clamp(Math.round(rowIndex), 0, timeline.rows.length - 1);
-    const activeRow = timeline.rows[activeTimelineRow];
-    const timing = activeRow.timing;
-    const bar = $("#choreoBar");
-    const playhead = $("#choreoPlayhead");
-    bar.replaceChildren(playhead);
-    const phaseValues = { intro: timing.intro, hold: timing.hold, anticipation: timing.anticipation, reveal: Math.max(timing.reveal, timing.settle), phraseHold: timing.phraseHold };
-    phaseDefinitions.forEach((phase) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = `me-choreo-block ${phase.className}`;
-      button.dataset.phase = phase.key;
-      button.style.flexGrow = String(Math.max(.08, phaseValues[phase.key]));
-      button.innerHTML = `<em>${phase.index}</em><strong>${phase.label}</strong><small>${Math.round(phaseValues[phase.key] * 1000)} ms</small>`;
-      button.addEventListener("click", () => seekToPhase(phase.key));
-      bar.insertBefore(button, playhead);
+  function renderChoreoTrack() {
+    const model = timelineValues();
+    const bar = $("#timeline");
+    if (!bar) return;
+    const speed = Math.max(0.01, Number(inputs.speed.value) / 100);
+    bar.replaceChildren();
+    model.rows.forEach((row, rowIndex) => {
+      const timing = row.timing;
+      const phaseValues = { intro: timing.intro, hold: timing.hold, anticipation: timing.anticipation, reveal: Math.max(timing.reveal, timing.settle), phraseHold: timing.phraseHold };
+      const starts = phaseStarts(timing);
+      phaseDefinitions.forEach((phase) => {
+        const seconds = Math.max(0, phaseValues[phase.key]);
+        if (seconds <= 0) return;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `gm-timeline-block me-choreo-block ${phase.className}`;
+        button.dataset.phase = phase.key;
+        button.dataset.rowIndex = String(rowIndex);
+        button.dataset.seekMs = String((row.start + (starts[phase.key] || 0)) * 1000);
+        button.setAttribute("role", "listitem");
+        button.innerHTML = `<strong>${phase.label}</strong><small>第 ${rowIndex + 1} 行 · ${(seconds / speed).toFixed(2)}s</small>`;
+        bar.append(button);
+      });
     });
-    const legend = $("#choreoLegend");
-    legend.innerHTML = `<li class="choreo-row-summary"><b>当前第 ${activeTimelineRow + 1} 行 · ${revealStyleLabel(activeRow.pair[2])}</b><span>${Math.round(timing.cycle * 1000)} ms</span></li>${phaseDefinitions.map((phase) => `<li><i class="${phase.className}"></i><b>${phase.label}</b><span>${Math.round(phaseValues[phase.key] * 1000)} ms</span></li>`).join("")}`;
+    syncScrubber(true);
   }
 
   function phaseStarts(timing) {
@@ -770,21 +825,28 @@
     syncPlayButtons();
   }
 
+  function syncScrubber(forceMax = false) {
+    const scrubber = $("#scrubber");
+    if (!scrubber) return;
+    const total = timelineValues().total;
+    const max = Math.max(1, total * 1000);
+    if (forceMax || Number(scrubber.max) !== max) scrubber.max = String(max);
+    if (document.activeElement !== scrubber) scrubber.value = String(clamp(simulationTime, 0, total) * 1000);
+    const now = $("#timeNow");
+    const tot = $("#timeTotal");
+    if (now) now.textContent = `${simulationTime.toFixed(2)}s`;
+    if (tot) tot.textContent = `${total.toFixed(2)}s`;
+  }
+
   function updateChoreoPlayhead(time) {
     const located = locateTimelineTime(time);
-    if (located.index !== activeTimelineRow) renderChoreoTrack(located.index);
-    const timing = located.timing;
-    const local = located.local;
-    $("#choreoPlayhead").style.left = `${clamp01(local / timing.cycle) * 100}%`;
-    const starts = phaseStarts(timing);
-    let current = "intro";
-    Object.entries(starts).forEach(([key, start]) => { if (local >= start) current = key; });
-    document.querySelectorAll(".me-choreo-block").forEach((block) => block.classList.toggle("is-active", block.dataset.phase === current));
+    activeTimelineRow = located.index;
+    syncScrubber();
   }
 
   function updateEditorState() {
     updateOutputs();
-    renderChoreoTrack(activeTimelineRow);
+    renderChoreoTrack();
     schedulePersist();
   }
 
@@ -1095,6 +1157,7 @@
     runtimeAssets.delete(assetId);
     if (activeAssetId === assetId) closeAssetDrawer();
     renderSelectedAssets();
+    updatePairAssetCounts();
     updateEditorState();
   }
 
@@ -1448,8 +1511,10 @@
   }
 
   function syncPlayButtons() {
-    $("#stagePauseButton").textContent = playing ? "暂停" : "播放";
-    $("#stagePauseButton").setAttribute("aria-pressed", String(!playing));
+    const pause = $("#stagePauseButton");
+    if (!pause) return;
+    pause.innerHTML = playing ? "Ⅱ <span>暂停</span>" : "▶ <span>播放</span>";
+    pause.setAttribute("aria-pressed", String(!playing));
   }
 
   function exportDimensions() {
@@ -1597,7 +1662,8 @@
     prepareAsset(asset);
     renderSelectedAssets();
     updateEditorState();
-    schemeStatus.textContent = `已把“${asset.name}”添加到第 ${assetTargetRow + 1} 行，可展开已选后单独编辑。`;
+    updatePairAssetCounts();
+    schemeStatus.textContent = `已将“${asset.name}”插入第 ${assetTargetRow + 1} 行。`;
   });
   $("#assetUpload").addEventListener("change", async (event) => {
     const uploadTargetRow = assetTargetRow;
@@ -1610,7 +1676,8 @@
     event.target.value = "";
     renderSelectedAssets();
     updateEditorState();
-    schemeStatus.textContent = `上传图片已加入第 ${uploadTargetRow + 1} 行，可展开已选后单独编辑。`;
+    updatePairAssetCounts();
+    schemeStatus.textContent = `已将图片插入第 ${uploadTargetRow + 1} 行。`;
   });
   Object.entries(assetControlMap).forEach(([id, key]) => $(`#${id}`).addEventListener("input", (event) => { const asset = activeAsset(); if (!asset) return; asset[key] = Number(event.target.value); updateAssetOutputs(); updateEditorState(); }));
   $("#assetRowAssignment").addEventListener("change", (event) => {
@@ -1646,18 +1713,30 @@
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
     if (!$("#assetDrawer").hidden) { closeAssetDrawer(); return; }
+    if ($("#iconLibraryDrawer") && !$("#iconLibraryDrawer").hidden) { setLibraryOpen(false); return; }
     const panel = $("#continuationLayerPanel");
-    if (panel.classList.contains("is-list-expanded")) $("#assetListToggle").click();
+    if (panel?.classList.contains("is-list-expanded")) $("#assetListToggle").click();
   });
 
   $("#stagePauseButton").addEventListener("click", () => { playing = !playing; syncPlayButtons(); });
   $("#stageReplayButton").addEventListener("click", () => { simulationTime = 0; playing = true; syncPlayButtons(); });
-  $("#choreoBar").addEventListener("click", (event) => {
-    if (event.target.closest(".me-choreo-block")) return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    const timeline = timelineValues();
-    const activeRow = timeline.rows[clamp(activeTimelineRow, 0, timeline.rows.length - 1)];
-    simulationTime = activeRow.start + clamp01((event.clientX - rect.left) / rect.width) * activeRow.timing.cycle;
+  $("#toggleInspector")?.addEventListener("click", () => {
+    if (!document.body.classList.contains("gm-inspector-hidden")) setLibraryOpen(false);
+    document.body.classList.toggle("gm-inspector-hidden");
+    const hidden = document.body.classList.contains("gm-inspector-hidden");
+    $("#toggleInspector").setAttribute("aria-pressed", String(hidden));
+    requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
+  });
+  $("#scrubber")?.addEventListener("input", () => {
+    simulationTime = Number($("#scrubber").value) / 1000;
+    playing = false;
+    syncPlayButtons();
+  });
+  $("#timeline")?.addEventListener("click", (event) => {
+    const block = event.target.closest("[data-seek-ms]");
+    if (!block) return;
+    simulationTime = Number(block.dataset.seekMs) / 1000;
+    activeTimelineRow = Number(block.dataset.rowIndex) || 0;
     playing = false;
     syncPlayButtons();
   });
@@ -1668,19 +1747,20 @@
     const scheme = collectScheme();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(scheme));
     downloadBlob(new Blob([JSON.stringify(scheme, null, 2)], { type: "application/json" }), "continuation-scheme.json");
-    schemeStatus.textContent = "方案已保存到本机，并下载 JSON。";
+    schemeStatus.textContent = "方案已保存并下载 JSON。";
   });
-  $("#importScheme").addEventListener("change", async (event) => {
+  $("#importScheme")?.addEventListener("click", () => $("#importSchemeFile")?.click());
+  $("#importSchemeFile")?.addEventListener("change", async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    try { applyScheme(JSON.parse(await file.text()), "方案已导入，文字、图标、位置与编舞已重建。"); schedulePersist(); }
+    try { applyScheme(JSON.parse(await file.text()), "方案已导入。"); schedulePersist(); }
     catch (error) { schemeStatus.textContent = `导入失败：${error.message}`; }
     event.target.value = "";
   });
   $("#restoreScheme").addEventListener("click", async () => {
     try { await loadApprovedDefaultScheme(); }
     catch (error) { console.error(error); }
-    applyScheme(defaultScheme(), "已恢复默认示例。");
+    applyScheme(defaultScheme(), "已恢复默认方案。");
     schedulePersist();
   });
   $("#clearScheme").addEventListener("click", () => { applyScheme(blankScheme(), "已清空文字和图标，可从空白方案重建。"); schedulePersist(); });
@@ -1694,7 +1774,7 @@
     catch (error) { console.error(error); }
     let stored = null;
     try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch (_) {}
-    applyScheme(stored || defaultScheme(), stored ? "已恢复上次自动保存的方案。" : "已载入默认示例。");
+    applyScheme(stored || defaultScheme());
     document.fonts?.ready?.then(() => { simulationTime = 0; });
     syncPlayButtons();
     requestAnimationFrame(animate);

@@ -2,90 +2,150 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="续句：文字与图标整体居中，支持逐字扫入、弹出与图标续接。">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="favicon.svg">
   <title>续句 Continuation | CellMotion</title>
-  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="workspace-editor.css?v=20260901-1">
   <link rel="stylesheet" href="me-motion-editor.css?v=20260909-timeline-color">
-  <link rel="stylesheet" href="continuation.css?v=20260829-editor24">
-  <link rel="stylesheet" href="stg-cn.css?v=20260828-1">
-  <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-coloriso">
-  <link rel="stylesheet" href="typecascade-polish.css?v=20260909-coloriso">
+  <link rel="stylesheet" href="shared-fonts.css?v=20260824-2">
+  <link rel="stylesheet" href="stg-cn.css?v=20260824-1">
+  <link rel="stylesheet" href="glyphmorph-reviewed.css?v=20260909-media-crop">
+  <link rel="stylesheet" href="continuation.css?v=20260910-std3">
+  <link rel="stylesheet" href="typecascade-workspace.css?v=20260910-std5">
+  <link rel="stylesheet" href="typecascade-polish.css?v=20260910-std2">
+  <link rel="stylesheet" href="continuation-workspace.css?v=20260910-std6">
 </head>
-<body class="me-motion-editor">
-  <main class="stage-shell" aria-label="续句动效预览">
-    <div class="design-frame" id="designFrame">
+<body class="glyphmorph-editor">
+  <main id="glyphMorphStage" class="gm-stage stage-shell" aria-label="续句动效预览">
+    <div class="design-frame gm-composition-frame" id="designFrame">
       <canvas id="previewCanvas" aria-label="续句实时画面"></canvas>
-      <div class="me-stage-controls" aria-label="画面播放控制">
-        <button id="stagePauseButton" type="button">暂停</button><button id="stageReplayButton" type="button">重播</button>
-      </div>
       <p class="sr-only" id="livePhrase" aria-live="polite"></p>
+    </div>
+    <div class="gm-stage-controls me-stage-controls" aria-label="预览控制">
+      <button id="toggleInspector" type="button" aria-pressed="false">▤ <span>编辑器</span></button>
+      <i aria-hidden="true"></i>
+      <button id="stageReplayButton" type="button">↺ <span>重播</span></button>
+      <button id="stagePauseButton" type="button" aria-pressed="false">Ⅱ <span>暂停</span></button>
     </div>
   </main>
 
   <details class="control-panel" id="controlPanel" open>
     <summary><span><b>续句</b><small>CONTINUATION / 24</small></span><i aria-hidden="true">编辑</i></summary>
     <div class="panel-scroll">
-      <section class="canvas-size-section">
-        <p class="section-label">画板尺寸</p>
-        <label class="full-field">编辑与预览尺寸<select id="exportPreset"><option value="1080x1080">1:1 · 1080 × 1080</option><option value="1080x1350">4:5 · 1080 × 1350</option><option value="1080x1920">9:16 · 1080 × 1920</option><option value="1920x1080" selected>16:9 · 1920 × 1080</option><option value="custom">自定义尺寸</option></select></label>
-        <div class="custom-size" id="customSize" hidden><label>宽<input id="exportWidth" type="number" min="240" max="3840" value="1080"></label><span>×</span><label>高<input id="exportHeight" type="number" min="240" max="3840" value="1920"></label></div>
-        <p class="hint">右侧画布会立即按所选比例显示；这里看到的字体、图标和位置就是导出构图。</p>
+      <section class="canvas-size-section gm-card gm-canvas-card">
+        <div class="gm-card-title"><span>01</span><h2>画布尺寸</h2></div>
+        <label class="gm-field gm-field-wide">预设
+          <select id="exportPreset">
+            <option value="1080x1080">1:1 方形 · 1080 × 1080</option>
+            <option value="1080x1350">4:5 竖版 · 1080 × 1350</option>
+            <option value="1080x1440">3:4 竖版 · 1080 × 1440</option>
+            <option value="1080x1620">2:3 竖版 · 1080 × 1620</option>
+            <option value="1080x1920">9:16 全屏 · 1080 × 1920</option>
+            <option value="1920x1080" selected>16:9 横版 · 1920 × 1080</option>
+            <option value="1440x1080">4:3 横版 · 1440 × 1080</option>
+            <option value="1620x1080">3:2 横版 · 1620 × 1080</option>
+            <option value="custom">自定义</option>
+          </select>
+        </label>
+        <div class="gm-grid-2 gm-custom-size custom-size" id="customSize" hidden>
+          <label class="gm-field">宽度 <input id="exportWidth" type="number" min="240" max="3840" value="1080"></label>
+          <label class="gm-field">高度 <input id="exportHeight" type="number" min="240" max="3840" value="1920"></label>
+        </div>
       </section>
 
-      <section class="pair-editor-section">
-        <div class="section-heading"><div><p class="section-label">句组编辑</p><p class="section-kicker">固定前半句 <span aria-hidden="true">→</span> 接入后半句</p></div><button class="add-pair-button" id="addPairButton" type="button">＋ 新增</button></div>
+      <section class="pair-editor-section gm-card">
+        <div class="gm-card-title section-heading"><span>02</span><h2>文字段落</h2><button class="add-pair-button gm-text-button" id="addPairButton" type="button">＋ 添加段落</button></div>
         <div class="pair-editor-head" aria-hidden="true"><span>排序</span><span>前半句</span><i>接入</i><span>后半句</span></div>
         <div class="pair-editor" id="pairEditor"></div>
-        <div class="continuation-colors"><label><span>新增行默认文字色</span><input id="textColor" type="color" value="#ffffff"></label><label><span>新增行默认背景色</span><input id="backgroundColor" type="color" value="#000000"></label></div>
+        <div class="continuation-colors gm-text-colors"><label class="gm-field">新增行默认文字色 <input id="textColor" type="color" value="#ffffff"></label><label class="gm-field">新增行默认背景色 <input id="backgroundColor" type="color" value="#000000"></label></div>
       </section>
 
-      <section class="font-picker">
-        <label class="section-label" for="fontFamily">字体</label><select id="fontFamily"><option value="stg:inter">Inter</option></select>
+      <section class="font-picker gm-card">
+        <div class="gm-card-title"><span>03</span><h2>字体与构图</h2></div>
+        <label class="gm-field gm-field-wide" for="fontFamily">全局默认字体<select id="fontFamily"><option value="stg:inter">Inter</option></select></label>
         <div class="split-type-grid">
-          <div class="type-side-card"><b>前半句统一设置</b><label>统一字号 <output id="leadFontSizeOut">48</output><input id="leadFontSize" type="range" min="18" max="180" value="48"></label><label>粗细<select id="leadFontWeight"><option>200</option><option>300</option><option>400</option><option selected>500</option><option>600</option><option>700</option><option>800</option><option>900</option></select></label></div>
-          <div class="type-side-card"><b>后半句统一设置</b><label>统一字号 <output id="suffixFontSizeOut">48</output><input id="suffixFontSize" type="range" min="18" max="180" value="48"></label><label>粗细<select id="suffixFontWeight"><option>200</option><option>300</option><option>400</option><option selected>500</option><option>600</option><option>700</option><option>800</option><option>900</option></select></label></div>
+          <div class="type-side-card"><b>前半句默认</b>
+            <label class="gm-field">字号 <input id="leadFontSize" type="range" min="18" max="180" value="48"><output for="leadFontSize" id="leadFontSizeOut">48</output></label>
+            <label class="gm-field">字重<select id="leadFontWeight"><option>200</option><option>300</option><option>400</option><option selected>500</option><option>600</option><option>700</option><option>800</option><option>900</option></select></label>
+          </div>
+          <div class="type-side-card"><b>后半句默认</b>
+            <label class="gm-field">字号 <input id="suffixFontSize" type="range" min="18" max="180" value="48"><output for="suffixFontSize" id="suffixFontSizeOut">48</output></label>
+            <label class="gm-field">字重<select id="suffixFontWeight"><option>200</option><option>300</option><option>400</option><option selected>500</option><option>600</option><option>700</option><option>800</option><option>900</option></select></label>
+          </div>
         </div>
       </section>
 
-      <section class="motion-section">
-        <p class="section-label">整体动效</p>
-        <div class="controls-grid">
-          <label>整体布局 <output id="anticipationOut">居中锁定</output><input id="anticipation" type="range" min="10" max="45" value="25" hidden disabled><small>文字与图标按可见范围整体居中。</small></label><label>统一前后句间距 <output id="wordGapOut">8</output><input id="wordGap" type="range" min="0" max="48" value="8"></label>
-          <label>收束起点 <output id="settleScaleOut">110%</output><input id="settleScale" type="range" min="100" max="125" value="110"></label>
-          <label>播放速度 <output id="speedOut">1.00×</output><input id="speed" type="range" min="50" max="160" value="100"></label>
+      <section class="motion-section gm-card">
+        <div class="gm-card-title"><span>04</span><h2>整体动效</h2></div>
+        <div class="controls-grid gm-grid-2">
+          <label class="sr-only">整体布局 <output id="anticipationOut">居中锁定</output><input id="anticipation" type="range" min="10" max="45" value="25" hidden disabled></label>
+          <label class="gm-field">前后句间距 <input id="wordGap" type="range" min="0" max="48" value="8"><output for="wordGap" id="wordGapOut">8</output></label>
+          <label class="gm-field">收束起点 <input id="settleScale" type="range" min="100" max="125" value="110"><output for="settleScale" id="settleScaleOut">110%</output></label>
+          <label class="gm-field">播放速度 <input id="speed" type="range" min="50" max="160" value="100"><output for="speed" id="speedOut">1.00×</output></label>
         </div>
       </section>
 
-      <section class="icon-section">
-        <p class="section-label">行内图标</p>
-        <label class="asset-target-field">图标要加入哪一行<select id="assetTargetRow"></select></label>
-        <div id="continuationLayerPanel" class="me-layer-panel"><div class="me-asset-selected-summary"><span><strong>已选图标</strong><small><b id="assetCount">0</b> 项 · 可插入任意字符位置</small></span><button class="me-layer-toggle" id="assetListToggle" type="button" aria-expanded="false">展开已选</button></div><div class="me-layer-items" id="selectedAssetList"></div></div>
-        <div class="asset-library-toolbar"><span id="candidateName">先在图库选择一个图标</span><button class="me-asset-commit" id="addCandidateButton" type="button" disabled>添加到第 1 行</button></div>
-        <div class="me-asset-library" aria-label="图标素材库"><details open><summary>流墙图标</summary><div class="asset-choice-grid" id="flowIconLibrary"></div></details><details><summary>GIF 动图</summary><div class="asset-choice-grid" id="gifMotionLibrary"></div></details><details><summary>透明动物</summary><div class="asset-choice-grid" id="animalIconLibrary"></div></details><details><summary>Bot 动态图标</summary><div class="asset-choice-grid" id="botIconLibrary"></div></details></div>
+      <section class="icon-section gm-library-drawer" id="iconLibraryDrawer" hidden>
+        <header class="gm-library-drawer-header">
+          <div><small>图标库</small><h2>插入到当前段落</h2></div>
+          <button id="closeIconLibrary" type="button" aria-label="关闭图标库">×</button>
+        </header>
+        <label class="asset-target-field gm-field gm-field-wide">插入到<select id="assetTargetRow"></select></label>
+        <div id="continuationLayerPanel" class="me-layer-panel gm-layer-panel"><div class="me-asset-selected-summary gm-layer-summary"><span><strong>已选图标</strong><small><b id="assetCount">0</b> 项</small></span><button class="me-layer-toggle" id="assetListToggle" type="button" aria-expanded="false">展开已选</button></div><div class="me-layer-items gm-layer-items" id="selectedAssetList"></div></div>
+        <div class="asset-library-toolbar gm-library-selection"><span id="candidateName">请先选择图标</span><button class="me-asset-commit" id="addCandidateButton" type="button" disabled>插入到光标</button></div>
+        <div class="me-asset-library gm-icon-groups" aria-label="图标素材库"><details><summary>流墙图标</summary><div class="asset-choice-grid" id="flowIconLibrary"></div></details><details><summary>GIF 动图</summary><div class="asset-choice-grid" id="gifMotionLibrary"></div></details><details><summary>透明动物</summary><div class="asset-choice-grid" id="animalIconLibrary"></div></details><details><summary>Bot 动态图标</summary><div class="asset-choice-grid" id="botIconLibrary"></div></details></div>
         <label class="upload-button"><span id="assetUploadText">上传图片到第 1 行</span><input id="assetUpload" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" multiple></label>
-        <p class="hint">先选目标行并添加图标；展开已选后点“单独编辑”，可指定句首、任意字符后或句末。</p>
       </section>
 
-      <section class="choreo-section"><p class="section-label">编舞时间轴</p><div class="me-choreo-track" id="choreoTrack"><div class="me-choreo-scroll"><div class="me-choreo-bar" id="choreoBar"><i class="me-choreo-playhead" id="choreoPlayhead"></i></div></div><ul class="me-choreo-legend" id="choreoLegend"></ul></div></section>
+      <section class="choreo-section gm-card">
+        <div class="gm-card-title"><span>05</span><h2>时间轴</h2></div>
+        <div class="me-choreo-scroll"><div id="timeline" class="gm-timeline me-choreo-track me-choreo-bar" role="list" aria-label="续句动效时间轴"></div></div>
+        <input id="scrubber" class="gm-scrubber me-choreo-playhead" type="range" min="0" max="1" step="0.001" value="0" aria-label="时间轴播放头">
+        <div class="gm-time-readout"><span id="timeNow">0.00s</span><span id="timeTotal">0.00s</span></div>
+      </section>
 
-      <section class="scheme-section"><p class="section-label">方案</p><div class="me-scheme-actions"><button id="saveScheme" type="button">保存方案</button><label class="me-scheme-import">导入方案<input id="importScheme" type="file" accept="application/json,.json"></label><button id="restoreScheme" type="button">恢复默认</button><button id="clearScheme" type="button">清理重做</button></div><p class="hint" id="schemeStatus" aria-live="polite">文字、图标、逐行背景、位置与完整编舞都会保存。</p></section>
+      <section class="scheme-section gm-card">
+        <div class="gm-card-title"><span>06</span><h2>方案</h2></div>
+        <div class="gm-actions gm-actions-4">
+          <button id="saveScheme" type="button">保存方案</button>
+          <button id="importScheme" type="button">导入方案</button>
+          <button id="restoreScheme" type="button">恢复默认</button>
+          <button id="clearScheme" type="button" aria-label="清空所有行">清理重做</button>
+        </div>
+        <input id="importSchemeFile" type="file" accept="application/json,.json" hidden>
+        <p class="hint gm-status" id="schemeStatus" aria-live="polite"></p>
+      </section>
 
-      <section class="export-panel">
-        <p class="section-label">真实导出</p>
-        <div class="export-grid"><label>时长<select id="exportDuration"><option value="full">完整循环</option><option value="2">2 秒</option><option value="3">3 秒</option><option value="5">5 秒</option><option value="custom">自定义</option></select></label><label>帧率<select id="exportFps"><option>15</option><option>24</option><option selected>30</option><option>60</option></select></label></div>
-        <label id="customDurationWrap" hidden>自定义秒数<input id="customDuration" type="number" min="0.1" max="30" step="0.1" value="3"></label>
-        <div class="export-actions"><button id="exportPng" type="button">PNG 图片</button><button id="exportGif" type="button">GIF 动图</button><button id="exportVideo" type="button">MP4 视频</button></div><p class="export-status" id="exportStatus" aria-live="polite">预览、GIF 和 MP4 使用同一套逐帧编舞。</p>
+      <section class="export-panel gm-card">
+        <div class="gm-card-title"><span>07</span><h2>真实导出</h2></div>
+        <div class="gm-grid-2 export-grid">
+          <label class="gm-field">时长<select id="exportDuration"><option value="full">完整循环</option><option value="2">2 秒</option><option value="3">3 秒</option><option value="5">5 秒</option><option value="custom">自定义</option></select></label>
+          <label class="gm-field">帧率<select id="exportFps"><option value="15">15 fps</option><option value="24">24 fps</option><option value="30" selected>30 fps</option><option value="60">60 fps</option></select></label>
+        </div>
+        <label class="gm-field" id="customDurationWrap" hidden>自定义秒数<input id="customDuration" type="number" min="0.1" max="30" step="0.1" value="3"></label>
+        <div class="gm-actions gm-actions-3 export-actions">
+          <button id="exportPng" type="button">PNG</button>
+          <button id="exportGif" type="button">GIF</button>
+          <button id="exportVideo" type="button">MP4</button>
+        </div>
+        <p class="gm-status export-status" id="exportStatus" aria-live="polite">输出将严格使用当前画布尺寸。</p>
       </section>
     </div>
   </details>
 
-  <aside class="me-asset-drawer" id="assetDrawer" hidden aria-label="单个图标编辑器"><header><div><small>单独编辑</small><strong id="drawerAssetName">图标</strong></div><button id="closeAssetDrawer" type="button" aria-label="关闭">×</button></header><div class="me-asset-editor"><label>所属行<select id="assetRowAssignment"></select></label><label>插入位置<select id="assetInsertionPoint"></select></label><label>图文间距 <output id="assetSpacingOut">6</output><input id="assetSpacing" type="range" min="0" max="96" step="1" value="6"></label><label>大小 <output id="assetSizeOut">100%</output><input id="assetSize" type="range" min="25" max="250" value="100"></label><label>透明度 <output id="assetOpacityOut">100%</output><input id="assetOpacity" type="range" min="0" max="100" value="100"></label><label>水平偏移 <output id="assetXOut">0</output><input id="assetX" type="range" min="-160" max="160" value="0"></label><label>垂直偏移 <output id="assetYOut">0</output><input id="assetY" type="range" min="-160" max="160" value="0"></label><label>旋转 <output id="assetRotationOut">0°</output><input id="assetRotation" type="range" min="-180" max="180" value="0"></label></div></aside>
+  <aside class="me-asset-drawer gm-asset-drawer" id="assetDrawer" hidden aria-label="单个图标编辑器"><header><div><small>单独编辑</small><strong id="drawerAssetName">图标</strong></div><button id="closeAssetDrawer" type="button" aria-label="关闭">×</button></header><div class="me-asset-editor gm-asset-editor"><label class="gm-field gm-field-wide">所属行<select id="assetRowAssignment"></select></label><label class="gm-field gm-field-wide">插入位置<select id="assetInsertionPoint"></select></label><label class="gm-field">图文间距 <output id="assetSpacingOut" for="assetSpacing">6</output><input id="assetSpacing" type="range" min="0" max="96" step="1" value="6"></label><label class="gm-field">大小 <output id="assetSizeOut" for="assetSize">100%</output><input id="assetSize" type="range" min="25" max="250" value="100"></label><label class="gm-field">透明度 <output id="assetOpacityOut" for="assetOpacity">100%</output><input id="assetOpacity" type="range" min="0" max="100" value="100"></label><label class="gm-field">水平偏移 <output id="assetXOut" for="assetX">0</output><input id="assetX" type="range" min="-160" max="160" value="0"></label><label class="gm-field">垂直偏移 <output id="assetYOut" for="assetY">0</output><input id="assetY" type="range" min="-160" max="160" value="0"></label><label class="gm-field">旋转 <output id="assetRotationOut" for="assetRotation">0°</output><input id="assetRotation" type="range" min="-180" max="180" value="0"></label></div></aside>
 
-  <script src="shared-font-library.js?v=20260824-2"></script><script src="shared-icon-library.js?v=20260902-1"></script><script src="cellmotion-animated-image.js?v=20260909-1"></script><script src="js/continuation-gif.js"></script><script src="js/h264-mp4-encoder.web.js"></script><script src="continuation.js?v=20260909-coloriso2"></script><script src="me-motion-editor.js?v=20260828-1"></script><script src="stg-cn.js?v=20260828-1"></script>
-  <script src="continuation-workspace.js?v=20260909-standard"></script>
-  <script src="typecascade-polish.js?v=20260909-coloriso"></script>
+  <script src="shared-font-library.js?v=20260824-2"></script>
+  <script src="shared-icon-library.js?v=20260902-1"></script>
+  <script src="cellmotion-animated-image.js?v=20260909-1"></script>
+  <script src="js/continuation-gif.js"></script>
+  <script src="js/h264-mp4-encoder.web.js"></script>
+  <script src="continuation.js?v=20260910-std5"></script>
+  <script src="stg-cn.js?v=20260828-1"></script>
+  <script src="continuation-workspace.js?v=20260910-std3"></script>
+  <script src="typecascade-polish.js?v=20260910-std2"></script>
   <script src="typecascade-selects.js?v=20260909-1"></script>
-  <script src="typecascade-locale.js?v=20260909-coloriso2"></script>
+  <script src="typecascade-locale.js?v=20260910-std4"></script>
 </body>
 </html>

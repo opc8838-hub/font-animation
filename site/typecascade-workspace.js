@@ -39,7 +39,7 @@
   contentCard.querySelector('.gm-text-colors')?.setAttribute('hidden', '');
   contentCard.querySelector('.gm-help')?.remove();
   contentCard.querySelector('.gm-card-title')?.remove();
-  const left = make('aside', 'tc-content', '<div class="tc-panel-heading"><div><small>CONTENT</small><h2>文字段落 <span id="tcRowCount"></span></h2></div></div><p class="tc-hint">选择一段文字，在右侧编辑</p><div class="tc-row-list" id="tcRowList" aria-label="选择文字段落"></div>');
+  const left = make('aside', 'tc-content', '<div class="tc-panel-heading"><div><small>内容</small><h2>文字段落 <span id="tcRowCount"></span></h2></div></div><p class="tc-hint">选择一段文字，在右侧编辑</p><div class="tc-row-list" id="tcRowList" aria-label="选择文字段落"></div>');
   left.setAttribute('aria-label', '段落导航');
   left.querySelector('.tc-panel-heading').append(addRowButton);
   body.append(left);
@@ -50,7 +50,7 @@
   const tabs = make('nav', 'tc-tabs', '<button type="button" data-panel="row" aria-pressed="true">当前段落</button><button type="button" data-panel="global" aria-pressed="false">动效设置</button><button type="button" data-panel="export" aria-pressed="false">导出</button>');
   tabs.setAttribute('aria-label', '属性分类');
   inspector.prepend(tabs);
-  const rowPanel = make('section', 'tc-properties', '<div class="tc-panel-heading"><div><small>SELECTED CELL</small><h2 id="tcSelectedTitle">段落 01</h2></div></div>');
+  const rowPanel = make('section', 'tc-properties', '<div class="tc-panel-heading"><div><small>当前编辑</small><h2 id="tcSelectedTitle">段落 01</h2></div></div>');
   rowPanel.dataset.panel = 'row';
   rowPanel.append(contentCard);
   const globalPanel = make('section', 'tc-properties');
