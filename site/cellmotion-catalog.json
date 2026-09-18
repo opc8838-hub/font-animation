@@ -41,6 +41,16 @@
       "video": "assets/previews/split-flip-card.mp4"
     },
     {
+      "id": "zerogflip",
+      "name": "无重力翻转",
+      "english": "Zero-G Flip",
+      "description": "卡片无重力翻转 · 切图",
+      "category": "space",
+      "href": "zerogflip.html",
+      "poster": "assets/cellmotion/poster-zerogflip.jpg",
+      "video": null
+    },
+    {
       "id": "currentwall",
       "name": "水流",
       "english": "Water Flow",

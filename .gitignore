@@ -4,6 +4,9 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
+# Private reference videos, MiniMax clones, frame dumps
+work/
+
 # Local reference-video analysis and browser/export scratch data
 .codex-watch-*/
 .codex-*-analysis/

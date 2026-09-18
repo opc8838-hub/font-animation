@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="favicon.svg">
+  <title>无重力翻转 Zero-G Flip | CellMotion</title>
+  <link rel="stylesheet" href="workspace-editor.css?v=20260901-1">
+  <link rel="stylesheet" href="me-motion-editor.css?v=20260909-timeline-color">
+  <link rel="stylesheet" href="shared-fonts.css?v=20260824-2">
+  <link rel="stylesheet" href="stg-cn.css?v=20260824-1">
+  <link rel="stylesheet" href="glyphmorph-reviewed.css?v=20260909-media-crop">
+  <link rel="stylesheet" href="typecascade-workspace.css?v=20260917-zg1">
+  <link rel="stylesheet" href="typecascade-polish.css?v=20260917-zg1">
+  <link rel="stylesheet" href="zerogflip.css?v=20260918-3">
+</head>
+<body class="glyphmorph-editor">
+  <main id="glyphMorphStage" class="gm-stage stage-shell" aria-label="无重力翻转预览">
+    <div class="design-frame gm-composition-frame" id="designFrame">
+      <canvas id="previewCanvas" aria-label="无重力翻转实时画面"></canvas>
+    </div>
+    <div class="gm-stage-controls me-stage-controls" aria-label="预览控制">
+      <button id="toggleInspector" type="button" aria-pressed="false">▤ <span>编辑器</span></button>
+      <i aria-hidden="true"></i>
+      <button id="stageReplayButton" type="button">↺ <span>重播</span></button>
+      <button id="stagePauseButton" type="button" aria-pressed="false">Ⅱ <span>暂停</span></button>
+    </div>
+  </main>
+
+  <details class="control-panel" id="controlPanel" open>
+    <summary><span><b>无重力翻转</b><small>ZERO-G FLIP</small></span><i aria-hidden="true">编辑</i></summary>
+    <div class="panel-scroll">
+      <section class="canvas-size-section gm-card gm-canvas-card">
+        <div class="gm-card-title"><span>01</span><h2>画布尺寸</h2></div>
+        <label class="gm-field gm-field-wide">预设
+          <select id="canvasPreset">
+            <option value="1920x1080" selected>16:9 横版 · 1920 × 1080</option>
+            <option value="2280x720">19:6 超宽 · 2280 × 720</option>
+            <option value="1900x600">19:6 紧凑 · 1900 × 600</option>
+            <option value="2560x1080">21:9 电影 · 2560 × 1080</option>
+            <option value="2160x1080">2:1 宽屏 · 2160 × 1080</option>
+            <option value="1440x1080">4:3 传统 · 1440 × 1080</option>
+            <option value="1920x1280">3:2 照片 · 1920 × 1280</option>
+            <option value="1080x1080">1:1 方形 · 1080 × 1080</option>
+            <option value="1080x1350">4:5 竖版 · 1080 × 1350</option>
+            <option value="1080x1920">9:16 全屏 · 1080 × 1920</option>
+            <option value="1080x2340">9:19.5 手机 · 1080 × 2340</option>
+            <option value="custom">自定义</option>
+          </select>
+        </label>
+        <div class="gm-grid-2 gm-custom-size" id="customSize" hidden>
+          <label class="gm-field">宽度 <input id="canvasWidth" type="number" min="320" max="4096" value="1920"></label>
+          <label class="gm-field">高度 <input id="canvasHeight" type="number" min="320" max="4096" value="1080"></label>
+        </div>
+      </section>
+
+      <section class="gm-card" id="assetCard">
+        <div class="gm-card-title"><span>02</span><h2>素材</h2></div>
+        <p class="gm-help">开头用首图翻转。转完立刻按你上传的 2–3 张图切换（不是滤镜变色）。主图按上传比例放大，约占画面一倍。</p>
+        <label class="zg-upload">翻转首图
+          <input id="assetFile" type="file" accept="image/png,image/jpeg,image/webp">
+        </label>
+        <div class="zg-asset-status"><span id="assetName">默认照片卡片</span><button id="clearAsset" type="button" hidden>移除</button></div>
+        <label class="zg-upload">翻转后切图（可多选 2–3 张）
+          <input id="seqFiles" type="file" accept="image/png,image/jpeg,image/webp" multiple>
+        </label>
+        <div class="zg-asset-status"><span id="seqName">未上传，默认走银/黑/蓝演示</span><button id="clearSeq" type="button" hidden>移除切图</button></div>
+        <label class="zg-upload">更换空间背景
+          <input id="bgFile" type="file" accept="image/png,image/jpeg,image/webp">
+        </label>
+        <div class="zg-asset-status"><span id="bgName">默认暗空间</span><button id="clearBg" type="button" hidden>恢复默认</button></div>
+        <label class="gm-field">底色 <input id="backgroundColor" type="color" value="#07080c"></label>
+        <label class="gm-field gm-field-wide">字幕<input id="caption" type="text" value="What's next?" maxlength="48"></label>
+        <label class="gm-check"><input id="captionEnabled" type="checkbox" checked><span>显示字幕（贴在屏幕上，不跟卡片翻）</span></label>
+      </section>
+
+      <section class="gm-card" id="motionCard">
+        <div class="gm-card-title"><span>03</span><h2>动效设置</h2></div>
+        <div class="gm-grid-2">
+          <label class="gm-field">翻转圈数 <input id="flipTurns" type="range" min="50" max="400" value="100"><output for="flipTurns" id="flipTurnsOut">1.00</output></label>
+          <label class="gm-field">斜角 <input id="pitch" type="range" min="4" max="28" value="14"><output for="pitch" id="pitchOut">14°</output></label>
+          <label class="gm-field">起始朝向 <input id="yaw0" type="range" min="-40" max="40" value="22"><output for="yaw0" id="yaw0Out">22°</output></label>
+          <label class="gm-field">镜头环绕 <input id="parallax" type="range" min="16" max="90" value="72"><output for="parallax" id="parallaxOut">72</output></label>
+          <label class="gm-field">切图过渡 <input id="recolorAmt" type="range" min="0" max="100" value="100"><output for="recolorAmt" id="recolorAmtOut">100</output></label>
+          <label class="gm-field">图片高度 <input id="cardScale" type="range" min="40" max="95" value="80"><output for="cardScale" id="cardScaleOut">80</output></label>
+          <label class="gm-field">上下移 <input id="cardLift" type="range" min="-40" max="40" value="0"><output for="cardLift" id="cardLiftOut">0</output></label>
+          <label class="gm-field">播放速度 <input id="speed" type="range" min="50" max="160" value="100"><output for="speed" id="speedOut">1.00×</output></label>
+        </div>
+      </section>
+
+      <section class="choreo-section gm-card">
+        <div class="gm-card-title"><span>04</span><h2>时间轴</h2></div>
+        <div class="me-choreo-scroll"><div id="timeline" class="gm-timeline me-choreo-track me-choreo-bar" role="list" aria-label="无重力翻转时间轴"></div></div>
+        <input id="scrubber" class="gm-scrubber me-choreo-playhead" type="range" min="0" max="1" step="0.001" value="0" aria-label="时间轴播放头">
+        <div class="gm-time-readout"><span id="timeNow">0.00s</span><span id="timeTotal">0.00s</span></div>
+      </section>
+
+      <section class="scheme-section gm-card">
+        <div class="gm-card-title"><span>05</span><h2>方案</h2></div>
+        <div class="gm-actions gm-actions-4">
+          <button id="saveScheme" type="button">保存方案</button>
+          <button id="importScheme" type="button">导入方案</button>
+          <button id="restoreScheme" type="button">恢复默认</button>
+          <button id="clearScheme" type="button">清理重做</button>
+        </div>
+        <input id="importSchemeFile" type="file" accept="application/json,.json" hidden>
+        <p class="gm-status" id="schemeStatus" aria-live="polite"></p>
+      </section>
+
+      <section class="export-panel gm-card">
+        <div class="gm-card-title"><span>06</span><h2>真实导出</h2></div>
+        <div class="gm-grid-2">
+          <label class="gm-field">时长<select id="exportDuration"><option value="full">完整循环</option><option value="3">3 秒</option><option value="5">5 秒</option></select></label>
+          <label class="gm-field">帧率<select id="exportFps"><option value="24">24 fps</option><option value="30" selected>30 fps</option></select></label>
+        </div>
+        <div class="gm-actions gm-actions-3">
+          <button id="exportPng" type="button">PNG</button>
+          <button id="exportGif" type="button">GIF</button>
+          <button id="exportMp4" type="button">MP4</button>
+        </div>
+        <p id="exportStatus" class="gm-status">输出将严格使用当前画布尺寸。</p>
+      </section>
+    </div>
+  </details>
+
+  <script src="js/continuation-gif.js"></script>
+  <script src="js/h264-mp4-encoder.web.js"></script>
+  <script src="zerogflip.js?v=20260918-19"></script>
+  <script src="zerogflip-workspace.js?v=20260918-12"></script>
+  <script src="typecascade-polish.js?v=20260917-zg1"></script>
+  <script src="typecascade-selects.js?v=20260909-1"></script>
+  <script src="typecascade-locale.js?v=20260917-zg1"></script>
+</body>
+</html>

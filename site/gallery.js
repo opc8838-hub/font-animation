@@ -2,6 +2,7 @@ const effects = [
   ["coil", "线圈", "Coil", "flow", "波形流动"],
   ["continuation", "续句", "Continuation", "type", "匹配切换"],
   ["split-flip", "上下翻转", "Split Flip", "space", "整块旋转 · 覆盖层上下扫"],
+  ["zerogflip", "无重力翻转", "Zero-G Flip", "space", "卡片无重力翻转 · 切图"],
   ["currentwall", "水流", "Water Flow", "flow", "多行水流"],
   ["verticalwall", "纵跃", "Vertical Rise", "flow", "纵向弹出"],
   ["creatorstudio", "汇聚", "Creator Merge", "type", "字位重组"],
