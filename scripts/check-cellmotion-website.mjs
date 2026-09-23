@@ -29,6 +29,19 @@ const library=await readFile(new URL(pages[1],site),'utf8');
 assert(library.includes('id="web-planned"'),'Do not imply unshipped web components are available');
 const catalog=JSON.parse(await readFile(new URL('cellmotion-catalog.json',site),'utf8'));
 assert.equal(new Set(catalog.effects.map(effect=>effect.id)).size,catalog.effects.length);
+const gallerySource=await readFile(new URL('gallery.js',site),'utf8');
+const pendingLiteral=gallerySource.match(/const pendingRelease = (\[[\s\S]*?\n\]);/)?.[1];
+assert(pendingLiteral,'gallery.js is missing pendingRelease');
+const pendingIds=JSON.parse(pendingLiteral.replace(/,\s*]/g,']'));
+const categories=new Set(['type','graphic','media','flow','space','physics']);
+for(const effect of catalog.effects){
+  assert(categories.has(effect.category),`${effect.id}: category must stay a real content category`);
+  assert(effect.status==='pending'||effect.status==='ready',`${effect.id}: missing release status`);
+}
+assert.deepEqual(catalog.effects.filter(effect=>effect.status==='pending').map(effect=>effect.id).sort(),[...pendingIds].sort(),'Catalog pending set must match gallery.js pendingRelease');
+for(const id of catalog.featured||[]){
+  assert.equal(catalog.effects.find(effect=>effect.id===id)?.status,'ready',`${id} is featured while still pending`);
+}
 for(const effect of catalog.effects){
   for(const field of ['href','poster','video'])if(effect[field]){
     assert((await stat(new URL(effect[field],site))).isFile(),`${effect.id}: missing ${field}`);checked++;

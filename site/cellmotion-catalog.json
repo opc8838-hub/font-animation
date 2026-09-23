@@ -18,7 +18,8 @@
       "category": "flow",
       "href": "coil.html",
       "poster": "final_coil.png",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "continuation",
@@ -28,7 +29,8 @@
       "category": "type",
       "href": "continuation.html",
       "poster": "assets/cellmotion/poster-continuation.jpg",
-      "video": "assets/previews/continuation-card-centered.mp4"
+      "video": "assets/previews/continuation-card-centered.mp4",
+      "status": "ready"
     },
     {
       "id": "split-flip",
@@ -38,7 +40,8 @@
       "category": "space",
       "href": "split-flip.html",
       "poster": "assets/cellmotion/poster-split-flip.jpg",
-      "video": "assets/previews/split-flip-card.mp4"
+      "video": "assets/previews/split-flip-card.mp4",
+      "status": "ready"
     },
     {
       "id": "zerogflip",
@@ -48,7 +51,8 @@
       "category": "space",
       "href": "zerogflip.html",
       "poster": "assets/cellmotion/poster-zerogflip.jpg",
-      "video": null
+      "video": null,
+      "status": "ready"
     },
     {
       "id": "currentwall",
@@ -58,7 +62,8 @@
       "category": "flow",
       "href": "currentwall.html",
       "poster": "assets/cellmotion/poster-currentwall.jpg",
-      "video": "assets/previews/water-flow-card.mp4"
+      "video": "assets/previews/water-flow-card.mp4",
+      "status": "ready"
     },
     {
       "id": "verticalwall",
@@ -68,7 +73,8 @@
       "category": "flow",
       "href": "verticalwall.html",
       "poster": "final_verticalwall.png",
-      "video": "assets/previews/vertical-rise-card.mp4"
+      "video": "assets/previews/vertical-rise-card.mp4",
+      "status": "ready"
     },
     {
       "id": "creatorstudio",
@@ -78,7 +84,8 @@
       "category": "type",
       "href": "creatorstudio.html",
       "poster": "final_creatorstudio.png",
-      "video": null
+      "video": null,
+      "status": "ready"
     },
     {
       "id": "focuswheel",
@@ -88,7 +95,8 @@
       "category": "flow",
       "href": "focuswheel.html",
       "poster": "final_focuswheel.svg",
-      "video": null
+      "video": null,
+      "status": "ready"
     },
     {
       "id": "gradienttype",
@@ -98,7 +106,8 @@
       "category": "type",
       "href": "gradienttype.html",
       "poster": "final_gradienttype.svg",
-      "video": null
+      "video": null,
+      "status": "ready"
     },
     {
       "id": "glyphrelay",
@@ -108,7 +117,8 @@
       "category": "type",
       "href": "glyphrelay.html",
       "poster": "final_glyphrelay.svg",
-      "video": null
+      "video": null,
+      "status": "ready"
     },
     {
       "id": "wordgather",
@@ -118,7 +128,8 @@
       "category": "type",
       "href": "wordgather.html",
       "poster": "final_wordgather.svg",
-      "video": null
+      "video": null,
+      "status": "ready"
     },
     {
       "id": "focusportal",
@@ -128,7 +139,8 @@
       "category": "type",
       "href": "focusportal.html",
       "poster": "final_focusportal.svg",
-      "video": null
+      "video": null,
+      "status": "ready"
     },
     {
       "id": "rapidsequence",
@@ -138,7 +150,8 @@
       "category": "flow",
       "href": "rapidsequence.html",
       "poster": "final_rapidsequence.svg",
-      "video": null
+      "video": null,
+      "status": "ready"
     },
     {
       "id": "citystack",
@@ -148,7 +161,8 @@
       "category": "type",
       "href": "citystack.html",
       "poster": "final_citystack.svg",
-      "video": null
+      "video": null,
+      "status": "ready"
     },
     {
       "id": "colorcanvas",
@@ -158,7 +172,8 @@
       "category": "type",
       "href": "colorcanvas.html",
       "poster": "final_colorcanvas.svg",
-      "video": null
+      "video": null,
+      "status": "ready"
     },
     {
       "id": "liquidtype",
@@ -168,7 +183,8 @@
       "category": "type",
       "href": "liquidtype.html",
       "poster": "final_liquidtype.svg",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "scrapbin",
@@ -178,7 +194,8 @@
       "category": "physics",
       "href": "scrapbin.html",
       "poster": "assets/cellmotion/poster-scrapbin.jpg",
-      "video": "assets/previews/delete-card.mp4"
+      "video": "assets/previews/delete-card.mp4",
+      "status": "ready"
     },
     {
       "id": "terminalbrand",
@@ -188,7 +205,8 @@
       "category": "type",
       "href": "terminalbrand.html",
       "poster": "final_terminalbrand.svg",
-      "video": null
+      "video": null,
+      "status": "ready"
     },
     {
       "id": "slotstories",
@@ -198,7 +216,8 @@
       "category": "graphic",
       "href": "slotstories.html",
       "poster": "final_slotstories.svg",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "mediacascade",
@@ -208,7 +227,8 @@
       "category": "media",
       "href": "mediacascade.html",
       "poster": "final_mediacascade.svg",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "colorrecompose",
@@ -218,7 +238,8 @@
       "category": "type",
       "href": "colorrecompose.html",
       "poster": "final_colorrecompose.svg",
-      "video": "assets/previews/color-recompose-card.mp4"
+      "video": "assets/previews/color-recompose-card.mp4",
+      "status": "ready"
     },
     {
       "id": "glyphmorph",
@@ -228,7 +249,8 @@
       "category": "type",
       "href": "glyphmorph.html",
       "poster": "assets/cellmotion/poster-glyphmorph.jpg",
-      "video": "assets/previews/glyphmorph-card.mp4"
+      "video": "assets/previews/glyphmorph-card.mp4",
+      "status": "ready"
     },
     {
       "id": "sproutshift",
@@ -238,7 +260,8 @@
       "category": "type",
       "href": "sproutshift.html",
       "poster": "assets/cellmotion/poster-sproutshift.jpg",
-      "video": "assets/previews/sproutshift-wide-card.mp4"
+      "video": "assets/previews/sproutshift-wide-card.mp4",
+      "status": "ready"
     },
     {
       "id": "mistlift",
@@ -248,7 +271,8 @@
       "category": "type",
       "href": "mistlift.html",
       "poster": "assets/cellmotion/poster-mistlift.jpg",
-      "video": "assets/previews/mistlift-wide-card.mp4"
+      "video": "assets/previews/mistlift-wide-card.mp4",
+      "status": "ready"
     },
     {
       "id": "typecascade",
@@ -258,7 +282,8 @@
       "category": "type",
       "href": "typecascade.html",
       "poster": "assets/cellmotion/poster-typecascade.jpg",
-      "video": "assets/previews/typecascade-wide-card.mp4"
+      "video": "assets/previews/typecascade-wide-card.mp4",
+      "status": "ready"
     },
     {
       "id": "dotresolve",
@@ -268,7 +293,8 @@
       "category": "type",
       "href": "dotresolve.html",
       "poster": "assets/cellmotion/poster-dotresolve.jpg",
-      "video": "assets/previews/dotresolve-wide-card.mp4"
+      "video": "assets/previews/dotresolve-wide-card.mp4",
+      "status": "ready"
     },
     {
       "id": "glyphreveal",
@@ -278,7 +304,8 @@
       "category": "type",
       "href": "glyphreveal.html",
       "poster": "assets/cellmotion/poster-glyphreveal.jpg",
-      "video": "assets/previews/glyphreveal-wide-card.mp4"
+      "video": "assets/previews/glyphreveal-wide-card.mp4",
+      "status": "ready"
     },
     {
       "id": "phrasebuild",
@@ -288,7 +315,8 @@
       "category": "type",
       "href": "phrasebuild.html",
       "poster": "final_phrasebuild.svg",
-      "video": null
+      "video": null,
+      "status": "ready"
     },
     {
       "id": "switchdrop",
@@ -298,7 +326,8 @@
       "category": "graphic",
       "href": "switchdrop.html",
       "poster": "final_switchdrop.svg",
-      "video": null
+      "video": null,
+      "status": "ready"
     },
     {
       "id": "searchtyping",
@@ -308,7 +337,8 @@
       "category": "type",
       "href": "searchtyping.html",
       "poster": "final_searchtyping.svg",
-      "video": null
+      "video": null,
+      "status": "ready"
     },
     {
       "id": "beforeafter",
@@ -318,7 +348,8 @@
       "category": "media",
       "href": "beforeafter.html",
       "poster": "assets/cellmotion/poster-beforeafter.jpg",
-      "video": "assets/previews/beforeafter-card.mp4"
+      "video": "assets/previews/beforeafter-card.mp4",
+      "status": "ready"
     },
     {
       "id": "shutterafter",
@@ -328,7 +359,8 @@
       "category": "media",
       "href": "shutterafter.html",
       "poster": "assets/cellmotion/poster-shutterafter.jpg",
-      "video": "assets/previews/shutterafter-card.mp4"
+      "video": "assets/previews/shutterafter-card.mp4",
+      "status": "ready"
     },
     {
       "id": "verbcue",
@@ -338,7 +370,8 @@
       "category": "type",
       "href": "verbcue.html",
       "poster": "final_verbcue.svg",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "tighten",
@@ -348,7 +381,8 @@
       "category": "type",
       "href": "tighten.html",
       "poster": "final_tighten.svg",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "titlecard",
@@ -358,7 +392,8 @@
       "category": "type",
       "href": "titlecard.html",
       "poster": "final_titlecard.svg",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "lockup",
@@ -368,7 +403,8 @@
       "category": "type",
       "href": "lockup.html",
       "poster": "final_lockup.svg",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "pullback",
@@ -378,7 +414,8 @@
       "category": "type",
       "href": "pullback.html",
       "poster": "final_pullback.svg",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "textswell",
@@ -388,7 +425,8 @@
       "category": "type",
       "href": "textswell.html",
       "poster": "final_textswell.svg",
-      "video": null
+      "video": null,
+      "status": "ready"
     },
     {
       "id": "impactbuild",
@@ -398,7 +436,8 @@
       "category": "type",
       "href": "impactbuild.html",
       "poster": "final_impactbuild.svg",
-      "video": "assets/previews/impactbuild-card.mp4"
+      "video": "assets/previews/impactbuild-card.mp4",
+      "status": "ready"
     },
     {
       "id": "wordflip",
@@ -408,7 +447,8 @@
       "category": "type",
       "href": "wordflip.html",
       "poster": "final_wordflip.svg",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "textbuild",
@@ -418,7 +458,8 @@
       "category": "type",
       "href": "textbuild.html",
       "poster": "final_textbuild.svg",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "textswap",
@@ -428,7 +469,8 @@
       "category": "type",
       "href": "textswap.html",
       "poster": "final_textswap.svg",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "textreveal",
@@ -438,7 +480,8 @@
       "category": "type",
       "href": "textreveal.html",
       "poster": "final_textreveal.svg",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "phoneframe",
@@ -448,7 +491,8 @@
       "category": "media",
       "href": "phoneframe.html",
       "poster": "final_phoneframe.svg",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "laptopframe",
@@ -458,7 +502,8 @@
       "category": "media",
       "href": "laptopframe.html",
       "poster": "final_laptopframe.svg",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "orbitgallery",
@@ -468,7 +513,8 @@
       "category": "media",
       "href": "orbitgallery.html",
       "poster": "final_orbitgallery.svg",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "followerrush",
@@ -478,7 +524,8 @@
       "category": "graphic",
       "href": "followerrush.html",
       "poster": "final_followerrush.svg",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "logoassemble",
@@ -488,7 +535,8 @@
       "category": "graphic",
       "href": "logoassemble.html",
       "poster": "final_logoassemble.svg",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "moodboard",
@@ -498,7 +546,8 @@
       "category": "media",
       "href": "moodboard.html",
       "poster": "final_moodboard.svg",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "pathwriter",
@@ -508,7 +557,8 @@
       "category": "type",
       "href": "pathwriter.html",
       "poster": "assets/cellmotion/poster-pathwriter.jpg",
-      "video": "assets/previews/pathwriter-card.mp4"
+      "video": "assets/previews/pathwriter-card.mp4",
+      "status": "ready"
     },
     {
       "id": "ribbonink",
@@ -518,7 +568,8 @@
       "category": "flow",
       "href": "ribbonink.html",
       "poster": "assets/cellmotion/poster-ribbonink.jpg",
-      "video": "assets/previews/ribbon-ink-card.mp4"
+      "video": "assets/previews/ribbon-ink-card.mp4",
+      "status": "ready"
     },
     {
       "id": "construct",
@@ -528,7 +579,8 @@
       "category": "graphic",
       "href": "construct.html",
       "poster": "final_construct.png",
-      "video": null
+      "video": null,
+      "status": "ready"
     },
     {
       "id": "crash",
@@ -538,7 +590,8 @@
       "category": "physics",
       "href": "crash.html",
       "poster": "final_crash.png",
-      "video": null
+      "video": null,
+      "status": "ready"
     },
     {
       "id": "crashclock",
@@ -548,7 +601,8 @@
       "category": "physics",
       "href": "crashclock.html",
       "poster": "final_crashclock.png",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "danger",
@@ -558,7 +612,8 @@
       "category": "type",
       "href": "danger.html",
       "poster": "final_danger.png",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "field",
@@ -568,7 +623,8 @@
       "category": "flow",
       "href": "field.html",
       "poster": "final_field.png",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "iconburst",
@@ -578,7 +634,8 @@
       "category": "graphic",
       "href": "iconburst.html",
       "poster": "assets/cellmotion/poster-iconburst.jpg",
-      "video": "assets/previews/iconburst-card.mp4"
+      "video": "assets/previews/iconburst-card.mp4",
+      "status": "ready"
     },
     {
       "id": "flash",
@@ -588,7 +645,8 @@
       "category": "type",
       "href": "flash-scenes.html",
       "poster": "final_flash.png",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "index",
@@ -598,7 +656,8 @@
       "category": "space",
       "href": "index.html",
       "poster": "final_index.png",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "layers",
@@ -608,7 +667,8 @@
       "category": "type",
       "href": "layers.html",
       "poster": "final_layers.png",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "morisawa",
@@ -618,7 +678,8 @@
       "category": "type",
       "href": "morisawa.html",
       "poster": "final_morisawa.png",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "pow",
@@ -628,7 +689,8 @@
       "category": "graphic",
       "href": "pow.html",
       "poster": "final_pow.png",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "prism",
@@ -638,7 +700,8 @@
       "category": "space",
       "href": "prism.html",
       "poster": "final_prism.png",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "ribbon",
@@ -648,7 +711,8 @@
       "category": "flow",
       "href": "ribbon.html",
       "poster": "final_ribbon.png",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "shine",
@@ -658,7 +722,8 @@
       "category": "graphic",
       "href": "shine.html",
       "poster": "final_shine.png",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "snap",
@@ -668,7 +733,8 @@
       "category": "physics",
       "href": "snap.html",
       "poster": "final_snap.png",
-      "video": null
+      "video": null,
+      "status": "ready"
     },
     {
       "id": "string",
@@ -678,7 +744,8 @@
       "category": "flow",
       "href": "string.html",
       "poster": "final_string.png",
-      "video": null
+      "video": null,
+      "status": "pending"
     },
     {
       "id": "vessel",
@@ -688,7 +755,8 @@
       "category": "space",
       "href": "vessel.html",
       "poster": "final_vessel.png",
-      "video": null
+      "video": null,
+      "status": "pending"
     }
   ]
 }

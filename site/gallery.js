@@ -69,6 +69,45 @@ const effects = [
   ["vessel", "器皿", "Vessel", "space", "立体空间"],
 ];
 
+// Unfinished effects stay in `effects` with their real category.
+// The website hides them from 全部动效 and that category, and lists them under 待上新.
+// Remove a slug from this list when the effect is ready, then rebuild the catalog.
+const pendingRelease = [
+  "coil",
+  "liquidtype",
+  "slotstories",
+  "mediacascade",
+  "verbcue",
+  "tighten",
+  "titlecard",
+  "lockup",
+  "pullback",
+  "wordflip",
+  "textbuild",
+  "textswap",
+  "textreveal",
+  "phoneframe",
+  "laptopframe",
+  "orbitgallery",
+  "followerrush",
+  "logoassemble",
+  "moodboard",
+  "crashclock",
+  "danger",
+  "field",
+  "flash",
+  "index",
+  "morisawa",
+  "pow",
+  "prism",
+  "ribbon",
+  "shine",
+  "string",
+  "vessel",
+  "layers"
+];
+const pendingReleaseSet = new Set(pendingRelease);
+
 const grid = document.querySelector("#effectGrid");
 const searchInput = document.querySelector("#searchInput");
 const count = document.querySelector("#visibleCount");
@@ -93,7 +132,10 @@ const liveObserver = new IntersectionObserver((entries) => {
 function render() {
   const query = searchInput.value.trim().toLocaleLowerCase("zh-CN");
   const visible = effects.filter(([slug, zh, en, category, categoryName]) => {
-    const matchesFilter = activeFilter === "all" || category === activeFilter;
+    const pending = pendingReleaseSet.has(slug);
+    const matchesFilter = activeFilter === "pending"
+      ? pending
+      : !pending && (activeFilter === "all" || category === activeFilter);
     const haystack = `${slug} ${zh} ${en} ${categoryName}`.toLocaleLowerCase("zh-CN");
     return matchesFilter && (!query || haystack.includes(query));
   });
@@ -134,6 +176,22 @@ function render() {
       : livePreviews.has(slug)
         ? `<iframe class="effect-live" title="${zh}实时预览" data-src="${slug}.html?preview=1&amp;v=${slug === "currentwall" ? "20260824-ui10" : "20260824-37"}" loading="lazy" tabindex="-1"></iframe>`
         : `<img src="${imageName}" alt="${zh}动态字体效果预览" ${index > 8 ? 'loading="lazy"' : ""}>`;
+    const pending = pendingReleaseSet.has(slug);
+    if (pending) {
+      return `
+      <article class="effect-card is-pending" data-effect="${slug}" aria-disabled="true" aria-label="${zh}，待上新，未完成">
+        <div class="effect-link">
+          <div class="effect-preview">
+            <img src="${imageName}" alt="${zh}动态字体效果预览" ${index > 8 ? 'loading="lazy"' : ""}>
+            <span class="pending-cover">待上新，未完成</span>
+            <span class="effect-number">${String(index).padStart(2, "0")}</span>
+          </div>
+          <div class="effect-body">
+            <div><h2>${zh}</h2><p>${en} / ${detail}</p></div>
+          </div>
+        </div>
+      </article>`;
+    }
     return `
       <article class="effect-card${featuredPreviews.has(slug) ? " has-live-preview" : ""}" data-effect="${slug}">
         <a class="effect-link" href="${target}" aria-label="打开${zh}效果">

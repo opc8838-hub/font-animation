@@ -6,7 +6,7 @@ CellMotion 是一个自由、灵活的动态设计系统。字体、图标、图
 
 **Move · Connect · Recombine · Grow.** 运动 · 连接 · 重组 · 生长。
 
-目前收录 68 个可编辑动效，支持中文与多语种字体、字图混排、图片 / GIF / 视频背景、响应式画布，以及浏览器内的预览与导出。
+目前收录 68 个动效，支持中文与多语种字体、字图混排、图片 / GIF / 视频背景、响应式画布，以及浏览器内的预览与导出。官网的「全部动效」和各内容分类只展示已完成的 36 个。另外 32 个尚未完成：原分类保留，只出现在「待上新」，封面写着「待上新，未完成」，暂时不能点进编辑器。名单和恢复方式见 [docs/PENDING_RELEASE.md](docs/PENDING_RELEASE.md)。
 
 在线浏览：[CellMotion](https://opc8838-hub.github.io/font-animation/cellmotion.html)
 
@@ -58,7 +58,7 @@ font-animation/
 ├── _scratch/               # 临时验证截图，可删
 └── site/                   # ★ 网站本体（68 张画廊卡片及补充子场景页）
     ├── cellmotion.html     # CellMotion 品牌首页
-    ├── cellmotion-components.html # 68 个动效的分类组件库
+    ├── cellmotion-components.html # 组件库：已完成动效按分类展示，未完成的只在「待上新」
     ├── gallery.html        # 旧画廊兼容入口（自动转到新组件库）
     ├── index.html ~ moodboard.html  # 各独立效果页
     ├── sketch_*.js          # 各效果的 p5.js 主程序

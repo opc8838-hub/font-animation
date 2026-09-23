@@ -23,6 +23,7 @@ This is the short entry point for continuing CellMotion work in a fresh chat or 
 
 - Base branch: latest `origin/main`. Create a fresh task branch for each new effect or focused refinement; do not reuse a historical branch named in an old prompt.
 - Gallery: `site/gallery.html`, `site/gallery.js`, and `site/gallery.css`.
+- Unfinished effects: `pendingRelease` in `site/gallery.js`, explained in [`PENDING_RELEASE.md`](PENDING_RELEASE.md). Keep each effect's existing category. Remove its slug from that list and run `node scripts/build-cellmotion-catalog.mjs` when it should leave 待上新 and show in that category again.
 - Shared effect skill: `.codex/skills/build-font-animation-effects/`.
 - Shared fonts: `site/shared-font-library.js` and `site/shared-fonts.css`.
 - Approved editor reference: Type Cascade — `site/typecascade.html`, `site/typecascade-workspace.css`, `site/typecascade-workspace.js`, `site/typecascade-polish.css`, `site/typecascade-polish.js`, `site/typecascade-selects.js`, and `site/typecascade-locale.js`. Reuse the shell; preserve effect-specific renderers and motion controls.

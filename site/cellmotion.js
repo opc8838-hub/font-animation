@@ -1,6 +1,12 @@
 const $ = (selector) => document.querySelector(selector);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-const categoryNames = {all:'全部动效',type:'文字排版',graphic:'图标与图形',media:'图片与媒体',flow:'流动与路径',space:'立体空间',physics:'物理粒子'};
+const categoryNames = {all:'全部动效',type:'文字排版',graphic:'图标与图形',media:'图片与媒体',flow:'流动与路径',space:'立体空间',physics:'物理粒子',pending:'待上新'};
+const isPending = (effect) => effect?.status === 'pending';
+function inCategory(effect, category) {
+  if (category === 'pending') return isPending(effect);
+  if (isPending(effect)) return false;
+  return category === 'all' || effect.category === category;
+}
 const escapeHTML = (text) => String(text).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const mediaURL = (url) => `${url}?v=20260909-1`;
 const play = async (video) => { try { await video.play(); return true; } catch { return false; } };
@@ -34,7 +40,7 @@ function initRibbon() {
   const ribbon=$('#motion-ribbon');if(!ribbon)return;
   if(ribbon.dataset.ready==='true')return;
   ribbon.dataset.ready='true';
-  const items=ribbonSeed.map(seed=>effects.find(effect=>effect.id===seed.id)||seed).filter(effect=>effect?.video);
+  const items=ribbonSeed.map(seed=>effects.find(effect=>effect.id===seed.id)||seed).filter(effect=>effect?.video && !isPending(effect));
   $('#ribbon-track').innerHTML=items.map(effect=>`<a class="ribbon-card" href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器"><img src="${effect.poster}" alt="${escapeHTML(effect.name)}动效"><video data-src="${effect.video}" muted loop playsinline preload="none" aria-hidden="true"></video><span class="ribbon-name">${escapeHTML(effect.name)} ↗</span></a>`).join('');
   const cards=[...ribbon.querySelectorAll('.ribbon-card')];
   let width=ribbon.clientWidth, cardWidth=0, offset=0, previous=0, raf=0, visible=false, hovered=false, focused=false, enabled=!reduced.matches;
@@ -147,21 +153,34 @@ const cardsObserver=new IntersectionObserver(entries=>{
     if(entry.isIntersecting)startCard(preview);else stopCard(preview);
   }
 },{threshold:.18});
+function catalogCard(effect) {
+  const pending=isPending(effect);
+  const image=effect.poster?`<img src="${effect.poster}" alt="${escapeHTML(effect.name)}动效封面" loading="lazy">`:`<span class="poster-fallback">${escapeHTML(effect.name)}</span>`;
+  const category=`<span class="card-category">${categoryNames[effect.category]||''}</span>`;
+  if(pending){
+    return `<article class="catalog-card is-pending" aria-disabled="true" aria-label="${escapeHTML(effect.name)}，待上新，未完成"><div class="catalog-preview">${image}${category}<span class="pending-cover">待上新，未完成</span></div><div class="card-caption"><div><h3>${escapeHTML(effect.name)}</h3><p>${escapeHTML(effect.english)}</p></div></div></article>`;
+  }
+  const video=effect.video?`<video data-src="${effect.video}" muted loop playsinline preload="none" aria-label="${escapeHTML(effect.name)}预览"></video>`:'';
+  const play=effect.video?`<button class="card-play" aria-label="播放或暂停${escapeHTML(effect.name)}预览" aria-pressed="false">▶</button>`:'';
+  return `<article class="catalog-card"><div class="catalog-preview"><a href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器">${image}${video}${category}</a>${play}</div><div class="card-caption"><a href="${effect.href}"><h3>${escapeHTML(effect.name)}</h3><p>${escapeHTML(effect.english)}</p></a><a href="${effect.href}" aria-label="编辑${escapeHTML(effect.name)}">↗</a></div></article>`;
+}
 function renderCatalog() {
   stopAllCards();cardsObserver.disconnect();
   const query=($('#search')?.value||'').trim().toLocaleLowerCase();
   // Existing editors are video-creation materials, not verified distributable web components.
   // Do not infer React/SDK availability or supported export formats from a preview MP4.
-  const matches=effects.filter(effect=>activeUsage!=='web'&&(activeCategory==='all'||effect.category===activeCategory)&&`${effect.name} ${effect.english} ${effect.id} ${effect.description}`.toLocaleLowerCase().includes(query));
+  const matches=effects.filter(effect=>activeUsage!=='web'&&inCategory(effect,activeCategory)&&`${effect.name} ${effect.english} ${effect.id} ${effect.description}`.toLocaleLowerCase().includes(query));
   const homeIds=['sproutshift','iconburst','shutterafter','currentwall','impactbuild','pathwriter'];
-  const showing=homePreview?homeIds.map(id=>effects.find(effect=>effect.id===id)).filter(Boolean):matches.slice(0,limit);
+  const showing=homePreview?homeIds.map(id=>effects.find(effect=>effect.id===id)).filter(effect=>effect && !isPending(effect)):matches.slice(0,limit);
   if($('#result-count'))$('#result-count').textContent=activeUsage==='web'?'0 个已适配组件':`${matches.length} 个动效`;
   if($('#catalog-empty'))$('#catalog-empty').hidden=matches.length>0||activeUsage==='web';
   if($('#web-planned'))$('#web-planned').hidden=activeUsage!=='web';
   if($('#load-more'))$('#load-more').hidden=matches.length<=limit;
   if($('#usage-note'))$('#usage-note').textContent=activeUsage==='web'?'网页使用是独立适配方向，不等同于把 MP4 嵌入网页。当前尚无已发布的网页组件。':activeUsage==='video'?'选择动效，进入工作台编辑，再使用该编辑器提供的导出功能。视频拼接器尚未开放。':'当前提供动效预览与独立编辑器；具体导出格式以各编辑器为准。网页组件正在规划，尚未提供代码安装。';
-  $('#catalog-grid').innerHTML=showing.map(effect=>`<article class="catalog-card"><div class="catalog-preview"><a href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器">${effect.poster?`<img src="${effect.poster}" alt="${escapeHTML(effect.name)}动效封面" loading="lazy">`:`<span class="poster-fallback">${escapeHTML(effect.name)}</span>`}${effect.video?`<video data-src="${effect.video}" muted loop playsinline preload="none" aria-label="${escapeHTML(effect.name)}预览"></video>`:''}<span class="card-category">${categoryNames[effect.category]}</span></a>${effect.video?`<button class="card-play" aria-label="播放或暂停${escapeHTML(effect.name)}预览" aria-pressed="false">▶</button>`:''}</div><div class="card-caption"><a href="${effect.href}"><h3>${escapeHTML(effect.name)}</h3><p>${escapeHTML(effect.english)}</p></a><a href="${effect.href}" aria-label="编辑${escapeHTML(effect.name)}">↗</a></div></article>`).join('');
+  $('#catalog-grid').innerHTML=showing.map(catalogCard).join('');
   $('#catalog-grid').querySelectorAll('.catalog-preview').forEach(preview=>{
+    const pending=preview.closest('.catalog-card')?.classList.contains('is-pending');
+    if(pending)return;
     if(capabilityLabels){const badges=document.createElement('div');badges.className='card-capabilities';badges.innerHTML='<span>独立编辑器</span><span>网页待适配</span>';preview.closest('.catalog-card').append(badges);}
     preview.querySelector('.card-play')?.addEventListener('click',()=>{
       const video=preview.querySelector('video');
@@ -172,8 +191,8 @@ function renderCatalog() {
 }
 function initCatalog() {
   if(!$('#catalog-grid'))return;
-  const ids=['all',...Object.keys(categoryNames).filter(id=>id!=='all'&&effects.some(effect=>effect.category===id))];
-  const count=id=>id==='all'?effects.length:effects.filter(effect=>effect.category===id).length;
+  const ids=['all',...Object.keys(categoryNames).filter(id=>id!=='all'&&effects.some(effect=>inCategory(effect,id)))];
+  const count=id=>effects.filter(effect=>inCategory(effect,id)).length;
   if(homePreview){$('#category-links').innerHTML=ids.filter(id=>id!=='all').map(id=>`<a href="cellmotion-components.html?category=${id}">${categoryNames[id]}<span>${count(id)}</span></a>`).join('');renderCatalog();return;}
   const params=new URLSearchParams(location.search);
   activeCategory=ids.includes(params.get('category'))?params.get('category'):'all';
@@ -223,11 +242,11 @@ document.addEventListener('visibilitychange',()=>{
 });
 async function loadCatalogData() {
   try {
-    const response=await fetch('cellmotion-catalog.json?v=20260909-1');
+    const response=await fetch('cellmotion-catalog.json?v=20260923-pending1');
     if(!response.ok)throw new Error(`Catalog HTTP ${response.status}`);
     const catalog=await response.json();
     effects=catalog.effects;
-    featured=catalog.featured.map(id=>effects.find(effect=>effect.id===id)).filter(effect=>effect?.video);
+    featured=catalog.featured.map(id=>effects.find(effect=>effect.id===id)).filter(effect=>effect?.video && !isPending(effect));
     // This is editorial ordering only, never a claim that all effects passed review.
     effects.sort((a,b)=>{const ai=catalog.featured.indexOf(a.id),bi=catalog.featured.indexOf(b.id);return(ai<0?999:ai)-(bi<0?999:bi);});
     initCatalog();initFeatured();initStory();

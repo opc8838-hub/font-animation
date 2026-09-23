@@ -37,6 +37,10 @@ These rules apply to the whole repository and are intended for both human contri
 - Commit only the new effect, its shared changes, gallery/navigation entries, preview image, documentation, and tests needed for that effect.
 - Before merging, compare against the latest `origin/main`, resolve shared gallery/navigation changes deliberately, and test the combined result.
 
+## Unfinished effects
+
+Effects in `pendingRelease` inside [`site/gallery.js`](site/gallery.js) are not finished. Their `category` stays the content category they return to. The CellMotion site omits them from 全部动效 and from that category, and shows them only under 待上新 with a light cover and no editor link. The list, the three name mappings, and the step that publishes one effect again are in [`docs/PENDING_RELEASE.md`](docs/PENDING_RELEASE.md). Removing a slug from `pendingRelease` and rebuilding the catalog is what puts it back; do not invent a second category for it.
+
 ## Definition of done
 
 - The reference analysis has a phase table and an uncertainty list.
