@@ -674,14 +674,21 @@ body.tc-workspace.ib-workspace .ib-content-panel label.ib-upload input[type="fil
 }
 body.tc-workspace.ib-workspace .ib-content-panel .ib-scheme-section {
   margin-top: 0;
-  gap: 6px;
+  flex: 0 0 auto;
+  gap: 8px;
+  padding: 12px;
 }
-body.tc-workspace.ib-workspace .ib-content-panel .ib-scheme-row { gap: 6px; }
+body.tc-workspace.ib-workspace .ib-content-panel .ib-scheme-row { gap: 8px; }
 body.tc-workspace.ib-workspace .ib-content-panel .ib-scheme-row button,
 body.tc-workspace.ib-workspace .ib-content-panel .ib-scheme-row label {
-  height: 30px;
-  min-height: 30px;
+  height: 38px;
+  min-height: 38px;
+  font-size: 12px;
+}
+body.tc-workspace.ib-workspace .ib-content-panel #ibSchemeStatus {
+  margin: 0;
   font-size: 11px;
+  line-height: 1.35;
 }
 body.tc-workspace.ib-workspace .ib-content-panel .ib-background-file {
   min-height: 24px;
