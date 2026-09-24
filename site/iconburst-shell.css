@@ -321,6 +321,29 @@ body.tc-workspace .gm-inspector .ib-mode-hint {
 
 body.tc-workspace .gm-inspector .ib-glyph-guide strong { color: var(--tc-text); }
 
+body.tc-workspace .gm-inspector .ib-tune {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 12px;
+  border: 1px solid var(--tc-line);
+  border-radius: 12px;
+  background: var(--tc-input);
+}
+body.tc-workspace .gm-inspector .ib-layer-panel .ib-layer-items {
+  display: grid !important;
+  gap: 8px;
+  margin-top: 8px;
+}
+body.tc-workspace .gm-inspector .ib-remove {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--tc-line);
+  border-radius: 8px;
+  background: var(--tc-panel);
+  color: var(--tc-text);
+  font-size: 12px;
+}
 body.tc-workspace .gm-inspector .ib-asset {
   background: var(--tc-panel);
   border-color: var(--tc-line);

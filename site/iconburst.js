@@ -490,7 +490,7 @@
         <span class="ib-drag-handle" role="button" tabindex="0" aria-label="上下拖动${safe(asset.name)}调整位置" title="按住上下拖动">⋮⋮</span>
         <span class="ib-asset-preview">${assetPreview(asset)}</span>
         <span class="ib-asset-copy"><strong>${safe(asset.name)}</strong><small>${sourceLabel}${dimensions} · ${Math.round(asset.size * 100)}% · ${purpose}${asset.role === "glyph" ? ` · 顺序 ${Number(asset.sequence) + 1} · ${Number(asset.replaceSpeed).toFixed(2).replace(/0+$/, "").replace(/\.$/, "")}× · 停留 ${Number(asset.holdMs || 160)}ms` : ""}</small>${quickTarget}</span>
-        <span class="ib-asset-actions"><button type="button" data-action="edit">${asset.id === state.activeAssetId ? "正在编辑" : "单独编辑"}</button><button class="ib-remove" type="button" data-action="remove" aria-label="删除">×</button></span>
+        <span class="ib-asset-actions"><button type="button" data-action="edit">${asset.id === state.activeAssetId ? "正在编辑" : "单独编辑"}</button><button class="ib-remove" type="button" data-action="remove">删除</button></span>
       </div>`;
       }).join("");
     }
@@ -1676,9 +1676,8 @@
     incomingWord.classList.toggle("is-unmasked", timeline.incomingReveal > 0);
 
     const closedGap = state.naturalGap ? fontSize * .18 : 0;
-    const slotScale = Number($("ibCollapse").value) / 100;
-    const gapRoom = Math.max(fontSize * .12, frame.width * .9 - titleWidth);
-    const openGap = closedGap + Math.min(frame.width * .14, gapRoom) * slotScale;
+    const spacing = Number($("ibCollapse").value) / 100;
+    const openGap = closedGap + frame.width * .3 * spacing;
     const wordGap = closedGap + (openGap - closedGap) * (1 - timeline.gapClose);
     word.style.setProperty("--word-gap", `${closedGap.toFixed(2)}px`);
     incomingWord.style.setProperty("--word-gap", `${closedGap.toFixed(2)}px`);
@@ -2228,9 +2227,7 @@
       const leftLayout = trackedLayout(ctx, leftText, tracking);
       const rightLayout = trackedLayout(ctx, rightText, tracking);
       const closedGap = state.naturalGap ? fontPx * .18 : 0;
-      const titleWidth = Math.max(layout.total, fontPx * 2);
-      const gapRoom = Math.max(fontPx * .12, width * .9 - titleWidth);
-      const openGap = closedGap + Math.min(width * .14, gapRoom) * Number($("ibCollapse").value) / 100;
+      const openGap = closedGap + width * .3 * Number($("ibCollapse").value) / 100;
       const sideShift = (openGap - closedGap) / 2;
       const orbitArc = Math.sin(Math.PI * timeline.incomingOrbit);
       const orbitRoom = Math.max(0, width * .46 - titleWidth * .58);
