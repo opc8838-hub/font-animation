@@ -2527,6 +2527,10 @@
     if (!row) return;
     const asset = state.assets.find((item) => item.id === row.dataset.id);
     if (!asset) return;
+    if (event.target.closest('[data-action="edit"]')) {
+      selectAsset(asset.id);
+      return;
+    }
     if (event.target.closest('[data-action="remove"]')) {
       const index = state.assets.indexOf(asset);
       state.assets.splice(index, 1);

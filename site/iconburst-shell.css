@@ -367,17 +367,21 @@ body.tc-workspace .gm-inspector .ib-image-fields {
 }
 
 body.tc-workspace .ib-asset-drawer {
-  position: static;
-  inset: auto;
-  width: auto;
+  position: static !important;
+  inset: auto !important;
+  left: auto !important;
+  top: auto !important;
+  bottom: auto !important;
+  width: auto !important;
   max-height: none;
-  margin-top: 10px;
+  margin: 8px 0 12px;
   padding: 12px;
   overflow: visible;
-  border: 1px solid var(--tc-line);
+  border: 1px solid var(--tc-accent-solid);
   border-radius: 12px;
   background: var(--tc-surface);
   box-shadow: none;
+  z-index: auto !important;
 }
 body.tc-workspace .gm-inspector .ib-asset.is-active {
   border-color: var(--tc-accent-solid);
