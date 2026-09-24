@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="iconburst-overrides.css?v=20260909-five">
   <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-five">
   <link rel="stylesheet" href="typecascade-polish.css?v=20260909-five">
-  <link rel="stylesheet" href="iconburst-shell.css?v=20260924-ux4">
+  <link rel="stylesheet" href="iconburst-shell.css?v=20260924-ux5">
 </head>
 <body>
   <main class="ib-app">
@@ -35,14 +35,10 @@
         <p class="ib-kicker">文字</p>
         <label>主标题<textarea id="ibText" rows="2">GOOD JOB</textarea></label>
         <div class="ib-two">
-          <label>字体<select id="ibFont">
-            <option value="archivoBlack" selected>Archivo Black</option><option value="robotoCondensed">Roboto Condensed Bold</option><option value="scRegular">Noto Sans SC Regular</option><option value="scBlack">Noto Sans SC Black</option><option value="space">Space Grotesk</option><option value="serif">Lora Serif</option><option value="mono">Martian Mono</option><option value="fenix">Fenix</option><option value="work">Work Sans</option><option value="spaceMonoBold">Space Mono Bold</option><option value="vollkornBoldItalic">Vollkorn Bold Italic</option><option value="cairoBold">Cairo Bold</option><option value="aguafina">Aguafina Script</option>
-            <option value="manrope">Manrope</option><option value="spartan">League Spartan</option><option value="cinzel">Cinzel</option><option value="instrument">Instrument Serif</option><option value="bebas">Bebas Neue</option><option value="poppins">Poppins</option><option value="rajdhani">Rajdhani</option><option value="teko">Teko</option><option value="khand">Khand</option><option value="fraunces">Fraunces</option>
-            <option value="scThin">思源黑体 Thin（中文）</option><option value="jpThin">Noto Sans JP Thin（中日）</option><option value="jpBlack">Noto Sans JP Black（中日）</option><option value="krBlack">Noto Sans KR Black（韩文）</option>
-          </select></label>
+          <label>字体<select id="ibFont"><option value="archivoBlack" selected>Archivo Black</option></select></label>
           <label>字重<select id="ibWeight"><option value="800">Heavy</option><option value="650">Semibold</option><option value="500">Medium</option></select></label>
         </div>
-        <p class="ib-help">共 27 款真实本地字体：已完整同步 SNAP 的 26 款，并新增 Archivo Black 粗黑近似字体。</p>
+        <p id="ibFontHelp" class="ib-help">字体来自共享字体库，并按字体名称自动去重。</p>
         <div class="ib-two"><label>文字大小 <output id="ibFontSizeValue">100%</output><input id="ibFontSize" type="range" min="45" max="180" value="100"></label><label>文字间距 <output id="ibTrackingValue">-4 px</output><input id="ibTracking" type="range" min="-14" max="36" value="-4"></label></div>
         <div class="ib-two"><label>文字颜色<input id="ibBaseColor" type="color" value="#ffffff"></label><label>背景颜色<input id="ibBackground" type="color" value="#050506"></label></div>
         <label class="ib-upload ib-background-upload">上传背景图片 / GIF / 视频<input id="ibBackgroundFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime,image/*,video/*"></label>
@@ -131,7 +127,7 @@
             <div id="ibGlyphLibraryContents" class="ib-library-contents" hidden></div>
           </div>
           <div id="ibAssetEditor" class="ib-asset-editor me-asset-editor" hidden>
-            <div class="ib-active-asset"><span>只改这一张</span><strong id="ibActiveAsset">—</strong><button id="ibCloseAssetDrawer" type="button">返回素材库</button></div>
+            <div class="ib-active-asset"><span>只改这一张</span><strong id="ibActiveAsset">—</strong><span class="ib-active-asset-actions"><button id="ibDeleteAsset" class="ib-delete-asset" type="button">删除这一张</button><button id="ibCloseAssetDrawer" type="button">返回素材库</button></span></div>
             <p id="ibAssetEditorHint" class="ib-help">大小、透明度和位置只作用于这一张图标，不会改文字，也不会改其他图标。</p>
             <label id="ibAssetTargetField">替换哪个字<select id="ibAssetTarget"><option value="-1">自动轮换</option></select></label>
             <label id="ibAssetSequenceField">播放顺序<select id="ibAssetSequence"></select></label>
@@ -247,8 +243,9 @@
   </main>
   <script src="js/continuation-gif.js"></script>
   <script src="js/h264-mp4-encoder.web.js"></script>
+  <script src="shared-font-library.js?v=20260924-ux5"></script>
   <script src="shared-icon-library.js?v=20260924-ux2"></script>
-  <script src="iconburst.js?v=20260924-ux4"></script>
+  <script src="iconburst.js?v=20260924-ux5"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
   <script src="cellmotion-me-shell.js?v=20260924-ux2"></script>
   <script src="typecascade-polish.js?v=20260909-five"></script>

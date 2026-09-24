@@ -508,6 +508,22 @@
     renderAssets();
   }
 
+  function deleteAsset(asset, returnToLibrary = false) {
+    if (!asset) return;
+    const role = asset.role === "glyph" ? "glyph" : "orbit";
+    const index = state.assets.indexOf(asset);
+    if (index < 0) return;
+    state.assets.splice(index, 1);
+    if (role === "glyph") normalizeGlyphSequence();
+    state.activeAssetId = null;
+    libraryRole = role;
+    assetDrawerView = returnToLibrary ? "library" : null;
+    renderAssets();
+    renderIcons();
+    renderChoreoTrack();
+    if (returnToLibrary) $("ibLibraryTitle").textContent = role === "glyph" ? "添加字体图标" : "添加环绕图标";
+  }
+
   function targetOptions(asset) {
     const letters = Array.from($("ibText").value || "GOOD JOB");
     return ['<option value="-1">自动轮换</option>'].concat(letters.map((character, index) =>
@@ -1182,23 +1198,23 @@
     const markers = timelineMarkers();
     const total = animationDuration(playback) / 1000;
     const beats = [
-      { id: "intro", kind: "intro", label: "标题起步", start: 0, end: markers.wordsEnterStart },
-      { id: "orbit", kind: "orbit", label: "图标聚拢", start: markers.wordsEnterStart, end: markers.settleEnd },
-      { id: "hold", kind: "hold", label: "滞空", start: markers.settleEnd, end: markers.contactStartSeconds },
-      { id: "contact", kind: "contact", label: `${markers.pairCount} 对字靠拢`, start: markers.contactStartSeconds, end: markers.contactSeconds },
-      { id: "color", kind: "color", label: "连续换色", start: markers.contactSeconds, end: markers.whiteStartSeconds },
-      { id: "return", kind: "orbit", label: "文字复位", start: markers.whiteStartSeconds, end: markers.replaceStartSeconds }
+      { id: "intro", kind: "intro", label: "标题起步", english: "Title Rise", start: 0, end: markers.wordsEnterStart },
+      { id: "orbit", kind: "orbit", label: "图标聚拢", english: "Icon Gather", start: markers.wordsEnterStart, end: markers.settleEnd },
+      { id: "hold", kind: "hold", label: "滞空", english: "Hover", start: markers.settleEnd, end: markers.contactStartSeconds },
+      { id: "contact", kind: "contact", label: `${markers.pairCount} 对字靠拢`, english: "Pairs Close", start: markers.contactStartSeconds, end: markers.contactSeconds },
+      { id: "color", kind: "color", label: "连续换色", english: "Color Sweep", start: markers.contactSeconds, end: markers.whiteStartSeconds },
+      { id: "return", kind: "orbit", label: "文字复位", english: "Text Return", start: markers.whiteStartSeconds, end: markers.replaceStartSeconds }
     ];
     if (replacementEnabled() && playback.groups.length) {
       let cursor = markers.replaceStartSeconds;
       playback.groups.forEach((group, index) => {
         const end = cursor + group.duration / 1000;
-        beats.push({ id: `replace-${index}`, kind: "replace", label: playback.groups.length === 1 ? "图标替字" : `图标替字 ${index + 1}`, start: cursor, end });
+        beats.push({ id: `replace-${index}`, kind: "replace", label: playback.groups.length === 1 ? "图标替字" : `图标替字 ${index + 1}`, english: "Icon Swap", start: cursor, end });
         cursor = end;
       });
-      beats.push({ id: "end", kind: "hold", label: "成品停留", start: cursor, end: total });
+      beats.push({ id: "end", kind: "hold", label: "成品停留", english: "Final Hold", start: cursor, end: total });
     } else {
-      beats.push({ id: "end", kind: "hold", label: "标题停留", start: markers.replaceStartSeconds, end: total });
+      beats.push({ id: "end", kind: "hold", label: "标题停留", english: "Title Hold", start: markers.replaceStartSeconds, end: total });
     }
     return beats.filter((beat) => beat.end > beat.start + .001);
   }
@@ -1212,14 +1228,16 @@
     scroll.className = "ib-choreo-scroll";
     const bar = document.createElement("div");
     bar.className = "ib-choreo-bar";
-    bar.style.width = `${Math.max(980, Math.round(total * 230), beats.length * 72)}px`;
+    bar.style.width = "100%";
+    bar.style.minWidth = `${Math.max(980, Math.round(total * 230), beats.length * 72)}px`;
     beats.forEach((beat, index) => {
       const block = document.createElement("div");
       block.className = `ib-choreo-block is-${beat.kind}`;
       block.dataset.beat = beat.id;
       block.tabIndex = 0;
       block.style.flex = `${Math.max(.08, beat.end - beat.start)} 1 0`;
-      block.innerHTML = `<em>${index + 1}</em><strong>${beat.label}</strong><small>${(beat.end - beat.start).toFixed(2)}秒</small>`;
+      block.innerHTML = `<em>${index + 1}</em><strong><span>${beat.label}</span><small class="ib-choreo-en">${beat.english}</small></strong><small class="ib-choreo-duration">${(beat.end - beat.start).toFixed(2)}秒</small>`;
+      block.title = `${beat.label} · ${beat.english} · ${(beat.end - beat.start).toFixed(2)}秒`;
       const jump = () => pauseAtSeconds(beat.start + Math.min(.04, (beat.end - beat.start) / 2));
       block.addEventListener("click", jump);
       block.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") jump(); });
@@ -1231,7 +1249,8 @@
     bar.append(playhead);
     const ruler = document.createElement("div");
     ruler.className = "ib-choreo-ruler";
-    ruler.style.width = bar.style.width;
+    ruler.style.width = "100%";
+    ruler.style.minWidth = bar.style.minWidth;
     const majorStep = total > 8 ? 2 : 1;
     const minorStep = majorStep / 5;
     for (let index = 0; index * minorStep <= total + .001; index += 1) {
@@ -1250,7 +1269,7 @@
     legend.className = "ib-choreo-legend";
     beats.forEach((beat, index) => {
       const item = document.createElement("li");
-      item.innerHTML = `<i class="is-${beat.kind}"></i><b>${index + 1}. ${beat.label}</b><span>${beat.start.toFixed(2)}s → ${beat.end.toFixed(2)}s</span>`;
+      item.innerHTML = `<i class="is-${beat.kind}"></i><b>${index + 1}. ${beat.label} · ${beat.english}</b><span>${beat.start.toFixed(2)}s → ${beat.end.toFixed(2)}s</span>`;
       legend.append(item);
     });
     details.append(legend);
@@ -2616,14 +2635,7 @@
       return;
     }
     if (event.target.closest('[data-action="remove"]')) {
-      const index = state.assets.indexOf(asset);
-      state.assets.splice(index, 1);
-      if (asset.role === "glyph") normalizeGlyphSequence();
-      if (state.activeAssetId === asset.id) {
-        state.activeAssetId = null;
-        assetDrawerView = null;
-      }
-      renderAssets(); renderIcons();
+      deleteAsset(asset);
       return;
     }
     // Native select menus dispatch a bubbling click before the user has made
@@ -2884,6 +2896,10 @@
     openAssetLibrary(libraryRole);
   });
 
+  $("ibDeleteAsset").addEventListener("click", () => {
+    deleteAsset(activeAsset(), true);
+  });
+
   $("ibAssetEditor").addEventListener("click", (event) => {
     const button = event.target.closest("[data-asset-size]");
     const asset = activeAsset();
@@ -3026,6 +3042,8 @@
     }
   });
 
+  const sharedFontCount = new Set((window.STGFontLibrary?.fonts || []).map((font) => font.label.trim())).size;
+  if ($("ibFontHelp") && sharedFontCount) $("ibFontHelp").textContent = `共享字体库共 ${sharedFontCount} 款，已按字体名称自动去重。`;
   renderImageLibraries();
   setupAssetLibrary();
   state.assets = builtinAssets();
