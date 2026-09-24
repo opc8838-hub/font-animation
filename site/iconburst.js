@@ -228,7 +228,12 @@
     // and no state switch—so slow motion remains visibly alive.
     const centreDistance = Math.max(0, p - .55);
     const centreArcBoost = 82 * (centreDistance - .10 * (1 - Math.exp(-centreDistance / .10)));
-    return (mainSweep + centreArcBoost) * Math.PI / 180;
+    // The cloud keeps following the same orbit during its slow hold. More
+    // angular distance is needed once the radius is compact; otherwise the
+    // visible travel drops to only a few pixels across the entire hold.
+    const hoverDistance = Math.max(0, p - .86);
+    const hoverArcBoost = 350 * (hoverDistance - .045 * (1 - Math.exp(-hoverDistance / .045)));
+    return (mainSweep + centreArcBoost + hoverArcBoost) * Math.PI / 180;
   }
   function smoothstep(value) {
     const t = clamp(value, 0, 1);

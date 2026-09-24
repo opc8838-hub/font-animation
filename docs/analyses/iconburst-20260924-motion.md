@@ -26,7 +26,7 @@
 
 - Freeze asset contents, saved typography/palette, editor layout, scheme ownership, replacement order/hold semantics, gallery preview bytes.
 - Correct the default motion timings to the measured normal-speed phases; saved user timing overrides remain editable and are not overwritten.
-- Opening radii use both actual composition width and height. Depth order and face foreshortening come from one orbital pose.
+- Opening radii use both actual composition width and height. Depth order comes from one orbital pose; icon artwork keeps its natural proportions.
 - The final cloud scale applies to every icon position, user X/Y offset, cluster offset and icon size; alpha stays visible until subpixel collapse. No scale-in-place plus opacity cut.
 - Intro and icon field share the same gather clock. Side text starts beyond the corresponding canvas edges and brakes into the slot.
 - Collision is a center-first inward closure with no invented outward anticipation or large rebound. Color begins at the first contact and overlaps later letter arrivals.
@@ -50,3 +50,4 @@
 - Live and export checks covered Archivo Black Latin, Noto Sans SC Chinese, Noto Sans JP Japanese and Noto Sans KR Korean; square 1080×1080 and portrait 1080×1920 PNGs were generated. Measured horizontal centering error was 0px for both additional aspect ratios. One and 30 orbit assets were exercised; desktop and 390px mobile screenshots inspected. No page errors in the completed browser runs.
 - `node --check site/iconburst.js`, shared `check_editor_contract.py`, and `git diff --check` passed. Cache keys updated to `20260924-motion1`. Asset files, gallery preview, existing editor controls and scheme storage were not changed.
 - Local evidence (not committed): `output/iconburst-reference-20260924/` for original Watch/dense frames; `output/playwright/iconburst-motion/` for exported media, source comparison, screenshots, FFprobe metadata, and browser metrics. These are reconstruction checks, not a claim that the unavailable original 3D scene or different artwork was recovered exactly.
+- Follow-up hover refinement: the original 3.333–4.067s hold continues forward along the incoming orbit. The initial implementation moved sample icons only about 4–9px across a 960px frame during the 0.75s hold, so it read as frozen. A smooth extra arc activated only after gather progress 0.86 raises visible travel without a new path or position reset. Six paused preview frames from 0.75–1.50s and shared pose samples show continuous travel into collapse. The opening and collision clocks remain unchanged.
