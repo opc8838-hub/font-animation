@@ -1555,9 +1555,8 @@
       + settings.clusterX * width * .35 * radial) * cloudScale;
     const y = (y3 * radiusY * perspective + asset.y / 100 * height * .28 * radial) * cloudScale;
     const depthScale = clamp(1 + z3 * .24, .72, 1.28);
-    const faceScale = .72 + .28 * Math.abs(Math.cos(longitude));
     return {
-      x, y, depth: z3, cloudScale, faceScale,
+      x, y, depth: z3, cloudScale,
       size: unit * .16 * settings.size * asset.size * (1.12 - .12 * radial) * depthScale * cloudScale,
       rotation: asset.rotation + 10 * Math.sin(Math.PI * gather) + 5.5 * Math.sin(Math.PI * collapseT),
       alpha: cloudScale > .00001 ? asset.opacity : 0
@@ -1936,7 +1935,6 @@
         element.style.setProperty("--ty", `${pose.y}px`);
         element.style.setProperty("--rot", `${pose.rotation}deg`);
         element.style.setProperty("--s", String(pose.size / unit));
-        element.style.setProperty("--face-scale", String(pose.faceScale));
         element.style.setProperty("--alpha", String(pose.alpha));
         element.style.zIndex = String(30 + Math.round((pose.depth + 1) * 24));
         return;
@@ -1956,7 +1954,6 @@
       element.style.width = `${iconUnit}px`;
       element.style.height = `${iconUnit}px`;
       element.classList.toggle("is-replacement", swap);
-      element.style.setProperty("--face-scale", "1");
       element.style.setProperty("--tx", `${(anchor?.x || 0) + asset.x / 100 * fittedNudge + motionX}px`);
       element.style.setProperty("--ty", `${(anchor?.y || 0) + asset.y / 100 * fittedNudge + motionY}px`);
       element.style.setProperty("--rot", `${asset.rotation}deg`);
@@ -2172,13 +2169,12 @@
     ctx.restore();
   }
 
-  function drawAssetToCanvas(ctx, asset, x, y, size, rotation, alpha, faceScale = 1) {
+  function drawAssetToCanvas(ctx, asset, x, y, size, rotation, alpha) {
     if (!(alpha > .001) || !(size > .1)) return;
     ctx.save();
     ctx.globalAlpha = clamp(alpha, 0, 1);
     ctx.translate(x, y);
     ctx.rotate(rotation * Math.PI / 180);
-    ctx.scale(faceScale, 1);
     if (asset.type === "image" && asset.originalImage?.complete && asset.originalImage.naturalWidth) {
       const image = asset.originalImage;
       const ratio = image.naturalWidth / Math.max(1, image.naturalHeight);
@@ -2332,7 +2328,7 @@
     const poses = orbitAssets.map((asset, index) => ({
       asset, ...orbitalPose(asset, index, orbitAssets.length, timeline, width, height, cloudSettings)
     })).sort((a, b) => a.depth - b.depth);
-    poses.forEach((pose) => drawAssetToCanvas(ctx, pose.asset, width / 2 + pose.x, height / 2 + pose.y, pose.size, pose.rotation, pose.alpha, pose.faceScale));
+    poses.forEach((pose) => drawAssetToCanvas(ctx, pose.asset, width / 2 + pose.x, height / 2 + pose.y, pose.size, pose.rotation, pose.alpha));
 
     glyphsToDraw.forEach(({ asset, replacement }) => {
       const nudge = fontPx * .42;

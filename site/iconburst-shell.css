@@ -423,20 +423,27 @@ body.tc-workspace .ib-disclosure > summary {
 body.tc-workspace .ib-disclosure > summary::-webkit-details-marker { display: none; }
 
 body.tc-workspace #ibMotionTiming {
-  padding: 0 10px 10px;
-  border-color: color-mix(in srgb, var(--me-phase-violet, #d4b8ff) 50%, var(--tc-line));
-  background: color-mix(in srgb, var(--me-phase-violet, #d4b8ff) 7%, var(--tc-surface));
+  padding: 0 10px;
+  border-color: color-mix(in srgb, var(--me-phase-violet, #d4b8ff) 68%, var(--tc-line));
+  background: color-mix(in srgb, var(--me-phase-violet, #d4b8ff) 24%, var(--tc-surface));
+}
+
+body.tc-workspace #ibMotionTiming[open] {
+  padding-bottom: 10px;
 }
 
 body.tc-workspace #ibMotionTiming > summary {
-  gap: 9px;
-  min-height: 44px;
+  position: relative;
+  min-height: 36px;
+  justify-content: center;
+  text-align: center;
   color: var(--tc-text);
 }
 
 body.tc-workspace #ibMotionTiming > summary::before {
   content: "";
-  flex: 0 0 8px;
+  position: absolute;
+  left: 0;
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -446,9 +453,11 @@ body.tc-workspace #ibMotionTiming > summary::before {
 
 body.tc-workspace #ibMotionTiming > summary::after {
   content: "";
+  position: absolute;
+  right: 1px;
   width: 7px;
   height: 7px;
-  margin: 0 3px 4px auto;
+  margin: 0 3px 4px 0;
   border-right: 1.5px solid var(--tc-muted);
   border-bottom: 1.5px solid var(--tc-muted);
   transform: rotate(45deg);
