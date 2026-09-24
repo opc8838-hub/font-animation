@@ -1236,7 +1236,7 @@
       block.dataset.beat = beat.id;
       block.tabIndex = 0;
       block.style.flex = `${Math.max(.08, beat.end - beat.start)} 1 0`;
-      block.innerHTML = `<em>${index + 1}</em><strong><span>${beat.label}</span><small class="ib-choreo-en">${beat.english}</small></strong><small class="ib-choreo-duration">${(beat.end - beat.start).toFixed(2)}秒</small>`;
+      block.innerHTML = `<em>${index + 1}</em><strong><span class="ib-choreo-zh">${beat.label}</span><small class="ib-choreo-en">${beat.english}</small></strong><small class="ib-choreo-duration">${(beat.end - beat.start).toFixed(2)}秒</small>`;
       block.title = `${beat.label} · ${beat.english} · ${(beat.end - beat.start).toFixed(2)}秒`;
       const jump = () => pauseAtSeconds(beat.start + Math.min(.04, (beat.end - beat.start) / 2));
       block.addEventListener("click", jump);
@@ -1269,7 +1269,7 @@
     legend.className = "ib-choreo-legend";
     beats.forEach((beat, index) => {
       const item = document.createElement("li");
-      item.innerHTML = `<i class="is-${beat.kind}"></i><b>${index + 1}. ${beat.label} · ${beat.english}</b><span>${beat.start.toFixed(2)}s → ${beat.end.toFixed(2)}s</span>`;
+      item.innerHTML = `<i class="is-${beat.kind}"></i><b><span class="ib-choreo-zh">${index + 1}. ${beat.label}</span><span class="ib-choreo-en">${index + 1}. ${beat.english}</span></b><span>${beat.start.toFixed(2)}s → ${beat.end.toFixed(2)}s</span>`;
       legend.append(item);
     });
     details.append(legend);
@@ -3042,8 +3042,6 @@
     }
   });
 
-  const sharedFontCount = new Set((window.STGFontLibrary?.fonts || []).map((font) => font.label.trim())).size;
-  if ($("ibFontHelp") && sharedFontCount) $("ibFontHelp").textContent = `共享字体库共 ${sharedFontCount} 款，已按字体名称自动去重。`;
   renderImageLibraries();
   setupAssetLibrary();
   state.assets = builtinAssets();

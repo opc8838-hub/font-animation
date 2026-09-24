@@ -31,7 +31,7 @@
     '让创意，自由生长': 'Let creativity grow freely', '动效库': 'Effects', '导出作品': 'Export',
     '☀ 浅色': '☀ Light', '☾ 深色': '☾ Dark', '切换为浅色编辑器': 'Switch to light theme', '切换为深色编辑器': 'Switch to dark theme',
     '▧ 铺满背景': '▧ Fill backdrop', '开启背景铺满': 'Enable full backdrop', '关闭背景铺满': 'Disable full backdrop',
-    '内容': 'Content', '当前编辑': 'Selected',
+    '内容': 'Content', '当前编辑': 'Selected', '文字与画面': 'Text & canvas', '动效': 'Motion',
     '文字段落': 'Text blocks', '＋ 添加段落': '＋ Add', '添加文字段落': 'Add text block', '选择一段文字，在右侧编辑': 'Select a block to edit on the right',
     '选择文字段落': 'Select a text block', '段落导航': 'Text navigation', '当前段落': 'Text block', '动效设置': 'Motion',
     '属性分类': 'Settings tabs', '导出': 'Export', '画布预览': 'Preview', '画布与播放': 'Canvas and playback',
@@ -120,6 +120,11 @@
     '当前使用纯色背景': 'Solid background', '清除背景素材': 'Remove media',
     '共 27 款真实本地字体：已完整同步 SNAP 的 26 款，并新增 Archivo Black 粗黑近似字体。': '27 local fonts. The 26 SNAP fonts, plus Archivo Black.',
     '连续换色': 'Color', '颜色动效': 'Color motion', '使用颜色数量': 'Color count',
+    '间距越大，左右文字离中间图标越远。下面可以直接增加或删除当前示例里的图标。': 'More spacing moves the words farther from the center icon. Add or remove icons below.',
+    '＋ 添加': '＋ Add', '图标布局细节': 'Icon layout', '图标爆发编舞时间轴': 'Icon Burst timeline',
+    '字内预告': 'Text preview', '标题起步': 'Title Rise', '图标聚拢': 'Icon Gather',
+    '滞空': 'Hover', '对字靠拢': 'Pairs Close', '颜色扫过': 'Color Sweep',
+    '文字复位': 'Text Return', '图标替字': 'Icon Swap', '成品停留': 'Final Hold',
     '1 个颜色': '1 color', '2 个颜色': '2 colors', '3 个颜色': '3 colors', '4 个颜色': '4 colors',
     '颜色 A': 'Color A', '颜色 B': 'Color B', '颜色 C': 'Color C', '颜色 D': 'Color D',
     '换色速度': 'Sweep speed', '颜色停留': 'Color hold',
@@ -209,7 +214,12 @@
     if (!s) return value;
     let out = s;
     // These labels embed user-authored text: only translate the UI prefix.
-    if (element.matches('#iconRow option')) out = s.replace(/^第 (\d+) 行 · /, 'Block $1 · ');
+    if (element.matches('.ib-choreo-block') && attribute === 'title') {
+      const title = s.match(/^(.+?) · (.+?) · ([\d.]+)秒$/);
+      out = title ? `${title[2]} · ${title[3]}s` : s;
+    } else if (element.matches('.ib-layer-title-copy small') && s === '项') {
+      out = Number(element.querySelector('b')?.textContent || 0) === 1 ? 'item' : 'items';
+    } else if (element.matches('#iconRow option')) out = s.replace(/^第 (\d+) 行 · /, 'Block $1 · ');
     else if (element.matches('#iconBoundary option')) out = dictionary.get(s) || s.replace(/^第 (\d+) 字“(.*)”之后$/, 'After character $1 “$2”');
     else if (element.matches('.tc-phase-details strong')) {
       for (const name of phaseNames) out = out.replace(new RegExp(`^(\\d+\\. )${name} · `), `$1${dictionary.get(name)} · `);
@@ -218,8 +228,10 @@
     } else {
       out = dictionary.get(s) || s;
       if (out === s) {
+        const itemCount = s.match(/^(\d+)\s*项$/);
         const beat = s.match(/^(\d+)\s·\s(.+)$/);
-        if (beat && dictionary.get(beat[2])) out = `${beat[1]} · ${dictionary.get(beat[2])}`;
+        if (itemCount) out = `${itemCount[1]} ${itemCount[1] === '1' ? 'item' : 'items'}`;
+        else if (beat && dictionary.get(beat[2])) out = `${beat[1]} · ${dictionary.get(beat[2])}`;
         else if (/^\d+ 对字体逐对靠拢并同步换色$/.test(s)) out = s.replace(/^(\d+) 对字体逐对靠拢并同步换色$/, '$1 pairs meet and change color');
       }
       if (out === s) {
