@@ -941,11 +941,12 @@
     const compositionRect = composition.getBoundingClientRect();
     const scaleX = composition.offsetWidth ? compositionRect.width / composition.offsetWidth : 1;
     const scaleY = composition.offsetHeight ? compositionRect.height / composition.offsetHeight : 1;
+    const wordScale = Math.max(.001, Number(getComputedStyle(composition).getPropertyValue("--replacement-scale")) || 1);
     state.letterAnchors = Array.from(word.children).map((letter) => {
       const rect = letter.getBoundingClientRect();
       return {
-        x: (rect.left + rect.width / 2 - (compositionRect.left + compositionRect.width / 2)) / Math.max(.001, scaleX),
-        y: (rect.top + rect.height / 2 - (compositionRect.top + compositionRect.height / 2)) / Math.max(.001, scaleY)
+        x: (rect.left + rect.width / 2 - (compositionRect.left + compositionRect.width / 2)) / Math.max(.001, scaleX * wordScale),
+        y: (rect.top + rect.height / 2 - (compositionRect.top + compositionRect.height / 2)) / Math.max(.001, scaleY * wordScale)
       };
     });
     return state.letterAnchors;
@@ -1795,8 +1796,8 @@
     const replacementScaleProgress = replacementEnabled() && phase >= timeline.replaceStart
       ? smoothstep(clamp(replacementTime / finalScaleDuration, 0, 1))
       : 0;
-    // The reference finishes on a lightly enlarged title. Do not ease this
-    // back down inside the loop; the next loop reset is the only reset.
+    // The finishing enlargement belongs to the title and replacement glyphs;
+    // the composition frame itself remains fixed throughout the loop.
     const finalScaleAmount = clamp(Number($("ibFinalScale").value) / 100, 0, .10);
     const replacementFontScale = 1 + finalScaleAmount * replacementScaleProgress;
 
@@ -1823,7 +1824,7 @@
     composition.style.setProperty("--group-x", `${timeline.groupX.toFixed(2)}px`);
     composition.style.setProperty("--group-y", `${timeline.groupY.toFixed(2)}px`);
     composition.style.setProperty("--replacement-scale", replacementFontScale.toFixed(4));
-    word.style.setProperty("--word-scale", "1");
+    word.style.setProperty("--word-scale", replacementFontScale.toFixed(4));
     word.style.opacity = String(timeline.wordOpacity);
     introWord.style.setProperty("--intro-scale", timeline.introScale.toFixed(4));
     introWord.style.opacity = String(timeline.introOpacity);

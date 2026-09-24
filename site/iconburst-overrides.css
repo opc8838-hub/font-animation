@@ -1,14 +1,16 @@
 /* Independent resource editing and match-cut motion overrides. */
 body .ib-composition {
-  transform: scale(var(--replacement-scale, 1));
-  transform-origin: 50% 50%;
-  will-change: transform;
+  transform: none;
 }
 
 body .ib-word {
-  transform: none;
   text-shadow: none;
   filter: none;
+}
+
+body .ib-glyph-layer {
+  transform: scale(var(--replacement-scale, 1));
+  transform-origin: 50% 50%;
 }
 
 body .ib-switch-word {
