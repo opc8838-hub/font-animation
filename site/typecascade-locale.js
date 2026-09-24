@@ -147,6 +147,7 @@
     '同时替换数量': 'Replacements at once', '每组最短时长': 'Minimum beat', '全局切换速度': 'Swap speed',
     '1 个 · 依次播放': '1 · one by one', '2 个 · 两两播放': '2 · in pairs', '3 个': '3', '4 个': '4', '全部同时': 'All at once',
     '滞空时长': 'Hang time', '慢动作速度': 'Slow-motion speed', '终点前转幅度': 'Overshoot',
+    '开场图标聚拢速度': 'Opening gather speed',
     '图文同步速度': 'Sync speed', '字体靠拢速度': 'Word approach', '单对碰撞时长': 'Pair duration',
     '逐对碰撞间隔': 'Pair gap', '球体旋转速度': 'Orbit speed', '字体回归时长': 'Return time',
     '图标聚拢密度': 'Cluster density', '收拢轨迹弧度': 'Curve', '替字收尾放大': 'Final scale', '收尾放大时长': 'Scale time',

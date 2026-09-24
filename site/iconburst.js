@@ -1099,12 +1099,16 @@
   }
 
   function timelineMarkers() {
-    const wordsEnterStart = .27;
-    const wordReturnDuration = clamp(Number($("ibWordReturn").value) / 1000, .08, 1.20);
+    const gatherSpeed = clamp(Number($("ibGatherSpeed").value), .5, 2);
+    const wordsEnterStart = .27 / gatherSpeed;
+    const baseWordReturnDuration = clamp(Number($("ibWordReturn").value) / 1000, .08, 1.20);
+    const wordReturnDuration = baseWordReturnDuration / gatherSpeed;
     // A longer font return extends the shared opening chapter. Later chapters
     // are derived from this marker, so slow motion, color and replacements can
     // never begin while the side words are still arriving.
-    const settleEnd = Math.max(.75, wordsEnterStart + wordReturnDuration);
+    const baseSettleEnd = Math.max(.75, .27 + baseWordReturnDuration);
+    const settleEnd = baseSettleEnd / gatherSpeed;
+    const openingShift = settleEnd - baseSettleEnd;
     const slowDuration = clamp(Number($("ibHang").value) / 100, .20, 1.40);
     const holdEndSeconds = settleEnd + slowDuration;
     const collapseStartSeconds = holdEndSeconds;
@@ -1138,6 +1142,9 @@
     const whiteFullSeconds = whiteStartSeconds + whiteDuration;
     const replaceStartSeconds = whiteFullSeconds + .04;
     return {
+      gatherSpeed,
+      baseSettleEnd,
+      openingShift,
       settleEnd,
       wordsEnterStart,
       wordReturnDuration,
@@ -1158,11 +1165,12 @@
   }
 
   function animationDuration(playback) {
-    const { replaceStartSeconds } = timelineMarkers();
-    if (!replacementEnabled()) return Math.max(2400, (replaceStartSeconds + .30) * 1000);
+    const { replaceStartSeconds, openingShift } = timelineMarkers();
+    const minimumDuration = 2400 + openingShift * 1000;
+    if (!replacementEnabled()) return Math.max(minimumDuration, (replaceStartSeconds + .30) * 1000);
     const scaleDuration = clamp(Number($("ibFinalScaleDuration").value), 200, 1200);
     const replacementDuration = Math.max(playback.total, scaleDuration + 100);
-    return Math.max(2400, replaceStartSeconds * 1000 + replacementDuration + 60);
+    return Math.max(minimumDuration, replaceStartSeconds * 1000 + replacementDuration + 60);
   }
 
   function seekToSeconds(seconds) {
@@ -1312,7 +1320,7 @@
     "ibText", "ibFont", "ibWeight", "ibFontSize", "ibTracking",
     "ibColorMode", "ibColorCount", "ibBaseColor", "ibColorA", "ibColorB", "ibColorC", "ibColorD", "ibBackground", "ibColorSpeed", "ibSoftness",
     "ibContentMode", "ibRange", "ibSize", "ibReplaceCount", "ibBeat", "ibReplaceSpeed", "ibCollapse", "ibClusterX", "ibHang", "ibDrift", "ibOvershoot",
-    "ibSync", "ibCollisionSpeed", "ibCollisionDuration", "ibPairStagger", "ibOrbitSpeed", "ibWordReturn", "ibDensity", "ibCurve", "ibFinalScale", "ibFinalScaleDuration", "ibSpeed"
+    "ibGatherSpeed", "ibSync", "ibCollisionSpeed", "ibCollisionDuration", "ibPairStagger", "ibOrbitSpeed", "ibWordReturn", "ibDensity", "ibCurve", "ibFinalScale", "ibFinalScaleDuration", "ibSpeed"
   ];
   const defaultControlValues = Object.fromEntries(schemeControlIds.map((id) => [id, $(id).value]));
   const latestDefaultControls = {
@@ -1401,7 +1409,7 @@
 
   function applyScheme(scheme, options = {}) {
     if (!scheme || typeof scheme !== "object") return;
-    const controls = { ...(scheme.controls || {}) };
+    const controls = { ibGatherSpeed: "1", ...(scheme.controls || {}) };
     if (Number(scheme.version || 0) < 3 && Number(controls.ibPairStagger || 0) <= 50) controls.ibPairStagger = 95;
     if (Number(scheme.version || 0) < 4 && Number(controls.ibClusterX) === -14) controls.ibClusterX = 0;
     Object.entries(controls).forEach(([id, value]) => { if ($(id) && value != null) $(id).value = String(value); });
@@ -1607,7 +1615,7 @@
     // Keep the center title readable long enough to establish the opening shot.
     // The former .09s shrink yielded fewer than three useful frames at 30fps,
     // so viewers perceived the side words as the actual beginning.
-    const shrinkStartSeconds = .20;
+    const shrinkStartSeconds = .20 / markers.gatherSpeed;
     const {
       settleEnd,
       wordsEnterStart,
@@ -1639,10 +1647,10 @@
     const syncRate = clamp(Number($("ibSync").value) / 100, .50, 1.80);
     const overshootStrength = clamp(Number($("ibOvershoot").value) / 100, 0, 1);
     const iconMotionTime = (time) => Math.max(0, time * syncRate);
-    const gatherAtSlowStart = sampleIconGather(iconMotionTime(settleEnd));
+    const gatherAtSlowStart = sampleIconGather(iconMotionTime(markers.baseSettleEnd));
     const slowElapsed = clamp(seconds - settleEnd, 0, holdEndSeconds - settleEnd);
     const velocityWindow = .008;
-    const gatherBeforeSlow = sampleIconGather(iconMotionTime(settleEnd - velocityWindow));
+    const gatherBeforeSlow = sampleIconGather(iconMotionTime(markers.baseSettleEnd - velocityWindow));
     const entryGatherVelocity = Math.max(.01, (gatherAtSlowStart - gatherBeforeSlow) / velocityWindow);
     const slowGatherVelocity = entryGatherVelocity * slowMultiplier;
     // One integrated motion clock drives radius, longitude, depth and pitch.
@@ -1668,8 +1676,14 @@
     const accelerationIntegral = Math.pow(collapseT, 3) - .5 * Math.pow(collapseT, 4);
     const collapseAdvance = slowGatherVelocity * collapseElapsed
       + (exitVelocity - slowGatherVelocity) * collapseDuration * accelerationIntegral;
+    // Retiming only the opening preserves its path and landing pose. The clock
+    // reaches the original entry velocity at the hover boundary, so subsequent
+    // drift, collapse and the finale retain their approved motion.
+    const openingT = clamp(seconds / settleEnd, 0, 1);
+    const openingClock = markers.gatherSpeed === 1 ? seconds : markers.baseSettleEnd
+      * (openingT + (1 - 1 / markers.gatherSpeed) * openingT * openingT * (1 - openingT));
     const iconGather = seconds <= settleEnd
-      ? sampleIconGather(iconMotionTime(seconds))
+      ? sampleIconGather(iconMotionTime(openingClock))
       : gatherAtSlowStart + slowGatherAdvance + collapseAdvance;
     const orbitAngleDegrees = sampleOrbitalSweep(iconGather) * 180 / Math.PI;
     const orbitStartDegrees = sampleOrbitalSweep(gatherAtSlowStart) * 180 / Math.PI;
@@ -2599,6 +2613,7 @@
     ["ibReplaceSpeed", "ibReplaceSpeedValue", (value) => `${Number(value).toFixed(1)}×`],
     ["ibCollapse", "ibCollapseValue", (value) => `${value}%`],
     ["ibClusterX", "ibClusterXValue", (value) => `${Number(value) > 0 ? "+" : ""}${value}%`],
+    ["ibGatherSpeed", "ibGatherSpeedValue", (value) => `${Number(value).toFixed(2)}×`],
     ["ibHang", "ibHangValue", (value) => `${(Number(value) / 100).toFixed(2)} 秒`],
     ["ibDrift", "ibDriftValue", (value) => `${value}%`],
     ["ibSync", "ibSyncValue", (value) => `${(Number(value) / 100).toFixed(2)}×`],
@@ -2619,7 +2634,7 @@
   // control restarts the complete choreography so the user sees the title
   // grow over time in its actual replacement chapter.
   ["ibFinalScale", "ibFinalScaleDuration"].forEach((id) => $(id).addEventListener("change", restart));
-  ["ibWordReturn", "ibSync", "ibCollisionSpeed", "ibCollisionDuration", "ibPairStagger", "ibOrbitSpeed", "ibOvershoot"].forEach((id) => $(id).addEventListener("change", restart));
+  ["ibGatherSpeed", "ibWordReturn", "ibSync", "ibCollisionSpeed", "ibCollisionDuration", "ibPairStagger", "ibOrbitSpeed", "ibOvershoot"].forEach((id) => $(id).addEventListener("change", restart));
 
   $("ibSaveScheme").addEventListener("click", () => {
     const scheme = collectScheme();
