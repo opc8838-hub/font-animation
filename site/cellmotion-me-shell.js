@@ -43,7 +43,7 @@
     const ids = $$("[id]", section).map((el) => el.id).join(" ");
     const text = section.textContent || "";
     if (/exportPng|exportGif|exportMp4|exportVideo|ibExportPng/.test(ids) || section.classList.contains("export-panel") || section.classList.contains("ib-export-section")) return "export";
-    if (/exportPreset|canvasPreset|ibExportPreset/.test(ids) && /画板|尺寸|比例|canvas|导出尺寸/.test(text)) return "canvas";
+    if (section.classList.contains("ib-canvas-section") || (/exportPreset|canvasPreset|ibExportPreset/.test(ids) && /画板|尺寸|比例|canvas|导出尺寸/.test(text))) return "canvas";
     if (section.querySelector(".me-choreo-track, .me-choreo-bar, .ib-choreo-track, .flow-timeline, #choreoBar, #flowTimeline, #pathwriterChoreoBar, #deleteChoreoBar, #ibChoreoTrack")) return "timeline";
     if (section.querySelector("#saveScheme, #saveButton, #ibSaveScheme, .me-scheme-actions, .ib-scheme-row") || /方案/.test(section.querySelector(".section-label, .ib-kicker, p")?.textContent || "") && section.querySelector("button")) return "scheme";
     if (section.querySelector("textarea, #phrase, #copyText, #rowsInput, #phrasesInput, #pairList, #wordRows, #sceneAText, #ibText, .sa-pair-list, .half-section")) return "content";

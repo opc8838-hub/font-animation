@@ -2028,10 +2028,14 @@
     const stageStyle = getComputedStyle(stage);
     const availableWidth = Math.max(1, stage.clientWidth - parseFloat(stageStyle.paddingLeft) - parseFloat(stageStyle.paddingRight));
     const availableHeight = Math.max(1, stage.clientHeight - parseFloat(stageStyle.paddingTop) - parseFloat(stageStyle.paddingBottom));
-    const fittedWidth = Math.min(availableWidth, availableHeight * ratio);
-    composition.style.width = `${fittedWidth}px`;
-    composition.style.height = `${fittedWidth / ratio}px`;
-    composition.style.aspectRatio = String(ratio);
+    const fittedWidth = Math.max(1, Math.min(availableWidth, availableHeight * ratio));
+    const fittedHeight = fittedWidth / ratio;
+    composition.style.setProperty("--ib-aspect", `${width} / ${height}`);
+    composition.style.setProperty("--ib-frame-w", `${fittedWidth}px`);
+    composition.style.setProperty("--ib-frame-h", `${fittedHeight}px`);
+    composition.style.setProperty("width", `${fittedWidth}px`, "important");
+    composition.style.setProperty("height", `${fittedHeight}px`, "important");
+    composition.style.setProperty("aspect-ratio", `${width} / ${height}`, "important");
     invalidateLetterAnchors();
   }
 
@@ -2916,5 +2920,6 @@
     const timeline = document.querySelector(".tc-timeline");
     if (transport && timeline) timeline.prepend(transport);
     fitCompositionFrame();
+    if (window.ResizeObserver) new ResizeObserver(() => fitCompositionFrame()).observe(stage);
   }, 0);
 })();

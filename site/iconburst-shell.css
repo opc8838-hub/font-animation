@@ -11,8 +11,14 @@ body.tc-workspace #ibStage.gm-stage {
 
 body.tc-workspace .ib-composition {
   container-type: size;
+  width: var(--ib-frame-w, 100%) !important;
+  height: var(--ib-frame-h, auto) !important;
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: var(--ib-aspect, 16 / 9) !important;
   background: var(--stage-bg, #050506);
   overflow: hidden;
+  flex: none;
 }
 
 body.tc-workspace .ib-word,
