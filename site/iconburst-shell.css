@@ -422,6 +422,93 @@ body.tc-workspace .ib-disclosure > summary {
 
 body.tc-workspace .ib-disclosure > summary::-webkit-details-marker { display: none; }
 
+body.tc-workspace #ibMotionTiming {
+  padding: 0 10px 10px;
+  border-color: color-mix(in srgb, var(--me-phase-violet, #d4b8ff) 50%, var(--tc-line));
+  background: color-mix(in srgb, var(--me-phase-violet, #d4b8ff) 7%, var(--tc-surface));
+}
+
+body.tc-workspace #ibMotionTiming > summary {
+  gap: 9px;
+  min-height: 44px;
+  color: var(--tc-text);
+}
+
+body.tc-workspace #ibMotionTiming > summary::before {
+  content: "";
+  flex: 0 0 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--me-phase-violet, #d4b8ff);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--me-phase-violet, #d4b8ff) 18%, transparent);
+}
+
+body.tc-workspace #ibMotionTiming > summary::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin: 0 3px 4px auto;
+  border-right: 1.5px solid var(--tc-muted);
+  border-bottom: 1.5px solid var(--tc-muted);
+  transform: rotate(45deg);
+  transition: transform 160ms ease, border-color 160ms ease;
+}
+
+body.tc-workspace #ibMotionTiming[open] > summary::after {
+  margin-bottom: -4px;
+  border-color: var(--me-phase-violet, #d4b8ff);
+  transform: rotate(225deg);
+}
+
+body.tc-workspace #ibMotionTiming > .ib-motion-groups {
+  display: grid;
+  gap: 8px;
+}
+
+body.tc-workspace #ibMotionTiming .ib-motion-group {
+  --ib-motion-accent: var(--me-phase-sky, #8ec8ff);
+  min-width: 0;
+  padding: 9px 10px 8px;
+  border: 1px solid color-mix(in srgb, var(--ib-motion-accent) 28%, var(--tc-line));
+  border-left: 3px solid var(--ib-motion-accent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ib-motion-accent) 8%, var(--tc-panel));
+}
+
+body.tc-workspace #ibMotionTiming .ib-motion-group--collision {
+  --ib-motion-accent: var(--me-phase-violet, #d4b8ff);
+}
+
+body.tc-workspace #ibMotionTiming .ib-motion-group--finish {
+  --ib-motion-accent: var(--me-phase-mint, #9de7d7);
+}
+
+body.tc-workspace #ibMotionTiming .ib-motion-group h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 5px;
+  color: color-mix(in srgb, var(--ib-motion-accent) 52%, var(--tc-text));
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+body.tc-workspace #ibMotionTiming .ib-motion-group h3::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+body.tc-workspace #ibMotionTiming .ib-motion-group .ib-two {
+  display: grid;
+  gap: 2px 12px;
+}
+
 body.tc-workspace .tc-timeline .ib-choreo-section {
   display: grid;
   gap: 8px;
