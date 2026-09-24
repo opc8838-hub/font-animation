@@ -518,6 +518,29 @@ body.tc-workspace #ibMotionTiming .ib-motion-group .ib-two {
   gap: 2px 12px;
 }
 
+/* Nested timing cards are narrower than the main inspector. Keep the range
+   on its own row so the label and readout cannot consume its drag area. */
+body.tc-workspace #ibMotionTiming .ib-motion-group label:has(> input[type="range"]) {
+  grid-template-columns: minmax(0, 1fr) 76px;
+  gap: 1px 10px;
+  min-height: 42px;
+  line-height: 18px;
+}
+
+body.tc-workspace #ibMotionTiming .ib-motion-group label:has(> input[type="range"]) output {
+  grid-column: 2;
+  grid-row: 1;
+  padding: 2px 4px;
+  line-height: 18px;
+}
+
+body.tc-workspace #ibMotionTiming .ib-motion-group label:has(> input[type="range"]) input[type="range"] {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  min-width: 0;
+  margin: 4px 0;
+}
+
 body.tc-workspace .tc-timeline .ib-choreo-section {
   display: grid;
   gap: 8px;
