@@ -949,8 +949,9 @@
     const wordScale = Math.max(.001, Number(getComputedStyle(composition).getPropertyValue("--replacement-scale")) || 1);
     state.letterAnchors = Array.from(word.children).map((letter) => {
       const rect = letter.getBoundingClientRect();
+      const animatedOffset = parseFloat(letter.style.getPropertyValue("--letter-x")) || 0;
       return {
-        x: (rect.left + rect.width / 2 - (compositionRect.left + compositionRect.width / 2)) / Math.max(.001, scaleX * wordScale),
+        x: (rect.left + rect.width / 2 - (compositionRect.left + compositionRect.width / 2)) / Math.max(.001, scaleX * wordScale) - animatedOffset,
         y: (rect.top + rect.height / 2 - (compositionRect.top + compositionRect.height / 2)) / Math.max(.001, scaleY * wordScale),
         width: rect.width / Math.max(.001, scaleX * wordScale)
       };
@@ -958,19 +959,49 @@
     return state.letterAnchors;
   }
 
-  // Keep a replacement inside its letter's available space. The title can
-  // become much smaller than the canvas short edge in portrait layouts.
-  function fittedReplacementSize(asset, target, anchors, fontPx, frameWidth, frameHeight) {
-    const center = anchors[target]?.x || 0;
-    const padding = Math.max(2, fontPx * .075);
-    let room = Infinity;
-    anchors.forEach((neighbor, index) => {
-      if (index === target || !word.children[index]?.textContent.trim()) return;
-      const clearDistance = Math.abs(neighbor.x - center) - neighbor.width / 2 - padding;
-      if (clearDistance > 0) room = Math.min(room, clearDistance * 2);
+  function replacementIconSize(asset, fontPx) {
+    const selectedSize = Number($("ibSize").value) / 100 * asset.size;
+    return fontPx * Math.max(1.12, 1.05 * selectedSize);
+  }
+
+  // Give the enlarged icons real space in the title instead of shrinking them
+  // to fit the old letter cells. Both DOM and Canvas use these same centers.
+  function replacementLayout(replacements, anchors, fontPx, frameWidth, finalScaleAmount) {
+    const impacts = anchors.map(() => 0);
+    const sizes = new Map();
+    replacements.forEach((replacement, assetId) => {
+      const asset = state.assets.find((item) => item.id === assetId);
+      if (!asset || !anchors[replacement.target]) return;
+      sizes.set(assetId, replacementIconSize(asset, fontPx));
+      impacts[replacement.target] = Math.max(impacts[replacement.target], clamp(replacement.envelope * 2, 0, 1));
     });
-    const requested = Math.min(frameWidth, frameHeight) * .16 * Number($("ibSize").value) / 100 * asset.size;
-    return Math.max(1, Math.min(requested, fontPx * .94, room));
+    const visualWidths = anchors.map((anchor, index) => {
+      let width = anchor.width;
+      replacements.forEach((replacement, assetId) => {
+        if (replacement.target === index) width = Math.max(width, anchor.width + (sizes.get(assetId) - anchor.width) * impacts[index]);
+      });
+      return width;
+    });
+    const extraGaps = anchors.slice(1).map((anchor, index) => {
+      const impact = Math.max(impacts[index], impacts[index + 1]);
+      if (!impact) return 0;
+      const distance = anchor.x - anchors[index].x;
+      const required = (visualWidths[index] + visualWidths[index + 1]) / 2 + fontPx * .08 * impact;
+      return Math.max(0, required - distance);
+    });
+    const totalExtra = extraGaps.reduce((sum, gap) => sum + gap, 0);
+    const first = anchors[0], last = anchors[anchors.length - 1];
+    const outerLeft = first ? (visualWidths[0] - first.width) / 2 : 0;
+    const outerRight = last ? (visualWidths[visualWidths.length - 1] - last.width) / 2 : 0;
+    let accumulated = 0;
+    const offsets = anchors.map((anchor, index) => {
+      if (index) accumulated += extraGaps[index - 1];
+      return accumulated - totalExtra / 2 + (outerLeft - outerRight) / 2;
+    });
+    const naturalWidth = first && last ? last.x + last.width / 2 - first.x + first.width / 2 : 0;
+    const expandedWidth = naturalWidth + totalExtra + outerLeft + outerRight;
+    const fit = expandedWidth > 0 ? Math.min(1, frameWidth * .92 / (expandedWidth * (1 + finalScaleAmount))) : 1;
+    return { offsets, sizes, fit };
   }
 
   function lightLetter(letter, color, intensity) {
@@ -1820,11 +1851,16 @@
     // The finishing enlargement belongs to the title and replacement glyphs;
     // the composition frame itself remains fixed throughout the loop.
     const finalScaleAmount = clamp(Number($("ibFinalScale").value) / 100, 0, .10);
-    const replacementFontScale = 1 + finalScaleAmount * replacementScaleProgress;
+    let replacementFontScale = 1 + finalScaleAmount * replacementScaleProgress;
 
     resetLetters();
     let label = timeline.label;
     const replacements = replacementState(replacementTime, replacementActive, playback);
+    const frame = frameBox();
+    const fontSize = parseFloat(word.style.fontSize) || 100;
+    const restingAnchors = getLetterAnchors();
+    const finalLayout = replacementLayout(replacements, restingAnchors, fontSize, composition.clientWidth, finalScaleAmount);
+    replacementFontScale *= finalLayout.fit;
     const colorMode = $("ibColorMode").value;
     if (colorActive && colorMode === "sweep") applyLinearSweep(Array.from(word.children), timeline.colorReveal, timeline.whiteReveal);
     else if (colorActive && colorMode === "unfold") {
@@ -1850,8 +1886,6 @@
     introWord.style.setProperty("--intro-scale", timeline.introScale.toFixed(4));
     introWord.style.opacity = String(timeline.introOpacity);
     incomingWord.style.opacity = String(timeline.incomingOpacity);
-    const frame = frameBox();
-    const fontSize = parseFloat(word.style.fontSize) || 100;
     incomingWord.style.setProperty("--incoming-orbit-x", `${incomingDisplacement(timeline, frame.width).toFixed(2)}px`);
     incomingWord.style.setProperty("--incoming-orbit-y", "0px");
     incomingWord.style.setProperty("--incoming-mask", "0%");
@@ -1869,7 +1903,6 @@
     const collisionColors = activeEffectColors();
     const collisionBaseColor = $("ibBaseColor").value;
     const collisionLetterCount = Math.max(1, Array.from(word.children).length);
-    const restingAnchors = getLetterAnchors();
     [
       { element: incomingLeft, direction: -1 },
       { element: incomingRight, direction: 1 }
@@ -1913,7 +1946,8 @@
       const distance = index - midpoint;
       const looseOffset = distance / maxDistance * fontSize * .58;
       const microOffset = distance / maxDistance * replacementExpansion;
-      letterOffsets.set(Number(letter.dataset.letter), (finalSequence ? looseOffset * (1 - timeline.letterContract) : 0) + microOffset);
+      const letterIndex = Number(letter.dataset.letter);
+      letterOffsets.set(letterIndex, (finalSequence ? looseOffset * (1 - timeline.letterContract) : 0) + microOffset + (finalLayout.offsets[letterIndex] || 0));
     });
     [word, colorWord, whiteWord].forEach((layer) => {
       Array.from(layer.children).forEach((letter) => {
@@ -1939,7 +1973,9 @@
 
     const rect = { width: composition.clientWidth, height: composition.clientHeight };
     const letters = Array.from(word.children);
-    const anchors = replacementActive ? getLetterAnchors() : [];
+    const anchors = replacementActive
+      ? restingAnchors.map((anchor, index) => ({ ...anchor, x: anchor.x + (finalLayout.offsets[index] || 0) }))
+      : [];
     const burst = 1 - clamp(timeline.pathProgress, 0, 1);
     const clusterOffsetX = Number($("ibClusterX").value) / 100 * rect.width * .35 * easeInOut(clamp(timeline.iconGather / .85, 0, 1));
     const orbitAssets = state.assets.filter((asset) => asset.role === "orbit");
@@ -1965,7 +2001,7 @@
       const swap = Boolean(replacement && replacement.swap);
       const anchor = replacement && anchors[replacement.target];
       const iconUnit = Math.min(rect.width, rect.height) * .16;
-      const fittedSize = swap ? fittedReplacementSize(asset, replacement.target, anchors, fontSize, rect.width, rect.height) : iconUnit;
+      const fittedSize = swap ? finalLayout.sizes.get(asset.id) || replacementIconSize(asset, fontSize) : iconUnit;
       const fittedNudge = fittedSize * .42;
       let motionX = 0, motionY = 0;
       if (replacementActive && swap && asset.motion === "float") motionY = Math.sin(replacementTime / 360 + index) * fittedSize * .10;
@@ -2278,7 +2314,7 @@
       : fontPx * .34;
     const baseline = height / 2 + baselineOffset;
     const finalScaleProgress = smoothstep(clamp(Math.max(0, seconds - timeline.replaceStartSeconds) * 1000 / clamp(Number($("ibFinalScaleDuration").value), 200, 1200), 0, 1));
-    const finalScale = 1 + Number($("ibFinalScale").value) / 100 * finalScaleProgress;
+    let finalScale = 1 + Number($("ibFinalScale").value) / 100 * finalScaleProgress;
 
     if (timeline.introOpacity > .001) {
       ctx.globalAlpha = timeline.introOpacity;
@@ -2328,6 +2364,10 @@
     const replacementTime = Math.max(0, (seconds - timeline.replaceStartSeconds) * 1000);
     const replacementActive = replacementEnabled() && seconds >= timeline.replaceStartSeconds && seconds < timeline.replaceEnd * baseCycleSeconds;
     const replacements = replacementState(replacementTime, replacementActive, playback);
+    const restingAnchors = getLetterAnchors();
+    const finalLayout = replacementLayout(replacements, restingAnchors, liveFontPx, composition.clientWidth, Number($("ibFinalScale").value) / 100);
+    finalScale *= finalLayout.fit;
+    layout.centers = restingAnchors.map((anchor, index) => (anchor.x + (finalLayout.offsets[index] || 0)) * screenScale);
     const hiddenTargets = new Set();
     const glyphsToDraw = [];
     replacements.forEach((replacement, assetId) => {
@@ -2349,7 +2389,7 @@
     poses.forEach((pose) => drawAssetToCanvas(ctx, pose.asset, width / 2 + pose.x, height / 2 + pose.y, pose.size, pose.rotation, pose.alpha));
 
     glyphsToDraw.forEach(({ asset, replacement }) => {
-      const fittedSize = fittedReplacementSize(asset, replacement.target, getLetterAnchors(), liveFontPx, composition.clientWidth, composition.clientHeight) * screenScale;
+      const fittedSize = (finalLayout.sizes.get(asset.id) || replacementIconSize(asset, liveFontPx)) * screenScale;
       const nudge = fittedSize * .42 * finalScale;
       const assetIndex = state.assets.indexOf(asset);
       const motionX = asset.motion === "orbit" ? Math.cos(replacementTime / 420 + assetIndex) * fittedSize * .14 * finalScale : 0;
