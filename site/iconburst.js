@@ -1776,7 +1776,8 @@
       const swap = Boolean(replacement && replacement.swap);
       const customX = asset.x / 100 * rect.width * .28;
       const customY = asset.y / 100 * rect.height * .28;
-      const letterBox = fontSize * .86;
+      const letterBox = fontSize * .86 * iconSize;
+      const orbitBox = Math.max(14, fontSize * .78 * iconSize);
       const orbitIndex = orbitIndexById.has(asset.id) ? orbitIndexById.get(asset.id) : -1;
       const orbitCount = Math.max(1, orbitAssets.length);
       const angleJitter = seed[2] * 1.65 * Math.PI / 180;
@@ -1883,8 +1884,8 @@
         element.style.width = `${letterBox}px`;
         element.style.height = `${letterBox}px`;
       } else {
-        element.style.width = "";
-        element.style.height = "";
+        element.style.width = `${orbitBox}px`;
+        element.style.height = `${orbitBox}px`;
       }
       const collapseT = asset.role === "orbit" && timeline.seconds >= timeline.collapseStartSeconds
         ? clamp((timeline.seconds - timeline.collapseStartSeconds) / (timeline.iconsGoneSeconds - timeline.collapseStartSeconds), 0, 1)
@@ -1900,7 +1901,7 @@
       element.style.setProperty("--tx", `${translateX}px`);
       element.style.setProperty("--ty", `${translateY}px`);
       element.style.setProperty("--rot", `${rotation}deg`);
-      element.style.setProperty("--s", String(iconSize * asset.size * baseScale));
+      element.style.setProperty("--s", String(asset.size * baseScale));
       element.style.setProperty("--alpha", String(reveal * asset.opacity));
       element.style.setProperty("--plate-alpha", plateAlpha.toFixed(3));
       element.style.setProperty("--shadow-x", `${(1.5 + depthFront * 2.5).toFixed(2)}px`);

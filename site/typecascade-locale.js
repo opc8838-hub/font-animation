@@ -112,7 +112,67 @@
     '彩虹圆环': 'Rainbow ring', '动态手掌': 'Moving hand', '动态天空': 'Moving sky', '动态线云': 'Line cloud',
     '动态线云 · 透明底黑线': 'Line cloud · black / alpha', '环绕线条': 'Orbit lines', '环绕线条 · 透明底黑线': 'Orbit lines · black / alpha',
     '彩色粗线': 'Color strokes', '渐变粗条': 'Gradient bars', '流光波线': 'Glowing waves', '双层飘带': 'Twin ribbons',
-    '旋转线圈': 'Spinning coil', '旋转线圈 · 透明底黑线': 'Spinning coil · black / alpha', '脉冲线束': 'Pulsing lines', '鲸鱼': 'Whale'
+    '旋转线圈': 'Spinning coil', '旋转线圈 · 透明底黑线': 'Spinning coil · black / alpha', '脉冲线束': 'Pulsing lines', '鲸鱼': 'Whale',
+    '选择一段内容，在右侧编辑': 'Select a block to edit on the right',
+    '主标题': 'Title', '文字': 'Text', '字体': 'Font', '字重': 'Weight',
+    '文字大小': 'Size', '文字间距': 'Tracking', '文字颜色': 'Text color',
+    '上传背景图片 / GIF / 视频': 'Upload image / GIF / video',
+    '当前使用纯色背景': 'Solid background', '清除背景素材': 'Remove media',
+    '共 27 款真实本地字体：已完整同步 SNAP 的 26 款，并新增 Archivo Black 粗黑近似字体。': '27 local fonts. The 26 SNAP fonts, plus Archivo Black.',
+    '连续换色': 'Color', '颜色动效': 'Color motion', '使用颜色数量': 'Color count',
+    '1 个颜色': '1 color', '2 个颜色': '2 colors', '3 个颜色': '3 colors', '4 个颜色': '4 colors',
+    '颜色 A': 'Color A', '颜色 B': 'Color B', '颜色 C': 'Color C', '颜色 D': 'Color D',
+    '换色速度': 'Sweep speed', '颜色停留': 'Color hold',
+    '柔光扫过 · Color Sweep': 'Soft sweep', '全体同时亮 · Full Flash': 'Full flash',
+    '逐字轮流亮 · Color Chase': 'Color chase', '中心向两侧亮 · Center Out': 'Center out',
+    '逐字接力 · Letter Relay': 'Letter relay', '流体渐变 · Aurora Flow': 'Aurora',
+    '色彩呼吸 · Color Pulse': 'Color pulse', '节奏硬切 · Beat Cut': 'Beat cut',
+    '扫色严格按已启用的 A → B → C → D 顺序经过；最后一个启用颜色会作为整句统一收尾色。换色速度最高 24×，可做超级快速扫色。': 'Colors run A → B → C → D. The last color fills the line. Sweep speed goes up to 24×.',
+    '图片与图标': 'Icons', '内容模式': 'Content',
+    '保留文字 · 环绕收拢后只换色': 'Keep text · color only',
+    '一个字切换成图标 / 图片': 'Replace one character',
+    '多个字切换成图标 / 图片': 'Replace several characters',
+    '文字切换图标 / 图片': 'Text becomes icons', '紧凑标题停留': 'Compact title hold',
+    '中央标题与图标起步': 'Title and icons start', '文字接入 · 图标聚拢': 'Words enter · icons gather',
+    '图标滞空继续流动': 'Icons keep drifting', '换色完成与复位': 'Color settles',
+    '阶段详情': 'Phase details', '名称与起止时间': 'Labels and timing',
+    '↻ 重播': '↻ Replay', '暂停': 'Pause', '播放': 'Play', '从头播放': 'Play from start',
+    '节奏': 'Timing', '节奏细节': 'Timing details', '循环速度': 'Loop speed',
+    '同时替换数量': 'Replacements at once', '每组最短时长': 'Minimum beat', '全局切换速度': 'Swap speed',
+    '1 个 · 依次播放': '1 · one by one', '2 个 · 两两播放': '2 · in pairs', '3 个': '3', '4 个': '4', '全部同时': 'All at once',
+    '滞空时长': 'Hang time', '慢动作速度': 'Slow-motion speed', '终点前转幅度': 'Overshoot',
+    '图文同步速度': 'Sync speed', '字体靠拢速度': 'Word approach', '单对碰撞时长': 'Pair duration',
+    '逐对碰撞间隔': 'Pair gap', '球体旋转速度': 'Orbit speed', '字体回归时长': 'Return time',
+    '图标聚拢密度': 'Cluster density', '收拢轨迹弧度': 'Curve', '替字收尾放大': 'Final scale', '收尾放大时长': 'Scale time',
+    '爆发范围': 'Burst range', '图标大小': 'Icon size', '左右文字与图标间距': 'Word spacing',
+    '聚拢图标整体水平位置': 'Cluster position',
+    '阶段 1 · 开场': 'Phase 1 · Opening', '阶段 3 · 颜色结束后': 'Phase 3 · After color',
+    '已选环绕图标': 'Orbit icons', '已选字体图标 / 图片': 'Letter icons',
+    '展开已选': 'Show selected', '项 · 展开后拖动排序': 'items · drag to reorder',
+    '＋ 添加环绕图片（可多选）': '＋ Add orbit images',
+    '＋ 添加字体图片（可多选）': '＋ Add letter images',
+    '＋ 添加内置透明动物图片': '＋ Add animals',
+    '＋ 添加 Bot 系列动态素材': '＋ Add Bot motion',
+    '＋ 添加音乐、播放、云朵、手表': '＋ Add music, play, cloud, watch',
+    '圆环': 'Ring', '彩虹圆环': 'Rainbow ring', '＋ 环绕图形': '＋ Orbit shape', '＋ 字体图形': '＋ Letter shape',
+    '直接这样编辑': 'Edit like this',
+    '① 添加图标或图片': '1. Add an icon or image',
+    '② 每一项分别设置字位、顺序、速度和停留时间': '2. Set position, order, speed, and hold for each',
+    '③ “同时替换数量”决定依次播放还是并行播放': '3. Replacement count plays them in sequence or together',
+    '每个字体图标可单独设置字位、顺序、速度和停留时间；停留变长时，循环会自动延长，不会截断图标。': 'Each letter icon has its own position, order, speed, and hold. A longer hold extends the loop.',
+    '间距控制左右文字离图标多远；整体水平位置用负值向左、正值向右移动聚拢后的整组图标。': 'Spacing sets how far the words sit from the icons. Negative cluster position moves the group left.',
+    '“字体靠拢速度”会同时缩短每一对字体的移动时间与接力间隔；单对时长和逐对间隔可继续精调。换色速度控制碰撞开始后从左向右连续扫过整句的速度。': 'Approach speed shortens each pair and the handoff. Sweep speed runs left to right after the words meet.',
+    '文字、节奏、颜色、背景素材与全部图片/图标都会随方案保存。': 'Text, timing, colors, background, and icons are saved with the project.',
+    '已恢复上次自动保存的方案。': 'Restored the last autosaved project.',
+    '已载入最新默认示例。': 'Loaded the default example.',
+    '导出': 'Export', '导出时长': 'Duration', '完整一轮': 'Full cycle', '自定义': 'Custom', '自定义秒数': 'Custom seconds',
+    '帧率': 'Frame rate', 'PNG 图片': 'PNG', 'GIF 动图': 'GIF', 'MP4 视频': 'MP4',
+    '导出使用与预览相同的文字、背景、图标素材和确定性时间轴。': 'Export uses the same text, background, icons, and timeline as the preview.',
+    '宽': 'W', '高': 'H', '画布尺寸': 'Canvas size',
+    '颜色动效结束后，多个文字位置可由不同字体图标或图片分别接管。': 'After the color, different icons can take over different characters.',
+    '环绕与字体换面完成后，多个文字位置可由不同字体图标或图片分别接管。': 'After the orbit and the color, different icons can take over different characters.',
+    '环绕与字体换面完成后，每个节拍只让一个文字位置切换成字体图标或图片。': 'After the orbit and the color, one character becomes an icon on each beat.',
+    '环绕图标从首帧沿弧线转向聚拢；字体始终保持水平，图标消失后文字闭合并继续换色。': 'Icons arc in from the first frame. The words stay level, then close and change color.'
   }));
   const phaseNames = ['立字开场', '结束停留', '倾倒坠落', '基线长入', '停留', '倾倒', '悬停', '下落', '主词入场', '主词停顿', '居中预备', '后句接入', '本页停留'];
   const languageButton = document.createElement('button');
@@ -137,6 +197,11 @@
       for (const name of phaseNames) if (s.startsWith(`${name} · `)) out = dictionary.get(name) + s.slice(name.length);
     } else {
       out = dictionary.get(s) || s;
+      if (out === s) {
+        const beat = s.match(/^(\d+)\s·\s(.+)$/);
+        if (beat && dictionary.get(beat[2])) out = `${beat[1]} · ${dictionary.get(beat[2])}`;
+        else if (/^\d+ 对字体逐对靠拢并同步换色$/.test(s)) out = s.replace(/^(\d+) 对字体逐对靠拢并同步换色$/, '$1 pairs meet and change color');
+      }
       if (out === s) {
         out = s
           .replace(/^(\d+:\d+) (方形|竖版|全屏|横版)/, (_, ratio, kind) => `${ratio} ${{方形:'Square',竖版:'Portrait',全屏:'Portrait',横版:'Landscape'}[kind]}`)
@@ -171,6 +236,7 @@
           .replace(/^(.*) 已设为本行背景。$/, '$1 is now the background for this block.')
           .replace(/ · 已加入“我的图片”，尚未自动插入。$/, ' · Added to “My images” without inserting it.');
       }
+      if (language === 'en') out = out.replace(/([\d.]+)秒/g, '$1s');
     }
     return value.replace(s, out);
   }
@@ -216,7 +282,8 @@
     languageButton.setAttribute('aria-label', next === 'en' ? 'Switch to Chinese' : '切换为英文');
     languageButton.lang = next === 'en' ? 'zh-CN' : 'en';
     walk(body);
-    document.title = next === 'en' ? 'Type Cascade | CellMotion' : '字倾 Type Cascade | CellMotion';
+    const heading = document.querySelector('.tc-header h1, .gm-header h1');
+    document.title = heading ? `${heading.textContent.replace(/\s+/g, ' ').trim()} | CellMotion` : document.title;
     try { localStorage.setItem('cellmotion-editor-language', next); } catch (_) { /* Optional preference. */ }
     document.dispatchEvent(new CustomEvent('tc-languagechange', { detail: { language: next } }));
   }
