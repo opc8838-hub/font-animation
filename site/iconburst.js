@@ -166,33 +166,18 @@
     const durationScale = clamp(5 / colorSpeed, .82, 3);
     return smoothstep(clamp(value / durationScale, 0, 1));
   }
-  // The reference is a two-beat impact, not a uniformly staggered squeeze.
-  // Inner pairs chase each other quickly; the outermost letter on each side
-  // waits for that first impact before it closes the word on the second beat.
+  // Source frames 127–131: inner letters lead; the outside pair closes last.
+  // There is no outward preparation or elastic rebound before this impact.
   function collisionPairStartOffset(rank, maxRank, pairStaggerSeconds) {
-    if (maxRank <= 1) return rank * pairStaggerSeconds;
-    if (rank === maxRank) return ((maxRank - 1) * .32 + 2.8) * pairStaggerSeconds;
-    return rank * pairStaggerSeconds * .32;
+    return Math.min(rank, maxRank) * pairStaggerSeconds;
   }
   function collisionBeat(value) {
     const progress = clamp(value, 0, 1);
-    let distanceFactor = 1;
-    if (progress < .16) {
-      // A small outward preparation makes the following inward force legible.
-      distanceFactor = 1 + .105 * smoothstep(progress / .16);
-    } else if (progress < .68) {
-      const impact = easeOutExpo((progress - .16) / .52);
-      // Cross the resting point slightly instead of stopping on it.
-      distanceFactor = 1.105 + (-.075 - 1.105) * impact;
-    } else {
-      const settle = clamp((progress - .68) / .32, 0, 1);
-      distanceFactor = -.075 * (1 - easeOut(settle)) * Math.cos(settle * Math.PI * .75);
-    }
-    const impactPulse = Math.exp(-Math.pow((progress - .67) / .13, 2));
+    const impactPulse = Math.sin(Math.PI * progress);
     return {
-      distanceFactor,
-      scale: 1 + .065 * impactPulse,
-      color: collisionColorProgress(clamp((progress - .18) / .78, 0, 1))
+      distanceFactor: 1 - easeOut(progress),
+      scale: 1 + .018 * impactPulse * impactPulse,
+      color: collisionColorProgress(progress)
     };
   }
   function createMonotoneSampler(keyframes) {
@@ -888,6 +873,7 @@
         span.className = "ib-incoming-letter";
         span.textContent = character;
         span.dataset.rank = String(Math.max(0, gapIndex - 1 - index));
+        span.dataset.letter = String(index);
         incomingLeft.append(span);
       });
       Array.from(characters.slice(gapIndex + 1).join("").trimStart()).forEach((character, index) => {
@@ -895,6 +881,8 @@
         span.className = "ib-incoming-letter";
         span.textContent = character;
         span.dataset.rank = String(index);
+        const rightStart = gapIndex + 1 + characters.slice(gapIndex + 1).findIndex((value) => value.trim());
+        span.dataset.letter = String(Math.max(gapIndex + 1, rightStart) + index);
         incomingRight.append(span);
       });
     } else {
@@ -905,6 +893,7 @@
         span.className = "ib-incoming-letter";
         span.textContent = character;
         span.dataset.rank = String(sideCharacters.length - 1 - index);
+        span.dataset.letter = String(index);
         incomingLeft.append(span);
       });
       characters.slice(gapIndex + 1).forEach((character, index) => {
@@ -912,6 +901,7 @@
         span.className = "ib-incoming-letter";
         span.textContent = character;
         span.dataset.rank = String(index);
+        span.dataset.letter = String(gapIndex + 1 + index);
         incomingRight.append(span);
       });
     }
@@ -923,6 +913,9 @@
       if (!state.naturalGap && index === gapIndex) span.classList.add("ib-gap-anchor");
       word.append(span);
     });
+    const movingLetters = [...incomingLeft.children, ...incomingRight.children];
+    const maxColorRank = Math.max(1, ...movingLetters.map((letter) => Number(letter.dataset.rank)));
+    state.colorDistances = new Map(movingLetters.map((letter) => [Number(letter.dataset.letter), Number(letter.dataset.rank) / maxColorRank]));
     colorWord.innerHTML = word.innerHTML;
     whiteWord.innerHTML = word.innerHTML;
     state.assets.forEach((asset) => { if (asset.target >= word.children.length) asset.target = -1; });
@@ -1095,7 +1088,7 @@
   }
 
   function timelineMarkers() {
-    const wordsEnterStart = .39;
+    const wordsEnterStart = .27;
     const wordReturnDuration = clamp(Number($("ibWordReturn").value) / 1000, .08, 1.20);
     // A longer font return extends the shared opening chapter. Later chapters
     // are derived from this marker, so slow motion, color and replacements can
@@ -1104,27 +1097,28 @@
     const slowDuration = clamp(Number($("ibHang").value) / 100, .20, 1.40);
     const holdEndSeconds = settleEnd + slowDuration;
     const collapseStartSeconds = holdEndSeconds;
-    const iconsGoneSeconds = collapseStartSeconds + .20;
+    const iconsGoneSeconds = collapseStartSeconds + 1 / 6;
     const pairCount = incomingPairCount();
     const collisionSpeed = clamp(Number($("ibCollisionSpeed").value), .5, 3);
     const pairStaggerSeconds = clamp(Number($("ibPairStagger").value) / 1000 / collisionSpeed, .015, .52);
     const collisionDurationSeconds = clamp(Number($("ibCollisionDuration").value) / 1000 / collisionSpeed, .04, 1.60);
-    // The centre pair starts while the icon cloud is still suspended. Each
+    // The centre pair starts during the last, near-subpixel cloud collapse. Each
     // following pair joins in rank order, so arbitrary text lengths generate
     // their own collision choreography instead of collapsing all at once.
-    const contactStartSeconds = collapseStartSeconds + .03;
+    const contactStartSeconds = collapseStartSeconds + .12;
     const lastPairOffsetSeconds = collisionPairStartOffset(pairCount - 1, pairCount - 1, pairStaggerSeconds);
     const contactSeconds = Math.max(iconsGoneSeconds, contactStartSeconds + collisionDurationSeconds + lastPairOffsetSeconds);
     // Color begins with the centre pair, not after every pair has already
     // arrived. This overlap is the visual hand-off between collision and color.
-    const lettersMoveStart = contactStartSeconds;
+    const lettersMoveStart = contactStartSeconds + collisionDurationSeconds * .32;
     const colorSpeed = clamp(Number($("ibColorSpeed").value), .5, 24);
     const colorHold = clamp(Number($("ibSoftness").value), 8, 70);
     // The colored front has its own clock. It must not inherit the duration of
     // the last colliding pair or the speed control becomes visually inert.
-    const colorDuration = clamp(.55 * (5 / colorSpeed), .11, 2.50);
+    const centerWave = $("ibColorMode").value === "unfold";
+    const colorDuration = clamp((centerWave ? .16 : .55) * (5 / colorSpeed), .08, 2.50);
     const colorHoldDuration = clamp(.02 + (colorHold - 28) / 42 * .16, .01, .18);
-    const whiteDuration = clamp(.20 * (5 / colorSpeed), .04, .80);
+    const whiteDuration = clamp((centerWave ? .13 : .20) * (5 / colorSpeed), .06, .80);
     const colorFullSeconds = lettersMoveStart + colorDuration;
     // A fast sweep can finish while the outer letters are still arriving.
     // Keep its final selected color until the word is compact, then return to
@@ -1324,8 +1318,8 @@
     ibColorC: "#9a6ddf",
     ibColorD: "#bf73e7",
     ibBackground: "#f5f5f5",
-    ibColorSpeed: "9.7",
-    ibSoftness: "8",
+    ibColorSpeed: "5",
+    ibSoftness: "28",
     ibContentMode: "replace-multi",
     ibRange: "98",
     ibSize: "100",
@@ -1334,14 +1328,14 @@
     ibReplaceSpeed: "4.5",
     ibCollapse: "91",
     ibClusterX: "0",
-    ibHang: "20",
+    ibHang: "75",
     ibDrift: "22",
     ibOvershoot: "58",
-    ibSync: "155",
-    ibCollisionSpeed: "2",
-    ibCollisionDuration: "210",
+    ibSync: "100",
+    ibCollisionSpeed: "1.5",
+    ibCollisionDuration: "160",
     ibPairStagger: "40",
-    ibOrbitSpeed: "145",
+    ibOrbitSpeed: "100",
     ibWordReturn: "360",
     ibDensity: "85",
     ibCurve: "58",
@@ -1521,6 +1515,79 @@
     return replacements;
   }
 
+  function orbitSettings() {
+    return {
+      range: Number($("ibRange").value) / 100,
+      size: Number($("ibSize").value) / 100,
+      speed: clamp(Number($("ibOrbitSpeed").value) / 100, .5, 2),
+      curve: Number($("ibCurve").value) / 100,
+      density: clamp(Number($("ibDensity").value) / 100, 0, 1),
+      clusterX: Number($("ibClusterX").value) / 100
+    };
+  }
+
+  function orbitalPose(asset, index, count, timeline, width, height, settings) {
+    const gather = clamp(timeline.iconGather, 0, 1);
+    const radial = easeOut(gather);
+    const sphereY = 1 - 2 * (index + .5) / Math.max(1, count);
+    const latitude = Math.sqrt(Math.max(0, 1 - sphereY * sphereY));
+    const longitude = index * Math.PI * (3 - Math.sqrt(5))
+      + seeds[index % seeds.length][2] * .008
+      + timeline.orbitAngleDegrees * settings.curve * settings.speed * Math.PI / 180;
+    const sphereX = Math.cos(longitude) * latitude;
+    const sphereZ = Math.sin(longitude) * latitude;
+    const pitch = (-16 + 27 * radial) * Math.PI / 180;
+    const y3 = sphereY * Math.cos(pitch) - sphereZ * Math.sin(pitch);
+    const z3 = sphereY * Math.sin(pitch) + sphereZ * Math.cos(pitch);
+    const perspective = 1 / (1 - z3 * .24);
+    const unit = Math.min(width, height);
+    const clusterRadius = unit * (.118 + index % 3 * .003) * (1.45 - .83 * settings.density);
+    // A wide field must use the actual width as well as height. A min(w,h)
+    // radius only populated the middle circle on a landscape canvas.
+    const radiusX = width * .64 * settings.range * (1 - radial) + clusterRadius * radial;
+    const radiusY = height * .61 * settings.range * (1 - radial) + clusterRadius * radial;
+    const collapseT = clamp((timeline.seconds - timeline.collapseStartSeconds)
+      / Math.max(.001, timeline.iconsGoneSeconds - timeline.collapseStartSeconds), 0, 1);
+    // The last source frames still contain a small, legible central bundle.
+    // A steep ease-out makes it subpixel several frames before the exit.
+    const cloudScale = 1 - collapseT;
+    const x = (sphereX * radiusX * perspective + asset.x / 100 * width * .28 * radial
+      + settings.clusterX * width * .35 * radial) * cloudScale;
+    const y = (y3 * radiusY * perspective + asset.y / 100 * height * .28 * radial) * cloudScale;
+    const depthScale = clamp(1 + z3 * .24, .72, 1.28);
+    const faceScale = .72 + .28 * Math.abs(Math.cos(longitude));
+    return {
+      x, y, depth: z3, cloudScale, faceScale,
+      size: unit * .16 * settings.size * asset.size * (1.12 - .12 * radial) * depthScale * cloudScale,
+      rotation: asset.rotation + 10 * Math.sin(Math.PI * gather) + 5.5 * Math.sin(Math.PI * collapseT),
+      alpha: cloudScale > .00001 ? asset.opacity : 0
+    };
+  }
+
+  function incomingDisplacement(timeline, width) {
+    return (1 - timeline.incomingOrbit) * width * .55;
+  }
+
+  // Source frames 128–135 show the same center-out direction for color and
+  // base-color restoration. Sample while letters move, not after they settle.
+  function centerSweepColor(index, count, colorReveal, whiteReveal = 0) {
+    const base = $("ibBaseColor").value;
+    const colors = activeEffectColors();
+    const middle = (count - 1) / 2;
+    const distance = state.colorDistances?.get(index) ?? Math.abs(index - middle) / Math.max(1, middle);
+    const edge = .11;
+    const trail = .32;
+    const head = colorReveal * (1 + trail + edge) - edge;
+    const coverage = smoothstep((head - distance + edge) / (edge * 2));
+    const palette = sampleColorList(colors, clamp((head - distance) / trail, 0, 1));
+    let color = mixHex(base, palette, coverage);
+    if (whiteReveal > 0) {
+      const whiteHead = whiteReveal * (1 + edge * 2) - edge;
+      color = mixHex(color, base, smoothstep((whiteHead - distance + edge) / (edge * 2)));
+    }
+    return color;
+  }
+
   function masterTimeline(phase, durationSeconds, replacementDurationMs) {
     const seconds = phase * durationSeconds;
     const at = (value) => value / durationSeconds;
@@ -1601,13 +1668,11 @@
       - sampleOrbitalSweep(gatherAtSlowStart + slowGatherAdvance) * 180 / Math.PI;
     const acceleratedOrbitDegrees = orbitOvershootDegrees;
     const orbitCarryDegrees = orbitAngleDegrees - orbitStartDegrees;
-    const openingSync = clamp((iconGather - .12) / .62, 0, 1);
-    const leadInProgress = clamp(seconds / shrinkStartSeconds, 0, 1);
-    const introScale = (1 - .04 * leadInProgress) * (1 - .97 * openingSync);
-    // In the slowed reference this lasts roughly .4s; played at normal speed
-    // it is a ~140ms two-sided snap. Strong deceleration keeps the arrival fast
-    // without producing a hard positional cut.
-    const incomingEntry = easeOutExpo(clamp((seconds - wordsEnterStart) / wordReturnDuration, 0, 1));
+    const openingSync = smoothstep(clamp((iconGather - .04) / .44, 0, 1));
+    const introScale = Math.max(0, 1 - openingSync);
+    // Normal-speed frames 87–100 show side entry braking into the open slot.
+    // Keep one continuous displacement throughout the configurable return.
+    const incomingEntry = easeOut(clamp((seconds - wordsEnterStart) / wordReturnDuration, 0, 1));
     const incomingReveal = incomingEntry > .02 ? 1 : 0;
     const incomingYaw = 0;
     const incomingOrbit = incomingEntry;
@@ -1627,9 +1692,7 @@
 
     const iconPresence = seconds < iconsGoneSeconds ? 1 : 0;
     const wordOpacity = seconds >= contactSeconds ? 1 : 0;
-    const introOpacity = seconds < wordsEnterStart
-      ? 1
-      : 1 - easeOut(clamp((seconds - wordsEnterStart) / .045, 0, 1));
+    const introOpacity = introScale > .005 && seconds < settleEnd ? 1 : 0;
     const incomingOpacity = seconds < wordsEnterStart - .015 || seconds >= contactSeconds
       ? 0
       : easeOut(clamp((seconds - (wordsEnterStart - .015)) / .045, 0, 1));
@@ -1743,7 +1806,11 @@
     const replacements = replacementState(replacementTime, replacementActive, playback);
     const colorMode = $("ibColorMode").value;
     if (colorActive && colorMode === "sweep") applyLinearSweep(Array.from(word.children), timeline.colorReveal, timeline.whiteReveal);
-    else if (colorActive && colorMode !== "unfold") animateColor(colorTime, true);
+    else if (colorActive && colorMode === "unfold") {
+      Array.from(word.children).forEach((letter, index, letters) => {
+        letter.style.setProperty("--letter-color", centerSweepColor(index, letters.length, timeline.colorReveal, timeline.whiteReveal));
+      });
+    } else if (colorActive) animateColor(colorTime, true);
     if (colorMode !== "unfold" && colorMode !== "sweep" && timeline.colorReveal >= .999 && timeline.seconds < timeline.whiteStartSeconds) {
       Array.from(word.children).forEach((letter) => { if (letter.textContent.trim()) letter.style.setProperty("--letter-color", finalEffectColor()); });
     }
@@ -1762,20 +1829,10 @@
     introWord.style.setProperty("--intro-scale", timeline.introScale.toFixed(4));
     introWord.style.opacity = String(timeline.introOpacity);
     incomingWord.style.opacity = String(timeline.incomingOpacity);
-    const wordCurveStrength = Number($("ibCurve").value) / 100;
-    const orbitRemaining = 1 - timeline.incomingOrbit;
-    const orbitArc = Math.sin(Math.PI * timeline.incomingOrbit);
     const frame = frameBox();
     const fontSize = parseFloat(word.style.fontSize) || 100;
-    const titleWidth = Math.max(word.scrollWidth, fontSize * 2);
-    const halfReach = titleWidth * .58;
-    const orbitRoom = Math.max(0, frame.width * .46 - halfReach);
-    const orbitCenterShift = orbitRemaining * Math.min(frame.width * .12, orbitRoom);
-    const orbitOvershoot = orbitArc * Math.min(frame.width * .012, 12) * wordCurveStrength;
-    const orbitX = orbitCenterShift - orbitOvershoot;
-    const orbitY = orbitArc * Math.min(frame.height * .012, 10) * wordCurveStrength;
-    incomingWord.style.setProperty("--incoming-orbit-x", `${orbitX.toFixed(2)}px`);
-    incomingWord.style.setProperty("--incoming-orbit-y", `${orbitY.toFixed(2)}px`);
+    incomingWord.style.setProperty("--incoming-orbit-x", `${incomingDisplacement(timeline, frame.width).toFixed(2)}px`);
+    incomingWord.style.setProperty("--incoming-orbit-y", "0px");
     incomingWord.style.setProperty("--incoming-mask", "0%");
     incomingWord.classList.toggle("is-unmasked", timeline.incomingReveal > 0);
 
@@ -1791,6 +1848,7 @@
     const collisionColors = activeEffectColors();
     const collisionBaseColor = $("ibBaseColor").value;
     const collisionLetterCount = Math.max(1, Array.from(word.children).length);
+    const restingAnchors = getLetterAnchors();
     [
       { element: incomingLeft, direction: -1 },
       { element: incomingRight, direction: 1 }
@@ -1805,12 +1863,17 @@
         const beat = collisionBeat(localProgress);
         const rankRatio = maxRank > 0 ? rank / maxRank : 0;
         const openDistance = sideShift * (.88 + .12 * rankRatio);
-        letter.style.setProperty("--incoming-letter-x", `${(direction * openDistance * beat.distanceFactor).toFixed(2)}px`);
+        const anchorIndex = Number(letter.dataset.letter || 0);
+        const restingX = restingAnchors[anchorIndex]?.x || 0;
+        const entryX = direction * incomingDisplacement(timeline, frame.width);
+        letter.style.setProperty("--incoming-letter-x", `${(restingX + entryX + direction * openDistance * beat.distanceFactor).toFixed(2)}px`);
         letter.style.setProperty("--incoming-letter-scale", beat.scale.toFixed(4));
         const letterIndex = clamp(Number(letter.dataset.letter || 0), 0, collisionLetterCount - 1);
         const collisionColor = colorMode === "sweep"
           ? linearSweepColor(letterIndex, collisionLetterCount, timeline.colorReveal, timeline.whiteReveal)
-          : mixHex(collisionBaseColor, collisionColors[inwardOrder % collisionColors.length], beat.color);
+          : colorMode === "unfold"
+            ? centerSweepColor(letterIndex, collisionLetterCount, timeline.colorReveal, timeline.whiteReveal)
+            : mixHex(collisionBaseColor, collisionColors[inwardOrder % collisionColors.length], beat.color);
         letter.style.setProperty("--incoming-letter-color", collisionColor);
       });
     });
@@ -1847,172 +1910,59 @@
       letter.style.setProperty("--overlay-color", mixHex(transitionColor, uniformColor, uniformColorProgress));
     });
 
-    const overlayActive = colorMode === "unfold" && timeline.seconds >= timeline.contactSeconds && timeline.seconds < timeline.replaceStartSeconds;
+    const overlayActive = false; // The moving/final glyphs now own the same wave.
     colorWord.style.opacity = overlayActive ? "1" : "0";
-    whiteWord.style.opacity = colorMode === "unfold" && timeline.seconds >= timeline.whiteStartSeconds && timeline.seconds < timeline.replaceStartSeconds ? "1" : "0";
+    whiteWord.style.opacity = "0";
     colorWord.style.setProperty("--color-sweep-inset", `${(50 * (1 - timeline.colorReveal)).toFixed(3)}%`);
     whiteWord.style.setProperty("--reveal-inset", `${(50 * (1 - timeline.whiteReveal)).toFixed(3)}%`);
 
-    const range = Number($("ibRange").value) / 100;
-    const iconSize = Number($("ibSize").value) / 100;
     const rect = { width: composition.clientWidth, height: composition.clientHeight };
     const letters = Array.from(word.children);
     const anchors = replacementActive ? getLetterAnchors() : [];
     const burst = 1 - clamp(timeline.pathProgress, 0, 1);
-    const curveStrength = Number($("ibCurve").value) / 100;
-    const orbitSpeed = clamp(Number($("ibOrbitSpeed").value) / 100, .5, 2);
     const clusterOffsetX = Number($("ibClusterX").value) / 100 * rect.width * .35 * easeInOut(clamp(timeline.iconGather / .85, 0, 1));
     const orbitAssets = state.assets.filter((asset) => asset.role === "orbit");
     const orbitIndexById = new Map(orbitAssets.map((asset, index) => [asset.id, index]));
+    const cloudSettings = orbitSettings();
     state.iconElements.forEach((element, index) => {
       const asset = state.assets[index];
       if (!asset) return;
-      const seed = seeds[index % seeds.length];
-      const ring = Math.floor(index / seeds.length) + 1;
+      if (asset.role === "orbit") {
+        const pose = orbitalPose(asset, orbitIndexById.get(asset.id), orbitAssets.length, timeline, rect.width, rect.height, cloudSettings);
+        const unit = Math.min(rect.width, rect.height) * .16;
+        element.style.width = `${unit}px`;
+        element.style.height = `${unit}px`;
+        element.style.setProperty("--tx", `${pose.x}px`);
+        element.style.setProperty("--ty", `${pose.y}px`);
+        element.style.setProperty("--rot", `${pose.rotation}deg`);
+        element.style.setProperty("--s", String(pose.size / unit));
+        element.style.setProperty("--face-scale", String(pose.faceScale));
+        element.style.setProperty("--alpha", String(pose.alpha));
+        element.style.zIndex = String(30 + Math.round((pose.depth + 1) * 24));
+        return;
+      }
       const replacement = replacements.get(asset.id);
-      let anchorX = 0, anchorY = 0;
-      if (replacement && anchors[replacement.target]) {
-        anchorX = anchors[replacement.target].x;
-        anchorY = anchors[replacement.target].y;
-      }
-      const envelope = replacement ? replacement.envelope : 0;
       const swap = Boolean(replacement && replacement.swap);
-      const customX = asset.x / 100 * rect.width * .28;
-      const customY = asset.y / 100 * rect.height * .28;
+      const anchor = replacement && anchors[replacement.target];
       const iconUnit = Math.min(rect.width, rect.height) * .16;
-      const letterBox = iconUnit;
-      const orbitBox = iconUnit;
-      const orbitIndex = orbitIndexById.has(asset.id) ? orbitIndexById.get(asset.id) : -1;
-      const orbitCount = Math.max(1, orbitAssets.length);
-      const angleJitter = seed[2] * 1.65 * Math.PI / 180;
-      const distributedAngle = -Math.PI / 2 + Math.PI * 2 * Math.max(0, orbitIndex) / orbitCount + angleJitter;
-      const radialScatter = .46 + ((Math.max(0, orbitIndex) * 7) % 5) * .068;
-      const startX = asset.role === "orbit"
-        ? Math.cos(distributedAngle) * rect.width * range * radialScatter
-        : seed[0] * rect.width * range * (.82 + .18 * ring);
-      const startY = asset.role === "orbit"
-        ? Math.sin(distributedAngle) * rect.height * range * radialScatter
-        : seed[1] * rect.height * range * (.82 + .18 * ring);
-      const target = clusterTargets[Math.max(0, orbitIndex) % clusterTargets.length];
-      const targetX = target[0] * rect.width;
-      const targetY = target[1] * rect.height;
-      const gather = timeline.iconGather;
-      const settledGather = clamp(gather, 0, 1);
-      const radius = Math.max(1, Math.hypot(startX, startY));
-      // All opening assets share one orbital direction. Alternating the
-      // direction per icon made the cloud look like unrelated pieces fighting
-      // each other. Individuality now comes from radius and target, not from a
-      // different choreography.
-      const trajectoryDirection = 1;
-      let pathTangentX = -startY / radius;
-      let pathTangentY = startX / radius;
-      let depthScale = 1;
-      let depthValue = 0;
-      let scatterX;
-      let scatterY;
-      if (asset.role === "orbit") {
-        // Fibonacci sphere: assets are evenly distributed over a 3D shell,
-        // rotate together around its Y axis, and remain camera-facing. This
-        // creates front/back crossings instead of a flat vertical carousel.
-        const safeOrbitIndex = Math.max(0, orbitIndex);
-        const sphereY = 1 - 2 * (safeOrbitIndex + .5) / orbitCount;
-        const latitudeRadius = Math.sqrt(Math.max(0, 1 - sphereY * sphereY));
-        const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-        const baseLongitude = safeOrbitIndex * goldenAngle + angleJitter * .28;
-        const orbitalAngle = baseLongitude + timeline.orbitAngleDegrees * curveStrength * orbitSpeed * Math.PI / 180;
-        const sphereX = Math.cos(orbitalAngle) * latitudeRadius;
-        const sphereZ = Math.sin(orbitalAngle) * latitudeRadius;
-        // A small diagonal pitch turns the round shell into the reference's
-        // crossing, slightly tilted orbit without rotating the text layer.
-        const pitch = (-16 + 27 * easeInOut(settledGather)) * Math.PI / 180;
-        const projectedY = sphereY * Math.cos(pitch) - sphereZ * Math.sin(pitch);
-        const projectedZ = sphereY * Math.sin(pitch) + sphereZ * Math.cos(pitch);
-        const radialProgress = easeInOut(settledGather);
-        const startRadius = Math.min(rect.width, rect.height) * range * (.49 + (safeOrbitIndex % 3) * .018);
-        const densityStrength = clamp(Number($("ibDensity").value) / 100, 0, 1);
-        const spreadScale = 1.45 - .83 * densityStrength;
-        const clusterRadius = Math.min(rect.width, rect.height) * (.118 + (safeOrbitIndex % 3) * .003) * spreadScale;
-        const sphereRadius = startRadius + (clusterRadius - startRadius) * radialProgress;
-        const perspective = 1 / (1 - projectedZ * .22);
-        scatterX = sphereX * sphereRadius * perspective;
-        scatterY = projectedY * sphereRadius * perspective * .94;
-        depthValue = projectedZ;
-        depthScale = clamp(1 + projectedZ * .22, .76, 1.24);
-        pathTangentX = -Math.sin(orbitalAngle);
-        pathTangentY = Math.cos(orbitalAngle) * Math.cos(pitch);
-      } else {
-        scatterX = startX + (targetX - startX) * easeInOut(gather);
-        scatterY = startY + (targetY - startY) * easeInOut(gather);
-      }
-      // Near the cluster, continue through the target along the incoming
-      // tangent, briefly crossing the opposite side before settling. This is
-      // the reference's moving "cross" impression—not planar self-rotation.
-      const crossT = clamp((gather - .58) / .39, 0, 1);
-      const crossSine = Math.sin(Math.PI * crossT);
-      const crossPulse = crossSine * crossSine;
-      if (asset.role === "orbit") {
-        const crossingDrift = Math.min(rect.width, rect.height) * .018 * curveStrength * crossPulse;
-        scatterX += pathTangentX * trajectoryDirection * crossingDrift;
-        scatterY += pathTangentY * trajectoryDirection * crossingDrift;
-      }
+      const fittedNudge = iconUnit * .42;
       let motionX = 0, motionY = 0;
       if (replacementActive && swap && asset.motion === "float") motionY = Math.sin(replacementTime / 360 + index) * 5;
       if (replacementActive && swap && asset.motion === "orbit") {
         motionX = Math.cos(replacementTime / 420 + index) * 7;
         motionY = Math.sin(replacementTime / 420 + index) * 7;
       }
-      let introVisible = asset.role !== "glyph" ? timeline.iconPresence : 0;
-      let collapseScale = 1;
-      if (asset.role === "orbit" && timeline.seconds >= timeline.collapseStartSeconds) {
-        // Font contact and every icon collapse start on the same frame. The
-        // former per-icon delay made the title visibly outrun the icon layer.
-        const collapseDuration = timeline.iconsGoneSeconds - timeline.collapseStartSeconds;
-        const localCollapse = clamp((timeline.seconds - timeline.collapseStartSeconds) / collapseDuration, 0, 1);
-        // First arrive, then visibly continue past the endpoint on the sphere,
-        // and only after that begin disappearing. Keeping full scale through
-        // 65% of this chapter makes the forward rotation readable.
-        const disappearStart = .65;
-        const disappearProgress = clamp((localCollapse - disappearStart) / (1 - disappearStart), 0, 1);
-        collapseScale = 1 - easeInOut(disappearProgress);
-        if (localCollapse >= 1) introVisible = 0;
-      }
-      const reveal = Math.max(introVisible, swap ? 1 : 0);
-      const fittedNudge = letterBox * .42;
-      const translateX = replacement ? anchorX + asset.x / 100 * fittedNudge + motionX : scatterX + customX + motionX + (asset.role === "orbit" ? clusterOffsetX : 0);
-      const translateY = replacement ? anchorY + asset.y / 100 * fittedNudge + motionY : scatterY + customY + motionY;
-      const startScale = 1.12 + (orbitIndex % 4) * .09;
-      const introScale = (startScale + (1 - startScale) * gather) * collapseScale * depthScale;
-      const replacementScale = .98 + easeOut(envelope) * .02;
-      const baseScale = replacement ? replacementScale : introScale;
-      if (replacement) {
-        element.style.width = `${letterBox}px`;
-        element.style.height = `${letterBox}px`;
-      } else {
-        element.style.width = `${orbitBox}px`;
-        element.style.height = `${orbitBox}px`;
-      }
-      const collapseT = asset.role === "orbit" && timeline.seconds >= timeline.collapseStartSeconds
-        ? clamp((timeline.seconds - timeline.collapseStartSeconds) / (timeline.iconsGoneSeconds - timeline.collapseStartSeconds), 0, 1)
-        : 0;
-      // The spherical position carries the 3D motion. Icons remain readable
-      // billboards and only bank gently along their path.
-      const pathTurn = asset.role === "orbit" ? 10 * Math.sin(Math.PI * settledGather) : 0;
-      const collapseTurn = asset.role === "orbit" ? 5.5 * Math.sin(Math.PI * collapseT) : 0;
-      const rotation = asset.rotation + pathTurn + collapseTurn;
-      const depthFront = clamp((depthValue + 1) / 2, 0, 1);
-      const plateAlpha = asset.role === "orbit" ? (.12 + .10 * depthFront + .03 * crossPulse) * introVisible * collapseScale : 0;
+      const replacementScale = .98 + easeOut(replacement?.envelope || 0) * .02;
+      element.style.width = `${iconUnit}px`;
+      element.style.height = `${iconUnit}px`;
       element.classList.toggle("is-replacement", swap);
-      element.style.setProperty("--tx", `${translateX}px`);
-      element.style.setProperty("--ty", `${translateY}px`);
-      element.style.setProperty("--rot", `${rotation}deg`);
-      element.style.setProperty("--s", String(asset.size * baseScale));
-      element.style.setProperty("--alpha", String(reveal * asset.opacity));
-      element.style.setProperty("--plate-alpha", plateAlpha.toFixed(3));
-      element.style.setProperty("--shadow-x", `${(1.5 + depthFront * 2.5).toFixed(2)}px`);
-      element.style.setProperty("--shadow-y", `${(3 + depthFront * 4).toFixed(2)}px`);
-      element.style.setProperty("--shadow-blur", `${(5 + depthFront * 8).toFixed(2)}px`);
-      element.style.setProperty("--shadow-alpha", (.26 + depthFront * .24).toFixed(3));
-      if (asset.role === "orbit" && !swap) element.style.zIndex = String(30 + Math.round((depthValue + 1) * 24));
+      element.style.setProperty("--face-scale", "1");
+      element.style.setProperty("--tx", `${(anchor?.x || 0) + asset.x / 100 * fittedNudge + motionX}px`);
+      element.style.setProperty("--ty", `${(anchor?.y || 0) + asset.y / 100 * fittedNudge + motionY}px`);
+      element.style.setProperty("--rot", `${asset.rotation}deg`);
+      element.style.setProperty("--s", String(asset.size * replacementScale));
+      element.style.setProperty("--alpha", String(swap ? asset.opacity : 0));
+      element.style.setProperty("--plate-alpha", "0");
     });
 
     window.ibMotionDebug = {
@@ -2042,7 +1992,7 @@
       orbitAngleDegrees: timeline.orbitAngleDegrees,
       finalScaleAmount,
       finalScaleDuration,
-      orbitSpeed,
+      orbitSpeed: cloudSettings.speed,
       wordReturnDuration: timeline.wordReturnDuration,
       introEnd: timeline.colorStart, slowEnd: timeline.slowEnd, snapEnd: timeline.snapEnd
     };
@@ -2222,12 +2172,13 @@
     ctx.restore();
   }
 
-  function drawAssetToCanvas(ctx, asset, x, y, size, rotation, alpha) {
+  function drawAssetToCanvas(ctx, asset, x, y, size, rotation, alpha, faceScale = 1) {
     if (!(alpha > .001) || !(size > .1)) return;
     ctx.save();
     ctx.globalAlpha = clamp(alpha, 0, 1);
     ctx.translate(x, y);
     ctx.rotate(rotation * Math.PI / 180);
+    ctx.scale(faceScale, 1);
     if (asset.type === "image" && asset.originalImage?.complete && asset.originalImage.naturalWidth) {
       const image = asset.originalImage;
       const ratio = image.naturalWidth / Math.max(1, image.naturalHeight);
@@ -2266,22 +2217,12 @@
     const base = $("ibBaseColor").value;
     const mode = $("ibColorMode").value;
     if (mode === "sweep") return linearSweepColor(index, count, timeline.colorReveal, timeline.whiteReveal);
+    if (mode === "unfold") return centerSweepColor(index, count, timeline.colorReveal, timeline.whiteReveal);
     if (timeline.seconds < timeline.contactSeconds) return base;
     if (timeline.colorReveal >= .999 && timeline.seconds < timeline.whiteStartSeconds) return finalEffectColor();
     if (mode === "flash") return base;
     const midpoint = (count - 1) / 2;
     const distance = Math.abs(index - midpoint) / Math.max(1, midpoint);
-    if (mode === "unfold") {
-      if (timeline.seconds >= timeline.whiteStartSeconds) {
-        const whiteThreshold = timeline.whiteReveal;
-        if (distance <= whiteThreshold) return base;
-      }
-      const colors = activeEffectColors();
-      const progress = count > 1 ? index / (count - 1) : 0;
-      const transitionColor = sampleColorList(colors, progress);
-      const targetColor = mixHex(transitionColor, finalEffectColor(), colorUniformProgress(timeline.colorReveal));
-      return mixHex(base, targetColor, colorWaveAlpha(index, count, timeline.colorReveal));
-    }
     const progress = clamp((timeline.seconds - timeline.contactSeconds) / Math.max(.001, timeline.replaceStartSeconds - timeline.contactSeconds), 0, 1);
     return samplePalette(clamp(progress + index / Math.max(1, count) * .35, 0, 1));
   }
@@ -2309,17 +2250,24 @@
     const compositionWidth = Math.max(1, composition.clientWidth * screenScale);
     const compositionHeight = Math.max(1, composition.clientHeight * screenScale);
     const tracking = Number($("ibTracking").value) * clamp(screenScale, .5, 4);
-    ctx.font = `${$("ibWeight").value} ${fontPx}px "${family}"`;
+    // The shared library returns a complete CSS family list, including quotes.
+    // Quoting it again makes Canvas reject the font and keep its 10px default.
+    ctx.font = `${$("ibWeight").value} ${fontPx}px ${family}`;
     const text = $("ibText").value || "GOOD JOB";
     const layout = trackedLayout(ctx, text, tracking);
+    layout.centers = getLetterAnchors().map((anchor) => anchor.x * screenScale);
     const titleWidth = Math.max(word.scrollWidth * screenScale, fontPx * 2);
-    const baseline = height / 2 + fontPx * .34;
+    const fontMetrics = ctx.measureText(text);
+    const baselineOffset = Number.isFinite(fontMetrics.fontBoundingBoxAscent)
+      ? (fontMetrics.fontBoundingBoxAscent - fontMetrics.fontBoundingBoxDescent) / 2
+      : fontPx * .34;
+    const baseline = height / 2 + baselineOffset;
     const finalScaleProgress = smoothstep(clamp(Math.max(0, seconds - timeline.replaceStartSeconds) * 1000 / clamp(Number($("ibFinalScaleDuration").value), 200, 1200), 0, 1));
     const finalScale = 1 + Number($("ibFinalScale").value) / 100 * finalScaleProgress;
 
     if (timeline.introOpacity > .001) {
       ctx.globalAlpha = timeline.introOpacity;
-      drawTrackedText(ctx, layout, width / 2, baseline, tracking, $("ibBaseColor").value, new Set(), timeline.introScale);
+      drawTrackedText(ctx, layout, width / 2, height / 2 + baselineOffset * timeline.introScale, tracking, $("ibBaseColor").value, new Set(), timeline.introScale);
       ctx.globalAlpha = 1;
     }
 
@@ -2328,18 +2276,9 @@
     if (timeline.incomingOpacity > .001 && (leftLetters.length || rightLetters.length)) {
       ctx.save();
       ctx.globalAlpha = timeline.incomingOpacity;
-      const leftText = leftLetters.map((letter) => letter.textContent).join("");
-      const rightText = rightLetters.map((letter) => letter.textContent).join("");
-      const leftLayout = trackedLayout(ctx, leftText, tracking);
-      const rightLayout = trackedLayout(ctx, rightText, tracking);
-      const closedGap = state.naturalGap ? fontPx * .18 : 0;
-      const pairOffset = (leftLayout.total - rightLayout.total) / 2;
-      const openGap = closedGap + width * .3 * Number($("ibCollapse").value) / 100;
-      const sideShift = (openGap - closedGap) / 2;
-      const orbitArc = Math.sin(Math.PI * timeline.incomingOrbit);
-      const orbitRoom = Math.max(0, width * .46 - titleWidth * .58);
-      const orbitShift = (1 - timeline.incomingOrbit) * Math.min(width * .12, orbitRoom) - orbitArc * Math.min(width * .012, 12) * Number($("ibCurve").value) / 100;
-      const drawSide = (letters, sideLayout, direction, startX) => {
+      const sideShift = width * .15 * Number($("ibCollapse").value) / 100;
+      const orbitShift = incomingDisplacement(timeline, width);
+      const drawSide = (letters, direction) => {
         const maxRank = Math.max(0, ...letters.map((letter) => Number(letter.dataset.rank || 0)));
         letters.forEach((letter, index) => {
           const rank = Number(letter.dataset.rank || 0);
@@ -2348,26 +2287,26 @@
           const beat = collisionBeat(localProgress);
           const rankRatio = maxRank > 0 ? rank / maxRank : 0;
           const openDistance = sideShift * (.88 + .12 * rankRatio);
-          const x = startX + sideLayout.centers[index] + direction * openDistance * beat.distanceFactor + direction * orbitShift;
+          const x = width / 2 + (layout.centers[Number(letter.dataset.letter || 0)] || 0) + direction * openDistance * beat.distanceFactor + direction * orbitShift;
           const pairColors = activeEffectColors();
           const letterIndex = clamp(Number(letter.dataset.letter || 0), 0, Math.max(0, layout.characters.length - 1));
           ctx.fillStyle = $("ibColorMode").value === "sweep"
             ? linearSweepColor(letterIndex, layout.characters.length, timeline.colorReveal, timeline.whiteReveal)
-            : mixHex($("ibBaseColor").value, pairColors[rank % pairColors.length], beat.color);
+            : $("ibColorMode").value === "unfold"
+              ? centerSweepColor(letterIndex, layout.characters.length, timeline.colorReveal, timeline.whiteReveal)
+              : mixHex($("ibBaseColor").value, pairColors[rank % pairColors.length], beat.color);
           ctx.textAlign = "center";
           ctx.textBaseline = "alphabetic";
           ctx.save();
-          ctx.translate(x, baseline);
+          ctx.translate(x, height / 2 + baselineOffset * beat.scale);
           ctx.scale(beat.scale, beat.scale);
           ctx.fillText(letter.textContent, 0, 0);
           ctx.restore();
         });
       };
-      // The live grid always starts both halves at the natural/closed gap;
-      // per-letter transforms create and close the temporary slot. Starting
-      // at the animated gap here counted that slot twice in exported media.
-      drawSide(leftLetters, leftLayout, -1, width / 2 + pairOffset - closedGap / 2 - leftLayout.total / 2);
-      drawSide(rightLetters, rightLayout, 1, width / 2 + pairOffset + closedGap / 2 + rightLayout.total / 2);
+      // Both renderers close onto the measured resting glyph centers.
+      drawSide(leftLetters, -1);
+      drawSide(rightLetters, 1);
       ctx.restore();
     }
 
@@ -2383,53 +2322,17 @@
     });
     if (timeline.wordOpacity > .001) {
       ctx.globalAlpha = timeline.wordOpacity;
-      drawTrackedText(ctx, layout, width / 2, baseline, tracking, (index) => exportTextColor(index, layout.characters.length, timeline), hiddenTargets, finalScale);
+      drawTrackedText(ctx, layout, width / 2, height / 2 + baselineOffset * finalScale, tracking, (index) => exportTextColor(index, layout.characters.length, timeline), hiddenTargets, finalScale);
       ctx.globalAlpha = 1;
     }
 
-    const range = Number($("ibRange").value) / 100;
     const iconSize = Number($("ibSize").value) / 100;
-    const orbitSpeed = clamp(Number($("ibOrbitSpeed").value) / 100, .5, 2);
-    const curveStrength = Number($("ibCurve").value) / 100;
-    const clusterOffsetX = Number($("ibClusterX").value) / 100 * compositionWidth * .35 * easeInOut(clamp(timeline.iconGather / .85, 0, 1));
     const orbitAssets = state.assets.filter((asset) => asset.role === "orbit");
-    const poses = orbitAssets.map((asset, orbitIndex) => {
-      const seed = seeds[orbitIndex % seeds.length];
-      const orbitCount = Math.max(1, orbitAssets.length);
-      const angleJitter = seed[2] * 1.65 * Math.PI / 180;
-      const sphereY = 1 - 2 * (orbitIndex + .5) / orbitCount;
-      const latitudeRadius = Math.sqrt(Math.max(0, 1 - sphereY * sphereY));
-      const baseLongitude = orbitIndex * Math.PI * (3 - Math.sqrt(5)) + angleJitter * .28;
-      const orbitalAngle = baseLongitude + timeline.orbitAngleDegrees * curveStrength * orbitSpeed * Math.PI / 180;
-      const sphereX = Math.cos(orbitalAngle) * latitudeRadius;
-      const sphereZ = Math.sin(orbitalAngle) * latitudeRadius;
-      const pitch = (-16 + 27 * easeInOut(clamp(timeline.iconGather, 0, 1))) * Math.PI / 180;
-      const projectedY = sphereY * Math.cos(pitch) - sphereZ * Math.sin(pitch);
-      const projectedZ = sphereY * Math.sin(pitch) + sphereZ * Math.cos(pitch);
-      const radialProgress = easeInOut(clamp(timeline.iconGather, 0, 1));
-      const startRadius = Math.min(compositionWidth, compositionHeight) * range * (.49 + (orbitIndex % 3) * .018);
-      const spreadScale = 1.45 - .83 * clamp(Number($("ibDensity").value) / 100, 0, 1);
-      const clusterRadius = Math.min(compositionWidth, compositionHeight) * (.118 + (orbitIndex % 3) * .003) * spreadScale;
-      const sphereRadius = startRadius + (clusterRadius - startRadius) * radialProgress;
-      const perspective = 1 / (1 - projectedZ * .22);
-      let x = sphereX * sphereRadius * perspective;
-      let y = projectedY * sphereRadius * perspective * .94;
-      const crossT = clamp((timeline.iconGather - .58) / .39, 0, 1);
-      const crossPulse = Math.pow(Math.sin(Math.PI * crossT), 2);
-      const crossingDrift = Math.min(compositionWidth, compositionHeight) * .018 * curveStrength * crossPulse;
-      x += -Math.sin(orbitalAngle) * crossingDrift;
-      y += Math.cos(orbitalAngle) * Math.cos(pitch) * crossingDrift;
-      let collapseScale = 1;
-      if (timeline.seconds >= timeline.collapseStartSeconds) {
-        const local = clamp((timeline.seconds - timeline.collapseStartSeconds) / Math.max(.001, timeline.iconsGoneSeconds - timeline.collapseStartSeconds), 0, 1);
-        collapseScale = 1 - easeInOut(clamp((local - .65) / .35, 0, 1));
-      }
-      const depthScale = clamp(1 + projectedZ * .22, .76, 1.24);
-      const startScale = 1.12 + (orbitIndex % 4) * .09;
-      const gatherScale = startScale + (1 - startScale) * timeline.iconGather;
-      return { asset, depth: projectedZ, x: width / 2 + x + clusterOffsetX + asset.x / 100 * compositionWidth * .28, y: height / 2 + y + asset.y / 100 * compositionHeight * .28, size: exportIconPx * iconSize * asset.size * gatherScale * collapseScale * depthScale, alpha: timeline.iconPresence * asset.opacity * collapseScale, rotation: asset.rotation + 10 * Math.sin(Math.PI * clamp(timeline.iconGather, 0, 1)) };
-    }).sort((a, b) => a.depth - b.depth);
-    poses.forEach((pose) => drawAssetToCanvas(ctx, pose.asset, pose.x, pose.y, pose.size, pose.rotation, pose.alpha));
+    const cloudSettings = orbitSettings();
+    const poses = orbitAssets.map((asset, index) => ({
+      asset, ...orbitalPose(asset, index, orbitAssets.length, timeline, width, height, cloudSettings)
+    })).sort((a, b) => a.depth - b.depth);
+    poses.forEach((pose) => drawAssetToCanvas(ctx, pose.asset, width / 2 + pose.x, height / 2 + pose.y, pose.size, pose.rotation, pose.alpha, pose.faceScale));
 
     glyphsToDraw.forEach(({ asset, replacement }) => {
       const nudge = fontPx * .42;

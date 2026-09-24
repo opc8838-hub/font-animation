@@ -791,7 +791,7 @@ body.ib-card-preview .ib-composition {
 .ib-glyph-layer { z-index: 7; }
 
 body .ib-icon {
-  transform: translate3d(-50%, -50%, 0) translate3d(var(--tx), var(--ty), 0) rotate(var(--rot)) scale(var(--s));
+  transform: translate3d(-50%, -50%, 0) translate3d(var(--tx), var(--ty), 0) rotate(var(--rot)) scale(var(--s)) scaleX(var(--face-scale, 1));
   transform-style: flat;
   backface-visibility: hidden;
 }

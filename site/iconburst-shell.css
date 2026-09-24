@@ -1229,3 +1229,14 @@ body.tc-workspace.ib-workspace[data-editor-language="en"] .ib-choreo-legend .ib-
     grid-template-columns: 84px minmax(0, 1fr) 68px;
   }
 }
+
+/* Incoming glyphs use the resting title's measured slots. This preserves
+   multiple spaces and unequal halves through the contact-to-title handoff. */
+body.tc-workspace .ib-incoming-word { display: block; height: 1em; }
+body.tc-workspace .ib-incoming-word > span { display: contents; }
+body.tc-workspace .ib-incoming-letter {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) translateX(var(--incoming-letter-x, 0px)) scale(var(--incoming-letter-scale, 1));
+}
