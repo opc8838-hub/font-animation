@@ -366,6 +366,18 @@ body.tc-workspace .gm-inspector .ib-image-fields {
   color: var(--tc-text);
 }
 
+body.tc-workspace .gm-inspector label.ib-check {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+body.tc-workspace .gm-inspector label.ib-check input {
+  position: static !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin: 0;
+  opacity: 1 !important;
+}
 body.tc-workspace .ib-asset-drawer {
   position: static !important;
   inset: auto !important;

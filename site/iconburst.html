@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="iconburst-overrides.css?v=20260909-five">
   <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-five">
   <link rel="stylesheet" href="typecascade-polish.css?v=20260909-five">
-  <link rel="stylesheet" href="iconburst-shell.css?v=20260924-split2">
+  <link rel="stylesheet" href="iconburst-shell.css?v=20260924-plain1">
 </head>
 <body>
   <main class="ib-app">
@@ -125,22 +125,31 @@
           </div>
           <aside id="ibAssetDrawer" class="ib-asset-drawer" aria-label="当前素材编辑面板" hidden>
           <div id="ibAssetEditor" class="ib-asset-editor" hidden>
-            <div class="ib-active-asset"><span>正在单独编辑</span><strong id="ibActiveAsset">—</strong><button id="ibCloseAssetDrawer" type="button">关闭</button></div>
-            <label>素材类型<select id="ibAssetSource"><option value="shape">内置图形</option><option value="image">图片</option></select></label>
-            <label id="ibAssetTargetField">替换字位<select id="ibAssetTarget"><option value="-1">自动轮换</option></select></label>
-            <label id="ibAssetHoldField">图标停留时间 <output id="ibAssetHoldValue">160 ms</output><input id="ibAssetHold" type="range" min="40" max="1200" value="160" step="20"></label>
+            <div class="ib-active-asset"><span>只改这一张</span><strong id="ibActiveAsset">—</strong><button id="ibCloseAssetDrawer" type="button">关闭</button></div>
+            <p id="ibAssetEditorHint" class="ib-help">大小、透明度和位置只作用于这一张图标，不会改文字，也不会改其他图标。</p>
+            <label id="ibAssetTargetField">替换哪个字<select id="ibAssetTarget"><option value="-1">自动轮换</option></select></label>
+            <label id="ibAssetHoldField">这一张停留 <output id="ibAssetHoldValue">160 ms</output><input id="ibAssetHold" type="range" min="40" max="1200" value="160" step="20"></label>
             <div id="ibAssetShapeFields" class="ib-two"><label>图形<select id="ibAssetShape"><option value="ring">圆环</option><option value="rainbow-ring">彩虹圆环</option><option value="star">星形（当前方案）</option></select></label><label>图形颜色<input id="ibAssetColor" type="color" value="#ffcc00"></label></div>
-            <div id="ibAssetImageFields" class="ib-image-fields" hidden>
-              <label class="ib-upload ib-replace-upload">替换当前素材图片<input id="ibAssetFile" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif"></label>
-              <label class="ib-check"><input id="ibRemoveBackground" type="checkbox" checked> 自动去除四角连通背景（保护主体内部白色）</label>
-              <div class="ib-two"><label>背景颜色<input id="ibBackgroundColor" type="color" value="#ffffff"></label><label>自动识别四角<label class="ib-check ib-check-compact"><input id="ibAutoBackground" type="checkbox" checked> 开启</label></label></div>
-              <div class="ib-two"><label>背景容差 <output id="ibToleranceValue">32</output><input id="ibTolerance" type="range" min="4" max="90" value="32"></label><label>边缘过渡 <output id="ibFeatherValue">4</output><input id="ibFeather" type="range" min="0" max="24" value="4"></label></div>
-              <p id="ibProcessStatus" class="ib-process-status">上传后会保留高清主体，并裁掉透明空白。</p>
-            </div>
-             <div class="ib-two"><label>编辑大小 <output id="ibAssetSizeValue">100%</output><input id="ibAssetSize" type="range" min="10" max="500" value="100"></label><label>独立透明度 <output id="ibAssetOpacityValue">100%</output><input id="ibAssetOpacity" type="range" min="0" max="100" value="100"></label></div>
+            <label>这一张的大小 <output id="ibAssetSizeValue">100%</output><input id="ibAssetSize" type="range" min="10" max="500" value="100"></label>
             <div class="ib-size-presets" aria-label="当前资源大小快捷设置"><button type="button" data-asset-size="50">50%</button><button type="button" data-asset-size="100">100%</button><button type="button" data-asset-size="200">200%</button><button type="button" data-asset-size="300">300%</button></div>
-            <div class="ib-two"><label>水平偏移 <output id="ibAssetXValue">0%</output><input id="ibAssetX" type="range" min="-100" max="100" value="0"></label><label>垂直偏移 <output id="ibAssetYValue">0%</output><input id="ibAssetY" type="range" min="-100" max="100" value="0"></label></div>
-            <div class="ib-two"><label>独立旋转 <output id="ibAssetRotationValue">0°</output><input id="ibAssetRotation" type="range" min="-180" max="180" value="0"></label><label>附加运动<select id="ibAssetMotion"><option value="replace">文字替换</option><option value="burst">爆发</option><option value="float">漂浮</option><option value="orbit">环绕</option></select></label></div>
+            <label>这一张的透明度 <output id="ibAssetOpacityValue">100%</output><input id="ibAssetOpacity" type="range" min="0" max="100" value="100"></label>
+            <label>左右位置 <output id="ibAssetXValue">0%</output><input id="ibAssetX" type="range" min="-100" max="100" value="0"></label>
+            <label>上下位置 <output id="ibAssetYValue">0%</output><input id="ibAssetY" type="range" min="-100" max="100" value="0"></label>
+            <label>旋转 <output id="ibAssetRotationValue">0°</output><input id="ibAssetRotation" type="range" min="-180" max="180" value="0"></label>
+            <details class="ib-disclosure" id="ibAssetMore">
+              <summary>更多</summary>
+              <label>素材类型<select id="ibAssetSource"><option value="shape">内置图形</option><option value="image">图片</option></select></label>
+              <label id="ibAssetMotionField">替换成字之后<select id="ibAssetMotion"><option value="replace">停在字上</option><option value="float">轻轻上下浮</option><option value="burst">向外炸开</option><option value="orbit">原地打转</option></select></label>
+              <div id="ibAssetImageFields" class="ib-image-fields" hidden>
+                <label class="ib-upload ib-replace-upload">换成另一张图片<input id="ibAssetFile" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif"></label>
+                <label class="ib-check"><input id="ibRemoveBackground" type="checkbox" checked> 去掉白底</label>
+                <label>白底颜色<input id="ibBackgroundColor" type="color" value="#ffffff"></label>
+                <label class="ib-check"><input id="ibAutoBackground" type="checkbox" checked> 只去掉图片四个角连着的底色</label>
+                <label>去白底的力度 <output id="ibToleranceValue">32</output><input id="ibTolerance" type="range" min="4" max="90" value="32"></label>
+                <label>边缘柔和 <output id="ibFeatherValue">4</output><input id="ibFeather" type="range" min="0" max="24" value="4"></label>
+                <p id="ibProcessStatus" class="ib-process-status">上传后会保留高清主体，并裁掉透明空白。</p>
+              </div>
+            </details>
           </div>
           </aside>
           <label>聚拢图标整体水平位置 <output id="ibClusterXValue">0%</output><input id="ibClusterX" type="range" min="-100" max="100" value="0"></label>
@@ -228,11 +237,11 @@
   </main>
   <script src="js/continuation-gif.js"></script>
   <script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="iconburst.js?v=20260924-split2"></script>
+  <script src="iconburst.js?v=20260924-plain1"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
   <script src="cellmotion-me-shell.js?v=20260924-size1"></script>
   <script src="typecascade-polish.js?v=20260909-five"></script>
   <script src="typecascade-selects.js?v=20260909-1"></script>
-  <script src="typecascade-locale.js?v=20260924-edit1"></script>
+  <script src="typecascade-locale.js?v=20260924-plain1"></script>
 </body>
 </html>

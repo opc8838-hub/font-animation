@@ -721,6 +721,7 @@
     $("ibAssetTarget").innerHTML = targetOptions(asset);
     $("ibAssetTarget").value = String(asset.target);
     $("ibAssetHoldField").hidden = asset.role !== "glyph";
+    $("ibAssetMotionField").hidden = asset.role !== "glyph";
     $("ibAssetHold").value = String(asset.holdMs || 160);
     $("ibAssetSize").value = String(Math.round(asset.size * 100));
     $("ibAssetOpacity").value = String(Math.round(asset.opacity * 100));
