@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="iconburst-overrides.css?v=20260909-five">
   <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-five">
   <link rel="stylesheet" href="typecascade-polish.css?v=20260909-five">
+  <link rel="stylesheet" href="iconburst-shell.css?v=20260924-fix1">
 </head>
 <body>
   <main class="ib-app">
@@ -153,7 +154,9 @@
         <p class="ib-kicker">节奏</p>
         <div id="ibReplacementTiming" class="ib-two"><label id="ibReplaceCountField">同时替换数量<select id="ibReplaceCount"><option value="1" selected>1 个 · 依次播放</option><option value="2">2 个 · 两两播放</option><option value="3">3 个</option><option value="4">4 个</option><option value="all">全部同时</option></select></label><label>每组最短时长 <output id="ibBeatValue">0.08 秒</output><input id="ibBeat" type="range" min="60" max="1200" value="80" step="20"></label><label>全局切换速度 <output id="ibReplaceSpeedValue">4.0×</output><input id="ibReplaceSpeed" type="range" min="0.5" max="8" value="4" step="0.1"></label></div>
         <p id="ibSequenceHelp" class="ib-help">每个字体图标可单独设置字位、顺序、速度和停留时间；停留变长时，循环会自动延长，不会截断图标。</p>
-        <div id="ibMotionTiming" class="ib-two">
+        <details id="ibMotionTiming" class="ib-disclosure">
+          <summary>节奏细节</summary>
+          <div class="ib-two">
           <label>滞空时长 <output id="ibHangValue">0.80 秒</output><input id="ibHang" type="range" min="20" max="140" value="80" step="5"></label>
           <label>慢动作速度 <output id="ibDriftValue">28%</output><input id="ibDrift" type="range" min="15" max="60" value="28"></label>
           <label>终点前转幅度 <output id="ibOvershootValue">58%</output><input id="ibOvershoot" type="range" min="0" max="100" value="58"></label>
@@ -167,8 +170,9 @@
           <label>收拢轨迹弧度 <output id="ibCurveValue">72%</output><input id="ibCurve" type="range" min="20" max="100" value="72"></label>
           <label>替字收尾放大 <output id="ibFinalScaleValue">+5.5%</output><input id="ibFinalScale" type="range" min="0" max="10" value="5.5" step="0.5"></label>
           <label>收尾放大时长 <output id="ibFinalScaleDurationValue">0.52 秒</output><input id="ibFinalScaleDuration" type="range" min="200" max="1200" value="520" step="20"></label>
-        </div>
-        <p class="ib-help">“字体靠拢速度”会同时缩短每一对字体的移动时间与接力间隔；下面的单对时长和逐对间隔可继续精调。换色速度控制碰撞开始后从左向右连续扫过整句的速度。</p>
+          </div>
+          <p class="ib-help">“字体靠拢速度”会同时缩短每一对字体的移动时间与接力间隔；单对时长和逐对间隔可继续精调。换色速度控制碰撞开始后从左向右连续扫过整句的速度。</p>
+        </details>
         <label>循环速度 <output id="ibSpeedValue">1.0×</output><input id="ibSpeed" type="range" min="0.5" max="2" value="1" step="0.1"></label>
         <button id="ibRestart" class="ib-primary" type="button">从头播放</button>
       </section>
@@ -179,10 +183,25 @@
         <p id="ibChoreoBeat" class="ib-choreo-beat">1 · 中央标题与图标起步</p>
       </section>
 
+      <section class="ib-section ib-canvas-section">
+        <label class="ib-canvas-size">
+          <select id="ibExportPreset" aria-label="画布尺寸">
+            <option value="1080x1080">1:1 方形 · 1080 × 1080</option>
+            <option value="1080x1350">4:5 竖版 · 1080 × 1350</option>
+            <option value="1080x1440">3:4 竖版 · 1080 × 1440</option>
+            <option value="1080x1620">2:3 竖版 · 1080 × 1620</option>
+            <option value="1080x1920">9:16 全屏 · 1080 × 1920</option>
+            <option value="1920x1080" selected>16:9 横版 · 1920 × 1080</option>
+            <option value="1440x1080">4:3 横版 · 1440 × 1080</option>
+            <option value="1620x1080">3:2 横版 · 1620 × 1080</option>
+            <option value="custom">自定义</option>
+          </select>
+        </label>
+        <div id="ibCustomSize" class="ib-custom-size gm-custom-size" hidden><label>宽<input id="ibExportWidth" type="number" min="240" max="3840" value="1920"></label><span>×</span><label>高<input id="ibExportHeight" type="number" min="240" max="3840" value="1080"></label></div>
+      </section>
+
       <section class="ib-section ib-export-section">
         <p class="ib-kicker">导出</p>
-        <label>导出尺寸<select id="ibExportPreset"><option value="current">当前画板</option><option value="1080x1080">1:1 · 1080 × 1080</option><option value="1080x1350">4:5 · 1080 × 1350</option><option value="1080x1920">9:16 · 1080 × 1920</option><option value="1920x1080" selected>16:9 · 1920 × 1080</option><option value="custom">自定义尺寸</option></select></label>
-        <div id="ibCustomSize" class="ib-custom-size" hidden><label>宽<input id="ibExportWidth" type="number" min="240" max="3840" value="1920"></label><span>×</span><label>高<input id="ibExportHeight" type="number" min="240" max="3840" value="1080"></label></div>
         <div class="ib-two"><label>导出时长<select id="ibExportDuration"><option value="cycle" selected>完整一轮</option><option value="3">3 秒</option><option value="5">5 秒</option><option value="10">10 秒</option><option value="custom">自定义</option></select></label><label>帧率<select id="ibExportFps"><option value="15">15 FPS</option><option value="24">24 FPS</option><option value="30" selected>30 FPS</option><option value="60">60 FPS</option></select></label></div>
         <label id="ibCustomDurationWrap" hidden>自定义秒数<input id="ibCustomDuration" type="number" min="0.5" max="30" step="0.1" value="4"></label>
         <div class="ib-export-actions"><button id="ibExportPng" type="button">PNG 图片</button><button id="ibExportGif" type="button">GIF 动图</button><button id="ibExportVideo" type="button">MP4 视频</button><button id="ibExportVerticalVideo" type="button">9:16 MP4</button></div>
@@ -191,9 +210,9 @@
     </aside>
 
     <section id="ibStage" class="ib-stage" aria-label="动画效果画布">
-      <div id="ibBackgroundMedia" class="ib-background-media" aria-hidden="true"><img id="ibBackgroundImage" alt=""><video id="ibBackgroundVideo" muted loop playsinline preload="auto"></video></div>
       <div class="ib-safe-area" aria-hidden="true"></div>
       <div id="ibComposition" class="ib-composition">
+        <div id="ibBackgroundMedia" class="ib-background-media" aria-hidden="true"><img id="ibBackgroundImage" alt=""><video id="ibBackgroundVideo" muted loop playsinline preload="auto"></video></div>
         <div id="ibOrbitLayer" class="ib-icon-layer ib-orbit-layer" aria-hidden="true"></div>
         <div id="ibGlyphLayer" class="ib-icon-layer ib-glyph-layer" aria-hidden="true"></div>
         <div id="ibIntroWord" class="ib-switch-word ib-intro-word" aria-hidden="true">GOOD JOB</div>
@@ -211,9 +230,9 @@
   </main>
   <script src="js/continuation-gif.js"></script>
   <script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="iconburst.js?v=20260909-five"></script>
+  <script src="iconburst.js?v=20260924-fix1"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
-  <script src="cellmotion-me-shell.js?v=20260909-standard"></script>
+  <script src="cellmotion-me-shell.js?v=20260923-layout2"></script>
   <script src="typecascade-polish.js?v=20260909-five"></script>
   <script src="typecascade-selects.js?v=20260909-1"></script>
   <script src="typecascade-locale.js?v=20260909-standard"></script>

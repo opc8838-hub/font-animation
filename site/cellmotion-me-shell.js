@@ -156,7 +156,7 @@
       button.type = "button";
       button.dataset.index = String(index);
       button.setAttribute("aria-pressed", String(selectedNow));
-      button.append(make("span", "tc-row-number", String(index + 1).padStart(2, "0")), make("strong", "tc-row-text", labelFor(item, index)), make("small", "tc-row-description", "在右侧编辑"));
+      button.append(make("span", "tc-row-number", String(index + 1).padStart(2, "0")), make("strong", "tc-row-text", labelFor(item, index)), make("small", "tc-row-description", iconBurst ? "主标题" : "在右侧编辑"));
       return button;
     }));
   };

@@ -1137,7 +1137,19 @@
     playhead.className = "ib-choreo-playhead";
     playhead.id = "ibChoreoPlayhead";
     bar.append(playhead);
-    scroll.append(bar);
+    const ruler = document.createElement("div");
+    ruler.className = "ib-choreo-ruler";
+    const step = total > 8 ? 2 : 1;
+    for (let mark = 0; mark <= total + .001; mark += step) {
+      const tick = document.createElement("span");
+      tick.style.left = `${clamp(mark / total, 0, 1) * 100}%`;
+      tick.textContent = `${Math.round(mark)}s`;
+      ruler.append(tick);
+    }
+    scroll.append(bar, ruler);
+    const details = document.createElement("details");
+    details.className = "ib-choreo-details";
+    details.innerHTML = "<summary>阶段详情 <span>名称与起止时间</span></summary>";
     const legend = document.createElement("ol");
     legend.className = "ib-choreo-legend";
     beats.forEach((beat, index) => {
@@ -1145,7 +1157,8 @@
       item.innerHTML = `<i class="is-${beat.kind}"></i><b>${index + 1}. ${beat.label}</b><span>${beat.start.toFixed(2)}s → ${beat.end.toFixed(2)}s</span>`;
       legend.append(item);
     });
-    track.replaceChildren(scroll, legend);
+    details.append(legend);
+    track.replaceChildren(scroll, details);
     const head = $("ibChoreoPlayhead");
     if (head) head.style.left = "0%";
     track.dataset.duration = String(total);
@@ -1739,6 +1752,7 @@
       const swap = Boolean(replacement && replacement.swap);
       const customX = asset.x / 100 * rect.width * .28;
       const customY = asset.y / 100 * rect.height * .28;
+      const letterBox = fontSize * .86;
       const orbitIndex = orbitIndexById.has(asset.id) ? orbitIndexById.get(asset.id) : -1;
       const orbitCount = Math.max(1, orbitAssets.length);
       const angleJitter = seed[2] * 1.65 * Math.PI / 180;
@@ -1834,12 +1848,20 @@
         if (localCollapse >= 1) introVisible = 0;
       }
       const reveal = Math.max(introVisible, swap ? 1 : 0);
-      const translateX = replacement ? anchorX + customX + motionX : scatterX + customX + motionX + (asset.role === "orbit" ? clusterOffsetX : 0);
-      const translateY = replacement ? anchorY + customY + motionY : scatterY + customY + motionY;
+      const fittedNudge = letterBox * .42;
+      const translateX = replacement ? anchorX + asset.x / 100 * fittedNudge + motionX : scatterX + customX + motionX + (asset.role === "orbit" ? clusterOffsetX : 0);
+      const translateY = replacement ? anchorY + asset.y / 100 * fittedNudge + motionY : scatterY + customY + motionY;
       const startScale = 1.12 + (orbitIndex % 4) * .09;
       const introScale = (startScale + (1 - startScale) * gather) * collapseScale * depthScale;
       const replacementScale = .98 + easeOut(envelope) * .02;
       const baseScale = replacement ? replacementScale : introScale;
+      if (replacement) {
+        element.style.width = `${letterBox}px`;
+        element.style.height = `${letterBox}px`;
+      } else {
+        element.style.width = "";
+        element.style.height = "";
+      }
       const collapseT = asset.role === "orbit" && timeline.seconds >= timeline.collapseStartSeconds
         ? clamp((timeline.seconds - timeline.collapseStartSeconds) / (timeline.iconsGoneSeconds - timeline.collapseStartSeconds), 0, 1)
         : 0;
@@ -1993,12 +2015,29 @@
     await seeked;
   }
 
+  function selectedCanvasSize() {
+    const preset = $("ibExportPreset").value;
+    if (preset === "custom") return [clamp(Number($("ibExportWidth").value) || 1920, 240, 3840), clamp(Number($("ibExportHeight").value) || 1080, 240, 3840)];
+    const parts = String(preset).split("x").map(Number);
+    return parts.length === 2 && parts.every(Number.isFinite) ? parts : [1920, 1080];
+  }
+
+  function fitCompositionFrame() {
+    const [width, height] = selectedCanvasSize();
+    const ratio = width / Math.max(1, height);
+    const stageStyle = getComputedStyle(stage);
+    const availableWidth = Math.max(1, stage.clientWidth - parseFloat(stageStyle.paddingLeft) - parseFloat(stageStyle.paddingRight));
+    const availableHeight = Math.max(1, stage.clientHeight - parseFloat(stageStyle.paddingTop) - parseFloat(stageStyle.paddingBottom));
+    const fittedWidth = Math.min(availableWidth, availableHeight * ratio);
+    composition.style.width = `${fittedWidth}px`;
+    composition.style.height = `${fittedWidth / ratio}px`;
+    composition.style.aspectRatio = String(ratio);
+    invalidateLetterAnchors();
+  }
+
   function exportDimensions(verticalHD = false) {
     if (verticalHD) return [1080, 1920];
-    const preset = $("ibExportPreset").value;
-    if (preset === "current") return [Math.max(240, Math.round(stage.clientWidth)), Math.max(240, Math.round(stage.clientHeight))];
-    if (preset === "custom") return [Number($("ibExportWidth").value), Number($("ibExportHeight").value)];
-    return preset.split("x").map(Number);
+    return selectedCanvasSize();
   }
 
   function exportDurationSeconds() {
@@ -2257,10 +2296,11 @@
     poses.forEach((pose) => drawAssetToCanvas(ctx, pose.asset, pose.x, pose.y, pose.size, pose.rotation, pose.alpha));
 
     glyphsToDraw.forEach(({ asset, replacement }) => {
-      const x = width / 2 + (layout.centers[replacement.target] || 0) * finalScale + asset.x / 100 * compositionWidth * .28;
-      const y = baseline - fontPx * .38 + asset.y / 100 * compositionHeight * .28;
+      const nudge = fontPx * .42;
+      const x = width / 2 + (layout.centers[replacement.target] || 0) * finalScale + asset.x / 100 * nudge;
+      const y = baseline - fontPx * .36 * finalScale + asset.y / 100 * nudge;
       const replacementScale = .98 + easeOut(replacement.envelope) * .02;
-      drawAssetToCanvas(ctx, asset, x, y, exportIconPx * iconSize * asset.size * replacementScale, asset.rotation, asset.opacity * replacement.envelope);
+      drawAssetToCanvas(ctx, asset, x, y, fontPx * .86 * iconSize * asset.size * replacementScale * finalScale, asset.rotation, asset.opacity * replacement.envelope);
     });
   }
 
@@ -2565,7 +2605,17 @@
   document.querySelector(".ib-editor")?.addEventListener("input", scheduleSchemePersist);
   document.querySelector(".ib-editor")?.addEventListener("change", scheduleSchemePersist);
 
-  $("ibExportPreset").addEventListener("change", () => { $("ibCustomSize").hidden = $("ibExportPreset").value !== "custom"; });
+  $("ibExportPreset").addEventListener("change", () => {
+    const preset = $("ibExportPreset").value;
+    $("ibCustomSize").hidden = preset !== "custom";
+    if (preset !== "custom" && preset.includes("x")) {
+      const [width, height] = preset.split("x").map(Number);
+      $("ibExportWidth").value = width;
+      $("ibExportHeight").value = height;
+    }
+    fitCompositionFrame();
+  });
+  ["ibExportWidth", "ibExportHeight"].forEach((id) => $(id).addEventListener("input", fitCompositionFrame));
   $("ibExportDuration").addEventListener("change", () => { $("ibCustomDurationWrap").hidden = $("ibExportDuration").value !== "custom"; });
 
   function currentRealSeconds() {
@@ -2802,7 +2852,7 @@
   bindImageLibrary("ibOrbitFlowLibrary", "orbit", flowIconImages);
   bindImageLibrary("ibGlyphFlowLibrary", "glyph", flowIconImages);
 
-  window.addEventListener("resize", invalidateLetterAnchors, { passive: true });
+  window.addEventListener("resize", () => { fitCompositionFrame(); }, { passive: true });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(invalidateLetterAnchors);
 
   function restart() {
@@ -2856,5 +2906,15 @@
     applyScheme(defaultScheme(true), previewMode ? {} : { status: "已载入最新默认示例。" });
   }
   updateColorCountUI();
+  fitCompositionFrame();
   requestAnimationFrame(animate);
+  setTimeout(() => {
+    const trigger = document.querySelector("#ibExportPreset + .tc-select-trigger .tc-select-label");
+    const selected = $("ibExportPreset")?.selectedOptions?.[0];
+    if (trigger && selected && !trigger.textContent.trim()) trigger.textContent = selected.textContent;
+    const transport = document.querySelector("#ibStage > .ib-controls");
+    const timeline = document.querySelector(".tc-timeline");
+    if (transport && timeline) timeline.prepend(transport);
+    fitCompositionFrame();
+  }, 0);
 })();
