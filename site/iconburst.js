@@ -869,6 +869,11 @@
     });
     state.naturalGap = gapIndex >= 0;
     if (gapIndex < 0) gapIndex = Math.max(0, Math.floor((characters.length - 1) / 2));
+    let gapStart = gapIndex, gapEnd = gapIndex;
+    if (state.naturalGap) {
+      while (gapStart > 0 && /\s/.test(characters[gapStart - 1])) gapStart -= 1;
+      while (gapEnd + 1 < characters.length && /\s/.test(characters[gapEnd + 1])) gapEnd += 1;
+    }
     introWord.textContent = text;
     if (state.naturalGap) {
       incomingLeft.textContent = "";
@@ -914,7 +919,7 @@
       const span = document.createElement("span");
       span.textContent = character === " " ? "\u00a0" : character;
       span.dataset.letter = index;
-      if (state.naturalGap && index === gapIndex) span.classList.add("ib-word-gap");
+      if (state.naturalGap && index >= gapStart && index <= gapEnd) span.classList.add("ib-word-gap");
       if (!state.naturalGap && index === gapIndex) span.classList.add("ib-gap-anchor");
       word.append(span);
     });
