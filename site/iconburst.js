@@ -951,10 +951,26 @@
       const rect = letter.getBoundingClientRect();
       return {
         x: (rect.left + rect.width / 2 - (compositionRect.left + compositionRect.width / 2)) / Math.max(.001, scaleX * wordScale),
-        y: (rect.top + rect.height / 2 - (compositionRect.top + compositionRect.height / 2)) / Math.max(.001, scaleY * wordScale)
+        y: (rect.top + rect.height / 2 - (compositionRect.top + compositionRect.height / 2)) / Math.max(.001, scaleY * wordScale),
+        width: rect.width / Math.max(.001, scaleX * wordScale)
       };
     });
     return state.letterAnchors;
+  }
+
+  // Keep a replacement inside its letter's available space. The title can
+  // become much smaller than the canvas short edge in portrait layouts.
+  function fittedReplacementSize(asset, target, anchors, fontPx, frameWidth, frameHeight) {
+    const center = anchors[target]?.x || 0;
+    const padding = Math.max(2, fontPx * .075);
+    let room = Infinity;
+    anchors.forEach((neighbor, index) => {
+      if (index === target || !word.children[index]?.textContent.trim()) return;
+      const clearDistance = Math.abs(neighbor.x - center) - neighbor.width / 2 - padding;
+      if (clearDistance > 0) room = Math.min(room, clearDistance * 2);
+    });
+    const requested = Math.min(frameWidth, frameHeight) * .16 * Number($("ibSize").value) / 100 * asset.size;
+    return Math.max(1, Math.min(requested, fontPx * .94, room));
   }
 
   function lightLetter(letter, color, intensity) {
@@ -1949,12 +1965,13 @@
       const swap = Boolean(replacement && replacement.swap);
       const anchor = replacement && anchors[replacement.target];
       const iconUnit = Math.min(rect.width, rect.height) * .16;
-      const fittedNudge = iconUnit * .42;
+      const fittedSize = swap ? fittedReplacementSize(asset, replacement.target, anchors, fontSize, rect.width, rect.height) : iconUnit;
+      const fittedNudge = fittedSize * .42;
       let motionX = 0, motionY = 0;
-      if (replacementActive && swap && asset.motion === "float") motionY = Math.sin(replacementTime / 360 + index) * 5;
+      if (replacementActive && swap && asset.motion === "float") motionY = Math.sin(replacementTime / 360 + index) * fittedSize * .10;
       if (replacementActive && swap && asset.motion === "orbit") {
-        motionX = Math.cos(replacementTime / 420 + index) * 7;
-        motionY = Math.sin(replacementTime / 420 + index) * 7;
+        motionX = Math.cos(replacementTime / 420 + index) * fittedSize * .14;
+        motionY = Math.sin(replacementTime / 420 + index) * fittedSize * .14;
       }
       const replacementScale = .98 + easeOut(replacement?.envelope || 0) * .02;
       element.style.width = `${iconUnit}px`;
@@ -1963,7 +1980,7 @@
       element.style.setProperty("--tx", `${(anchor?.x || 0) + asset.x / 100 * fittedNudge + motionX}px`);
       element.style.setProperty("--ty", `${(anchor?.y || 0) + asset.y / 100 * fittedNudge + motionY}px`);
       element.style.setProperty("--rot", `${asset.rotation}deg`);
-      element.style.setProperty("--s", String(asset.size * replacementScale));
+      element.style.setProperty("--s", String(fittedSize / iconUnit * replacementScale));
       element.style.setProperty("--alpha", String(swap ? asset.opacity : 0));
       element.style.setProperty("--plate-alpha", "0");
     });
@@ -2247,10 +2264,6 @@
     // editor at the very same timestamp.
     const liveFontPx = parseFloat(getComputedStyle(word).fontSize) || 100;
     const fontPx = liveFontPx * screenScale;
-    const liveIconPx = parseFloat(getComputedStyle(state.iconElements[0] || orbitLayer).width) || liveFontPx * .64;
-    const exportIconPx = liveIconPx * screenScale;
-    const compositionWidth = Math.max(1, composition.clientWidth * screenScale);
-    const compositionHeight = Math.max(1, composition.clientHeight * screenScale);
     const tracking = Number($("ibTracking").value) * clamp(screenScale, .5, 4);
     // The shared library returns a complete CSS family list, including quotes.
     // Quoting it again makes Canvas reject the font and keep its 10px default.
@@ -2328,7 +2341,6 @@
       ctx.globalAlpha = 1;
     }
 
-    const iconSize = Number($("ibSize").value) / 100;
     const orbitAssets = state.assets.filter((asset) => asset.role === "orbit");
     const cloudSettings = orbitSettings();
     const poses = orbitAssets.map((asset, index) => ({
@@ -2337,12 +2349,17 @@
     poses.forEach((pose) => drawAssetToCanvas(ctx, pose.asset, width / 2 + pose.x, height / 2 + pose.y, pose.size, pose.rotation, pose.alpha));
 
     glyphsToDraw.forEach(({ asset, replacement }) => {
-      const nudge = fontPx * .42;
-      const x = width / 2 + (layout.centers[replacement.target] || 0) * finalScale + asset.x / 100 * nudge;
-      const y = baseline - fontPx * .36 * finalScale + asset.y / 100 * nudge;
+      const fittedSize = fittedReplacementSize(asset, replacement.target, getLetterAnchors(), liveFontPx, composition.clientWidth, composition.clientHeight) * screenScale;
+      const nudge = fittedSize * .42 * finalScale;
+      const assetIndex = state.assets.indexOf(asset);
+      const motionX = asset.motion === "orbit" ? Math.cos(replacementTime / 420 + assetIndex) * fittedSize * .14 * finalScale : 0;
+      const motionY = asset.motion === "orbit"
+        ? Math.sin(replacementTime / 420 + assetIndex) * fittedSize * .14 * finalScale
+        : asset.motion === "float" ? Math.sin(replacementTime / 360 + assetIndex) * fittedSize * .10 * finalScale : 0;
+      const x = width / 2 + (layout.centers[replacement.target] || 0) * finalScale + asset.x / 100 * nudge + motionX;
+      const y = baseline - fontPx * .36 * finalScale + asset.y / 100 * nudge + motionY;
       const replacementScale = .98 + easeOut(replacement.envelope) * .02;
-      const iconUnit = Math.min(compositionWidth, compositionHeight) * .16;
-      drawAssetToCanvas(ctx, asset, x, y, iconUnit * iconSize * asset.size * replacementScale * finalScale, asset.rotation, asset.opacity * replacement.envelope);
+      drawAssetToCanvas(ctx, asset, x, y, fittedSize * replacementScale * finalScale, asset.rotation, asset.opacity * replacement.envelope);
     });
   }
 
