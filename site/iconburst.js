@@ -826,7 +826,14 @@
     word.style.fontWeight = $("ibWeight").value;
     word.style.letterSpacing = `${Number($("ibTracking").value)}px`;
     word.style.fontSize = `${base}px`;
+    const letters = Array.from(word.children);
+    const animatedOffsets = letters.map((letter) => letter.style.getPropertyValue("--letter-x"));
+    letters.forEach((letter) => letter.style.setProperty("--letter-x", "0px"));
     const measured = Math.max(word.scrollWidth, 1);
+    letters.forEach((letter, index) => {
+      if (animatedOffsets[index]) letter.style.setProperty("--letter-x", animatedOffsets[index]);
+      else letter.style.removeProperty("--letter-x");
+    });
     const limit = frame.width * .84;
     if (measured > limit) base *= limit / measured;
     base = clamp(base, 16, 168);
@@ -973,7 +980,7 @@
       const asset = state.assets.find((item) => item.id === assetId);
       if (!asset || !anchors[replacement.target]) return;
       sizes.set(assetId, replacementIconSize(asset, fontPx));
-      impacts[replacement.target] = Math.max(impacts[replacement.target], clamp(replacement.envelope * 2, 0, 1));
+      impacts[replacement.target] = Math.max(impacts[replacement.target], clamp(replacement.envelope, 0, 1));
     });
     const visualWidths = anchors.map((anchor, index) => {
       let width = anchor.width;
@@ -1002,6 +1009,31 @@
     const expandedWidth = naturalWidth + totalExtra + outerLeft + outerRight;
     const fit = expandedWidth > 0 ? Math.min(1, frameWidth * .92 / (expandedWidth * (1 + finalScaleAmount))) : 1;
     return { offsets, sizes, fit };
+  }
+
+  function plannedReplacements(playback, seconds, replaceStartSeconds) {
+    const usableTargets = Array.from(word.children).map((letter, index) => ({ letter, index })).filter(({ letter }) => letter.textContent.trim());
+    const planned = new Map();
+    let groupStartMs = 0;
+    playback.groups.forEach((group, groupIndex) => {
+      const targets = resolveReplacementTargets(group.timings, usableTargets, groupIndex);
+      group.timings.forEach(({ asset, transitionMs, holdMs }, index) => {
+        // Reserve the letter slot before the cut; release it only after the
+        // icon has gone. Short per-icon transition speeds cannot jerk the row.
+        const enterAt = replaceStartSeconds + groupStartMs / 1000;
+        const exitAt = enterAt + (transitionMs * 1.5 + holdMs) / 1000;
+        const enter = smoothstep(clamp((seconds - (enterAt - .22)) / .22, 0, 1));
+        const exit = 1 - smoothstep(clamp((seconds - exitAt) / .26, 0, 1));
+        planned.set(asset.id, { target: targets[index], envelope: enter * exit });
+      });
+      groupStartMs += group.duration;
+    });
+    return planned;
+  }
+
+  function finaleLayout(playback, anchors, fontPx, frameWidth, finalScaleAmount, seconds, replaceStartSeconds) {
+    const planned = replacementEnabled() ? plannedReplacements(playback, seconds, replaceStartSeconds) : new Map();
+    return replacementLayout(planned, anchors, fontPx, frameWidth, finalScaleAmount);
   }
 
   function lightLetter(letter, color, intensity) {
@@ -1859,7 +1891,7 @@
     const frame = frameBox();
     const fontSize = parseFloat(word.style.fontSize) || 100;
     const restingAnchors = getLetterAnchors();
-    const finalLayout = replacementLayout(replacements, restingAnchors, fontSize, composition.clientWidth, finalScaleAmount);
+    const finalLayout = finaleLayout(playback, restingAnchors, fontSize, composition.clientWidth, finalScaleAmount, timeline.seconds, timeline.replaceStartSeconds);
     replacementFontScale *= finalLayout.fit;
     const colorMode = $("ibColorMode").value;
     if (colorActive && colorMode === "sweep") applyLinearSweep(Array.from(word.children), timeline.colorReveal, timeline.whiteReveal);
@@ -2365,7 +2397,7 @@
     const replacementActive = replacementEnabled() && seconds >= timeline.replaceStartSeconds && seconds < timeline.replaceEnd * baseCycleSeconds;
     const replacements = replacementState(replacementTime, replacementActive, playback);
     const restingAnchors = getLetterAnchors();
-    const finalLayout = replacementLayout(replacements, restingAnchors, liveFontPx, composition.clientWidth, Number($("ibFinalScale").value) / 100);
+    const finalLayout = finaleLayout(playback, restingAnchors, liveFontPx, composition.clientWidth, Number($("ibFinalScale").value) / 100, seconds, timeline.replaceStartSeconds);
     finalScale *= finalLayout.fit;
     layout.centers = restingAnchors.map((anchor, index) => (anchor.x + (finalLayout.offsets[index] || 0)) * screenScale);
     const hiddenTargets = new Set();
