@@ -19,6 +19,7 @@
   if (!panel || !stage) return;
 
   body.classList.add("tc-workspace");
+  if (iconBurst) body.classList.add("ib-workspace");
   if (!iconBurst) body.classList.add("me-motion-editor");
   if (panel instanceof HTMLDetailsElement) panel.open = true;
 
@@ -65,13 +66,16 @@
     buckets[classify(section)].push(section);
   });
 
-  const left = make("aside", "tc-content", '<div class="tc-panel-heading"><div><small>内容</small><h2>文字段落 <span id="tcRowCount"></span></h2></div></div><p class="tc-hint">选择一段内容，在右侧编辑</p><div class="tc-row-list" id="tcRowList" aria-label="选择文字段落"></div>');
-  left.setAttribute("aria-label", "段落导航");
+  const left = iconBurst
+    ? make("aside", "tc-content ib-content-panel", '<div class="tc-panel-heading"><div><small>内容</small><h2>文字与画面</h2></div></div>')
+    : make("aside", "tc-content", '<div class="tc-panel-heading"><div><small>内容</small><h2>文字段落 <span id="tcRowCount"></span></h2></div></div><p class="tc-hint">选择一段内容，在右侧编辑</p><div class="tc-row-list" id="tcRowList" aria-label="选择文字段落"></div>');
+  left.setAttribute("aria-label", iconBurst ? "文字与画面" : "段落导航");
   const addButton = $("#addPairButton, #addRow, .add-pair-button");
-  if (addButton) {
+  if (addButton && left) {
     addButton.setAttribute("aria-label", "添加文字段落");
     left.querySelector(".tc-panel-heading").append(addButton);
   }
+  if (iconBurst) buckets.content.forEach((section) => left.append(section));
   buckets.scheme.forEach((section) => {
     section.classList.add("tc-scheme");
     left.append(section);
@@ -79,22 +83,36 @@
   body.append(left);
 
   const inspector = make("aside", "gm-inspector");
-  inspector.id = "glyphMorphInspector";
+  inspector.id = iconBurst ? "iconBurstInspector" : "glyphMorphInspector";
   inspector.setAttribute("aria-label", `${zhName}编辑器`);
-  const tabs = make("nav", "tc-tabs", '<button type="button" data-panel="row" aria-pressed="true">当前段落</button><button type="button" data-panel="global" aria-pressed="false">动效设置</button><button type="button" data-panel="export" aria-pressed="false">导出</button>');
+  const tabs = make("nav", "tc-tabs", iconBurst
+    ? '<button type="button" data-panel="global" aria-pressed="true">动效</button><button type="button" data-panel="assets" aria-pressed="false">图标</button><button type="button" data-panel="export" aria-pressed="false">导出</button>'
+    : '<button type="button" data-panel="row" aria-pressed="true">当前段落</button><button type="button" data-panel="global" aria-pressed="false">动效设置</button><button type="button" data-panel="export" aria-pressed="false">导出</button>');
   tabs.setAttribute("aria-label", "属性分类");
   const rowPanel = make("section", "tc-properties", '<div class="tc-panel-heading"><div><small>当前编辑</small><h2 id="tcSelectedTitle">段落 01</h2></div></div>');
   rowPanel.dataset.panel = "row";
-  buckets.content.forEach((section) => rowPanel.append(section));
+  if (!iconBurst) buckets.content.forEach((section) => rowPanel.append(section));
   const globalPanel = make("section", "tc-properties");
   globalPanel.dataset.panel = "global";
-  globalPanel.hidden = true;
-  buckets.motion.forEach((section) => globalPanel.append(section));
+  globalPanel.hidden = !iconBurst;
+  const assetPanel = iconBurst ? make("section", "tc-properties") : null;
+  if (assetPanel) {
+    assetPanel.dataset.panel = "assets";
+    assetPanel.hidden = true;
+  }
+  buckets.motion.forEach((section) => {
+    if (assetPanel && section.querySelector("#ibResourceTools")) assetPanel.append(section);
+    else globalPanel.append(section);
+  });
   const exportPanel = make("section", "tc-properties");
   exportPanel.dataset.panel = "export";
   exportPanel.hidden = true;
   buckets.export.forEach((section) => exportPanel.append(section));
-  inspector.append(tabs, rowPanel, globalPanel, exportPanel);
+  inspector.append(tabs);
+  if (!iconBurst) inspector.append(rowPanel);
+  inspector.append(globalPanel);
+  if (assetPanel) inspector.append(assetPanel);
+  inspector.append(exportPanel);
   body.append(inspector);
 
   const toolbar = make("section", "tc-canvas-toolbar", '<span class="tc-preview-label">画布预览</span>');
@@ -121,7 +139,7 @@
   else panel.remove();
 
   const setPanel = (name) => {
-    [rowPanel, globalPanel, exportPanel].forEach((section) => { section.hidden = section.dataset.panel !== name; });
+    [iconBurst ? null : rowPanel, globalPanel, assetPanel, exportPanel].filter(Boolean).forEach((section) => { section.hidden = section.dataset.panel !== name; });
     $$("button", tabs).forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.panel === name)));
   };
   tabs.addEventListener("click", (event) => {
@@ -160,7 +178,7 @@
       return button;
     }));
   };
-  rowList.addEventListener("click", (event) => {
+  rowList?.addEventListener("click", (event) => {
     const button = event.target.closest("[data-index]");
     if (!button) return;
     selected = Number(button.dataset.index);
@@ -168,13 +186,13 @@
     syncRows();
   });
   if (listRoot) new MutationObserver(syncRows).observe(listRoot, { childList: true });
-  document.addEventListener("input", (event) => {
+  if (!iconBurst) document.addEventListener("input", (event) => {
     if (event.target.closest("#pairList, #wordRows, textarea, input[type='text']")) syncRows();
   });
   addButton?.addEventListener("click", () => requestAnimationFrame(() => {
     selected = Math.max(0, collectItems().length - 1);
     syncRows();
   }));
-  syncRows();
+  if (!iconBurst) syncRows();
   window.dispatchEvent(new Event("resize"));
 })();

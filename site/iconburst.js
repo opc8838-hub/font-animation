@@ -58,12 +58,8 @@
     { name: "水流云", url: iconSvg('<circle cx="34" cy="56" r="15" fill="white"/><circle cx="51" cy="45" r="22" fill="white"/><circle cx="70" cy="56" r="16" fill="white"/><rect x="19" y="54" width="67" height="21" rx="10" fill="white"/>', "#1389ff") },
     { name: "水流手表", url: iconSvg('<rect x="28" y="19" width="44" height="62" rx="15" fill="#111"/><rect x="35" y="28" width="30" height="44" rx="9" fill="#d7ff2f"/><circle cx="50" cy="50" r="3" fill="#111"/>', "#d8d8d8") }
   ];
-  const transparentAnimalImages = Array.from({ length: 31 }, (_, index) => ({
-    name: index === 4 ? "鲸鱼" : `透明动物 ${String(index + 1).padStart(2, "0")}`,
-    url: `assets/transparent-animals/animal-${String(index + 1).padStart(2, "0")}.png`,
-    fileType: "image/png",
-    width: 768,
-    height: 768
+  const transparentAnimalImages = (window.STGIconLibrary?.groups.animals || []).map((image) => ({
+    ...image, width: 768, height: 768
   }));
   const botSeriesImages = [
     "bloub-capsule-colere-brun.gif",
@@ -444,7 +440,7 @@
 
   function renderImageLibraries() {
     const renderLibrary = (libraryId, images) => {
-      $(libraryId).innerHTML = images.map((image, index) => `<button type="button" data-image-index="${index}" title="添加${safe(image.name)}"><img src="${image.url}" alt="${safe(image.name)}" loading="lazy"><span>${String(index + 1).padStart(2, "0")}</span></button>`).join("");
+      $(libraryId).innerHTML = images.map((image, index) => `<div class="ib-asset-choice me-asset-choice"><button type="button" data-image-index="${index}" data-library-action="select" title="选择${safe(image.name)}"><img src="${image.url}" alt="${safe(image.name)}" loading="lazy"><span>${String(index + 1).padStart(2, "0")}</span></button><button type="button" class="ib-asset-commit me-asset-commit" data-image-index="${index}" data-library-action="insert" aria-label="插入${safe(image.name)}">插入</button></div>`).join("");
     };
     renderLibrary("ibOrbitImageLibrary", transparentAnimalImages);
     renderLibrary("ibGlyphImageLibrary", transparentAnimalImages);
@@ -476,20 +472,20 @@
     });
   }
 
+  let assetDrawerView = null;
+  let libraryRole = "orbit";
+
   function renderAssets() {
     function assetRows(assets) {
       if (!assets.length) return '<p class="ib-asset-empty">还没有内容，可从上方直接添加。</p>';
       return assets.map((asset) => {
       const dimensions = asset.processedWidth ? ` · ${asset.processedWidth}×${asset.processedHeight}` : "";
       const purpose = asset.role === "glyph" ? (asset.target < 0 ? "自动换字" : `替换第 ${asset.target + 1} 字`) : "开场环绕";
-      const quickTarget = asset.role === "glyph"
-        ? `<span class="ib-glyph-routing"><label class="ib-quick-target">替换字位<select data-action="quick-target" aria-label="${safe(asset.name)}替换字位">${targetOptions(asset)}</select></label><label class="ib-quick-target">播放顺序<select data-action="quick-order" aria-label="${safe(asset.name)}播放顺序">${sequenceOptions(asset, assets.length)}</select></label><label class="ib-quick-target">单项速度<select data-action="quick-speed" aria-label="${safe(asset.name)}单项速度">${speedOptions(asset)}</select></label><label class="ib-quick-target ib-quick-hold">图标停留<select data-action="quick-hold" aria-label="${safe(asset.name)}停留时间">${holdOptions(asset)}</select></label></span>`
-        : "";
       const sourceLabel = asset.type === "shape" ? "内置图形" : asset.libraryImage ? "内置透明图片" : "上传图片";
       return `<div class="ib-asset${asset.id === state.activeAssetId ? " is-active" : ""}" data-id="${asset.id}">
         <span class="ib-drag-handle" role="button" tabindex="0" aria-label="上下拖动${safe(asset.name)}调整位置" title="按住上下拖动">⋮⋮</span>
         <span class="ib-asset-preview">${assetPreview(asset)}</span>
-        <span class="ib-asset-copy"><strong>${safe(asset.name)}</strong><small>${sourceLabel}${dimensions} · ${Math.round(asset.size * 100)}% · ${purpose}${asset.role === "glyph" ? ` · 顺序 ${Number(asset.sequence) + 1} · ${Number(asset.replaceSpeed).toFixed(2).replace(/0+$/, "").replace(/\.$/, "")}× · 停留 ${Number(asset.holdMs || 160)}ms` : ""}</small>${quickTarget}</span>
+        <span class="ib-asset-copy"><strong>${safe(asset.name)}</strong><small>${sourceLabel}${dimensions} · ${Math.round(asset.size * 100)}% · ${purpose}${asset.role === "glyph" ? ` · 第 ${Number(asset.sequence) + 1} 个` : ""}</small></span>
         <span class="ib-asset-actions"><button type="button" data-action="edit">${asset.id === state.activeAssetId ? "正在编辑" : "单独编辑"}</button><button class="ib-remove" type="button" data-action="remove">删除</button></span>
       </div>`;
       }).join("");
@@ -507,6 +503,8 @@
   function selectAsset(assetId) {
     if (!state.assets.some((asset) => asset.id === assetId)) return;
     state.activeAssetId = assetId;
+    assetDrawerView = "editor";
+    pauseForAsset(activeAsset());
     renderAssets();
   }
 
@@ -551,8 +549,7 @@
 
   function setLayerManager(panel, expanded) {
     if (!panel) return;
-    $("ibAssetDrawer").hidden = true;
-    $("ibAssetEditor").hidden = true;
+    if (expanded) closeAssetDrawer();
     document.querySelectorAll(".ib-layer-panel.is-list-expanded").forEach((item) => {
       if (item !== panel) {
         item.classList.remove("is-list-expanded");
@@ -578,6 +575,11 @@
   }
 
   $("ibAssets").addEventListener("click", (event) => {
+    const libraryButton = event.target.closest("[data-open-library]");
+    if (libraryButton) {
+      openAssetLibrary(libraryButton.dataset.openLibrary);
+      return;
+    }
     const toggle = event.target.closest("[data-layer-toggle]");
     if (!toggle) return;
     const panel = toggle.closest(".ib-layer-panel");
@@ -586,24 +588,17 @@
 
   window.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
-    if (!$("ibAssetDrawer").hidden) {
-      $("ibAssetDrawer").hidden = true;
-      $("ibAssetEditor").hidden = true;
+    if (assetDrawerView === "editor") {
+      openAssetLibrary(libraryRole);
+      return;
+    }
+    if (assetDrawerView === "library") {
+      closeAssetDrawer();
       return;
     }
     const panel = document.querySelector(".ib-layer-panel.is-list-expanded");
     if (panel) setLayerManager(panel, false);
   });
-
-  window.addEventListener("resize", () => {
-    const panel = document.querySelector(".ib-layer-panel.is-list-expanded");
-    const editorWidth = document.querySelector(".ib-editor")?.getBoundingClientRect().width;
-    if (panel && editorWidth) panel.style.setProperty("--panel", `${editorWidth}px`);
-    if (!$("ibAssetDrawer").hidden && editorWidth) {
-      $("ibAssetDrawer").style.setProperty("--asset-drawer-left", `${editorWidth}px`);
-      $("ibAssetDrawer").style.setProperty("--asset-drawer-width", `${Math.min(420, Math.max(0, window.innerWidth - editorWidth))}px`);
-    }
-  }, { passive: true });
 
   let assetDrag = null;
   let suppressAssetClickUntil = 0;
@@ -681,6 +676,36 @@
   window.addEventListener("pointerup", finishAssetDrag);
   window.addEventListener("pointercancel", finishAssetDrag);
 
+  function openAssetLibrary(role = "orbit") {
+    libraryRole = role === "glyph" ? "glyph" : "orbit";
+    state.activeAssetId = null;
+    assetDrawerView = "library";
+    $("ibLibraryTitle").textContent = libraryRole === "glyph" ? "添加字体替换图标" : "添加环绕图标";
+    $("ibOrbitLibraryContents").hidden = libraryRole !== "orbit";
+    $("ibGlyphLibraryContents").hidden = libraryRole !== "glyph";
+    renderAssets();
+    $("ibAssetDrawer").scrollTop = 0;
+  }
+
+  function closeAssetDrawer() {
+    state.activeAssetId = null;
+    assetDrawerView = null;
+    renderAssets();
+  }
+
+  function setupAssetLibrary() {
+    [["ibOrbitPanel", "ibOrbitLibraryContents"], ["ibGlyphTools", "ibGlyphLibraryContents"]].forEach(([sourceId, targetId]) => {
+      const source = $(sourceId);
+      const target = $(targetId);
+      source.querySelectorAll(":scope > .ib-upload, :scope > .ib-image-library, :scope > .ib-shape-add").forEach((node) => target.append(node));
+    });
+    document.querySelectorAll(".ib-image-library summary span").forEach((span) => {
+      const grid = span.closest("details")?.querySelector(".ib-image-library-grid");
+      if (grid) span.textContent = `${grid.querySelectorAll(".ib-asset-choice").length} 个`;
+    });
+    $("ibCloseLibrary").addEventListener("click", closeAssetDrawer);
+  }
+
   $("ibAssets").addEventListener("keydown", (event) => {
     const handle = event.target.closest(".ib-drag-handle");
     if (!handle || !["ArrowUp", "ArrowDown"].includes(event.key)) return;
@@ -701,17 +726,15 @@
     const asset = activeAsset();
     $("ibOrbitPanel").classList.toggle("is-editing", Boolean(asset && asset.role !== "glyph"));
     $("ibGlyphPanel").classList.toggle("is-editing", Boolean(asset && asset.role === "glyph"));
-    const panel = asset ? $(asset.role === "glyph" ? "ibGlyphPanel" : "ibOrbitPanel") : null;
-    const showDrawer = Boolean(asset && panel);
-    drawer.hidden = !showDrawer;
-    editor.hidden = !showDrawer;
-    if (!showDrawer) return;
-    const slot = $(asset.role === "glyph" ? "ibGlyphEditorSlot" : "ibOrbitEditorSlot");
-    if (slot && drawer.parentElement !== slot) slot.append(drawer);
-    if (drawer.dataset.assetId !== asset.id) {
-      drawer.dataset.assetId = asset.id;
-      drawer.scrollIntoView({ block: "nearest" });
-    }
+    if (drawer.parentElement !== document.body) document.body.append(drawer);
+    const editing = Boolean(asset && assetDrawerView === "editor");
+    drawer.hidden = !editing && assetDrawerView !== "library";
+    editor.hidden = !editing;
+    $("ibAssetLibrary").hidden = assetDrawerView !== "library";
+    document.body.classList.toggle("ib-asset-editor-open", !drawer.hidden);
+    if (!editing) return;
+    libraryRole = asset.role === "glyph" ? "glyph" : "orbit";
+    drawer.dataset.assetId = asset.id;
     $("ibActiveAsset").textContent = `${asset.role === "glyph" ? "字体图标" : "环绕图标"} · ${asset.name}`;
     $("ibAssetSource").value = asset.type;
     $("ibAssetShapeFields").hidden = asset.type !== "shape";
@@ -720,6 +743,12 @@
     $("ibAssetColor").value = asset.color || "#ffcc00";
     $("ibAssetTarget").innerHTML = targetOptions(asset);
     $("ibAssetTarget").value = String(asset.target);
+    $("ibAssetSequence").innerHTML = sequenceOptions(asset, state.assets.filter((item) => item.role === "glyph").length);
+    $("ibAssetSequence").value = String(asset.sequence);
+    $("ibAssetSpeed").innerHTML = speedOptions(asset);
+    $("ibAssetSpeed").value = String(asset.replaceSpeed);
+    $("ibAssetSequenceField").hidden = asset.role !== "glyph";
+    $("ibAssetSpeedField").hidden = asset.role !== "glyph";
     $("ibAssetHoldField").hidden = asset.role !== "glyph";
     $("ibAssetMotionField").hidden = asset.role !== "glyph";
     $("ibAssetHold").value = String(asset.holdMs || 160);
@@ -1122,17 +1151,56 @@
     state.pausedAt = elapsed;
   }
 
+  function pauseAtSeconds(seconds) {
+    seekToSeconds(seconds);
+    state.playing = false;
+    $("ibPlayIcon").textContent = "▶";
+    $("ibPlayLabel").textContent = "播放";
+    $("ibPlay").setAttribute("aria-pressed", "true");
+  }
+
+  function pauseForAsset(asset) {
+    if (!asset) return;
+    const markers = timelineMarkers();
+    if (asset.role !== "glyph" || !replacementEnabled()) {
+      pauseAtSeconds((markers.settleEnd + markers.contactStartSeconds) / 2);
+      return;
+    }
+    let start = markers.replaceStartSeconds;
+    for (const group of glyphPlaybackConfig().groups) {
+      const timing = group.timings.find((item) => item.asset.id === asset.id);
+      if (timing) {
+        pauseAtSeconds(start + (timing.transitionMs + timing.holdMs * .5) / 1000);
+        return;
+      }
+      start += group.duration / 1000;
+    }
+    pauseAtSeconds(markers.replaceStartSeconds);
+  }
+
   function choreoBeats(playback = glyphPlaybackConfig()) {
     const markers = timelineMarkers();
     const total = animationDuration(playback) / 1000;
-    return [
-      { id: "intro", kind: "intro", label: "中央标题与图标起步", start: 0, end: markers.wordsEnterStart },
-      { id: "orbit", kind: "orbit", label: "文字接入 · 图标聚拢", start: markers.wordsEnterStart, end: markers.settleEnd },
-      { id: "hold", kind: "hold", label: "图标滞空继续流动", start: markers.settleEnd, end: markers.contactStartSeconds },
-      { id: "contact", kind: "contact", label: `${markers.pairCount} 对字体逐对靠拢并同步换色`, start: markers.contactStartSeconds, end: markers.contactSeconds },
-      { id: "color", kind: "replace", label: "换色完成与复位", start: markers.contactSeconds, end: markers.replaceStartSeconds },
-      { id: "replace", kind: "replace", label: replacementEnabled() ? "文字切换图标 / 图片" : "紧凑标题停留", start: markers.replaceStartSeconds, end: total }
-    ].filter((beat) => beat.end > beat.start + .001);
+    const beats = [
+      { id: "intro", kind: "intro", label: "标题起步", start: 0, end: markers.wordsEnterStart },
+      { id: "orbit", kind: "orbit", label: "图标聚拢", start: markers.wordsEnterStart, end: markers.settleEnd },
+      { id: "hold", kind: "hold", label: "滞空", start: markers.settleEnd, end: markers.contactStartSeconds },
+      { id: "contact", kind: "contact", label: `${markers.pairCount} 对字靠拢`, start: markers.contactStartSeconds, end: markers.contactSeconds },
+      { id: "color", kind: "color", label: "连续换色", start: markers.contactSeconds, end: markers.whiteStartSeconds },
+      { id: "return", kind: "orbit", label: "文字复位", start: markers.whiteStartSeconds, end: markers.replaceStartSeconds }
+    ];
+    if (replacementEnabled() && playback.groups.length) {
+      let cursor = markers.replaceStartSeconds;
+      playback.groups.forEach((group, index) => {
+        const end = cursor + group.duration / 1000;
+        beats.push({ id: `replace-${index}`, kind: "replace", label: playback.groups.length === 1 ? "图标替字" : `图标替字 ${index + 1}`, start: cursor, end });
+        cursor = end;
+      });
+      beats.push({ id: "end", kind: "hold", label: "成品停留", start: cursor, end: total });
+    } else {
+      beats.push({ id: "end", kind: "hold", label: "标题停留", start: markers.replaceStartSeconds, end: total });
+    }
+    return beats.filter((beat) => beat.end > beat.start + .001);
   }
 
   function renderChoreoTrack() {
@@ -1144,6 +1212,7 @@
     scroll.className = "ib-choreo-scroll";
     const bar = document.createElement("div");
     bar.className = "ib-choreo-bar";
+    bar.style.width = `${Math.max(980, Math.round(total * 230), beats.length * 72)}px`;
     beats.forEach((beat, index) => {
       const block = document.createElement("div");
       block.className = `ib-choreo-block is-${beat.kind}`;
@@ -1151,7 +1220,7 @@
       block.tabIndex = 0;
       block.style.flex = `${Math.max(.08, beat.end - beat.start)} 1 0`;
       block.innerHTML = `<em>${index + 1}</em><strong>${beat.label}</strong><small>${(beat.end - beat.start).toFixed(2)}秒</small>`;
-      const jump = () => seekToSeconds(beat.start);
+      const jump = () => pauseAtSeconds(beat.start + Math.min(.04, (beat.end - beat.start) / 2));
       block.addEventListener("click", jump);
       block.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") jump(); });
       bar.append(block);
@@ -1162,11 +1231,15 @@
     bar.append(playhead);
     const ruler = document.createElement("div");
     ruler.className = "ib-choreo-ruler";
-    const step = total > 8 ? 2 : 1;
-    for (let mark = 0; mark <= total + .001; mark += step) {
+    ruler.style.width = bar.style.width;
+    const majorStep = total > 8 ? 2 : 1;
+    const minorStep = majorStep / 5;
+    for (let index = 0; index * minorStep <= total + .001; index += 1) {
+      const mark = index * minorStep;
       const tick = document.createElement("span");
       tick.style.left = `${clamp(mark / total, 0, 1) * 100}%`;
-      tick.textContent = `${Math.round(mark)}s`;
+      if (index % 5 === 0) tick.textContent = `${Math.round(mark)}s`;
+      else tick.className = "is-minor";
       ruler.append(tick);
     }
     scroll.append(bar, ruler);
@@ -1181,7 +1254,13 @@
       legend.append(item);
     });
     details.append(legend);
-    track.replaceChildren(scroll, details);
+    const footer = document.createElement("div");
+    footer.className = "ib-choreo-footer";
+    const duration = document.createElement("span");
+    duration.className = "ib-choreo-total";
+    duration.textContent = `${total.toFixed(2)}s`;
+    footer.append(details, duration);
+    track.replaceChildren(scroll, footer);
     const head = $("ibChoreoPlayhead");
     if (head) head.style.left = "0%";
     track.dataset.duration = String(total);
@@ -1235,7 +1314,7 @@
     ibBeat: "80",
     ibReplaceSpeed: "4.5",
     ibCollapse: "91",
-    ibClusterX: "-14",
+    ibClusterX: "0",
     ibHang: "20",
     ibDrift: "22",
     ibOvershoot: "58",
@@ -1264,7 +1343,7 @@
 
   function collectScheme() {
     return {
-      version: 3,
+      version: 4,
       controls: Object.fromEntries(schemeControlIds.map((id) => [id, $(id).value])),
       assets: state.assets.map(serializableAsset),
       backgroundMedia: state.backgroundMedia ? {
@@ -1300,6 +1379,7 @@
     if (!scheme || typeof scheme !== "object") return;
     const controls = { ...(scheme.controls || {}) };
     if (Number(scheme.version || 0) < 3 && Number(controls.ibPairStagger || 0) <= 50) controls.ibPairStagger = 95;
+    if (Number(scheme.version || 0) < 4 && Number(controls.ibClusterX) === -14) controls.ibClusterX = 0;
     Object.entries(controls).forEach(([id, value]) => { if ($(id) && value != null) $(id).value = String(value); });
     state.assets = Array.isArray(scheme.assets)
       ? scheme.assets.map(migrateAsset).filter((asset) => asset.type !== "shape" || !["square", "triangle", "heart", "circle"].includes(asset.shape))
@@ -1308,6 +1388,7 @@
     setBackgroundMedia(scheme.backgroundMedia || null);
     state.assets.forEach(hydrateAssetImage);
     state.activeAssetId = null;
+    assetDrawerView = null;
     updateWord();
     updateColorCountUI();
     updateContentModeUI();
@@ -1320,7 +1401,7 @@
   }
 
   function defaultScheme(includeAssets = true) {
-    return { version: 3, controls: { ...defaultControlValues, ...latestDefaultControls }, assets: includeAssets ? builtinAssets().map(serializableAsset) : [], backgroundMedia: null };
+    return { version: 4, controls: { ...defaultControlValues, ...latestDefaultControls }, assets: includeAssets ? builtinAssets().map(serializableAsset) : [], backgroundMedia: null };
   }
 
   function downloadBlob(blob, filename) {
@@ -2212,6 +2293,7 @@
     ctx.font = `${$("ibWeight").value} ${fontPx}px "${family}"`;
     const text = $("ibText").value || "GOOD JOB";
     const layout = trackedLayout(ctx, text, tracking);
+    const titleWidth = Math.max(word.scrollWidth * screenScale, fontPx * 2);
     const baseline = height / 2 + fontPx * .34;
     const finalScaleProgress = smoothstep(clamp(Math.max(0, seconds - timeline.replaceStartSeconds) * 1000 / clamp(Number($("ibFinalScaleDuration").value), 200, 1200), 0, 1));
     const finalScale = 1 + Number($("ibFinalScale").value) / 100 * finalScaleProgress;
@@ -2232,6 +2314,7 @@
       const leftLayout = trackedLayout(ctx, leftText, tracking);
       const rightLayout = trackedLayout(ctx, rightText, tracking);
       const closedGap = state.naturalGap ? fontPx * .18 : 0;
+      const pairOffset = (leftLayout.total - rightLayout.total) / 2;
       const openGap = closedGap + width * .3 * Number($("ibCollapse").value) / 100;
       const sideShift = (openGap - closedGap) / 2;
       const orbitArc = Math.sin(Math.PI * timeline.incomingOrbit);
@@ -2264,8 +2347,8 @@
       // The live grid always starts both halves at the natural/closed gap;
       // per-letter transforms create and close the temporary slot. Starting
       // at the animated gap here counted that slot twice in exported media.
-      drawSide(leftLetters, leftLayout, -1, width / 2 - closedGap / 2 - leftLayout.total / 2);
-      drawSide(rightLetters, rightLayout, 1, width / 2 + closedGap / 2 + rightLayout.total / 2);
+      drawSide(leftLetters, leftLayout, -1, width / 2 + pairOffset - closedGap / 2 - leftLayout.total / 2);
+      drawSide(rightLetters, rightLayout, 1, width / 2 + pairOffset + closedGap / 2 + rightLayout.total / 2);
       ctx.restore();
     }
 
@@ -2536,7 +2619,10 @@
       const index = state.assets.indexOf(asset);
       state.assets.splice(index, 1);
       if (asset.role === "glyph") normalizeGlyphSequence();
-      if (state.activeAssetId === asset.id) state.activeAssetId = (state.assets[index] || state.assets[index - 1] || {}).id || null;
+      if (state.activeAssetId === asset.id) {
+        state.activeAssetId = null;
+        assetDrawerView = null;
+      }
       renderAssets(); renderIcons();
       return;
     }
@@ -2544,7 +2630,8 @@
     // a choice. Re-rendering the whole row here destroyed the open menu, which
     // made playback order (and the other quick controls) impossible to edit.
     if (event.target.closest("select, input, textarea, label, a")) return;
-    selectAsset(asset.id);
+    // The row is for selection and ordering; only its edit button opens
+    // controls, so a pointer click cannot unexpectedly lengthen the panel.
   });
 
   $("ibBackgroundFile").addEventListener("change", async (event) => {
@@ -2742,13 +2829,19 @@
   $("ibExportVideo").addEventListener("click", () => exportMp4(false));
   $("ibExportVerticalVideo").addEventListener("click", () => exportMp4(true));
 
-  const assetInputs = ["ibAssetShape", "ibAssetColor", "ibAssetTarget", "ibAssetHold", "ibAssetSize", "ibAssetOpacity", "ibAssetX", "ibAssetY", "ibAssetRotation", "ibAssetMotion"];
+  const assetInputs = ["ibAssetShape", "ibAssetColor", "ibAssetTarget", "ibAssetSequence", "ibAssetSpeed", "ibAssetHold", "ibAssetSize", "ibAssetOpacity", "ibAssetX", "ibAssetY", "ibAssetRotation", "ibAssetMotion"];
   assetInputs.forEach((id) => $(id).addEventListener("input", () => {
     const asset = activeAsset();
     if (!asset) return;
     if (id === "ibAssetShape") { asset.shape = $(id).value; asset.name = `内置${shapeLabels[asset.shape]}`; }
     if (id === "ibAssetColor") { asset.color = $(id).value; asset.color2 = $(id).value; }
     if (id === "ibAssetTarget") asset.target = Number($(id).value);
+    if (id === "ibAssetSequence") {
+      const ordered = state.assets.filter((item) => item.role === "glyph" && item.id !== asset.id).sort((a, b) => Number(a.sequence) - Number(b.sequence));
+      ordered.splice(clamp(Number($(id).value), 0, ordered.length), 0, asset);
+      ordered.forEach((item, index) => { item.sequence = index; });
+    }
+    if (id === "ibAssetSpeed") asset.replaceSpeed = Number($(id).value);
     if (id === "ibAssetHold") asset.holdMs = Number($(id).value);
     if (id === "ibAssetSize") asset.size = Number($(id).value) / 100;
     if (id === "ibAssetOpacity") asset.opacity = Number($(id).value) / 100;
@@ -2758,6 +2851,7 @@
     if (id === "ibAssetMotion") asset.motion = $(id).value;
     updateAssetReadouts(asset);
     if (["ibAssetShape", "ibAssetColor"].includes(id)) { renderIcons(); renderAssets(); }
+    else if (["ibAssetSequence", "ibAssetSpeed", "ibAssetTarget", "ibAssetHold"].includes(id)) { renderAssets(); scheduleChoreoRender(); }
   }));
 
   $("ibAssetSource").addEventListener("change", () => {
@@ -2787,10 +2881,7 @@
   });
 
   $("ibCloseAssetDrawer").addEventListener("click", () => {
-    state.activeAssetId = null;
-    $("ibAssetDrawer").hidden = true;
-    $("ibAssetEditor").hidden = true;
-    renderAssets();
+    openAssetLibrary(libraryRole);
   });
 
   $("ibAssetEditor").addEventListener("click", (event) => {
@@ -2826,7 +2917,7 @@
       const added = files.map((file, index) => defaultAsset({ id: `upload-${Date.now()}-${index}`, type: "image", role, name: file.name, status: "等待处理…", sequence: role === "glyph" ? sequenceStart + index : 0 }));
       state.assets.push(...added);
       if (role === "glyph") normalizeGlyphSequence();
-      if (added.length) state.activeAssetId = added[added.length - 1].id;
+      state.activeAssetId = null;
       renderAssets(); renderIcons();
       added.forEach((asset, index) => assignFileToAsset(asset, files[index]));
     });
@@ -2840,7 +2931,7 @@
       const asset = defaultAsset({ role, shape, color, color2: $("ibColorC").value, name: `内置${shapeLabels[shape]}`, target: -1, sequence });
       state.assets.push(asset);
       if (role === "glyph") normalizeGlyphSequence();
-      state.activeAssetId = asset.id;
+      state.activeAssetId = null;
       renderAssets(); renderIcons();
     });
   }
@@ -2851,6 +2942,15 @@
       if (!button) return;
       const image = images[Number(button.dataset.imageIndex)];
       if (!image) return;
+      if (button.dataset.libraryAction === "select") {
+        button.closest(".ib-image-library-grid").querySelectorAll(".ib-asset-choice").forEach((choice) => choice.classList.remove("is-selected"));
+        button.closest(".ib-asset-choice").classList.add("is-selected");
+        return;
+      }
+      if (state.assets.some((item) => item.role === role && item.url === image.url)) {
+        $("ibLibraryTitle").textContent = "这张素材已添加";
+        return;
+      }
       const sequence = role === "glyph" ? state.assets.filter((asset) => asset.role === "glyph").length : 0;
       const asset = defaultAsset({
         type: "image",
@@ -2872,7 +2972,7 @@
       });
       state.assets.push(asset);
       if (role === "glyph") normalizeGlyphSequence();
-      state.activeAssetId = asset.id;
+      state.activeAssetId = null;
       renderAssets();
       renderIcons();
       loadImage(image.url).then((loadedImage) => { asset.originalImage = loadedImage; }).catch(() => {
@@ -2927,6 +3027,7 @@
   });
 
   renderImageLibraries();
+  setupAssetLibrary();
   state.assets = builtinAssets();
   // Keep both layer cards compact on entry. An editor opens inside the exact
   // layer card only after the user chooses an individual asset.

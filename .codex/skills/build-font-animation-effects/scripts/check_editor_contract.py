@@ -57,8 +57,12 @@ def main() -> int:
         if token not in source:
             errors.append(f"missing {label}: {token}")
 
-    background = html.find('id="backgroundColor"')
-    text_color = html.find('id="textColor"')
+    def first_present(*tokens: str) -> int:
+        positions = [html.find(token) for token in tokens]
+        return min((position for position in positions if position >= 0), default=-1)
+
+    background = first_present('id="backgroundColor"', 'id="ibBackground"')
+    text_color = first_present('id="textColor"', 'id="ibBaseColor"')
     asset_panel = html.find("me-layer-panel")
     if text_only:
         if min(background, text_color) < 0:

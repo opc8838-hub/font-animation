@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="iconburst-overrides.css?v=20260909-five">
   <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-five">
   <link rel="stylesheet" href="typecascade-polish.css?v=20260909-five">
-  <link rel="stylesheet" href="iconburst-shell.css?v=20260924-plain1">
+  <link rel="stylesheet" href="iconburst-shell.css?v=20260924-ux4">
 </head>
 <body>
   <main class="ib-app">
@@ -78,9 +78,9 @@
         <p id="ibContentModeHint" class="ib-mode-hint">颜色动效结束后，多个文字位置可由不同字体图标或图片分别接管。</p>
         <div id="ibResourceTools" class="ib-resource-tools">
           <div id="ibAssets" class="ib-layer-panels" aria-live="polite">
-            <section id="ibOrbitPanel" class="ib-layer-panel">
+            <section id="ibOrbitPanel" class="ib-layer-panel me-layer-panel">
               <div class="ib-layer-sequence"><span>阶段 1 · 开场</span></div>
-              <div class="ib-layer-title"><span class="ib-layer-title-copy"><strong>已选环绕图标</strong><small><b id="ibOrbitCount">0</b> 项 · 可删除</small></span></div>
+              <div class="ib-layer-title"><span class="ib-layer-title-copy"><strong>已选环绕图标</strong><small><b id="ibOrbitCount">0</b> 项</small></span><span class="ib-layer-actions"><button type="button" data-open-library="orbit">＋ 添加</button><button class="ib-layer-toggle me-layer-toggle" type="button" data-layer-toggle aria-expanded="false">展开已选</button></span></div>
               <label class="ib-upload">＋ 添加环绕图片（可多选）<input id="ibOrbitFiles" type="file" multiple accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif"></label>
               <details class="ib-image-library">
                 <summary>＋ 添加内置透明动物图片 <span>31 张</span></summary>
@@ -95,12 +95,12 @@
                 <div id="ibOrbitFlowLibrary" class="ib-image-library-grid" aria-label="环绕经典图标素材库"></div>
               </details>
               <div class="ib-shape-add"><select id="ibOrbitShape"><option value="ring">圆环</option><option value="rainbow-ring">彩虹圆环</option></select><input id="ibOrbitShapeColor" type="color" value="#ffcc00" aria-label="环绕图形颜色"><button id="ibAddOrbitShape" type="button">＋ 环绕图形</button></div>
-              <div id="ibOrbitItems" class="ib-layer-items"></div>
+              <div id="ibOrbitItems" class="ib-layer-items me-layer-items"></div>
               <div id="ibOrbitEditorSlot" class="ib-editor-slot"></div>
             </section>
-            <section id="ibGlyphPanel" class="ib-layer-panel ib-glyph-panel">
+            <section id="ibGlyphPanel" class="ib-layer-panel ib-glyph-panel me-layer-panel">
               <div class="ib-layer-sequence"><span>阶段 3 · 颜色结束后</span></div>
-              <div class="ib-layer-title"><span class="ib-layer-title-copy"><strong>已选字体图标 / 图片</strong><small><b id="ibGlyphCount">0</b> 项 · 可删除</small></span></div>
+              <div class="ib-layer-title"><span class="ib-layer-title-copy"><strong>已选字体图标 / 图片</strong><small><b id="ibGlyphCount">0</b> 项</small></span><span class="ib-layer-actions"><button type="button" data-open-library="glyph">＋ 添加</button><button class="ib-layer-toggle me-layer-toggle" type="button" data-layer-toggle aria-expanded="false">展开已选</button></span></div>
               <div class="ib-glyph-guide"><strong>直接这样编辑</strong><span>① 添加图标或图片</span><span>② 每一项分别设置字位、顺序、速度和停留时间</span><span>③ “同时替换数量”决定依次播放还是并行播放</span></div>
               <p id="ibGlyphModeMessage" class="ib-mode-hint" hidden>当前动画只换色，但这里仍可预先编辑字体图标；切换为单字或多字模式后开始播放。</p>
               <div id="ibGlyphTools" class="ib-layer-tools">
@@ -118,16 +118,24 @@
                   <div id="ibGlyphFlowLibrary" class="ib-image-library-grid" aria-label="字体替换经典图标素材库"></div>
                 </details>
                 <div class="ib-shape-add"><select id="ibGlyphShape"><option value="ring">圆环</option><option value="rainbow-ring">彩虹圆环</option></select><input id="ibGlyphShapeColor" type="color" value="#7b61ff" aria-label="字体图形颜色"><button id="ibAddGlyphShape" type="button">＋ 字体图形</button></div>
-                <div id="ibGlyphItems" class="ib-layer-items"></div>
+                <div id="ibGlyphItems" class="ib-layer-items me-layer-items"></div>
               </div>
               <div id="ibGlyphEditorSlot" class="ib-editor-slot"></div>
             </section>
           </div>
-          <aside id="ibAssetDrawer" class="ib-asset-drawer" aria-label="当前素材编辑面板" hidden>
-          <div id="ibAssetEditor" class="ib-asset-editor" hidden>
-            <div class="ib-active-asset"><span>只改这一张</span><strong id="ibActiveAsset">—</strong><button id="ibCloseAssetDrawer" type="button">关闭</button></div>
+          <aside id="ibAssetDrawer" class="ib-asset-drawer me-asset-drawer" aria-label="当前素材编辑面板" hidden>
+          <div id="ibAssetLibrary" class="ib-asset-library me-asset-library" hidden>
+            <div class="ib-active-asset"><span>素材库</span><strong id="ibLibraryTitle">添加环绕图标</strong><button id="ibCloseLibrary" type="button">关闭</button></div>
+            <p class="ib-help">点素材预览只选择；点旁边的“插入”才会加入画面。</p>
+            <div id="ibOrbitLibraryContents" class="ib-library-contents"></div>
+            <div id="ibGlyphLibraryContents" class="ib-library-contents" hidden></div>
+          </div>
+          <div id="ibAssetEditor" class="ib-asset-editor me-asset-editor" hidden>
+            <div class="ib-active-asset"><span>只改这一张</span><strong id="ibActiveAsset">—</strong><button id="ibCloseAssetDrawer" type="button">返回素材库</button></div>
             <p id="ibAssetEditorHint" class="ib-help">大小、透明度和位置只作用于这一张图标，不会改文字，也不会改其他图标。</p>
             <label id="ibAssetTargetField">替换哪个字<select id="ibAssetTarget"><option value="-1">自动轮换</option></select></label>
+            <label id="ibAssetSequenceField">播放顺序<select id="ibAssetSequence"></select></label>
+            <label id="ibAssetSpeedField">单项切换速度<select id="ibAssetSpeed"></select></label>
             <label id="ibAssetHoldField">这一张停留 <output id="ibAssetHoldValue">160 ms</output><input id="ibAssetHold" type="range" min="40" max="1200" value="160" step="20"></label>
             <div id="ibAssetShapeFields" class="ib-two"><label>图形<select id="ibAssetShape"><option value="ring">圆环</option><option value="rainbow-ring">彩虹圆环</option><option value="star">星形（当前方案）</option></select></label><label>图形颜色<input id="ibAssetColor" type="color" value="#ffcc00"></label></div>
             <label>这一张的大小 <output id="ibAssetSizeValue">100%</output><input id="ibAssetSize" type="range" min="10" max="500" value="100"></label>
@@ -152,8 +160,10 @@
             </details>
           </div>
           </aside>
-          <label>聚拢图标整体水平位置 <output id="ibClusterXValue">0%</output><input id="ibClusterX" type="range" min="-100" max="100" value="0"></label>
-          <label>爆发范围 <output id="ibRangeValue">72%</output><input id="ibRange" type="range" min="25" max="110" value="72"></label>
+          <details class="ib-disclosure ib-icon-layout"><summary>图标布局细节</summary>
+            <label>聚拢图标整体水平位置 <output id="ibClusterXValue">0%</output><input id="ibClusterX" type="range" min="-100" max="100" value="0"></label>
+            <label>爆发范围 <output id="ibRangeValue">72%</output><input id="ibRange" type="range" min="25" max="110" value="72"></label>
+          </details>
         </div>
       </section>
 
@@ -186,7 +196,7 @@
 
       <section class="ib-section ib-choreo-section">
         <div class="ib-section-heading"><p class="ib-kicker">编舞时间轴</p><small>点一段可跳到那一拍</small></div>
-        <div id="ibChoreoTrack" class="ib-choreo-track" aria-label="图标爆发编舞时间轴"></div>
+        <div id="ibChoreoTrack" class="ib-choreo-track me-choreo-track" aria-label="图标爆发编舞时间轴"></div>
         <p id="ibChoreoBeat" class="ib-choreo-beat">1 · 中央标题与图标起步</p>
       </section>
 
@@ -229,7 +239,7 @@
         <div id="ibWhiteWord" class="ib-word ib-final-overlay ib-white-word" aria-hidden="true">GOOD JOB</div>
       </div>
       <div class="ib-stage-meta"><span>TEXT × ICON × COLOR CUT</span><strong id="ibPhase">01 · 字内预告</strong></div>
-      <div class="ib-controls">
+      <div class="ib-controls me-stage-controls">
         <button id="ibPlay" type="button" aria-pressed="false"><span id="ibPlayIcon">Ⅱ</span><span id="ibPlayLabel">暂停</span></button>
         <button id="ibReplay" type="button">↻ 重播</button>
       </div>
@@ -237,9 +247,10 @@
   </main>
   <script src="js/continuation-gif.js"></script>
   <script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="iconburst.js?v=20260924-plain1"></script>
+  <script src="shared-icon-library.js?v=20260924-ux2"></script>
+  <script src="iconburst.js?v=20260924-ux4"></script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
-  <script src="cellmotion-me-shell.js?v=20260924-size1"></script>
+  <script src="cellmotion-me-shell.js?v=20260924-ux2"></script>
   <script src="typecascade-polish.js?v=20260909-five"></script>
   <script src="typecascade-selects.js?v=20260909-1"></script>
   <script src="typecascade-locale.js?v=20260924-plain1"></script>
