@@ -23,9 +23,27 @@ body.tc-workspace .ib-composition {
 
 body.tc-workspace .ib-word,
 body.tc-workspace .ib-switch-word {
-  font-size: clamp(40px, 22cqh, 120px);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max-content;
+  max-width: none;
+  margin: 0;
   line-height: 1;
   letter-spacing: -0.045em;
+  text-align: center;
+  white-space: nowrap;
+  transform: translate(-50%, -50%) scale(var(--word-scale, 1));
+}
+body.tc-workspace .ib-intro-word {
+  transform: translate(-50%, -50%) scale(var(--intro-scale, 1));
+}
+body.tc-workspace .ib-incoming-word {
+  left: 0;
+  top: 50%;
+  width: 100%;
+  max-width: 100%;
+  transform: translateY(-50%);
 }
 
 body.tc-workspace .ib-icon.is-replacement {

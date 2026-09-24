@@ -768,14 +768,33 @@
     $("ibAssetHoldValue").textContent = `${Number(asset.holdMs || 160)} ms`;
   }
 
+  function frameBox() {
+    return {
+      width: Math.max(1, composition.clientWidth || stage.clientWidth || 1),
+      height: Math.max(1, composition.clientHeight || stage.clientHeight || 1)
+    };
+  }
+
   function updateTypography() {
     invalidateLetterAnchors();
     const family = window.STGFontLibrary?.family($("ibFont").value) || fontMap[$("ibFont").value] || "IBSpace";
-    const base = clamp(stage.clientWidth * .09, 52, 154);
+    const frame = frameBox();
+    const userScale = Number($("ibFontSize").value) / 100 || 1;
+    const portrait = frame.width < frame.height;
+    let base = Math.min(frame.height * (portrait ? .2 : .32), frame.width * (portrait ? .15 : .12), 160) * userScale;
+    base = clamp(base, 16, 168);
+    word.style.fontFamily = family;
+    word.style.fontWeight = $("ibWeight").value;
+    word.style.letterSpacing = `${Number($("ibTracking").value)}px`;
+    word.style.fontSize = `${base}px`;
+    const measured = Math.max(word.scrollWidth, 1);
+    const limit = frame.width * .84;
+    if (measured > limit) base *= limit / measured;
+    base = clamp(base, 16, 168);
     [word, introWord, incomingWord, colorWord, whiteWord].forEach((element) => {
       element.style.fontFamily = family;
       element.style.fontWeight = $("ibWeight").value;
-      element.style.fontSize = `${base * Number($("ibFontSize").value) / 100}px`;
+      element.style.fontSize = `${base}px`;
       element.style.letterSpacing = `${Number($("ibTracking").value)}px`;
       element.style.setProperty("--base", $("ibBaseColor").value);
       element.style.setProperty("--color-a", $("ibColorA").value);
@@ -1642,19 +1661,24 @@
     const wordCurveStrength = Number($("ibCurve").value) / 100;
     const orbitRemaining = 1 - timeline.incomingOrbit;
     const orbitArc = Math.sin(Math.PI * timeline.incomingOrbit);
-    const orbitCenterShift = orbitRemaining * clamp(stage.clientWidth * .46, 250, 450);
-    const orbitOvershoot = orbitArc * clamp(stage.clientWidth * .015, 7, 15) * wordCurveStrength;
+    const frame = frameBox();
+    const fontSize = parseFloat(word.style.fontSize) || 100;
+    const titleWidth = Math.max(word.scrollWidth, fontSize * 2);
+    const halfReach = titleWidth * .58;
+    const orbitRoom = Math.max(0, frame.width * .46 - halfReach);
+    const orbitCenterShift = orbitRemaining * Math.min(frame.width * .12, orbitRoom);
+    const orbitOvershoot = orbitArc * Math.min(frame.width * .012, 12) * wordCurveStrength;
     const orbitX = orbitCenterShift - orbitOvershoot;
-    const orbitY = orbitArc * clamp(stage.clientHeight * .007, 3, 6) * wordCurveStrength;
+    const orbitY = orbitArc * Math.min(frame.height * .012, 10) * wordCurveStrength;
     incomingWord.style.setProperty("--incoming-orbit-x", `${orbitX.toFixed(2)}px`);
     incomingWord.style.setProperty("--incoming-orbit-y", `${orbitY.toFixed(2)}px`);
     incomingWord.style.setProperty("--incoming-mask", "0%");
     incomingWord.classList.toggle("is-unmasked", timeline.incomingReveal > 0);
 
-    const fontSize = parseFloat(word.style.fontSize) || 100;
     const closedGap = state.naturalGap ? fontSize * .18 : 0;
     const slotScale = Number($("ibCollapse").value) / 100;
-    const openGap = closedGap + clamp(stage.clientWidth * .22, 120, 260) * slotScale;
+    const gapRoom = Math.max(fontSize * .12, frame.width * .9 - titleWidth);
+    const openGap = closedGap + Math.min(frame.width * .14, gapRoom) * slotScale;
     const wordGap = closedGap + (openGap - closedGap) * (1 - timeline.gapClose);
     word.style.setProperty("--word-gap", `${closedGap.toFixed(2)}px`);
     incomingWord.style.setProperty("--word-gap", `${closedGap.toFixed(2)}px`);
@@ -2036,7 +2060,7 @@
     composition.style.setProperty("width", `${fittedWidth}px`, "important");
     composition.style.setProperty("height", `${fittedHeight}px`, "important");
     composition.style.setProperty("aspect-ratio", `${width} / ${height}`, "important");
-    invalidateLetterAnchors();
+    updateTypography();
   }
 
   function exportDimensions(verticalHD = false) {
@@ -2168,7 +2192,7 @@
     const seconds = ((realSeconds * speed) % baseCycleSeconds + baseCycleSeconds) % baseCycleSeconds;
     const timeline = masterTimeline(seconds / baseCycleSeconds, baseCycleSeconds, playback.total);
     const family = window.STGFontLibrary?.family($("ibFont").value) || fontMap[$("ibFont").value] || "IBSpace";
-    const screenScale = stage.clientWidth ? width / stage.clientWidth : 1;
+    const screenScale = composition.clientWidth ? width / composition.clientWidth : 1;
     // Export from the same measured composition as the live preview. The old
     // renderer invented a second responsive layout (82% x 62%), so GIF/MP4
     // frames made the icon cluster smaller and the title gap wider than the
@@ -2203,10 +2227,13 @@
       const leftLayout = trackedLayout(ctx, leftText, tracking);
       const rightLayout = trackedLayout(ctx, rightText, tracking);
       const closedGap = state.naturalGap ? fontPx * .18 : 0;
-      const openGap = closedGap + clamp(stage.clientWidth * .22, 120, 260) * screenScale * Number($("ibCollapse").value) / 100;
+      const titleWidth = Math.max(layout.total, fontPx * 2);
+      const gapRoom = Math.max(fontPx * .12, width * .9 - titleWidth);
+      const openGap = closedGap + Math.min(width * .14, gapRoom) * Number($("ibCollapse").value) / 100;
       const sideShift = (openGap - closedGap) / 2;
       const orbitArc = Math.sin(Math.PI * timeline.incomingOrbit);
-      const orbitShift = (1 - timeline.incomingOrbit) * clamp(width * .46, 120, width * .46) - orbitArc * width * .015 * Number($("ibCurve").value) / 100;
+      const orbitRoom = Math.max(0, width * .46 - titleWidth * .58);
+      const orbitShift = (1 - timeline.incomingOrbit) * Math.min(width * .12, orbitRoom) - orbitArc * Math.min(width * .012, 12) * Number($("ibCurve").value) / 100;
       const drawSide = (letters, sideLayout, direction, startX) => {
         const maxRank = Math.max(0, ...letters.map((letter) => Number(letter.dataset.rank || 0)));
         letters.forEach((letter, index) => {
