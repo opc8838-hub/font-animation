@@ -172,7 +172,18 @@
     '颜色动效结束后，多个文字位置可由不同字体图标或图片分别接管。': 'After the color, different icons can take over different characters.',
     '环绕与字体换面完成后，多个文字位置可由不同字体图标或图片分别接管。': 'After the orbit and the color, different icons can take over different characters.',
     '环绕与字体换面完成后，每个节拍只让一个文字位置切换成字体图标或图片。': 'After the orbit and the color, one character becomes an icon on each beat.',
-    '环绕图标从首帧沿弧线转向聚拢；字体始终保持水平，图标消失后文字闭合并继续换色。': 'Icons arc in from the first frame. The words stay level, then close and change color.'
+    '环绕图标从首帧沿弧线转向聚拢；字体始终保持水平，图标消失后文字闭合并继续换色。': 'Icons arc in from the first frame. The words stay level, then close and change color.',
+    '正在单独编辑': 'Editing', '关闭': 'Close', '素材类型': 'Asset type', '内置图形': 'Shape', '图片': 'Image',
+    '替换字位': 'Replace character', '自动轮换': 'Auto', '图标停留时间': 'Hold',
+    '图形': 'Shape', '图形颜色': 'Shape color', '星形（当前方案）': 'Star',
+    '替换当前素材图片': 'Replace this image',
+    '自动去除四角连通背景（保护主体内部白色）': 'Remove the connected corner background',
+    '自动识别四角': 'Detect corners', '开启': 'On', '背景容差': 'Tolerance', '边缘过渡': 'Edge',
+    '上传后会保留高清主体，并裁掉透明空白。': 'The upload keeps the subject and trims empty space.',
+    '编辑大小': 'Size', '独立透明度': 'Opacity', '水平偏移': 'X', '垂直偏移': 'Y', '独立旋转': 'Rotate',
+    '文字替换': 'Replace text', '爆发': 'Burst', '漂浮': 'Float', '环绕': 'Orbit',
+    '当前动画只换色，但这里仍可预先编辑字体图标；切换为单字或多字模式后开始播放。': 'This mode only changes color. Icons edited here play after you switch to a replace mode.',
+    '点一段可跳到那一拍': 'Click a phase to jump there', '编舞时间轴': 'Timeline'
   }));
   const phaseNames = ['立字开场', '结束停留', '倾倒坠落', '基线长入', '停留', '倾倒', '悬停', '下落', '主词入场', '主词停顿', '居中预备', '后句接入', '本页停留'];
   const languageButton = document.createElement('button');
