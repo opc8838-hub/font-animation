@@ -604,6 +604,12 @@ body.tc-workspace.ib-workspace .ib-content-panel > .ib-section {
   border: 1px solid var(--tc-line);
   border-radius: 12px;
 }
+
+body.tc-workspace.ib-workspace .ib-content-panel > .ib-section:not(.ib-scheme-section) {
+  flex: 1 1 auto;
+  min-height: 0;
+  align-content: space-between;
+}
 body.tc-workspace.ib-workspace .ib-content-panel .ib-two {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
@@ -628,6 +634,7 @@ body.tc-workspace.ib-workspace .ib-content-panel textarea {
   height: 42px;
   min-height: 42px;
   padding: 9px 10px;
+  border-radius: 10px;
   resize: none;
   font-size: 14px;
   line-height: 1.45;
@@ -757,7 +764,10 @@ body.tc-workspace.ib-workspace .ib-asset-copy small {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-body.tc-workspace.ib-workspace .ib-layer-title-copy b { color: var(--tc-growth); }
+body.tc-workspace.ib-workspace .ib-layer-title-copy b {
+  color: var(--tc-text);
+  font-variant-numeric: tabular-nums;
+}
 body.tc-workspace.ib-workspace .ib-asset.is-active {
   border-color: var(--tc-growth);
   box-shadow: 0 0 0 1px var(--tc-growth);
@@ -823,6 +833,37 @@ body.tc-workspace.ib-workspace .ib-asset-drawer .ib-active-asset strong {
 body.tc-workspace.ib-workspace .ib-active-asset-actions {
   display: flex;
   gap: 6px;
+}
+
+body.tc-workspace.ib-workspace .ib-asset-editor .ib-active-asset {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 7px 10px;
+  padding-bottom: 12px;
+}
+
+body.tc-workspace.ib-workspace .ib-asset-editor .ib-active-asset > span:first-child {
+  white-space: nowrap;
+}
+
+body.tc-workspace.ib-workspace .ib-asset-editor .ib-active-asset > strong {
+  min-width: 0;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+body.tc-workspace.ib-workspace .ib-asset-editor .ib-active-asset-actions {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+  gap: 8px;
+}
+
+body.tc-workspace.ib-workspace .ib-asset-editor .ib-active-asset-actions button {
+  width: 100%;
+  min-width: 0;
 }
 body.tc-workspace.ib-workspace .ib-asset-drawer .ib-active-asset button,
 body.tc-workspace.ib-workspace .ib-asset-drawer :is(select, input[type="number"]) {
