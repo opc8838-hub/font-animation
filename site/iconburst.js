@@ -21,7 +21,6 @@
   const backgroundMediaLayer = $("ibBackgroundMedia");
   const backgroundImage = $("ibBackgroundImage");
   const backgroundVideo = $("ibBackgroundVideo");
-  const finalSlotSettleMs = 130;
   const state = {
     playing: true,
     start: performance.now(),
@@ -827,14 +826,7 @@
     word.style.fontWeight = $("ibWeight").value;
     word.style.letterSpacing = `${Number($("ibTracking").value)}px`;
     word.style.fontSize = `${base}px`;
-    const letters = Array.from(word.children);
-    const animatedOffsets = letters.map((letter) => letter.style.getPropertyValue("--letter-x"));
-    letters.forEach((letter) => letter.style.setProperty("--letter-x", "0px"));
     const measured = Math.max(word.scrollWidth, 1);
-    letters.forEach((letter, index) => {
-      if (animatedOffsets[index]) letter.style.setProperty("--letter-x", animatedOffsets[index]);
-      else letter.style.removeProperty("--letter-x");
-    });
     const limit = frame.width * .84;
     if (measured > limit) base *= limit / measured;
     base = clamp(base, 16, 168);
@@ -957,87 +949,12 @@
     const wordScale = Math.max(.001, Number(getComputedStyle(composition).getPropertyValue("--replacement-scale")) || 1);
     state.letterAnchors = Array.from(word.children).map((letter) => {
       const rect = letter.getBoundingClientRect();
-      const animatedOffset = parseFloat(letter.style.getPropertyValue("--letter-x")) || 0;
       return {
-        x: (rect.left + rect.width / 2 - (compositionRect.left + compositionRect.width / 2)) / Math.max(.001, scaleX * wordScale) - animatedOffset,
-        y: (rect.top + rect.height / 2 - (compositionRect.top + compositionRect.height / 2)) / Math.max(.001, scaleY * wordScale),
-        width: rect.width / Math.max(.001, scaleX * wordScale)
+        x: (rect.left + rect.width / 2 - (compositionRect.left + compositionRect.width / 2)) / Math.max(.001, scaleX * wordScale),
+        y: (rect.top + rect.height / 2 - (compositionRect.top + compositionRect.height / 2)) / Math.max(.001, scaleY * wordScale)
       };
     });
     return state.letterAnchors;
-  }
-
-  function replacementIconSize(asset, fontPx) {
-    const selectedSize = Number($("ibSize").value) / 100 * asset.size;
-    return fontPx * Math.max(1.12, 1.05 * selectedSize);
-  }
-
-  // Give the enlarged icons real space in the title instead of shrinking them
-  // to fit the old letter cells. Both DOM and Canvas use these same centers.
-  function replacementLayout(replacements, anchors, fontPx, frameWidth, finalScaleAmount) {
-    const impacts = anchors.map(() => 0);
-    const sizes = new Map();
-    replacements.forEach((replacement, assetId) => {
-      const asset = state.assets.find((item) => item.id === assetId);
-      if (!asset || !anchors[replacement.target]) return;
-      sizes.set(assetId, replacementIconSize(asset, fontPx));
-      impacts[replacement.target] = Math.max(impacts[replacement.target], clamp(replacement.envelope, 0, 1));
-    });
-    const visualWidths = anchors.map((anchor, index) => {
-      let width = anchor.width;
-      replacements.forEach((replacement, assetId) => {
-        if (replacement.target === index) width = Math.max(width, anchor.width + (sizes.get(assetId) - anchor.width) * impacts[index]);
-      });
-      return width;
-    });
-    const extraGaps = anchors.slice(1).map((anchor, index) => {
-      const impact = Math.max(impacts[index], impacts[index + 1]);
-      if (!impact) return 0;
-      const distance = anchor.x - anchors[index].x;
-      const required = (visualWidths[index] + visualWidths[index + 1]) / 2 + fontPx * .08 * impact;
-      return Math.max(0, required - distance);
-    });
-    const totalExtra = extraGaps.reduce((sum, gap) => sum + gap, 0);
-    const first = anchors[0], last = anchors[anchors.length - 1];
-    const outerLeft = first ? (visualWidths[0] - first.width) / 2 : 0;
-    const outerRight = last ? (visualWidths[visualWidths.length - 1] - last.width) / 2 : 0;
-    let accumulated = 0;
-    const offsets = anchors.map((anchor, index) => {
-      if (index) accumulated += extraGaps[index - 1];
-      return accumulated - totalExtra / 2 + (outerLeft - outerRight) / 2;
-    });
-    const naturalWidth = first && last ? last.x + last.width / 2 - first.x + first.width / 2 : 0;
-    const expandedWidth = naturalWidth + totalExtra + outerLeft + outerRight;
-    const fit = expandedWidth > 0 ? Math.min(1, frameWidth * .92 / (expandedWidth * (1 + finalScaleAmount))) : 1;
-    return { offsets, sizes, fit };
-  }
-
-  function plannedReplacements(playback, seconds, replaceStartSeconds) {
-    const usableTargets = Array.from(word.children).map((letter, index) => ({ letter, index })).filter(({ letter }) => letter.textContent.trim());
-    const planned = new Map();
-    let groupStartMs = 0;
-    playback.groups.forEach((group, groupIndex) => {
-      const targets = resolveReplacementTargets(group.timings, usableTargets, groupIndex);
-      group.timings.forEach(({ asset, transitionMs, holdMs }, index) => {
-        // Keep the full-sized icon and its reserved space until the matched
-        // cut. Only the restored letters settle after the icon has gone.
-        const enterAt = replaceStartSeconds + groupStartMs / 1000;
-        const exitAt = enterAt + (transitionMs * 1.5 + holdMs) / 1000;
-        const enter = smoothstep(clamp((seconds - (enterAt - .22)) / .22, 0, 1));
-        const finalTailCut = groupIndex === playback.groups.length - 1
-          && group.duration - (transitionMs * 1.5 + holdMs) < finalSlotSettleMs;
-        const exitDuration = finalTailCut ? .10 : .26;
-        const exit = 1 - smoothstep(clamp((seconds - exitAt) / exitDuration, 0, 1));
-        planned.set(asset.id, { target: targets[index], envelope: enter * exit });
-      });
-      groupStartMs += group.duration;
-    });
-    return planned;
-  }
-
-  function finaleLayout(playback, anchors, fontPx, frameWidth, finalScaleAmount, seconds, replaceStartSeconds) {
-    const planned = replacementEnabled() ? plannedReplacements(playback, seconds, replaceStartSeconds) : new Map();
-    return replacementLayout(planned, anchors, fontPx, frameWidth, finalScaleAmount);
   }
 
   function lightLetter(letter, color, intensity) {
@@ -1240,7 +1157,7 @@
     if (!replacementEnabled()) return Math.max(2400, (replaceStartSeconds + .30) * 1000);
     const scaleDuration = clamp(Number($("ibFinalScaleDuration").value), 200, 1200);
     const replacementDuration = Math.max(playback.total, scaleDuration + 100);
-    return Math.max(2400, replaceStartSeconds * 1000 + replacementDuration + finalSlotSettleMs);
+    return Math.max(2400, replaceStartSeconds * 1000 + replacementDuration + 60);
   }
 
   function seekToSeconds(seconds) {
@@ -1887,16 +1804,11 @@
     // The finishing enlargement belongs to the title and replacement glyphs;
     // the composition frame itself remains fixed throughout the loop.
     const finalScaleAmount = clamp(Number($("ibFinalScale").value) / 100, 0, .10);
-    let replacementFontScale = 1 + finalScaleAmount * replacementScaleProgress;
+    const replacementFontScale = 1 + finalScaleAmount * replacementScaleProgress;
 
     resetLetters();
     let label = timeline.label;
     const replacements = replacementState(replacementTime, replacementActive, playback);
-    const frame = frameBox();
-    const fontSize = parseFloat(word.style.fontSize) || 100;
-    const restingAnchors = getLetterAnchors();
-    const finalLayout = finaleLayout(playback, restingAnchors, fontSize, composition.clientWidth, finalScaleAmount, timeline.seconds, timeline.replaceStartSeconds);
-    replacementFontScale *= finalLayout.fit;
     const colorMode = $("ibColorMode").value;
     if (colorActive && colorMode === "sweep") applyLinearSweep(Array.from(word.children), timeline.colorReveal, timeline.whiteReveal);
     else if (colorActive && colorMode === "unfold") {
@@ -1922,6 +1834,8 @@
     introWord.style.setProperty("--intro-scale", timeline.introScale.toFixed(4));
     introWord.style.opacity = String(timeline.introOpacity);
     incomingWord.style.opacity = String(timeline.incomingOpacity);
+    const frame = frameBox();
+    const fontSize = parseFloat(word.style.fontSize) || 100;
     incomingWord.style.setProperty("--incoming-orbit-x", `${incomingDisplacement(timeline, frame.width).toFixed(2)}px`);
     incomingWord.style.setProperty("--incoming-orbit-y", "0px");
     incomingWord.style.setProperty("--incoming-mask", "0%");
@@ -1939,6 +1853,7 @@
     const collisionColors = activeEffectColors();
     const collisionBaseColor = $("ibBaseColor").value;
     const collisionLetterCount = Math.max(1, Array.from(word.children).length);
+    const restingAnchors = getLetterAnchors();
     [
       { element: incomingLeft, direction: -1 },
       { element: incomingRight, direction: 1 }
@@ -1982,8 +1897,7 @@
       const distance = index - midpoint;
       const looseOffset = distance / maxDistance * fontSize * .58;
       const microOffset = distance / maxDistance * replacementExpansion;
-      const letterIndex = Number(letter.dataset.letter);
-      letterOffsets.set(letterIndex, (finalSequence ? looseOffset * (1 - timeline.letterContract) : 0) + microOffset + (finalLayout.offsets[letterIndex] || 0));
+      letterOffsets.set(Number(letter.dataset.letter), (finalSequence ? looseOffset * (1 - timeline.letterContract) : 0) + microOffset);
     });
     [word, colorWord, whiteWord].forEach((layer) => {
       Array.from(layer.children).forEach((letter) => {
@@ -2009,9 +1923,7 @@
 
     const rect = { width: composition.clientWidth, height: composition.clientHeight };
     const letters = Array.from(word.children);
-    const anchors = replacementActive
-      ? restingAnchors.map((anchor, index) => ({ ...anchor, x: anchor.x + (finalLayout.offsets[index] || 0) }))
-      : [];
+    const anchors = replacementActive ? getLetterAnchors() : [];
     const burst = 1 - clamp(timeline.pathProgress, 0, 1);
     const clusterOffsetX = Number($("ibClusterX").value) / 100 * rect.width * .35 * easeInOut(clamp(timeline.iconGather / .85, 0, 1));
     const orbitAssets = state.assets.filter((asset) => asset.role === "orbit");
@@ -2037,13 +1949,12 @@
       const swap = Boolean(replacement && replacement.swap);
       const anchor = replacement && anchors[replacement.target];
       const iconUnit = Math.min(rect.width, rect.height) * .16;
-      const fittedSize = swap ? finalLayout.sizes.get(asset.id) || replacementIconSize(asset, fontSize) : iconUnit;
-      const fittedNudge = fittedSize * .42;
+      const fittedNudge = iconUnit * .42;
       let motionX = 0, motionY = 0;
-      if (replacementActive && swap && asset.motion === "float") motionY = Math.sin(replacementTime / 360 + index) * fittedSize * .10;
+      if (replacementActive && swap && asset.motion === "float") motionY = Math.sin(replacementTime / 360 + index) * 5;
       if (replacementActive && swap && asset.motion === "orbit") {
-        motionX = Math.cos(replacementTime / 420 + index) * fittedSize * .14;
-        motionY = Math.sin(replacementTime / 420 + index) * fittedSize * .14;
+        motionX = Math.cos(replacementTime / 420 + index) * 7;
+        motionY = Math.sin(replacementTime / 420 + index) * 7;
       }
       const replacementScale = .98 + easeOut(replacement?.envelope || 0) * .02;
       element.style.width = `${iconUnit}px`;
@@ -2052,7 +1963,7 @@
       element.style.setProperty("--tx", `${(anchor?.x || 0) + asset.x / 100 * fittedNudge + motionX}px`);
       element.style.setProperty("--ty", `${(anchor?.y || 0) + asset.y / 100 * fittedNudge + motionY}px`);
       element.style.setProperty("--rot", `${asset.rotation}deg`);
-      element.style.setProperty("--s", String(fittedSize / iconUnit * replacementScale));
+      element.style.setProperty("--s", String(asset.size * replacementScale));
       element.style.setProperty("--alpha", String(swap ? asset.opacity : 0));
       element.style.setProperty("--plate-alpha", "0");
     });
@@ -2336,6 +2247,10 @@
     // editor at the very same timestamp.
     const liveFontPx = parseFloat(getComputedStyle(word).fontSize) || 100;
     const fontPx = liveFontPx * screenScale;
+    const liveIconPx = parseFloat(getComputedStyle(state.iconElements[0] || orbitLayer).width) || liveFontPx * .64;
+    const exportIconPx = liveIconPx * screenScale;
+    const compositionWidth = Math.max(1, composition.clientWidth * screenScale);
+    const compositionHeight = Math.max(1, composition.clientHeight * screenScale);
     const tracking = Number($("ibTracking").value) * clamp(screenScale, .5, 4);
     // The shared library returns a complete CSS family list, including quotes.
     // Quoting it again makes Canvas reject the font and keep its 10px default.
@@ -2350,7 +2265,7 @@
       : fontPx * .34;
     const baseline = height / 2 + baselineOffset;
     const finalScaleProgress = smoothstep(clamp(Math.max(0, seconds - timeline.replaceStartSeconds) * 1000 / clamp(Number($("ibFinalScaleDuration").value), 200, 1200), 0, 1));
-    let finalScale = 1 + Number($("ibFinalScale").value) / 100 * finalScaleProgress;
+    const finalScale = 1 + Number($("ibFinalScale").value) / 100 * finalScaleProgress;
 
     if (timeline.introOpacity > .001) {
       ctx.globalAlpha = timeline.introOpacity;
@@ -2400,10 +2315,6 @@
     const replacementTime = Math.max(0, (seconds - timeline.replaceStartSeconds) * 1000);
     const replacementActive = replacementEnabled() && seconds >= timeline.replaceStartSeconds && seconds < timeline.replaceEnd * baseCycleSeconds;
     const replacements = replacementState(replacementTime, replacementActive, playback);
-    const restingAnchors = getLetterAnchors();
-    const finalLayout = finaleLayout(playback, restingAnchors, liveFontPx, composition.clientWidth, Number($("ibFinalScale").value) / 100, seconds, timeline.replaceStartSeconds);
-    finalScale *= finalLayout.fit;
-    layout.centers = restingAnchors.map((anchor, index) => (anchor.x + (finalLayout.offsets[index] || 0)) * screenScale);
     const hiddenTargets = new Set();
     const glyphsToDraw = [];
     replacements.forEach((replacement, assetId) => {
@@ -2417,6 +2328,7 @@
       ctx.globalAlpha = 1;
     }
 
+    const iconSize = Number($("ibSize").value) / 100;
     const orbitAssets = state.assets.filter((asset) => asset.role === "orbit");
     const cloudSettings = orbitSettings();
     const poses = orbitAssets.map((asset, index) => ({
@@ -2425,17 +2337,12 @@
     poses.forEach((pose) => drawAssetToCanvas(ctx, pose.asset, width / 2 + pose.x, height / 2 + pose.y, pose.size, pose.rotation, pose.alpha));
 
     glyphsToDraw.forEach(({ asset, replacement }) => {
-      const fittedSize = (finalLayout.sizes.get(asset.id) || replacementIconSize(asset, liveFontPx)) * screenScale;
-      const nudge = fittedSize * .42 * finalScale;
-      const assetIndex = state.assets.indexOf(asset);
-      const motionX = asset.motion === "orbit" ? Math.cos(replacementTime / 420 + assetIndex) * fittedSize * .14 * finalScale : 0;
-      const motionY = asset.motion === "orbit"
-        ? Math.sin(replacementTime / 420 + assetIndex) * fittedSize * .14 * finalScale
-        : asset.motion === "float" ? Math.sin(replacementTime / 360 + assetIndex) * fittedSize * .10 * finalScale : 0;
-      const x = width / 2 + (layout.centers[replacement.target] || 0) * finalScale + asset.x / 100 * nudge + motionX;
-      const y = baseline - fontPx * .36 * finalScale + asset.y / 100 * nudge + motionY;
+      const nudge = fontPx * .42;
+      const x = width / 2 + (layout.centers[replacement.target] || 0) * finalScale + asset.x / 100 * nudge;
+      const y = baseline - fontPx * .36 * finalScale + asset.y / 100 * nudge;
       const replacementScale = .98 + easeOut(replacement.envelope) * .02;
-      drawAssetToCanvas(ctx, asset, x, y, fittedSize * replacementScale * finalScale, asset.rotation, asset.opacity * replacement.envelope);
+      const iconUnit = Math.min(compositionWidth, compositionHeight) * .16;
+      drawAssetToCanvas(ctx, asset, x, y, iconUnit * iconSize * asset.size * replacementScale * finalScale, asset.rotation, asset.opacity * replacement.envelope);
     });
   }
 
