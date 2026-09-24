@@ -702,13 +702,16 @@
     $("ibOrbitPanel").classList.toggle("is-editing", Boolean(asset && asset.role !== "glyph"));
     $("ibGlyphPanel").classList.toggle("is-editing", Boolean(asset && asset.role === "glyph"));
     const panel = asset ? $(asset.role === "glyph" ? "ibGlyphPanel" : "ibOrbitPanel") : null;
-    const showDrawer = Boolean(asset && panel?.classList.contains("is-list-expanded"));
+    const showDrawer = Boolean(asset && panel);
     drawer.hidden = !showDrawer;
     editor.hidden = !showDrawer;
     if (!showDrawer) return;
-    const editorWidth = document.querySelector(".ib-editor")?.getBoundingClientRect().width || 420;
-    drawer.style.setProperty("--asset-drawer-left", `${editorWidth}px`);
-    drawer.style.setProperty("--asset-drawer-width", `${Math.min(420, Math.max(0, window.innerWidth - editorWidth))}px`);
+    const slot = $(asset.role === "glyph" ? "ibGlyphEditorSlot" : "ibOrbitEditorSlot");
+    if (slot && drawer.parentElement !== slot) slot.append(drawer);
+    if (drawer.dataset.assetId !== asset.id) {
+      drawer.dataset.assetId = asset.id;
+      drawer.scrollIntoView({ block: "nearest" });
+    }
     $("ibActiveAsset").textContent = `${asset.role === "glyph" ? "字体图标" : "环绕图标"} · ${asset.name}`;
     $("ibAssetSource").value = asset.type;
     $("ibAssetShapeFields").hidden = asset.type !== "shape";
@@ -1775,8 +1778,9 @@
       const swap = Boolean(replacement && replacement.swap);
       const customX = asset.x / 100 * rect.width * .28;
       const customY = asset.y / 100 * rect.height * .28;
-      const letterBox = fontSize * .86 * iconSize;
-      const orbitBox = Math.max(14, fontSize * .78 * iconSize);
+      const iconUnit = Math.min(rect.width, rect.height) * .16;
+      const letterBox = iconUnit;
+      const orbitBox = iconUnit;
       const orbitIndex = orbitIndexById.has(asset.id) ? orbitIndexById.get(asset.id) : -1;
       const orbitCount = Math.max(1, orbitAssets.length);
       const angleJitter = seed[2] * 1.65 * Math.PI / 180;
@@ -2329,7 +2333,8 @@
       const x = width / 2 + (layout.centers[replacement.target] || 0) * finalScale + asset.x / 100 * nudge;
       const y = baseline - fontPx * .36 * finalScale + asset.y / 100 * nudge;
       const replacementScale = .98 + easeOut(replacement.envelope) * .02;
-      drawAssetToCanvas(ctx, asset, x, y, fontPx * .86 * iconSize * asset.size * replacementScale * finalScale, asset.rotation, asset.opacity * replacement.envelope);
+      const iconUnit = Math.min(compositionWidth, compositionHeight) * .16;
+      drawAssetToCanvas(ctx, asset, x, y, iconUnit * iconSize * asset.size * replacementScale * finalScale, asset.rotation, asset.opacity * replacement.envelope);
     });
   }
 
@@ -2777,8 +2782,10 @@
   });
 
   $("ibCloseAssetDrawer").addEventListener("click", () => {
+    state.activeAssetId = null;
     $("ibAssetDrawer").hidden = true;
     $("ibAssetEditor").hidden = true;
+    renderAssets();
   });
 
   $("ibAssetEditor").addEventListener("click", (event) => {

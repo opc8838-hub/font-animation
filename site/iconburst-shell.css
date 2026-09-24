@@ -371,11 +371,16 @@ body.tc-workspace .ib-asset-drawer {
   inset: auto;
   width: auto;
   max-height: none;
-  padding: 0;
+  margin-top: 10px;
+  padding: 12px;
   overflow: visible;
-  border: 0;
-  background: transparent;
+  border: 1px solid var(--tc-line);
+  border-radius: 12px;
+  background: var(--tc-surface);
   box-shadow: none;
+}
+body.tc-workspace .gm-inspector .ib-asset.is-active {
+  border-color: var(--tc-accent-solid);
 }
 
 body.tc-workspace .ib-disclosure {
