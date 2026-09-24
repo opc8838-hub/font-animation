@@ -21,6 +21,7 @@
   const backgroundMediaLayer = $("ibBackgroundMedia");
   const backgroundImage = $("ibBackgroundImage");
   const backgroundVideo = $("ibBackgroundVideo");
+  const finalSlotSettleMs = 130;
   const state = {
     playing: true,
     start: performance.now(),
@@ -979,14 +980,13 @@
     replacements.forEach((replacement, assetId) => {
       const asset = state.assets.find((item) => item.id === assetId);
       if (!asset || !anchors[replacement.target]) return;
-      const impact = clamp(replacement.envelope, 0, 1);
-      sizes.set(assetId, anchors[replacement.target].width + (replacementIconSize(asset, fontPx) - anchors[replacement.target].width) * impact);
-      impacts[replacement.target] = Math.max(impacts[replacement.target], impact);
+      sizes.set(assetId, replacementIconSize(asset, fontPx));
+      impacts[replacement.target] = Math.max(impacts[replacement.target], clamp(replacement.envelope, 0, 1));
     });
     const visualWidths = anchors.map((anchor, index) => {
       let width = anchor.width;
       replacements.forEach((replacement, assetId) => {
-        if (replacement.target === index) width = Math.max(width, sizes.get(assetId));
+        if (replacement.target === index) width = Math.max(width, anchor.width + (sizes.get(assetId) - anchor.width) * impacts[index]);
       });
       return width;
     });
@@ -1019,12 +1019,15 @@
     playback.groups.forEach((group, groupIndex) => {
       const targets = resolveReplacementTargets(group.timings, usableTargets, groupIndex);
       group.timings.forEach(({ asset, transitionMs, holdMs }, index) => {
-        // Reserve the slot before the matched cut. On exit, contract the icon
-        // and its slot together so the original letter returns centered.
+        // Keep the full-sized icon and its reserved space until the matched
+        // cut. Only the restored letters settle after the icon has gone.
         const enterAt = replaceStartSeconds + groupStartMs / 1000;
         const exitAt = enterAt + (transitionMs * 1.5 + holdMs) / 1000;
         const enter = smoothstep(clamp((seconds - (enterAt - .22)) / .22, 0, 1));
-        const exit = 1 - smoothstep(clamp((seconds - (exitAt - .16)) / .16, 0, 1));
+        const finalTailCut = groupIndex === playback.groups.length - 1
+          && group.duration - (transitionMs * 1.5 + holdMs) < finalSlotSettleMs;
+        const exitDuration = finalTailCut ? .10 : .26;
+        const exit = 1 - smoothstep(clamp((seconds - exitAt) / exitDuration, 0, 1));
         planned.set(asset.id, { target: targets[index], envelope: enter * exit });
       });
       groupStartMs += group.duration;
@@ -1237,7 +1240,7 @@
     if (!replacementEnabled()) return Math.max(2400, (replaceStartSeconds + .30) * 1000);
     const scaleDuration = clamp(Number($("ibFinalScaleDuration").value), 200, 1200);
     const replacementDuration = Math.max(playback.total, scaleDuration + 100);
-    return Math.max(2400, replaceStartSeconds * 1000 + replacementDuration + 60);
+    return Math.max(2400, replaceStartSeconds * 1000 + replacementDuration + finalSlotSettleMs);
   }
 
   function seekToSeconds(seconds) {
