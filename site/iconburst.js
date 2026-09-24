@@ -979,13 +979,14 @@
     replacements.forEach((replacement, assetId) => {
       const asset = state.assets.find((item) => item.id === assetId);
       if (!asset || !anchors[replacement.target]) return;
-      sizes.set(assetId, replacementIconSize(asset, fontPx));
-      impacts[replacement.target] = Math.max(impacts[replacement.target], clamp(replacement.envelope, 0, 1));
+      const impact = clamp(replacement.envelope, 0, 1);
+      sizes.set(assetId, anchors[replacement.target].width + (replacementIconSize(asset, fontPx) - anchors[replacement.target].width) * impact);
+      impacts[replacement.target] = Math.max(impacts[replacement.target], impact);
     });
     const visualWidths = anchors.map((anchor, index) => {
       let width = anchor.width;
       replacements.forEach((replacement, assetId) => {
-        if (replacement.target === index) width = Math.max(width, anchor.width + (sizes.get(assetId) - anchor.width) * impacts[index]);
+        if (replacement.target === index) width = Math.max(width, sizes.get(assetId));
       });
       return width;
     });
@@ -1018,12 +1019,12 @@
     playback.groups.forEach((group, groupIndex) => {
       const targets = resolveReplacementTargets(group.timings, usableTargets, groupIndex);
       group.timings.forEach(({ asset, transitionMs, holdMs }, index) => {
-        // Reserve the letter slot before the cut; release it only after the
-        // icon has gone. Short per-icon transition speeds cannot jerk the row.
+        // Reserve the slot before the matched cut. On exit, contract the icon
+        // and its slot together so the original letter returns centered.
         const enterAt = replaceStartSeconds + groupStartMs / 1000;
         const exitAt = enterAt + (transitionMs * 1.5 + holdMs) / 1000;
         const enter = smoothstep(clamp((seconds - (enterAt - .22)) / .22, 0, 1));
-        const exit = 1 - smoothstep(clamp((seconds - exitAt) / .26, 0, 1));
+        const exit = 1 - smoothstep(clamp((seconds - (exitAt - .16)) / .16, 0, 1));
         planned.set(asset.id, { target: targets[index], envelope: enter * exit });
       });
       groupStartMs += group.duration;
