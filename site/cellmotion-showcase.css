@@ -1,0 +1,28 @@
+/* Three real vertical films presented as a small, tactile phone gallery. */
+.story-showcase{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:clamp(24px,5vw,72px);max-width:1050px;margin:0 auto;padding:6px 36px 28px}
+.case-phone-card{min-width:0;margin:0;justify-self:center;width:min(100%,258px)}
+.iphone-frame{position:relative;width:100%;aspect-ratio:9/19.25;padding:7px;border-radius:40px;background:linear-gradient(145deg,#424247,#111114 32%,#242428 72%,#09090b);box-shadow:0 26px 55px #17151c35,0 4px 12px #17151c28,inset 0 0 0 1px #ffffff5c}
+.iphone-frame:before,.iphone-frame:after{content:"";position:absolute;left:-3px;width:3px;border-radius:3px;background:#77777c}
+.iphone-frame:before{top:92px;height:31px;box-shadow:0 43px 0 #77777c}
+.iphone-frame:after{right:-3px;left:auto;top:112px;height:55px}
+.iphone-screen{position:relative;width:100%;height:100%;overflow:hidden;border-radius:34px;background:#f7f6f3;isolation:isolate}
+.iphone-screen video{display:block;width:100%;height:100%;max-width:none;object-fit:contain;background:#f7f6f3}
+.dynamic-island{position:absolute;z-index:1;left:50%;top:10px;width:28%;height:18px;transform:translateX(-50%);border-radius:99px;background:#050507;box-shadow:0 1px 3px #0008;pointer-events:none}
+.case-phone-card figcaption{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 5px 0}
+.case-phone-card figcaption>span{display:grid;gap:4px}
+.case-phone-card figcaption small{font-size:9px;letter-spacing:1.8px;color:#77716b}
+.case-phone-card figcaption strong{font-size:13px;font-weight:500;color:#242322}
+.case-toggle{width:30px;height:30px;border:1px solid #d5d1cc;border-radius:50%;background:#f8f7f4;color:#393633;font-size:10px;line-height:1}
+.case-toggle:hover{border-color:#a58ade;color:#7853c3}
+.case-gallery-hint{display:none}
+.own-film{width:min(100%,1050px);margin:4px auto 0;padding:17px 22px;border:1px solid #d9d5cf;border-radius:12px;display:flex;align-items:center;gap:18px;background:#f3f1ed}
+.own-film .file-input{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.own-film:focus-within .file-label{outline:3px solid var(--purple);outline-offset:5px}
+.own-film>p{margin:0;font-size:12px;color:#68635d}
+.own-film .file-label{gap:7px;font-size:12px}
+.own-film small{font-size:10px;color:#827c75;margin-left:auto}
+.own-film-preview{width:min(240px,30vw);aspect-ratio:9/16;object-fit:contain;background:#151515;border-radius:9px}
+@media(min-width:1100px){.case-phone-card-featured{transform:translateY(-5px) scale(1.045)}.story-showcase{padding-top:10px;padding-bottom:38px}}
+@media(max-width:800px){.story-showcase{gap:clamp(12px,3vw,28px);padding-inline:6px}.case-phone-card{width:min(100%,220px)}.iphone-frame{border-radius:32px;padding:6px}.iphone-screen{border-radius:27px}.iphone-frame:before{top:74px}.iphone-frame:after{top:91px}.own-film{flex-wrap:wrap;padding:14px 16px;gap:12px}.own-film small{width:100%;margin-left:0}.own-film-preview{width:min(220px,52vw)}}
+@media(max-width:540px){.case-gallery-hint{display:block;margin:-13px 0 13px;color:#807a73;font-size:10px}.story-showcase{display:grid;grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(200px,64vw);gap:16px;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x mandatory;padding:0 18px 22px;margin-inline:-18px;scrollbar-width:thin}.case-phone-card{width:100%;scroll-snap-align:center}.iphone-frame{padding:4px;border-radius:21px;box-shadow:0 15px 32px #17151c30,0 2px 7px #17151c22,inset 0 0 0 1px #ffffff5c}.iphone-screen{border-radius:17px}.dynamic-island{top:5px;height:10px}.iphone-frame:before,.iphone-frame:after{display:none}.case-phone-card figcaption{padding:9px 1px 0;gap:4px}.case-phone-card figcaption small{font-size:7px;letter-spacing:1px}.case-phone-card figcaption strong{font-size:10px}.case-toggle{width:24px;height:24px;font-size:8px}.case-phone-card-featured{transform:none}.own-film{margin-top:0}.own-film-preview{width:100%;max-width:200px}}
+@media(prefers-reduced-motion:reduce){.case-phone-card-featured{transform:none}}

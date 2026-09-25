@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="cellmotion-hero.css?v=20260909-1">
   <link rel="stylesheet" href="cellmotion-type.css?v=20260907-5">
   <link rel="stylesheet" href="cellmotion-layout.css?v=20260925-contact2">
+  <link rel="stylesheet" href="cellmotion-showcase.css?v=20260925-1">
 </head>
 <body>
   <a class="skip-link" href="#main">跳到内容</a>
@@ -18,9 +19,9 @@
     <a class="brand original-brand" href="cellmotion.html" aria-label="CellMotion 首页"><img class="logo-source" src="assets/cellmotion/logo-original.png" alt="CellMotion"></a>
     <nav aria-label="主导航"><a href="cellmotion-components.html">组件库</a><a href="#featured">精选动效</a><a href="#stories">成片案例</a></nav>
     <div class="header-actions">
+      <a class="button dark small" href="cellmotion-editors.html">打开编辑器 <span aria-hidden="true">↗</span></a>
       <a class="button outline small" href="https://github.com/opc8838-hub/font-animation" target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a>
       <button class="button outline small" type="button" data-contact-open>联系</button>
-      <a class="button dark small" href="cellmotion-editors.html">打开编辑器 <span aria-hidden="true">↗</span></a>
     </div>
   </header>
   <main id="main">
@@ -52,10 +53,22 @@
 
     <section id="stories" class="stories section" aria-labelledby="stories-title"><div class="wrap">
       <div class="section-heading"><div><p class="eyebrow">02 / MADE OF MOTION</p><h2 id="stories-title">独立成章，连接成片。</h2></div><p class="heading-note">不止看见一个效果，<br>也看见它们在一起的可能。</p></div>
-      <div class="story-layout">
-        <div class="story-stage"><video id="story-video" muted playsinline preload="none" aria-label="动效组合演示"></video><div id="story-cover" class="story-cover"><div class="story-type">Small moves.<br><em>New stories.</em></div><button id="story-start" class="button light"><span aria-hidden="true">▶</span> 播放组合演示</button><p>字芽 → 字倾 → 点解 · 独立预览顺序播放</p></div><button id="story-toggle" class="round-button" hidden aria-label="暂停组合演示">Ⅱ</button></div>
-        <div class="story-copy"><span class="story-tag">组合方式演示 / 非真实成片</span><h3>把不同的运动，<br>写进同一个故事。</h3><p>开场、表达、收尾。单个动效里完成细节，片段之间接续节奏。</p><div class="sequence-links"><a href="sproutshift.html">01 字芽 ↗</a><a href="typecascade.html">02 字倾 ↗</a><a href="dotresolve.html">03 点解 ↗</a></div><div class="own-film"><p>已经有一条自己的成片？</p><label class="text-link file-label" for="case-file">选择视频，在这里看看 <span>＋</span></label><input id="case-file" type="file" accept="video/*" class="file-input"><small id="case-status" role="status">仅在本机预览，不上传。真实案例待加入。</small></div></div>
+      <p class="case-gallery-hint">左右滑动，查看三个案例</p>
+      <div class="story-showcase" aria-label="三个真实动效视频案例">
+        <figure class="case-phone-card">
+          <div class="iphone-frame"><div class="iphone-screen"><video class="case-video" src="assets/cellmotion/cases/case-1.mp4" poster="assets/cellmotion/cases/case-1-poster.jpg" muted autoplay loop playsinline preload="none" aria-label="真实成片案例一"></video><span class="dynamic-island" aria-hidden="true"></span></div></div>
+          <figcaption><span><small>CASE 01</small><strong>真实成片</strong></span><button class="case-toggle" type="button" aria-label="播放视频案例" aria-pressed="false">▶</button></figcaption>
+        </figure>
+        <figure class="case-phone-card case-phone-card-featured">
+          <div class="iphone-frame"><div class="iphone-screen"><video class="case-video" src="assets/cellmotion/cases/case-2.mp4" poster="assets/cellmotion/cases/case-2-poster.jpg" muted autoplay loop playsinline preload="none" aria-label="真实成片案例二"></video><span class="dynamic-island" aria-hidden="true"></span></div></div>
+          <figcaption><span><small>CASE 02</small><strong>真实成片</strong></span><button class="case-toggle" type="button" aria-label="播放视频案例" aria-pressed="false">▶</button></figcaption>
+        </figure>
+        <figure class="case-phone-card">
+          <div class="iphone-frame"><div class="iphone-screen"><video class="case-video" src="assets/cellmotion/cases/case-3.mp4" poster="assets/cellmotion/cases/case-3-poster.jpg" muted autoplay loop playsinline preload="none" aria-label="真实成片案例三"></video><span class="dynamic-island" aria-hidden="true"></span></div></div>
+          <figcaption><span><small>CASE 03</small><strong>真实成片</strong></span><button class="case-toggle" type="button" aria-label="播放视频案例" aria-pressed="false">▶</button></figcaption>
+        </figure>
       </div>
+      <div class="own-film"><p>试试你的成片</p><label class="text-link file-label" for="case-file">选择本地视频预览 <span>＋</span></label><input id="case-file" type="file" accept="video/*" class="file-input"><small id="case-status" role="status">仅在本机预览，不上传。</small><video id="story-video" class="own-film-preview" controls playsinline hidden aria-label="本地成片预览"></video></div>
     </div></section>
 
     <section id="library" class="section wrap" aria-labelledby="library-title">
@@ -79,6 +92,6 @@
     <img id="contact-wechat" src="assets/cellmotion/contact-wechat.jpg" alt="微信 allen_8838，扫码联系" hidden>
   </dialog>
   <footer class="footer wrap"><div class="footer-top"><a class="brand original-brand" href="cellmotion.html" aria-label="CellMotion 首页"><img class="logo-source" src="assets/cellmotion/logo-original.png" alt="CellMotion"></a><p>And let design grow.</p><a href="#main" class="text-link">回到顶部 ↑</a></div><div class="footer-bottom"><span>MOVE · CONNECT · RECOMBINE · GROW</span><span>基于 Space Type Generator 等开源项目持续创作 · 保留原作署名与许可</span><a href="cellmotion-components.html">浏览组件库 ↗</a></div></footer>
-  <script defer src="cellmotion.js?v=20260925-contact1"></script>
+  <script defer src="cellmotion.js?v=20260925-showcase1"></script>
 </body>
 </html>
