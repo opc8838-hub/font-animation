@@ -3077,5 +3077,10 @@
     if (message.type === "cellmotion:seek") window.CellMotionEffectBridge.seek(message.seconds);
     if (message.type === "cellmotion:request-duration") postBridge("cellmotion:duration", { durationMs: bridgeDurationMs() });
   });
-  if (previewMode || pageParams.get("embed") === "1") postBridge("cellmotion:ready", { durationMs: bridgeDurationMs() });
+  if (previewMode || pageParams.get("embed") === "1") {
+    const refitPreview = () => fitCompositionFrame();
+    requestAnimationFrame(() => requestAnimationFrame(refitPreview));
+    if (window.ResizeObserver) new ResizeObserver(refitPreview).observe(document.documentElement);
+    postBridge("cellmotion:ready", { durationMs: bridgeDurationMs() });
+  }
 })();
