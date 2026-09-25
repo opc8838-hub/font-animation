@@ -667,8 +667,43 @@ body.ib-card-preview .ib-stage {
 }
 
 body.ib-card-preview .ib-composition {
+  min-width: 0 !important;
+  min-height: 0 !important;
   max-width: 100%;
   max-height: 100%;
+  overflow: hidden;
+}
+body.ib-card-preview .ib-word,
+body.ib-card-preview .ib-switch-word {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max-content;
+  max-width: none;
+  margin: 0;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  transform: translate(-50%, -50%) scale(var(--word-scale, 1));
+}
+body.ib-card-preview .ib-intro-word {
+  transform: translate(-50%, -50%) scale(var(--intro-scale, 1));
+}
+body.ib-card-preview .ib-incoming-word {
+  display: block;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1em;
+  max-width: 100%;
+  transform: translateY(-50%);
+}
+body.ib-card-preview .ib-incoming-word > span { display: contents; }
+body.ib-card-preview .ib-incoming-letter {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) translateX(var(--incoming-letter-x, 0px)) scale(var(--incoming-letter-scale, 1));
 }
 
 .ib-asset-drawer {

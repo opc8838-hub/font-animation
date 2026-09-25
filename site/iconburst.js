@@ -807,7 +807,9 @@
     $("ibAssetHoldValue").textContent = `${Number(asset.holdMs || 160)} ms`;
   }
 
+  let layoutFrame = { width: 0, height: 0 };
   function frameBox() {
+    if (layoutFrame.width > 1 && layoutFrame.height > 1) return layoutFrame;
     return {
       width: Math.max(1, composition.clientWidth || stage.clientWidth || 1),
       height: Math.max(1, composition.clientHeight || stage.clientHeight || 1)
@@ -2157,10 +2159,15 @@
     const [width, height] = selectedCanvasSize();
     const ratio = width / Math.max(1, height);
     const stageStyle = getComputedStyle(stage);
-    const availableWidth = Math.max(1, stage.clientWidth - parseFloat(stageStyle.paddingLeft) - parseFloat(stageStyle.paddingRight));
-    const availableHeight = Math.max(1, stage.clientHeight - parseFloat(stageStyle.paddingTop) - parseFloat(stageStyle.paddingBottom));
+    const availableWidth = previewMode
+      ? Math.max(1, document.documentElement.clientWidth || window.innerWidth)
+      : Math.max(1, stage.clientWidth - parseFloat(stageStyle.paddingLeft) - parseFloat(stageStyle.paddingRight));
+    const availableHeight = previewMode
+      ? Math.max(1, document.documentElement.clientHeight || window.innerHeight)
+      : Math.max(1, stage.clientHeight - parseFloat(stageStyle.paddingTop) - parseFloat(stageStyle.paddingBottom));
     const fittedWidth = Math.max(1, Math.min(availableWidth, availableHeight * ratio));
     const fittedHeight = fittedWidth / ratio;
+    layoutFrame = { width: fittedWidth, height: fittedHeight };
     composition.style.setProperty("--ib-aspect", `${width} / ${height}`);
     composition.style.setProperty("--ib-frame-w", `${fittedWidth}px`);
     composition.style.setProperty("--ib-frame-h", `${fittedHeight}px`);
