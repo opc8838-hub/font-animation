@@ -410,7 +410,8 @@ body.tc-workspace[data-editor-theme="light"] {
 .tc-phase-details .is-active button, .tc-phase-details button:hover { background: var(--tc-selected); }
 
 /* Live-state component actions for AI frontend handoff. */
-.tc-workspace .tc-ai-actions { position: relative; flex: 0 0 auto; }
+.tc-workspace .tc-header { position: relative; z-index: 40; }
+.tc-workspace .tc-ai-actions { position: relative; flex: 0 0 auto; z-index: 2; }
 .tc-workspace .tc-ai-trigger {
   display: inline-flex;
   align-items: center;

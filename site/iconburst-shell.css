@@ -1,4 +1,7 @@
 /* Icon Burst in the CellMotion shell. Colors follow the editor theme; the frame follows the canvas size. */
+body.tc-workspace .tc-header { position: relative; z-index: 40; }
+body.tc-workspace .tc-ai-menu { z-index: 50; }
+body.tc-workspace .tc-ai-toast { z-index: 80; }
 body.tc-workspace .ib-stage-meta,
 body.tc-workspace .ib-safe-area,
 body.tc-workspace .ib-stage::before { display: none !important; }
