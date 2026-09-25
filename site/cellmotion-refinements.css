@@ -1,0 +1,56 @@
+/* Homepage-specific polish: keep the film strip on a clean white field. */
+body:has(#motion-ribbon),
+body:has(#motion-ribbon) .hero,
+body:has(#motion-ribbon) .motion-ribbon,
+body:has(#motion-ribbon) .stories,
+body:has(#motion-ribbon) .story-section {
+  background-color: #fff;
+}
+
+body:has(#motion-ribbon) .header-actions > .button,
+body:has(#motion-ribbon) .site-preference-button {
+  background: transparent;
+  box-shadow: none;
+}
+
+body:has(#motion-ribbon) .header-actions > .button.dark {
+  color: var(--ink, #252529);
+  border-color: transparent;
+}
+
+body:has(#motion-ribbon) .header-actions > .button.outline {
+  border-color: transparent;
+}
+
+body:has(#motion-ribbon) .header-actions > .button:hover,
+body:has(#motion-ribbon) .site-preference-button:hover {
+  background: #f5f4f2;
+}
+
+body:has(#motion-ribbon) .brand.original-brand img.logo-source {
+  mix-blend-mode: multiply;
+}
+
+body:has(#motion-ribbon) .ribbon-card {
+  border-color: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  background-color: #fff;
+}
+
+body:has(#motion-ribbon) .ribbon-card:before {
+  display: none;
+}
+
+body:has(#motion-ribbon) .ribbon-card video {
+  background: #fff;
+}
+
+body:has(#motion-ribbon) .ribbon-card.is-portrait img,
+body:has(#motion-ribbon) .ribbon-card.is-portrait video {
+  object-fit: cover;
+}
+
+body:has(#motion-ribbon) .motion-ribbon {
+  overflow: hidden;
+}

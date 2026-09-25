@@ -41,10 +41,10 @@ function initRibbon() {
   if(ribbon.dataset.ready==='true')return;
   ribbon.dataset.ready='true';
   const items=ribbonSeed.map(seed=>effects.find(effect=>effect.id===seed.id)||seed).filter(effect=>effect?.video && !isPending(effect));
-  $('#ribbon-track').innerHTML=items.map(effect=>`<a class="ribbon-card" href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器"><img src="${effect.poster}" alt="${escapeHTML(effect.name)}动效"><video data-src="${effect.video}" muted loop playsinline preload="none" aria-hidden="true"></video><span class="ribbon-name">${escapeHTML(effect.name)} ↗</span></a>`).join('');
+  $('#ribbon-track').innerHTML=items.map(effect=>`<a class="ribbon-card${effect.id==='iconburst'?' is-portrait':''}" href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器"><img src="${effect.poster}" alt="${escapeHTML(effect.name)}动效"><video data-src="${effect.video}" muted loop playsinline preload="none" aria-hidden="true"></video><span class="ribbon-name">${escapeHTML(effect.name)} ↗</span></a>`).join('');
   const cards=[...ribbon.querySelectorAll('.ribbon-card')];
   cards.forEach((card,index)=>{card.style.backgroundImage=`url("${items[index].poster}")`;});
-  let width=ribbon.clientWidth, cardWidth=0, offset=0, previous=0, raf=0, visible=false, hovered=false, focused=false, enabled=!reduced.matches;
+  let width=ribbon.clientWidth, cardWidth=0, cardSizes=[], offset=0, previous=0, raf=0, visible=false, hovered=false, focused=false, enabled=!reduced.matches;
   const videos=cards.map(card=>card.querySelector('video'));
   videos.forEach((video,index)=>{
     const card=cards[index];
@@ -52,18 +52,20 @@ function initRibbon() {
     ['waiting','stalled','error','emptied'].forEach(type=>video.addEventListener(type,()=>card.classList.remove('is-playing')));
   });
   const running=()=>enabled&&visible&&!hovered&&!focused&&!document.hidden;
-  function size(){width=ribbon.clientWidth;cardWidth=Math.max(225,Math.min(370,width*.235));cards.forEach(card=>{card.style.width=`${cardWidth}px`;card.style.height=`${cardWidth*.64}px`;});}
+  function size(){width=ribbon.clientWidth;const maxHeight=Math.max(100,ribbon.clientHeight-28);cardWidth=Math.max(225,Math.min(370,width*.235));cardSizes=cards.map(card=>{const height=card.classList.contains('is-portrait')?Math.min(maxHeight,Math.min(260,width*.6)):Math.min(cardWidth*.64,maxHeight);const cardWidthForCard=card.classList.contains('is-portrait')?height*9/16:height/.64;card.style.width=`${cardWidthForCard}px`;card.style.height=`${height}px`;card.style.top=`${Math.max(8,(ribbon.clientHeight-height)/2)}px`;return {width:cardWidthForCard,height};});}
   function update(time=0){
     raf=0;
     const active=running();
     if(active&&previous)offset+=(Math.min(50,time-previous)/1000)*25;
     previous=time;
-    const step=cardWidth+18,total=step*cards.length;
+    const gap=18,total=cardSizes.reduce((sum,size)=>sum+size.width+gap,0);let cursor=0;
+    const centers=cardSizes.map(size=>{const center=cursor+size.width/2;cursor+=size.width+gap;return center;});
     cards.forEach((card,i)=>{
-      const x=((i*step-offset+total/2)%total+total)%total-total/2;
-      const n=x/(width*.5), visibleCard=Math.abs(x)<width*.5+cardWidth*.6;
+      const size=cardSizes[i];
+      const x=((centers[i]-offset+total/2)%total+total)%total-total/2;
+      const n=x/(width*.5), visibleCard=Math.abs(x)<width*.5+size.width*.6;
       card.style.visibility=visibleCard?'visible':'hidden';
-      card.style.transform=`translateX(${x-cardWidth/2}px) translateY(${-Math.min(1.8,n*n)*17}px) perspective(1050px) rotateY(${-n*19}deg) scaleY(${1+Math.min(1.8,n*n)*.23})`;
+      card.style.transform=`translateX(${x-size.width/2}px) translateY(${-Math.min(1.8,n*n)*17}px) perspective(1050px) rotateY(${-n*19}deg) scaleY(${1+Math.min(1.8,n*n)*.23})`;
       const video=videos[i], shouldPlay=visibleCard&&active;
       if(shouldPlay&&video.dataset.active!=='true'){
         video.dataset.active='true';if(!video.getAttribute('src'))video.src=mediaURL(video.dataset.src);

@@ -21,10 +21,13 @@
   const languageButton = document.createElement('button');
   languageButton.type = 'button';
   languageButton.className = 'site-preference-button site-language-toggle';
-  controls.append(languageButton);
+  const homepage = Boolean(document.querySelector('#motion-ribbon'));
+  if (!homepage) controls.append(languageButton);
 
   const actions = document.querySelector('.header-actions');
-  if (actions) actions.append(controls);
+  if (homepage) {
+    // The homepage follows the saved site language but keeps its header clear.
+  } else if (actions) actions.append(controls);
   else {
     const header = document.querySelector('header');
     (header || body).append(controls);

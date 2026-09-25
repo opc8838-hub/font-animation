@@ -2177,8 +2177,7 @@
     updateTypography();
   }
 
-  function exportDimensions(verticalHD = false) {
-    if (verticalHD) return [1080, 1920];
+  function exportDimensions() {
     return selectedCanvasSize();
   }
 
@@ -2189,8 +2188,8 @@
     return Number(value);
   }
 
-  function makeExportCanvas(verticalHD = false) {
-    const [rawWidth, rawHeight] = exportDimensions(verticalHD);
+  function makeExportCanvas() {
+    const [rawWidth, rawHeight] = exportDimensions();
     const canvas = document.createElement("canvas");
     canvas.width = clamp(Math.round(rawWidth / 2) * 2, 240, 3840);
     canvas.height = clamp(Math.round(rawHeight / 2) * 2, 240, 3840);
@@ -2402,7 +2401,7 @@
     });
   }
 
-  const exportButtons = [$("ibExportPng"), $("ibExportGif"), $("ibExportVideo"), $("ibExportVerticalVideo")];
+  const exportButtons = [$("ibExportPng"), $("ibExportGif"), $("ibExportVideo")];
   function setExportBusy(busy, message) {
     exportButtons.forEach((button) => { button.disabled = busy; });
     $("ibExportStatus").textContent = message;
@@ -2761,13 +2760,13 @@
     } catch (error) { setExportBusy(false, `GIF 导出失败：${error.message}`); }
   });
 
-  async function exportMp4(verticalHD = false) {
+  async function exportMp4() {
     if (!window.HME || typeof HME.createH264MP4Encoder !== "function") { $("ibExportStatus").textContent = "MP4 编码器未加载，请刷新后重试。"; return; }
     setExportBusy(true, "正在准备高清素材…");
     let encoder;
     try {
       await preloadExportAssets();
-      const output = makeExportCanvas(verticalHD);
+      const output = makeExportCanvas();
       const context = output.getContext("2d", { willReadFrequently: true });
       const fps = Number($("ibExportFps").value) || 30;
       const duration = exportDurationSeconds();
@@ -2777,7 +2776,7 @@
       encoder.width = output.width;
       encoder.height = output.height;
       encoder.frameRate = fps;
-      encoder.kbps = verticalHD ? 20000 : 16000;
+      encoder.kbps = 16000;
       encoder.groupOfPictures = 15;
       encoder.initialize();
       for (let frame = 0; frame < frameCount; frame += 1) {
@@ -2800,8 +2799,7 @@
       try { encoder?.delete(); } catch (_) {}
     }
   }
-  $("ibExportVideo").addEventListener("click", () => exportMp4(false));
-  $("ibExportVerticalVideo").addEventListener("click", () => exportMp4(true));
+  $("ibExportVideo").addEventListener("click", () => exportMp4());
 
   const assetInputs = ["ibAssetShape", "ibAssetColor", "ibAssetTarget", "ibAssetSequence", "ibAssetSpeed", "ibAssetHold", "ibAssetSize", "ibAssetOpacity", "ibAssetX", "ibAssetY", "ibAssetRotation", "ibAssetMotion"];
   assetInputs.forEach((id) => $(id).addEventListener("input", () => {
