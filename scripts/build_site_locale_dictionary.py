@@ -279,20 +279,20 @@ def main() -> None:
         page_source = page.read_text(encoding="utf-8")
         relative = Path(__import__("os").path.relpath(SITE, page.parent)).as_posix()
         prefix = "" if relative == "." else relative + "/"
-        stylesheet = f'<link rel="stylesheet" href="{prefix}site-preferences.css?v=20260926-17">'
-        script = f'<script defer src="{prefix}site-preferences.js?v=20260926-17"></script>'
+        stylesheet = f'<link rel="stylesheet" href="{prefix}site-preferences.css?v=20260926-18">'
+        script = f'<script defer src="{prefix}site-preferences.js?v=20260926-18"></script>'
         changed = False
         if "site-preferences.css" not in page_source and re.search(r"</head\s*>", page_source, re.I):
             page_source = re.sub(r"</head\s*>", stylesheet + "\n</head>", page_source, count=1, flags=re.I)
             changed = True
         elif "site-preferences.css" in page_source:
-            page_source, count = re.subn(r"site-preferences\.css(?:\?v=[^\"' ]*)?", f"site-preferences.css?v=20260926-17", page_source)
+            page_source, count = re.subn(r"site-preferences\.css(?:\?v=[^\"' ]*)?", f"site-preferences.css?v=20260926-18", page_source)
             changed |= count > 0
         if "site-preferences.js" not in page_source and re.search(r"</body\s*>", page_source, re.I):
             page_source = re.sub(r"</body\s*>", script + "\n</body>", page_source, count=1, flags=re.I)
             changed = True
         elif "site-preferences.js" in page_source:
-            page_source, count = re.subn(r"site-preferences\.js(?:\?v=[^\"' ]*)?", f"site-preferences.js?v=20260926-17", page_source)
+            page_source, count = re.subn(r"site-preferences\.js(?:\?v=[^\"' ]*)?", f"site-preferences.js?v=20260926-18", page_source)
             changed |= count > 0
         if changed:
             page.write_text(page_source, encoding="utf-8", newline="")

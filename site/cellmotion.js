@@ -43,6 +43,7 @@ function initRibbon() {
   const items=ribbonSeed.map(seed=>effects.find(effect=>effect.id===seed.id)||seed).filter(effect=>effect?.video && !isPending(effect));
   $('#ribbon-track').innerHTML=items.map(effect=>`<a class="ribbon-card" href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器"><img src="${effect.poster}" alt="${escapeHTML(effect.name)}动效"><video data-src="${effect.video}" muted loop playsinline preload="none" aria-hidden="true"></video><span class="ribbon-name">${escapeHTML(effect.name)} ↗</span></a>`).join('');
   const cards=[...ribbon.querySelectorAll('.ribbon-card')];
+  cards.forEach((card,index)=>{card.style.backgroundImage=`url("${items[index].poster}")`;});
   let width=ribbon.clientWidth, cardWidth=0, offset=0, previous=0, raf=0, visible=false, hovered=false, focused=false, enabled=!reduced.matches;
   const videos=cards.map(card=>card.querySelector('video'));
   videos.forEach((video,index)=>{
