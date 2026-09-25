@@ -2,6 +2,7 @@
 html{background:var(--site-bg)}
 body{background-color:var(--site-bg);color:var(--site-ink)}
 .site-preferences{display:flex;align-items:center;gap:8px;flex:0 0 auto;margin-left:18px}
+.site-preferences-inline{margin-left:0}
 .site-preference-button{box-sizing:border-box;min-width:42px;height:46px;min-height:46px;padding:0 11px;border:1px solid var(--site-border,#d6d6d4);border-radius:11px;background:var(--site-surface,#fff);color:var(--site-ink,#252529);font:inherit;font-size:13px;font-weight:500;line-height:1;cursor:pointer}
 .site-preference-button:hover{border-color:#85828e;transform:translateY(-1px)}
 .site-preferences-floating{position:fixed;z-index:9999;right:16px;top:14px;padding:5px;border:1px solid var(--site-border);border-radius:14px;background:color-mix(in srgb,var(--site-surface) 88%,transparent);backdrop-filter:blur(14px)}

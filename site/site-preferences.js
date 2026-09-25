@@ -36,7 +36,12 @@
   controls.append(languageButton);
 
   const actions = document.querySelector('.header-actions');
+  const editorHeader = isEditor ? document.querySelector('.tc-header') : null;
   if (actions) actions.append(controls);
+  else if (editorHeader) {
+    editorHeader.append(controls);
+    controls.classList.add('site-preferences-inline');
+  }
   else {
     const header = document.querySelector('header');
     (header || body).append(controls);
