@@ -32,9 +32,9 @@ body:has(#motion-ribbon) .brand.original-brand img.logo-source {
 }
 
 body:has(#motion-ribbon) .ribbon-card {
-  border-color: transparent;
-  border-radius: 0;
-  box-shadow: none;
+  border: 1px solid #dedede;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px #17151c0a;
   background-color: #fff;
 }
 

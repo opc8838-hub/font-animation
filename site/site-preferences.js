@@ -21,13 +21,15 @@
   const languageButton = document.createElement('button');
   languageButton.type = 'button';
   languageButton.className = 'site-preference-button site-language-toggle';
-  const homepage = Boolean(document.querySelector('#motion-ribbon'));
-  if (!homepage) controls.append(languageButton);
+  controls.append(languageButton);
 
   const actions = document.querySelector('.header-actions');
-  if (homepage) {
-    // The homepage follows the saved site language but keeps its header clear.
-  } else if (actions) actions.append(controls);
+  const editorHeader = document.querySelector('.tc-header');
+  if (actions) actions.append(controls);
+  else if (editorHeader) {
+    editorHeader.append(controls);
+    controls.classList.add('site-preferences-inline');
+  }
   else {
     const header = document.querySelector('header');
     (header || body).append(controls);
