@@ -2,6 +2,8 @@
 
 [简体中文](README.md) · [English](README.en.md)
 
+Questions and pull requests: see the [bilingual contribution guide](CONTRIBUTING.md).
+
 **Let creativity grow freely.**
 
 CellMotion is a browser-based motion design system. Text, icons, images, and shapes are independent design cells that can move, connect, separate, and recombine into visual stories.

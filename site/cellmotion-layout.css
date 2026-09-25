@@ -1,5 +1,5 @@
 /* CellMotion's website shell. No effect/editor rendering rules live here. */
-.header-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
+.header-actions{display:flex;align-items:center;gap:8px;margin-left:auto;margin-right:-20px}
 .header-actions .button{margin-top:0}
 .contact-dialog{width:min(440px,calc(100vw - 32px));padding:22px;border:0;border-radius:18px;background:#fff;color:#171717}
 .contact-dialog::backdrop{background:rgba(16,16,17,.46)}
@@ -10,9 +10,10 @@
 .contact-dialog img{width:100%;height:auto;margin-top:14px;border-radius:12px}
 .contact-dialog [data-contact-close]{position:absolute;top:12px;right:12px;width:32px;height:32px;border:0;border-radius:50%;background:#f3f1ee}
 .contact-dialog{position:relative}
-@media(max-width:760px){.header-actions{gap:6px}.header-actions .button{font-size:10px;padding:10px 12px}}
+@media(max-width:760px){.header-actions{gap:6px;margin-right:-8px}.header-actions .button{font-size:10px;padding:10px 12px}}
 .header nav a[aria-current=page]{color:var(--ink)}
 .editor-heading .editor-scope-note{font-size:12px;color:#948a83;line-height:1.8}
+@media(max-width:760px){.header{height:auto;min-height:90px}}
 .hero.hero-immersive{position:relative;isolation:isolate;height:calc(100svh - 86px);min-height:620px;width:100%;padding:0;overflow:hidden;background:#fafafa}
 .hero-full-film{position:absolute;inset:0;z-index:-2}
 .hero-full-film video{width:100%;height:100%;object-fit:cover;object-position:50% 42%}
