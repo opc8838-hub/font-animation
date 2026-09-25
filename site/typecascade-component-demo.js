@@ -20,7 +20,15 @@
     player.manifest = manifest;
     configuredCode = window.CellMotionAI.configuredCode(manifest);
     code.textContent = configuredCode;
-    status.textContent = `${sourceLabel} Manifest 已载入，正在等待同一 Canvas 渲染器就绪…`;
+    const zh = manifest.effect?.name?.zh || "CellMotion";
+    const en = manifest.effect?.name?.en || "";
+    const title = en ? `${zh} · ${en}` : zh;
+    document.querySelector(".demo-intro h1").textContent = title;
+    document.getElementById("demoTitle").textContent = title;
+    document.title = `${title} | CellMotion`;
+    const back = document.querySelector(".demo-back");
+    if (manifest.effect?.id && back) back.href = `${manifest.effect.id}.html`;
+    status.textContent = `${sourceLabel} Manifest 已载入，正在等待同一渲染器就绪…`;
   }
 
   async function initialize() {

@@ -28,7 +28,7 @@
 
   const root = document.createElement("div");
   root.className = "tc-ai-actions";
-  root.innerHTML = '<button class="tc-ai-trigger" type="button" aria-haspopup="menu" aria-expanded="false"><span></span><b aria-hidden="true"></b></button><div class="tc-ai-menu" role="menu" hidden><button type="button" data-ai-action="prompt"></button><button type="button" data-ai-action="code"></button><button type="button" data-ai-action="json"></button><i></i><button type="button" data-ai-action="params"></button></div>';
+  root.innerHTML = '<button class="tc-ai-trigger" type="button" aria-haspopup="menu" aria-expanded="false"><span></span><b aria-hidden="true"></b></button><div class="tc-ai-menu" role="menu" hidden><button type="button" data-ai-action="preview"></button><i></i><button type="button" data-ai-action="prompt"></button><button type="button" data-ai-action="code"></button><button type="button" data-ai-action="json"></button><i></i><button type="button" data-ai-action="params"></button></div>';
   header.insertBefore(root, exportButton);
   const trigger = root.querySelector(".tc-ai-trigger");
   const menu = root.querySelector(".tc-ai-menu");
@@ -67,6 +67,7 @@
   function renderLanguage() {
     const t = words[language];
     trigger.querySelector("span").textContent = t.trigger;
+    root.querySelector('[data-ai-action="preview"]').textContent = t.preview;
     root.querySelector('[data-ai-action="prompt"]').textContent = t.prompt;
     root.querySelector('[data-ai-action="code"]').textContent = t.code;
     root.querySelector('[data-ai-action="json"]').textContent = t.json;
@@ -96,9 +97,20 @@
     const button = event.target.closest("[data-ai-action]");
     if (!button) return;
     const action = button.dataset.aiAction;
+    const previewWindow = action === "preview" ? window.open("about:blank", "_blank") : null;
     closeMenu();
     try {
       const current = await manifest();
+      if (action === "preview") {
+        if (!previewWindow) throw new Error(language === "en" ? "Allow pop-ups to open the preview" : "请允许弹出窗口后再打开预览");
+        const receiveReady = (messageEvent) => {
+          if (messageEvent.source !== previewWindow || messageEvent.data?.type !== "cellmotion:demo-ready") return;
+          previewWindow.postMessage({ type: "cellmotion:demo-manifest", manifest: current }, location.origin);
+          window.removeEventListener("message", receiveReady);
+        };
+        window.addEventListener("message", receiveReady);
+        previewWindow.location.href = "typecascade-component-demo.html?live=1";
+      }
       if (action === "prompt") await window.CellMotionAI.copyText(window.CellMotionAI.aiPrompt(current, language)).then(() => notify(words[language].copied));
       if (action === "code") await window.CellMotionAI.copyText(window.CellMotionAI.configuredCode(current)).then(() => notify(words[language].copied));
       if (action === "json") {
@@ -107,6 +119,7 @@
       }
       if (action === "params") showParameters(await definition());
     } catch (error) {
+      if (previewWindow && !previewWindow.closed) previewWindow.close();
       console.error(error);
       notify(language === "en" ? error.message : "生成失败：" + error.message);
     }

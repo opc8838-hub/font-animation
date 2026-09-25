@@ -1409,7 +1409,35 @@
     return migrated;
   }
 
+  function aiComposition() {
+    const scheme = collectScheme();
+    const [width, height] = selectedCanvasSize();
+    const controls = scheme.controls || {};
+    return {
+      canvas: { width, height, background: controls.ibBackground || "#050506" },
+      typography: {
+        fontFamily: controls.ibFont || "",
+        fontWeight: controls.ibWeight || "",
+        fontSize: Number(controls.ibFontSize) || 100,
+        tracking: Number(controls.ibTracking) || 0,
+        color: controls.ibBaseColor || "#111111"
+      },
+      motion: {
+        iconSize: Number(controls.ibSize) || 100,
+        iconTextGap: Number(controls.ibCollapse) || 0,
+        contentMode: controls.ibContentMode || "text",
+        speed: Number(controls.ibSpeed) || 1
+      },
+      rows: [{ id: "title", role: "title", text: controls.ibText || "" }],
+      customAssets: (scheme.assets || []).filter((asset) => asset.url || asset.originalDataUrl).map((asset) => ({
+        id: asset.id, name: asset.name, type: asset.type, role: asset.role, url: asset.url || asset.originalDataUrl
+      })),
+      iconburst: scheme
+    };
+  }
+
   function applyScheme(scheme, options = {}) {
+    if (scheme?.iconburst && typeof scheme.iconburst === "object") scheme = scheme.iconburst;
     if (!scheme || typeof scheme !== "object") return;
     const controls = { ibGatherSpeed: "1", ...(scheme.controls || {}) };
     if (Number(scheme.version || 0) < 3 && Number(controls.ibPairStagger || 0) <= 50) controls.ibPairStagger = 95;
@@ -3003,4 +3031,51 @@
     fitCompositionFrame();
     if (window.ResizeObserver) new ResizeObserver(() => fitCompositionFrame()).observe(stage);
   }, 0);
+
+  function bridgeDurationMs() {
+    return animationDuration(glyphPlaybackConfig());
+  }
+  function postBridge(type, extra = {}) {
+    if (window.parent === window) return;
+    window.parent.postMessage({ type, effectId: "iconburst", bridgeVersion: "1.0.0", ...extra }, "*");
+  }
+  window.CellMotionEffectBridge = {
+    version: "1.0.0",
+    effectId: "iconburst",
+    getScheme: aiComposition,
+    applyScheme: (scheme, options = {}) => {
+      applyScheme(scheme, options);
+      if (options.autoplay === false) pauseAtSeconds((state.pausedAt || 0) / 1000);
+    },
+    play: () => {
+      state.start = performance.now() - state.pausedAt;
+      state.playing = true;
+      if ($("ibPlayIcon")) {
+        $("ibPlayIcon").textContent = "Ⅱ";
+        $("ibPlayLabel").textContent = "暂停";
+        $("ibPlay").setAttribute("aria-pressed", "false");
+      }
+    },
+    pause: () => pauseAtSeconds(state.playing ? (performance.now() - state.start) / 1000 : state.pausedAt / 1000),
+    restart,
+    seek: (seconds) => pauseAtSeconds(seconds),
+    durationMs: bridgeDurationMs
+  };
+  window.addEventListener("message", (event) => {
+    const message = event.data || {};
+    if (typeof message.type !== "string" || !message.type.startsWith("cellmotion:")) return;
+    if (message.type === "cellmotion:configure") {
+      const manifest = message.manifest;
+      if (manifest?.effect?.id && manifest.effect.id !== "iconburst") return;
+      const composition = manifest?.composition || message.composition;
+      if (composition) window.CellMotionEffectBridge.applyScheme(composition, { autoplay: manifest?.presentation?.autoplay });
+      postBridge("cellmotion:duration", { durationMs: bridgeDurationMs() });
+    }
+    if (message.type === "cellmotion:play") window.CellMotionEffectBridge.play();
+    if (message.type === "cellmotion:pause") window.CellMotionEffectBridge.pause();
+    if (message.type === "cellmotion:restart") window.CellMotionEffectBridge.restart();
+    if (message.type === "cellmotion:seek") window.CellMotionEffectBridge.seek(message.seconds);
+    if (message.type === "cellmotion:request-duration") postBridge("cellmotion:duration", { durationMs: bridgeDurationMs() });
+  });
+  if (previewMode || pageParams.get("embed") === "1") postBridge("cellmotion:ready", { durationMs: bridgeDurationMs() });
 })();

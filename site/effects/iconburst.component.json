@@ -1,0 +1,44 @@
+{
+  "effect": {
+    "id": "iconburst",
+    "name": { "zh": "图标爆发", "en": "Icon Burst" },
+    "version": "1.0.0",
+    "category": "kinetic-typography"
+  },
+  "runtime": {
+    "kind": "iframe-bridge",
+    "entry": "iconburst.html?preview=1&embed=1",
+    "bridgeVersion": "1.0.0",
+    "renderer": "dom"
+  },
+  "capabilities": {
+    "editableTextRows": false,
+    "customImageAssets": true,
+    "localBackgroundRemoval": true,
+    "timeline": true,
+    "responsiveCanvas": true,
+    "exports": ["png", "gif", "mp4"]
+  },
+  "behavior": {
+    "summary": {
+      "zh": "文字与图标从中心爆开、聚拢，再换色，最后由图标替换部分文字。图标大小和文字大小分开控制。",
+      "en": "Text and icons burst from the center, gather, change color, then icons replace selected characters. Icon size is independent of text size."
+    },
+    "phases": [
+      { "id": "intro", "name": { "zh": "中央标题与图标起步", "en": "Title and icons start" }, "colorToken": "phase.intro" },
+      { "id": "orbit", "name": { "zh": "文字接入 · 图标聚拢", "en": "Words enter · icons gather" }, "colorToken": "phase.orbit" },
+      { "id": "hold", "name": { "zh": "图标滞空继续流动", "en": "Icons keep drifting" }, "colorToken": "phase.hold" },
+      { "id": "contact", "name": { "zh": "字体靠拢换色", "en": "Words meet and change color" }, "colorToken": "phase.contact" },
+      { "id": "replace", "name": { "zh": "文字切换图标", "en": "Text becomes icons" }, "colorToken": "phase.replace" }
+    ]
+  },
+  "parameters": [
+    { "path": "composition.canvas.width", "scope": "global", "type": "integer", "unit": "px", "minimum": 240, "maximum": 3840, "name": { "zh": "画布宽度", "en": "Canvas width" } },
+    { "path": "composition.canvas.height", "scope": "global", "type": "integer", "unit": "px", "minimum": 240, "maximum": 3840, "name": { "zh": "画布高度", "en": "Canvas height" } },
+    { "path": "composition.rows[].text", "scope": "row", "type": "string", "name": { "zh": "主标题", "en": "Title" } },
+    { "path": "composition.typography.fontSize", "scope": "effect", "type": "number", "unit": "%", "minimum": 40, "maximum": 180, "name": { "zh": "文字大小", "en": "Text size" } },
+    { "path": "composition.motion.iconSize", "scope": "effect", "type": "number", "unit": "%", "minimum": 40, "maximum": 180, "name": { "zh": "图标大小", "en": "Icon size" } },
+    { "path": "composition.motion.iconTextGap", "scope": "effect", "type": "number", "unit": "%", "minimum": 0, "maximum": 200, "name": { "zh": "图标与文字间距", "en": "Icon and text spacing" } },
+    { "path": "composition.motion.contentMode", "scope": "effect", "type": "string", "name": { "zh": "内容模式", "en": "Content mode" } }
+  ]
+}
