@@ -334,7 +334,7 @@
   }
 
   function builtinAssets() {
-    // Default matches the user-approved Desktop/好.json scheme.
+    // Keep the built-in assets aligned with assets/presets/iconburst-default.json.
     const orbitAssets = [
       animalAsset(7, "orbit", { size: 1.25, x: -12, y: 43, rotation: 8 }),
       flowIconAsset(0, "orbit", { size: .66, x: 9, y: 3, rotation: -34 }),
@@ -1323,6 +1323,7 @@
     "ibGatherSpeed", "ibSync", "ibCollisionSpeed", "ibCollisionDuration", "ibPairStagger", "ibOrbitSpeed", "ibWordReturn", "ibDensity", "ibCurve", "ibFinalScale", "ibFinalScaleDuration", "ibSpeed"
   ];
   const defaultControlValues = Object.fromEntries(schemeControlIds.map((id) => [id, $(id).value]));
+  // Keep these approved reset values aligned with assets/presets/iconburst-default.json.
   const latestDefaultControls = {
     ibText: "GOOD  JOB",
     ibFont: "archivoBlack",
@@ -1350,6 +1351,7 @@
     ibHang: "75",
     ibDrift: "22",
     ibOvershoot: "58",
+    ibGatherSpeed: "1.3",
     ibSync: "100",
     ibCollisionSpeed: "1.5",
     ibCollisionDuration: "160",
