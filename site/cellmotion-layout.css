@@ -14,6 +14,12 @@
 .header nav a[aria-current=page]{color:var(--ink)}
 .editor-heading .editor-scope-note{font-size:12px;color:#948a83;line-height:1.8}
 @media(max-width:760px){.header{height:auto;min-height:90px}}
+@media(min-width:761px){.header.wrap{width:100%;max-width:none;padding-inline:clamp(20px,3vw,56px);box-sizing:border-box}.header .header-actions{margin-left:auto;margin-right:0;justify-content:flex-end}}
+@media(max-width:760px){.header.wrap{width:100%;height:auto;min-height:90px;flex-wrap:wrap;row-gap:8px;padding:12px 16px;box-sizing:border-box}.header nav{display:none}.header .header-actions{margin-left:auto;margin-right:0;justify-content:flex-end;flex-wrap:wrap;gap:6px;max-width:100%}.header .header-actions .button{padding:9px 11px;gap:9px}}
+@media(max-width:430px){.header.wrap{row-gap:6px}.header .header-actions{flex:1 0 100%;width:100%;margin:0;justify-content:flex-end}.site-preferences{margin-left:4px}}
+body:has(.hero-immersive)>.header{border-bottom-color:transparent}
+.contact-wechat-action{display:inline-flex;align-items:center;justify-content:center;gap:9px}
+.contact-wechat-action img{width:17px;height:14px;object-fit:contain;display:block}
 .hero.hero-immersive{position:relative;isolation:isolate;height:calc(100svh - 86px);min-height:620px;width:100%;padding:0;overflow:hidden;background:#fafafa}
 .hero-full-film{position:absolute;inset:0;z-index:-2}
 .hero-full-film video{width:100%;height:100%;object-fit:cover;object-position:50% 42%}

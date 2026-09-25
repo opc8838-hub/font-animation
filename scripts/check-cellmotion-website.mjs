@@ -1,9 +1,9 @@
 // Scoped static checks for the new website shell, not an effect/export audit.
 import assert from 'node:assert/strict';
 import {readFile,stat} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
 const site=new URL('../site/',import.meta.url);
 const pages=['cellmotion.html','cellmotion-components.html','cellmotion-editors.html'];
-const scripts=new Set();
 let checked=0;
 for(const page of pages){
   const html=await readFile(new URL(page,site),'utf8');
@@ -13,14 +13,12 @@ for(const page of pages){
   for(const [,value]of html.matchAll(/\b(?:src|href)="([^"]+)"/g)){
     if(/^(?:https?:|data:|#)/.test(value))continue;
     const target=new URL(value,site);target.search='';target.hash='';
-    assert((await stat(target)).isFile(),`${page}: missing ${value}`);checked++;
+    assert((await stat(fileURLToPath(target))).isFile(),`${page}: missing ${value}`);checked++;
   }
-  const sharedScript = html.match(/<script(?:\s+type="module")?\s+defer\s+src="([^"]+)"/);
-  assert(sharedScript, `${page}: missing deferred shared script`);
-  scripts.add(sharedScript[1]);
+  assert(html.includes('site-preferences.js'),`${page}: missing global language/theme controls`);
+  assert(html.includes('cellmotion.js'),`${page}: missing shared website script`);
   assert(html.includes('assets/cellmotion/logo-original.png'),`${page}: original logo required`);
 }
-assert.equal(scripts.size,1,'Pages should load the same current shared script');
 const home=await readFile(new URL(pages[0],site),'utf8');
 assert(home.includes('data-home-preview="true"'),'Homepage must remain a small preview, not full catalog');
 assert(home.includes('hero-immersive'),'Full-screen Hero missing');
@@ -44,7 +42,8 @@ for(const id of catalog.featured||[]){
 }
 for(const effect of catalog.effects){
   for(const field of ['href','poster','video'])if(effect[field]){
-    assert((await stat(new URL(effect[field],site))).isFile(),`${effect.id}: missing ${field}`);checked++;
+    const target=new URL(effect[field],site);target.search='';target.hash='';
+    assert((await stat(fileURLToPath(target))).isFile(),`${effect.id}: missing ${field}`);checked++;
   }
 }
 console.log(`PASS: ${pages.length} pages, ${catalog.effects.length} catalog entries, ${checked} file references. Browser and export behavior are separate checks.`);

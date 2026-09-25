@@ -17,6 +17,36 @@ The project includes a growing library of editable motion effects, a shared edit
 - **Reference-video workflow:** [docs/REFERENCE_VIDEO_WORKFLOW.md](docs/REFERENCE_VIDEO_WORKFLOW.md)
 - **Pending-release notes:** [docs/PENDING_RELEASE.md](docs/PENDING_RELEASE.md)
 
+## Contact, collaboration, and consulting
+
+CellMotion is still evolving. Bug reports, ideas, collaboration, and consulting inquiries are welcome.
+
+<img src="site/assets/cellmotion/contact-wechat.jpg" alt="WeChat allen_8838, scan to connect" width="360">
+
+- X / Twitter: [x.com/opc_8838](https://x.com/opc_8838)
+- WeChat: `allen_8838`; scan the QR code above
+
+<details>
+<summary>Contact</summary>
+
+Say hello, follow the repository, or report a bug.
+
+</details>
+
+<details>
+<summary>Collaboration</summary>
+
+For motion, editor, or open-source collaboration, reach out on WeChat or X.
+
+</details>
+
+<details>
+<summary>Consulting</summary>
+
+For project consulting or custom motion, scan the code and tell us what you need.
+
+</details>
+
 ## Run locally
 
 Serve the `site` directory over HTTP. For example:

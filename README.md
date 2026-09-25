@@ -145,38 +145,31 @@ font-animation/
 
 ## 联系 / 合作 / 咨询
 
-**中文**  
 CellMotion 还在持续更新。欢迎提 bug、提想法，也欢迎合作和咨询。
 
-**English**  
-CellMotion is still being updated. Bug reports and ideas are welcome, and so are collaboration and consulting inquiries.
+<img src="site/assets/cellmotion/contact-wechat.jpg" alt="微信 allen_8838，扫码联系" width="360">
 
-<img src="site/assets/cellmotion/contact-wechat.jpg" alt="WeChat allen_8838, scan to connect" width="360">
-
-- X / Twitter: [https://x.com/opc_8838](https://x.com/opc_8838)
-- WeChat: `allen_8838`，扫上面的码
+- X / Twitter：[https://x.com/opc_8838](https://x.com/opc_8838)
+- 微信：`allen_8838`，扫上面的码
 
 <details>
-<summary>联系 / Contact</summary>
+<summary>联系</summary>
 
-打个招呼、跟进仓库，或报告一个 bug。  
-Say hello, follow the repo, or report a bug.
+欢迎打个招呼、关注仓库或反馈问题。
 
 </details>
 
 <details>
-<summary>合作 / Collaboration</summary>
+<summary>合作</summary>
 
-动效、编辑器或开源协作，直接微信或 X 联系。  
-For motion, editor, or open-source collaboration, reach out on WeChat or X.
+动效、编辑器或开源合作，请通过微信或 X 联系。
 
 </details>
 
 <details>
-<summary>咨询 / Consulting</summary>
+<summary>咨询</summary>
 
-项目咨询、定制动效，扫码或发消息说明需求。  
-For project consulting or custom motion, scan the code or send a message with what you need.
+项目咨询或定制动效，请扫码并说明需求。
 
 </details>
 
