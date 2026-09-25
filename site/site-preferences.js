@@ -7,6 +7,11 @@
   const read = (key) => { try { return localStorage.getItem(key); } catch (_) { return null; } };
   const preferredLanguage = read('cellmotion-site-language') || (navigator.language?.toLowerCase().startsWith('zh') ? 'zh' : 'en');
   let language = preferredLanguage === 'en' ? 'en' : 'zh';
+  const isEditor = body.classList.contains('tc-workspace');
+  const preferredTheme = isEditor
+    ? (read('cellmotion-site-theme') || read('cellmotion-editor-theme') || 'dark')
+    : 'light';
+  let theme = preferredTheme === 'dark' ? 'dark' : 'light';
   const originals = new WeakMap();
   const dictionary = new Map();
   let phraseTrie = null;
@@ -18,28 +23,53 @@
   controls.id = 'site-preferences';
   controls.className = 'site-preferences';
   controls.setAttribute('aria-label', 'Site preferences');
+  const themeButton = isEditor ? document.createElement('button') : null;
+  if (themeButton) {
+    themeButton.type = 'button';
+    themeButton.className = 'site-preference-button site-theme-toggle';
+  }
   const languageButton = document.createElement('button');
   languageButton.type = 'button';
   languageButton.className = 'site-preference-button site-language-toggle';
+  languageButton.dataset.noTranslate = '';
+  if (themeButton) controls.append(themeButton);
   controls.append(languageButton);
 
   const actions = document.querySelector('.header-actions');
-  const editorHeader = document.querySelector('.tc-header');
   if (actions) actions.append(controls);
-  else if (editorHeader) {
-    editorHeader.append(controls);
-    controls.classList.add('site-preferences-inline');
-  }
   else {
     const header = document.querySelector('header');
     (header || body).append(controls);
     controls.classList.add('site-preferences-floating');
   }
 
+  function setTheme(next, persist = true) {
+    theme = next === 'dark' ? 'dark' : 'light';
+    root.dataset.siteTheme = theme;
+    if (isEditor) {
+      body.dataset.editorTheme = theme;
+      root.style.colorScheme = theme;
+    }
+    if (themeButton) {
+      themeButton.textContent = theme === 'dark' ? '☼' : '◐';
+      themeButton.setAttribute('aria-label', language === 'en'
+        ? (theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme')
+        : (theme === 'dark' ? '切换为浅色主题' : '切换为深色主题'));
+      themeButton.title = language === 'en'
+        ? (theme === 'dark' ? 'Light theme' : 'Dark theme')
+        : (theme === 'dark' ? '浅色主题' : '深色主题');
+    }
+    if (persist && isEditor) {
+      store('cellmotion-site-theme', theme);
+      store('cellmotion-editor-theme', theme);
+    }
+  }
+
   function setLanguage(next, persist = true) {
     language = next === 'en' ? 'en' : 'zh';
     root.lang = language === 'en' ? 'en' : 'zh-CN';
     root.dataset.siteLanguage = language;
+    setTheme(theme, false);
     const titleHasChinese = /[\u3400-\u9fff]/.test(initialTitle);
     document.title = (language === 'en' && titleHasChinese) || (language === 'zh' && !titleHasChinese)
       ? (dictionary.get(initialTitle) || initialTitle)
@@ -186,8 +216,13 @@
     for (const child of node.childNodes) translateEditorTextTree(child);
   }
 
+  themeButton?.addEventListener('click', () => {
+    root.classList.add('site-theme-transition');
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+    window.setTimeout(() => root.classList.remove('site-theme-transition'), 760);
+  });
   languageButton.addEventListener('click', () => setLanguage(language === 'en' ? 'zh' : 'en'));
-  root.dataset.siteTheme = 'light';
+  setTheme(theme, false);
   fetch(new URL('site-locale-dictionary.json?v=20260926-18', document.currentScript?.src || location.href), { cache: 'reload' })
     .then((response) => response.ok ? response.json() : {})
     .then((entries) => {
