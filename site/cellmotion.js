@@ -258,3 +258,16 @@ async function loadCatalogData() {
 
 initRibbon();
 loadCatalogData();
+
+const contactDialog = document.querySelector("#contact-dialog");
+document.querySelector("[data-contact-open]")?.addEventListener("click", () => {
+  const card = document.querySelector("#contact-wechat");
+  if (card) card.hidden = true;
+  contactDialog?.showModal();
+});
+contactDialog?.querySelector("[data-contact-close]")?.addEventListener("click", () => contactDialog.close());
+contactDialog?.addEventListener("click", (event) => { if (event.target === contactDialog) contactDialog.close(); });
+document.querySelector("[data-contact-wechat]")?.addEventListener("click", () => {
+  const card = document.querySelector("#contact-wechat");
+  if (card) card.hidden = !card.hidden;
+});

@@ -10,6 +10,8 @@ CellMotion 是一个自由、灵活的动态设计系统。字体、图标、图
 
 在线浏览：[CellMotion](https://opc8838-hub.github.io/font-animation/cellmotion.html)
 
+这个仓库会持续更新。欢迎提 bug、提想法，也可以直接联系。[联系 / 合作 / 咨询](#联系--合作--咨询)
+
 ## 开源来源与 CellMotion 贡献
 
 感谢以下项目为部分动效提供了开放源码、算法或运动方式参考：
@@ -136,6 +138,43 @@ font-animation/
 23. **2026-08-16 城市字塔**：新增 City Stack 高字重中英叠字动效。汉字按阅读顺序逐字点亮，英文逐行接入，副标题由两端向中间补全，最后淡入署名；背景保持独立可换的基础色，支持闪现、上升、弹入、硬切四种节奏以及完整导出。网站现共 46 个效果。
 
 ---
+
+## 联系 / 合作 / 咨询
+
+**中文**  
+CellMotion 还在持续更新。欢迎提 bug、提想法，也欢迎合作和咨询。
+
+**English**  
+CellMotion is still being updated. Bug reports and ideas are welcome, and so are collaboration and consulting inquiries.
+
+<img src="site/assets/cellmotion/contact-wechat.jpg" alt="WeChat allen_8838, scan to connect" width="360">
+
+- X / Twitter: [https://x.com/opc_8838](https://x.com/opc_8838)
+- WeChat: `allen_8838`，扫上面的码
+
+<details>
+<summary>联系 / Contact</summary>
+
+打个招呼、跟进仓库，或报告一个 bug。  
+Say hello, follow the repo, or report a bug.
+
+</details>
+
+<details>
+<summary>合作 / Collaboration</summary>
+
+动效、编辑器或开源协作，直接微信或 X 联系。  
+For motion, editor, or open-source collaboration, reach out on WeChat or X.
+
+</details>
+
+<details>
+<summary>咨询 / Consulting</summary>
+
+项目咨询、定制动效，扫码或发消息说明需求。  
+For project consulting or custom motion, scan the code or send a message with what you need.
+
+</details>
 
 ## 2026-08-08 动效编排升级
 
