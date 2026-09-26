@@ -13,7 +13,7 @@
   darkLogo.src = 'assets/cellmotion/logo-dark-original.png';
   const lightLogo = darkLogo.cloneNode();
   lightLogo.className = 'tc-logo-light';
-  lightLogo.src = 'assets/cellmotion/logo-original.png';
+  lightLogo.src = 'assets/cellmotion/logo-original-transparent.png?v=20260926-1';
   lightLogo.alt = '';
   lightLogo.setAttribute('aria-hidden', 'true');
   darkLogo.after(lightLogo);

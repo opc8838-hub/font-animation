@@ -17,7 +17,7 @@ for(const page of pages){
   }
   assert(html.includes('site-preferences.js'),`${page}: missing global language/theme controls`);
   assert(html.includes('cellmotion.js'),`${page}: missing shared website script`);
-  assert(html.includes('assets/cellmotion/logo-original.png'),`${page}: original logo required`);
+  assert(html.includes('assets/cellmotion/logo-original-transparent.png'),`${page}: transparent logo required`);
 }
 const home=await readFile(new URL(pages[0],site),'utf8');
 assert(home.includes('data-home-preview="true"'),'Homepage must remain a small preview, not full catalog');

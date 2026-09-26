@@ -14,7 +14,7 @@ let effects = [], featured = [], activeCategory = 'all', limit = 12;
 let activeUsage = 'all';
 const ribbonSeed = [
   {id:'sproutshift',name:'字芽',href:'sproutshift.html',poster:'assets/cellmotion/poster-sproutshift.jpg',video:'assets/previews/sproutshift-wide-card.mp4'},
-  {id:'iconburst',name:'图标爆发',href:'iconburst.html',poster:'assets/cellmotion/poster-iconburst.jpg?v=20260926-2',video:'assets/previews/iconburst-card.mp4?v=20260926-2'},
+  {id:'iconburst',name:'图标爆发',href:'iconburst.html',poster:'assets/cellmotion/poster-iconburst.jpg?v=20260926-3',video:'assets/previews/iconburst-card.mp4?v=20260926-3'},
   {id:'typecascade',name:'字倾',href:'typecascade.html',poster:'assets/cellmotion/poster-typecascade.jpg',video:'assets/previews/typecascade-wide-card.mp4'},
   {id:'dotresolve',name:'点解',href:'dotresolve.html',poster:'assets/cellmotion/poster-dotresolve.jpg',video:'assets/previews/dotresolve-wide-card.mp4'},
   {id:'glyphmorph',name:'字融',href:'glyphmorph.html',poster:'assets/cellmotion/poster-glyphmorph.jpg',video:'assets/previews/glyphmorph-card.mp4'},
@@ -251,7 +251,7 @@ document.addEventListener('visibilitychange',()=>{
 });
 async function loadCatalogData() {
   try {
-    const response=await fetch('cellmotion-catalog.json?v=20260923-pending1');
+    const response=await fetch('cellmotion-catalog.json?v=20260926-cover1');
     if(!response.ok)throw new Error(`Catalog HTTP ${response.status}`);
     const catalog=await response.json();
     effects=catalog.effects;

@@ -12,7 +12,7 @@
   const body = document.body;
   body.classList.add('tc-workspace', 'glyphmorph-editor');
   panel.open = true;
-  const header = make('header', 'gm-header tc-header', '<a class="tc-brand" href="cellmotion.html" aria-label="CellMotion 首页"><img src="assets/cellmotion/logo-original.png" alt="CellMotion"></a><div><small>让创意，自由生长</small><h1>无重力翻转 <span>Zero-G Flip</span></h1></div>');
+  const header = make('header', 'gm-header tc-header', '<a class="tc-brand" href="cellmotion.html" aria-label="CellMotion 首页"><img src="assets/cellmotion/logo-original-transparent.png?v=20260926-1" alt="CellMotion"></a><div><small>让创意，自由生长</small><h1>无重力翻转 <span>Zero-G Flip</span></h1></div>');
   body.prepend(header);
   header.append(make('a', 'tc-back', '动效库'));
   header.lastChild.href = 'cellmotion-components.html';

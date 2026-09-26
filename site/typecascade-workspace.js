@@ -17,7 +17,7 @@
   const header = inspector.querySelector('.gm-header');
   header.classList.add('tc-header');
   if (!header.querySelector('.tc-brand')) {
-    const brand = make('a', 'tc-brand', '<img src="assets/cellmotion/logo-original.png" alt="CellMotion">');
+    const brand = make('a', 'tc-brand', '<img src="assets/cellmotion/logo-original-transparent.png?v=20260926-1" alt="CellMotion">');
     brand.href = 'cellmotion.html';
     brand.setAttribute('aria-label', 'CellMotion 首页');
     const legacy = header.querySelector('a');
