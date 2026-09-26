@@ -14,7 +14,7 @@ let effects = [], featured = [], activeCategory = 'all', limit = 12;
 let activeUsage = 'all';
 const ribbonSeed = [
   {id:'sproutshift',name:'字芽',href:'sproutshift.html',poster:'assets/cellmotion/poster-sproutshift.jpg',video:'assets/previews/sproutshift-wide-card.mp4'},
-  {id:'iconburst',name:'图标爆发',href:'iconburst.html',poster:'assets/cellmotion/poster-iconburst.jpg?v=20260926-3',video:'assets/previews/iconburst-card.mp4?v=20260926-3'},
+  {id:'iconburst',name:'图标爆发',href:'iconburst.html',poster:'assets/cellmotion/poster-iconburst.jpg?v=20260926-4',video:'assets/previews/iconburst-card.mp4?v=20260926-4'},
   {id:'typecascade',name:'字倾',href:'typecascade.html',poster:'assets/cellmotion/poster-typecascade.jpg',video:'assets/previews/typecascade-wide-card.mp4'},
   {id:'dotresolve',name:'点解',href:'dotresolve.html',poster:'assets/cellmotion/poster-dotresolve.jpg',video:'assets/previews/dotresolve-wide-card.mp4'},
   {id:'glyphmorph',name:'字融',href:'glyphmorph.html',poster:'assets/cellmotion/poster-glyphmorph.jpg',video:'assets/previews/glyphmorph-card.mp4'},
@@ -41,7 +41,7 @@ function initRibbon() {
   if(ribbon.dataset.ready==='true')return;
   ribbon.dataset.ready='true';
   const items=ribbonSeed.map(seed=>effects.find(effect=>effect.id===seed.id)||seed).filter(effect=>effect?.video && !isPending(effect));
-  $('#ribbon-track').innerHTML=items.map(effect=>`<a class="ribbon-card${effect.id==='iconburst'?' is-portrait':''}" href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器"><img src="${effect.poster}" alt="${escapeHTML(effect.name)}动效"><video data-src="${effect.video}" muted loop playsinline preload="none" aria-hidden="true"></video><span class="ribbon-name">${escapeHTML(effect.name)} ↗</span></a>`).join('');
+  $('#ribbon-track').innerHTML=items.map(effect=>`<a class="ribbon-card${effect.id==='iconburst'?' is-landscape':''}" href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器"><img src="${effect.poster}" alt="${escapeHTML(effect.name)}动效"><video data-src="${effect.video}" muted loop playsinline preload="none" aria-hidden="true"></video><span class="ribbon-name">${escapeHTML(effect.name)} ↗</span></a>`).join('');
   const cards=[...ribbon.querySelectorAll('.ribbon-card')];
   cards.forEach((card,index)=>{card.style.backgroundImage=`url("${items[index].poster}")`;});
   let width=ribbon.clientWidth, cardWidth=0, cardSizes=[], offset=0, previous=0, raf=0, visible=false, hovered=false, focused=false, enabled=!reduced.matches;
@@ -52,7 +52,7 @@ function initRibbon() {
     ['waiting','stalled','error','emptied'].forEach(type=>video.addEventListener(type,()=>card.classList.remove('is-playing')));
   });
   const running=()=>enabled&&visible&&!hovered&&!focused&&!document.hidden;
-  function size(){width=ribbon.clientWidth;const maxHeight=Math.max(100,ribbon.clientHeight-28);cardWidth=Math.max(225,Math.min(370,width*.235));cardSizes=cards.map(card=>{const height=card.classList.contains('is-portrait')?Math.min(maxHeight,Math.min(260,width*.6)):Math.min(cardWidth*.64,maxHeight);const cardWidthForCard=card.classList.contains('is-portrait')?height*9/16:height/.64;card.style.width=`${cardWidthForCard}px`;card.style.height=`${height}px`;card.style.top=`${Math.max(8,(ribbon.clientHeight-height)/2)}px`;return {width:cardWidthForCard,height};});}
+  function size(){width=ribbon.clientWidth;const maxHeight=Math.max(100,ribbon.clientHeight-28);cardWidth=Math.max(225,Math.min(370,width*.235));cardSizes=cards.map(card=>{const isLandscape=card.classList.contains('is-landscape');const height=Math.min(isLandscape?cardWidth*9/16:cardWidth*.64,maxHeight);const cardWidthForCard=isLandscape?height*16/9:height/.64;card.style.width=`${cardWidthForCard}px`;card.style.height=`${height}px`;card.style.top=`${Math.max(8,(ribbon.clientHeight-height)/2)}px`;return {width:cardWidthForCard,height};});}
   function update(time=0){
     raf=0;
     const active=running();
@@ -251,7 +251,7 @@ document.addEventListener('visibilitychange',()=>{
 });
 async function loadCatalogData() {
   try {
-    const response=await fetch('cellmotion-catalog.json?v=20260926-cover1');
+    const response=await fetch('cellmotion-catalog.json?v=20260926-cover2');
     if(!response.ok)throw new Error(`Catalog HTTP ${response.status}`);
     const catalog=await response.json();
     effects=catalog.effects;
