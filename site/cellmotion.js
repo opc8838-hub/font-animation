@@ -8,7 +8,7 @@ function inCategory(effect, category) {
   return category === 'all' || effect.category === category;
 }
 const escapeHTML = (text) => String(text).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-const mediaURL = (url) => `${url}?v=20260927-letterpulse`;
+const mediaURL = (url) => `${url}?v=20260927-letterpulse1920`;
 const play = async (video) => { try { await video.play(); return true; } catch { return false; } };
 let effects = [], featured = [], activeCategory = 'all', limit = 12;
 let activeUsage = 'all';
@@ -20,7 +20,7 @@ const ribbonSeed = [
   {id:'glyphmorph',name:'字融',href:'glyphmorph.html',poster:'assets/cellmotion/poster-glyphmorph.jpg',video:'assets/previews/glyphmorph-card.mp4'},
   {id:'currentwall',name:'水流',href:'currentwall.html',poster:'assets/cellmotion/poster-currentwall.jpg',video:'assets/previews/water-flow-card.mp4'},
   {id:'pathwriter',name:'轨书',href:'pathwriter.html',poster:'assets/cellmotion/poster-pathwriter.jpg',video:'assets/previews/pathwriter-card.mp4'},
-  {id:'letterpulse',name:'字阶',href:'letterpulse.html',poster:'final_letterpulse.svg',video:'assets/previews/letterpulse-1620x1080.mp4'},
+  {id:'letterpulse',name:'字阶',href:'letterpulse.html',poster:'final_letterpulse.svg',video:'assets/previews/letterpulse-1920x1080.mp4'},
   {id:'ribbonink',name:'流彩笔迹',href:'ribbonink.html',poster:'assets/cellmotion/poster-ribbonink.jpg',video:'assets/previews/ribbon-ink-card.mp4'}
 ];
 const homePreview = $('#catalog-grid')?.dataset.homePreview === 'true';
@@ -252,7 +252,7 @@ document.addEventListener('visibilitychange',()=>{
 });
 async function loadCatalogData() {
   try {
-    const response=await fetch('cellmotion-catalog.json?v=20260927-letterpulse');
+    const response=await fetch('cellmotion-catalog.json?v=20260927-letterpulse1920');
     if(!response.ok)throw new Error(`Catalog HTTP ${response.status}`);
     const catalog=await response.json();
     effects=catalog.effects;

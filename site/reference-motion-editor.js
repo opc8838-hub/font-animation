@@ -99,7 +99,7 @@
     motionPanel.hidden = true;
     $(".rm-timeline-heading strong").textContent = tr("时间线", "Timeline");
     $("#rm-timeline").insertAdjacentHTML("afterend", `<input id="rm-scrubber" type="range" min="0" max="1" step="0.001" value="0" aria-label="${tr("播放进度", "Playback position")}">`);
-    $("#rm-timeline-legend").insertAdjacentHTML("afterend", `<details class="rm-phase-details" open><summary>${tr("阶段详情", "Phase details")} <span>${tr("名称与起止时间", "Names and time range")}</span></summary><div id="rm-phase-details-list" class="rm-phase-details-list"></div></details>`);
+    $("#rm-timeline-legend").insertAdjacentHTML("afterend", `<details class="rm-phase-details"><summary>${tr("阶段详情", "Phase details")} <span>${tr("名称与起止时间", "Names and time range")}</span></summary><div id="rm-phase-details-list" class="rm-phase-details-list"></div></details>`);
     $("#rm-timeline").insertAdjacentHTML("afterend", `<div class="rm-time-ruler" id="rm-time-ruler" aria-hidden="true"></div>`);
     document.querySelectorAll("input[type=range][data-key]").forEach((range) => {
       const number = document.createElement("input");
