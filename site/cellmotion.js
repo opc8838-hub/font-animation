@@ -20,6 +20,7 @@ const ribbonSeed = [
   {id:'glyphmorph',name:'字融',href:'glyphmorph.html',poster:'assets/cellmotion/poster-glyphmorph.jpg',video:'assets/previews/glyphmorph-card.mp4'},
   {id:'currentwall',name:'水流',href:'currentwall.html',poster:'assets/cellmotion/poster-currentwall.jpg',video:'assets/previews/water-flow-card.mp4'},
   {id:'pathwriter',name:'轨书',href:'pathwriter.html',poster:'assets/cellmotion/poster-pathwriter.jpg',video:'assets/previews/pathwriter-card.mp4'},
+  {id:'letterpulse',name:'字阶',href:'letterpulse.html',poster:'final_letterpulse.svg',video:'assets/previews/letterpulse-1620x1080.mp4'},
   {id:'ribbonink',name:'流彩笔迹',href:'ribbonink.html',poster:'assets/cellmotion/poster-ribbonink.jpg',video:'assets/previews/ribbon-ink-card.mp4'}
 ];
 const homePreview = $('#catalog-grid')?.dataset.homePreview === 'true';
