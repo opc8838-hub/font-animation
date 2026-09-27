@@ -8,7 +8,7 @@ function inCategory(effect, category) {
   return category === 'all' || effect.category === category;
 }
 const escapeHTML = (text) => String(text).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-const mediaURL = (url) => `${url}?v=20260909-1`;
+const mediaURL = (url) => `${url}?v=20260927-letterpulse`;
 const play = async (video) => { try { await video.play(); return true; } catch { return false; } };
 let effects = [], featured = [], activeCategory = 'all', limit = 12;
 let activeUsage = 'all';
@@ -251,7 +251,7 @@ document.addEventListener('visibilitychange',()=>{
 });
 async function loadCatalogData() {
   try {
-    const response=await fetch('cellmotion-catalog.json?v=20260926-cover3');
+    const response=await fetch('cellmotion-catalog.json?v=20260927-letterpulse');
     if(!response.ok)throw new Error(`Catalog HTTP ${response.status}`);
     const catalog=await response.json();
     effects=catalog.effects;

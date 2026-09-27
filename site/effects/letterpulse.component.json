@@ -1,0 +1,53 @@
+{
+  "effect": {
+    "id": "letterpulse",
+    "name": { "zh": "字阶", "en": "Letter Pulse" },
+    "version": "1.0.0",
+    "category": "kinetic-typography"
+  },
+  "runtime": {
+    "kind": "iframe-bridge",
+    "entry": "letterpulse.html?preview=1&embed=1",
+    "bridgeVersion": "1.0.0",
+    "renderer": "canvas2d"
+  },
+  "capabilities": {
+    "editableText": true,
+    "fontSelection": true,
+    "responsiveCanvas": true,
+    "timeline": true,
+    "controls": ["configure", "play", "pause", "restart", "seek", "update"],
+    "exports": ["png", "gif", "mp4"]
+  },
+  "behavior": {
+    "summary": {
+      "zh": "整词停留后，字母依次放大接力，再缩到两端并重组，末段轻微回弹。",
+      "en": "The word holds, letters pulse in sequence, shrink toward the edges, rebuild, and finish with a subtle bounce."
+    },
+    "phases": [
+      { "id": "hold", "name": { "zh": "整词停留", "en": "Word hold" }, "colorToken": "phase.hold" },
+      { "id": "relay", "name": { "zh": "逐字接力", "en": "Glyph relay" }, "colorToken": "phase.action" },
+      { "id": "shrink", "name": { "zh": "缩到两端", "en": "Shrink to edges" }, "colorToken": "phase.accent" },
+      { "id": "rebuild", "name": { "zh": "两端重组", "en": "Rebuild" }, "colorToken": "phase.intro" },
+      { "id": "rest", "name": { "zh": "聚合停留", "en": "Reformed hold" }, "colorToken": "phase.exit" }
+    ]
+  },
+  "parameters": [
+    { "path": "composition.canvas.width", "scope": "global", "type": "integer", "unit": "px", "minimum": 240, "maximum": 3840, "name": { "zh": "画布宽度", "en": "Canvas width" } },
+    { "path": "composition.canvas.height", "scope": "global", "type": "integer", "unit": "px", "minimum": 240, "maximum": 3840, "name": { "zh": "画布高度", "en": "Canvas height" } },
+    { "path": "composition.typography.fontFamily", "scope": "global", "type": "font", "name": { "zh": "字体", "en": "Font" } },
+    { "path": "composition.typography.fontSize", "scope": "global", "type": "number", "unit": "×", "minimum": 0.22, "maximum": 1.1, "name": { "zh": "整体大小", "en": "Overall size" } },
+    { "path": "composition.typography.tracking", "scope": "global", "type": "number", "unit": "× 高", "minimum": -0.3, "maximum": 0.2, "name": { "zh": "字母间距", "en": "Letter spacing" } },
+    { "path": "composition.typography.positionY", "scope": "global", "type": "number", "unit": "× 高", "minimum": 0.4, "maximum": 0.98, "name": { "zh": "纵向位置", "en": "Vertical position" } },
+    { "path": "composition.motion.hold", "scope": "effect", "type": "number", "unit": "s", "minimum": 0.1, "maximum": 2, "name": { "zh": "整词停留", "en": "Word hold" } },
+    { "path": "composition.motion.relayDuration", "scope": "effect", "type": "number", "unit": "s", "minimum": 0.4, "maximum": 4, "name": { "zh": "接力时长", "en": "Relay duration" } },
+    { "path": "composition.motion.shrinkDuration", "scope": "effect", "type": "number", "unit": "s", "minimum": 0.1, "maximum": 1.5, "name": { "zh": "缩隐时长", "en": "Shrink duration" } },
+    { "path": "composition.motion.rebuildDuration", "scope": "effect", "type": "number", "unit": "s", "minimum": 0.1, "maximum": 2, "name": { "zh": "重组时长", "en": "Rebuild duration" } },
+    { "path": "composition.motion.finalBounceDuration", "scope": "effect", "type": "number", "unit": "s", "minimum": 0.1, "maximum": 1.5, "name": { "zh": "末段回弹", "en": "Final bounce" } },
+    { "path": "composition.motion.peak", "scope": "effect", "type": "number", "minimum": 0.4, "maximum": 1.5, "name": { "zh": "跳动幅度", "en": "Bounce amplitude" } },
+    { "path": "composition.motion.speed", "scope": "global", "type": "number", "unit": "×", "minimum": 0.25, "maximum": 3, "name": { "zh": "播放速度", "en": "Playback speed" } },
+    { "path": "composition.rows[].text", "scope": "row", "type": "string", "name": { "zh": "文字", "en": "Text" } },
+    { "path": "composition.rows[].textColor", "scope": "row", "type": "color", "name": { "zh": "文字颜色", "en": "Text color" } },
+    { "path": "composition.rows[].backgroundColor", "scope": "row", "type": "color", "name": { "zh": "背景颜色", "en": "Background color" } }
+  ]
+}

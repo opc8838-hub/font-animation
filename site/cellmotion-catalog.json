@@ -7,7 +7,8 @@
     "dotresolve",
     "glyphmorph",
     "iconburst",
-    "pathwriter"
+    "pathwriter",
+    "letterpulse"
   ],
   "effects": [
     {
@@ -283,6 +284,17 @@
       "href": "typecascade.html",
       "poster": "assets/cellmotion/poster-typecascade.jpg",
       "video": "assets/previews/typecascade-wide-card.mp4",
+      "status": "ready"
+    },
+    {
+      "id": "letterpulse",
+      "name": "字阶",
+      "english": "Letter Pulse",
+      "description": "逐字放大接力与缩散重组",
+      "category": "type",
+      "href": "letterpulse.html",
+      "poster": "final_letterpulse.svg",
+      "video": "assets/previews/letterpulse-1620x1080.mp4",
       "status": "ready"
     },
     {

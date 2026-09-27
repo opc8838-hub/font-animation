@@ -28,6 +28,36 @@ def main() -> int:
     js = js_path.read_text(encoding="utf-8")
     errors: list[str] = []
 
+    # New CellMotion pages may build the shared three-column shell at runtime.
+    # Check the actual shared template and interactions rather than requiring
+    # obsolete static Icon Burst markup in every effect HTML file.
+    if "reference-motion-editor.js" in html:
+        shared_runtime = html_path.parent / "reference-motion-editor.js"
+        if not shared_runtime.is_file():
+            fail(f"missing shared editor runtime: {shared_runtime}")
+            return 1
+        js += "\n" + shared_runtime.read_text(encoding="utf-8")
+        required = {
+            "scheme actions": ('id="rm-save"', 'id="rm-import"', 'id="rm-reset"', 'id="rm-clear"'),
+            "composition and playback": ('id="rm-canvas"', 'id="rm-play"', 'id="rm-replay"'),
+            "colored choreography": ("me-choreo-track", "me-choreo-block", "rm-playhead", "data-seek"),
+            "size and type": ('id="rm-preset"', 'id="rm-font"', 'id="rm-text-color"', 'id="rm-bg-color"'),
+            "export": ('id="rm-png"', 'id="rm-gif"', 'id="rm-mp4"', "createH264MP4Encoder"),
+            "persistence": ("saveLocal", "rm-import-file", "storageKey"),
+        }
+        for label, tokens in required.items():
+            for token in tokens:
+                if token not in js:
+                    errors.append(f"missing {label}: {token}")
+        if "reference-motion-editor.css" not in html:
+            errors.append("missing shared CellMotion editor stylesheet")
+        if errors:
+            for error in errors:
+                fail(error)
+            return 1
+        print(f"PASS: {html_path.name} uses the shared CellMotion editor; browser interaction checks are still required.")
+        return 0
+
     text_only = 'data-editor-capabilities="text-only"' in html
     required_html = {
         "scheme Save": "保存方案",

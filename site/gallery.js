@@ -24,6 +24,7 @@ const effects = [
   ["sproutshift", "字芽", "Sprout Shift", "type", "逐字生长变形"],
   ["mistlift", "雾升", "Mist Lift", "type", "升散浮入"],
   ["typecascade", "字倾", "Type Cascade", "type", "倾倒坠落"],
+  ["letterpulse", "字阶", "Letter Pulse", "type", "逐字放大接力与缩散重组"],
   ["dotresolve", "点解", "Dot Resolve", "type", "像素解析"],
   ["glyphreveal", "字现", "Glyph Reveal", "type", "逐字缩放显现"],
   ["phrasebuild", "组句", "Phrase Build", "type", "累计组词"],
@@ -142,7 +143,7 @@ function render() {
 
   grid.innerHTML = visible.map(([slug, zh, en, , categoryName]) => {
     const index = effects.findIndex((effect) => effect[0] === slug) + 1;
-    const imageName = slug === "crashclock" ? "final_crashclock.png" : ["iconburst", "focuswheel", "gradienttype", "glyphrelay", "glyphmorph", "wordgather", "focusportal", "rapidsequence", "citystack", "colorcanvas", "liquidtype", "scrapbin", "terminalbrand", "slotstories", "mediacascade", "colorrecompose", "phrasebuild", "switchdrop", "searchtyping", "beforeafter", "shutterafter", "assemble", "verbcue", "tighten", "titlecard", "lockup", "promptcue", "pullback", "textswell", "impactbuild", "wordflip", "textbuild", "textswap", "textreveal", "phoneframe", "laptopframe", "orbitgallery", "followerrush", "logoassemble", "moodboard"].includes(slug) ? `final_${slug}.svg` : `final_${slug}.png`;
+    const imageName = slug === "crashclock" ? "final_crashclock.png" : ["letterpulse", "iconburst", "focuswheel", "gradienttype", "glyphrelay", "glyphmorph", "wordgather", "focusportal", "rapidsequence", "citystack", "colorcanvas", "liquidtype", "scrapbin", "terminalbrand", "slotstories", "mediacascade", "colorrecompose", "phrasebuild", "switchdrop", "searchtyping", "beforeafter", "shutterafter", "assemble", "verbcue", "tighten", "titlecard", "lockup", "promptcue", "pullback", "textswell", "impactbuild", "wordflip", "textbuild", "textswap", "textreveal", "phoneframe", "laptopframe", "orbitgallery", "followerrush", "logoassemble", "moodboard"].includes(slug) ? `final_${slug}.svg` : `final_${slug}.png`;
     const target = slug === "flash" ? "flash-scenes.html" : slug === "iconburst" ? "iconburst.html?from=gallery&v=20260925-default1" : slug === "glyphmorph" ? "glyphmorph.html?from=gallery&v=20260904-4" : ["sproutshift", "mistlift", "typecascade", "dotresolve", "glyphreveal"].includes(slug) ? `${slug}.html?from=gallery&v=20260909-1` : slug === "continuation" ? "continuation.html?from=gallery&v=20260904-center1" : slug === "split-flip" ? "split-flip.html?from=gallery&v=20260907-1" : slug === "currentwall" ? "currentwall.html?from=gallery&v=20260830-28" : slug === "verticalwall" ? "verticalwall.html?from=gallery&v=20260901-57" : slug === "beforeafter" ? "beforeafter.html?from=gallery&v=20260825-latest1" : slug === "shutterafter" ? "shutterafter.html?from=gallery&v=20260827-1" : slug === "pathwriter" ? "pathwriter.html?from=gallery&v=20260827-default2" : slug === "ribbonink" ? "ribbonink.html?from=gallery&v=20260909-1" : slug === "impactbuild" ? "impactbuild.html?from=gallery&v=20260901-final2" : slug === "scrapbin" ? "scrapbin.html?from=gallery&v=20260826-delete11" : slug === "liquidtype" ? "liquidtype.html?from=gallery&v=20260824-scatter3" : `${slug}.html`;
     const detail = slug === "flash" ? "13 个独立子风格" : categoryName;
     const preview = slug === "split-flip"

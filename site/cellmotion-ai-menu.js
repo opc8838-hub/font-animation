@@ -1,16 +1,17 @@
 (() => {
   "use strict";
 
-  if (!document.body.classList.contains("tc-workspace")) return;
-  const slug = document.body.dataset.morphPort;
+  const isReferenceEditor = document.body.classList.contains("rm-letterpulse");
+  if (!document.body.classList.contains("tc-workspace") && !isReferenceEditor) return;
+  const slug = isReferenceEditor ? window.ReferenceMotionEffect?.slug : document.body.dataset.morphPort;
   if (!slug || slug === "typecascade") return;
-  const header = document.querySelector(".tc-header");
-  const exportButton = header?.querySelector(".tc-export-shortcut");
+  const header = document.querySelector(isReferenceEditor ? ".rm-header" : ".tc-header");
+  const exportButton = header?.querySelector(isReferenceEditor ? ".rm-export-shortcut" : ".tc-export-shortcut");
   if (!header || !exportButton || !window.CellMotionAI) return;
 
-  let language = localStorage.getItem("cellmotion-language") === "en" ? "en" : "zh";
+  let language = (localStorage.getItem(isReferenceEditor ? "cellmotion-lang" : "cellmotion-language") || "zh") === "en" ? "en" : "zh";
   let definitionPromise;
-  const title = document.querySelector(".tc-header h1")?.childNodes[0]?.textContent?.trim() || slug;
+  const title = (isReferenceEditor ? document.querySelector(".rm-title strong") : document.querySelector(".tc-header h1")?.childNodes[0])?.textContent?.trim() || slug;
   const words = {
     zh: {
       trigger: "用于 AI", preview: "预览 AI 组件", prompt: "复制 AI 提示词", code: "复制配置代码",

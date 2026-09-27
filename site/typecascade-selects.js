@@ -1,6 +1,6 @@
 /* Rounded select presentation. Native selects remain the authoritative controls. */
 (() => {
-  if (!document.body.classList.contains('tc-workspace')) return;
+  if (!document.body.classList.contains('tc-workspace') && !document.body.classList.contains('rm-letterpulse')) return;
   const body = document.body;
   const popover = document.createElement('div');
   popover.className = 'tc-select-popover';
@@ -96,6 +96,7 @@
   }
 
   function enhance(select) {
+    if (select.classList.contains('rm-native-font-field')) return;
     if (select.dataset.tcRoundedSelect === 'true') return;
     select.dataset.tcRoundedSelect = 'true';
     select.classList.add('tc-native-select');
