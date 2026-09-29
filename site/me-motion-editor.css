@@ -170,6 +170,7 @@ body.me-motion-editor .motion-map span { border-radius: 5px; background: var(--m
 body.me-motion-editor .motion-map span:nth-of-type(3) { background: var(--me-blue) !important; color: #fff !important; }
 
 body.me-motion-editor :is(.frame-index, .frame-time, .canvas-mark, .prism-status) { z-index: 5; }
+body.tc-workspace .canvas-mark { display: none !important; }
 body.me-motion-editor .prism-panel__footer { padding: 14px 18px 90px !important; border: 0 !important; background: var(--me-panel) !important; color: var(--me-muted) !important; }
 body.me-motion-editor .prism-signal { background: var(--me-blue) !important; box-shadow: none !important; }
 
@@ -226,6 +227,20 @@ body.me-motion-editor .me-stage-controls button {
 }
 body.me-motion-editor .me-stage-controls button:hover { background: rgba(255,255,255,.12) !important; }
 body.me-motion-editor.is-preview .me-stage-controls { display: none; }
+
+body.tc-workspace .gm-stage-controls {
+  width: min(100%, 390px) !important;
+  max-width: 100% !important;
+  flex-wrap: nowrap !important;
+  gap: 4px !important;
+}
+body.tc-workspace .gm-stage-controls button {
+  width: auto !important;
+  min-width: 0 !important;
+  flex: 1 1 0 !important;
+  padding: 0 7px !important;
+  font-size: 12px !important;
+}
 
 body.me-motion-editor .me-choreo-track { display: grid; gap: 10px; }
 body.me-motion-editor .me-choreo-scroll { overflow-x: auto; padding-bottom: 4px; }

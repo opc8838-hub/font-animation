@@ -456,6 +456,77 @@
     const rapidCount = Math.max(1, lines("rapidItems").length), interval = number("rapidInterval", 180) / 1000 / divisor, rapid = Math.max(interval, rapidCount * interval), hold = number("finalHold", 850) / 1000 / divisor;
     return { stagger, roll, headline, bridge, icon, interval, rapid, hold, cycle: Math.max(1 / fps, headline + bridge + icon + rapid + hold) };
   }
+  const sequenceTimeline = document.createElement("section");
+  sequenceTimeline.className = "choreo-section sequence-choreo-section";
+  sequenceTimeline.innerHTML = '<p class="section-label" data-sequence-timeline-title></p><div class="me-choreo-track"><div class="me-choreo-scroll"><div class="me-choreo-ruler" data-sequence-ruler></div><div class="me-choreo-bar" id="sequenceChoreoBar"><i class="me-choreo-playhead" data-sequence-playhead></i></div></div></div>';
+  panelScroll.append(sequenceTimeline);
+  const sequencePhaseNames = {
+    gather: [["逐组出现", "Word entry", "is-intro"], ["汇聚放大", "Gather and zoom", "is-orbit"], ["标题切换", "Title transition", "is-contact"], ["彩幕展开", "Color reveal", "is-replace"], ["收尾停留", "Final hold", "is-hold"]],
+    portal: [["文字序列", "Text sequence", "is-intro"], ["短句停留", "Phrase hold", "is-hold"], ["放大转场", "Zoom transition", "is-orbit"], ["结果停留", "Result hold", "is-contact"]],
+    rapid: [["逐行进入", "Headline entry", "is-intro"], ["文案过渡", "Copy transition", "is-contact"], ["图标停留", "Icon hold", "is-hold"], ["快速轮播", "Rapid sequence", "is-orbit"], ["收尾停留", "Final hold", "is-replace"]],
+    city: [["汉字点亮", "Chinese title", "is-intro"], ["英文出现", "English title", "is-orbit"], ["副标题出现", "Subtitle entry", "is-contact"], ["署名出现", "Footer reveal", "is-replace"], ["结果停留", "Result hold", "is-hold"]]
+  };
+  function sequencePhaseData(t) {
+    const phases = [], add = (index, start, end) => { if (end > start) phases.push({ name: sequencePhaseNames[mode][index], start, end }); };
+    if (mode === "gather") {
+      add(0, 0, t.motionEnd); add(1, t.motionEnd, t.build - t.transition - t.color - t.hold);
+      add(2, t.build, t.build + t.transition); add(3, t.build + t.transition, t.build + t.transition + t.color);
+      add(4, t.cycle - t.hold, t.cycle);
+    } else if (mode === "portal") {
+      add(0, 0, t.sequence); add(1, t.sequence, t.sequence + t.phrase);
+      add(2, t.sequence + t.phrase, t.sequence + t.phrase + t.zoom); add(3, t.cycle - t.hold, t.cycle);
+    } else if (mode === "rapid") {
+      add(0, 0, t.headline); add(1, t.headline, t.headline + t.bridge);
+      add(2, t.headline + t.bridge, t.headline + t.bridge + t.icon);
+      add(3, t.headline + t.bridge + t.icon, t.cycle - t.hold); add(4, t.cycle - t.hold, t.cycle);
+    } else if (t.cityMode === "pulse") {
+      add(0, 0, t.pulseSchedule.end); add(3, t.pulseSchedule.end, t.pulseSchedule.end + t.footerFade);
+      add(4, t.cycle - t.hold, t.cycle);
+    } else {
+      add(0, 0, t.hanEnd); add(1, t.englishStart, t.englishEnd); add(2, t.subtitleStart, t.subtitleEnd);
+      add(3, t.footerStart, t.footerStart + t.footerFade); add(4, t.cycle - t.hold, t.cycle);
+    }
+    return phases;
+  }
+  function renderSequenceTimeline() {
+    const total = timing().cycle, scroll = sequenceTimeline.querySelector(".me-choreo-scroll");
+    const ruler = sequenceTimeline.querySelector("[data-sequence-ruler]");
+    const bar = $("#sequenceChoreoBar"), title = sequenceTimeline.querySelector("[data-sequence-timeline-title]");
+    if (!bar || !ruler || !scroll) return;
+    const width = Math.max(scroll.clientWidth, total * 150, 640);
+    bar.style.cssText = "position:relative;display:block;width:" + width + "px;height:78px;min-height:78px;overflow:visible";
+    ruler.style.width = width + "px"; ruler.style.height = "28px";
+    const majorStep = total > 20 ? 5 : total > 10 ? 2 : 1, ticks = [];
+    for (let seconds = 0; seconds <= total + .001; seconds += 1) {
+      const tick = document.createElement("span");
+      tick.className = Math.abs(seconds / majorStep - Math.round(seconds / majorStep)) < .001 ? "is-major" : "";
+      tick.style.left = seconds / total * width + "px"; tick.dataset.time = String(seconds);
+      if (tick.classList.contains("is-major")) tick.textContent = seconds + "s";
+      ticks.push(tick);
+    }
+    ruler.replaceChildren(...ticks);
+    const english = localStorage.getItem("cellmotion-site-language") === "en";
+    const buttons = sequencePhaseData(timing()).map((phase) => {
+      const button = document.createElement("button");
+      button.type = "button"; button.className = "me-choreo-block " + phase.name[2];
+      button.dataset.start = String(phase.start); button.dataset.end = String(phase.end);
+      button.style.cssText = "position:absolute;left:" + phase.start / total * width + "px;top:0;width:" + Math.max(12, (phase.end - phase.start) / total * width) + "px;height:68px;min-height:68px;flex:none";
+      button.innerHTML = "<strong>" + phase.name[english ? 1 : 0] + "</strong><small>" + (phase.end - phase.start).toFixed(2) + "s</small>";
+      return button;
+    });
+    const playhead = document.createElement("i");
+    playhead.className = "me-choreo-playhead"; playhead.dataset.sequencePlayhead = "";
+    playhead.style.cssText = "position:absolute;top:-5px;height:78px;left:" + mod(currentTime(), total) / total * width + "px";
+    bar.replaceChildren(...buttons, playhead);
+    title.textContent = english ? "Motion timeline" : "动效时间轴";
+  }
+  sequenceTimeline.querySelector("#sequenceChoreoBar").addEventListener("click", (event) => {
+    const block = event.target.closest("button[data-start]");
+    if (!block) return;
+    paused = true; setTime(Number(block.dataset.start));
+    $("#pauseButton").textContent = localStorage.getItem("cellmotion-site-language") === "en" ? "Continue" : "继续";
+  });
+  document.addEventListener("cellmotion:languagechange", renderSequenceTimeline);
   function currentTime() { return paused ? pausedAt : Math.max(0, (performance.now() - animationStart) / 1000); }
   function setTime(next) { pausedAt = Math.max(0, next); animationStart = performance.now() - pausedAt * 1000; drawPreview(pausedAt); }
   function restart() { pausedAt = 0; animationStart = performance.now(); paused = false; lastCycle = timing().cycle; $("#pauseButton").textContent = "暂停"; }
@@ -463,6 +534,7 @@
     const now = currentTime(), previous = Math.max(1 / fps, lastCycle), next = timing().cycle;
     const rebased = (Math.floor(now / previous) + mod(now, previous) / previous) * next;
     lastCycle = next; if (paused) pausedAt = rebased; else animationStart = performance.now() - rebased * 1000;
+    renderSequenceTimeline();
   }
 
   function fillBackground(context, width, height, color = value("backgroundColor", "#f4f3fb")) { context.fillStyle = color; context.fillRect(0, 0, width, height); }
@@ -781,7 +853,7 @@
     if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) { canvas.width = pixelWidth; canvas.height = pixelHeight; canvas.dataset.ratio = String(ratio); }
   }
   function drawPreview(time = currentTime()) { resizeCanvas(); const ratio = Number(canvas.dataset.ratio || 1); renderFrame(canvas, time, canvas.width / ratio, canvas.height / ratio, ratio); frameCounter.textContent = `F ${String(Math.floor(time * fps)).padStart(4, "0")}`; }
-  function previewLoop() { drawPreview(); rafId = requestAnimationFrame(previewLoop); }
+  function previewLoop() { drawPreview(); const playhead = sequenceTimeline.querySelector("[data-sequence-playhead]"), bar = $("#sequenceChoreoBar"), total = timing().cycle; if (playhead && bar) playhead.style.left = (mod(currentTime(), total) / total * Number.parseFloat(bar.style.width || "0")) + "px"; rafId = requestAnimationFrame(previewLoop); }
 
   function outputText(input) {
     const raw = Number(input.value), format = input.dataset.format;
@@ -870,5 +942,5 @@
   }
   $("#exportVideo").addEventListener("click", () => exportVideo(false)); $("#exportVerticalVideo").addEventListener("click", () => exportVideo(true));
 
-  updateOutputs(); lastCycle = timing().cycle; document.fonts.ready.then(() => { if (mode === "city") setAltReference(); else restart(); }); previewLoop();
+  updateOutputs(); lastCycle = timing().cycle; renderSequenceTimeline(); document.fonts.ready.then(() => { if (mode === "city") setAltReference(); else restart(); }); previewLoop();
 })();

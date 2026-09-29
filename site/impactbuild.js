@@ -386,6 +386,26 @@
     const bar = $("#choreoBar"); const legend = $("#choreoLegend");
     bar.querySelectorAll(".me-choreo-block").forEach((node) => node.remove()); legend.replaceChildren();
     const total = timeline().cycle * Math.max(0.4, number("#masterSpeed") / 100);
+    const ruler = $("#choreoRuler");
+    if (ruler) {
+      ruler.replaceChildren();
+      ruler.style.width = "620px";
+      const tickStep = total > 12 ? 2 : 1;
+      for (let second = 0; second <= total; second += tickStep) {
+        const tick = document.createElement("span");
+        tick.className = "is-major";
+        tick.textContent = `${second}s`;
+        tick.style.left = `${second / total * 100}%`;
+        ruler.append(tick);
+      }
+      if (Math.floor(total) !== total) {
+        const end = document.createElement("span");
+        end.className = "is-end";
+        end.textContent = `${total.toFixed(1)}s`;
+        end.style.left = "100%";
+        ruler.append(end);
+      }
+    }
     beats().forEach((beat, index) => {
       const block = document.createElement("button");
       block.type = "button"; block.className = `me-choreo-block is-${beat.kind}`;

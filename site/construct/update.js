@@ -21,7 +21,13 @@ function setText(){
     });
   }
   keyText = enteredText;
-  keyArray = enteredText.trim().split(/\s+/);
+  var trimmedText = enteredText.trim();
+  var segmenter = typeof Intl !== "undefined" && Intl.Segmenter ? new Intl.Segmenter("zh", { granularity: "grapheme" }) : null;
+  keyArray = trimmedText.split(/\s+/).flatMap(function(token) {
+    return /[\u3400-\u9fff\u3040-\u30ff\uac00-\ud7af]/.test(token)
+      ? (segmenter ? Array.from(segmenter.segment(token), function(part) { return part.segment; }) : Array.from(token))
+      : [token];
+  });
 
   if(keyArray == null){
     keyArray = "";

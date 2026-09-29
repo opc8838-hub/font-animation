@@ -194,13 +194,16 @@ html.is-preview #flowCanvas {
   background: #fff;
 }
 
+.swell-timeline-scroll { min-width:0; max-width:100%; overflow-x:auto; overflow-y:hidden; padding-bottom:4px; }
+.swell-time-ruler { position:relative; display:block; height:26px; min-height:26px; margin:0; border-bottom:1px solid #b7b7bf; }
+.swell-time-ruler span { position:absolute; top:3px; height:21px; padding-left:4px; border-left:1px solid #777780; color:#62616c; font:10px/1.2 Inter,"Noto Sans SC",sans-serif; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.swell-time-ruler span.is-major { border-left-color:#25252b; color:#25252b; }
+
 .swell-track-bar {
   position: relative;
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 4px;
+  display: block;
   min-height: 88px;
-  overflow: auto hidden;
+  overflow: hidden;
 }
 
 body.textswell-editor .swell-beat-block {
@@ -263,6 +266,8 @@ body.textswell-editor .swell-beat-block small {
   margin: 0;
   padding: 0;
   list-style: none;
+  max-height: 92px;
+  overflow-y: auto;
 }
 
 .swell-track-legend li {

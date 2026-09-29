@@ -56,11 +56,18 @@
 
   function configuredCode(manifest) {
     const json = JSON.stringify(manifest, null, 2).replace(/<\//g, "<\\/");
+    if (manifest.capabilities?.nativeEffectPage) {
+      return `<iframe title="${manifest.effect.name?.en || manifest.effect.id}" src="${manifest.runtime.entry}" style="display:block;width:100%;aspect-ratio:${manifest.composition.canvas.width}/${manifest.composition.canvas.height};border:0"></iframe>\n<script type="application/json" id="cellmotion-editor-config">${json}</script>`;
+    }
     return `<script type="module" src="${new URL("cellmotion-player.js", document.baseURI).href}"></script>\n<cellmotion-player id="cellmotion" style="display:block;width:100%;max-width:720px"></cellmotion-player>\n<script>\n  document.querySelector('#cellmotion').manifest = ${json};\n<\/script>`;
   }
 
   function aiPrompt(manifest, language = "zh") {
     const payload = JSON.stringify(manifest, null, 2);
+    if (manifest.capabilities?.nativeEffectPage) {
+      if (language === "en") return `Reuse the existing CellMotion effect page at runtime.entry. Do not redraw or replace its animation. Keep the current text, canvas dimensions, and editor control values from composition.editorState. Place the page inside a responsive frame using composition.canvas dimensions.\n\n${payload}`;
+      return `接入现有 CellMotion 动效页面 runtime.entry，不要重画或替换动效。保留 composition.editorState 中的文字、画布尺寸和编辑器控件值，并按 composition.canvas 的比例自适应展示。\n\n${payload}`;
+    }
     if (language === "en") {
       return `Integrate this CellMotion component without reimplementing its animation. Load cellmotion-player.js, pass the complete manifest to <cellmotion-player>, preserve its canvas aspect ratio, text, fonts, icons, per-row backgrounds/media, timings and reduced-motion behavior. The composition is the user's live editor state.\n\n${payload}`;
     }

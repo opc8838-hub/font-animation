@@ -7,13 +7,14 @@
   <title>上下翻转 Split Flip | CellMotion</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="shared-fonts.css?v=20260830-1">
-  <link rel="stylesheet" href="me-motion-editor.css?v=20260909-timeline-color">
-  <link rel="stylesheet" href="split-flip.css?v=20260903-10">
-  <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-five">
-  <link rel="stylesheet" href="typecascade-polish.css?v=20260909-five">
+  <link rel="stylesheet" href="me-motion-editor.css?v=20260927-auditfix2">
+  <link rel="stylesheet" href="split-flip.css?v=20260927-ui-pass8">
+  <link rel="stylesheet" href="typecascade-workspace.css?v=20260927-ui-pass4">
+  <link rel="stylesheet" href="typecascade-polish.css?v=20260927-ui-pass22">
 <link rel="stylesheet" href="site-preferences.css?v=20260926-18">
+  <link rel="stylesheet" href="iconburst-shell.css?v=20260927-standard">
 </head>
-<body class="me-motion-editor">
+<body class="me-motion-editor" data-editor-standard="true">
   <main class="stage-shell split-flip-stage" aria-label="上下翻转实时预览">
     <div class="design-frame" id="designFrame">
       <canvas id="previewCanvas" aria-label="上下翻转画面"></canvas>
@@ -43,8 +44,6 @@
           <span>×</span>
           <label>高 <input id="canvasHeight" type="number" min="240" max="3840" value="1080"></label>
         </div>
-        <nav class="editor-jump-nav" aria-label="编辑器快捷入口"><button type="button" data-jump="topSection">底层背景</button><button type="button" data-jump="bottomSection">覆盖层文字</button><button type="button" data-jump="assetSection">图标 / GIF</button><button type="button" data-jump="motionSection">旋转 + 扫动</button><button type="button" data-jump=".export-panel">导出</button></nav>
-        <button class="open-text-studio" id="openTextStudio" type="button">打开独立文字动效编辑器</button>
       </section>
 
       <section class="half-section" data-half="top" id="topSection">
@@ -103,6 +102,7 @@
           <label>背景转场<select class="media-transition"><option value="direct">直接出现</option><option value="crossfade">柔和叠化</option></select></label>
           <label class="transition-duration" hidden>叠化时长（秒）<input type="number" min="0.01" max="2" step="0.01" value="0.25"></label>
         </div>
+        <button class="open-text-studio" id="openTextStudio" type="button">打开独立文字动效编辑器</button>
         <button class="open-text-studio" id="openTextStudioInline" type="button">弹窗编辑文字动效</button>
         <dialog class="text-studio-dialog" id="textStudioDialog">
           <div class="text-studio-shell">
@@ -207,12 +207,15 @@
   <script src="cellmotion-animated-image.js?v=20260909-1"></script>
   <script src="js/continuation-gif.js"></script>
   <script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="split-flip.js?v=20260909-gif-runtime"></script>
+  <script src="split-flip.js?v=20260927-ui-pass9"></script>
   <script src="me-motion-editor.js?v=20260828-1"></script>
-  <script src="cellmotion-me-shell.js?v=20260909-standard"></script>
+  <script src="cellmotion-me-shell.js?v=20260928-shell-inkfix1"></script>
   <script src="typecascade-polish.js?v=20260909-five"></script>
   <script src="typecascade-selects.js?v=20260909-1"></script>
-  <script src="typecascade-locale.js?v=20260909-standard"></script>
+  <script src="typecascade-locale.js?v=20260927-locale-pass2"></script>
 <script defer src="site-preferences.js?v=20260926-18"></script>
+
+  <script src="cellmotion-ai-manifest.js?v=20260927-standard"></script>
+  <script src="cellmotion-ai-menu.js?v=20260928-ai-definitions1"></script>
 </body>
 </html>

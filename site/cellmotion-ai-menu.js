@@ -2,15 +2,17 @@
   "use strict";
 
   const isReferenceEditor = document.body.classList.contains("rm-letterpulse");
-  if (!document.body.classList.contains("tc-workspace") && !isReferenceEditor) return;
-  const slug = isReferenceEditor ? window.ReferenceMotionEffect?.slug : document.body.dataset.morphPort;
+  const isStgEditor = document.body.classList.contains("stg-pro-workspace");
+  if (!document.body.classList.contains("tc-workspace") && !isReferenceEditor && !isStgEditor) return;
+  const slug = isReferenceEditor ? window.ReferenceMotionEffect?.slug : (document.body.dataset.morphPort || location.pathname.split("/").pop().replace(/\.html$/, ""));
   if (!slug || slug === "typecascade") return;
-  const header = document.querySelector(isReferenceEditor ? ".rm-header" : ".tc-header");
-  const exportButton = header?.querySelector(isReferenceEditor ? ".rm-export-shortcut" : ".tc-export-shortcut");
+  const header = document.querySelector(isReferenceEditor ? ".rm-header" : isStgEditor ? ".stg-workspace-header" : ".tc-header");
+  const exportButton = header?.querySelector(isReferenceEditor ? ".rm-export-shortcut" : isStgEditor ? (".stg-standard-export-shortcut, .stg-workspace-top") : ".tc-export-shortcut");
   if (!header || !exportButton || !window.CellMotionAI) return;
 
-  let language = (localStorage.getItem(isReferenceEditor ? "cellmotion-lang" : "cellmotion-language") || "zh") === "en" ? "en" : "zh";
+  let language = (localStorage.getItem(isReferenceEditor ? "cellmotion-lang" : "cellmotion-site-language") || "zh") === "en" ? "en" : "zh";
   let definitionPromise;
+  const authoredComponentDefinitions = new Set(["typecascade", "sproutshift", "mistlift", "letterpulse", "iconburst", "glyphreveal"]);
   const title = (isReferenceEditor ? document.querySelector(".rm-title strong") : document.querySelector(".tc-header h1")?.childNodes[0])?.textContent?.trim() || slug;
   const words = {
     zh: {
@@ -33,6 +35,20 @@
   header.insertBefore(root, exportButton);
   const trigger = root.querySelector(".tc-ai-trigger");
   const menu = root.querySelector(".tc-ai-menu");
+  if (isStgEditor) {
+    document.body.append(menu);
+    const positionMenu = () => {
+      const rect = trigger.getBoundingClientRect();
+      menu.style.setProperty("position", "fixed", "important");
+      menu.style.setProperty("top", `${Math.round(rect.bottom + 8)}px`, "important");
+      menu.style.setProperty("left", `${Math.max(8, Math.min(window.innerWidth - 226, Math.round(rect.right - 218)))}px`, "important");
+      menu.style.setProperty("right", "auto", "important");
+      menu.style.setProperty("z-index", "2147483647", "important");
+    };
+    trigger.addEventListener("click", () => requestAnimationFrame(() => { if (!menu.hidden) positionMenu(); }));
+    window.addEventListener("resize", () => { if (!menu.hidden) positionMenu(); }, { passive: true });
+    window.addEventListener("scroll", () => { if (!menu.hidden) positionMenu(); }, { passive: true, capture: true });
+  }
   const toast = document.createElement("div");
   toast.className = "tc-ai-toast";
   toast.setAttribute("role", "status");
@@ -49,17 +65,59 @@
     clearTimeout(notify.timer);
     notify.timer = setTimeout(() => { toast.hidden = true; }, 2200);
   }
+  function controlDefinitions() {
+    const seen = new Map();
+    return [...document.querySelectorAll("input, select, textarea")]
+      .filter((control) => !["file", "button", "submit", "reset", "hidden"].includes(control.type) && !control.disabled)
+      .map((control, index) => {
+        const labelNode = control.closest("label") || (control.id ? document.querySelector(`label[for="${CSS.escape(control.id)}"]`) : null);
+        const labelClone = labelNode?.cloneNode(true);
+        labelClone?.querySelectorAll("input, select, textarea, output, button").forEach((node) => node.remove());
+        const label = labelClone?.textContent?.replace(/\s+/g, " ").trim() || control.getAttribute("aria-label") || control.id || `参数 ${index + 1}`;
+        const key = control.id || control.name || `control-${index + 1}`;
+        const occurrence = (seen.get(key) || 0) + 1;
+        seen.set(key, occurrence);
+        const section = control.closest(".export-panel, [data-panel='export']") ? "global" : control.closest(".pair-editor-row, .gm-row-shell, .text-layer-row") ? "row" : "effect";
+        return { path: `editor.controls.${key}${occurrence > 1 ? `.${occurrence}` : ""}`, scope: section, name: { zh: label, en: control.id || control.name || `Control ${index + 1}` }, type: control.type === "range" || control.type === "number" ? "number" : control.type === "color" ? "color" : control.tagName.toLowerCase() === "select" ? "enum" : control.type === "checkbox" ? "boolean" : "string", unit: control.dataset.unit || undefined };
+      });
+  }
+  function genericDefinition() {
+    const titleText = document.querySelector(".tc-header h1, .stg-workspace-heading strong, .rm-title strong, h1")?.textContent?.trim() || slug;
+    return {
+      effect: { id: slug, name: { zh: titleText, en: slug } },
+      runtime: { entry: location.pathname + location.search },
+      capabilities: { nativeEffectPage: true, liveEditorState: true, preview: false },
+      behavior: { summary: { zh: `使用 ${titleText} 编辑器中的当前设置。配置包含页面控件、画布尺寸和文字内容。`, en: `Uses the current settings from the ${titleText} editor, including controls, canvas dimensions, and text.` } },
+      parameters: controlDefinitions()
+    };
+  }
   function definition() {
-    definitionPromise ||= fetch(`effects/${slug}.component.json`).then((response) => {
-      if (!response.ok) throw new Error("AI component definition unavailable");
-      return response.json();
-    });
+    definitionPromise ||= authoredComponentDefinitions.has(slug)
+      ? fetch(`effects/${slug}.component.json`).then(async (response) => response.ok ? response.json() : genericDefinition()).catch(() => genericDefinition())
+      : Promise.resolve(genericDefinition());
     return definitionPromise;
   }
   async function manifest() {
     const bridge = window.CellMotionEffectBridge;
-    if (!bridge?.getScheme) throw new Error("Editor runtime bridge unavailable");
-    return window.CellMotionAI.createManifest({ definition: await definition(), scheme: bridge.getScheme(), baseUrl: document.baseURI });
+    const def = await definition();
+    let scheme;
+    if (bridge?.getScheme) scheme = bridge.getScheme();
+    else if (def.capabilities?.nativeEffectPage) {
+      const stage = document.querySelector("main, .stg-canvas-stage, .gm-stage, .current-stage") || document.body;
+      const stageRect = stage.getBoundingClientRect();
+      const canvas = document.querySelector("canvas");
+      const width = Math.max(1, Math.round(canvas?.width || stageRect.width || 1920));
+      const height = Math.max(1, Math.round(canvas?.height || stageRect.height || 1080));
+      const controls = [...document.querySelectorAll("input, select, textarea")]
+        .filter((control) => !["file", "button", "submit", "reset", "hidden"].includes(control.type))
+        .map((control, index) => ({ id: control.id || control.name || `control-${index + 1}`, type: control.type || control.tagName.toLowerCase(), value: control.type === "checkbox" ? control.checked : control.value }));
+      const textControls = [...document.querySelectorAll("textarea, input[type='text'], input:not([type])")]
+        .filter((control) => !control.closest(".tc-ai-menu, .tc-ai-dialog"));
+      const rows = textControls.map((control, index) => ({ id: control.id || `row-${index + 1}`, text: control.value || "", hold: 0 }));
+      scheme = { version: 1, canvas: { width, height, fps: 30 }, typography: {}, rows, editorState: { entry: location.href, controls } };
+      window.CellMotionEffectBridge = { getScheme: () => structuredClone(scheme) };
+    } else throw new Error("Editor runtime bridge unavailable");
+    return window.CellMotionAI.createManifest({ definition: def, scheme, baseUrl: document.baseURI });
   }
   function closeMenu() {
     menu.hidden = true;
@@ -68,11 +126,13 @@
   function renderLanguage() {
     const t = words[language];
     trigger.querySelector("span").textContent = t.trigger;
-    root.querySelector('[data-ai-action="preview"]').textContent = t.preview;
-    root.querySelector('[data-ai-action="prompt"]').textContent = t.prompt;
-    root.querySelector('[data-ai-action="code"]').textContent = t.code;
-    root.querySelector('[data-ai-action="json"]').textContent = t.json;
-    root.querySelector('[data-ai-action="params"]').textContent = t.params;
+    const labels = { preview: t.preview, prompt: t.prompt, code: t.code, json: t.json, params: t.params };
+    Object.entries(labels).forEach(([action, label]) => {
+      const button = menu.querySelector(`[data-ai-action="${action}"]`);
+      if (button) button.textContent = label;
+    });
+    const previewButton = root.querySelector('[data-ai-action="preview"]');
+    if (previewButton) previewButton.hidden = false;
   }
   function showParameters(def) {
     const t = words[language];
@@ -94,10 +154,12 @@
     menu.hidden = !open;
     trigger.setAttribute("aria-expanded", String(open));
   });
-  root.addEventListener("click", async (event) => {
+  (isStgEditor ? menu : root).addEventListener("click", async (event) => {
     const button = event.target.closest("[data-ai-action]");
     if (!button) return;
     const action = button.dataset.aiAction;
+    const currentDefinition = await definition();
+    if (currentDefinition.capabilities?.preview === false && action === "preview") return;
     const previewWindow = action === "preview" ? window.open("about:blank", "_blank") : null;
     closeMenu();
     try {
@@ -129,9 +191,17 @@
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeMenu(); });
   dialog.querySelector("[data-ai-close]").addEventListener("click", () => dialog.close());
   dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
-  document.addEventListener("tc-languagechange", (event) => {
+  const onLanguageChange = (event) => {
     language = event.detail?.language === "en" ? "en" : "zh";
     renderLanguage();
-  });
+  };
+  document.addEventListener("tc-languagechange", onLanguageChange);
+  document.addEventListener("cellmotion:languagechange", onLanguageChange);
   renderLanguage();
+  definition().then((def) => {
+    if (def.capabilities?.preview === false) menu.querySelector('[data-ai-action="preview"]')?.remove();
+  }).catch((error) => {
+    console.error(error);
+    root.remove();
+  });
 })();

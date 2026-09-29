@@ -177,7 +177,16 @@ body.me-motion-editor .beforeafter-panel .formula {
 .ba-speed-presets button { min-height: 38px; border: 1px solid #d8e1ec; border-radius: 11px; color: #0766cf; background: #edf6ff; }
 .ba-speed-presets button:hover { border-color: #1682f5; background: #e3f1ff; }
 
-.beforeafter-panel .me-choreo-bar { min-width: 780px; }
+.beforeafter-panel #beforeAfterTimelineTrack { min-width: var(--ba-timeline-width, 780px); }
+.beforeafter-panel #beforeAfterTimelineRuler { min-width: var(--ba-timeline-width, 780px); }
+.beforeafter-panel #beforeAfterTimelineTrack .me-choreo-block { min-height: 62px; height: 62px; padding: 6px 7px; }
+.beforeafter-panel .me-choreo-scroll { position: relative; padding-top: 22px; overflow-x: auto; overflow-y: hidden; }
+.beforeafter-panel .me-choreo-ruler span { position: absolute; top: 0; transform: translateX(-50%); font-size: 10px; color: var(--workspace-muted, #777); white-space: nowrap; }
+.beforeafter-panel .me-choreo-ruler span::before { content: ""; position: absolute; left: 50%; top: 13px; height: 7px; border-left: 1px solid currentColor; }
+.beforeafter-panel .me-choreo-legend { margin-top: 10px; }
+.beforeafter-panel .ba-timeline-details { margin-top:8px; color:var(--workspace-muted,#777); font-size:11px; }
+.beforeafter-panel .ba-timeline-details summary { width:max-content; max-width:100%; cursor:pointer; }
+.beforeafter-panel .ba-timeline-details[open] { max-height:112px; overflow-y:auto; padding-right:4px; }
 .beforeafter-panel .me-choreo-legend b { font-size: 10px; }
 
 .ba-upload {

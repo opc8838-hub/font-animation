@@ -7,7 +7,7 @@
   const read = (key) => { try { return localStorage.getItem(key); } catch (_) { return null; } };
   const preferredLanguage = read('cellmotion-site-language') || (navigator.language?.toLowerCase().startsWith('zh') ? 'zh' : 'en');
   let language = preferredLanguage === 'en' ? 'en' : 'zh';
-  const isEditor = body.classList.contains('tc-workspace');
+  const isEditor = body.classList.contains('tc-workspace') || body.dataset.editorStandard === 'true';
   const preferredTheme = isEditor
     ? (read('cellmotion-site-theme') || read('cellmotion-editor-theme') || 'dark')
     : 'light';
@@ -36,7 +36,7 @@
   controls.append(languageButton);
 
   const actions = document.querySelector('.header-actions');
-  const editorHeader = isEditor ? document.querySelector('.tc-header') : null;
+  const editorHeader = isEditor ? document.querySelector('.tc-header, .stg-workspace-header') : null;
   if (actions) actions.append(controls);
   else if (editorHeader) {
     editorHeader.append(controls);
@@ -228,7 +228,7 @@
   });
   languageButton.addEventListener('click', () => setLanguage(language === 'en' ? 'zh' : 'en'));
   setTheme(theme, false);
-  fetch(new URL('site-locale-dictionary.json?v=20260926-18', document.currentScript?.src || location.href), { cache: 'reload' })
+  fetch(new URL('site-locale-dictionary.json?v=20260927-20', document.currentScript?.src || location.href), { cache: 'reload' })
     .then((response) => response.ok ? response.json() : {})
     .then((entries) => {
       for (const [source, translated] of Object.entries(entries)) dictionary.set(source, translated);

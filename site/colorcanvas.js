@@ -170,6 +170,10 @@
   }
 
   function renderFrame(target, time, width, height, ratio = 1) {
+    if (target === canvas) {
+      target.dataset.cycleDuration = cycleDuration().toFixed(4);
+      target.dataset.timelineTime = time.toFixed(4);
+    }
     const ctx = target.getContext("2d", { alpha: false });
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     ctx.imageSmoothingEnabled = true;
@@ -218,6 +222,23 @@
   $("#exportVideo").addEventListener("click", () => exportVideo(false));
   $("#exportVerticalVideo").addEventListener("click", () => exportVideo(true));
 
+  window.cellmotionTimelineProvider = () => {
+    const current = timing();
+    const phases = [
+      { label: { zh: "缩放入场", en: "Scale intro" }, duration: current.intro },
+      { label: { zh: "逐字显现", en: "Text reveal" }, duration: current.reveal },
+      { label: { zh: "紫色停留", en: "Purple hold" }, duration: current.purple },
+      { label: { zh: "绿色转场", en: "Green transition" }, duration: current.shift },
+      { label: { zh: "流动停留", en: "Flow hold" }, duration: current.flow }
+    ];
+    let start = 0;
+    phases.forEach((phase) => { phase.start = start; start += phase.duration; });
+    return {
+      title: { zh: "彩色画布时间轴", en: "Color canvas timeline" }, phases,
+      time: timelineTime(),
+      seek(value) { paused = true; setTime(value); $("#pauseButton").textContent = "继续"; }
+    };
+  };
   lastDuration = cycleDuration();
   resizeCanvas();
   previewLoop();

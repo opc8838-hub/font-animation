@@ -547,7 +547,7 @@
     installStageControls();
   }
 
-  if (["flash", "snap", "construct"].includes(slug)) installProWorkspace();
+  if (["flash", "snap", "construct"].includes(slug) || document.body.dataset.editorStandard === "true") installProWorkspace();
 
   if (legacyEffects.has(slug)) {
     let attempts = 0;
