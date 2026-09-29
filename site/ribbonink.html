@@ -7,9 +7,13 @@
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="shared-fonts.css?v=20260901-1">
   <link rel="stylesheet" href="workspace-editor.css?v=20260901-1">
-  <link rel="stylesheet" href="me-motion-editor.css?v=20260901-1">
-  <link rel="stylesheet" href="ribbonink.css?v=20260909-1">
+  <link rel="stylesheet" href="me-motion-editor.css?v=20260927-auditfix2">
+  <link rel="stylesheet" href="ribbonink.css?v=20260928-theme1">
 <link rel="stylesheet" href="site-preferences.css?v=20260926-18">
+  <link rel="stylesheet" href="me-motion-editor.css?v=20260927-auditfix2">
+  <link rel="stylesheet" href="typecascade-workspace.css?v=20260927-ui-pass4">
+  <link rel="stylesheet" href="typecascade-polish.css?v=20260927-ui-pass22">
+  <link rel="stylesheet" href="iconburst-shell.css?v=20260927-standard">
 </head>
 <body data-editor-capabilities="text-only">
   <aside class="ink-panel" id="editorPanel" aria-label="流彩笔迹编辑器">
@@ -287,6 +291,7 @@
         <div class="ink-card-heading"><span>05</span><h2 id="timelineTitle">编舞时间线</h2></div>
         <div class="me-choreo-scroll" id="timelineScroll">
           <div class="me-choreo-track" id="timelineTrack" aria-label="点击时间线跳转">
+            <div class="me-choreo-ruler" id="timelineRuler" aria-hidden="true"></div>
             <div class="me-choreo-bar" id="timelineBar"></div>
             <div class="me-choreo-playhead" id="timelinePlayhead" aria-hidden="true"></div>
           </div>
@@ -360,7 +365,11 @@
   <script src="ribbonink-writing.js?v=20260905-25"></script>
   <script src="ribbonink-glyphs.js?v=20260905-41"></script>
   <script src="cellmotion-animated-image.js?v=20260909-1"></script>
-  <script src="ribbonink.js?v=20260909-2"></script>
+  <script src="ribbonink.js?v=20260928-localetimeline2"></script>
 <script defer src="site-preferences.js?v=20260926-18"></script>
+
+  <script src="cellmotion-me-shell.js?v=20260928-shell-inkfix1"></script>
+  <script src="cellmotion-ai-manifest.js?v=20260927-standard"></script>
+  <script src="cellmotion-ai-menu.js?v=20260928-ai-definitions1"></script>
 </body>
 </html>

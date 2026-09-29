@@ -966,6 +966,45 @@
       { key: "end", label: "结果停留", value: toReal(state.motion.endHold), className: "is-hold", start: toReal(state.motion.introHold + motionDuration), track: 0 }
     ];
     const bar = $("#choreoBar");
+    const scroll = bar.parentElement;
+    let ruler = $(".me-choreo-ruler", scroll);
+    if (!ruler) {
+      ruler = document.createElement("div");
+      ruler.className = "me-choreo-ruler";
+      ruler.setAttribute("aria-hidden", "true");
+      scroll.insertBefore(ruler, bar);
+    }
+    const trackWidth = Math.max(scroll.clientWidth, total * 180, 620);
+    bar.style.width = `${trackWidth}px`;
+    ruler.style.width = `${trackWidth}px`;
+    bar.dataset.timelineTotal = String(total);
+    bar.dataset.rulerScale = String(trackWidth);
+    const majorStep = total > 30 ? 10 : total > 12 ? 2 : 1;
+    const minorStep = trackWidth / total >= 160 ? majorStep / 5 : majorStep / 2;
+    const ticks = [];
+    for (let tickTime = 0; tickTime <= total + .0001; tickTime += minorStep) {
+      const tick = document.createElement("span");
+      const major = Math.abs(tickTime / majorStep - Math.round(tickTime / majorStep)) < .001;
+      tick.className = major ? "is-major" : "";
+      tick.style.left = `${tickTime / total * trackWidth}px`;
+      tick.dataset.time = String(tickTime);
+      if (major) tick.textContent = `${Number(tickTime.toFixed(2))}s`;
+      ticks.push(tick);
+    }
+    ruler.replaceChildren(...ticks);
+    if (!scroll.dataset.rulerResizeObserved) {
+      scroll.dataset.rulerResizeObserved = "true";
+      new ResizeObserver(() => {
+        const duration = Number(bar.dataset.timelineTotal) || 1;
+        const width = Math.max(scroll.clientWidth, duration * 180, 620);
+        bar.style.width = `${width}px`;
+        ruler.style.width = `${width}px`;
+        bar.dataset.rulerScale = String(width);
+        ruler.querySelectorAll("span").forEach((tick) => {
+          tick.style.left = `${Number(tick.dataset.time) / duration * width}px`;
+        });
+      }).observe(scroll);
+    }
     bar.querySelectorAll("button").forEach((node) => node.remove());
     phases.forEach((phase) => {
       const button = document.createElement("button"); button.type = "button"; button.className = `me-choreo-block ${phase.className}`; button.dataset.start = phase.start; button.dataset.end = phase.start + phase.value; button.style.left = `${phase.start / total * 100}%`; button.style.width = `${Math.max(3, phase.value / total * 100)}%`; button.style.top = `${phase.track * 42}px`; button.innerHTML = `<em>${phase.key === "flip" ? "↻" : phase.key === "sweep" ? "↕" : "•"}</em><strong>${phase.label}</strong><small>${phase.value.toFixed(2)}s</small>`;
@@ -1058,6 +1097,7 @@
     $("#sweepEnabled").checked = state.motion.sweepEnabled;
     $("#customAngleWrap").hidden = state.motion.anglePreset !== "custom";
     fitStage(); updateMotionOutputs(); updateTextMotionOutputs(); renderTextEditors(); ["top", "bottom"].forEach(syncHalfEditor); renderSelectedAssets(); renderTimeline();
+    $("#canvasPreset").dispatchEvent(new Event("change", { bubbles: true }));
     if (message) $("#schemeStatus").textContent = message;
   }
 
@@ -1180,7 +1220,7 @@
   }
   $("#textPreviewOnly").addEventListener("change", (event) => setTextPreviewMode(event.target.checked));
   $("#textReplayButton").addEventListener("click", () => { textStudioSeconds = 0; textStudioPlaying = true; syncPlaybackButtons(); });
-  [$("#openTextStudio"), $("#openTextStudioInline")].forEach((button) => button.addEventListener("click", () => {
+  [$("#openTextStudio"), $("#openTextStudioInline")].forEach((button) => button?.addEventListener("click", () => {
     setTextPreviewMode(true);
     syncPlaybackButtons();
     textStudioDialog.showModal();

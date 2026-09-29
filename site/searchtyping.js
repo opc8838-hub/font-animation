@@ -260,6 +260,10 @@
   }
 
   function renderFrame(target, time, width, height, pixelRatio = 1) {
+    if (target === canvas) {
+      target.dataset.cycleDuration = cycleLength().toFixed(4);
+      target.dataset.timelineTime = time.toFixed(4);
+    }
     const context = target.getContext("2d");
     const w = width ?? target.width / pixelRatio;
     const h = height ?? target.height / pixelRatio;

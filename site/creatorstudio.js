@@ -806,6 +806,36 @@
     setExportBusy(false, `${extension} 视频已生成 · ${output.width} × ${output.height} · ${duration.toFixed(1)}秒`);
   });
 
+  window.cellmotionTimelineProvider = () => {
+    if (inputs.motionMode.value !== "choreography") {
+      const duration = 4;
+      return {
+        title: { zh: "纵向滚轮循环", en: "Vertical ticker loop" },
+        phases: [{ label: { zh: "滚轮循环", en: "Ticker loop" }, duration, start: 0 }],
+        time: currentTime(),
+        seek(time) { paused = true; setTime(time); $("#pauseButton").textContent = "继续"; }
+      };
+    }
+    const timing = choreographyTiming();
+    const labels = [
+      { zh: "首项停留", en: "Opening hold" },
+      { zh: "纵向滚轮", en: "Vertical ticker" },
+      { zh: "标题接入", en: "Title settle" },
+      { zh: "彩色重组", en: "Color rebuild" },
+      { zh: "定稿停留", en: "Final hold" }
+    ];
+    let start = 0;
+    const phases = timing.duration.map((duration, index) => {
+      const phase = { label: labels[index], duration, start };
+      start += duration;
+      return phase;
+    });
+    return {
+      title: { zh: "名称汇聚编舞", en: "Name merge choreography" }, phases,
+      time: currentTime(),
+      seek(time) { paused = true; setTime(time); $("#pauseButton").textContent = "继续"; }
+    };
+  };
   window.addEventListener("beforeunload", () => cancelAnimationFrame(rafId));
   if (window.innerWidth <= 720) $("#controlPanel").removeAttribute("open");
   renderAssetGrid();

@@ -35,7 +35,7 @@
     '文字段落': 'Text blocks', '＋ 添加段落': '＋ Add', '添加文字段落': 'Add text block', '选择一段文字，在右侧编辑': 'Select a block to edit on the right',
     '选择文字段落': 'Select a text block', '段落导航': 'Text navigation', '当前段落': 'Text block', '动效设置': 'Motion',
     '属性分类': 'Settings tabs', '导出': 'Export', '画布预览': 'Preview', '画布与播放': 'Canvas and playback',
-    '预设': 'Preset', '自定义': 'Custom', '宽度': 'Width', '高度': 'Height', '停留 / 毫秒': 'Hold / ms',
+    '预设': 'Preset', '自定义': 'Custom', '宽度': 'Width', '高度': 'Height', '停留 / 毫秒': 'Hold / ms', '编辑与预览尺寸': 'Edit and preview dimensions', 'Edit and preview dimensions': '编辑与预览尺寸',
     '本行字体': 'Block font', '跟随全局字体': 'Use default font', '复位留白': 'Blank reset',
     '本段文字颜色': 'Block text color', '本段背景颜色': 'Block background color', '应用到全部段落': 'Apply to all blocks',
     '＋ 插入图标': '＋ Add icon', '暂停修改': 'Pause & edit', '上移': 'Move up', '下移': 'Move down', '删除': 'Remove',
@@ -209,7 +209,7 @@
   document.getElementById('tcThemeToggle').after(languageButton);
   let language = 'zh';
   const originals = new WeakMap();
-  const excluded = 'script,style,textarea,output,.tc-row-text,#timeline small,.gm-background-video-head strong,.stg-cn-toolbar,.stg-cn-drawer,.stg-cn-backdrop';
+  const excluded = 'script,style,textarea,output,.site-preferences,.tc-row-text,#timeline small,.gm-background-video-head strong,.stg-cn-toolbar,.stg-cn-drawer,.stg-cn-backdrop';
 
   function translate(value, element, attribute = '') {
     const s = value.trim();

@@ -340,5 +340,18 @@
   async function exportVideo(vertical = false) { const output = makeExportCanvas(vertical), exportFps = Number($("#exportFps").value) || 30, duration = selectedDuration(), frames = Math.ceil(duration * exportFps); setExportBusy(true, "正在逐帧生成视频 · 0%"); try { const writer = new WebMWriter({ quality: .94, frameRate: exportFps }); for (let frame = 0; frame < frames; frame += 1) { renderFrame(output, frame / exportFps, output.width, output.height, 1); writer.addFrame(output); if (frame % 2 === 0) { exportStatus.textContent = `正在逐帧生成视频 · ${Math.round((frame + 1) / frames * 100)}%`; await new Promise((resolve) => setTimeout(resolve, 0)); } } const blob = await writer.complete(); downloadBlob(blob, `glyph-relay-${output.width}x${output.height}.webm`); setExportBusy(false, `WEBM 视频已生成 · ${output.width} × ${output.height}`); } catch (error) { setExportBusy(false, `视频导出失败：${error.message}`); } }
   $("#exportVideo").addEventListener("click", () => exportVideo(false)); $("#exportVerticalVideo").addEventListener("click", () => exportVideo(true));
 
+  window.cellmotionTimelineProvider = () => {
+    const current = timing();
+    const phases = [
+      { label: { zh: "第一段入场", en: "First phrase entrance" }, duration: current.a },
+      { label: { zh: "颜色过渡", en: "Color transition" }, duration: current.color },
+      { label: { zh: "第二段停留", en: "Second phrase hold" }, duration: current.bHold },
+      { label: { zh: "弧线接力", en: "Arc relay" }, duration: current.arc },
+      { label: { zh: "第三段停留", en: "Final phrase hold" }, duration: current.cHold }
+    ].filter((phase) => phase.duration > 0);
+    let start = 0;
+    phases.forEach((phase) => { phase.start = start; start += phase.duration; });
+    return { title: { zh: "字标接力时间轴", en: "Glyph relay timeline" }, duration: cycleDuration(), time: timelineTime(), phases, seek: setTime };
+  };
   updateOutputs(); lastDuration = cycleDuration(); document.fonts.ready.then(restart); previewLoop();
 })();

@@ -112,6 +112,23 @@
     drawPreview(next);
   }
 
+  window.cellmotionTimelineProvider = () => {
+    const timing = timingConfig();
+    const phases = [
+      { label: { zh: "开场停留", en: "Intro hold" }, duration: timing.intro },
+      { label: { zh: "文字切换", en: "Text transition" }, duration: timing.gap },
+      { label: { zh: "主句逐字出现", en: "Type-on" }, duration: timing.typing },
+      { label: { zh: "完整句停留", en: "Full-line hold" }, duration: timing.hold }
+    ];
+    let start = 0;
+    phases.forEach((phase) => { phase.start = start; start += phase.duration; });
+    return {
+      title: { zh: "渐变文字时间轴", en: "Gradient type timeline" }, phases,
+      time: timelineTime(),
+      seek(time) { paused = true; setTime(time); $("#pauseButton").textContent = "继续"; }
+    };
+  };
+
   function restart() {
     pausedAt = 0;
     animationStart = performance.now();

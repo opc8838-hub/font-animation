@@ -29,10 +29,12 @@
   <style> body {padding: 0; margin: 0;} canvas {vertical-align: top;} </style>
   <link rel="stylesheet" href="stg-cn.css">
   <link rel="stylesheet" href="workspace-editor.css">
-<link rel="stylesheet" href="site-preferences.css?v=20260926-18">
+<link rel="stylesheet" href="site-preferences.css?v=20260926-20">
+  <link rel="stylesheet" href="workspace-editor.css?v=20260927-standard11">
+  <link rel="stylesheet" href="stg-standard-tools.css?v=20260928-standard-tools-v48">
 </head>
 
-<body>
+<body data-editor-standard="true" data-morph-port="snap">
   <main id="stgCanvasStage" class="stg-canvas-stage" aria-label="Snap 动画效果画布"></main>
   <div id="widget">
     <div class="dropdown">
@@ -210,7 +212,13 @@
     }
   </script>
   <script src="stg-cn.js?v=20260824-fonts1"></script>
-<script defer src="site-preferences.js?v=20260926-18"></script>
+  <script src="js/continuation-gif.js"></script>
+  <script src="js/h264-mp4-encoder.web.js"></script>
+    <script src="stg-standard-tools.js?v=20260928-standard-tools-v48"></script>
+<script defer src="site-preferences.js?v=20260926-20"></script>
+
+  <script src="cellmotion-ai-manifest.js?v=20260927-standard"></script>
+  <script src="cellmotion-ai-menu.js?v=20260928-ai-definitions1"></script>
 </body>
 
 </html>

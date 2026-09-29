@@ -603,6 +603,17 @@
   $("#exportVideo").addEventListener("click", () => exportVideo(false));
   $("#exportVerticalVideo").addEventListener("click", () => exportVideo(true));
 
+  window.cellmotionTimelineProvider = () => {
+    const current = timing();
+    const phases = [
+      { label: { zh: "主体落入", en: "Subject drop" }, start: 0, duration: current.drop },
+      { label: { zh: "落点稳定", en: "Settle" }, start: current.drop, duration: current.settle },
+      { label: { zh: "背景与标题转场", en: "Background and title transition" }, start: current.shiftStart, duration: Math.max(1 / fps, current.finish - current.shiftStart) },
+      { label: { zh: "结束停留", en: "Final hold" }, start: current.finish, duration: current.hold }
+    ].filter((phase) => phase.duration > 0);
+    return { title: { zh: "主体切换时间轴", en: "Subject transition timeline" }, duration: current.cycle, time: currentTime(), phases, seek: setTime };
+  };
+
   renderAssetGrid();
   document.fonts.ready.then(restartPreview);
   updateOutputs();

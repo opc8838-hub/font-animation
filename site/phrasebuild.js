@@ -365,6 +365,7 @@
       canvas.dataset.revealAlpha = incomingAlpha.toFixed(4);
       canvas.dataset.rhythm = activeStage?.rhythm || "none";
       canvas.dataset.timelineTime = localTime.toFixed(4);
+      canvas.dataset.cycleDuration = currentTiming.cycle.toFixed(4);
       canvas.dataset.nextBeat = String(currentTiming.stages.findIndex((stage) => stage.at > localTime) + 1);
       canvas.dataset.beatTimes = currentTiming.stages.map((stage) => stage.at.toFixed(3)).join(",");
       canvas.dataset.horizontalCenter = inputs.horizontalPosition.value;
@@ -516,6 +517,19 @@
   }
   $("#exportVideo").addEventListener("click", () => exportVideo(false));
   $("#exportVerticalVideo").addEventListener("click", () => exportVideo(true));
+
+  window.cellmotionTimelineProvider = () => {
+    const current = timing();
+    const phases = current.stages.map((stage, index) => {
+      const next = current.stages[index + 1];
+      return {
+        label: { zh: `第 ${index + 1} 组呈现`, en: `Group ${index + 1} reveal` },
+        start: stage.at,
+        duration: Math.max(1 / fps, (next?.at ?? current.cycle) - stage.at)
+      };
+    });
+    return { title: { zh: "组句呈现时间轴", en: "Phrase reveal timeline" }, duration: current.cycle, time: paused ? pausedAt : currentTime(), phases, seek: setTime };
+  };
 
   renderPhraseList();
   updateOutputs();

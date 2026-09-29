@@ -647,6 +647,29 @@
     const options = settings();
     const line = marks(options);
     const beats = timelineBeats(options, line);
+    const ruler = $("#beforeAfterTimelineRuler");
+    if (ruler) {
+      const duration = Math.max(.05, line.cycleEnd);
+      const width = Math.max(780, duration * 96);
+      const stride = duration > 15 ? 5 : duration > 8 ? 2 : 1;
+      ruler.style.width = `${width}px`;
+      ruler.replaceChildren();
+      for (let time = 0; time <= duration + .001; time += stride) {
+        const tick = document.createElement("span");
+        tick.className = "is-major";
+        tick.textContent = `${Number(time.toFixed(2))}s`;
+        tick.style.left = `${time / duration * 100}%`;
+        ruler.append(tick);
+      }
+      if (Math.abs((duration / stride) - Math.round(duration / stride)) > .001) {
+        const tick = document.createElement("span");
+        tick.className = "is-major";
+        tick.textContent = `${duration.toFixed(2)}s`;
+        tick.style.left = "100%";
+        ruler.append(tick);
+      }
+    }
+    track.style.setProperty("--ba-timeline-width", `${Math.max(780, line.cycleEnd * 96)}px`);
     track.replaceChildren();
     list.replaceChildren();
     beats.forEach((beat) => {

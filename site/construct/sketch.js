@@ -106,6 +106,11 @@ function windowResized(){
   setText();
 }
 
+function setPGsize(value){
+  pgTextSize = Math.max(24, Math.min(200, Number(value) || 100));
+  setText();
+}
+
 function sinEngine(aCount, aLength, bCount,bLength, Speed, slopeN) {
   var sinus = sin((frameCount*Speed + aCount*aLength + bCount*bLength));
   var sign = (sinus >= 0 ? 1: -1);

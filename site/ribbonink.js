@@ -1346,33 +1346,65 @@
 
   function timelinePhases() {
     const span = timing();
+    const english = document.body.dataset.editorLanguage === "en" || localStorage.getItem("cellmotion-site-language") === "en";
+    const label = (zh, en) => english ? en : zh;
     if (twoPages()) return [
-      { id: "write", label: "首页写入", duration: span.write, color: PHASE_COLORS[0] },
-      { id: "flow", label: "首页流动", duration: span.flow, color: PHASE_COLORS[1] },
-      { id: "bridge", label: "续写·弹出", duration: span.bridge, color: PHASE_COLORS[2] },
-      { id: "page2", label: "收笔轻弹", duration: span.finish, color: PHASE_COLORS[3] },
-      { id: "settled", label: "动作后停留", duration: span.endHold, color: "#777780" },
-      { id: "textExit", label: "文字退场", duration: span.textExit, color: "#9e499f" },
-      { id: "empty", label: "结束留白", duration: span.emptyHold, color: "#657476" }
+      { id: "write", label: label("首页写入", "Page 1 write"), duration: span.write, color: PHASE_COLORS[0] },
+      { id: "flow", label: label("首页流动", "Page 1 flow"), duration: span.flow, color: PHASE_COLORS[1] },
+      { id: "bridge", label: label("续写·弹出", "Continue · pop"), duration: span.bridge, color: PHASE_COLORS[2] },
+      { id: "page2", label: label("收笔轻弹", "Page 2 finish"), duration: span.finish, color: PHASE_COLORS[3] },
+      { id: "settled", label: label("动作后停留", "Post-motion hold"), duration: span.endHold, color: "#777780" },
+      { id: "textExit", label: label("文字退场", "Text exit"), duration: span.textExit, color: "#9e499f" },
+      { id: "empty", label: label("结束留白", "End blank"), duration: span.emptyHold, color: "#657476" }
     ].filter(phase => phase.duration > 0);
     return [
-      { id: "write", label: "写入", duration: span.write, color: PHASE_COLORS[0] },
-      { id: "flow", label: "流动", duration: span.flow, color: PHASE_COLORS[1] },
-      { id: "erase", label: "擦除", duration: span.erase, color: PHASE_COLORS[2] },
-      { id: inputs.drawingMode.value === "freehand" ? "hold" : "singleSettled", label: inputs.drawingMode.value === "freehand" ? "留白" : "动作后停留", duration: span.hold, color: PHASE_COLORS[3] },
-      { id: "singleTextExit", label: "文字退场", duration: span.textExit || 0, color: "#9e499f" },
-      { id: "singleEmpty", label: "结束留白", duration: span.emptyHold || 0, color: "#657476" }
+      { id: "write", label: label("写入", "Write"), duration: span.write, color: PHASE_COLORS[0] },
+      { id: "flow", label: label("流动", "Flow"), duration: span.flow, color: PHASE_COLORS[1] },
+      { id: "erase", label: label("擦除", "Erase"), duration: span.erase, color: PHASE_COLORS[2] },
+      { id: inputs.drawingMode.value === "freehand" ? "hold" : "singleSettled", label: inputs.drawingMode.value === "freehand" ? label("留白", "Hold") : label("动作后停留", "Post-motion hold"), duration: span.hold, color: PHASE_COLORS[3] },
+      { id: "singleTextExit", label: label("文字退场", "Text exit"), duration: span.textExit || 0, color: "#9e499f" },
+      { id: "singleEmpty", label: label("结束留白", "End blank"), duration: span.emptyHold || 0, color: "#657476" }
     ].filter(phase => phase.duration > 0);
   }
 
   function renderTimeline() {
     const phases = timelinePhases();
     const total = timing().total;
-    $("#timelineBar").innerHTML = phases.map((phase) =>
-      `<div class="me-choreo-block" data-phase="${phase.id}" style="width:${phase.duration / total * 100}%;background:${phase.color}"><b>${phase.label}</b><small>${phase.duration.toFixed(2)}s</small></div>`
-    ).join("");
+    const track = $("#timelineTrack");
+    const ruler = $("#timelineRuler");
+    const availableWidth = Math.max(0, track?.closest(".me-choreo-scroll")?.clientWidth - 6 || 0);
+    const width = Math.max(560, total * 90, availableWidth);
+    if (track) track.style.width = `${width}px`;
+    if (ruler) {
+      ruler.style.width = `${Math.max(100, width - 16)}px`;
+      ruler.replaceChildren();
+      const stride = total > 15 ? 5 : total > 8 ? 2 : 1;
+      for (let time = 0; time <= total + .001; time += stride) {
+        const tick = document.createElement("span");
+        tick.className = "is-major";
+        tick.textContent = `${Number(time.toFixed(2))}s`;
+        tick.style.left = `${time / Math.max(.01, total) * 100}%`;
+        ruler.append(tick);
+      }
+      if (Math.abs((total / stride) - Math.round(total / stride)) > .001) {
+        const tick = document.createElement("span");
+        tick.className = "is-major";
+        tick.textContent = `${total.toFixed(2)}s`;
+        tick.style.left = "100%";
+        ruler.append(tick);
+      }
+    }
+    let elapsed = 0;
+    $("#timelineBar").style.width = `${Math.max(100, width - 16)}px`;
+    $("#timelineBar").innerHTML = phases.map((phase) => {
+      const start = elapsed;
+      elapsed += phase.duration;
+      return `<div class="me-choreo-block" data-phase="${phase.id}" style="width:${phase.duration / total * 100}%;background:${phase.color}" title="${phase.label} · ${start.toFixed(2)}s → ${elapsed.toFixed(2)}s"><b>${phase.label}</b><small>${phase.duration.toFixed(2)}s</small></div>`;
+    }).join("");
+    const english = document.body.dataset.editorLanguage === "en" || localStorage.getItem("cellmotion-site-language") === "en";
+    const durationUnit = english ? "seconds" : "秒";
     $("#timelineLegend").innerHTML = phases.map((phase) =>
-      `<span><i style="background:${phase.color}"></i>${phase.label} · ${phase.duration.toFixed(2)} 秒</span>`
+      `<span><i style="background:${phase.color}"></i>${phase.label} · ${phase.duration.toFixed(2)} ${durationUnit}</span>`
     ).join("");
   }
 
@@ -1952,7 +1984,8 @@
   function setExportBusy(busy, message) {
     state.exporting = busy;
     if (!busy && state.backgroundRuntime) state.backgroundRuntime.previewNeedsSync = true;
-    $("#editorPanel").inert = busy;
+    const editorPanel = $("#editorPanel");
+    if (editorPanel) editorPanel.inert = busy;
     workspace.inert = busy;
     exportButtons.forEach((button) => { button.disabled = busy; });
     exportStatus.textContent = message;
@@ -2248,6 +2281,9 @@
   });
 
   window.addEventListener("resize", updateStageLayout);
+  window.addEventListener("resize", renderTimeline);
+  document.addEventListener("tc-languagechange", renderTimeline);
+  document.addEventListener("cellmotion:languagechange", renderTimeline);
   window.addEventListener("beforeunload", () => {
     cancelAnimationFrame(state.raf);
     if (state.autosaveTimer) {

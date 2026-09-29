@@ -702,13 +702,38 @@
     const total = Math.max(1, cycleFrames());
     const colors = { lead: "#d7ff2f", bounce: "#8ec8ff", push: "#f3d19e", hold: "#e7e7ea", recede: "#ffc4d6" };
     const backup = track.innerHTML;
+    const duration = total / FPS;
+    const timelineWidth = Math.max(560, duration * 90);
+    const scroll = document.createElement("div");
+    scroll.className = "swell-timeline-scroll";
+    const ruler = document.createElement("div");
+    ruler.className = "me-choreo-ruler swell-time-ruler";
+    ruler.setAttribute("aria-hidden", "true");
+    ruler.style.width = `${timelineWidth}px`;
+    const stride = duration > 15 ? 5 : duration > 8 ? 2 : 1;
+    for (let second = 0; second <= duration + .001; second += stride) {
+      const tick = document.createElement("span");
+      tick.className = "is-major";
+      tick.textContent = `${Number(second.toFixed(2))}s`;
+      tick.style.left = `${second / duration * 100}%`;
+      ruler.append(tick);
+    }
+    if (Math.abs(duration / stride - Math.round(duration / stride)) > .001) {
+      const tick = document.createElement("span");
+      tick.className = "is-major";
+      tick.textContent = `${duration.toFixed(2)}s`;
+      tick.style.left = "100%";
+      ruler.append(tick);
+    }
     const bar = document.createElement("div");
     bar.className = "swell-track-bar";
+    bar.style.width = `${timelineWidth}px`;
+    bar.style.height = "88px";
     beats.forEach((beat, index) => {
       const cell = document.createElement("div");
       const span = Math.max(0.01, beat.end - beat.start);
       cell.className = `swell-beat-block is-${beat.kind}`;
-      cell.style.cssText = `width:${Math.max(14, (span / total) * 100)}%;min-width:76px;min-height:88px;background:${colors[beat.kind] || "#ececef"};color:#111;border:1px solid #111;padding:8px;`;
+      cell.style.cssText = `position:absolute;left:${beat.start / total * 100}%;top:0;width:${span / total * 100}%;height:100%;min-width:0;min-height:0;background:${colors[beat.kind] || "#ececef"};color:#111;border:1px solid #111;padding:7px;`;
       cell.setAttribute("role", "button");
       cell.tabIndex = 0;
       cell.innerHTML = `<em>${index + 1}</em><strong>${beat.label}</strong><small>${(span / FPS).toFixed(2)}秒</small>`;
@@ -730,8 +755,9 @@
       item.innerHTML = `<i class="is-${beat.kind}"></i><b>${index + 1}. ${beat.label}</b><span>${(beat.start / FPS).toFixed(2)}s → ${(beat.end / FPS).toFixed(2)}s</span>`;
       list.append(item);
     });
+    scroll.append(ruler, bar);
     try {
-      track.replaceChildren(bar, list);
+      track.replaceChildren(scroll, list);
     } catch (error) {
       console.error(error);
       track.innerHTML = backup;

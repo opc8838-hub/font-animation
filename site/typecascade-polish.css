@@ -46,6 +46,27 @@ body.tc-workspace[data-editor-theme="light"] {
   --tc-logo-bg: #fff;
   color-scheme: light;
 }
+/* Site preferences store theme on <html>; mirror the same tokens into legacy workspaces. */
+html[data-site-theme="light"] body.tc-workspace {
+  --tc-bg: #efeff2;
+  --tc-panel: #fff;
+  --tc-surface: #f6f6f8;
+  --tc-input: #f0f0f4;
+  --tc-line: #ddddE5;
+  --tc-text: #24232b;
+  --tc-muted: #6e6c7d;
+  --tc-accent: #7650d5;
+  --tc-accent-solid: #7954df;
+  --tc-selected: #eee7fc;
+  --tc-growth-soft: #f0f7d5;
+  --tc-growth-line: #b5cc59;
+  --tc-growth-button-line: #8fac17;
+  --tc-track: #dad8e3;
+  --tc-canvas-surround: #e7e7ec;
+  --tc-logo-bg: #fff;
+  color-scheme: light;
+}
+html[data-site-theme="dark"] body.tc-workspace { color-scheme: dark; }
 .tc-workspace .tc-header,
 .tc-workspace .tc-content,
 .tc-workspace .gm-inspector,
@@ -347,6 +368,65 @@ body.tc-workspace[data-editor-theme="light"] {
 .tc-workspace .export-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; }
 .tc-workspace .scheme-section .hint { min-height: 18px; margin-top: 8px; font-size: 12px; color: var(--tc-muted); }
 .tc-workspace .tc-scheme { background: transparent; border: 0; border-top: 1px solid var(--tc-line); border-radius: 0; padding: 14px 0 0; margin-bottom: 0; }
+.tc-workspace .gm-scheme-fallback { margin-top: auto; padding: 14px 2px 2px; border: 0; border-top: 1px solid var(--tc-line); border-radius: 0; background: transparent; }
+.tc-workspace .gm-scheme-title { display: block; margin: 0 0 10px; color: var(--tc-text); font-size: 13px; }
+.tc-workspace .gm-scheme-actions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }
+.tc-workspace .gm-scheme-actions button { min-width: 0; min-height: 38px; padding: 7px 8px; border: 1px solid var(--tc-line); border-radius: 9px; background: var(--tc-surface); color: var(--tc-text); font-size: 12px; line-height: 1.3; }
+.tc-workspace .gm-scheme-actions button:hover { border-color: var(--tc-accent); background: var(--tc-selected); }
+.tc-workspace .gm-scheme-status { display: block; margin-top: 7px; color: var(--tc-muted); font-size: 10px; line-height: 1.4; }
+.tc-workspace[data-editor-theme="light"] .gm-scheme-actions button { background: #f2f1f5; color: #302f37; border-color: #dedde4; }
+
+/* Keep the shared scheme actions inside the narrow left rail. */
+body.tc-workspace :is(.gm-sidebar, .tc-content) { min-width: 0; box-sizing: border-box; }
+body.tc-workspace :is(.gm-sidebar, .tc-content) .gm-scheme-fallback,
+body.tc-workspace :is(.gm-sidebar, .tc-content) > .tc-scheme { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }
+body.tc-workspace :is(.gm-sidebar, .tc-content) .gm-scheme-actions,
+body.tc-workspace :is(.gm-sidebar, .tc-content) .gm-actions { width: 100%; min-width: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+body.tc-workspace :is(.gm-sidebar, .tc-content) :is(.gm-scheme-actions, .gm-actions) button { width: 100%; min-width: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+
+/* Legacy Crash controls inherit the editor theme instead of their original dark panel colors. */
+body.tc-workspace[data-morph-port="crash"][data-editor-theme="light"] #glyphMorphInspector :is(.collapsible, .resetPos, .addDebris, .removeDebris) {
+  border: 1px solid var(--tc-line) !important;
+  background: var(--tc-surface) !important;
+  color: var(--tc-text) !important;
+}
+body.tc-workspace[data-morph-port="crash"][data-editor-theme="light"] #glyphMorphInspector :is(label, p, h1, h2, h3, span) {
+  color: var(--tc-text) !important;
+}
+body.tc-workspace[data-morph-port="crash"][data-editor-theme="light"] #glyphMorphInspector :is(input:not([type="range"]):not([type="color"]), textarea, select) {
+  border: 1px solid var(--tc-line) !important;
+  background: var(--tc-panel) !important;
+  color: var(--tc-text) !important;
+}
+html[data-site-theme="light"] body.tc-workspace #glyphMorphInspector :is(label, p, h1, h2, h3, span, output, .section-label) {
+  color: #302f37 !important;
+}
+html[data-site-theme="light"] body.tc-workspace #glyphMorphInspector :is(.tc-tabs button[aria-pressed="true"], .collapsible[aria-expanded="true"]) {
+  border: 1px solid #c4e52d !important;
+  background: #d7ff2f !important;
+  color: #222610 !important;
+}
+html[data-site-theme="light"] body.tc-workspace #glyphMorphInspector :is(.tc-tabs button:not([aria-pressed="true"]), .collapsible[aria-expanded="false"]) {
+  background: #f2f1f5 !important;
+  color: #302f37 !important;
+}
+body.tc-workspace #glyphMorphInspector :is(button, .tc-content button) { min-width: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+body.tc-workspace[data-editor-theme="dark"] #phraseList .phrase-card,
+html[data-site-theme="dark"] #phraseList .phrase-card {
+  border-color: #3b3a43;
+  background: #222226;
+  color: #ededf1;
+}
+body.tc-workspace[data-editor-theme="dark"] #phraseList .phrase-card :is(label, output, small),
+html[data-site-theme="dark"] #phraseList .phrase-card :is(label, output, small) {
+  color: #c9c7d2;
+}
+body.tc-workspace[data-editor-theme="dark"] #phraseList .phrase-card :is(input:not([type="range"]), select),
+html[data-site-theme="dark"] #phraseList .phrase-card :is(input:not([type="range"]), select) {
+  border-color: #45444e;
+  background: #2b2b30;
+  color: #f2f1f5;
+}
 .tc-workspace :is(.tc-properties,.tc-row-list,.gm-library-browse,.tc-phase-scroll,.tc-phase-details ol) { scrollbar-width: thin; scrollbar-color: var(--tc-track) transparent; }
 .tc-workspace .gm-background-video-head { align-items: center; }
 .tc-workspace .gm-background-video-head span { flex: 0 0 auto; padding: 3px 7px; border-radius: 999px; background: var(--tc-growth-soft); color: var(--tc-growth-line); font-size: 10px; }
@@ -506,6 +586,42 @@ body.tc-workspace,
 .tc-workspace .tc-hint { min-height: 36px; }
 .tc-workspace .tc-properties[data-panel="global"] .gm-help { min-height: 60px; }
 .tc-workspace[data-editor-language="en"] .gm-inline-icon-chip strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tc-workspace .me-choreo-ruler { position: relative; display: block; height: 28px; min-height: 28px; border-bottom: 1px solid var(--tc-line, #36363d); }
+.tc-workspace .me-choreo-ruler span { position: absolute; top: 4px; height: 22px; padding-left: 4px; border-left: 1px solid var(--tc-muted, #aaa8b6); color: var(--tc-muted, #aaa8b6); font: 10px/1.2 Inter, "Noto Sans SC", sans-serif; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tc-workspace .me-choreo-ruler span.is-major { border-left-color: var(--tc-text, #ededf1); color: var(--tc-text, #ededf1); }
+.tc-workspace .sequence-choreo-section .me-choreo-scroll { height: 108px; max-height: 108px; overflow-x: auto; overflow-y: hidden; }
+.tc-workspace .sequence-choreo-section .me-choreo-bar { height: 78px; min-height: 78px; }
+.tc-workspace .sequence-choreo-section .me-choreo-playhead { z-index: 4; width: 2px; background: var(--tc-text, #ededf1); pointer-events: none; }
+.tc-workspace .gm-loop-timeline { min-width: 0; padding: 12px 14px; }
+.tc-workspace .gm-loop-timeline-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; color: var(--tc-muted); font-size: 11px; }
+.tc-workspace .gm-loop-timeline-head strong { color: var(--tc-text); font-size: 12px; font-weight: 550; }
+.tc-workspace .gm-loop-timeline-head output { font-variant-numeric: tabular-nums; }
+.tc-workspace .gm-loop-timeline .me-choreo-scroll { overflow-x: auto; overflow-y: hidden; }
+.tc-workspace .gm-loop-track { min-width: 100%; }
+.tc-workspace .gm-loop-track .me-choreo-ruler { height: 25px; }
+.tc-workspace .gm-loop-track .me-choreo-bar { position: relative; height: 50px; min-height: 50px; margin-top: 4px; overflow: hidden; border-radius: 10px; }
+.tc-workspace .gm-loop-track .me-choreo-block { position: absolute; inset: 0; display: flex; align-items: center; justify-content: flex-start; width: 100%; min-height: 50px; padding: 8px 12px; border: 0; border-radius: 10px; color: #24251d; text-align: left; }
+.tc-workspace .gm-loop-track .me-choreo-block.me-phase-lime { background: var(--tc-growth) !important; color: var(--tc-growth-ink) !important; }
+.tc-workspace .gm-loop-track .me-choreo-bar { display: flex !important; gap: 4px !important; overflow: hidden !important; }
+.tc-workspace .gm-loop-track .me-choreo-block {
+  position: relative !important; inset: auto !important; width: auto !important; height: 50px !important; min-height: 50px !important;
+  min-width: 42px !important; flex-basis: 0 !important; flex-shrink: 1 !important; padding: 6px 8px !important; gap: 2px !important;
+  display: flex !important; flex-direction: column !important; align-items: flex-start !important; justify-content: space-between !important;
+  overflow: hidden !important; border-radius: 10px !important; font-size: 10px !important; text-align: left !important;
+}
+.tc-workspace .gm-loop-track .me-choreo-block strong { display: block; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px !important; }
+.tc-workspace .gm-loop-track .me-choreo-block small { display: block; margin: 0 0 0 auto !important; font-size: 9px !important; }
+.tc-workspace .gm-loop-track .me-choreo-block.is-phase-1 { background: var(--me-phase-lime) !important; color: #222 !important; }
+.tc-workspace .gm-loop-track .me-choreo-block.is-phase-2 { background: var(--me-phase-sky) !important; color: #222 !important; }
+.tc-workspace .gm-loop-track .me-choreo-block.is-phase-3 { background: var(--me-phase-mint) !important; color: #222 !important; }
+.tc-workspace .gm-loop-track .me-choreo-block.is-phase-4 { background: var(--me-phase-coral) !important; color: #222 !important; }
+.tc-workspace .gm-loop-track .me-choreo-block.is-phase-5 { background: var(--me-phase-violet) !important; color: #222 !important; }
+.tc-workspace .gm-loop-track .me-choreo-block.is-phase-6 { background: var(--me-phase-amber) !important; color: #222 !important; }
+.tc-workspace .gm-loop-track .me-choreo-block small { margin-left: auto; color: inherit; opacity: .8; font-variant-numeric: tabular-nums; }
+.tc-workspace .gm-loop-track .me-choreo-playhead { position: absolute; top: 0; bottom: 0; left: 0; z-index: 3; width: 2px; background: #ff4264; pointer-events: none; }
+body.tc-workspace .gm-inspector .tc-properties :is(label,.section-label,.section-note,.hint,small,legend) { color: var(--tc-muted) !important; }
+body.tc-workspace .gm-inspector .tc-properties :is(h1,h2,h3,h4,strong) { color: var(--tc-text) !important; }
+body.tc-workspace[data-editor-theme="light"] .gm-inspector .tc-properties :is(label,.section-label,.section-note,.hint,small,legend) { color: #646274 !important; }
 @media (prefers-reduced-motion: reduce) {
   .tc-workspace, .tc-workspace *, .tc-workspace *::before, .tc-workspace *::after { transition-duration: 0ms !important; }
 }
@@ -552,4 +668,108 @@ body.tc-workspace,
   .tc-workspace .tc-language-toggle { width: 34px; flex-basis: 34px; }
   .tc-workspace .tc-ai-trigger { width: 51px; }
   .tc-workspace .tc-export-shortcut { width: 62px; flex-basis: 62px; font-size: 11px; }
+}
+
+/* Keep visually hidden native controls from expanding mobile workspaces. */
+body.tc-workspace[data-editor-standard="true"] .tc-properties select.tc-native-select,
+body.tc-workspace .tc-properties select.tc-native-select {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  min-width: 1px !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+@media (max-width: 860px) {
+  body.tc-workspace[data-editor-standard="true"] .tc-properties :is(input:not([type="range"]), select, textarea) {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+/* Hidden source selects remain reachable through their custom UI without affecting layout. */
+body.tc-workspace[data-editor-standard="true"] #glyphMorphInspector .tc-properties select.tc-native-select {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  min-width: 1px !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+@media (max-width: 860px) {
+  body.me-motion-editor #glyphMorphInspector select.tc-native-select {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    min-width: 1px !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  body.me-motion-editor .gm-canvas-card,
+  body.me-motion-editor .canvas-size-section {
+    box-sizing: border-box !important;
+    width: min(calc(100vw - 24px), 100%) !important;
+    max-width: calc(100vw - 24px) !important;
+    min-width: 0 !important;
+    margin-inline: auto !important;
+  }
+  body.me-motion-editor .site-preferences-inline { gap: 2px; flex: 0 0 auto; }
+  body.me-motion-editor .site-preferences-inline .site-preference-button {
+    flex: 0 0 30px;
+    width: 30px;
+    min-width: 30px;
+    padding-inline: 2px;
+  }
+}
+
+@media (max-width: 860px) {
+  body.tc-workspace .tc-canvas-toolbar .gm-canvas-card .canvas-size-section {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+  body.tc-workspace .tc-canvas-toolbar .gm-canvas-card .canvas-size-section > * {
+    grid-column: 1 / -1 !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  body.tc-workspace .tc-canvas-toolbar .gm-canvas-card .canvas-size-section :is(.tc-select-trigger,.hint) {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 860px) {
+  body.tc-workspace select.tc-native-select,
+  body.tc-workspace #exportPreset.tc-native-select,
+  body.me-motion-editor select.tc-native-select,
+  body.me-motion-editor #exportPreset.tc-native-select {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    min-width: 1px !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
 }
