@@ -50,13 +50,18 @@
     </section>`;
   const cityFont = `
     <section>
-      <div class="section-heading"><p class="section-label">字体</p><small class="section-note">主字、英文与副标题可使用统一多语言字体库</small></div>
+      <div class="section-heading"><p class="section-label">字体</p><small class="section-note">按原片分开：中文主字、英文、副标题、署名各用一套字体</small></div>
       <div class="sequence-font-grid">
-        <label><span class="section-label">字体家族</span><select id="fontFamily"><option value="noto-hk" selected>Noto Sans HK</option><option value="noto">Noto Sans SC</option><option value="city-black">Noto Sans SC Black</option><option value="inter">Inter</option><option value="space">Space Grotesk</option><option value="manrope">Manrope</option><option value="poppins">Poppins</option></select></label>
+        <label><span class="section-label">主中文字体</span><select id="fontFamily"><option value="hk-lettering" selected>原片字形 · 只在香港</option><option value="noto-hk">Noto Sans HK</option><option value="noto">Noto Sans SC</option><option value="city-black">Noto Sans SC Black</option><option value="montserrat">Montserrat</option><option value="albert">Albert Sans</option><option value="inter">Inter</option><option value="space">Space Grotesk</option><option value="manrope">Manrope</option><option value="poppins">Poppins</option></select></label>
         <label><span class="section-label">主中文字重</span><select id="cityHanWeight"><option value="300">Light</option><option value="400">Regular</option><option value="500" selected>Medium</option><option value="600">Semibold</option><option value="700">Bold</option><option value="800">Extra Bold</option></select></label>
-        <label><span class="section-label">英文字重</span><select id="cityEnglishWeight"><option value="300">Light</option><option value="400">Regular</option><option value="500" selected>Medium</option><option value="600">Semibold</option><option value="700">Bold</option></select></label>
-        <label><span class="section-label">副标题字重</span><select id="citySubtitleWeight"><option value="400">Regular</option><option value="500">Medium</option><option value="600">Semibold</option><option value="700" selected>Bold</option><option value="800">Extra Bold</option></select></label>
+        <label><span class="section-label">英文字体</span><select id="cityEnglishFont"><option value="follow">跟随主字体</option><option value="noto-hk">Noto Sans HK</option><option value="noto">Noto Sans SC</option><option value="city-black">Noto Sans SC Black</option><option value="montserrat" selected>Montserrat</option><option value="albert">Albert Sans</option><option value="inter">Inter</option><option value="space">Space Grotesk</option><option value="manrope">Manrope</option><option value="poppins">Poppins</option></select></label>
+        <label><span class="section-label">英文字重</span><select id="cityEnglishWeight"><option value="300">Light</option><option value="400">Regular</option><option value="500">Medium</option><option value="600">Semibold</option><option value="700" selected>Bold</option><option value="800">Extra Bold</option></select></label>
+        <label><span class="section-label">副标题字体</span><select id="citySubtitleFont"><option value="follow">跟随主字体</option><option value="noto-hk" selected>Noto Sans HK</option><option value="noto">Noto Sans SC</option><option value="city-black">Noto Sans SC Black</option><option value="montserrat">Montserrat</option><option value="albert">Albert Sans</option><option value="inter">Inter</option><option value="space">Space Grotesk</option><option value="manrope">Manrope</option><option value="poppins">Poppins</option></select></label>
+        <label><span class="section-label">副标题字重</span><select id="citySubtitleWeight"><option value="400">Regular</option><option value="500">Medium</option><option value="600">Semibold</option><option value="700">Bold</option><option value="750" selected>Bold 750 · 原片</option><option value="800">Extra Bold</option><option value="900">Black</option></select></label>
+        <label><span class="section-label">署名字体</span><select id="cityFooterFont"><option value="follow">跟随主字体</option><option value="noto-hk">Noto Sans HK</option><option value="noto">Noto Sans SC</option><option value="city-black">Noto Sans SC Black</option><option value="montserrat">Montserrat</option><option value="albert" selected>Albert Sans</option><option value="inter">Inter</option><option value="space">Space Grotesk</option><option value="manrope">Manrope</option><option value="poppins">Poppins</option></select></label>
+        <label><span class="section-label">署名字重</span><select id="cityFooterWeight"><option value="400">Regular</option><option value="500">Medium</option><option value="600" selected>Semibold</option><option value="700">Bold</option></select></label>
       </div>
+      <p class="hint">“原片字形”按参考视频逐笔还原了“只在香港”四个字（字重固定为原片粗细）；输入其它汉字时自动使用 Noto Sans HK。</p>
     </section>`;
   const commonColors = `
     <section class="sequence-colors">
@@ -66,12 +71,12 @@
     </section>`;
   const cityColors = `
     <section class="sequence-colors">
-      <label>背景<input id="backgroundColor" type="color" value="#050505"></label>
-      <label>主汉字<input id="accentColor" type="color" value="#1dff11"></label>
-      <label>英文字<input id="cityEnglishColor" type="color" value="#1dff11"></label>
-      <label>副标题<input id="citySubtitleColor" type="color" value="#1dff11"></label>
-      <label>单项闪烁<input id="cityFlashColor" type="color" value="#0a5010"></label>
-      <label>署名<input id="textColor" type="color" value="#d5d5d5"></label>
+      <label>背景<input id="backgroundColor" type="color" value="#000000"></label>
+      <label>主汉字<input id="accentColor" type="color" value="#4cebfa"></label>
+      <label>英文字<input id="cityEnglishColor" type="color" value="#4cebfa"></label>
+      <label>副标题<input id="citySubtitleColor" type="color" value="#4cebfa"></label>
+      <label>单项闪烁<input id="cityFlashColor" type="color" value="#0f3f45"></label>
+      <label>署名<input id="textColor" type="color" value="#ffffff"></label>
     </section>`;
   const commonExport = `
     <section class="transport" aria-label="时间轴控制"><button id="restartButton" type="button">重播</button><button id="pauseButton" type="button">暂停</button><button id="backButton" type="button">−1 帧</button><button id="forwardButton" type="button">+1 帧</button></section>
@@ -237,7 +242,7 @@
         <div class="section-heading"><p class="section-label">文字内容</p><small class="section-note">输入任意字数；换行决定排版，顺序单独编排</small></div>
         <label class="stacked-control">主汉字<textarea id="cityHanLines">只在\n香港</textarea></label>
         <div class="controls-grid">
-          <label>播放结构<select id="cityTimelineMode"><option value="build" selected>逐项搭建 · 动效 11</option><option value="pulse">全文出现后局部闪 · 11-1</option></select></label>
+          <label>播放结构<select id="cityTimelineMode"><option value="neon" selected>原片霓虹点亮 · HK</option><option value="build">逐项搭建 · 动效 11</option><option value="pulse">全文出现后局部闪 · 11-1</option></select></label>
           <label>汉字搭建顺序<select id="cityHanOrder"><option value="row-ltr" selected>逐行 · 左到右</option><option value="row-rtl">逐行 · 右到左</option><option value="column">逐列 · 上到下</option><option value="reverse">全部倒序</option><option value="custom">自定义字位</option></select></label>
           <label>汉字自定义顺序<input id="cityCustomOrder" type="text" value="1,2,3,4" placeholder="例如 2,1,4,3"></label>
           <label>局部闪烁顺序<input id="cityFlashSequence" type="text" value="全部" placeholder="例如 H3,S3+S4,E1,E2"></label>
@@ -245,10 +250,13 @@
         <p class="hint">字位：H=主汉字，E=英文行，S=副标题字；例如 H3,S3+S4,E1。逗号代表先后，+ 代表同时；未填写的字不闪烁，“全部”代表全部参与。</p>
         <label class="stacked-control">逐项闪烁时长 · 可选<input id="cityHanDurations" type="text" value="" placeholder="毫秒，例如 320,450,280；留空使用统一时长"></label>
         <label class="stacked-control">逐项闪完后等待 · 可选<input id="cityFlashGaps" type="text" value="" placeholder="毫秒，例如 40,120,80；留空使用统一等待"></label>
+        <label class="stacked-control">霓虹点亮 · 逐项亮起时间<input id="cityNeonStarts" type="text" value="0,333,500,700,900,1133,1467,1533,1700" placeholder="毫秒，按 只、在、香、港、HONG、KONG、亚洲、都会、国际 的顺序"></label>
+        <label class="stacked-control">霓虹点亮 · 逐项熄灭区间<input id="cityNeonOffs" type="text" value="100-233; 133-167; 33-133; 300-333; 500-533,567-600; 100-267,667-733; 167-267; 133-300; " placeholder="毫秒，相对该项亮起；分号分隔每一项，例如 100-233; 133-167"></label>
+        <p class="hint">霓虹点亮按原片逐帧测得：每一项硬切亮起，在熄灭区间里整项消失，之后常亮。顺序为主汉字（按搭建顺序）→ 英文行 → 副标题组（两端先亮、中间后亮）；未填写的项沿用最后的间隔和 100-233 的熄灭区间。</p>
         <label class="stacked-control">英文叠字<textarea id="cityEnglishLines">HONG\nKONG</textarea></label>
         <label class="stacked-control">底部副标题<input id="citySubtitle" type="text" value="亚洲国际都会"></label>
         <label class="stacked-control">末尾署名<input id="cityFooter" type="text" value="discoverhongkong.cn"></label>
-        <div class="sequence-preset-actions"><button id="referencePreset" type="button">动效 11 参考</button><button id="referenceAltPreset" type="button">动效 11-1 参考</button><button id="chinesePreset" type="button">中文示例</button><button id="restartTop" type="button">从头播放</button></div>
+        <div class="sequence-preset-actions"><button id="referenceHkPreset" type="button">HK 原片参考</button><button id="referencePreset" type="button">动效 11 参考</button><button id="referenceAltPreset" type="button">动效 11-1 参考</button><button id="chinesePreset" type="button">中文示例</button><button id="restartTop" type="button">从头播放</button></div>
       </section>
       ${cityFont}
       <section>
@@ -256,7 +264,7 @@
         <div class="motion-map"><span>${config.map[0]}</span><i>→</i><span>${config.map[1]}</span><i>→</i><span>${config.map[2]}</span></div>
         <div class="controls-grid">
           ${slider("整体速度", "playbackSpeed", .25, 3, .05, 1, "speed")}
-          ${slider("开始出现时间", "cityLeadIn", 0, 2400, 10, 667, "seconds")}
+          ${slider("开始出现时间", "cityLeadIn", 0, 2400, 10, 60, "seconds")}
           ${slider("全文出现到首次闪烁", "cityPulseDelay", 0, 1600, 10, 120, "seconds")}
           ${slider("每字闪完后等待", "cityHanInterval", 0, 1000, 10, 40, "seconds")}
           ${slider("英文每行闪完后等待", "cityEnglishInterval", 0, 1200, 10, 40, "seconds")}
@@ -265,9 +273,9 @@
           ${slider("末个汉字到英文", "citySectionGap", 0, 1200, 10, 150, "seconds")}
           ${slider("末行英文到副标", "citySubtitleDelay", 0, 1800, 10, 260, "seconds")}
           ${slider("副标题每组结束后等待", "citySubtitleInterval", 0, 600, 10, 40, "seconds")}
-          ${slider("署名等待", "cityFooterDelay", 0, 2400, 10, 500, "seconds")}
-          ${slider("署名淡入", "cityFooterFade", 60, 1600, 10, 300, "seconds")}
-          ${slider("完成后停留", "finalHold", 0, 6000, 10, 716, "seconds")}
+          ${slider("署名等待", "cityFooterDelay", 0, 2400, 10, 70, "seconds")}
+          ${slider("署名淡入", "cityFooterFade", 60, 1600, 10, 350, "seconds")}
+          ${slider("完成后停留", "finalHold", 0, 6000, 10, 2490, "seconds")}
           <label>进入节奏<select id="cityRhythm"><option value="flash" selected>闪现点亮</option><option value="rise">柔和上升</option><option value="snap">快速弹入</option><option value="cut">直接切入</option></select></label>
         </div>
       </section>
@@ -275,25 +283,26 @@
         <div class="section-heading"><p class="section-label">字体间距</p><small class="section-note">横向字距与纵向行距分别调整</small></div>
         <div class="controls-grid">
           ${slider("汉字横向间距", "cityHanLetterGap", -80, 160, 1, 8, "pixels")}
-          ${slider("汉字纵向间距", "cityHanVerticalGap", -100, 180, 1, 57, "pixels")}
+          ${slider("汉字纵向间距", "cityHanVerticalGap", -100, 180, 1, 54, "pixels")}
           <label class="check-control"><span>主文字每行等宽</span><input id="cityUniformLineWidth" type="checkbox" checked></label>
-          ${slider("统一行宽", "cityLineWidth", 280, 900, 1, 520, "pixels")}
+          ${slider("统一行宽", "cityLineWidth", 280, 900, 1, 490, "pixels")}
+          ${slider("汉字行宽比例", "cityHanWidthRatio", 80, 130, 1, 105, "percent")}
           ${slider("英文横向间距", "cityEnglishLetterGap", -30, 120, 1, 0, "pixels")}
-          ${slider("英文纵向间距", "cityEnglishVerticalGap", -100, 180, 1, 14, "pixels")}
-          ${slider("副标题横向间距", "citySubtitleLetterGap", -30, 100, 1, 3, "pixels")}
+          ${slider("英文纵向间距", "cityEnglishVerticalGap", -100, 180, 1, 10, "pixels")}
+          ${slider("副标题横向间距", "citySubtitleLetterGap", -30, 100, 1, 9, "pixels")}
           ${slider("署名横向间距", "cityFooterLetterGap", -20, 80, 1, 0, "pixels")}
-          ${slider("中英文纵向距离", "cityBlockGap", -40, 180, 1, 34, "pixels")}
-          ${slider("副标题纵向距离", "citySubtitleGap", -20, 180, 1, 21, "pixels")}
-          ${slider("署名纵向距离", "cityFooterGap", 40, 700, 1, 240, "pixels")}
+          ${slider("中英文纵向距离", "cityBlockGap", -40, 180, 1, 39, "pixels")}
+          ${slider("副标题纵向距离", "citySubtitleGap", -20, 180, 1, -1, "pixels")}
+          ${slider("署名纵向距离", "cityFooterGap", 40, 700, 1, 245, "pixels")}
         </div>
         <label class="stacked-control">各行横向比例 · 关闭等宽时使用<input id="cityHanRowScaleX" type="text" value="100,100" placeholder="百分比，例如 100,92"></label>
-        <label class="stacked-control">各行纵向比例<input id="cityHanRowScaleY" type="text" value="96,130" placeholder="百分比，例如 96,130；第一行扁、第二行高"></label>
+        <label class="stacked-control">各行纵向比例<input id="cityHanRowScaleY" type="text" value="96,128" placeholder="百分比，例如 96,130；第一行扁、第二行高"></label>
       </section>
       <details class="sequence-advanced"><summary>高级细调</summary><div class="controls-grid">
         ${slider("汉字大小", "cityHanSize", 60, 340, 1, 250, "pixels")}
-        ${slider("英文大小", "cityEnglishSize", 36, 220, 1, 170, "pixels")}
-        ${slider("副标题大小", "citySubtitleSize", 18, 120, 1, 80, "pixels")}
-        ${slider("署名大小", "cityFooterSize", 16, 100, 1, 60, "pixels")}
+        ${slider("英文大小", "cityEnglishSize", 36, 220, 1, 165, "pixels")}
+        ${slider("副标题大小", "citySubtitleSize", 18, 120, 1, 77, "pixels")}
+        ${slider("署名大小", "cityFooterSize", 16, 100, 1, 58, "pixels")}
         ${slider("进入位移", "cityEntryDistance", 0, 180, 1, 0, "pixels")}
         ${slider("进入放大", "cityEntryScale", 100, 180, 1, 100, "percent")}
         ${slider("单项闪烁强度", "cityFlashStrength", 0, 100, 1, 88, "percent")}
@@ -309,7 +318,8 @@
   const fontMap = {
     inter: '"Relay Inter", "Relay Noto", sans-serif', space: '"Relay Space", "Relay Noto", sans-serif',
     manrope: '"Relay Manrope", "Relay Noto", sans-serif', poppins: '"Relay Poppins", "Relay Noto", sans-serif',
-    noto: '"Relay Noto", sans-serif', "noto-hk": '"City Noto HK", "Relay Noto", sans-serif', "city-black": '"City Noto Black", "Relay Noto", sans-serif'
+    noto: '"Relay Noto", sans-serif', "noto-hk": '"City Noto HK", "Relay Noto", sans-serif', "city-black": '"City Noto Black", "Relay Noto", sans-serif',
+    "hk-lettering": '"City Noto HK", "Relay Noto", sans-serif', montserrat: '"City Montserrat", "City Noto HK", sans-serif', albert: '"City Albert Sans", "City Noto HK", sans-serif'
   };
   const value = (id, fallback = "") => { const element = $(`#${id}`); return element ? element.value : fallback; };
   const number = (id, fallback = 0) => { const result = Number(value(id, fallback)); return Number.isFinite(result) ? result : fallback; };
@@ -367,9 +377,26 @@
     context.font = `${number("fontWeight", 500)} ${size}px ${window.STGFontLibrary?.family(value("fontFamily", "inter")) || fontMap[value("fontFamily", "inter")] || fontMap.inter}`;
     context.textBaseline = "middle"; context.textAlign = "left";
   }
-  function setCityFont(context, size, weightId, fallbackWeight) {
-    context.font = `${number(weightId, fallbackWeight)} ${size}px ${window.STGFontLibrary?.family(value("fontFamily", "noto-hk")) || fontMap[value("fontFamily", "noto-hk")] || fontMap["noto-hk"]}`;
+  function cityFamily(familyId = "fontFamily") {
+    let key = value(familyId, "follow"); if (!key || key === "follow") key = value("fontFamily", "noto-hk");
+    if (fontMap[key] && !window.STGFontLibrary?.idFor(key)) return fontMap[key];
+    return window.STGFontLibrary?.family(key) || fontMap[key] || fontMap["noto-hk"];
+  }
+  let cityLetteringWanted = mode === "city";
+  function ensureCityLetteringOption() {
+    const select = $("#fontFamily"); if (mode !== "city" || !select) return;
+    window.STGFontLibrary?.enhanceSelect(select);
+    if (!select.querySelector('option[value="hk-lettering"]')) { const group = document.createElement("optgroup"); group.label = "原片字形"; group.innerHTML = '<option value="hk-lettering">原片字形 · 只在香港</option>'; select.prepend(group); }
+    if (cityLetteringWanted) select.value = "hk-lettering";
+  }
+  function setCityFont(context, size, weightId, fallbackWeight, familyId = "fontFamily") {
+    context.font = `${number(weightId, fallbackWeight)} ${size}px ${cityFamily(familyId)}`;
     context.textBaseline = "middle"; context.textAlign = "left";
+  }
+  let cityLetteringActive = false;
+  function cityFillGlyph(context, character, x, y) {
+    if (cityLetteringActive && window.CityLettering?.has(character)) { const size = Number((context.font.match(/([\d.]+)px/) || [0, 100])[1]); window.CityLettering.fill(context, character, x, y, size); return; }
+    context.fillText(character, x, y);
   }
   function logicalScale(width, height) { return Math.max(.22, Math.min(width / 1280, height / 720)); }
   function splitWords() { const raw = String(value("gatherWords", "All|new|interface|design")); return raw.includes("|") ? raw.split("|").map((item) => item.trim()).filter(Boolean) : raw.split(/\s+/).filter(Boolean); }
@@ -415,6 +442,29 @@
     });
     return { groups, byKey, leadIn, pulseDelay, end: groups.length ? cursor : leadIn + pulseDelay, defaultGap };
   }
+  function cityNeonUnits() {
+    const units = cityHanSequence().map((item) => ({ section: "han", keys: [`H${item.flat + 1}`] }));
+    lines("cityEnglishLines").forEach((line, index) => units.push({ section: "english", keys: [`E${index + 1}`] }));
+    citySubtitleGroups(graphemes(value("citySubtitle", "亚洲国际都会")).length).forEach((group) => units.push({ section: "subtitle", keys: group.map((index) => `S${index + 1}`) }));
+    return units;
+  }
+  function cityNeonOffs(raw) {
+    return String(raw || "").split(/[,，]/).map((pair) => pair.trim().match(/^(\d+(?:\.\d+)?)\s*[-~–]\s*(\d+(?:\.\d+)?)$/)).filter(Boolean)
+      .map((match) => ({ from: Number(match[1]), to: Number(match[2]) })).filter((item) => item.to > item.from);
+  }
+  function cityNeonSchedule(divisor = 1) {
+    const units = cityNeonUnits(), starts = csv("cityNeonStarts"), offLists = String(value("cityNeonOffs", "")).split(/[;；]/), leadIn = number("cityLeadIn", 60) / 1000 / divisor, byKey = new Map(), sections = {};
+    const step = starts.length > 1 ? Math.max(0, (starts[starts.length - 1] - starts[0]) / (starts.length - 1)) : 230;
+    let previous = -step, end = leadIn;
+    units.forEach((unit, rank) => {
+      const startMs = starts[rank] ?? previous + step, offs = rank < offLists.length ? cityNeonOffs(offLists[rank]) : [{ from: 100, to: 233 }]; previous = startMs;
+      const start = leadIn + Math.max(0, startMs) / 1000 / divisor, item = { start, offs: offs.map((off) => ({ from: start + off.from / 1000 / divisor, to: start + off.to / 1000 / divisor })) };
+      item.end = Math.max(start, ...item.offs.map((off) => off.to)); end = Math.max(end, item.end);
+      unit.keys.forEach((key) => byKey.set(key, item));
+      const section = sections[unit.section] || (sections[unit.section] = { start: Infinity, end: 0 }); section.start = Math.min(section.start, start); section.end = Math.max(section.end, item.end + 1 / fps);
+    });
+    return { leadIn, byKey, sections, end };
+  }
   function cityHanSchedule(divisor = 1) {
     const items = cityHanItems(), ordered = cityHanSequence(items), overrides = csv("cityHanDurations"), gapOverrides = csv("cityFlashGaps"), defaultDuration = number("cityEntryDuration", 320) / 1000 / divisor, gap = number("cityHanInterval", 40) / 1000 / divisor, leadIn = number("cityLeadIn", 670) / 1000 / divisor, byIndex = new Map(); let cursor = leadIn;
     ordered.forEach((item, rank) => { const duration = Math.max(.08 / divisor, (overrides[rank] ?? number("cityEntryDuration", 320)) / 1000 / divisor), after = Math.max(0, (gapOverrides[rank] ?? number("cityHanInterval", 40)) / 1000 / divisor); byIndex.set(item.flat, { start: cursor, duration, rank }); cursor += duration + (rank < ordered.length - 1 ? after : 0); });
@@ -438,6 +488,10 @@
       return { intro, interval, sequence, phrase, zoom, hold, cycle: Math.max(1 / fps, sequence + phrase + zoom + hold) };
     }
     if (mode === "city") {
+      if (value("cityTimelineMode", "build") === "neon") {
+        const neon = cityNeonSchedule(divisor), footerStart = neon.end + number("cityFooterDelay", 70) / 1000 / divisor, footerFade = number("cityFooterFade", 350) / 1000 / divisor, hold = number("finalHold", 2490) / 1000 / divisor;
+        return { cityMode: "neon", neon, leadIn: neon.leadIn, footerStart, footerFade, hold, cycle: Math.max(1 / fps, footerStart + footerFade + hold) };
+      }
       if (value("cityTimelineMode", "build") === "pulse") {
         const pulseSchedule = cityPulseSchedule(divisor), hold = number("finalHold", 1066) / 1000 / divisor;
         return { cityMode: "pulse", pulseSchedule, leadIn: pulseSchedule.leadIn, footerFade: number("cityFooterFade", 100) / 1000 / divisor, hold, cycle: Math.max(1 / fps, pulseSchedule.end + hold) };
@@ -479,6 +533,12 @@
       add(0, 0, t.headline); add(1, t.headline, t.headline + t.bridge);
       add(2, t.headline + t.bridge, t.headline + t.bridge + t.icon);
       add(3, t.headline + t.bridge + t.icon, t.cycle - t.hold); add(4, t.cycle - t.hold, t.cycle);
+    } else if (t.cityMode === "neon") {
+      const sections = t.neon.sections;
+      if (sections.han) add(0, sections.han.start, sections.han.end);
+      if (sections.english) add(1, sections.english.start, sections.english.end);
+      if (sections.subtitle) add(2, sections.subtitle.start, sections.subtitle.end);
+      add(3, t.footerStart, t.footerStart + t.footerFade); add(4, t.cycle - t.hold, t.cycle);
     } else if (t.cityMode === "pulse") {
       add(0, 0, t.pulseSchedule.end); add(3, t.pulseSchedule.end, t.pulseSchedule.end + t.footerFade);
       add(4, t.cycle - t.hold, t.cycle);
@@ -713,7 +773,7 @@
     else {
       const metrics = cityTextMetrics(raster, text, letterGap), scaledWidths = metrics.widths.map((width) => width * glyphScale), total = scaledWidths.reduce((sum, width) => sum + width, 0) + Math.max(0, scaledWidths.length - 1) * letterGap;
       let cursor = -total / 2;
-      metrics.characters.forEach((character, index) => { raster.save(); raster.translate(cursor + scaledWidths[index] / 2, 0); raster.scale(glyphScale, scaleY); raster.fillText(character, 0, 0); raster.restore(); cursor += scaledWidths[index] + letterGap; });
+      metrics.characters.forEach((character, index) => { raster.save(); raster.translate(cursor + scaledWidths[index] / 2, 0); raster.scale(glyphScale, scaleY); cityFillGlyph(raster, character, 0, 0); raster.restore(); cursor += scaledWidths[index] + letterGap; });
     }
     raster.restore();
     const pixels = raster.getImageData(0, 0, cityRasterCanvas.width, cityRasterCanvas.height).data; let left = cityRasterCanvas.width, right = -1;
@@ -723,7 +783,7 @@
   }
   const cityUniformLayerCache = new Map();
   function drawCityUniformLine(context, text, letterGap, targetWidth, centerX, centerY, mode, scaleY, painter) {
-    const fontReady = document.fonts ? document.fonts.check(context.font) : true, key = [context.font, text, letterGap.toFixed(3), mode, scaleY.toFixed(3), fontReady].join("|"); let layer = cityUniformLayerCache.get(key);
+    const fontReady = document.fonts ? document.fonts.check(context.font) : true, key = [context.font, cityLetteringActive, text, letterGap.toFixed(3), mode, scaleY.toFixed(3), fontReady].join("|"); let layer = cityUniformLayerCache.get(key);
     if (!layer) {
       const bounds = cityRasterInkBounds(context, text, letterGap, 1, mode, scaleY), padding = 3, fontSize = Number((context.font.match(/([\d.]+)px/) || [0, 200])[1]), canvas = document.createElement("canvas"); canvas.width = Math.max(8, Math.ceil(bounds.width) + padding * 2); canvas.height = Math.max(64, Math.ceil(fontSize * Math.max(1, scaleY) * 1.7) + 24);
       layer = { bounds, padding, canvas, context: canvas.getContext("2d"), originX: padding - bounds.left, originY: canvas.height / 2 }; cityUniformLayerCache.set(key, layer);
@@ -733,7 +793,7 @@
   }
   function fillCityText(context, text, letterGap = 0) {
     const metrics = cityTextMetrics(context, text, letterGap); let x = -metrics.total / 2;
-    metrics.characters.forEach((character, index) => { context.fillText(character, x + metrics.widths[index] / 2, 0); x += metrics.widths[index] + letterGap; });
+    metrics.characters.forEach((character, index) => { cityFillGlyph(context, character, x + metrics.widths[index] / 2, 0); x += metrics.widths[index] + letterGap; });
   }
   function drawCityItem(context, text, x, y, phase, start, duration, scale, color, letterGap = 0, shouldFlash = true, scaleX = 1, scaleY = 1) {
     if (phase < start || !text) return;
@@ -757,6 +817,11 @@
     const flashMix = number("cityFlashStrength", 88) / 100 * flicker.dim;
     context.save(); context.globalAlpha *= flicker.alpha; context.fillStyle = mixHex(color, value("cityFlashColor", "#0a5010"), flashMix); context.translate(x, y); context.scale(scaleX, scaleY); context.textAlign = "center"; fillCityText(context, text, letterGap); context.restore();
   }
+  function drawCityNeonItem(context, text, x, y, phase, item, fallbackStart, color, letterGap = 0, scaleX = 1, scaleY = 1) {
+    const visible = item ? phase >= item.start && !item.offs.some((off) => phase >= off.from && phase < off.to) : phase >= fallbackStart;
+    if (!text || !visible) return;
+    context.save(); context.fillStyle = color; context.translate(x, y); context.scale(scaleX, scaleY); context.textAlign = "center"; fillCityText(context, text, letterGap); context.restore();
+  }
   function citySubtitleGroups(length) {
     if (length <= 2) return [Array.from({ length }, (_, index) => index)];
     const used = new Set(), groups = [];
@@ -774,36 +839,37 @@
     const hanLetterGap = number("cityHanLetterGap", 8) * scale, englishLetterGap = number("cityEnglishLetterGap", 0) * scale, subtitleLetterGap = number("citySubtitleLetterGap", 3) * scale, footerLetterGap = number("cityFooterLetterGap", 0) * scale;
     const hanColor = value("accentColor", "#1dff11"), englishColor = value("cityEnglishColor", "#1dff11"), subtitleColor = value("citySubtitleColor", "#1dff11");
     const rowScaleXs = csv("cityHanRowScaleX"), rowScaleYs = csv("cityHanRowScaleY"), hanVerticalGap = number("cityHanVerticalGap", 57) * scale;
-    const uniformLineWidth = checked("cityUniformLineWidth"), targetLineWidth = number("cityLineWidth", 520) * scale;
+    const uniformLineWidth = checked("cityUniformLineWidth"), targetLineWidth = number("cityLineWidth", 490) * scale, hanLineWidth = targetLineWidth * number("cityHanWidthRatio", 100) / 100;
     const hanRows = hanLines.map((line, row) => ({ line, scaleX: Math.max(.2, (rowScaleXs[row] ?? 100) / 100), scaleY: Math.max(.2, (rowScaleYs[row] ?? 100) / 100) }));
     hanRows.forEach((row) => { row.height = Math.max(hanSize * .35, hanSize * .82 * row.scaleY); });
     const hanHeight = hanRows.reduce((sum, row) => sum + row.height, 0) + Math.max(0, hanRows.length - 1) * hanVerticalGap;
     const mainHeight = hanHeight + blockGap + englishLines.length * englishLineHeight + subtitleGap + subtitleSize, top = centerY - mainHeight / 2;
     const targets = cityFlashKeySet(), pulses = t.cityMode === "pulse" ? t.pulseSchedule.byKey : null, participates = (key) => targets === null || targets.has(key);
     context.save();
-    setCityFont(context, hanSize, "cityHanWeight", 500); let characterIndex = 0, rowY = top;
+    setCityFont(context, hanSize, "cityHanWeight", 500); cityLetteringActive = value("fontFamily", "noto-hk") === "hk-lettering"; let characterIndex = 0, rowY = top;
     hanRows.forEach((row) => {
       const metrics = cityTextMetrics(context, row.line, hanLetterGap), itemY = rowY + row.height / 2;
       const paintHanRow = (paintContext, originX, originY, rowScaleX) => { const scaledWidths = metrics.widths.map((item) => item * rowScaleX), total = scaledWidths.reduce((sum, item) => sum + item, 0) + Math.max(0, scaledWidths.length - 1) * hanLetterGap; let x = originX - total / 2;
         metrics.characters.forEach((char, index) => { const key = `H${characterIndex + 1}`, itemX = x + scaledWidths[index] / 2;
-          if (t.cityMode === "pulse") drawCityPulseItem(paintContext, char, itemX, originY, phase, t.leadIn, pulses.get(key), hanColor, 0, rowScaleX, row.scaleY);
+          if (t.cityMode === "neon") drawCityNeonItem(paintContext, char, itemX, originY, phase, t.neon.byKey.get(key), t.leadIn, hanColor, 0, rowScaleX, row.scaleY);
+          else if (t.cityMode === "pulse") drawCityPulseItem(paintContext, char, itemX, originY, phase, t.leadIn, pulses.get(key), hanColor, 0, rowScaleX, row.scaleY);
           else { const itemTiming = t.hanSchedule.byIndex.get(characterIndex) || { start: t.leadIn, duration: t.entry }; drawCityItem(paintContext, char, itemX, originY, phase, itemTiming.start, itemTiming.duration, scale, hanColor, 0, participates(key), rowScaleX, row.scaleY); }
           x += scaledWidths[index] + hanLetterGap; characterIndex += 1; }); };
-      if (uniformLineWidth) drawCityUniformLine(context, row.line, hanLetterGap, targetLineWidth, centerX, itemY, "split", row.scaleY, (paintContext, originX, originY) => paintHanRow(paintContext, originX, originY, 1));
+      if (uniformLineWidth) drawCityUniformLine(context, row.line, hanLetterGap, hanLineWidth, centerX, itemY, "split", row.scaleY, (paintContext, originX, originY) => paintHanRow(paintContext, originX, originY, 1));
       else { const bounds = cityInkBounds(context, row.line, hanLetterGap, row.scaleX); paintHanRow(context, centerX - bounds.center, itemY, row.scaleX); }
       rowY += row.height + hanVerticalGap;
     });
-    const englishTop = top + hanHeight + blockGap; setCityFont(context, englishSize, "cityEnglishWeight", 500);
-    englishLines.forEach((line, index) => { const key = `E${index + 1}`, text = line.toUpperCase(), lineY = englishTop + englishLineHeight * (index + .5), paintEnglish = (paintContext, x, y) => { if (t.cityMode === "pulse") drawCityPulseItem(paintContext, text, x, y, phase, t.leadIn, pulses.get(key), englishColor, englishLetterGap); else drawCityItem(paintContext, text, x, y, phase, t.englishStart + index * (t.entry + t.englishInterval), t.entry, scale, englishColor, englishLetterGap, participates(key)); };
+    cityLetteringActive = false; const englishTop = top + hanHeight + blockGap; setCityFont(context, englishSize, "cityEnglishWeight", 700, "cityEnglishFont");
+    englishLines.forEach((line, index) => { const key = `E${index + 1}`, text = line.toUpperCase(), lineY = englishTop + englishLineHeight * (index + .5), paintEnglish = (paintContext, x, y) => { if (t.cityMode === "neon") drawCityNeonItem(paintContext, text, x, y, phase, t.neon.byKey.get(key), t.leadIn, englishColor, englishLetterGap); else if (t.cityMode === "pulse") drawCityPulseItem(paintContext, text, x, y, phase, t.leadIn, pulses.get(key), englishColor, englishLetterGap); else drawCityItem(paintContext, text, x, y, phase, t.englishStart + index * (t.entry + t.englishInterval), t.entry, scale, englishColor, englishLetterGap, participates(key)); };
       if (uniformLineWidth) drawCityUniformLine(context, text, englishLetterGap, targetLineWidth, centerX, lineY, "group", 1, paintEnglish); else { const ink = cityInkBounds(context, text, englishLetterGap); paintEnglish(context, centerX - ink.center, lineY); }
     });
-    const subtitleY = englishTop + englishLines.length * englishLineHeight + subtitleGap + subtitleSize / 2; setCityFont(context, subtitleSize, "citySubtitleWeight", 700);
+    const subtitleY = englishTop + englishLines.length * englishLineHeight + subtitleGap + subtitleSize / 2; setCityFont(context, subtitleSize, "citySubtitleWeight", 800, "citySubtitleFont");
     const subtitleText = subtitle.join(""), subtitleMetrics = cityTextMetrics(context, subtitleText, subtitleLetterGap), subtitleGroups = citySubtitleGroups(subtitle.length), subtitleRank = new Map(subtitleGroups.flatMap((group, rank) => group.map((index) => [index, rank])));
-    const paintSubtitle = (paintContext, originX, originY) => { let subtitleX = originX - subtitleMetrics.total / 2; subtitle.forEach((char, index) => { const key = `S${index + 1}`, x = subtitleX + subtitleMetrics.widths[index] / 2; if (t.cityMode === "pulse") drawCityPulseItem(paintContext, char, x, originY, phase, t.leadIn, pulses.get(key), subtitleColor); else drawCityItem(paintContext, char, x, originY, phase, t.subtitleStart + (subtitleRank.get(index) || 0) * (t.entry + t.subtitleInterval), t.entry, scale, subtitleColor, 0, participates(key)); subtitleX += subtitleMetrics.widths[index] + subtitleLetterGap; }); };
+    const paintSubtitle = (paintContext, originX, originY) => { let subtitleX = originX - subtitleMetrics.total / 2; subtitle.forEach((char, index) => { const key = `S${index + 1}`, x = subtitleX + subtitleMetrics.widths[index] / 2; if (t.cityMode === "neon") drawCityNeonItem(paintContext, char, x, originY, phase, t.neon.byKey.get(key), t.leadIn, subtitleColor); else if (t.cityMode === "pulse") drawCityPulseItem(paintContext, char, x, originY, phase, t.leadIn, pulses.get(key), subtitleColor); else drawCityItem(paintContext, char, x, originY, phase, t.subtitleStart + (subtitleRank.get(index) || 0) * (t.entry + t.subtitleInterval), t.entry, scale, subtitleColor, 0, participates(key)); subtitleX += subtitleMetrics.widths[index] + subtitleLetterGap; }); };
     if (uniformLineWidth) drawCityUniformLine(context, subtitleText, subtitleLetterGap, targetLineWidth, centerX, subtitleY, "split", 1, paintSubtitle); else { const bounds = cityInkBounds(context, subtitleText, subtitleLetterGap); paintSubtitle(context, centerX - bounds.center, subtitleY); } context.restore();
     const footerStart = t.cityMode === "pulse" ? t.leadIn : t.footerStart;
     if (phase >= footerStart && footer) {
-      const reveal = smoother((phase - footerStart) / Math.max(.001, t.footerFade)); context.save(); context.globalAlpha = reveal; context.fillStyle = value("textColor", "#d5d5d5"); context.font = `600 ${footerSize}px ${window.STGFontLibrary?.family(value("fontFamily", "noto-hk")) || fontMap[value("fontFamily", "noto-hk")] || fontMap["noto-hk"]}`; context.textAlign = "center"; context.textBaseline = "middle"; context.translate(centerX, subtitleY + subtitleSize / 2 + footerGap); fillCityText(context, footer, footerLetterGap); context.restore();
+      const footerProgress = clamp((phase - footerStart) / Math.max(.001, t.footerFade)), reveal = t.cityMode === "neon" ? 1 - (1 - footerProgress) ** 2 : smoother(footerProgress); context.save(); context.globalAlpha = reveal; context.fillStyle = value("textColor", "#d5d5d5"); context.font = `${number("cityFooterWeight", 600)} ${footerSize}px ${cityFamily("cityFooterFont")}`; context.textAlign = "center"; context.textBaseline = "middle"; context.translate(centerX, subtitleY + subtitleSize / 2 + footerGap); fillCityText(context, footer, footerLetterGap); context.restore();
     }
   }
 
@@ -872,12 +938,18 @@
   $("#iconUpload")?.addEventListener("change", (event) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { const image = new Image(); image.onload = () => { uploadedIcon = image; $("#iconPreset").value = "upload"; }; image.src = reader.result; }; reader.readAsDataURL(file); });
   $("#finalUpload")?.addEventListener("change", (event) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { const image = new Image(); image.onload = () => { uploadedFinal = image; }; image.src = reader.result; }; reader.readAsDataURL(file); });
 
+  if (mode === "city") {
+    $("#fontFamily")?.addEventListener("change", () => { cityLetteringWanted = value("fontFamily") === "hk-lettering"; });
+    document.querySelector("script[data-stg-font-library]")?.addEventListener("load", () => { ensureCityLetteringOption(); preservePhase(); });
+    ensureCityLetteringOption();
+  }
   function assignValues(values) { Object.entries(values).forEach(([id, next]) => { const input = $(`#${id}`); if (!input) return; if (input.type === "checkbox") input.checked = Boolean(next); else input.value = String(next); }); }
   function setReference() {
     if (mode === "gather") { $("#gatherWords").value = "All|new|interface|design"; $("#finalTitle").value = "iOS"; }
     else if (mode === "portal") { $("#portalSequence").value = "13\n[icon]\nIntroducing\niPhone\n13\nPro"; $("#portalPhrase").value = "Our fastest model yet."; $("#focusIndex").value = "1"; }
     else if (mode === "rapid") { $("#headlineLines").value = "Smooth.\nStylish.\nCustomizable."; $("#bridgeText").value = "That's iPhone."; $("#rapidItems").value = "M4 Neural Engine\nPro camera system\nAction mode\nSpatial audio\nAll-day battery\nSimply powerful"; }
     else {
+      cityLetteringWanted = true; ensureCityLetteringOption();
       assignValues({
         cityHanLines: "只在\n香港", cityEnglishLines: "HONG\nKONG", citySubtitle: "亚洲国际都会", cityFooter: "discoverhongkong.cn",
         cityTimelineMode: "build", cityHanOrder: "row-ltr", cityCustomOrder: "1,2,3,4", cityFlashSequence: "全部", cityHanDurations: "", cityFlashGaps: "", cityHanWeight: 500, cityEnglishWeight: 500, citySubtitleWeight: 700, playbackSpeed: 1, cityLeadIn: 670, cityPulseDelay: 120, cityHanInterval: 40, cityEnglishInterval: 40,
@@ -887,13 +959,34 @@
         citySubtitleLetterGap: 3, cityFooterLetterGap: 0, cityBlockGap: 34, citySubtitleGap: 21, cityFooterGap: 240,
         cityEntryDistance: 0, cityEntryScale: 100, cityFlashCount: 4, cityFlashStrength: 88, textX: 50, textY: 44,
         backgroundColor: "#050505", accentColor: "#1dff11", cityEnglishColor: "#1dff11", citySubtitleColor: "#1dff11",
-        cityFlashColor: "#0a5010", textColor: "#d5d5d5"
+        cityFlashColor: "#0a5010", textColor: "#d5d5d5", ...cityHkType
       });
     }
-    $("#fontFamily").value = mode === "city" ? "noto-hk" : "inter"; updateOutputs(); restart();
+    if (mode !== "city") $("#fontFamily").value = "inter"; updateOutputs(); restart();
+  }
+  const cityHkType = {
+    fontFamily: "hk-lettering", cityEnglishFont: "stg:montserrat", citySubtitleFont: "stg:noto-hk", cityFooterFont: "stg:albert-sans",
+    cityHanWeight: 500, cityEnglishWeight: 700, citySubtitleWeight: 750, cityFooterWeight: 600,
+    cityHanSize: 250, cityEnglishSize: 165, citySubtitleSize: 77, cityFooterSize: 58,
+    cityHanLetterGap: 8, cityHanVerticalGap: 54, cityUniformLineWidth: true, cityLineWidth: 490, cityHanWidthRatio: 105, cityHanRowScaleX: "100,100", cityHanRowScaleY: "96,128",
+    cityEnglishLetterGap: 0, cityEnglishVerticalGap: 10, citySubtitleLetterGap: 9, cityFooterLetterGap: 0, cityBlockGap: 39, citySubtitleGap: -1, cityFooterGap: 245, textX: 50, textY: 44
+  };
+  function setHkReference() {
+    if (mode !== "city") return;
+    cityLetteringWanted = true; ensureCityLetteringOption();
+    assignValues({
+      cityHanLines: "只在\n香港", cityEnglishLines: "HONG\nKONG", citySubtitle: "亚洲国际都会", cityFooter: "discoverhongkong.cn",
+      cityTimelineMode: "neon", cityHanOrder: "row-ltr", cityCustomOrder: "1,2,3,4", cityFlashSequence: "全部", cityHanDurations: "", cityFlashGaps: "",
+      cityNeonStarts: "0,333,500,700,900,1133,1467,1533,1700", cityNeonOffs: "100-233; 133-167; 33-133; 300-333; 500-533,567-600; 100-267,667-733; 167-267; 133-300; ",
+      playbackSpeed: 1, cityLeadIn: 60, cityFooterDelay: 70, cityFooterFade: 350, finalHold: 2490, cityRhythm: "flash", cityEntryDistance: 0, cityEntryScale: 100, cityFlashCount: 4, cityFlashStrength: 88,
+      backgroundColor: "#000000", accentColor: "#4cebfa", cityEnglishColor: "#4cebfa", citySubtitleColor: "#4cebfa", cityFlashColor: "#0f3f45", textColor: "#ffffff",
+      ...cityHkType
+    });
+    updateOutputs(); restart();
   }
   function setAltReference() {
     if (mode !== "city") return;
+    cityLetteringWanted = true; ensureCityLetteringOption();
     assignValues({
       cityHanLines: "只在\n香港", cityEnglishLines: "HONG\nKONG", citySubtitle: "亚洲国际都会", cityFooter: "discoverhongkong.cn",
       cityTimelineMode: "pulse", cityFlashSequence: "H3,S3+S4,E1,E2", cityHanDurations: "520,240,300,460", cityFlashGaps: "360,100,200,0",
@@ -901,18 +994,19 @@
       cityFooterFade: 100, finalHold: 1066, cityRhythm: "flash", cityHanSize: 250, cityEnglishSize: 170, citySubtitleSize: 80, cityFooterSize: 60,
       cityHanLetterGap: 8, cityHanVerticalGap: 57, cityUniformLineWidth: true, cityLineWidth: 520, cityHanRowScaleX: "100,100", cityHanRowScaleY: "96,130", cityEnglishLetterGap: 0, cityEnglishVerticalGap: 14,
       citySubtitleLetterGap: 3, cityFooterLetterGap: 0, cityBlockGap: 34, citySubtitleGap: 21, cityFooterGap: 240,
-      cityFlashStrength: 92, textX: 50, textY: 44, backgroundColor: "#050505", accentColor: "#c176ff", cityEnglishColor: "#c176ff", citySubtitleColor: "#c176ff", cityFlashColor: "#281536", textColor: "#f2f2f2"
+      cityFlashStrength: 92, textX: 50, textY: 44, backgroundColor: "#050505", accentColor: "#c176ff", cityEnglishColor: "#c176ff", citySubtitleColor: "#c176ff", cityFlashColor: "#281536", textColor: "#f2f2f2", ...cityHkType
     });
-    $("#fontFamily").value = "noto-hk"; updateOutputs(); restart();
+    updateOutputs(); restart();
   }
   function setChinese() {
     if (mode === "gather") { $("#gatherWords").value = "全新|界面|灵感|设计"; $("#finalTitle").value = "现在开始"; }
     else if (mode === "portal") { $("#portalSequence").value = "你好\n[icon]\n重新认识\n未来\n现在\n出发"; $("#portalPhrase").value = "最快的灵感，就在此刻。"; $("#focusIndex").value = "1"; }
     else if (mode === "rapid") { $("#headlineLines").value = "流畅。\n醒目。\n自由。"; $("#bridgeText").value = "这就是灵感。"; $("#rapidItems").value = "快速切换\n丝滑滚动\n自由节奏\n图标收束\n马上开始"; }
     else assignValues({ cityHanLines: "灵感\n发生", cityEnglishLines: "CREATE\nMORE", citySubtitle: "每一次相遇", cityFooter: "hello-motion.cn", cityTimelineMode: "build", cityFlashSequence: "全部", cityHanDurations: "", cityFlashGaps: "", cityUniformLineWidth: true, cityLineWidth: 520, cityHanRowScaleX: "100,100", cityHanRowScaleY: "88,108" });
-    $("#fontFamily").value = "noto-hk"; updateOutputs(); restart();
+    if (mode === "city") { cityLetteringWanted = false; $("#fontFamily").value = "stg:noto-hk"; } else $("#fontFamily").value = "noto-hk";
+    updateOutputs(); restart();
   }
-  $("#referencePreset").addEventListener("click", setReference); $("#referenceAltPreset")?.addEventListener("click", setAltReference); $("#chinesePreset").addEventListener("click", setChinese);
+  $("#referencePreset").addEventListener("click", setReference); $("#referenceHkPreset")?.addEventListener("click", setHkReference); $("#referenceAltPreset")?.addEventListener("click", setAltReference); $("#chinesePreset").addEventListener("click", setChinese);
   [$("#restartTop"), $("#restartButton")].forEach((button) => button.addEventListener("click", restart));
   $("#pauseButton").addEventListener("click", (event) => { if (paused) { animationStart = performance.now() - pausedAt * 1000; paused = false; event.currentTarget.textContent = "暂停"; } else { pausedAt = currentTime(); paused = true; drawPreview(pausedAt); event.currentTarget.textContent = "继续"; } });
   $("#backButton").addEventListener("click", () => { paused = true; setTime(currentTime() - 1 / fps); $("#pauseButton").textContent = "继续"; });
@@ -942,5 +1036,5 @@
   }
   $("#exportVideo").addEventListener("click", () => exportVideo(false)); $("#exportVerticalVideo").addEventListener("click", () => exportVideo(true));
 
-  updateOutputs(); lastCycle = timing().cycle; renderSequenceTimeline(); document.fonts.ready.then(() => { if (mode === "city") setAltReference(); else restart(); }); previewLoop();
+  updateOutputs(); lastCycle = timing().cycle; renderSequenceTimeline(); document.fonts.ready.then(() => { if (mode === "city") setHkReference(); else restart(); }); previewLoop();
 })();

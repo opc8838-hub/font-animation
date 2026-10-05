@@ -6,6 +6,8 @@
     ["inter", "Inter", "STG Inter", 500, "normal", "常用拉丁"],
     ["space-grotesk", "Space Grotesk", "STG Space Grotesk", 500, "normal", "常用拉丁"],
     ["manrope", "Manrope", "STG Manrope", 500, "normal", "常用拉丁"],
+    ["montserrat", "Montserrat", "STG Montserrat", 600, "normal", "常用拉丁"],
+    ["albert-sans", "Albert Sans", "STG Albert Sans", 500, "normal", "常用拉丁"],
     ["poppins", "Poppins", "STG Poppins", 400, "normal", "常用拉丁"],
     ["work-sans", "Work Sans", "STG Work Sans", 400, "normal", "常用拉丁"],
     ["archivo-black", "Archivo Black", "STG Archivo Black", 900, "normal", "常用拉丁"],
@@ -61,7 +63,7 @@
     "uncut-berlin": "berlin", "uncut-berlin-bold": "berlin-bold",
     "fs-satoshi": "manrope", "fs-general-sans": "work-sans", "fs-clash-display": "league-spartan", "fs-cabinet": "manrope",
     satoshi: "manrope", "general-sans": "work-sans",
-    manrope: "manrope", poppins: "poppins", noto: "noto-sc", "noto-sc": "noto-sc", "noto-hk": "noto-hk",
+    manrope: "manrope", albert: "albert-sans", poppins: "poppins", noto: "noto-sc", "noto-sc": "noto-sc", "noto-hk": "noto-hk",
     "cn-noto-regular": "noto-sc", "cn-noto-black": "noto-sc-black", "city-black": "noto-sc-black",
     archivoBlack: "archivo-black", robotoCondensed: "roboto-condensed", work: "work-sans", serif: "lora", mono: "martian-mono",
     scRegular: "noto-sc", scBlack: "noto-sc-black", fenix: "fenix", spaceMonoBold: "space-mono",
@@ -138,7 +140,7 @@
 
   const styleLink = document.createElement("link");
   styleLink.rel = "stylesheet";
-  styleLink.href = "shared-fonts.css?v=20260824-2";
+  styleLink.href = "shared-fonts.css?v=20261005-hk1";
   styleLink.dataset.stgSharedFonts = "true";
   if (!document.querySelector("link[data-stg-shared-fonts]")) document.head.append(styleLink);
 

@@ -18,6 +18,8 @@ The following local fonts were added after reviewing the collections on Fontshar
 | Noto Sans JP Thin / Black | Existing project CJK assets | `site/assets` + `site/resources` | SIL OFL 1.1 |
 | Noto Sans KR Black | Existing project CJK assets | `site/resources/NotoSansKR-Black.otf` | SIL OFL 1.1 |
 | Noto Sans HK Variable | City Stack video font matching | google/fonts `ofl/notosanshk` | SIL OFL 1.1 |
+| Montserrat Variable | City Stack HK reference · `HONG KONG` | google/fonts `ofl/montserrat` | SIL OFL 1.1 |
+| Albert Sans Variable | City Stack HK reference · signature line | google/fonts `ofl/albertsans` | SIL OFL 1.1 |
 
 Upstream repository: https://github.com/google/fonts
 

@@ -32,6 +32,8 @@
 @font-face{font-family:"STG Teko";src:url("assets/fonts/Teko-Variable.ttf") format("truetype");font-weight:300 700;font-display:swap}
 @font-face{font-family:"STG Rajdhani";src:url("assets/fonts/Rajdhani-Bold.ttf") format("truetype");font-weight:700;font-display:swap}
 @font-face{font-family:"STG Manrope";src:url("assets/fonts/Manrope-Variable.ttf") format("truetype");font-weight:200 800;font-display:swap}
+@font-face{font-family:"STG Montserrat";src:url("assets/fonts/Montserrat-Variable.ttf") format("truetype");font-weight:100 900;font-display:swap}
+@font-face{font-family:"STG Albert Sans";src:url("assets/fonts/AlbertSans-Variable.ttf") format("truetype");font-weight:100 900;font-display:swap}
 @font-face{font-family:"STG Poppins";src:url("assets/fonts/Poppins-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
 @font-face{font-family:"STG Noto Sans SC";src:url("assets/NotoSansSC-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
 @font-face{font-family:"STG Noto Sans SC";src:url("assets/NotoSansSC-Black.ttf") format("truetype");font-weight:900;font-display:swap}

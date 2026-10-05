@@ -1,7 +1,7 @@
 (function () {
   if (!window.STGFontLibrary && !document.querySelector('script[data-stg-font-library]')) {
     const fontLibrary = document.createElement("script");
-    fontLibrary.src = "shared-font-library.js?v=20260824-2";
+    fontLibrary.src = "shared-font-library.js?v=20261005-hk1";
     fontLibrary.dataset.stgFontLibrary = "true";
     document.head.append(fontLibrary);
   }

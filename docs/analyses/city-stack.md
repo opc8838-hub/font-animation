@@ -81,6 +81,52 @@ A fixed-top Chinese/English word tower builds one item at a time with a brief ne
 - The campaign does not publish a typeface name. Frame-level glyph comparison identifies Noto Sans HK Medium as the closest redistributable match; it uses the correct Hong Kong regional glyph set and remains user-replaceable.
 - A few one-frame brightness changes may partly come from source video compression/exposure; the implementation treats them as a controlled flash amount rather than random noise.
 
+## HK reference (2026-10-05) · current default
+
+- Reference file: `HK动效/f601de545f01206a00bc200ef3402aa0.mp4`, HEVC, 4.83s, ~30fps, 448×960, cyan tower on a night skyline that cuts to black.
+- Default preset: **HK 原片参考**, timeline mode `neon` (原片霓虹点亮 · HK). The 动效 11 / 11-1 presets keep their timing and colours but now share the same typography.
+
+### Typography
+
+| Line | Source look | Implementation |
+| --- | --- | --- |
+| 只在 / 香港 | square-cornered geometric lettering, not a published font | `site/city-lettering.js`: contours traced from frames 80–134 averaged, polygonised and axis-snapped; ink normalised to ±0.46em per row. Font option `原片字形 · 只在香港`; any other character falls back to Noto Sans HK |
+| HONG / KONG | Gotham-like geometric sans | Montserrat 700 (ink coverage 0.50 vs reference 0.49) |
+| 亚洲国际都会 | heavy Hei | Noto Sans HK 750, 9px logical tracking |
+| discoverhongkong.cn | white geometric sans, single-storey g | Albert Sans 600 (width/height 10.6 vs 10.4) |
+
+Colours: `#4cebfa` tower on `#000000`, white signature.
+
+### Geometry (448×960 export vs reference, px)
+
+| Line | Reference y / height / width | Export y / height / width |
+| --- | --- | --- |
+| 只在 | 226–316 / 91 / 212 | 226–316 / 91 / 213 |
+| 香港 | 328–449 / 122 / 216 | 328–449 / 122 / 213 |
+| HONG | 462–511 / 50 / 204 | 462–511 / 50 / 203 |
+| KONG | 523–573 / 51 / 204 | 523–572 / 50 / 203 |
+| 亚洲国际都会 | 585–614 / 30 / 203 | 584–613 / 30 / 203 |
+| signature | 706–728 / 23 / 239 | 705–727 / 23 / 238 |
+
+Chinese rows use a 105% line-width ratio over the 490px English width (`cityHanWidthRatio`).
+
+### Neon timing (frames at 30fps, measured per item)
+
+| Item | On | Off | Back on |
+| --- | --- | --- | --- |
+| 只 | 2 | 5–8 | 9 |
+| 在 | 12 | 16 | 17 |
+| 香 | 17 | 18–20 | 21 |
+| 港 | 23 | 32 | 33 |
+| HONG | 29 | 44, 46 | 47 |
+| KONG | 36 | 39–43, 56–57 | 58 |
+| 亚洲 | 46 | 51–53 | 54 |
+| 都会 | 48 | 52–56 | 57 |
+| 国际 | 53 | — | — |
+| signature | ease-out fade frames 60–71 | | |
+
+Every switch is a hard cut. Defaults: lead-in 60ms, `cityNeonStarts` = `0,333,500,700,900,1133,1467,1533,1700`, `cityNeonOffs` = `100-233; 133-167; 33-133; 300-333; 500-533,567-600; 100-267,667-733; 167-267; 133-300; `, footer delay 70ms, fade 350ms, hold 2.49s. A 448×960 WEBM export matched the reference on every frame except the first frames of 港 and HONG, which are half-bright transition frames in the source.
+
 ## Acceptance evidence
 
 - [x] Key paused frames
