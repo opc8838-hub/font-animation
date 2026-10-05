@@ -83,7 +83,7 @@
   function fontFace(rowState) {
     const key = isLettering(rowState) ? "stg:noto-hk" : fontKey(rowState);
     const preset = library()?.preset(key) || { family: "STG Noto Sans HK", weight: 500, style: "normal" };
-    return { family: `"${preset.family}",${library()?.fallbackStack || "sans-serif"}`, weight: Number(rowState.fontWeight) || preset.weight || 500, style: preset.style || "normal" };
+    return { family: `"${preset.family}","STG Noto Sans HK",${library()?.fallbackStack || "sans-serif"}`, weight: Number(rowState.fontWeight) || preset.weight || 500, style: preset.style || "normal" };
   }
   function fontString(rowState, size) {
     const face = fontFace(rowState);
@@ -93,9 +93,21 @@
     if (value === LETTERING) return LETTERING;
     return window.MERowFonts?.normalize(value) || "";
   }
+  // Load only each row's own face (plus the HK face for Chinese typed in a Latin font);
+  // passing the whole fallback stack to fonts.load() would download every CJK fallback.
   async function refreshFonts() {
     if (!document.fonts?.load) return;
-    await Promise.all(state.scheme.rows.map((item) => document.fonts.load(fontString(item, 64), item.text || "Aa").catch(() => null)));
+    const loads = new Map();
+    state.scheme.rows.forEach((item) => {
+      const key = isLettering(item) ? "stg:noto-hk" : fontKey(item);
+      const preset = library()?.preset(key) || { family: "STG Noto Sans HK", style: "normal" };
+      const face = fontFace(item);
+      const text = item.text || "Aa";
+      const add = (family) => { const css = `${face.style} ${face.weight} 64px "${family}"`; loads.set(css, (loads.get(css) || "") + text); };
+      add(preset.family);
+      if (/[㐀-鿿]/u.test(text) && preset.family !== "STG Noto Sans HK") add("STG Noto Sans HK");
+    });
+    await Promise.all(Array.from(loads, ([css, text]) => document.fonts.load(css, text).catch(() => null)));
     state.fontsVersion += 1;
     measureCache.clear();
     resizePreview();
