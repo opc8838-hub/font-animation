@@ -127,6 +127,17 @@ Chinese rows use a 105% line-width ratio over the 490px English width (`cityHanW
 
 Every switch is a hard cut. Defaults: lead-in 60ms, `cityNeonStarts` = `0,333,500,700,900,1133,1467,1533,1700`, `cityNeonOffs` = `100-233; 133-167; 33-133; 300-333; 500-533,567-600; 100-267,667-733; 167-267; 133-300; `, footer delay 70ms, fade 350ms, hold 2.49s. A 448×960 WEBM export matched the reference on every frame except the first frames of 港 and HONG, which are half-bright transition frames in the source.
 
+## Editor migration (2026-10-05) · Sprout Shift standard
+
+- `citystack.html` now uses the same shell as 字芽 (`typecascade-workspace/polish/selects/locale`): left text blocks + scheme card, center stage/timeline, right `当前段落 / 动效设置 / 导出`. The old `sequence-motion.js` panel is no longer loaded by this page.
+- Engine: `site/citystack-editor.js`. Every tower line is a row with a stable id that owns text, role (主汉字 / 英文行 / 副标题 / 署名), font (shared catalog or 原片字形), weight, color, size, vertical scale, width ratio, letter gap, gap above, neon on-times and off-windows (or fade start/length for the signature), and inline icons.
+- Rendering is vector: each row is drawn with a transform from its measured ink box, so the uniform-width stretch no longer rasterises and stretches text (the cause of the jagged 香港 strokes reported on 2026-10-05).
+- Layout is ink-based: row height = measured ink × vertical scale, gaps are visible gaps, and the whole stack is centered. A 448×960 render matches the reference heights 91/122/50/50/30/23 px and gaps within 1 px.
+- Inline icons use the shared icon library and drawer (selection-first, quick insert, single editor). Icons follow the glyph before them for neon visibility and never squeeze the row text; text alignment is measured without icons.
+- Background: color plus image/GIF (cover, opacity, zoom) in 动效设置; `铺满背景` follows the background color.
+- Default preset: `site/assets/presets/citystack-default.json` (kept in sync with `DEFAULT_SCHEME`). Storage key `me-motion-citystack-v1`; `?from=gallery` opens the approved default.
+- Verified: contract script PASS, frame-by-frame neon timing unchanged, per-row color/font edits isolated, EN/light theme, mobile without horizontal overflow, real PNG/GIF/MP4 at 1080×1920.
+
 ## Acceptance evidence
 
 - [x] Key paused frames

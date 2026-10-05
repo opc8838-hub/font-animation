@@ -1,0 +1,5 @@
+/* City Stack additions on top of the shared CellMotion row editor. */
+.city-wide { grid-column: 1 / -1; }
+.gm-row-background-grid .gm-help.city-wide { margin: 0; }
+.gm-row-background-grid .gm-text-button.city-wide { justify-self: start; }
+.city-background summary { cursor: pointer; }

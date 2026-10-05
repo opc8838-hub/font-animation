@@ -130,7 +130,7 @@
       title.textContent = row.querySelector('[data-key="text"]')?.value || '留白段落';
       const meta = make('small', 'tc-row-description');
       const holdSeconds = hold ? `${Number(hold.value) / 1000}s 停留` : '独立段落';
-      meta.textContent = `${holdSeconds} · ${row.querySelectorAll('.gm-inline-icon-chip').length} 个图标`;
+      meta.textContent = row.dataset.rowSummary || `${holdSeconds} · ${row.querySelectorAll('.gm-inline-icon-chip').length} 个图标`;
       button.append(number, title, meta);
       return button;
     }));

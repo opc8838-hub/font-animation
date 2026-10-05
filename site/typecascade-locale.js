@@ -25,6 +25,26 @@
     '翻转首图': 'First image', '翻转后切图（可多选 2–3 张）': 'Images after flip (2–3)', '切图过渡': 'Cut transition',
     '镜头环绕': 'Camera orbit', '斜角': 'Tilt', '起始朝向': 'Start facing',
     '城市字塔': 'City Stack', 'Delete': 'Delete',
+    '城市字塔编辑器': 'City Stack editor', '城市字塔效果预览': 'City Stack preview', '城市字塔动效时间轴': 'City Stack timeline',
+    '本行类型': 'Block role', '主汉字 · 逐字点亮': 'Chinese · per character', '英文行 · 整行点亮': 'English · whole line',
+    '副标题 · 两端先亮': 'Subtitle · ends first', '署名 · 最后淡入': 'Signature · fade in',
+    '本行字重': 'Block weight', '字体默认': 'Font default', 'Bold 750 · 原片': 'Bold 750 · reference',
+    '原片字形': 'Reference lettering', '原片字形 · 只在香港': 'Reference lettering · 只在香港',
+    '本行排版': 'Block layout', '字号 / 比例 / 间距': 'Size / scale / spacing', '字号': 'Size', '纵向比例': 'Vertical scale',
+    '行宽比例': 'Width ratio', '与上一行间距': 'Gap above', '本行点亮节奏': 'Block lighting', '亮起 / 熄灭': 'On / off',
+    '淡入开始 / 时长': 'Fade start / length', '亮起时间': 'On times', '熄灭区间': 'Off windows', '淡入开始': 'Fade start', '淡入时长': 'Fade length',
+    '▶ 预览本行点亮': '▶ Preview this block', '统一行宽': 'Shared line width', '整体大小': 'Overall size', '点亮节奏': 'Lighting rhythm',
+    '开始出现': 'Lead-in', '完成后停留': 'Final hold', '画面背景': 'Background', '背景 · 图片 / GIF': 'Background · image / GIF',
+    '素材不透明度': 'Media opacity', '画面缩放': 'Media zoom', '新段落默认文字色': 'Default text color for new blocks', '字塔文字': 'Tower text',
+    '至少保留一行文字': 'Keep at least one block',
+    '每一段是字塔中的一行：主汉字逐字点亮、英文整行点亮、副标题两端先亮、署名最后淡入。': 'Each block is one line of the tower: Chinese lights per character, English per line, the subtitle from both ends, and the signature fades in last.',
+    '统一行宽让各行左右边缘对齐；每行可在“本行排版”里设置自己的行宽比例，设为 0 则保持字体原宽。': 'The shared line width aligns every block edge. Set a per-block width ratio in Block layout; 0 keeps the natural width.',
+    '按 HK 原片逐帧测得：每一项硬切亮起，在熄灭区间整项消失，之后常亮。每行的亮起时间与熄灭区间在“本行点亮节奏”里单独调整。': 'Measured frame by frame from the HK reference: each unit cuts on, disappears inside its off windows, then stays lit. Edit each block in Block lighting.',
+    '行宽比例按“统一行宽”计算，100% 时与其它行左右对齐；设为 0 保持字体原宽。': 'Width ratio is relative to the shared line width; 100% aligns with other blocks, 0 keeps the natural width.',
+    '时间从“开始出现”之后算起；淡入为先快后慢，与原片署名一致。': 'Times count from the lead-in. The fade eases out like the reference signature.',
+    '全部文字内容已清空，每行的字体、颜色、排版与节奏保持不变。': 'All text cleared; fonts, colors, layout and rhythm stay unchanged.',
+    '文字颜色已应用到全部段落。': 'Text color applied to all blocks.',
+    '汉字点亮': 'Chinese on', '英文点亮': 'English on', '副标题点亮': 'Subtitle on', '署名淡入': 'Signature fade', '结果定格': 'Final lockup', '完整字塔': 'Full tower',
     '萌发开场': 'Sprout intro', '缩放生长': 'Scale grow', '雾凝开场': 'Mist intro', '升散浮入': 'Lift in',
     '用于 AI': 'For AI',
     'CellMotion 首页': 'CellMotion home',
@@ -201,7 +221,7 @@
     '当前动画只换色，但这里仍可预先编辑字体图标；切换为单字或多字模式后开始播放。': 'This mode only changes color. Icons edited here play after you switch to a replace mode.',
     '点一段可跳到那一拍': 'Click a phase to jump there', '编舞时间轴': 'Timeline'
   }));
-  const phaseNames = ['立字开场', '结束停留', '倾倒坠落', '基线长入', '停留', '倾倒', '悬停', '下落', '主词入场', '主词停顿', '居中预备', '后句接入', '本页停留'];
+  const phaseNames = ['汉字点亮', '英文点亮', '副标题点亮', '署名淡入', '结果定格', '立字开场', '结束停留', '倾倒坠落', '基线长入', '停留', '倾倒', '悬停', '下落', '主词入场', '主词停顿', '居中预备', '后句接入', '本页停留'];
   const languageButton = document.createElement('button');
   languageButton.type = 'button';
   languageButton.id = 'tcLanguageToggle';
@@ -246,6 +266,11 @@
           .replace(/^第 (\d+) 行文字$/, 'Block $1 text')
           .replace(/^第 (\d+) 行停留毫秒$/, 'Block $1 hold in milliseconds')
           .replace(/^第 (\d+) 行字体$/, 'Block $1 font')
+          .replace(/^第 (\d+) 行类型$/, 'Block $1 role')
+          .replace(/^第 (\d+) 行字重$/, 'Block $1 weight')
+          .replace(/^(\d+) 个点亮单位$/, (_, count) => `${count} ${count === '1' ? 'unit' : 'units'}`)
+          .replace(/^本行点亮单位：(.*?)。时间从“开始出现”之后算起；熄灭区间里整项消失，例如 100-233 表示亮起 0.10 秒后熄灭到 0.233 秒。$/, 'Units: $1. Times count from the lead-in; a unit disappears inside its off windows, e.g. 100-233 turns off from 0.10 s to 0.233 s after it lights.')
+          .replace(/^(主汉字|英文行|副标题|署名) · (原片字形|.*?) · ([\d.]+)–([\d.]+)s$/, (_, role, font, a, b) => `${{主汉字:'Chinese',英文行:'English',副标题:'Subtitle',署名:'Signature'}[role]} · ${font === '原片字形' ? 'Reference lettering' : font} · ${a}–${b}s`)
           .replace(/^第 (\d+) 行 · 边界 (\d+) · (.*?) · 间距 (.*)$/, 'Block $1 · Position $2 · $3 · Gap $4')
           .replace(/^目标：第 (\d+) 行 · /, 'Target: block $1 · ')
           .replace(/文字开头$/, 'Start of text').replace(/文字末尾$/, 'End of text').replace(/第 (\d+) 字后$/, 'After character $1')
