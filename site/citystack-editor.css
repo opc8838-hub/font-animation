@@ -3,3 +3,9 @@
 .gm-row-background-grid .gm-help.city-wide { margin: 0; }
 .gm-row-background-grid .gm-text-button.city-wide { justify-self: start; }
 .city-background summary { cursor: pointer; }
+/* cellmotion-me-shell.js supplies the shared CellMotion brand; keep the Sprout Shift canvas-size control in the toolbar. */
+body.tc-workspace[data-city-stack] .tc-canvas-toolbar .gm-canvas-card .gm-field-wide { font-size: 0 !important; color: var(--tc-text) !important; }
+body.tc-workspace[data-city-stack] .tc-canvas-toolbar .gm-canvas-card .tc-select-trigger { display: block !important; width: 230px !important; max-width: 100% !important; font-size: 14px !important; color: var(--tc-text) !important; }
+body.tc-workspace[data-city-stack] .tc-canvas-toolbar .gm-canvas-card .tc-select-label { font-size: 14px !important; line-height: 21px !important; }
+.city-background summary > span { white-space: nowrap; }
+.city-background summary > b { min-width: 0; }

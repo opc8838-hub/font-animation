@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="glyphmorph-reviewed.css?v=20260909-media-crop">
   <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-coloriso">
   <link rel="stylesheet" href="typecascade-polish.css?v=20260909-coloriso">
-  <link rel="stylesheet" href="citystack-editor.css?v=20261005-1">
+  <link rel="stylesheet" href="citystack-editor.css?v=20261005-3">
 <link rel="stylesheet" href="site-preferences.css?v=20260926-18">
 </head>
 <body class="glyphmorph-editor" data-city-stack="true">
@@ -88,14 +88,33 @@
     <section class="gm-card" data-city-global-card>
       <div class="gm-card-title"><span>06</span><h2>画面背景</h2></div>
       <details class="gm-row-background city-background" open>
-        <summary><span>背景 · 图片 / GIF</span><i class="gm-row-background-swatch" id="backgroundSwatch"></i></summary>
+        <summary><span>背景 · 图片 / GIF / 视频</span><b id="backgroundSummary" hidden></b><i class="gm-row-background-swatch" id="backgroundSwatch"></i></summary>
         <div class="gm-row-background-grid">
           <label>背景颜色<input id="backgroundColor" type="color"></label>
-          <label class="gm-background-upload">上传 / 更换背景<input id="backgroundFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+          <label class="gm-background-upload">上传 / 更换背景<input id="backgroundFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime"></label>
           <label>素材不透明度<input id="backgroundOpacity" type="number" min="0" max="100" step="1"><small>%</small></label>
-          <label>画面缩放<input id="backgroundZoom" type="number" min="1" max="4" step="0.05"><small>×</small></label>
           <div class="gm-background-video" id="backgroundMediaInfo" hidden>
             <div class="gm-background-video-head"><strong id="backgroundMediaName"></strong><span id="backgroundMediaType"></span><button id="backgroundRemove" type="button">移除素材</button></div>
+            <div class="gm-background-crop">
+              <div class="gm-background-crop-head"><strong>画面裁剪</strong><span>在画面中拖动选择保留区域</span></div>
+              <canvas id="backgroundCropPreview" width="720" height="405" aria-label="背景画面裁剪预览"></canvas>
+              <label class="gm-background-crop-zoom">画面缩放
+                <input id="backgroundCropZoom" type="range" min="1" max="4" step="0.01" value="1">
+                <output id="backgroundCropOutput">1.00×</output>
+              </label>
+              <button id="backgroundCropReset" type="button">居中并恢复原始缩放</button>
+            </div>
+            <div class="gm-background-video-trim" id="backgroundVideoTrim" hidden>
+              <div class="gm-video-timeline" id="backgroundVideoTimeline" aria-label="拖动两侧把手裁剪视频片段">
+                <canvas id="backgroundFilmstrip" width="720" height="96"></canvas>
+                <div class="gm-video-selection" id="backgroundVideoSelection"><span class="gm-video-handle is-start" data-video-edge="start" role="slider" tabindex="0"></span><span class="gm-video-handle is-end" data-video-edge="end" role="slider" tabindex="0"></span></div>
+              </div>
+              <div class="gm-video-scale"><span>0.0 秒</span><span id="backgroundVideoDuration">读取中…</span></div>
+              <div class="gm-video-time-fields">
+                <label>开始秒数<input id="backgroundVideoStart" type="number" min="0" step="0.1" value="0"></label>
+                <label>结束秒数<input id="backgroundVideoEnd" type="number" min="0.1" step="0.1" value=""></label>
+              </div>
+            </div>
           </div>
         </div>
       </details>
@@ -196,10 +215,11 @@
   <script src="shared-icon-library.js?v=20260902-1"></script>
   <script src="cellmotion-animated-image.js?v=20260909-1"></script>
   <script src="city-lettering.js?v=20261005-2"></script>
-  <script src="citystack-editor.js?v=20261005-2"></script>
+  <script src="citystack-editor.js?v=20261005-3"></script>
   <script src="stg-cn.js?v=20261005-hk1"></script>
   <script src="typecascade-workspace.js?v=20261005-city"></script>
   <script src="typecascade-polish.js?v=20260909-coloriso"></script>
+  <script src="cellmotion-me-shell.js?v=20260928-shell-inkfix1"></script>
   <script src="typecascade-selects.js?v=20260909-1"></script>
   <script src="typecascade-locale.js?v=20261005-city"></script>
   <script src="cellmotion-ai-manifest.js?v=20260909-ai-manifest"></script>

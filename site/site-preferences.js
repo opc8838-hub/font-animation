@@ -226,7 +226,29 @@
     setTheme(theme === 'dark' ? 'light' : 'dark');
     window.setTimeout(() => root.classList.remove('site-theme-transition'), 760);
   });
-  languageButton.addEventListener('click', () => setLanguage(language === 'en' ? 'zh' : 'en'));
+  // Language changes breathe: the UI eases out, swaps copy, then eases back in.
+  // Editor stages (the live composition) never fade.
+  const languageFadeStyle = document.createElement('style');
+  const fadeTargets = 'body.tc-workspace > :not(.tc-center):not(script):not(style), body.tc-workspace .tc-center > :not(.gm-stage), body:not(.tc-workspace) > :not(script):not(style)';
+  const scoped = (prefix) => fadeTargets.split(', ').map((selector) => `${prefix} ${selector}`).join(', ');
+  languageFadeStyle.textContent = `${scoped('html.cm-language-anim')} { transition: opacity 220ms cubic-bezier(.4,0,.2,1), filter 220ms cubic-bezier(.4,0,.2,1) !important; }`
+    + `${scoped('html.cm-language-fading')} { opacity: .06 !important; filter: blur(3px) !important; }`;
+  document.head.append(languageFadeStyle);
+  let languageFadeTimer = 0;
+  function switchLanguage(next) {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) { setLanguage(next); return; }
+    window.clearTimeout(languageFadeTimer);
+    root.classList.add('cm-language-anim');
+    requestAnimationFrame(() => root.classList.add('cm-language-fading'));
+    languageFadeTimer = window.setTimeout(() => {
+      setLanguage(next);
+      requestAnimationFrame(() => {
+        root.classList.remove('cm-language-fading');
+        languageFadeTimer = window.setTimeout(() => root.classList.remove('cm-language-anim'), 260);
+      });
+    }, 230);
+  }
+  languageButton.addEventListener('click', () => switchLanguage(language === 'en' ? 'zh' : 'en'));
   setTheme(theme, false);
   fetch(new URL('site-locale-dictionary.json?v=20260927-20', document.currentScript?.src || location.href), { cache: 'reload' })
     .then((response) => response.ok ? response.json() : {})

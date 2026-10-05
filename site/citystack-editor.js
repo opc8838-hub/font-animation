@@ -42,7 +42,7 @@
     canvas: { width: 1080, height: 1920, preset: "1080x1920" },
     typography: { fontFamily: "stg:noto-hk", lineWidth: 490, layoutScale: 100, positionX: 0, positionY: 0, textColor: "#4cebfa" },
     motion: { leadIn: 60, finalHold: 2490, speed: 1, loop: true },
-    background: { color: "#000000", media: null, opacity: 100, zoom: 1 },
+    background: { color: "#000000", media: null, opacity: 100 },
     rows: [
       row("city-han-1", "只在", "han", { fontFamily: LETTERING, fontWeight: "500", size: 250, scaleY: 96, widthRatio: 105, letterGap: 8, gapBefore: 0, starts: "0,333", offs: "100-233; 133-167" }),
       row("city-han-2", "香港", "han", { fontFamily: LETTERING, fontWeight: "500", size: 250, scaleY: 128, widthRatio: 105, letterGap: 8, gapBefore: 29, starts: "500,700", offs: "33-133; 300-333" }),
@@ -74,7 +74,7 @@
   const frame = $("compositionFrame");
   const context = canvas.getContext("2d");
   const library = () => window.STGFontLibrary;
-  const controlIds = ["fontFamily", "lineWidth", "layoutScale", "positionX", "positionY", "leadIn", "finalHold", "speed", "loop", "textColor", "backgroundColor", "backgroundOpacity", "backgroundZoom"];
+  const controlIds = ["fontFamily", "lineWidth", "layoutScale", "positionX", "positionY", "leadIn", "finalHold", "speed", "loop", "textColor", "backgroundColor", "backgroundOpacity"];
   const controls = Object.fromEntries(controlIds.map((id) => [id, $(id)]));
 
   // ---------- Fonts ----------
@@ -333,47 +333,197 @@
     return { scale, entries, centerX, top };
   }
 
-  // ---------- Background ----------
-  async function prepareBackground() {
+  // ---------- Background (color + image / GIF / video; cropped and trimmed like 字芽) ----------
+  const isVideoMedia = (media) => /^video\//i.test(media?.fileType || "");
+  const isGifMedia = (media) => /gif/i.test(media?.fileType || "");
+  function normalizeBackgroundMedia(media) {
+    if (!media || typeof media !== "object" || !media.url) return null;
+    return {
+      name: String(media.name || "背景素材"),
+      url: String(media.url),
+      fileType: String(media.fileType || media.type || "image/png"),
+      videoStart: Math.max(0, Number.isFinite(Number(media.videoStart)) ? Number(media.videoStart) : 0),
+      videoEnd: Number.isFinite(Number(media.videoEnd)) && Number(media.videoEnd) > 0 ? Number(media.videoEnd) : null,
+      cropX: clamp(Number.isFinite(Number(media.cropX)) ? Number(media.cropX) : 0.5),
+      cropY: clamp(Number.isFinite(Number(media.cropY)) ? Number(media.cropY) : 0.5),
+      cropZoom: clamp(Number.isFinite(Number(media.cropZoom)) ? Number(media.cropZoom) : 1, 1, 4)
+    };
+  }
+  function videoClipBounds(media, duration) {
+    const safeDuration = Math.max(0.1, Number(duration) || 0.1);
+    const start = clamp(Number(media?.videoStart) || 0, 0, Math.max(0, safeDuration - 0.1));
+    const requestedEnd = Number(media?.videoEnd);
+    const end = clamp(Number.isFinite(requestedEnd) && requestedEnd > 0 ? Math.max(requestedEnd, start + 0.1) : safeDuration, start + 0.1, safeDuration);
+    return { start, end, duration: Math.max(0.1, end - start) };
+  }
+  function videoClipTime(media, duration, localTime) {
+    const clip = videoClipBounds(media, duration);
+    return Math.min(clip.end - 0.001, clip.start + (((localTime % clip.duration) + clip.duration) % clip.duration));
+  }
+  function backgroundRuntime() {
     const media = state.scheme.background.media;
-    if (state.background && state.background.url === media?.url) return state.background;
-    if (state.background?.resource?.kind === "frames") window.CellMotionAnimatedImage?.dispose(state.background.resource);
+    return media && state.background?.url === media.url ? state.background : null;
+  }
+  function disposeBackground() {
+    const runtime = state.background;
+    runtime?.video?.pause();
+    runtime?.exportVideo?.pause();
+    if (runtime?.resource?.kind === "frames") window.CellMotionAnimatedImage?.dispose(runtime.resource);
     state.background = null;
-    if (!media?.url) return null;
-    const runtime = { url: media.url, resource: null };
+  }
+  function prepareBackground() {
+    const media = state.scheme.background.media;
+    if (!media) { disposeBackground(); return Promise.resolve(null); }
+    if (state.background?.url === media.url) return state.background.promise;
+    disposeBackground();
+    const runtime = { url: media.url, kind: isVideoMedia(media) ? "video" : "image", resource: null, video: null, exportVideo: null, duration: 0, previewImage: null, exportImage: null, filmstrip: null, filmstripPromise: null, promise: null };
     state.background = runtime;
-    try {
-      const animated = /gif/i.test(media.type || "") ? await window.CellMotionAnimatedImage?.decode({ url: media.url, type: media.type, maxFrames: 600 }) : null;
-      if (animated) runtime.resource = animated;
-      else {
-        const image = new Image();
-        image.src = media.url;
-        await image.decode();
-        runtime.resource = { kind: "image", image };
+    if (runtime.kind === "image") {
+      runtime.promise = (async () => {
+        try {
+          const animated = isGifMedia(media) ? await window.CellMotionAnimatedImage?.decode({ url: media.url, type: media.fileType, maxFrames: 600 }) : null;
+          if (animated) runtime.resource = animated;
+          else { const image = new Image(); image.src = media.url; await image.decode(); runtime.resource = { kind: "image", image }; }
+        } catch (error) { console.warn("background", error); }
+        return runtime;
+      })();
+    } else {
+      const loadVideo = (key) => new Promise((resolve) => {
+        const video = document.createElement("video");
+        video.muted = true; video.loop = false; video.playsInline = true; video.preload = "auto";
+        const finish = () => { runtime[key] = video; runtime.duration = Number(video.duration) || runtime.duration; resolve(runtime); };
+        video.addEventListener("loadeddata", finish, { once: true });
+        video.addEventListener("error", () => resolve(runtime), { once: true });
+        video.src = media.url;
+        video.load();
+      });
+      runtime.promise = Promise.all([loadVideo("video"), loadVideo("exportVideo")]).then(() => runtime);
+    }
+    runtime.promise.then(() => { if (state.background === runtime) { refreshMediaUi(); resizePreview(); } });
+    return runtime.promise;
+  }
+  function waitForSeek(video, target, fallbackMs) {
+    return new Promise((resolve) => {
+      let settled = false;
+      const done = () => {
+        if (settled) return;
+        settled = true;
+        if (typeof video.requestVideoFrameCallback === "function") {
+          const fallback = setTimeout(resolve, fallbackMs);
+          video.requestVideoFrameCallback(() => { clearTimeout(fallback); resolve(); });
+        } else requestAnimationFrame(resolve);
+      };
+      video.addEventListener("seeked", done, { once: true });
+      video.currentTime = target;
+      setTimeout(done, 800);
+    });
+  }
+  function prepareVideoFilmstrip(runtime) {
+    if (!runtime?.url) return Promise.resolve(null);
+    if (runtime.filmstrip) return Promise.resolve(runtime.filmstrip);
+    if (runtime.filmstripPromise) return runtime.filmstripPromise;
+    runtime.filmstripPromise = (async () => {
+      const video = document.createElement("video");
+      video.muted = true; video.playsInline = true; video.preload = "auto";
+      await new Promise((resolve, reject) => { video.addEventListener("loadeddata", resolve, { once: true }); video.addEventListener("error", reject, { once: true }); video.src = runtime.url; video.load(); });
+      const duration = Number(video.duration) || runtime.duration;
+      if (!(duration > 0)) return null;
+      const filmstrip = document.createElement("canvas");
+      filmstrip.width = 720; filmstrip.height = 96;
+      const filmstripContext = filmstrip.getContext("2d");
+      const frameCount = 8, frameWidth = filmstrip.width / frameCount;
+      for (let frameIndex = 0; frameIndex < frameCount; frameIndex += 1) {
+        await waitForSeek(video, clamp((frameIndex + 0.5) / frameCount * duration, 0, Math.max(0, duration - 0.001)), 120);
+        const sourceWidth = video.videoWidth || 1, sourceHeight = video.videoHeight || 1;
+        const cover = Math.max(frameWidth / sourceWidth, filmstrip.height / sourceHeight);
+        const drawWidth = sourceWidth * cover, drawHeight = sourceHeight * cover;
+        filmstripContext.save();
+        filmstripContext.beginPath(); filmstripContext.rect(frameIndex * frameWidth, 0, frameWidth, filmstrip.height); filmstripContext.clip();
+        filmstripContext.drawImage(video, frameIndex * frameWidth + (frameWidth - drawWidth) / 2, (filmstrip.height - drawHeight) / 2, drawWidth, drawHeight);
+        filmstripContext.restore();
       }
-    } catch (error) { console.warn("background", error); }
-    resizePreview();
-    return runtime;
+      video.pause(); video.removeAttribute("src"); video.load();
+      runtime.filmstrip = filmstrip;
+      return filmstrip;
+    })().catch(() => null);
+    return runtime.filmstripPromise;
   }
-  function backgroundImage(timeSeconds) {
-    const resource = state.background?.url === state.scheme.background.media?.url ? state.background?.resource : null;
-    if (!resource) return null;
-    if (resource.kind === "image") return resource.image;
-    return window.CellMotionAnimatedImage?.frameAt(resource, timeSeconds) || resource.frames?.[0]?.image || null;
+  function cachePreviewVideoFrame(runtime) {
+    const video = runtime?.video;
+    if (!video || video.readyState < 2 || video.seeking || !video.videoWidth || !video.videoHeight) return;
+    const frameCanvas = runtime.previewImage || document.createElement("canvas");
+    if (frameCanvas.width !== video.videoWidth || frameCanvas.height !== video.videoHeight) { frameCanvas.width = video.videoWidth; frameCanvas.height = video.videoHeight; }
+    frameCanvas.getContext("2d").drawImage(video, 0, 0, frameCanvas.width, frameCanvas.height);
+    runtime.previewImage = frameCanvas;
   }
-  function renderBackground(ctx, width, height, timeSeconds) {
+  function backgroundImageAt(timeSeconds, preview) {
+    const media = state.scheme.background.media;
+    const runtime = backgroundRuntime();
+    if (!media || !runtime) return null;
+    if (runtime.kind === "image") {
+      const resource = runtime.resource;
+      if (!resource) return null;
+      return resource.kind === "image" ? resource.image : (window.CellMotionAnimatedImage?.frameAt(resource, timeSeconds) || resource.frames?.[0]?.image || null);
+    }
+    if (!preview) return runtime.exportImage || runtime.previewImage;
+    const video = runtime.video;
+    if (!video || video.readyState < 2) return runtime.previewImage;
+    const target = videoClipTime(media, runtime.duration || Number(video.duration) || 0, timeSeconds);
+    cachePreviewVideoFrame(runtime);
+    if (!video.seeking && Math.abs(video.currentTime - target) > 0.16) video.currentTime = target;
+    if (state.playing && !state.exportBusy && !video.seeking) {
+      video.playbackRate = clamp(Number(state.scheme.motion.speed) || 1, 0.25, 2);
+      video.play().catch(() => {});
+    } else video.pause();
+    cachePreviewVideoFrame(runtime);
+    return video.seeking ? runtime.previewImage : video;
+  }
+  // Export seeks a dedicated video element to the exact clip time of every frame.
+  async function prepareBackgroundFrame(timeSeconds) {
+    const media = state.scheme.background.media;
+    const runtime = backgroundRuntime();
+    if (!media || !runtime || runtime.kind !== "video") return;
+    await runtime.promise;
+    const video = runtime.exportVideo;
+    const duration = runtime.duration || Number(video?.duration) || 0;
+    if (!video || !(duration > 0)) return;
+    const target = videoClipTime(media, duration, timeSeconds);
+    if (Math.abs(video.currentTime - target) > 1 / 240) await waitForSeek(video, target, 180);
+    const frameCanvas = runtime.exportImage || document.createElement("canvas");
+    frameCanvas.width = video.videoWidth || 2; frameCanvas.height = video.videoHeight || 2;
+    frameCanvas.getContext("2d").drawImage(video, 0, 0, frameCanvas.width, frameCanvas.height);
+    runtime.exportImage = frameCanvas;
+  }
+  function drawBackgroundLayer(ctx, width, height, image) {
     const background = state.scheme.background;
     ctx.fillStyle = normalizeColor(background.color, "#000000");
     ctx.fillRect(0, 0, width, height);
-    const image = backgroundImage(timeSeconds);
     if (!image) return;
-    const sourceWidth = image.width || image.naturalWidth || width, sourceHeight = image.height || image.naturalHeight || height;
-    const cover = Math.max(width / sourceWidth, height / sourceHeight) * background.zoom;
+    const media = background.media;
+    const sourceWidth = image.videoWidth || image.width || image.naturalWidth || width;
+    const sourceHeight = image.videoHeight || image.height || image.naturalHeight || height;
+    const cover = Math.max(width / Math.max(1, sourceWidth), height / Math.max(1, sourceHeight)) * (media?.cropZoom || 1);
     const drawWidth = sourceWidth * cover, drawHeight = sourceHeight * cover;
     ctx.save();
     ctx.globalAlpha = clamp(background.opacity / 100);
-    ctx.drawImage(image, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
+    ctx.drawImage(image, -(drawWidth - width) * (media?.cropX ?? 0.5), -(drawHeight - height) * (media?.cropY ?? 0.5), drawWidth, drawHeight);
     ctx.restore();
+  }
+  function renderBackground(ctx, width, height, timeSeconds, preview) {
+    drawBackgroundLayer(ctx, width, height, backgroundImageAt(timeSeconds, preview));
+  }
+  function drawCropPreview() {
+    const cropCanvas = $("backgroundCropPreview");
+    const runtime = backgroundRuntime();
+    if (!cropCanvas || !state.scheme.background.media || !runtime) return;
+    const ratio = state.scheme.canvas.width / Math.max(1, state.scheme.canvas.height);
+    cropCanvas.width = 720;
+    cropCanvas.height = Math.max(180, Math.round(720 / ratio));
+    cropCanvas.style.aspectRatio = `${state.scheme.canvas.width} / ${state.scheme.canvas.height}`;
+    const image = runtime.kind === "video"
+      ? (runtime.previewImage || (runtime.video?.readyState >= 2 ? runtime.video : null))
+      : backgroundImageAt(state.elapsedMs / 1000, false);
+    drawBackgroundLayer(cropCanvas.getContext("2d"), cropCanvas.width, cropCanvas.height, image);
   }
 
   // ---------- Rendering ----------
@@ -384,7 +534,7 @@
     const ctx = targetCanvas.getContext("2d");
     const time = elapsedMode ? compositionTime(timeSeconds * 1000) : timeSeconds * 1000;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    renderBackground(ctx, width, height, timeSeconds);
+    renderBackground(ctx, width, height, time / 1000, targetCanvas === canvas);
     const layout = composition(width, height);
     layout.entries.forEach((entry) => {
       if (entry.metrics.empty) return;
@@ -449,6 +599,7 @@
     canvas.height = Math.max(2, Math.round(canvas.width / ratio));
     stage.style.setProperty("--tc-active-composition-bg", normalizeColor(state.scheme.background.color, "#000000"));
     renderFrame(canvas, state.elapsedMs / 1000, canvas.width, canvas.height);
+    drawCropPreview();
   }
 
   // ---------- Row editor ----------
@@ -646,9 +797,46 @@
     const background = state.scheme.background;
     $("backgroundSwatch").style.backgroundColor = background.color;
     $("backgroundSwatch").setAttribute("aria-label", `当前背景颜色 ${background.color}`);
-    $("backgroundMediaInfo").hidden = !background.media;
-    $("backgroundMediaName").textContent = background.media?.name || "";
-    $("backgroundMediaType").textContent = /gif/i.test(background.media?.type || "") ? "GIF" : background.media ? "图片" : "";
+    $("backgroundSummary").textContent = background.media?.name || "";
+    $("backgroundSummary").hidden = !background.media;
+  }
+  function drawFilmstrip(filmstrip) {
+    const target = $("backgroundFilmstrip");
+    if (!filmstrip || !target) return;
+    const filmstripContext = target.getContext("2d");
+    filmstripContext.clearRect(0, 0, target.width, target.height);
+    filmstripContext.drawImage(filmstrip, 0, 0, target.width, target.height);
+  }
+  async function refreshMediaUi() {
+    syncBackgroundChrome();
+    const media = state.scheme.background.media;
+    $("backgroundMediaInfo").hidden = !media;
+    if (!media) return;
+    $("backgroundMediaName").textContent = media.name;
+    $("backgroundMediaType").textContent = isVideoMedia(media) ? "视频" : isGifMedia(media) ? "GIF" : "图片";
+    $("backgroundVideoTrim").hidden = !isVideoMedia(media);
+    $("backgroundCropZoom").value = String(media.cropZoom);
+    $("backgroundCropOutput").textContent = `${media.cropZoom.toFixed(2)}×`;
+    const runtime = await prepareBackground();
+    if (!runtime || backgroundRuntime() !== runtime) return;
+    drawCropPreview();
+    if (runtime.kind !== "video" || !(runtime.duration > 0)) return;
+    const duration = runtime.duration;
+    const clip = videoClipBounds(media, duration);
+    media.videoStart = clip.start;
+    media.videoEnd = clip.end;
+    $("backgroundVideoStart").max = String(Math.max(0, duration - 0.1));
+    $("backgroundVideoEnd").max = String(duration);
+    $("backgroundVideoStart").value = String(Number(clip.start.toFixed(2)));
+    $("backgroundVideoEnd").value = String(Number(clip.end.toFixed(2)));
+    $("backgroundVideoDuration").textContent = `${duration.toFixed(1)} 秒`;
+    const selection = $("backgroundVideoSelection");
+    selection.style.left = `${clip.start / duration * 100}%`;
+    selection.style.width = `${clip.duration / duration * 100}%`;
+    selection.querySelector(".is-start").setAttribute("aria-valuetext", `${clip.start.toFixed(1)} 秒`);
+    selection.querySelector(".is-end").setAttribute("aria-valuetext", `${clip.end.toFixed(1)} 秒`);
+    if (runtime.filmstrip) drawFilmstrip(runtime.filmstrip);
+    else prepareVideoFilmstrip(runtime).then(drawFilmstrip);
   }
   function syncControlsFromState() {
     const { canvas: canvasState, typography, motion, background } = state.scheme;
@@ -663,8 +851,7 @@
     controls.loop.checked = Boolean(motion.loop);
     controls.backgroundColor.value = background.color;
     controls.backgroundOpacity.value = background.opacity;
-    controls.backgroundZoom.value = background.zoom;
-    syncBackgroundChrome();
+    refreshMediaUi();
     renderRows();
     renderSelectedAssets();
     renderTimeline();
@@ -685,7 +872,6 @@
     motion.loop = controls.loop.checked;
     background.color = normalizeColor(controls.backgroundColor.value, "#000000");
     background.opacity = number(controls.backgroundOpacity.value, 100, 0, 100);
-    background.zoom = number(controls.backgroundZoom.value, 1, 1, 4);
   }
   function autoSave() {
     if (state.previewMode) return;
@@ -712,8 +898,10 @@
     if (!scheme || !Array.isArray(scheme.rows)) return;
     const typography = { ...clone(DEFAULT_SCHEME.typography), ...(scheme.typography || {}) };
     typography.fontFamily = normalizeFontValue(typography.fontFamily) || DEFAULT_SCHEME.typography.fontFamily;
-    const background = { ...clone(DEFAULT_SCHEME.background), ...(scheme.background || {}) };
-    background.media = background.media?.url ? { name: String(background.media.name || "背景"), type: String(background.media.type || ""), url: String(background.media.url) } : null;
+    const sourceBackground = scheme.background || {};
+    const background = { color: normalizeColor(sourceBackground.color, DEFAULT_SCHEME.background.color), opacity: number(sourceBackground.opacity, 100, 0, 100) };
+    // Older schemes stored a single zoom value beside the media.
+    background.media = normalizeBackgroundMedia(sourceBackground.media ? { cropZoom: sourceBackground.zoom, ...sourceBackground.media } : null);
     state.scheme = {
       version: VERSION,
       canvas: { ...clone(DEFAULT_SCHEME.canvas), ...(scheme.canvas || {}) },
@@ -800,27 +988,107 @@
     changed({ restart: timingControls.has(id) });
     if (id === "fontFamily") { measureCache.clear(); renderRows(); refreshFonts(); }
     if (id === "backgroundColor") syncBackgroundChrome();
+    if (id === "speed") { const runtime = backgroundRuntime(); if (runtime) runtime.exportImage = null; }
     if (id === "finalHold") pauseAt(cycleDurationMs() - 1);
     if (["lineWidth", "layoutScale", "positionX", "positionY"].includes(id) && !state.playing) pauseAt(stableElapsed());
   }));
   $("backgroundFile").addEventListener("change", async () => {
     const file = $("backgroundFile").files?.[0];
     if (!file) return;
+    if (!/^(image|video)\//i.test(file.type || "")) { $("exportStatus").textContent = "请选择图片、GIF 或视频文件。"; $("backgroundFile").value = ""; return; }
     const url = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
-    state.scheme.background.media = { name: file.name, type: file.type, url };
+    state.scheme.background.media = normalizeBackgroundMedia({ name: file.name, url, fileType: file.type, videoStart: 0, videoEnd: null, cropX: 0.5, cropY: 0.5, cropZoom: 1 });
     $("backgroundFile").value = "";
-    syncBackgroundChrome();
     await prepareBackground();
+    await refreshMediaUi();
     autoSave();
     resizePreview();
+    $("exportStatus").textContent = `${file.name} 已设为画面背景。`;
   });
   $("backgroundRemove").addEventListener("click", () => {
+    disposeBackground();
     state.scheme.background.media = null;
-    syncBackgroundChrome();
-    prepareBackground();
+    refreshMediaUi();
     autoSave();
     resizePreview();
   });
+  $("backgroundCropZoom").addEventListener("input", () => {
+    const media = state.scheme.background.media;
+    if (!media) return;
+    media.cropZoom = clamp(Number($("backgroundCropZoom").value) || 1, 1, 4);
+    $("backgroundCropOutput").textContent = `${media.cropZoom.toFixed(2)}×`;
+    autoSave(); resizePreview();
+  });
+  $("backgroundCropReset").addEventListener("click", () => {
+    const media = state.scheme.background.media;
+    if (!media) return;
+    media.cropX = 0.5; media.cropY = 0.5; media.cropZoom = 1;
+    $("backgroundCropZoom").value = "1";
+    $("backgroundCropOutput").textContent = "1.00×";
+    autoSave(); resizePreview();
+  });
+  let cropDrag = null;
+  $("backgroundCropPreview").addEventListener("pointerdown", (event) => {
+    const media = state.scheme.background.media;
+    if (!media) return;
+    cropDrag = { pointerId: event.pointerId, clientX: event.clientX, clientY: event.clientY, cropX: media.cropX, cropY: media.cropY };
+    $("backgroundCropPreview").setPointerCapture(event.pointerId);
+    event.preventDefault();
+  });
+  $("backgroundCropPreview").addEventListener("pointermove", (event) => {
+    const media = state.scheme.background.media;
+    if (!cropDrag || cropDrag.pointerId !== event.pointerId || !media) return;
+    const rect = $("backgroundCropPreview").getBoundingClientRect();
+    media.cropX = clamp(cropDrag.cropX - (event.clientX - cropDrag.clientX) / Math.max(1, rect.width));
+    media.cropY = clamp(cropDrag.cropY - (event.clientY - cropDrag.clientY) / Math.max(1, rect.height));
+    autoSave(); resizePreview();
+  });
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach((eventName) => $("backgroundCropPreview").addEventListener(eventName, () => { cropDrag = null; }));
+  function commitTrim() {
+    const media = state.scheme.background.media;
+    const runtime = backgroundRuntime();
+    if (!isVideoMedia(media) || !(runtime?.duration > 0)) return;
+    const clip = videoClipBounds({ ...media, videoStart: Number($("backgroundVideoStart").value), videoEnd: Number($("backgroundVideoEnd").value) }, runtime.duration);
+    media.videoStart = clip.start;
+    media.videoEnd = clip.end;
+    runtime.exportImage = null;
+    autoSave(); refreshMediaUi(); resizePreview();
+  }
+  ["backgroundVideoStart", "backgroundVideoEnd"].forEach((id) => $(id).addEventListener("change", commitTrim));
+  function trimPointerSeconds(event) {
+    const rect = $("backgroundVideoTimeline").getBoundingClientRect();
+    return clamp((event.clientX - rect.left) / Math.max(1, rect.width), 0, 1) * (backgroundRuntime()?.duration || 0);
+  }
+  function setTrimBoundary(edge, rawSeconds) {
+    const media = state.scheme.background.media;
+    const runtime = backgroundRuntime();
+    if (!media || !(runtime?.duration > 0)) return;
+    const clip = videoClipBounds(media, runtime.duration);
+    const seconds = Math.round(Number(rawSeconds) * 10) / 10;
+    if (edge === "start") $("backgroundVideoStart").value = String(clamp(seconds, 0, clip.end - 0.1));
+    else $("backgroundVideoEnd").value = String(clamp(seconds, clip.start + 0.1, runtime.duration));
+    commitTrim();
+  }
+  let draggedEdge = "";
+  $("backgroundVideoTimeline").addEventListener("pointerdown", (event) => {
+    const media = state.scheme.background.media;
+    const runtime = backgroundRuntime();
+    if (!media || !(runtime?.duration > 0)) return;
+    const clip = videoClipBounds(media, runtime.duration);
+    const seconds = trimPointerSeconds(event);
+    draggedEdge = event.target.closest("[data-video-edge]")?.dataset.videoEdge || (Math.abs(seconds - clip.start) <= Math.abs(seconds - clip.end) ? "start" : "end");
+    $("backgroundVideoTimeline").setPointerCapture(event.pointerId);
+    setTrimBoundary(draggedEdge, seconds);
+    event.preventDefault();
+  });
+  $("backgroundVideoTimeline").addEventListener("pointermove", (event) => { if (draggedEdge && $("backgroundVideoTimeline").hasPointerCapture(event.pointerId)) setTrimBoundary(draggedEdge, trimPointerSeconds(event)); });
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach((eventName) => $("backgroundVideoTimeline").addEventListener(eventName, () => { draggedEdge = ""; }));
+  $("backgroundVideoSelection").querySelectorAll("[data-video-edge]").forEach((handle) => handle.addEventListener("keydown", (event) => {
+    if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+    const current = handle.dataset.videoEdge === "start" ? Number($("backgroundVideoStart").value) : Number($("backgroundVideoEnd").value);
+    setTrimBoundary(handle.dataset.videoEdge, current + (event.key === "ArrowLeft" ? -0.1 : 0.1));
+    event.preventDefault();
+  }));
 
   const styleKeys = new Set(["fontFamily", "fontWeight", "size", "scaleY", "widthRatio", "letterGap", "gapBefore", "role", "text"]);
   function handleRowInput(event) {
@@ -1101,6 +1369,7 @@
   $("exportPng").addEventListener("click", async () => {
     await exportReady();
     const output = exportCanvas();
+    await prepareBackgroundFrame(compositionTime(state.elapsedMs) / 1000);
     renderFrame(output, state.elapsedMs / 1000, output.width, output.height);
     output.toBlob((blob) => {
       if (!blob) return;
@@ -1122,6 +1391,7 @@
       const total = Math.max(1, Math.ceil(exportSeconds() * fps));
       const gif = new GIF({ workers: 2, quality: 10, width: output.width, height: output.height, workerScript: workerUrl });
       for (let index = 0; index < total; index += 1) {
+        await prepareBackgroundFrame(compositionTime(index / fps * 1000) / 1000);
         renderFrame(output, index / fps, output.width, output.height);
         const delay = (Math.round((index + 1) * 100 / fps) - Math.round(index * 100 / fps)) * 10;
         gif.addFrame(output, { copy: true, delay });
@@ -1154,6 +1424,7 @@
       const outputContext = output.getContext("2d", { willReadFrequently: true });
       const progressInterval = Math.max(1, Math.floor(fps / 10));
       for (let index = 0; index < total; index += 1) {
+        await prepareBackgroundFrame(compositionTime(index / fps * 1000) / 1000);
         renderFrame(output, index / fps, output.width, output.height);
         encoder.addFrameRgba(outputContext.getImageData(0, 0, output.width, output.height).data);
         if (index % progressInterval === 0 || index === total - 1) {
@@ -1238,7 +1509,7 @@
       if (message.type === "cellmotion:seek") window.CellMotionEffectBridge.seek(message.seconds);
       if (message.type === "cellmotion:request-duration") postDuration();
     });
-    window.__cityStackTest = { preloadInsertedAssets, renderFrame, getScheme: () => clone(state.scheme), cycleDurationMs, setTime, stableElapsed, refreshFonts, rowSchedule };
+    window.__cityStackTest = { prepareBackgroundFrame, prepareBackground, preloadInsertedAssets, renderFrame, getScheme: () => clone(state.scheme), cycleDurationMs, setTime, stableElapsed, refreshFonts, rowSchedule };
     if (window.parent !== window) window.parent.postMessage({ type: "cellmotion:ready", effectId: SLUG, bridgeVersion: "1.0.0", durationMs: cycleDurationMs() }, "*");
     requestAnimationFrame(animationLoop);
   }
