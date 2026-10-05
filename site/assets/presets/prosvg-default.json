@@ -1,0 +1,53 @@
+{
+  "version": 7,
+  "canvas": {
+    "width": 1920,
+    "height": 1080,
+    "preset": "1920x1080"
+  },
+  "typography": {
+    "fontFamily": "stg:inter",
+    "fontSize": 400,
+    "tracking": 0,
+    "positionX": 0,
+    "positionY": 0,
+    "alignment": "center",
+    "textColor": "#16181b",
+    "backgroundColor": "#ffffff"
+  },
+  "motion": {
+    "introEnabled": true,
+    "introDuration": 440,
+    "introCharacterDelay": 0,
+    "morphDuration": 600,
+    "characterDelay": 0,
+    "effectAmount": 0,
+    "speed": 1,
+    "loop": true
+  },
+  "material": {
+    "palette": "original",
+    "stage": 5,
+    "blur": 7.3,
+    "grain": 0.12,
+    "period": 4.4,
+    "warp": 0,
+    "light": 0,
+    "direction": 1,
+    "proShape": true
+  },
+  "rows": [
+    {
+      "id": "prosvg-01",
+      "text": "PRO",
+      "hold": 0,
+      "icons": [],
+      "fontFamily": "",
+      "textColor": "#16181b",
+      "backgroundColor": "#ffffff",
+      "backgroundMedia": null,
+      "backgroundTransition": "direct",
+      "backgroundTransitionDuration": 120
+    }
+  ]
+}

@@ -162,6 +162,10 @@
     if (!active || event.target === popover || popover.contains(event.target)) return;
     requestAnimationFrame(() => { if (active) positionPopover(active.trigger); });
   }, true);
+  document.addEventListener('tc-controls-synced', () => {
+    document.querySelectorAll('select[data-tc-rounded-select="true"]').forEach(sync);
+    if (active) refreshOpen(active.select);
+  });
   document.addEventListener('tc-languagechange', () => {
     document.querySelectorAll('select[data-tc-rounded-select="true"]').forEach(sync);
     if (active) refreshOpen(active.select);

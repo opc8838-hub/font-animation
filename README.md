@@ -10,7 +10,9 @@ CellMotion 是一个自由、灵活的动态设计系统。字体、图标、图
 
 **Move · Connect · Recombine · Grow.** 运动 · 连接 · 重组 · 生长。
 
-目前收录 69 个动效，支持中文与多语种字体、字图混排、图片 / GIF / 视频背景、响应式画布，以及浏览器内的预览与导出。官网的「全部动效」和各内容分类只展示已完成的 37 个。另外 32 个尚未完成：原分类保留，只出现在「待上新」，封面写着「待上新，未完成」，暂时不能点进编辑器。名单和恢复方式见 [docs/PENDING_RELEASE.md](docs/PENDING_RELEASE.md)。
+目前收录 70 个动效，支持中文与多语种字体、字图混排、图片 / GIF / 视频背景、响应式画布，以及浏览器内的预览与导出。官网的「全部动效」和各内容分类只展示已完成的 38 个。另外 32 个尚未完成：原分类保留，只出现在「待上新」，封面写着「待上新，未完成」，暂时不能点进编辑器。名单和恢复方式见 [docs/PENDING_RELEASE.md](docs/PENDING_RELEASE.md)。
+
+**2026-10-05 彩铸 / PRO SVG Lab**：接入 Johnlzx 的 SVG 材质实验，保留四种色谱、六级滤镜分解与定制 PRO 字形；编辑器沿用字芽，支持多语种文字、图标与媒体、主流及自定义尺寸、方案管理和 PNG/GIF/H.264 MP4/SVG 导出。详见 [分析与验证](docs/analyses/prosvg.md)。
 
 **2026-09-24 字阶**：按最新 193552 视频校正为独立字形位置与字号变化、两端缩隐和重组；文字、字体、字距、大小、节奏和画布尺寸可编辑，预览及 PNG/GIF/MP4 共用确定性渲染。
 
@@ -20,9 +22,11 @@ CellMotion 是一个自由、灵活的动态设计系统。字体、图标、图
 
 这个仓库会持续更新。欢迎提 bug、提想法，也可以直接联系。[联系 / 合作 / 咨询](#联系--合作--咨询)
 
-## 开源来源与 CellMotion 贡献
+## 来源署名与 CellMotion 贡献
 
-感谢以下项目为部分动效提供了开放源码、算法或运动方式参考：
+感谢以下项目为部分动效提供了源码、算法或运动方式参考：
+
+- [PRO SVG Lab](https://github.com/Johnlzx/pro-svg-lab) — **彩铸的材质实现来自 Johnlzx，不是本仓库维护者原创**；更早的视觉原作来自 Mike Bespalov / Refero。本仓库的贡献是字芽同款编辑器、可编辑文字、多尺寸及 PNG/GIF/MP4 导出接入，并将在此基础上继续二创。保留上游署名；上游未提供明确许可，不将本仓库许可自动套用于它。详见 [来源、贡献与许可状态](docs/PRO_SVG_LAB_ATTRIBUTION.md)。
 
 - [Space Type Generator](https://spacetypegenerator.com/) — Kiel Mutschelknaus 创作的生成式字体实验。CellMotion 的个别早期 p5.js 动效在其开源代码基础上进行了中文支持、编辑器重构与功能扩展；这些衍生部分继续保留原作者署名和对应许可。
 - [LTMorphingLabel](https://github.com/lexrus/LTMorphingLabel#uikit) — Lex Tang 的 UILabel 字符变形库。字芽、雾升、字倾、点解等逐字形变动效参考其公开效果与 MIT 源码，并面向浏览器画布、独立时间轴和可视化编辑重新实现。

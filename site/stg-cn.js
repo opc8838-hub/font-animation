@@ -10,6 +10,7 @@
     return;
   }
   const effects = [
+    ["prosvg", "彩铸", "PRO SVG Lab"],
     ["sproutshift", "字芽", "Sprout Shift"], ["mistlift", "雾升", "Mist Lift"],
     ["typecascade", "字倾", "Type Cascade"], ["letterpulse", "字阶", "Letter Pulse"], ["dotresolve", "点解", "Dot Resolve"],
     ["glyphreveal", "字现", "Glyph Reveal"],

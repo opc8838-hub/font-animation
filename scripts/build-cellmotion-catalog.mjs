@@ -17,6 +17,7 @@ for (const id of pendingRelease) {
   if (!knownIds.has(id)) throw new Error(`Unknown pending effect: ${id}`);
 }
 const videos = {
+  prosvg:'prosvg-card',
   continuation:'continuation-card-centered', 'split-flip':'split-flip-card', iconburst:'iconburst-card', glyphmorph:'glyphmorph-card',
   sproutshift:'sproutshift-wide-card', mistlift:'mistlift-wide-card', typecascade:'typecascade-wide-card',
   dotresolve:'dotresolve-wide-card', glyphreveal:'glyphreveal-wide-card', currentwall:'water-flow-card',
@@ -25,7 +26,7 @@ const videos = {
   colorrecompose:'color-recompose-card', impactbuild:'impactbuild-card'
 };
 const media = new Set(['mediacascade','beforeafter','shutterafter','phoneframe','laptopframe','orbitgallery','moodboard']);
-const featured = ['sproutshift','typecascade','dotresolve','glyphmorph','iconburst','pathwriter'];
+const featured = ['prosvg','sproutshift','typecascade','dotresolve','glyphmorph','iconburst','pathwriter'];
 async function exists(path) { try { await access(new URL(path, site)); return true; } catch { return false; } }
 const effects = [];
 for (const [id,name,english,group,description] of rows) {

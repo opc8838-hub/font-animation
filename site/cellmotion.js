@@ -8,11 +8,12 @@ function inCategory(effect, category) {
   return category === 'all' || effect.category === category;
 }
 const escapeHTML = (text) => String(text).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-const mediaURL = (url) => `${url}?v=20260927-letterpulsecover2`;
+const mediaURL = (url) => `${url}?v=20261005-prosvg1`;
 const play = async (video) => { try { await video.play(); return true; } catch { return false; } };
 let effects = [], featured = [], activeCategory = 'all', limit = 12;
 let activeUsage = 'all';
 const ribbonSeed = [
+  {id:'prosvg',name:'彩铸',href:'prosvg.html?from=gallery',poster:'final_prosvg.png',video:'assets/previews/prosvg-card.mp4'},
   {id:'letterpulse',name:'字阶',href:'letterpulse.html',poster:'final_letterpulse.svg',video:'assets/previews/letterpulse-1920x1080.mp4'},
   {id:'iconburst',name:'图标爆发',href:'iconburst.html',poster:'assets/cellmotion/poster-iconburst.jpg?v=20260926-5',video:'assets/previews/iconburst-card.mp4?v=20260926-5'},
   {id:'typecascade',name:'字倾',href:'typecascade.html',poster:'assets/cellmotion/poster-typecascade.jpg',video:'assets/previews/typecascade-wide-card.mp4'},
@@ -174,7 +175,7 @@ function renderCatalog() {
   // Existing editors are video-creation materials, not verified distributable web components.
   // Do not infer React/SDK availability or supported export formats from a preview MP4.
   const matches=effects.filter(effect=>activeUsage!=='web'&&inCategory(effect,activeCategory)&&`${effect.name} ${effect.english} ${effect.id} ${effect.description}`.toLocaleLowerCase().includes(query));
-  const homeIds=['sproutshift','iconburst','shutterafter','currentwall','impactbuild','pathwriter'];
+  const homeIds=['prosvg','sproutshift','iconburst','shutterafter','currentwall','impactbuild','pathwriter'];
   const showing=homePreview?homeIds.map(id=>effects.find(effect=>effect.id===id)).filter(effect=>effect && !isPending(effect)):matches.slice(0,limit);
   if($('#result-count'))$('#result-count').textContent=activeUsage==='web'?'0 个已适配组件':`${matches.length} 个动效`;
   if($('#catalog-empty'))$('#catalog-empty').hidden=matches.length>0||activeUsage==='web';
@@ -252,7 +253,7 @@ document.addEventListener('visibilitychange',()=>{
 });
 async function loadCatalogData() {
   try {
-    const response=await fetch('cellmotion-catalog.json?v=20260927-letterpulsecover2');
+    const response=await fetch('cellmotion-catalog.json?v=20261005-prosvg1');
     if(!response.ok)throw new Error(`Catalog HTTP ${response.status}`);
     const catalog=await response.json();
     effects=catalog.effects;

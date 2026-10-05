@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "source": "gallery.js",
   "featured": [
+    "prosvg",
     "sproutshift",
     "typecascade",
     "dotresolve",
@@ -11,6 +12,17 @@
     "letterpulse"
   ],
   "effects": [
+    {
+      "id": "prosvg",
+      "name": "彩铸",
+      "english": "PRO SVG Lab",
+      "description": "流动色谱 · SVG 材质",
+      "category": "type",
+      "href": "prosvg.html?from=gallery&v=20261005-1",
+      "poster": "final_prosvg.png",
+      "video": "assets/previews/prosvg-card.mp4",
+      "status": "ready"
+    },
     {
       "id": "coil",
       "name": "线圈",

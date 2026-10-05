@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="favicon.svg">
+  <title>彩铸 PRO SVG Lab | CellMotion</title>
+  <link rel="stylesheet" href="workspace-editor.css?v=20260901-1">
+  <link rel="stylesheet" href="me-motion-editor.css?v=20260909-timeline-color">
+  <link rel="stylesheet" href="shared-fonts.css?v=20260824-2">
+  <link rel="stylesheet" href="stg-cn.css?v=20260824-1">
+  <link rel="stylesheet" href="glyphmorph-reviewed.css?v=20260909-media-crop">
+  <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-coloriso">
+  <link rel="stylesheet" href="typecascade-polish.css?v=20260909-coloriso">
+<link rel="stylesheet" href="site-preferences.css?v=20260926-18">
+  <link rel="stylesheet" href="prosvg.css?v=20261005-1">
+</head>
+<body class="glyphmorph-editor" data-morph-port="prosvg">
+  <aside id="glyphMorphInspector" class="gm-inspector" aria-label="彩铸编辑器">
+    <header class="gm-header">
+      <a class="tc-brand" href="cellmotion.html" aria-label="CellMotion 首页"><img src="assets/cellmotion/logo-original-transparent.png?v=20260926-1" alt="CellMotion"></a>
+      <div><small>让创意，自由生长</small><h1>彩铸 <span>PRO SVG Lab</span></h1></div>
+    </header>
+
+    <section class="gm-card gm-canvas-card">
+      <div class="gm-card-title"><span>01</span><h2>画布尺寸</h2></div>
+      <label class="gm-field gm-field-wide">预设
+        <select id="canvasPreset">
+          <option value="1080x1080">1:1 方形 · 1080 × 1080</option>
+          <option value="1080x1350">4:5 竖版 · 1080 × 1350</option>
+          <option value="1080x1440">3:4 竖版 · 1080 × 1440</option>
+          <option value="1080x1620">2:3 竖版 · 1080 × 1620</option>
+          <option value="1080x1920">9:16 全屏 · 1080 × 1920</option>
+          <option value="1920x1080">16:9 横版 · 1920 × 1080</option>
+          <option value="1440x1080">4:3 横版 · 1440 × 1080</option>
+          <option value="1620x1080">3:2 横版 · 1620 × 1080</option>
+          <option value="custom">自定义</option>
+        </select>
+      </label>
+      <div class="gm-grid-2 gm-custom-size" hidden>
+        <label class="gm-field">宽度 <input id="canvasWidth" type="number" min="320" max="3840" step="2" value="1080"></label>
+        <label class="gm-field">高度 <input id="canvasHeight" type="number" min="320" max="3840" step="2" value="1080"></label>
+      </div>
+    </section>
+
+    <section class="gm-card">
+      <div class="gm-card-title"><span>02</span><h2>文字段落</h2><button id="addRow" class="gm-text-button" type="button">＋ 添加段落</button></div>
+      <p class="gm-help">默认按 6 个文字节拍演示完整缩放变形；每段可独立停留、插入图标并设置背景视频。</p>
+      <div id="sequenceRows" class="gm-sequence"></div>
+      <div class="gm-grid-2 gm-text-colors">
+        <label class="gm-field">新段落默认文字色 <input id="textColor" type="color"></label>
+        <label class="gm-field">新段落默认背景 <input id="backgroundColor" type="color"></label>
+      </div>
+    </section>
+
+    <section class="gm-card gm-icon-launch-card">
+      <div class="gm-card-title"><span>03</span><h2>图标库</h2><button id="openIconLibrary" class="gm-text-button" type="button" aria-expanded="false">右侧展开</button></div>
+      <p class="gm-help">从文字行点击“插入图标”，图库会在右侧独立打开，左栏不再上下跳动。</p>
+      <button id="openIconLibraryLarge" class="gm-open-library" type="button">打开图标库</button>
+    </section>
+
+    <section class="gm-card">
+      <div class="gm-card-title"><span>04</span><h2>字体与构图</h2></div>
+      <label class="gm-field gm-field-wide">全局默认字体
+        <select id="fontFamily"><option value="stg:inter">Inter</option></select>
+      </label>
+      <div class="gm-grid-2">
+        <label class="gm-field">字号 <input id="fontSize" type="range" min="42" max="600" step="1"><output for="fontSize"></output></label>
+        <label class="gm-field">字距 <input id="tracking" type="range" min="-12" max="60" step="1"><output for="tracking"></output></label>
+        <label class="gm-field">水平 <input id="positionX" type="range" min="-40" max="40" step="1"><output for="positionX"></output></label>
+        <label class="gm-field">垂直 <input id="positionY" type="range" min="-40" max="40" step="1"><output for="positionY"></output></label>
+      </div>
+      <fieldset class="gm-segmented"><legend>对齐</legend>
+        <label><input type="radio" name="alignment" value="left"><span>左</span></label>
+        <label><input type="radio" name="alignment" value="center"><span>中</span></label>
+        <label><input type="radio" name="alignment" value="right"><span>右</span></label>
+      </fieldset>
+    </section>
+
+    <section class="gm-card" id="materialCard">
+      <div class="gm-card-title"><span>05</span><h2>流动材质</h2></div>
+      <label class="gm-field gm-field-wide">色谱<select id="materialPalette"><option value="original">光谱</option><option value="silver">冷银</option><option value="lava">熔岩</option><option value="violet">电离紫</option></select></label>
+      <label class="gm-field gm-field-wide">滤镜分解<select id="materialStage"><option value="0">01 · 字形</option><option value="1">02 · 灰度轮廓</option><option value="2">03 · 移动扫描</option><option value="3">04 · 柔化场</option><option value="4">05 · 颗粒调制</option><option value="5">06 · 色谱映射</option></select></label>
+      <div class="gm-grid-2">
+        <label class="gm-field">柔度<input id="materialBlur" type="range" min="0" max="16" step="0.1"><output for="materialBlur"></output></label>
+        <label class="gm-field">颗粒<input id="materialGrain" type="range" min="0" max="0.4" step="0.01"><output for="materialGrain"></output></label>
+        <label class="gm-field">扫描周期<input id="materialPeriod" type="range" min="1" max="12" step="0.1"><output for="materialPeriod"></output></label>
+        <label class="gm-field">总速度<input id="speed" type="range" min="0.25" max="2" step="0.05"><output for="speed"></output></label>
+      </div>
+      <label class="gm-field gm-field-wide">扫描方向<select id="materialDirection"><option value="1">向右</option><option value="-1">向左</option></select></label>
+      <label class="gm-check"><input id="introEnabled" type="checkbox"><span>首次柔和揭示</span></label>
+      <label class="gm-check"><input id="materialProShape" type="checkbox"><span>PRO 使用定制字形</span></label>
+      <p class="gm-help">输入其他文字或插入图标后使用所选字体；关闭定制字形可为 PRO 更换字体。</p>
+      <details class="gm-row-background"><summary>进一步实验</summary><div class="gm-grid-2" style="padding:10px">
+        <label class="gm-field">流体置换<input id="materialWarp" type="range" min="0" max="24" step="0.5"><output for="materialWarp"></output></label>
+        <label class="gm-field">浮雕高光<input id="materialLight" type="range" min="0" max="2" step="0.05"><output for="materialLight"></output></label>
+      </div></details>
+      <label class="gm-check"><input id="loop" type="checkbox"><span>循环播放</span></label>
+      <div hidden><input id="introDuration" value="440"><input id="introCharacterDelay" value="0"><input id="morphDuration" value="600"><input id="characterDelay" value="0"><input id="effectAmount" value="0"></div>
+    </section>
+
+    <section class="gm-card">
+      <div class="gm-card-title"><span>06</span><h2>时间轴</h2></div>
+      <div class="me-choreo-scroll"><div id="timeline" class="gm-timeline me-choreo-track me-choreo-bar" role="list" aria-label="彩铸动效时间轴"></div></div>
+      <input id="scrubber" class="gm-scrubber me-choreo-playhead" type="range" min="0" max="1" step="0.001" value="0" aria-label="时间轴播放头">
+      <div class="gm-time-readout"><span id="timeNow">0.00s</span><span id="timeTotal">0.00s</span></div>
+    </section>
+
+    <section class="gm-card">
+      <div class="gm-card-title"><span>07</span><h2>方案</h2></div>
+      <div class="gm-actions gm-actions-4">
+        <button id="saveScheme" type="button">保存方案</button>
+        <button id="importScheme" type="button">导入方案</button>
+        <button id="restoreScheme" type="button">恢复默认</button>
+        <button id="clearScheme" type="button" aria-label="清空所有行">清理重做</button>
+      </div>
+      <input id="schemeFile" type="file" accept="application/json,.json" hidden>
+    </section>
+
+    <section class="gm-card">
+      <div class="gm-card-title"><span>08</span><h2>真实导出</h2></div>
+      <div class="gm-grid-2">
+        <label class="gm-field">时长
+          <select id="exportDuration"><option value="cycle">完整循环</option><option value="3">3 秒</option><option value="5">5 秒</option><option value="10">10 秒</option><option value="custom">自定义</option></select>
+        </label>
+        <label class="gm-field">帧率
+          <select id="exportFps"><option value="15">15 fps</option><option value="24">24 fps</option><option value="30" selected>30 fps</option><option value="60">60 fps</option></select>
+        </label>
+      </div>
+      <label class="gm-field gm-field-wide" id="customDurationField" hidden>时长 / 秒<input id="customExportDuration" type="number" min="0.1" max="60" step="0.1" value="4.4"></label>
+      <div class="gm-actions gm-actions-3">
+        <button id="exportPng" type="button">PNG</button>
+        <button id="exportGif" type="button">GIF</button>
+        <button id="exportMp4" type="button">MP4</button>
+      </div>
+      <div class="gm-actions" style="margin-top:8px"><button id="exportSvg" type="button">SVG · 当前材质动画</button></div>
+      <p class="gm-help" style="margin-top:8px">SVG 保存当前段落的材质动画；完整段落、图标和背景请使用 PNG / GIF / MP4。GIF 最高 30 fps。自定义尺寸对齐至偶数像素，以保持 MP4 与预览一致。</p>
+      <p id="exportStatus" class="gm-status" aria-live="polite">输出将严格使用当前画布尺寸。</p>
+    </section>
+  </aside>
+
+  <aside id="iconLibraryDrawer" class="gm-library-drawer" aria-label="图标库侧窗" hidden>
+    <header class="gm-library-drawer-header">
+      <div><small>当前文字行的图标</small><h2>图标库</h2></div>
+      <button id="closeIconLibrary" type="button" aria-label="关闭图标库">×</button>
+    </header>
+    <div id="iconLibraryBrowse" class="gm-library-browse">
+      <div id="iconLayerPanel" class="gm-layer-panel me-layer-panel">
+        <div class="gm-layer-summary">
+          <div><small>已插入图标</small><strong id="selectedIconCount">0</strong></div>
+          <button id="toggleSelectedIcons" class="me-layer-toggle" type="button" aria-expanded="false">展开已选</button>
+        </div>
+        <div id="selectedIconItems" class="gm-layer-items me-layer-items"></div>
+      </div>
+      <div class="gm-library-selection">
+        <div id="librarySelectionPreview" class="gm-library-selection-preview" aria-hidden="true">＋</div>
+        <div><small>当前候选</small><strong id="librarySelectionName">请先选择图标</strong><span id="insertTargetLabel">目标：第 01 行 · 文字末尾</span></div>
+        <button id="insertSelectedIcon" class="me-asset-commit" type="button" disabled>插入到光标</button>
+      </div>
+      <div id="iconLibrary" class="gm-icon-groups"></div>
+    </div>
+
+    <section id="iconAssetDrawer" class="gm-asset-drawer me-asset-drawer" aria-label="单图标编辑" hidden>
+      <header>
+        <div><small>单独编辑</small><h2 id="activeIconName">图标</h2></div>
+        <button id="closeIconDrawer" type="button" aria-label="返回图标库">←</button>
+      </header>
+      <div class="me-asset-editor gm-asset-editor">
+        <label class="gm-field gm-field-wide">所属文字行<select id="iconRow"></select></label>
+        <label class="gm-field gm-field-wide">插入位置<select id="iconBoundary"></select></label>
+        <div class="gm-grid-2">
+          <label class="gm-field">图标大小<input id="iconSize" type="range" min="20" max="220" step="1"><output for="iconSize"></output></label>
+          <label class="gm-field">图标与文字间距<input id="iconGap" type="range" min="0" max="80" step="1"><output for="iconGap"></output></label>
+          <label class="gm-field">水平左右位置<input id="iconX" type="range" min="-100" max="100" step="1"><output for="iconX"></output></label>
+          <label class="gm-field">垂直位置<input id="iconY" type="range" min="-100" max="100" step="1"><output for="iconY"></output></label>
+        </div>
+        <button id="removeActiveIcon" class="gm-remove-active" type="button">删除这个图标</button>
+      </div>
+    </section>
+  </aside>
+
+  <main id="glyphMorphStage" class="gm-stage">
+    <div id="compositionFrame" class="gm-composition-frame">
+      <canvas id="glyphMorphCanvas" width="1080" height="1080" aria-label="彩铸效果预览"></canvas>
+    </div>
+    <div class="gm-stage-controls me-stage-controls" aria-label="预览控制">
+      <button id="toggleInspector" type="button" aria-pressed="false">▤ <span>编辑器</span></button>
+      <i aria-hidden="true"></i>
+      <button id="restartPreview" type="button">↺ <span>重播</span></button>
+      <button id="togglePlayback" type="button" aria-pressed="false">Ⅱ <span>暂停</span></button>
+    </div>
+  </main>
+
+  <script src="js/continuation-gif.js?v=20260824-1"></script>
+  <script src="shared-font-library.js?v=20260824-2"></script>
+  <script src="row-font-editor.js?v=20260904-4"></script>
+  <script src="shared-icon-library.js?v=20260902-1"></script>
+  <script src="cellmotion-animated-image.js?v=20260909-1"></script>
+  <script src="vendor/pro-svg-lab/renderer.js?v=20261005-1"></script>
+  <script src="prosvg.js?v=20261005-1"></script>
+  <script src="morphports-reviewed.js?v=20261005-prosvg1"></script>
+  <script src="stg-cn.js?v=20261005-prosvg1"></script>
+  <script src="typecascade-workspace.js?v=20260909-standard"></script>
+  <script src="typecascade-polish.js?v=20260909-coloriso"></script>
+  <script src="typecascade-selects.js?v=20261005-prosvg1"></script>
+  <script src="typecascade-locale.js?v=20261005-prosvg1"></script>
+  <script src="cellmotion-ai-manifest.js?v=20260909-ai-manifest"></script>
+  <script src="cellmotion-ai-menu.js?v=20261005-prosvg1"></script>
+<script defer src="site-preferences.js?v=20260926-18"></script>
+</body>
+</html>

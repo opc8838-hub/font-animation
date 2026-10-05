@@ -94,8 +94,9 @@
     }
   };
   const portKey = document.body.dataset.morphPort;
-  const port = PORTS[portKey] || PORTS.sproutshift;
-  const minimumRows = port.mode === "cascade" ? 1 : 2;
+  const extension = window.MEMorphPortExtension?.port?.slug === portKey ? window.MEMorphPortExtension : null;
+  const port = extension?.port || PORTS[portKey] || PORTS.sproutshift;
+  const minimumRows = extension?.minimumRows || (port.mode === "cascade" ? 1 : 2);
   const STORAGE_KEY = `me-motion-${port.slug}-v3`;
 
   // Frozen approved example. Keep synchronized with assets/presets/{slug}-default.json.
@@ -194,6 +195,7 @@
     try {
       await window.MERowFonts.loadRows(state.scheme.rows, state.scheme.typography);
       fitCache.key = "";
+      extension?.invalidate();
       resizePreview();
     } catch (error) { $("exportStatus").textContent = `字体加载失败：${error.message}`; }
   }
@@ -223,6 +225,7 @@
   }
 
   function timelineSegments() {
+    if (extension) return extension.segments(state.scheme);
     const rows = state.scheme.rows.length ? state.scheme.rows : [{ id: "blank-a", text: "", hold: 100 }];
     return rows.map((row, index) => {
       const singleRowCascade = port.mode === "cascade" && rows.length === 1;
@@ -251,7 +254,7 @@
     const index = ((rowIndex % length) + length) % length;
     let rawStart = 0;
     for (let cursor = 0; cursor < index; cursor += 1) rawStart += segments[cursor].durationMs;
-    return (rawStart + (segments[index].introMs || 0)) / Math.max(0.01, state.scheme.motion.speed);
+    return (rawStart + (extension ? extension.editOffset(state.scheme) : (segments[index].introMs || 0))) / Math.max(0.01, state.scheme.motion.speed);
   }
 
   function seekToRowStart(rowIdOrIndex, pause = true) {
@@ -796,6 +799,7 @@
   }
 
   function renderFrame(targetCanvas, timeSeconds, width = targetCanvas.width, height = targetCanvas.height) {
+    if (extension) return extension.render({ targetCanvas, timeSeconds, width, height, state, canvas, resolveTimeline, glyphLayout, drawToken, renderBackground, syncPresentationBackdrop });
     const ctx = targetCanvas.getContext("2d", { willReadFrequently: true });
     ctx.save();
     ctx.clearRect(0, 0, width, height);
@@ -1392,6 +1396,7 @@
   }
 
   function renderTimeline() {
+    if (extension) { extension.renderTimeline(state.scheme); return; }
     const segments = timelineSegments();
     const speed = Math.max(0.01, state.scheme.motion.speed);
     let cursor = 0;
@@ -1450,6 +1455,7 @@
   }
 
   function syncControlsFromState() {
+    extension?.sync(state.scheme);
     const { canvas: canvasState, typography, motion } = state.scheme;
     $("canvasPreset").value = canvasState.preset;
     $("canvasWidth").value = canvasState.width;
@@ -1465,6 +1471,8 @@
     renderSelectedAssets();
     renderTimeline();
     updateOutputs();
+    extension?.sync(state.scheme);
+    document.dispatchEvent(new Event("tc-controls-synced"));
     resizePreview();
   }
 
@@ -1477,6 +1485,7 @@
     motionNumbers.forEach((id) => { state.scheme.motion[id] = Number(controls[id].value); });
     state.scheme.motion.introEnabled = controls.introEnabled.checked;
     state.scheme.motion.loop = controls.loop.checked;
+    extension?.collect(state.scheme);
   }
 
   function autoSave() {
@@ -1496,12 +1505,14 @@
 
   function applyScheme(scheme, status = "") {
     if (!scheme || !Array.isArray(scheme.rows)) return;
+    if (extension) scheme = extension.normalizeScheme(scheme);
     const customAssets = (Array.isArray(scheme.customAssets) ? scheme.customAssets : []).map(normalizeCustomAsset).filter(Boolean);
     const availableAsset = (libraryId) => customAssets.find((asset) => asset.libraryId === libraryId)
       || window.STGIconLibrary?.byId?.get(libraryId)
       || null;
     state.scheme = {
       version: VERSION,
+      ...(extension ? { material: extension.normalize(scheme.material) } : {}),
       canvas: { ...clone(DEFAULT_SCHEME.canvas), ...(scheme.canvas || {}) },
       typography: { ...clone(DEFAULT_SCHEME.typography), ...(scheme.typography || {}) },
       motion: { ...clone(DEFAULT_SCHEME.motion), ...(scheme.motion || {}) },
@@ -1581,11 +1592,13 @@
   }
 
   function exportSeconds() {
+    if (extension && $("exportDuration").value === "custom") return clamp(Number($("customExportDuration").value) || 4.4, 0.1, 60);
     return $("exportDuration").value === "cycle" ? cycleDurationMs() / 1000 : Number($("exportDuration").value);
   }
 
   function setBusy(value, message) {
     state.exportBusy = value;
+    extension?.busy(value);
     document.querySelectorAll("#exportPng,#exportGif,#exportMp4").forEach((button) => { button.disabled = value; });
     $("exportStatus").textContent = message;
   }
@@ -2051,15 +2064,19 @@
   });
 
   $("exportPng").addEventListener("click", async () => {
-    await Promise.all([preloadInsertedAssets(), preloadRowBackgrounds()]);
-    const output = exportCanvas();
-    await prepareBackgroundFrame(state.elapsedMs / 1000);
-    renderFrame(output, state.elapsedMs / 1000, output.width, output.height);
-    output.toBlob((blob) => {
-      if (!blob) return;
+    if (state.exportBusy) return;
+    const captureSeconds = state.elapsedMs / 1000;
+    setBusy(true, "正在生成 PNG…");
+    try {
+      await Promise.all([preloadInsertedAssets(), preloadRowBackgrounds()]);
+      const output = exportCanvas();
+      await prepareBackgroundFrame(captureSeconds);
+      await renderFrame(output, captureSeconds, output.width, output.height);
+      const blob = await new Promise(resolve => output.toBlob(resolve, "image/png"));
+      if (!blob) throw new Error("PNG 编码失败");
       download(blob, `${port.slug}-${output.width}x${output.height}.png`);
-      $("exportStatus").textContent = `PNG 已生成 · ${output.width} × ${output.height}`;
-    }, "image/png");
+      setBusy(false, `PNG 已生成 · ${output.width} × ${output.height}`);
+    } catch (error) { setBusy(false, `PNG 生成失败：${error.message}`); }
   });
 
   $("exportGif").addEventListener("click", async () => {
@@ -2077,7 +2094,7 @@
       const gif = new GIF({ workers: 2, quality: 10, width: output.width, height: output.height, workerScript: workerUrl });
       for (let index = 0; index < total; index += 1) {
         await prepareBackgroundFrame(index / fps);
-        renderFrame(output, index / fps, output.width, output.height);
+        await renderFrame(output, index / fps, output.width, output.height);
         const delay = (Math.round((index + 1) * 100 / fps) - Math.round(index * 100 / fps)) * 10;
         gif.addFrame(output, { copy: true, delay });
       }
@@ -2094,7 +2111,7 @@
     const output = exportCanvas();
     output.width -= output.width % 2; output.height -= output.height % 2;
     const requestedFps = Number($("exportFps").value);
-    const fps = [24, 30, 60].includes(requestedFps) ? requestedFps : 30;
+    const fps = [15, 24, 30, 60].includes(requestedFps) ? requestedFps : 30;
     const total = Math.max(1, Math.ceil(exportSeconds() * fps));
     let encoder = null;
     setBusy(true, "正在加载 MP4 编码器…");
@@ -2111,7 +2128,7 @@
       const progressInterval = Math.max(1, Math.floor(fps / 10));
       for (let index = 0; index < total; index += 1) {
         await prepareBackgroundFrame(index / fps);
-        renderFrame(output, index / fps, output.width, output.height);
+        await renderFrame(output, index / fps, output.width, output.height);
         encoder.addFrameRgba(outputContext.getImageData(0, 0, output.width, output.height).data);
         if (index % progressInterval === 0 || index === total - 1) {
           $("exportStatus").textContent = `正在导出 MP4 ${output.width} × ${output.height} · ${fps}fps · ${Math.round((index + 1) / total * 100)}%`;
@@ -2156,8 +2173,8 @@
     applyScheme(useDefault || !stored?.rows || Number(stored.version || 1) > VERSION ? clone(DEFAULT_SCHEME) : stored);
     if (state.reducedMotion) { state.playing = false; state.elapsedMs = state.scheme.motion.morphDuration; updatePlaybackButton(); }
     new ResizeObserver(resizePreview).observe(frame);
-    document.fonts?.ready.then(() => { fitCache.key = ""; resizePreview(); });
-    document.fonts?.addEventListener("loadingdone", () => { fitCache.key = ""; resizePreview(); });
+    document.fonts?.ready.then(() => { fitCache.key = ""; extension?.invalidate(); resizePreview(); });
+    document.fonts?.addEventListener("loadingdone", () => { fitCache.key = ""; extension?.invalidate(); resizePreview(); });
     window.addEventListener("resize", resizePreview, { passive: true });
     const setPlaying = (playing) => {
       // Reduced-motion prevents autoplay, but an explicit Play/Replay action must
@@ -2213,5 +2230,6 @@
     requestAnimationFrame(animationLoop);
   }
 
+  extension?.bind({ getScheme: () => state.scheme, changed, applyScheme, download, setBusy, refreshFonts, canvas, renderFrame, resolveTimeline, getElapsedMs: () => state.elapsedMs });
   initialize();
 })();

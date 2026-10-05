@@ -3,6 +3,14 @@
   if (!document.body.classList.contains('tc-workspace')) return;
   const body = document.body;
   const dictionary = new Map(Object.entries({
+    '彩铸': 'PRO SVG Lab', '彩铸编辑器': 'PRO SVG Lab editor',
+    '流动材质': 'Flowing material', '色谱': 'Palette', '光谱': 'Spectrum', '冷银': 'Silver', '熔岩': 'Lava', '电离紫': 'Violet',
+    '滤镜分解': 'Filter stages', '柔度': 'Softness', '颗粒': 'Grain', '扫描周期': 'Scan period', '扫描方向': 'Scan direction',
+    '首次柔和揭示': 'First soft reveal', 'PRO 使用定制字形': 'Use custom PRO outlines',
+    '进一步实验': 'Further experiments', '流体置换': 'Displacement', '浮雕高光': 'Specular light',
+    '柔和揭示': 'Soft reveal', '色谱流动': 'Material flow', '材质停留': 'Material hold', '背景淡化': 'Background fade',
+    '时长 / 秒': 'Duration / seconds', 'SVG · 当前材质动画': 'SVG · Current material',
+    '01 · 字形': '01 · Glyph', '02 · 灰度轮廓': '02 · Grayscale relief', '03 · 移动扫描': '03 · Moving scan', '04 · 柔化场': '04 · Soft field', '05 · 颗粒调制': '05 · Grain', '06 · 色谱映射': '06 · Palette mapping',
     '字倾': 'Type Cascade', '字倾编辑器': 'Type Cascade editor',
     '字芽': 'Sprout Shift', '字芽编辑器': 'Sprout Shift editor',
     '点解': 'Dot Resolve', '点解编辑器': 'Dot Resolve editor',
