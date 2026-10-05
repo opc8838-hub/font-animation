@@ -672,6 +672,26 @@
         }).join("")}</div>
       </div>`).join("");
     updateInsertTargetLabel();
+    renderTextList();
+  }
+  // Right panel: every tower line is editable at once; the row below shows the selected line's settings.
+  function renderTextList() {
+    const list = $("cityTextList");
+    if (!list) return;
+    list.innerHTML = state.scheme.rows.map((rowState, index) => `
+      <label class="city-text-item" data-row-id="${rowState.id}">
+        <span class="city-text-meta"><b>${String(index + 1).padStart(2, "0")}</b>${ROLES[rowState.role]?.short || "文字"}</span>
+        <input data-city-text="${rowState.id}" value="${escapeHtml(rowState.text)}" placeholder="字塔文字" aria-label="第 ${index + 1} 行文字">
+      </label>`).join("");
+    syncTextListSelection();
+  }
+  function syncTextListSelection() {
+    const selected = [...$("sequenceRows").children].find((element) => !element.hidden)?.dataset.rowId;
+    $("cityTextList")?.querySelectorAll(".city-text-item").forEach((item) => item.classList.toggle("is-selected", item.dataset.rowId === selected));
+  }
+  function selectRowFromList(rowId) {
+    const selected = [...$("sequenceRows").children].find((element) => !element.hidden)?.dataset.rowId;
+    if (selected !== rowId) document.querySelector(`#tcRowList [data-row-id="${rowId}"]`)?.click();
   }
   function refreshRowChrome(rowElement, rowState) {
     rowElement.dataset.rowSummary = rowSummary(rowState);
@@ -1456,6 +1476,26 @@
     requestAnimationFrame(animationLoop);
   }
 
+  function bindRowNavigation() {
+    const panel = document.querySelector('.tc-properties[data-panel="row"]');
+    if (!panel || $("cityTextCard")) return;
+    const card = document.createElement("section");
+    card.id = "cityTextCard";
+    card.className = "gm-card city-text-card";
+    card.innerHTML = '<div class="city-text-head"><h3>全部文字</h3><small>直接修改任意一行；点一行，下方显示这一行的设置</small></div><div id="cityTextList" class="city-text-list"></div>';
+    panel.prepend(card);
+    renderTextList();
+    const list = $("cityTextList");
+    list.addEventListener("focusin", (event) => { const id = event.target.dataset.cityText; if (id) selectRowFromList(id); });
+    list.addEventListener("input", (event) => {
+      const id = event.target.dataset.cityText;
+      const input = id && document.querySelector(`#sequenceRows .gm-row-shell[data-row-id="${id}"] input[data-key="text"]`);
+      if (!input) return;
+      input.value = event.target.value;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    new MutationObserver(syncTextListSelection).observe($("sequenceRows"), { subtree: true, attributes: true, attributeFilter: ["hidden"] });
+  }
   function moveGlobalCards() {
     const panel = document.querySelector('.tc-properties[data-panel="global"]');
     if (!panel) return;
@@ -1476,8 +1516,9 @@
     document.fonts?.ready.then(() => { measureCache.clear(); resizePreview(); });
     document.fonts?.addEventListener("loadingdone", () => { state.fontsVersion += 1; measureCache.clear(); resizePreview(); });
     window.addEventListener("resize", resizePreview, { passive: true });
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", moveGlobalCards, { once: true });
-    else moveGlobalCards();
+    const afterShell = () => { moveGlobalCards(); bindRowNavigation(); };
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", afterShell, { once: true });
+    else afterShell();
 
     const setPlaying = (playing) => { state.playing = Boolean(playing); state.lastFrame = performance.now(); updatePlaybackButton(); resizePreview(); };
     const setTime = (seconds) => { state.elapsedMs = clamp(Number(seconds) || 0, 0, cycleDurationMs() / 1000) * 1000; setPlaying(false); };

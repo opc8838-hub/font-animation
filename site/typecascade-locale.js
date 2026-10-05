@@ -33,6 +33,8 @@
     '翻转首图': 'First image', '翻转后切图（可多选 2–3 张）': 'Images after flip (2–3)', '切图过渡': 'Cut transition',
     '镜头环绕': 'Camera orbit', '斜角': 'Tilt', '起始朝向': 'Start facing',
     '城市字塔': 'City Stack', 'Delete': 'Delete',
+    '全部文字': 'All text', '直接修改任意一行；点一行，下方显示这一行的设置': 'Edit any line directly; select a line to show its settings below',
+    '主汉字': 'Chinese', '英文行': 'English', '副标题': 'Subtitle', '署名': 'Signature',
     '城市字塔编辑器': 'City Stack editor', '城市字塔效果预览': 'City Stack preview', '城市字塔动效时间轴': 'City Stack timeline',
     '本行类型': 'Block role', '主汉字 · 逐字点亮': 'Chinese · per character', '英文行 · 整行点亮': 'English · whole line',
     '副标题 · 两端先亮': 'Subtitle · ends first', '署名 · 最后淡入': 'Signature · fade in',

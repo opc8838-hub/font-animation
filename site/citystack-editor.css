@@ -10,3 +10,17 @@
   body.tc-workspace[data-city-stack] .tc-canvas-toolbar { width: 100%; box-sizing: border-box; align-self: stretch; justify-self: stretch; }
   body.tc-workspace[data-city-stack] .tc-canvas-toolbar > .gm-canvas-card { flex: 0 0 auto; width: max-content !important; max-width: 100%; margin-left: auto; }
 }
+/* 全部文字: every tower line editable at once above the selected line's settings. */
+body.tc-workspace[data-city-stack] .gm-row-shell input[data-key="text"] { display: none !important; }
+.city-text-card { display: grid; gap: 10px; }
+.city-text-head { display: grid; gap: 4px; }
+.city-text-head h3 { margin: 0; font-size: 15px; }
+.city-text-head small { color: var(--tc-muted, #8c8a96); font-size: 12px; line-height: 1.5; }
+.city-text-list { display: grid; gap: 8px; }
+.city-text-item { display: grid; grid-template-columns: 74px minmax(0, 1fr); align-items: center; gap: 10px; padding: 4px 4px 4px 10px; border: 1px solid var(--tc-line, #36363d); border-radius: 12px; transition: border-color 200ms ease, background-color 200ms ease; cursor: text; }
+.city-text-item.is-selected { border-color: var(--tc-accent, #a18aff); background: var(--tc-selected, #352b4c); }
+.city-text-meta { display: flex; align-items: center; gap: 6px; color: var(--tc-muted, #8c8a96); font-size: 12px; white-space: nowrap; }
+.city-text-meta b { color: var(--tc-text, #ededf1); font: 700 12px/1 ui-monospace, monospace; }
+.city-text-item.is-selected .city-text-meta b { color: var(--tc-accent, #a18aff); }
+.city-text-item input { width: 100%; min-width: 0; height: 40px; padding: 0 12px; border: 0; border-radius: 9px; background: var(--tc-input, #2b2b30); color: var(--tc-text, #ededf1); font: 500 16px/1 inherit; outline: none; }
+.city-text-item input:focus { box-shadow: 0 0 0 2px color-mix(in srgb, var(--tc-accent, #a18aff) 45%, transparent); }
