@@ -106,6 +106,13 @@
       svg = svg.replaceAll('x2="486"','x2="'+486*factor+'"').replaceAll('x1="-243"','x1="'+(-243*factor)+'"');
       svg = svg.replaceAll('from="109 0"','from="'+109*factor+' 0"').replaceAll('to="595 0"','to="'+595*factor+' 0"').replaceAll('to="594 0"','to="'+594*factor+' 0"');
     }
+    // In the isolated grain stage, preserve white as a fixed point. Multiplying
+    // the paper by noise colors the entire filter rectangle; modulate its ink
+    // coverage instead: 1 - (1 - soft) * grain. The final color stage stays intact.
+    if (m.stage === 4) {
+      svg = svg.replace('operator="arithmetic" k1="1" result="textured"',
+        'operator="arithmetic" k1="1" k3="-1" k4="1" result="textured"');
+    }
     const color = row.textColor || s.typography.textColor;
     if (/^#[0-9a-f]{6}$/i.test(color) && color.toLowerCase() !== '#16181b') {
       svg = svg.replaceAll('#16181b', color);

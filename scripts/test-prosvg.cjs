@@ -28,6 +28,22 @@ for(const time of [0,.5,2.2,4.4,6.6,8.8]) {
   assert.match(svg,/Mike Bespalov \/ Refero/);
   assert.match(svg,/viewBox="-18 -24 373 177"/,'canonical geometry is unchanged');
 }
+// Grain may texture ink, but must leave fully white paper exactly white.
+// Exercise the emitted filter arithmetic with multiple palettes and grain values.
+for (const palette of ['original','silver','lava','violet']) {
+  for (const grain of [0,.12,.4]) {
+    const material={...clean,material:{...clean.material,stage:4,palette,grain}};
+    for (const animated of [false,true]) {
+      const svg=extension.createSvg(material,material.rows[0],geometry,6.3,animated);
+      const composite=svg.match(/<feComposite in="soft" in2="grain"[^>]+>/)[0];
+      const coefficient=k=>Number(composite.match(new RegExp(k+'="([^" ]+)"'))?.[1]||0);
+      for (const noise of [0,.6,.9,1]) {
+        const white=coefficient('k1')*noise+coefficient('k2')+coefficient('k3')*noise+coefficient('k4');
+        assert.equal(white,1,'grain must not tint the rectangular paper area');
+      }
+    }
+  }
+}
 const animated=extension.createSvg(clean,clean.rows[0],geometry,0,true);
 assert.match(animated,/<animateTransform/,'standalone SVG retains native motion');
 assert.doesNotMatch(animated,/<script/);

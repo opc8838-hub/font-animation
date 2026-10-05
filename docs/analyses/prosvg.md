@@ -38,3 +38,10 @@ Verified in desktop Chromium on 2026-10-05:
 - Console clean in editor validation. Existing six morph-port layout regressions, editor contract, new material tests and website checks run before publication.
 - Browser coverage is Chromium only. High-resolution exports are offline frame rendering; the tested 1080p 8.8-second export took about 70 seconds on this machine. Safari/Firefox and every possible font/media combination have not been tested.
 - Disable the one-shot intro to export the continuous scan alone; the default full-cycle export deliberately includes the initial reveal.
+
+
+## 2026-10-06 grain-stage correction
+
+A reported rectangle behind PRO was reproduced in filter stage 4 (UI “05 · 颗粒调制”), lava palette, 7.3 blur / 0.12 grain. The upstream intermediate-stage arithmetic multiplies the full white paper by grain, exposing its rectangular filter bounds. The adaptation now uses `1 - (1 - soft) * grain` for this isolated stage, keeping white fixed and texturing ink coverage. Upstream vendor bytes and stages 0–3/5 are unchanged; emitted SVG equality checked for those stages. The approved default scheme and gallery artifacts are unchanged.
+
+Visually checked the reported desktop state, white-boundary pixels at grain 0 / 0.12 / 0.4, actual 1920×1080 PNG, 320×320 GIF and 24 fps MP4, and Chinese text on a colored background. The filter correction is shared by preview and all exports, including animated SVG. Numeric regression evaluates the emitted arithmetic for all four palettes and multiple noise/grain values. Browser console clean.
