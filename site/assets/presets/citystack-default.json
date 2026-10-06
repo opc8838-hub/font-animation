@@ -1,15 +1,15 @@
 {
   "version": 1,
   "canvas": {
-    "width": 1080,
-    "height": 1920,
-    "preset": "1080x1920"
+    "width": 1920,
+    "height": 1080,
+    "preset": "1920x1080"
   },
   "typography": {
     "fontFamily": "stg:noto-hk",
     "lineWidth": 490,
     "layoutScale": 100,
-    "positionX": 0,
+    "positionX": -35,
     "positionY": 0,
     "textColor": "#4cebfa"
   },
@@ -20,10 +20,18 @@
     "loop": true
   },
   "background": {
-    "color": "#000000",
-    "media": null,
+    "color": "#7f1a1a",
     "opacity": 100,
-    "zoom": 1
+    "media": {
+      "name": "B2W_MV1_成片.mp4",
+      "url": "assets/presets/citystack-bg.mp4",
+      "fileType": "video/mp4",
+      "videoStart": 0,
+      "videoEnd": 10.1,
+      "cropX": 0.5,
+      "cropY": 0.5,
+      "cropZoom": 1
+    }
   },
   "rows": [
     {
@@ -50,7 +58,7 @@
       "role": "han",
       "fontFamily": "hk-lettering",
       "fontWeight": "500",
-      "textColor": "#4cebfa",
+      "textColor": "#f7f264",
       "size": 250,
       "scaleY": 128,
       "widthRatio": 105,

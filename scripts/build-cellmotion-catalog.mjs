@@ -17,7 +17,7 @@ for (const id of pendingRelease) {
   if (!knownIds.has(id)) throw new Error(`Unknown pending effect: ${id}`);
 }
 const videos = {
-  prosvg:'prosvg-card',
+  prosvg:'prosvg-card', citystack:'citystack-card',
   continuation:'continuation-card-centered', 'split-flip':'split-flip-card', iconburst:'iconburst-card', glyphmorph:'glyphmorph-card',
   sproutshift:'sproutshift-wide-card', mistlift:'mistlift-wide-card', typecascade:'typecascade-wide-card',
   dotresolve:'dotresolve-wide-card', glyphreveal:'glyphreveal-wide-card', currentwall:'water-flow-card',
@@ -26,6 +26,13 @@ const videos = {
   colorrecompose:'color-recompose-card', impactbuild:'impactbuild-card'
 };
 const media = new Set(['mediacascade','beforeafter','shutterafter','phoneframe','laptopframe','orbitgallery','moodboard']);
+// Newest releases first, shown on the homepage as 最近上新. Dates are the public release of each editor.
+const recent = [
+  ['citystack','2026-10-06'], ['prosvg','2026-10-05'], ['letterpulse','2026-09-27'], ['zerogflip','2026-09-18'],
+  ['split-flip','2026-09-07'], ['glyphreveal','2026-09-04'], ['typecascade','2026-09-02'], ['sproutshift','2026-09-02'],
+  ['mistlift','2026-09-02'], ['dotresolve','2026-09-02'], ['ribbonink','2026-09-01'], ['glyphmorph','2026-09-01']
+];
+for (const [id] of recent) if (!knownIds.has(id)) throw new Error(`Unknown recent effect: ${id}`);
 const featured = ['prosvg','sproutshift','typecascade','dotresolve','glyphmorph','iconburst','pathwriter'];
 async function exists(path) { try { await access(new URL(path, site)); return true; } catch { return false; } }
 const effects = [];
@@ -44,6 +51,6 @@ for (const [id,name,english,group,description] of rows) {
     status:pendingRelease.has(id)?'pending':'ready'
   });
 }
-const catalog = {schemaVersion:1,source:'gallery.js',featured,effects};
+const catalog = {schemaVersion:1,source:'gallery.js',featured,recent:recent.map(([id,date])=>({id,date})),effects};
 await writeFile(new URL('cellmotion-catalog.json',site),JSON.stringify(catalog,null,2)+'\n');
 console.log(`Validated ${effects.length} effects → ${fileURLToPath(new URL('cellmotion-catalog.json',site))}`);

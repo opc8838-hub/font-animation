@@ -11,6 +11,56 @@
     "pathwriter",
     "letterpulse"
   ],
+  "recent": [
+    {
+      "id": "citystack",
+      "date": "2026-10-06"
+    },
+    {
+      "id": "prosvg",
+      "date": "2026-10-05"
+    },
+    {
+      "id": "letterpulse",
+      "date": "2026-09-27"
+    },
+    {
+      "id": "zerogflip",
+      "date": "2026-09-18"
+    },
+    {
+      "id": "split-flip",
+      "date": "2026-09-07"
+    },
+    {
+      "id": "glyphreveal",
+      "date": "2026-09-04"
+    },
+    {
+      "id": "typecascade",
+      "date": "2026-09-02"
+    },
+    {
+      "id": "sproutshift",
+      "date": "2026-09-02"
+    },
+    {
+      "id": "mistlift",
+      "date": "2026-09-02"
+    },
+    {
+      "id": "dotresolve",
+      "date": "2026-09-02"
+    },
+    {
+      "id": "ribbonink",
+      "date": "2026-09-01"
+    },
+    {
+      "id": "glyphmorph",
+      "date": "2026-09-01"
+    }
+  ],
   "effects": [
     {
       "id": "prosvg",
@@ -172,9 +222,9 @@
       "english": "City Stack",
       "description": "港版黑体中英文字逐项点亮叠满",
       "category": "type",
-      "href": "citystack.html",
-      "poster": "final_citystack.svg",
-      "video": null,
+      "href": "citystack.html?from=gallery&v=20261006-1",
+      "poster": "assets/cellmotion/poster-citystack.jpg",
+      "video": "assets/previews/citystack-card.mp4",
       "status": "ready"
     },
     {

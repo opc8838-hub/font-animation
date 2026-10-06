@@ -1,0 +1,18 @@
+/* 最近上新: dense preview grid between the motion ribbon and the featured section. */
+.recent-section{padding-top:56px;padding-bottom:24px}
+.recent-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px 12px}
+.recent-card{display:grid;gap:8px;min-width:0;color:inherit}
+.recent-preview{position:relative;display:block;aspect-ratio:16/9;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:#fff;transition:border-color .2s ease,transform .2s ease}
+.recent-preview img,.recent-preview video,.recent-preview .poster-fallback{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.recent-preview .poster-fallback{display:grid;place-items:center;color:var(--muted);font-size:12px}
+.recent-preview video{opacity:0;transition:opacity .35s ease}
+.recent-preview.playing video{opacity:1}
+.recent-badge{position:absolute;top:8px;left:8px;z-index:1;padding:4px 6px;border-radius:4px;background:#ffffffe6;color:#666;font-size:9px;letter-spacing:.04em;line-height:1}
+.recent-card.is-newest .recent-badge{background:var(--purple);color:#fff}
+.recent-caption{display:flex;align-items:baseline;justify-content:space-between;gap:8px;min-width:0;font-size:12px}
+.recent-caption strong{min-width:0;overflow:hidden;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
+.recent-caption span{flex:none;color:var(--muted);font-size:10px;white-space:nowrap}
+.recent-card:hover .recent-preview,.recent-card:focus-visible .recent-preview{border-color:var(--purple);transform:translateY(-2px)}
+@media(max-width:1200px){.recent-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:760px){.recent-section{padding-top:40px;padding-bottom:12px}.recent-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 10px}.recent-caption span{display:none}}
+@media(prefers-reduced-motion:reduce){.recent-preview{transition:none}.recent-card:hover .recent-preview{transform:none}}

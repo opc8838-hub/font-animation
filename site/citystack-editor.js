@@ -36,16 +36,16 @@
     id, text, role, fontFamily: "", fontWeight: "", textColor: "#4cebfa", size: 160, scaleY: 100, widthRatio: 100, letterGap: 0, gapBefore: 29,
     starts: "", offs: "", fadeStart: 0, fadeDuration: 350, icons: [], ...extra
   });
-  // Approved HK reference lockup (HK动效 reference, measured 2026-10-05). Keep synchronized with assets/presets/citystack-default.json.
+  // Approved default (user scheme 2026-10-06: HK reference lockup over the B2W walking film). Keep synchronized with assets/presets/citystack-default.json.
   const DEFAULT_SCHEME = Object.freeze({
     version: VERSION,
-    canvas: { width: 1080, height: 1920, preset: "1080x1920" },
-    typography: { fontFamily: "stg:noto-hk", lineWidth: 490, layoutScale: 100, positionX: 0, positionY: 0, textColor: "#4cebfa" },
+    canvas: { width: 1920, height: 1080, preset: "1920x1080" },
+    typography: { fontFamily: "stg:noto-hk", lineWidth: 490, layoutScale: 100, positionX: -35, positionY: 0, textColor: "#4cebfa" },
     motion: { leadIn: 60, finalHold: 2490, speed: 1, loop: true },
-    background: { color: "#000000", media: null, opacity: 100 },
+    background: { color: "#7f1a1a", opacity: 100, media: { name: "B2W_MV1_成片.mp4", url: "assets/presets/citystack-bg.mp4", fileType: "video/mp4", videoStart: 0, videoEnd: 10.1, cropX: 0.5, cropY: 0.5, cropZoom: 1 } },
     rows: [
       row("city-han-1", "只在", "han", { fontFamily: LETTERING, fontWeight: "500", size: 250, scaleY: 96, widthRatio: 105, letterGap: 8, gapBefore: 0, starts: "0,333", offs: "100-233; 133-167" }),
-      row("city-han-2", "香港", "han", { fontFamily: LETTERING, fontWeight: "500", size: 250, scaleY: 128, widthRatio: 105, letterGap: 8, gapBefore: 29, starts: "500,700", offs: "33-133; 300-333" }),
+      row("city-han-2", "香港", "han", { fontFamily: LETTERING, fontWeight: "500", textColor: "#f7f264", size: 250, scaleY: 128, widthRatio: 105, letterGap: 8, gapBefore: 29, starts: "500,700", offs: "33-133; 300-333" }),
       row("city-en-1", "HONG", "english", { fontFamily: "stg:montserrat", fontWeight: "700", size: 165, gapBefore: 31, starts: "900", offs: "500-533,567-600" }),
       row("city-en-2", "KONG", "english", { fontFamily: "stg:montserrat", fontWeight: "700", size: 165, gapBefore: 29, starts: "1133", offs: "100-267,667-733" }),
       row("city-sub", "亚洲国际都会", "subtitle", { fontFamily: "stg:noto-hk", fontWeight: "750", size: 77, letterGap: 9, gapBefore: 29, starts: "1467,1533,1700", offs: "167-267; 133-300; " }),
@@ -815,10 +815,8 @@
   }
   function syncBackgroundChrome() {
     const background = state.scheme.background;
-    $("backgroundSwatch").style.backgroundColor = background.color;
-    $("backgroundSwatch").setAttribute("aria-label", `当前背景颜色 ${background.color}`);
-    $("backgroundSummary").textContent = background.media?.name || "";
-    $("backgroundSummary").hidden = !background.media;
+    // The background card shows its controls directly; no collapsed summary to keep in sync.
+    void background;
   }
   function drawFilmstrip(filmstrip) {
     const target = $("backgroundFilmstrip");
@@ -1470,6 +1468,8 @@
     }
     state.lastFrame = now;
     renderFrame(canvas, state.elapsedMs / 1000, canvas.width, canvas.height);
+    // Keep the crop preview live (video frames arrive after the first draw) while it is on screen.
+    if (now - (state.cropPreviewAt || 0) > 200 && $("backgroundCropPreview")?.offsetParent) { state.cropPreviewAt = now; drawCropPreview(); }
     const displayTime = state.scheme.motion.loop ? state.elapsedMs % Math.max(1, total) : Math.min(state.elapsedMs, total);
     $("scrubber").value = String(displayTime);
     $("timeNow").textContent = `${(displayTime / 1000).toFixed(2)}s`;
@@ -1550,7 +1550,7 @@
       if (message.type === "cellmotion:seek") window.CellMotionEffectBridge.seek(message.seconds);
       if (message.type === "cellmotion:request-duration") postDuration();
     });
-    window.__cityStackTest = { prepareBackgroundFrame, prepareBackground, preloadInsertedAssets, renderFrame, getScheme: () => clone(state.scheme), cycleDurationMs, setTime, stableElapsed, refreshFonts, rowSchedule };
+    window.__cityStackTest = { backgroundDebug: () => ({ time: state.background?.video?.currentTime, ready: state.background?.video?.readyState, paused: state.background?.video?.paused, preview: Boolean(state.background?.previewImage), playing: state.playing, elapsed: state.elapsedMs }), prepareBackgroundFrame, prepareBackground, preloadInsertedAssets, renderFrame, getScheme: () => clone(state.scheme), cycleDurationMs, setTime, stableElapsed, refreshFonts, rowSchedule };
     if (window.parent !== window) window.parent.postMessage({ type: "cellmotion:ready", effectId: SLUG, bridgeVersion: "1.0.0", durationMs: cycleDurationMs() }, "*");
     requestAnimationFrame(animationLoop);
   }

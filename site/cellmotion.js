@@ -8,9 +8,9 @@ function inCategory(effect, category) {
   return category === 'all' || effect.category === category;
 }
 const escapeHTML = (text) => String(text).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-const mediaURL = (url) => `${url}?v=20261005-prosvg1`;
+const mediaURL = (url) => `${url}?v=20261006-citystack1`;
 const play = async (video) => { try { await video.play(); return true; } catch { return false; } };
-let effects = [], featured = [], activeCategory = 'all', limit = 12;
+let effects = [], featured = [], recent = [], activeCategory = 'all', limit = 12;
 let activeUsage = 'all';
 const ribbonSeed = [
   {id:'prosvg',name:'彩铸',href:'prosvg.html?from=gallery',poster:'final_prosvg.png',video:'assets/previews/prosvg-card.mp4'},
@@ -22,6 +22,7 @@ const ribbonSeed = [
   {id:'currentwall',name:'水流',href:'currentwall.html',poster:'assets/cellmotion/poster-currentwall.jpg',video:'assets/previews/water-flow-card.mp4'},
   {id:'pathwriter',name:'轨书',href:'pathwriter.html',poster:'assets/cellmotion/poster-pathwriter.jpg',video:'assets/previews/pathwriter-card.mp4'},
   {id:'sproutshift',name:'字芽',href:'sproutshift.html',poster:'assets/cellmotion/poster-sproutshift.jpg',video:'assets/previews/sproutshift-wide-card.mp4'},
+  {id:'citystack',name:'城市字塔',href:'citystack.html?from=gallery&v=20261006-1',poster:'assets/cellmotion/poster-citystack.jpg',video:'assets/previews/citystack-card.mp4'},
   {id:'ribbonink',name:'流彩笔迹',href:'ribbonink.html',poster:'assets/cellmotion/poster-ribbonink.jpg',video:'assets/previews/ribbon-ink-card.mp4'}
 ];
 const homePreview = $('#catalog-grid')?.dataset.homePreview === 'true';
@@ -158,6 +159,25 @@ const cardsObserver=new IntersectionObserver(entries=>{
     if(entry.isIntersecting)startCard(preview);else stopCard(preview);
   }
 },{threshold:.18});
+// 最近上新: a dense grid so many recent previews are visible at once. Videos load and play only on screen.
+const recentObserver=new IntersectionObserver(entries=>{
+  for(const entry of entries){
+    const preview=entry.target;preview.dataset.visible=String(entry.isIntersecting);
+    if(entry.isIntersecting)startCard(preview);else stopCard(preview);
+  }
+},{threshold:.18});
+function recentCard(item,index) {
+  const effect=item.effect, [, month, day]=item.date.split('-');
+  const image=effect.poster?`<img src="${effect.poster}" alt="${escapeHTML(effect.name)}动效封面" loading="lazy">`:`<span class="poster-fallback">${escapeHTML(effect.name)}</span>`;
+  const video=effect.video?`<video data-src="${effect.video}" muted loop playsinline preload="none" aria-hidden="true"></video>`:'';
+  return `<a class="recent-card${index===0?' is-newest':''}" href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器"><span class="recent-preview">${image}${video}<span class="recent-badge">${index===0?'NEW · ':''}${month}.${day}</span></span><span class="recent-caption"><strong>${escapeHTML(effect.name)}</strong><span data-no-translate>${escapeHTML(effect.english)}</span></span></a>`;
+}
+function initRecent() {
+  const grid=$('#recent-grid');if(!grid)return;
+  recentObserver.disconnect();
+  grid.innerHTML=recent.map(recentCard).join('');
+  grid.querySelectorAll('.recent-preview').forEach(preview=>{if(preview.querySelector('video'))recentObserver.observe(preview);});
+}
 function catalogCard(effect) {
   const pending=isPending(effect);
   const image=effect.poster?`<img src="${effect.poster}" alt="${escapeHTML(effect.name)}动效封面" loading="lazy">`:`<span class="poster-fallback">${escapeHTML(effect.name)}</span>`;
@@ -248,19 +268,20 @@ function initStory() {
 }
 document.addEventListener('visibilitychange',()=>{
   const caseVideos=[...document.querySelectorAll('.case-video')];
-  if(document.hidden){hero?.pause();featureVideo?.pause();$('#story-video')?.pause();caseVideos.forEach(video=>video.pause());stopAllCards();}
+  if(document.hidden){hero?.pause();featureVideo?.pause();$('#story-video')?.pause();caseVideos.forEach(video=>video.pause());stopAllCards();document.querySelectorAll('.recent-preview').forEach(preview=>stopCard(preview));}
   else{if(heroIntent&&heroVisible&&hero)play(hero);if(featuredIntent&&featureVisible&&featureVideo)play(featureVideo);if(storyPreviewWasPlaying)$('#story-video')?.play().catch(()=>{});caseVideos.forEach(video=>{if(video.getBoundingClientRect().top<innerHeight&&video.getBoundingClientRect().bottom>0&&!matchMedia('(prefers-reduced-motion: reduce)').matches)video.play().catch(()=>{});});document.querySelectorAll('.catalog-preview[data-visible="true"]').forEach(preview=>startCard(preview));}
 });
 async function loadCatalogData() {
   try {
-    const response=await fetch('cellmotion-catalog.json?v=20261005-prosvg1');
+    const response=await fetch('cellmotion-catalog.json?v=20261006-citystack1');
     if(!response.ok)throw new Error(`Catalog HTTP ${response.status}`);
     const catalog=await response.json();
     effects=catalog.effects;
     featured=catalog.featured.map(id=>effects.find(effect=>effect.id===id)).filter(effect=>effect?.video && !isPending(effect));
     // This is editorial ordering only, never a claim that all effects passed review.
     effects.sort((a,b)=>{const ai=catalog.featured.indexOf(a.id),bi=catalog.featured.indexOf(b.id);return(ai<0?999:ai)-(bi<0?999:bi);});
-    initCatalog();initFeatured();initStory();
+    recent=(catalog.recent||[]).map(item=>({...item,effect:effects.find(effect=>effect.id===item.id)})).filter(item=>item.effect && !isPending(item.effect));
+    initRecent();initCatalog();initFeatured();initStory();
   } catch(error) {
     if($('#catalog-error'))$('#catalog-error').hidden=false;
     console.error('CellMotion catalog:',error);

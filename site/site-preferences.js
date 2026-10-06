@@ -261,7 +261,7 @@
   }
   languageButton.addEventListener('click', () => switchLanguage(languageTarget === 'en' ? 'zh' : 'en'));
   setTheme(theme, false);
-  fetch(new URL('site-locale-dictionary.json?v=20260927-20', document.currentScript?.src || location.href), { cache: 'reload' })
+  fetch(new URL('site-locale-dictionary.json?v=20261006-recent1', document.currentScript?.src || location.href), { cache: 'reload' })
     .then((response) => response.ok ? response.json() : {})
     .then((entries) => {
       for (const [source, translated] of Object.entries(entries)) dictionary.set(source, translated);
