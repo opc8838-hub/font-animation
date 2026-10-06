@@ -114,11 +114,11 @@
       "id": "zerogflip",
       "name": "无重力翻转",
       "english": "Zero-G Flip",
-      "description": "卡片无重力翻转 · 切图",
+      "description": "爆炸拆解 · 无重力翻转 · 收尾切换",
       "category": "space",
       "href": "zerogflip.html",
-      "poster": "assets/cellmotion/poster-zerogflip.jpg",
-      "video": null,
+      "poster": "assets/cellmotion/poster-zerogflip.jpg?v=20261006",
+      "video": "assets/previews/zerogflip-card.mp4?v=20261006",
       "status": "ready"
     },
     {

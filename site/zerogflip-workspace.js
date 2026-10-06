@@ -21,7 +21,7 @@
   header.append(exportShortcut);
 
   const assetCard = $('assetCard');
-  const left = make('aside', 'tc-content', '<div class="tc-panel-heading"><div><small>内容</small><h2>素材</h2></div></div><p class="tc-hint">首图翻转，转完立刻切 2–3 张图。主图更大，画布含 19:6</p>');
+  const left = make('aside', 'tc-content', '<div class="tc-panel-heading"><div><small>内容</small><h2>素材</h2></div></div><p class="tc-hint">爆炸拆解 → 合拢 → 翻转 → 关灯 → 收尾切换 → 片名。右侧「当前素材」换主体、爆炸图、背景和切换素材</p>');
   const scheme = document.querySelector('.scheme-section');
   scheme.classList.add('tc-scheme', 'gm-card');
   left.append(scheme);

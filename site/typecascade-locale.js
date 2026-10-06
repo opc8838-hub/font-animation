@@ -368,9 +368,30 @@
     '编辑大小': 'Size', '独立透明度': 'Opacity', '水平偏移': 'X', '垂直偏移': 'Y', '独立旋转': 'Rotate',
     '文字替换': 'Replace text', '爆发': 'Burst', '漂浮': 'Float', '环绕': 'Orbit',
     '当前动画只换色，但这里仍可预先编辑字体图标；切换为单字或多字模式后开始播放。': 'This mode only changes color. Icons edited here play after you switch to a replace mode.',
-    '点一段可跳到那一拍': 'Click a phase to jump there', '编舞时间轴': 'Timeline'
+    '点一段可跳到那一拍': 'Click a phase to jump there', '编舞时间轴': 'Timeline',
+    // 无重力翻转
+    "素材": "Assets", "片名与底色": "Title & base color", "片名": "Title", "片名字体": "Title font", "底色": "Base color",
+    "结尾切黑出片名": "End on a black title card", "翻转主体": "Flip subject", "上传主体图": "Upload subject", "透明底 PNG 效果最好；白底图会自动抠掉连通的底色。系统根据轮廓自动生成厚度、侧面和背面。": "Transparent PNGs work best; a plain connected background is removed automatically. Thickness, sides and back are generated from the outline.",
+    "爆炸拆解": "Exploded view", "开场爆炸": "Explode at start", "主体按切线拆成前壳、后壳、两侧和底部，在空间里飞散后真实拼回。拖动图上的切线调整拆法。": "The subject splits along the cut lines into front, back, sides and base, flies apart in 3D and reassembles. Drag the lines to change the split.", "拆出两侧（紫线）": "Split sides (purple)",
+    "拆出底部（青线）": "Split base (teal)", "内部结构": "Inner parts", "来自爆炸图，合拢时被外壳吞进去": "from the exploded image, swallowed by the shell", "上传爆炸图": "Upload exploded image",
+    "不用爆炸图": "No exploded image", "系统按空白缝自动切出零件，点亮的零件会插在前后壳之间。": "Parts are cut automatically at blank gaps; highlighted parts sit between the shells.", "未使用爆炸图：开场只拆主体外壳。上传爆炸图可加入内部结构。": "No exploded image: only the shell splits. Upload one to add inner parts.", "正在切分爆炸图…": "Cutting the exploded image…",
+    "展厅背景": "Backdrop", "上传全景图": "Upload panorama", "恢复默认展厅": "Restore default hall", "用越宽的图，镜头横移越有空间感。": "Wider images give the camera pan more room.",
+    "收尾切换": "Ending cuts", "翻转回正后按顺序硬切；拖动或 Alt + ↑↓ 调整顺序。": "After the flip settles, images cut in order; drag or press Alt + ↑↓ to reorder.", "最后切回主体": "End on the subject", "文物素材": "Objects",
+    "选择后再添加": "Select, then add", "素材库": "Library", "添加所选": "Add selected", "上传图片": "Upload images",
+    "插入": "Insert", "爆炸与合拢": "Explode & assemble", "散开距离": "Spread", "仰角": "Low angle",
+    "广角开场": "Wide-angle start", "圈数": "Turns", "翻转时长": "Flip duration", "回正余晃": "Settle sway",
+    "主体厚度": "Thickness", "镜头与灯光": "Camera & light", "背景推移": "Background pan", "推移方向": "Pan direction",
+    "从左到右": "Left to right", "从右到左": "Right to left", "背景虚化": "Background blur", "关灯": "Lights down",
+    "边缘反光": "Rim light", "地面倒影": "Floor reflection", "主体大小": "Subject size", "收尾节奏": "Ending rhythm",
+    "首次切换前停留": "Hold before first cut", "切换间隔": "Cut interval", "越切越快": "Speed-up", "最后一张停留": "Last image hold",
+    "片名时长": "Title duration", "完整一遍": "Full loop", "输出严格使用当前画布尺寸；GIF / MP4 带运动模糊。": "Output uses the exact canvas size; GIF / MP4 include motion blur.", "水平位置": "Horizontal",
+    "画面已停在这件素材上，调整会立即生效。": "Paused on this image; changes apply immediately.", "正在生成立体效果…": "Building 3D…", "当前素材": "Assets", "爆炸拆开": "Explode",
+    "回正关灯": "Settle & lights down", "回到主体": "Back to subject", "爆炸拆解 → 合拢 → 翻转 → 关灯 → 收尾切换 → 片名。右侧「当前素材」换主体、爆炸图、背景和切换素材": "Explode → assemble → flip → lights down → ending cuts → title. Use “Assets” on the right to change the subject, exploded image, backdrop and cuts.", "选择翻转主体": "Choose the flip subject",
+    "拖动切线调整拆解位置": "Drag the cut lines", "选择作为内部结构的零件": "Choose inner parts", "单独编辑切换素材": "Edit one cut image", "青铜人头像 · 平顶": "Bronze head · flat top",
+    "青铜人头像 · 圆顶": "Bronze head · round top", "青铜器 · 兽耳": "Bronze vessel", "青铜神树": "Bronze tree", "青铜铃": "Bronze bell",
+    "大小": "Size"
   }));
-  const phaseNames = ['汉字点亮', '英文点亮', '副标题点亮', '署名淡入', '结果定格', '立字开场', '结束停留', '倾倒坠落', '基线长入', '停留', '倾倒', '悬停', '下落', '主词入场', '主词停顿', '居中预备', '后句接入', '本页停留'];
+  const phaseNames = ['爆炸拆开', '回正关灯', '片名', '汉字点亮', '英文点亮', '副标题点亮', '署名淡入', '结果定格', '立字开场', '结束停留', '倾倒坠落', '基线长入', '停留', '倾倒', '悬停', '下落', '主词入场', '主词停顿', '居中预备', '后句接入', '本页停留'];
   const languageButton = document.createElement('button');
   languageButton.type = 'button';
   languageButton.id = 'tcLanguageToggle';

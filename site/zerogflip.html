@@ -13,17 +13,15 @@
   <link rel="stylesheet" href="glyphmorph-reviewed.css?v=20260909-media-crop">
   <link rel="stylesheet" href="typecascade-workspace.css?v=20260927-ui-pass4">
   <link rel="stylesheet" href="typecascade-polish.css?v=20261006-garden1">
-  <link rel="stylesheet" href="zerogflip.css?v=20260918-3">
-<link rel="stylesheet" href="site-preferences.css?v=20260926-18">
-  <link rel="stylesheet" href="me-motion-editor.css?v=20260927-auditfix2">
-  <link rel="stylesheet" href="typecascade-workspace.css?v=20260927-ui-pass4">
-  <link rel="stylesheet" href="typecascade-polish.css?v=20261006-garden1">
+  <link rel="stylesheet" href="site-preferences.css?v=20260926-18">
   <link rel="stylesheet" href="iconburst-shell.css?v=20260927-standard">
+  <link rel="stylesheet" href="zerogflip.css?v=20261006-pro1">
 </head>
 <body class="glyphmorph-editor">
   <main id="glyphMorphStage" class="gm-stage stage-shell" aria-label="无重力翻转预览">
     <div class="design-frame gm-composition-frame" id="designFrame">
       <canvas id="previewCanvas" aria-label="无重力翻转实时画面"></canvas>
+      <div id="zgBusy" class="zg-busy" role="status" aria-live="polite" hidden><i aria-hidden="true"></i><span>正在生成立体效果…</span></div>
     </div>
     <div class="gm-stage-controls me-stage-controls" aria-label="预览控制">
       <button id="toggleInspector" type="button" aria-pressed="false">▤ <span>编辑器</span></button>
@@ -42,15 +40,12 @@
           <select id="canvasPreset">
             <option value="1920x1080" selected>16:9 横版 · 1920 × 1080</option>
             <option value="2280x720">19:6 超宽 · 2280 × 720</option>
-            <option value="1900x600">19:6 紧凑 · 1900 × 600</option>
             <option value="2560x1080">21:9 电影 · 2560 × 1080</option>
             <option value="2160x1080">2:1 宽屏 · 2160 × 1080</option>
             <option value="1440x1080">4:3 传统 · 1440 × 1080</option>
-            <option value="1920x1280">3:2 照片 · 1920 × 1280</option>
             <option value="1080x1080">1:1 方形 · 1080 × 1080</option>
             <option value="1080x1350">4:5 竖版 · 1080 × 1350</option>
             <option value="1080x1920">9:16 全屏 · 1080 × 1920</option>
-            <option value="1080x2340">9:19.5 手机 · 1080 × 2340</option>
             <option value="custom">自定义</option>
           </select>
         </label>
@@ -62,42 +57,125 @@
 
       <section class="gm-card" id="assetCard">
         <div class="gm-card-title"><span>02</span><h2>素材</h2></div>
-        <p class="gm-help">开头用首图翻转。转完立刻按你上传的 2–3 张图切换（不是滤镜变色）。主图按上传比例放大，约占画面一倍。</p>
-        <label class="zg-upload">翻转首图
-          <input id="assetFile" type="file" accept="image/png,image/jpeg,image/webp">
-        </label>
-        <div class="zg-asset-status"><span id="assetName">默认照片卡片</span><button id="clearAsset" type="button" hidden>移除</button></div>
-        <label class="zg-upload">翻转后切图（可多选 2–3 张）
-          <input id="seqFiles" type="file" accept="image/png,image/jpeg,image/webp" multiple>
-        </label>
-        <div class="zg-asset-status"><span id="seqName">未上传，默认走银/黑/蓝演示</span><button id="clearSeq" type="button" hidden>移除切图</button></div>
-        <label class="zg-upload">更换空间背景
-          <input id="bgFile" type="file" accept="image/png,image/jpeg,image/webp">
-        </label>
-        <div class="zg-asset-status"><span id="bgName">默认暗空间</span><button id="clearBg" type="button" hidden>恢复默认</button></div>
-        <label class="gm-field">底色 <input id="backgroundColor" type="color" value="#07080c"></label>
-        <label class="gm-field gm-field-wide">字幕<input id="caption" type="text" value="What's next?" maxlength="48"></label>
-        <label class="gm-check"><input id="captionEnabled" type="checkbox" checked><span>显示字幕（贴在屏幕上，不跟卡片翻）</span></label>
+
+        <div class="zg-block zg-text-block">
+          <h3>片名与底色</h3>
+          <label class="gm-field gm-field-wide">片名<input id="title" type="text" value="三星堆" maxlength="24"></label>
+          <label class="gm-field gm-field-wide">副标题<input id="subtitle" type="text" value="SANXINGDUI" maxlength="40"></label>
+          <label class="gm-field gm-field-wide">片名字体<select id="titleFont"><option value="stg:noto-sc" selected>Noto Sans SC · 中文</option></select></label>
+          <div class="zg-color-row">
+            <label class="gm-field">文字颜色<input id="textColor" type="color" value="#f2f0ec"></label>
+            <label class="gm-field">底色<input id="backgroundColor" type="color" value="#000000"></label>
+          </div>
+          <label class="gm-check"><input id="titleOn" type="checkbox" checked><span>结尾切黑出片名</span></label>
+        </div>
+
+        <div class="zg-block">
+          <h3>翻转主体</h3>
+          <div class="zg-asset-row">
+            <img id="mainThumb" class="zg-thumb" alt="">
+            <div class="zg-asset-meta">
+              <select id="mainSelect" aria-label="选择翻转主体"></select>
+              <label class="zg-upload">上传主体图<input id="mainFile" type="file" accept="image/png,image/webp,image/jpeg"></label>
+            </div>
+          </div>
+          <p class="gm-help">透明底 PNG 效果最好；白底图会自动抠掉连通的底色。系统根据轮廓自动生成厚度、侧面和背面。</p>
+        </div>
+
+        <div class="zg-block">
+          <div class="zg-block-head"><h3>爆炸拆解</h3><label class="zg-switch"><input id="explodeOn" type="checkbox" checked><span>开场爆炸</span></label></div>
+          <p class="gm-help">主体按切线拆成前壳、后壳、两侧和底部，在空间里飞散后真实拼回。拖动图上的切线调整拆法。</p>
+          <div class="zg-cut-editor">
+            <canvas id="cutEditor" width="240" height="300" aria-label="拖动切线调整拆解位置"></canvas>
+            <div class="zg-cut-toggles">
+              <label class="gm-check"><input id="cutWings" type="checkbox" checked><span>拆出两侧（紫线）</span></label>
+              <label class="gm-check"><input id="cutBase" type="checkbox" checked><span>拆出底部（青线）</span></label>
+            </div>
+          </div>
+          <h4>内部结构 <small>来自爆炸图，合拢时被外壳吞进去</small></h4>
+          <div class="zg-asset-row">
+            <img id="explodedThumb" class="zg-thumb" alt="">
+            <div class="zg-asset-meta">
+              <label class="zg-upload">上传爆炸图<input id="explodedFile" type="file" accept="image/png,image/webp,image/jpeg"></label>
+              <button id="clearExploded" class="zg-text-button" type="button">不用爆炸图</button>
+            </div>
+          </div>
+          <div id="coreParts" class="zg-core-parts" aria-label="选择作为内部结构的零件"></div>
+          <p id="coreHint" class="gm-help">系统按空白缝自动切出零件，点亮的零件会插在前后壳之间。</p>
+        </div>
+
+        <div class="zg-block">
+          <h3>展厅背景</h3>
+          <div class="zg-asset-row">
+            <img id="bgThumb" class="zg-thumb zg-thumb-wide" alt="">
+            <div class="zg-asset-meta">
+              <label class="zg-upload">上传全景图<input id="bgFile" type="file" accept="image/png,image/webp,image/jpeg"></label>
+              <button id="clearBg" class="zg-text-button" type="button">恢复默认展厅</button>
+            </div>
+          </div>
+          <p class="gm-help">用越宽的图，镜头横移越有空间感。</p>
+        </div>
+
+        <section id="zgLayerPanel" class="me-layer-panel zg-layer-panel">
+          <div class="zg-block-head"><h3>收尾切换 <output id="selectedAssetCount">4</output></h3><button id="zgLayerToggle" class="me-layer-toggle" type="button">展开已选</button></div>
+          <p class="gm-help">翻转回正后按顺序硬切；拖动或 Alt + ↑↓ 调整顺序。</p>
+          <div id="zgLayerItems" class="me-layer-items" hidden></div>
+          <label class="gm-check"><input id="returnMain" type="checkbox" checked><span>最后切回主体</span></label>
+        </section>
+
+        <section class="me-asset-library zg-asset-library">
+          <div class="zg-block-head"><h3>文物素材</h3><small id="librarySelectionName">选择后再添加</small></div>
+          <details open><summary>素材库</summary><div id="zgLibrary" class="zg-library-grid"></div></details>
+          <div class="zg-library-actions">
+            <button id="addSelectedAsset" class="me-asset-commit" type="button">添加所选</button>
+            <label class="zg-upload">上传图片<input id="assetUpload" type="file" accept="image/png,image/webp,image/jpeg" multiple></label>
+          </div>
+        </section>
       </section>
 
       <section class="gm-card" id="motionCard">
         <div class="gm-card-title"><span>03</span><h2>动效设置</h2></div>
+        <h3 class="zg-group">爆炸与合拢</h3>
         <div class="gm-grid-2">
-          <label class="gm-field">翻转圈数 <input id="flipTurns" type="range" min="50" max="400" value="100"><output for="flipTurns" id="flipTurnsOut">1.00</output></label>
-          <label class="gm-field">斜角 <input id="pitch" type="range" min="4" max="28" value="14"><output for="pitch" id="pitchOut">14°</output></label>
-          <label class="gm-field">起始朝向 <input id="yaw0" type="range" min="-40" max="40" value="22"><output for="yaw0" id="yaw0Out">22°</output></label>
-          <label class="gm-field">镜头环绕 <input id="parallax" type="range" min="16" max="90" value="72"><output for="parallax" id="parallaxOut">72</output></label>
-          <label class="gm-field">切图过渡 <input id="recolorAmt" type="range" min="0" max="100" value="100"><output for="recolorAmt" id="recolorAmtOut">100</output></label>
-          <label class="gm-field">图片高度 <input id="cardScale" type="range" min="40" max="95" value="80"><output for="cardScale" id="cardScaleOut">80</output></label>
-          <label class="gm-field">上下移 <input id="cardLift" type="range" min="-40" max="40" value="0"><output for="cardLift" id="cardLiftOut">0</output></label>
-          <label class="gm-field">播放速度 <input id="speed" type="range" min="50" max="160" value="100"><output for="speed" id="speedOut">1.00×</output></label>
+          <label class="gm-field">散开距离 <input id="spread" type="range" min="40" max="180" value="100"><output id="spreadOut">1.00×</output></label>
+          <label class="gm-field">仰角 <input id="elevation" type="range" min="0" max="35" value="22"><output id="elevationOut">22°</output></label>
+          <label class="gm-field">起始朝向 <input id="yaw" type="range" min="-80" max="-10" value="-40"><output id="yawOut">-40°</output></label>
+          <label class="gm-field">广角开场 <input id="fovStart" type="range" min="18" max="50" value="40"><output id="fovStartOut">40°</output></label>
+          <label class="gm-field">悬停 <input id="explodeHold" type="range" min="0" max="120" value="30"><output id="explodeHoldOut">0.30s</output></label>
+          <label class="gm-field">合拢 <input id="converge" type="range" min="30" max="200" value="85"><output id="convergeOut">0.85s</output></label>
+        </div>
+        <h3 class="zg-group">翻转</h3>
+        <div class="gm-grid-2">
+          <label class="gm-field">圈数 <input id="turns" type="range" min="1" max="3" step="1" value="1"><output id="turnsOut">1</output></label>
+          <label class="gm-field">翻转时长 <input id="spinSec" type="range" min="80" max="320" value="147"><output id="spinSecOut">1.47s</output></label>
+          <label class="gm-field">回正余晃 <input id="wobble" type="range" min="0" max="200" value="100"><output id="wobbleOut">100%</output></label>
+          <label class="gm-field">主体厚度 <input id="thickness" type="range" min="30" max="110" value="62"><output id="thicknessOut">62%</output></label>
+        </div>
+        <h3 class="zg-group">镜头与灯光</h3>
+        <div class="gm-grid-2">
+          <label class="gm-field">背景推移 <input id="pan" type="range" min="0" max="100" value="100"><output id="panOut">100%</output></label>
+          <label class="gm-field">推移方向 <select id="panDir"><option value="ltr" selected>从左到右</option><option value="rtl">从右到左</option></select></label>
+          <label class="gm-field">背景虚化 <input id="blur" type="range" min="0" max="150" value="42"><output id="blurOut">42</output></label>
+          <label class="gm-field">关灯 <input id="dim" type="range" min="0" max="70" value="48"><output id="dimOut">48%</output></label>
+          <label class="gm-field">边缘反光 <input id="rim" type="range" min="0" max="200" value="100"><output id="rimOut">100%</output></label>
+          <label class="gm-field">地面倒影 <input id="reflection" type="range" min="0" max="30" value="10"><output id="reflectionOut">10%</output></label>
+          <label class="gm-field">主体大小 <input id="objSize" type="range" min="35" max="80" value="60"><output id="objSizeOut">60%</output></label>
+          <label class="gm-field">上下位置 <input id="objY" type="range" min="35" max="60" step="0.5" value="47.5"><output id="objYOut">47.5%</output></label>
+        </div>
+        <h3 class="zg-group">收尾节奏</h3>
+        <div class="gm-grid-2">
+          <label class="gm-field">首次切换前停留 <input id="firstHold" type="range" min="20" max="200" value="97"><output id="firstHoldOut">0.97s</output></label>
+          <label class="gm-field">切换间隔 <input id="interval" type="range" min="15" max="120" value="50"><output id="intervalOut">0.50s</output></label>
+          <label class="gm-field">越切越快 <input id="accel" type="range" min="60" max="100" value="84"><output id="accelOut">84%</output></label>
+          <label class="gm-field">最后一张停留 <input id="lastHold" type="range" min="15" max="200" value="40"><output id="lastHoldOut">0.40s</output></label>
+          <label class="gm-field">片名时长 <input id="titleHold" type="range" min="40" max="300" value="135"><output id="titleHoldOut">1.35s</output></label>
         </div>
       </section>
 
       <section class="choreo-section gm-card">
         <div class="gm-card-title"><span>04</span><h2>时间轴</h2></div>
         <div class="me-choreo-scroll"><div id="timeline" class="gm-timeline me-choreo-track me-choreo-bar" role="list" aria-label="无重力翻转时间轴"></div></div>
-        <input id="scrubber" class="gm-scrubber me-choreo-playhead" type="range" min="0" max="1" step="0.001" value="0" aria-label="时间轴播放头">
+        <input id="scrubber" class="gm-scrubber me-choreo-playhead" type="range" min="0" max="1" step="1" value="0" aria-label="时间轴播放头">
         <div class="gm-time-readout"><span id="timeNow">0.00s</span><span id="timeTotal">0.00s</span></div>
       </section>
 
@@ -116,27 +194,41 @@
       <section class="export-panel gm-card">
         <div class="gm-card-title"><span>06</span><h2>真实导出</h2></div>
         <div class="gm-grid-2">
-          <label class="gm-field">时长<select id="exportDuration"><option value="full">完整循环</option><option value="3">3 秒</option><option value="5">5 秒</option></select></label>
-          <label class="gm-field">帧率<select id="exportFps"><option value="24">24 fps</option><option value="30" selected>30 fps</option></select></label>
+          <label class="gm-field">时长<select id="exportDuration"><option value="full" selected>完整一遍</option><option value="3">3 秒</option><option value="5">5 秒</option></select></label>
+          <label class="gm-field">帧率<select id="exportFps"><option value="24">24 fps</option><option value="30" selected>30 fps</option><option value="60">60 fps</option></select></label>
         </div>
         <div class="gm-actions gm-actions-3">
           <button id="exportPng" type="button">PNG</button>
           <button id="exportGif" type="button">GIF</button>
           <button id="exportMp4" type="button">MP4</button>
         </div>
-        <p id="exportStatus" class="gm-status">输出将严格使用当前画布尺寸。</p>
+        <progress id="exportProgress" class="zg-progress" max="1" value="0" hidden></progress>
+        <p id="exportStatus" class="gm-status">输出严格使用当前画布尺寸；GIF / MP4 带运动模糊。</p>
       </section>
     </div>
   </details>
 
+  <aside id="zgAssetDrawer" class="me-asset-drawer zg-asset-drawer" hidden aria-label="单独编辑切换素材">
+    <div class="me-asset-editor">
+      <div class="zg-block-head"><h3>单独编辑</h3><button id="closeAssetDrawer" class="zg-text-button" type="button">关闭</button></div>
+      <div class="zg-drawer-preview"><img id="assetEditorThumb" alt=""><span id="assetEditorName"></span></div>
+      <label class="gm-field">大小 <input id="assetScale" type="range" min="50" max="160" value="100"><output id="assetScaleOut">100%</output></label>
+      <label class="gm-field">水平位置 <input id="assetX" type="range" min="-30" max="30" value="0"><output id="assetXOut">0</output></label>
+      <label class="gm-field">垂直位置 <input id="assetY" type="range" min="-25" max="25" value="0"><output id="assetYOut">0</output></label>
+      <p class="gm-help">画面已停在这件素材上，调整会立即生效。</p>
+    </div>
+  </aside>
+
   <script src="js/continuation-gif.js"></script>
   <script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="zerogflip.js?v=20260918-19"></script>
-  <script src="zerogflip-workspace.js?v=20260918-12"></script>
-  <script src="typecascade-polish.js?v=20260917-zg1"></script>
+  <script src="shared-font-library.js?v=20261006-garden1"></script>
+  <script src="zerogflip-engine.js?v=20261006-pro1"></script>
+  <script src="zerogflip.js?v=20261006-pro1"></script>
+  <script src="zerogflip-workspace.js?v=20261006-pro1"></script>
+  <script src="typecascade-polish.js?v=20261006-zg3"></script>
   <script src="typecascade-selects.js?v=20260909-1"></script>
-  <script src="typecascade-locale.js?v=20260927-locale-pass2"></script>
-<script defer src="site-preferences.js?v=20260926-18"></script>
+  <script src="typecascade-locale.js?v=20261006-zg2"></script>
+  <script defer src="site-preferences.js?v=20260926-18"></script>
 
   <script src="cellmotion-me-shell.js?v=20260928-shell-inkfix1"></script>
   <script src="cellmotion-ai-manifest.js?v=20260927-standard"></script>
