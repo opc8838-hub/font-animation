@@ -171,7 +171,7 @@ function recentCard(item,index) {
   const effect=item.effect, [, month, day]=item.date.split('-');
   const image=effect.poster?`<img src="${effect.poster}" alt="${escapeHTML(effect.name)}动效封面" loading="lazy">`:`<span class="poster-fallback">${escapeHTML(effect.name)}</span>`;
   const video=effect.video?`<video data-src="${effect.video}" muted loop playsinline preload="none" aria-hidden="true"></video>`:'';
-  return `<a class="recent-card${index===0?' is-newest':''}" href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器"><span class="recent-preview">${image}${video}<span class="recent-badge">${index===0?'NEW · ':''}${month}.${day}</span></span><span class="recent-caption"><strong>${escapeHTML(effect.name)}</strong><span data-no-translate>${escapeHTML(effect.english)}</span></span></a>`;
+  return `<a class="recent-card${index===0?' is-newest':''}" href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器"><span class="recent-preview">${image}${video}<span class="recent-badge">${item.date===recent[0]?.date?'NEW · ':''}${month}.${day}</span></span><span class="recent-caption"><strong>${escapeHTML(effect.name)}</strong><span data-no-translate>${escapeHTML(effect.english)}</span></span></a>`;
 }
 function initRecent() {
   const grid=$('#recent-grid');if(!grid)return;
@@ -274,7 +274,7 @@ document.addEventListener('visibilitychange',()=>{
 });
 async function loadCatalogData() {
   try {
-    const response=await fetch('cellmotion-catalog.json?v=20261006-garden1');
+    const response=await fetch('cellmotion-catalog.json?v=20261006-four1');
     if(!response.ok)throw new Error(`Catalog HTTP ${response.status}`);
     const catalog=await response.json();
     effects=catalog.effects;
