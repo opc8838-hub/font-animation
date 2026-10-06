@@ -14,3 +14,6 @@
 }
 
 @media (max-width: 480px) { body[data-morph-port="prosvg"] .tc-brand img { width:200%; left:-50%; top:50%; transform:translateY(-50%); } }
+
+/* Keep size controls at the right edge of the live-stage toolbar. */
+body.tc-workspace[data-morph-port="prosvg"] .tc-canvas-toolbar .gm-canvas-card { flex:0 1 230px; width:230px; max-width:100%; margin-left:auto; margin-right:0; }
