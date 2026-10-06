@@ -118,7 +118,7 @@ const emptyState = document.querySelector("#emptyState");
 const filterButtons = [...document.querySelectorAll(".filter")];
 let activeFilter = "all";
 const livePreviews = new Set(["textswell"]);
-const featuredPreviews = new Set(["citystack", "prosvg", "textswell", "impactbuild", "currentwall", "verticalwall", "iconburst", "glyphmorph", "sproutshift", "mistlift", "typecascade", "dotresolve", "glyphreveal", "continuation", "split-flip", "beforeafter", "shutterafter", "pathwriter", "ribbonink", "scrapbin"]);
+const featuredPreviews = new Set(["citystack", "zerogflip", "prosvg", "textswell", "impactbuild", "currentwall", "verticalwall", "iconburst", "glyphmorph", "sproutshift", "mistlift", "typecascade", "dotresolve", "glyphreveal", "continuation", "split-flip", "beforeafter", "shutterafter", "pathwriter", "ribbonink", "scrapbin"]);
 const liveObserver = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
     const frame = entry.target;
@@ -150,6 +150,8 @@ function render() {
     const detail = slug === "flash" ? "13 个独立子风格" : categoryName;
     const preview = slug === "citystack"
       ? `<video class="effect-loop" src="assets/previews/citystack-card.mp4?v=20261006-1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
+      : slug === "zerogflip"
+      ? `<video class="effect-loop" src="assets/previews/zerogflip-card.mp4?v=20261006-1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
       : slug === "prosvg"
       ? `<video class="effect-loop" src="assets/previews/prosvg-card.mp4?v=20261005-1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
       : slug === "split-flip"
