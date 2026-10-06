@@ -127,6 +127,7 @@
       const number = make('span', 'tc-row-number');
       number.textContent = String(index + 1).padStart(2, '0');
       const title = make('strong', 'tc-row-text');
+      title.dataset.noTranslate = ''; // user-authored text, never machine-translated
       title.textContent = row.querySelector('[data-key="text"]')?.value || '留白段落';
       const meta = make('small', 'tc-row-description');
       const holdSeconds = hold ? `${Number(hold.value) / 1000}s 停留` : '独立段落';

@@ -15,6 +15,12 @@
     ["lora", "Lora", "STG Lora", 500, "normal", "衬线与书写"],
     ["fraunces", "Fraunces", "STG Fraunces", 500, "normal", "衬线与书写"],
     ["instrument-serif", "Instrument Serif", "STG Instrument Serif", 400, "normal", "衬线与书写"],
+    ["playfair", "Playfair Display Bold", "STG Playfair Display", 700, "normal", "衬线与书写"],
+    ["playfair-black", "Playfair Display Black", "STG Playfair Display", 900, "normal", "衬线与书写"],
+    ["dm-serif-display", "DM Serif Display", "STG DM Serif Display", 400, "normal", "衬线与书写"],
+    ["abril-fatface", "Abril Fatface", "STG Abril Fatface", 400, "normal", "衬线与书写"],
+    ["cormorant", "Cormorant Bold", "STG Cormorant", 700, "normal", "衬线与书写"],
+    ["georgia", "Georgia · 系统字体", "Georgia", 400, "normal", "衬线与书写"],
     ["cinzel", "Cinzel", "STG Cinzel", 600, "normal", "衬线与书写"],
     ["fenix", "Fenix", "STG Fenix", 400, "normal", "衬线与书写"],
     ["kepler", "Kepler", "STG Kepler", 500, "normal", "衬线与书写"],
@@ -49,6 +55,9 @@
     ["noto-sc", "Noto Sans SC · 中文", "STG Noto Sans SC", 400, "normal", "中文字体"],
     ["noto-sc-black", "Noto Sans SC Black · 中文", "STG Noto Sans SC", 900, "normal", "中文字体"],
     ["noto-hk", "Noto Sans HK · 中文", "STG Noto Sans HK", 500, "normal", "中文字体"],
+    ["noto-serif-sc", "思源宋体 Bold · 中文", "STG Noto Serif SC", 700, "normal", "中文字体"],
+    ["zcool-xiaowei", "站酷小薇 · 中文", "STG ZCOOL XiaoWei", 400, "normal", "中文字体"],
+    ["ma-shan-zheng", "马善政毛笔 · 中文", "STG Ma Shan Zheng", 400, "normal", "中文字体"],
     ["noto-jp-thin", "Noto Sans JP Thin · 日文", "STG Noto Sans JP", 200, "normal", "日文字体"],
     ["noto-jp-black", "Noto Sans JP Black · 日文", "STG Noto Sans JP", 900, "normal", "日文字体"],
     ["noto-kr-black", "Noto Sans KR Black · 韩文", "STG Noto Sans KR", 900, "normal", "韩文字体"],
@@ -68,7 +77,7 @@
     archivoBlack: "archivo-black", robotoCondensed: "roboto-condensed", work: "work-sans", serif: "lora", mono: "martian-mono",
     scRegular: "noto-sc", scBlack: "noto-sc-black", fenix: "fenix", spaceMonoBold: "space-mono",
     vollkornBoldItalic: "vollkorn", cairoBold: "cairo", aguafina: "aguafina", spartan: "league-spartan",
-    cinzel: "cinzel", instrument: "instrument-serif", bebas: "bebas-neue", rajdhani: "rajdhani", teko: "teko",
+    cinzel: "cinzel", instrument: "instrument-serif", playfair: "playfair", "noto-serif-sc": "noto-serif-sc", bebas: "bebas-neue", rajdhani: "rajdhani", teko: "teko",
     khand: "khand", fraunces: "fraunces", scThin: "noto-sc-thin", jpThin: "noto-jp-thin",
     jpBlack: "noto-jp-black", krBlack: "noto-kr-black",
     "ib-archivo": "archivo-black", "ib-roboto-condensed": "roboto-condensed", "ib-work": "work-sans",
@@ -140,7 +149,7 @@
 
   const styleLink = document.createElement("link");
   styleLink.rel = "stylesheet";
-  styleLink.href = "shared-fonts.css?v=20261005-hk1";
+  styleLink.href = "shared-fonts.css?v=20261006-garden1";
   styleLink.dataset.stgSharedFonts = "true";
   if (!document.querySelector("link[data-stg-shared-fonts]")) document.head.append(styleLink);
 

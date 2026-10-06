@@ -13,17 +13,18 @@ const play = async (video) => { try { await video.play(); return true; } catch {
 let effects = [], featured = [], recent = [], activeCategory = 'all', limit = 12;
 let activeUsage = 'all';
 const ribbonSeed = [
-  {id:'prosvg',name:'彩铸',href:'prosvg.html?from=gallery',poster:'final_prosvg.png',video:'assets/previews/prosvg-card.mp4'},
+  {id:'typegarden',name:'字园',href:'typegarden.html?from=gallery&v=20261006-1',poster:'assets/cellmotion/poster-typegarden.jpg',video:'assets/previews/typegarden-card.mp4'},
   {id:'letterpulse',name:'字阶',href:'letterpulse.html',poster:'final_letterpulse.svg',video:'assets/previews/letterpulse-1920x1080.mp4'},
   {id:'iconburst',name:'图标爆发',href:'iconburst.html',poster:'assets/cellmotion/poster-iconburst.jpg?v=20260926-5',video:'assets/previews/iconburst-card.mp4?v=20260926-5'},
-  {id:'citystack',name:'城市字塔',href:'citystack.html?from=gallery&v=20261006-1',poster:'assets/cellmotion/poster-citystack.jpg',video:'assets/previews/citystack-card.mp4'},
+  {id:'prosvg',name:'彩铸',href:'prosvg.html?from=gallery',poster:'final_prosvg.png',video:'assets/previews/prosvg-card.mp4'},
   {id:'dotresolve',name:'点解',href:'dotresolve.html',poster:'assets/cellmotion/poster-dotresolve.jpg',video:'assets/previews/dotresolve-wide-card.mp4'},
   {id:'glyphmorph',name:'字融',href:'glyphmorph.html',poster:'assets/cellmotion/poster-glyphmorph.jpg',video:'assets/previews/glyphmorph-card.mp4'},
   {id:'currentwall',name:'水流',href:'currentwall.html',poster:'assets/cellmotion/poster-currentwall.jpg',video:'assets/previews/water-flow-card.mp4'},
   {id:'pathwriter',name:'轨书',href:'pathwriter.html',poster:'assets/cellmotion/poster-pathwriter.jpg',video:'assets/previews/pathwriter-card.mp4'},
   {id:'sproutshift',name:'字芽',href:'sproutshift.html',poster:'assets/cellmotion/poster-sproutshift.jpg',video:'assets/previews/sproutshift-wide-card.mp4'},
-  {id:'typecascade',name:'字倾',href:'typecascade.html',poster:'assets/cellmotion/poster-typecascade.jpg',video:'assets/previews/typecascade-wide-card.mp4'},
-  {id:'ribbonink',name:'流彩笔迹',href:'ribbonink.html',poster:'assets/cellmotion/poster-ribbonink.jpg',video:'assets/previews/ribbon-ink-card.mp4'}
+  {id:'citystack',name:'城市字塔',href:'citystack.html?from=gallery&v=20261006-1',poster:'assets/cellmotion/poster-citystack.jpg',video:'assets/previews/citystack-card.mp4'},
+  {id:'ribbonink',name:'流彩笔迹',href:'ribbonink.html',poster:'assets/cellmotion/poster-ribbonink.jpg',video:'assets/previews/ribbon-ink-card.mp4'},
+  {id:'typecascade',name:'字倾',href:'typecascade.html',poster:'assets/cellmotion/poster-typecascade.jpg',video:'assets/previews/typecascade-wide-card.mp4'}
 ];
 const homePreview = $('#catalog-grid')?.dataset.homePreview === 'true';
 const capabilityLabels = $('#catalog-grid')?.dataset.capabilityLabels === 'true';
@@ -273,7 +274,7 @@ document.addEventListener('visibilitychange',()=>{
 });
 async function loadCatalogData() {
   try {
-    const response=await fetch('cellmotion-catalog.json?v=20261006-citystack1');
+    const response=await fetch('cellmotion-catalog.json?v=20261006-garden1');
     if(!response.ok)throw new Error(`Catalog HTTP ${response.status}`);
     const catalog=await response.json();
     effects=catalog.effects;

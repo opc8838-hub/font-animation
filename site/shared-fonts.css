@@ -28,6 +28,13 @@
 @font-face{font-family:"STG League Spartan";src:url("assets/fonts/LeagueSpartan-Variable.ttf") format("truetype");font-weight:100 900;font-display:swap}
 @font-face{font-family:"STG Khand";src:url("assets/fonts/Khand-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
 @font-face{font-family:"STG Instrument Serif";src:url("assets/fonts/InstrumentSerif-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"STG Playfair Display";src:url("assets/fonts/PlayfairDisplay-Variable.ttf") format("truetype");font-weight:400 900;font-display:swap}
+@font-face{font-family:"STG DM Serif Display";src:url("assets/fonts/DMSerifDisplay-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"STG Abril Fatface";src:url("assets/fonts/AbrilFatface-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"STG Cormorant";src:url("assets/fonts/Cormorant-Variable.ttf") format("truetype");font-weight:300 700;font-display:swap}
+@font-face{font-family:"STG Noto Serif SC";src:url("assets/fonts/NotoSerifSC-Bold-GB2312.woff2") format("woff2");font-weight:700;font-display:swap}
+@font-face{font-family:"STG ZCOOL XiaoWei";src:url("assets/fonts/ZCOOLXiaoWei-Regular.woff2") format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"STG Ma Shan Zheng";src:url("assets/fonts/MaShanZheng-Regular.woff2") format("woff2");font-weight:400;font-display:swap}
 @font-face{font-family:"STG Lora";src:url("assets/fonts/Lora-Variable.ttf") format("truetype");font-weight:100 900;font-display:swap}
 @font-face{font-family:"STG Teko";src:url("assets/fonts/Teko-Variable.ttf") format("truetype");font-weight:300 700;font-display:swap}
 @font-face{font-family:"STG Rajdhani";src:url("assets/fonts/Rajdhani-Bold.ttf") format("truetype");font-weight:700;font-display:swap}

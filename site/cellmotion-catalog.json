@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "typegarden",
+      "date": "2026-10-06"
+    },
+    {
       "id": "citystack",
       "date": "2026-10-06"
     },
@@ -225,6 +229,17 @@
       "href": "citystack.html?from=gallery&v=20261006-1",
       "poster": "assets/cellmotion/poster-citystack.jpg",
       "video": "assets/previews/citystack-card.mp4",
+      "status": "ready"
+    },
+    {
+      "id": "typegarden",
+      "name": "字园",
+      "english": "Type Garden",
+      "description": "打字即生长 · 花茎玫瑰从字母里长出",
+      "category": "type",
+      "href": "typegarden.html?from=gallery&v=20261006-1",
+      "poster": "assets/cellmotion/poster-typegarden.jpg",
+      "video": "assets/previews/typegarden-card.mp4",
       "status": "ready"
     },
     {

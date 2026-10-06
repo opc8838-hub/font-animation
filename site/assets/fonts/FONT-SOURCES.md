@@ -20,7 +20,16 @@ The following local fonts were added after reviewing the collections on Fontshar
 | Noto Sans HK Variable | City Stack video font matching | google/fonts `ofl/notosanshk` | SIL OFL 1.1 |
 | Montserrat Variable | City Stack HK reference · `HONG KONG` | google/fonts `ofl/montserrat` | SIL OFL 1.1 |
 | Albert Sans Variable | City Stack HK reference · signature line | google/fonts `ofl/albertsans` | SIL OFL 1.1 |
+| Playfair Display Variable | Type Garden · letters (stand-in the original author recommends for GT Ultra) | google/fonts `ofl/playfairdisplay` | SIL OFL 1.1 |
+| DM Serif Display | Type Garden · display serif option | google/fonts `ofl/dmserifdisplay` | SIL OFL 1.1 |
+| Abril Fatface | Type Garden · fat display serif option | google/fonts `ofl/abrilfatface` | SIL OFL 1.1 |
+| Cormorant Variable | Type Garden · light-contrast serif option | google/fonts `ofl/cormorant` | SIL OFL 1.1 |
+| Noto Serif SC Bold (GB2312 subset, WOFF2) | Type Garden · Chinese serif and CJK fallback for serif faces | google/fonts `ofl/notoserifsc`, instanced at wght 700 and subset to GB2312 + ASCII with fontTools | SIL OFL 1.1 |
+| ZCOOL XiaoWei (WOFF2) | Type Garden · Chinese display option | google/fonts `ofl/zcoolxiaowei`, recompressed to WOFF2 | SIL OFL 1.1 |
+| Ma Shan Zheng (WOFF2) | Type Garden · Chinese brush option | google/fonts `ofl/mashanzheng`, recompressed to WOFF2 | SIL OFL 1.1 |
 
 Upstream repository: https://github.com/google/fonts
 
 Per-family license texts are stored in `licenses/` beside the existing font licenses.
+
+Georgia is listed in the font library as a system font only (`"Georgia"`, no file). It ships with Windows, macOS and iOS; its licence does not allow redistribution, so it is not bundled. Devices without it fall back to the next serif.

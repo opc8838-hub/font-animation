@@ -23,7 +23,7 @@ const videos = {
   dotresolve:'dotresolve-wide-card', glyphreveal:'glyphreveal-wide-card', currentwall:'water-flow-card',
   verticalwall:'vertical-rise-card', beforeafter:'beforeafter-card', shutterafter:'shutterafter-card',
   pathwriter:'pathwriter-card', ribbonink:'ribbon-ink-card', scrapbin:'delete-card',
-  colorrecompose:'color-recompose-card', impactbuild:'impactbuild-card'
+  colorrecompose:'color-recompose-card', impactbuild:'impactbuild-card', typegarden:'typegarden-card'
 };
 const media = new Set(['mediacascade','beforeafter','shutterafter','phoneframe','laptopframe','orbitgallery','moodboard']);
 // Newest releases first, shown on the homepage as 最近上新. Dates are the public release of each editor.

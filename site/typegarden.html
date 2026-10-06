@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="字园 Type Garden：打字即生长，花茎与玫瑰从字母里长出来。空格剪断、退格凋谢，七种循环动态，支持手机壁纸尺寸与 PNG/GIF/MP4 导出。">
+  <link rel="icon" href="favicon.svg">
+  <title>字园 Type Garden | CellMotion</title>
+  <link rel="stylesheet" href="workspace-editor.css?v=20260901-1">
+  <link rel="stylesheet" href="me-motion-editor.css?v=20260909-timeline-color">
+  <link rel="stylesheet" href="shared-fonts.css?v=20261006-garden1">
+  <link rel="stylesheet" href="stg-cn.css?v=20260824-1">
+  <link rel="stylesheet" href="glyphmorph-reviewed.css?v=20260909-media-crop">
+  <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-coloriso">
+  <link rel="stylesheet" href="typecascade-polish.css?v=20261006-garden1">
+  <link rel="stylesheet" href="typegarden-editor.css?v=20261006-7">
+<link rel="stylesheet" href="site-preferences.css?v=20261006-garden1">
+</head>
+<body class="glyphmorph-editor" data-type-garden="true">
+  <aside id="glyphMorphInspector" class="gm-inspector" aria-label="字园编辑器">
+    <header class="gm-header">
+      <a class="tc-brand" href="cellmotion.html" aria-label="CellMotion 首页"><img src="assets/cellmotion/logo-original-transparent.png?v=20260926-1" alt="CellMotion"></a>
+      <div><small>让创意，自由生长</small><h1>字园 <span>Type Garden</span></h1></div>
+    </header>
+
+    <section class="gm-card gm-canvas-card">
+      <div class="gm-card-title"><span>01</span><h2>画布尺寸</h2></div>
+      <label class="gm-field gm-field-wide">预设
+        <select id="canvasPreset">
+          <optgroup label="社交与视频">
+            <option value="1080x1080">1:1 方形 · 1080 × 1080</option>
+            <option value="1080x1350">4:5 竖版 · 1080 × 1350</option>
+            <option value="1080x1920">9:16 竖屏视频 · 1080 × 1920</option>
+            <option value="1920x1080">16:9 横版 · 1920 × 1080</option>
+          </optgroup>
+          <optgroup label="手机壁纸">
+            <option value="1206x2622">iPhone Pro · 1206 × 2622</option>
+            <option value="1320x2868">iPhone Pro Max · 1320 × 2868</option>
+            <option value="1179x2556">iPhone 标准 · 1179 × 2556</option>
+            <option value="1080x2400">安卓 20:9 · 1080 × 2400</option>
+            <option value="1440x3200">安卓 2K · 1440 × 3200</option>
+          </optgroup>
+          <optgroup label="平板与电脑壁纸">
+            <option value="2048x2732">iPad · 2048 × 2732</option>
+            <option value="2560x1440">电脑 2K · 2560 × 1440</option>
+            <option value="3840x2160">电脑 4K · 3840 × 2160</option>
+          </optgroup>
+          <option value="custom">自定义</option>
+        </select>
+      </label>
+      <div class="gm-grid-2 gm-custom-size" hidden>
+        <label class="gm-field">宽度 <input id="canvasWidth" type="number" min="320" max="3840" step="1" value="1080"></label>
+        <label class="gm-field">高度 <input id="canvasHeight" type="number" min="320" max="3840" step="1" value="1080"></label>
+      </div>
+    </section>
+
+    <section class="gm-card">
+      <div class="gm-card-title"><span>02</span><h2>文字段落</h2><button id="addRow" class="gm-text-button" type="button">＋ 添加段落</button></div>
+      <p class="gm-help">每一段是一行文字，字母里都会长出花茎。空格把一个词剪断，下一个词另起一片花园。</p>
+      <div id="sequenceRows" class="gm-sequence"></div>
+      <div class="gm-grid-2 gm-text-colors">
+        <label class="gm-field">文字颜色 <input id="textColor" type="color"></label>
+        <label class="gm-field">背景颜色 <input id="backgroundColor" type="color"></label>
+      </div>
+    </section>
+
+    <section class="gm-card gm-icon-launch-card">
+      <div class="gm-card-title"><span>03</span><h2>图标库</h2><button id="openIconLibrary" class="gm-text-button" type="button" aria-expanded="false">右侧展开</button></div>
+      <p class="gm-help">插入的图标会像字母一样长出花茎。</p>
+      <button id="openIconLibraryLarge" class="gm-open-library" type="button">打开图标库</button>
+    </section>
+
+    <section class="gm-card">
+      <div class="gm-card-title"><span>04</span><h2>字体与构图</h2></div>
+      <label class="gm-field gm-field-wide">全局字体
+        <select id="fontFamily"><option value="stg:playfair">Playfair Display Bold</option></select>
+      </label>
+      <div class="gm-grid-2">
+        <label class="gm-field">整体大小 <input id="layoutScale" type="range" min="50" max="150" step="1"><output for="layoutScale"></output></label>
+        <label class="gm-field">字间距 <input id="letterSpacing" type="range" min="-20" max="40" step="1"><output for="letterSpacing"></output></label>
+        <label class="gm-field">水平 <input id="positionX" type="range" min="-40" max="40" step="1"><output for="positionX"></output></label>
+        <label class="gm-field">垂直 <input id="positionY" type="range" min="-40" max="40" step="1"><output for="positionY"></output></label>
+      </div>
+      <p class="gm-help">字间距按字号的百分比计算，字放大缩小都保持同样的松紧（网页上 32px 字号的 -2px ≈ -6%）。花园会自动缩放到画面 6% 的边距之内；做手机壁纸时可以把文字往下移，避开锁屏时间。</p>
+    </section>
+
+    <section class="gm-card" data-tg-global-card>
+      <div class="gm-card-title"><span>05</span><h2>花园动态</h2></div>
+      <div id="presetGrid" class="tg-preset-grid" role="radiogroup" aria-label="循环动态"></div>
+      <div class="tg-addons" role="group" aria-label="叠加效果">
+        <div class="tg-addons-title"><strong>叠加效果</strong><small>可叠在任何动态上，「边打边长」里也会出现</small></div>
+        <div class="tg-addon" id="flyAddon">
+          <label class="gm-check"><input id="flyOn" type="checkbox"><span>蝴蝶来访</span></label>
+          <label class="gm-field">蝴蝶数量 <input id="butterflies" type="range" min="1" max="6" step="1"><output for="butterflies"></output></label>
+        </div>
+        <div class="tg-addon" id="lightAddon">
+          <label class="gm-check"><input id="lightOn" type="checkbox"><span>追光光点</span></label>
+          <label class="gm-field">光点数量 <input id="lights" type="range" min="1" max="4" step="1"><output for="lights"></output></label>
+        </div>
+      </div>
+      <div class="gm-grid-2">
+        <label class="gm-field">花朵数量 <input id="flowers" type="range" min="0" max="100" step="5"><output for="flowers"></output></label>
+        <label class="gm-field">播放速度 <input id="speed" type="range" min="0.25" max="2" step="0.05"><output for="speed"></output></label>
+        <label class="gm-field">茎叶密度 <input id="density" type="range" min="0.5" max="1.6" step="0.1"><output for="density"></output></label>
+        <label class="gm-field">剪断回弹 <input id="recoil" type="range" min="0" max="80" step="1"><output for="recoil"></output></label>
+        <label class="gm-field">生长种子 <input id="seed" type="number" min="0" max="999999" step="1"></label>
+      </div>
+      <label class="gm-check"><input id="textFront" type="checkbox"><span>文字始终在最前面（花不挡字）</span></label>
+      <label class="gm-check"><input id="boil" type="checkbox"><span>手绘抖动（线条轻微颤动）</span></label>
+      <button id="regrow" class="gm-text-button tg-regrow" type="button">↻ 重新生长一片</button>
+      <p class="tg-credit">花园的绘制与动态改编自 Akshat Agarwal 的 <a href="https://type-garden.vercel.app/" target="_blank" rel="noopener">Type Garden</a>。</p>
+    </section>
+
+    <section class="gm-card" data-tg-global-card>
+      <div class="gm-card-title"><span>06</span><h2>配色</h2></div>
+      <div class="tg-bg-quick" role="group" aria-label="画面背景">
+        <span>画面背景</span>
+        <button type="button" data-bg-quick="#000000" aria-label="黑色背景"><i style="background:#000000"></i>黑色</button>
+        <button type="button" data-bg-quick="#FFFFFF" aria-label="白色背景"><i style="background:#FFFFFF"></i>白色</button>
+        <label class="tg-bg-pick" title="其他颜色"><input id="bgQuickColor" type="color" aria-label="其他背景颜色"><span>其他</span></label>
+      </div>
+      <div id="paletteGrid" class="tg-palette-grid" role="radiogroup" aria-label="配色"></div>
+      <details class="gm-row-background tg-custom-colors">
+        <summary><span>自定义颜色</span><i class="gm-row-background-swatch" id="backgroundSwatch"></i></summary>
+        <div class="gm-row-background-grid">
+          <label>背景<input data-color="bg" type="color"></label>
+          <label>花朵<input data-color="flower" type="color"></label>
+          <label>茎与叶<input data-color="stem" type="color"></label>
+          <label>花瓣线<input data-color="line" type="color"></label>
+          <label>文字<input data-color="text" type="color"></label>
+        </div>
+      </details>
+      <details class="gm-row-background tg-background">
+        <summary><span>背景 · 图片 / GIF / 视频</span><b id="backgroundMediaLabel">未上传</b></summary>
+        <div class="gm-row-background-grid">
+          <label class="gm-background-upload">上传 / 更换背景<input id="backgroundFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime"></label>
+          <label>素材不透明度<input id="backgroundOpacity" type="number" min="0" max="100" step="1"><small>%</small></label>
+          <label>画面缩放<input id="backgroundZoom" type="number" min="1" max="4" step="0.05"><small>×</small></label>
+          <label>水平位置<input id="backgroundX" type="number" min="-100" max="100" step="1"><small>%</small></label>
+          <label>垂直位置<input id="backgroundY" type="number" min="-100" max="100" step="1"><small>%</small></label>
+          <div class="gm-background-video" id="backgroundMediaInfo" hidden>
+            <div class="gm-background-video-head"><strong id="backgroundMediaName"></strong><span id="backgroundMediaType"></span><button id="backgroundRemove" type="button">移除素材</button></div>
+            <div id="videoTrim" class="gm-background-video-trim" hidden>
+              <div id="videoTimeline" class="gm-video-timeline" aria-label="拖动两侧把手裁剪视频片段"><canvas id="videoFilmstrip" width="720" height="96"></canvas><div id="videoSelection" class="gm-video-selection"><span class="gm-video-handle is-start" data-edge="start" role="slider" tabindex="0" aria-label="视频片段开始"></span><span class="gm-video-handle is-end" data-edge="end" role="slider" tabindex="0" aria-label="视频片段结束"></span></div></div>
+              <div class="gm-video-scale"><span>0.0 秒</span><span id="videoDuration"></span></div>
+              <div class="gm-video-time-fields"><label>开始秒数<input id="videoStart" type="number" min="0" step="0.1" inputmode="decimal"></label><label>结束秒数<input id="videoEnd" type="number" min="0.1" step="0.1" inputmode="decimal"></label></div>
+              <p>拖动左右把手选择片段，也可输入精确秒数；片段会在动画里循环，预览和导出使用同一区间。</p>
+            </div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="gm-card">
+      <div class="gm-card-title"><span>07</span><h2>时间轴</h2></div>
+      <div class="me-choreo-scroll"><div id="timeline" class="gm-timeline me-choreo-track me-choreo-bar" role="list" aria-label="字园动效时间轴"></div></div>
+      <input id="scrubber" class="gm-scrubber me-choreo-playhead" type="range" min="0" max="1" step="0.001" value="0" aria-label="时间轴播放头">
+      <div class="gm-time-readout"><span id="timeNow">0.00s</span><span id="timeTotal">0.00s</span></div>
+    </section>
+
+    <section class="gm-card">
+      <div class="gm-card-title"><span>08</span><h2>方案</h2></div>
+      <div class="gm-actions gm-actions-4">
+        <button id="saveScheme" type="button">保存方案</button>
+        <button id="importScheme" type="button">导入方案</button>
+        <button id="restoreScheme" type="button">恢复默认</button>
+        <button id="clearScheme" type="button" aria-label="清空所有文字">清理重做</button>
+      </div>
+      <input id="schemeFile" type="file" accept="application/json,.json" hidden>
+    </section>
+
+    <section class="gm-card">
+      <div class="gm-card-title"><span>09</span><h2>真实导出</h2></div>
+      <div class="gm-grid-2">
+        <label class="gm-field">时长
+          <select id="exportDuration"><option value="cycle">完整循环</option><option value="2">2 个循环</option><option value="5s">5 秒</option><option value="10s">10 秒</option><option value="15s">15 秒</option></select>
+        </label>
+        <label class="gm-field">帧率
+          <select id="exportFps"><option value="24">24 fps</option><option value="30" selected>30 fps</option><option value="60">60 fps</option></select>
+        </label>
+        <label class="gm-field gm-field-wide">GIF 尺寸
+          <select id="gifScale"><option value="1">原尺寸</option><option value="0.5" selected>1/2（推荐，文件小）</option><option value="0.34">1/3</option></select>
+        </label>
+      </div>
+      <div class="gm-actions gm-actions-4">
+        <button id="exportPng" type="button">PNG</button>
+        <button id="exportGif" type="button">GIF</button>
+        <button id="exportMp4" type="button">MP4</button>
+        <button id="exportSvg" type="button">SVG</button>
+      </div>
+      <p id="exportStatus" class="gm-status" aria-live="polite">输出严格使用当前画布尺寸；手机壁纸建议导出 PNG（静态）或 MP4（动态壁纸）。</p>
+    </section>
+  </aside>
+
+  <aside id="iconLibraryDrawer" class="gm-library-drawer" aria-label="图标库侧窗" hidden>
+    <header class="gm-library-drawer-header">
+      <div><small>当前文字行的图标</small><h2>图标库</h2></div>
+      <button id="closeIconLibrary" type="button" aria-label="关闭图标库">×</button>
+    </header>
+    <div id="iconLibraryBrowse" class="gm-library-browse">
+      <div id="iconLayerPanel" class="gm-layer-panel me-layer-panel">
+        <div class="gm-layer-summary">
+          <div><small>已插入图标</small><strong id="selectedIconCount">0</strong></div>
+          <button id="toggleSelectedIcons" class="me-layer-toggle" type="button" aria-expanded="false">展开已选</button>
+        </div>
+        <div id="selectedIconItems" class="gm-layer-items me-layer-items"></div>
+      </div>
+      <div class="gm-library-selection">
+        <div id="librarySelectionPreview" class="gm-library-selection-preview" aria-hidden="true">＋</div>
+        <div><small>当前候选</small><strong id="librarySelectionName">请先选择图标</strong><span id="insertTargetLabel">目标：第 01 行 · 文字末尾</span></div>
+        <button id="insertSelectedIcon" class="me-asset-commit" type="button" disabled>插入到光标</button>
+      </div>
+      <div id="iconLibrary" class="gm-icon-groups"></div>
+    </div>
+
+    <section id="iconAssetDrawer" class="gm-asset-drawer me-asset-drawer" aria-label="单图标编辑" hidden>
+      <header>
+        <div><small>单独编辑</small><h2 id="activeIconName">图标</h2></div>
+        <button id="closeIconDrawer" type="button" aria-label="返回图标库">←</button>
+      </header>
+      <div class="me-asset-editor gm-asset-editor">
+        <label class="gm-field gm-field-wide">所属文字行<select id="iconRow"></select></label>
+        <label class="gm-field gm-field-wide">插入位置<select id="iconBoundary"></select></label>
+        <div class="gm-grid-2">
+          <label class="gm-field">图标大小<input id="iconSize" type="range" min="20" max="200" step="1"><output for="iconSize"></output></label>
+          <label class="gm-field">图标与文字间距<input id="iconGap" type="range" min="0" max="60" step="1"><output for="iconGap"></output></label>
+          <label class="gm-field">水平左右位置<input id="iconX" type="range" min="-100" max="100" step="1"><output for="iconX"></output></label>
+          <label class="gm-field">垂直位置<input id="iconY" type="range" min="-100" max="100" step="1"><output for="iconY"></output></label>
+        </div>
+        <button id="removeActiveIcon" class="gm-remove-active" type="button">删除这个图标</button>
+      </div>
+    </section>
+  </aside>
+
+  <section id="tgLiveBar" class="tg-live-bar" hidden aria-label="边打边长操作说明">
+        <strong class="tg-live-title">边打边长</strong>
+        <span class="tg-live-hints"><span>输入文字 · 长出花园</span><span>空格 · 剪断</span><span>退格 · 凋谢</span><span>回车 · 清空</span><span>点击画布 · 放蝴蝶</span></span>
+        <button id="tgLiveToPoster" type="button">用这段文字做循环海报</button>
+  </section>
+
+  <main id="glyphMorphStage" class="gm-stage">
+    <div id="tgModes" class="tg-modes" role="group" aria-label="预览模式">
+      <button type="button" data-mode="poster" aria-pressed="true">循环海报</button>
+      <button type="button" data-mode="live" aria-pressed="false">边打边长</button>
+    </div>
+    <div id="compositionFrame" class="gm-composition-frame">
+      <canvas id="glyphMorphCanvas" width="1080" height="1080" aria-label="字园效果预览"></canvas>
+      <div id="tgLock" class="tg-lock" hidden aria-hidden="true"><small id="tgLockDate">10月5日 星期一</small><strong id="tgLockTime">9:41</strong></div>
+      <input id="tgLiveInput" class="tg-live-input" aria-label="在这里打字，花园会长出来" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div class="gm-stage-controls me-stage-controls" aria-label="预览控制">
+      <button id="toggleInspector" type="button" aria-pressed="false">▤ <span>编辑器</span></button>
+      <i aria-hidden="true"></i>
+      <button id="restartPreview" type="button">↺ <span>重播</span></button>
+      <button id="togglePlayback" type="button" aria-pressed="false">Ⅱ <span>暂停</span></button>
+      <button id="toggleLock" type="button" aria-pressed="false">◷ <span>锁屏预览</span></button>
+    </div>
+  </main>
+
+  <script src="js/continuation-gif.js?v=20260824-1"></script>
+  <script src="shared-font-library.js?v=20261006-garden1"></script>
+  <script src="row-font-editor.js?v=20260904-4"></script>
+  <script src="shared-icon-library.js?v=20260902-1"></script>
+  <script src="cellmotion-animated-image.js?v=20260909-1"></script>
+  <script src="typegarden-engine.js?v=20261006-7"></script>
+  <script src="typegarden-editor.js?v=20261006-8"></script>
+  <script src="stg-cn.js?v=20261006-garden1"></script>
+  <script src="typecascade-workspace.js?v=20261006-notr1"></script>
+  <script src="typecascade-polish.js?v=20261006-garden1"></script>
+  <script src="typecascade-selects.js?v=20260909-1"></script>
+  <script src="typecascade-locale.js?v=20261006-garden10"></script>
+  <script src="cellmotion-ai-manifest.js?v=20260909-ai-manifest"></script>
+  <script src="cellmotion-ai-menu.js?v=20260909-standard"></script>
+<script defer src="site-preferences.js?v=20261006-garden1"></script>
+</body>
+</html>

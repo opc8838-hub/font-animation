@@ -467,7 +467,7 @@ html[data-site-theme="dark"] #phraseList .phrase-card :is(input:not([type="range
 .tc-workspace #timeline .gm-timeline-block.tc-phase-medium small { display: none; }
 .tc-workspace #timeline .gm-timeline-block.tc-phase-narrow { padding: 0; }
 .tc-workspace #timeline .gm-timeline-block.tc-phase-narrow strong { display: none; }
-.tc-workspace #timeline .gm-timeline-block.is-active { outline: 2px solid var(--tc-text); outline-offset: -2px; }
+.tc-workspace #timeline .gm-timeline-block.is-active { outline: 0; box-shadow: 0 6px 18px -10px rgba(0,0,0,.45); filter: saturate(1.06); }
 .tc-workspace #timeline .gm-timeline-block:hover { filter: brightness(.95); }
 .tc-time-ruler { position: relative; height: 34px; cursor: ew-resize; touch-action: none; }
 .tc-time-ruler span { position: absolute; top: 8px; height: 7px; border-left: 1px solid var(--tc-muted); color: var(--tc-muted); font: 10px/1.2 Inter,sans-serif; padding: 12px 0 0 3px; white-space: nowrap; }

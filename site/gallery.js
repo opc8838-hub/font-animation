@@ -14,6 +14,7 @@ const effects = [
   ["focusportal", "焦点转场", "Focus Portal", "type", "字母或图标放大旋转转场"],
   ["rapidsequence", "速序轮播", "Rapid Sequence", "flow", "逐行滚入与快速文字轮播"],
   ["citystack", "城市字塔", "City Stack", "type", "港版黑体中英文字逐项点亮叠满"],
+  ["typegarden", "字园", "Type Garden", "type", "打字即生长 · 花茎玫瑰从字母里长出"],
   ["colorcanvas", "彩幕组句", "Color Canvas", "type", "逐行弹出与彩色弧面"],
   ["liquidtype", "散", "Scatter", "type", "花粒 · 蓝胶 · 横向散尘"],
   ["scrapbin", "Delete 删除", "Delete", "physics", "真实揉纸与重力入桶"],

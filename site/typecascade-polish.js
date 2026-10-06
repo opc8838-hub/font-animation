@@ -198,7 +198,7 @@
       const end = index + 1 < blocks.length ? Number(blocks[index + 1].dataset.seekMs) : total;
       const label = blocks[index].querySelector('strong').textContent;
       const info = block.querySelector('small')?.textContent || '';
-      const color = colorForLabel(label);
+      const color = block.dataset.phaseColor || colorForLabel(label);
       block.style.setProperty('--tc-phase-color', color);
       block.style.setProperty('background', color, 'important');
       block.title = `${label} · ${info} · ${(start / 1000).toFixed(2)}–${(end / 1000).toFixed(2)}s`;
