@@ -21,6 +21,19 @@ assert.equal(bad.period,1);assert.equal(bad.grain,.4);assert.equal(bad.stage,5);
 const sanitized=extension.normalizeScheme({...s,canvas:{width:321,height:-1},motion:{speed:0}});
 assert.equal(sanitized.canvas.width,322);assert.equal(sanitized.canvas.height,320);assert.equal(sanitized.motion.speed,.25);
 const clean=extension.port.scheme;
+assert.equal(clean.typography.fontFamily,'stg:archivo-black','editable default uses the matching heavy font');
+const testLayout={fontSize:400,family:'Test Font',weight:900,style:'normal',slots:[0,1,2].map((i)=>({token:{type:'glyph',glyph:'ABC'[i]},x:760+i*200,y:540,width:200}))};
+for (const [ascent,descent] of [[240,60],[300,0],[190,90]]) {
+  const ctx={measureText:()=>({actualBoundingBoxAscent:ascent,actualBoundingBoxDescent:descent})};
+  const normalized=extension.materialLayout(ctx,testLayout,clean.typography,1920,1080);
+  assert.equal(normalized.inkHeight,400,'font metrics must not shrink the visible size after typing');
+  const baseline=normalized.layout.slots[0].y,factor=normalized.layout.fontSize/400;
+  assert.equal((baseline-ascent*factor+baseline+descent*factor)/2,540,'visible ink remains vertically centered');
+}
+const wideLayout={...testLayout,slots:[0,1].map(i=>({token:{type:'glyph',glyph:'M'},x:500+i*1000,y:540,width:1000}))};
+const fitted=extension.materialLayout({measureText:()=>({actualBoundingBoxAscent:300,actualBoundingBoxDescent:0})},wideLayout,clean.typography,1920,1080);
+const slots=fitted.layout.slots;
+assert(Math.abs((slots.at(-1).x+slots.at(-1).width/2)-(slots[0].x-slots[0].width/2)-1920*.88)<.001,'long text still fits the canvas');
 for(const time of [0,.5,2.2,4.4,6.6,8.8]) {
   const svg=extension.createSvg(clean,clean.rows[0],geometry,time);
   assert.doesNotMatch(svg,/<animate(?:Transform)?\b/,'raster frames cannot depend on wall-clock SMIL');
@@ -43,6 +56,11 @@ for (const palette of ['original','silver','lava','violet']) {
       }
     }
   }
+}
+for (const W of [200,800]) {
+  const editedGeometry={W,H:129,scale:2,markup:'<g id="cm-letters"><rect width="'+W+'" height="129"/></g>'};
+  const svg=extension.createSvg(clean,clean.rows[0],editedGeometry,2.2);
+  assert.match(svg,/x2="486"/,'typing must not stretch the material wavelength with word width');
 }
 const animated=extension.createSvg(clean,clean.rows[0],geometry,0,true);
 assert.match(animated,/<animateTransform/,'standalone SVG retains native motion');

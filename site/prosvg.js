@@ -14,7 +14,7 @@
   const scheme = {
     version: 7,
     canvas: { width: 1920, height: 1080, preset: '1920x1080' },
-    typography: { fontFamily: 'stg:inter', fontSize: 400, tracking: 0, positionX: 0, positionY: 0, alignment: 'center', textColor: '#16181b', backgroundColor: '#ffffff' },
+    typography: { fontFamily: 'stg:archivo-black', fontSize: 400, tracking: 0, positionX: 0, positionY: 0, alignment: 'center', textColor: '#16181b', backgroundColor: '#ffffff' },
     motion: { introEnabled: true, introDuration: 440, introCharacterDelay: 0, morphDuration: 600, characterDelay: 0, effectAmount: 0, speed: 1, loop: true },
     material: { ...defaults },
     rows: [{ id: 'prosvg-01', text: 'PRO', hold: 0, icons: [], fontFamily: '', textColor: '#16181b', backgroundColor: '#ffffff', backgroundMedia: null, backgroundTransition: 'direct', backgroundTransitionDuration: 120 }]
@@ -55,16 +55,41 @@
   let lastSvg = '';
   let lastGeometry;
   const escapeAttr = v => String(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  function materialLayout(ctx, layout, typography, width, height) {
+    ctx.font = layout.style + ' ' + layout.weight + ' ' + layout.fontSize + 'px ' + layout.family;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const glyphs = layout.slots.filter(slot => slot.token.type === 'glyph' && slot.token.glyph.trim());
+    const measures = glyphs.map(slot => ctx.measureText(slot.token.glyph));
+    if (!measures.length) measures.push(ctx.measureText('H'));
+    const ascent = Math.max(0,...measures.map(m => m.actualBoundingBoxAscent || 0));
+    const descent = Math.max(0,...measures.map(m => m.actualBoundingBoxDescent || 0));
+    const inkHeight = Math.max(1,ascent + descent || layout.fontSize * .73);
+    const left = layout.slots.length ? Math.min(...layout.slots.map(slot => slot.x - slot.width / 2)) : width / 2;
+    const right = layout.slots.length ? Math.max(...layout.slots.map(slot => slot.x + slot.width / 2)) : left + 1;
+    const span = Math.max(1,right-left);
+    // Here the size control denotes visible letter height, as it does for the
+    // canonical 129-unit PRO outline. Fit only when the composition is too wide.
+    const factor = Math.min(layout.fontSize / inkHeight,width * .88 / span);
+    const total = span * factor;
+    let start = width * (.5 + typography.positionX / 100) - total / 2;
+    if (typography.alignment === 'left') start = width * (.08 + typography.positionX / 100);
+    if (typography.alignment === 'right') start = width * (.92 + typography.positionX / 100) - total;
+    const baselineOffset = (ascent - descent) * factor / 2;
+    return { inkHeight: inkHeight * factor, layout: { ...layout,
+      fontSize: layout.fontSize * factor,
+      slots: layout.slots.map(slot => ({ ...slot, x: start + (slot.x-left)*factor,
+        y: slot.y + (slot.token.type === 'glyph' ? baselineOffset : 0), width: slot.width*factor })) } };
+  }
   function shapeFor(args, timeline) {
     const { state, width, height, glyphLayout, drawToken } = args;
     const row = timeline.segment.from;
     const s = state.scheme, m = normalize(s.material);
-    const original = m.proShape && row.text === 'PRO' && !row.icons.length && !s.typography.tracking;
+    const original = m.proShape && row.text.toUpperCase() === 'PRO' && !row.icons.length && !s.typography.tracking;
     const key = JSON.stringify([width,height,s.typography,row.text,row.fontFamily,row.icons,original,document.fonts.status]);
     if (shapeCache.has(key)) return shapeCache.get(key);
     const scratch = document.createElement('canvas'); scratch.width = width; scratch.height = height;
     const ctx = scratch.getContext('2d');
-    const layout = glyphLayout(ctx,row,width,height);
+    let layout = glyphLayout(ctx,row,width,height);
     let W, H, x, y, scale, markup = '';
     if (original) {
       W = 337; H = 129;
@@ -74,11 +99,13 @@
       if (s.typography.alignment === 'right') x = width * (.92 + s.typography.positionX / 100) - W * scale;
       y = height * (.5 + s.typography.positionY / 100) - H * scale / 2;
     } else {
+      const normalized = materialLayout(ctx,layout,s.typography,width,height);
+      layout = normalized.layout;
       const slots = layout.slots;
       x = slots.length ? Math.min(...slots.map(slot => slot.x - slot.width / 2)) : width / 2;
       const right = slots.length ? Math.max(...slots.map(slot => slot.x + slot.width / 2)) : x + 1;
-      scale = layout.fontSize / 129;
-      W = Math.max(1,(right-x)/scale); H = 193.5;
+      scale = normalized.inkHeight / 129;
+      W = Math.max(1,(right-x)/scale); H = 129;
       y = height * (.5 + s.typography.positionY / 100) - H * scale / 2;
       // A self-contained alpha mask embeds the resolved shared font. No remote font
       // dependency or second set of export text metrics is introduced.
@@ -101,10 +128,8 @@
         .replace('width="385" height="177"','width="'+(W+48)+'" height="'+(H+48)+'"')
         .replace('viewBox="-18 -24 373 177"','viewBox="-18 -24 '+(W+36)+' '+(H+48)+'"')
         .replaceAll('168 64',W/2+' '+H/2);
-      // Adapt the scan wavelength only for edited text. The canonical PRO is untouched.
-      const factor = W / 337;
-      svg = svg.replaceAll('x2="486"','x2="'+486*factor+'"').replaceAll('x1="-243"','x1="'+(-243*factor)+'"');
-      svg = svg.replaceAll('from="109 0"','from="'+109*factor+' 0"').replaceAll('to="595 0"','to="'+595*factor+' 0"').replaceAll('to="594 0"','to="'+594*factor+' 0"');
+      // Keep the material wavelength in the same cap-height coordinate system.
+      svg = svg.replaceAll('to="594 0"','to="'+(594+Math.max(0,W-337))+' 0"');
     }
     // In the isolated grain stage, preserve white as a fixed point. Multiplying
     // the paper by noise colors the entire filter rectangle; modulate its ink
@@ -124,10 +149,9 @@
       });
     }
     if (!animated) {
-      const factor = W / 337;
       const phase = ((seconds / m.period) % 1 + 1) % 1;
-      const sweep = (109 + 486 * (m.direction === 1 ? phase : 1-phase)) * factor;
-      const reveal = (109 + 485 * Math.min(1,Math.max(0,seconds) / Math.max(.1,m.period-.01))) * factor;
+      const sweep = 109 + 486 * (m.direction === 1 ? phase : 1-phase);
+      const reveal = 109 + (485 + Math.max(0,W-337)) * Math.min(1,Math.max(0,seconds) / Math.max(.1,m.period-.01));
       svg = svg.replace(/(<linearGradient id="cm-sweep"[^>]*gradientTransform=")([^"]*)"/, '$1$2 translate('+sweep+' 0)"')
         .replace(/(<linearGradient id="cm-reveal"[^>]*gradientTransform=")([^"]*)"/, '$1$2 translate('+reveal+' 0)"')
         .replace(/<animateTransform\b[^>]*\/>/g,'');
@@ -213,6 +237,11 @@
   }
   function bind(runtime){
     api=runtime;
+    document.addEventListener('input',event=>{
+      if (!event.target.matches('#fontFamily,select[data-key="fontFamily"]')) return;
+      // A deliberate font choice applies to PRO as well as other content.
+      $('materialProShape').checked=false;api.changed();sync(api.getScheme());
+    });
     Object.entries(fields).forEach(([key,id])=>$(id).addEventListener('input',()=>{const bridge=window.CellMotionEffectBridge;const previous=api.getScheme().material.period;api.changed();sync(api.getScheme());if(key==='period'&&bridge)bridge.seek((window.__morphPortTest.getElapsedMs()/1000)*api.getScheme().material.period/previous);}));
     $('exportDuration').addEventListener('change',()=>$('customDurationField').hidden=$('exportDuration').value!=='custom');
     $('exportSvg').addEventListener('click',async()=>{
@@ -232,5 +261,5 @@
     document.addEventListener('keydown',event=>{if(!(event.ctrlKey||event.metaKey)||event.altKey||event.target.matches('input,textarea,[contenteditable]'))return;const key=event.key.toLowerCase();if(key!=='z'&&key!=='y')return;event.preventDefault();record();const next=cursor+((key==='y'||event.shiftKey)?1:-1);if(next<0||next>=history.length)return;cursor=next;restoring=true;api.applyScheme(JSON.parse(history[cursor]),'已'+(key==='y'||event.shiftKey?'重做':'撤销'));restoring=false;});
     setTimeout(record,0);
   }
-  window.MEMorphPortExtension={port:{mode:'material',slug:'prosvg',zh:'彩铸',en:'PRO SVG Lab',amountMin:0,amountMax:1,amountStep:.01,amountUnit:'',scheme},minimumRows:1,normalizeScheme,invalidate:()=>shapeCache.clear(),normalize,segments,renderTimeline,editOffset:s=>normalize(s.material).period*600,render,sync,collect,busy,bind,createSvg,getLastSvg:()=>lastSvg};
+  window.MEMorphPortExtension={port:{mode:'material',slug:'prosvg',zh:'彩铸',en:'PRO SVG Lab',amountMin:0,amountMax:1,amountStep:.01,amountUnit:'',scheme},minimumRows:1,materialLayout,normalizeScheme,invalidate:()=>shapeCache.clear(),normalize,segments,renderTimeline,editOffset:s=>normalize(s.material).period*600,render,sync,collect,busy,bind,createSvg,getLastSvg:()=>lastSvg};
 })();

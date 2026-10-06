@@ -6,6 +6,7 @@
     '彩铸': 'PRO SVG Lab', '彩铸编辑器': 'PRO SVG Lab editor',
     '流动材质': 'Flowing material', '色谱': 'Palette', '光谱': 'Spectrum', '冷银': 'Silver', '熔岩': 'Lava', '电离紫': 'Violet',
     '滤镜分解': 'Filter stages', '柔度': 'Softness', '颗粒': 'Grain', '扫描周期': 'Scan period', '扫描方向': 'Scan direction',
+    'PRO 不区分大小写使用定制字形；其他文字沿用当前粗体、字形高度和材质尺度。选择字体可切换字形。': 'PRO uses custom outlines regardless of case; other text keeps the current bold type, visible height and material scale. Choose a font to change the outlines.',
     '首次柔和揭示': 'First soft reveal', 'PRO 使用定制字形': 'Use custom PRO outlines',
     '进一步实验': 'Further experiments', '流体置换': 'Displacement', '浮雕高光': 'Specular light',
     '柔和揭示': 'Soft reveal', '色谱流动': 'Material flow', '材质停留': 'Material hold', '背景淡化': 'Background fade',

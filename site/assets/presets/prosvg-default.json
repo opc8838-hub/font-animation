@@ -6,7 +6,7 @@
     "preset": "1920x1080"
   },
   "typography": {
-    "fontFamily": "stg:inter",
+    "fontFamily": "stg:archivo-black",
     "fontSize": 400,
     "tracking": 0,
     "positionX": 0,

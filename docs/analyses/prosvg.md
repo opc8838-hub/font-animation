@@ -45,3 +45,12 @@ Verified in desktop Chromium on 2026-10-05:
 A reported rectangle behind PRO was reproduced in filter stage 4 (UI “05 · 颗粒调制”), lava palette, 7.3 blur / 0.12 grain. The upstream intermediate-stage arithmetic multiplies the full white paper by grain, exposing its rectangular filter bounds. The adaptation now uses `1 - (1 - soft) * grain` for this isolated stage, keeping white fixed and texturing ink coverage. Upstream vendor bytes and stages 0–3/5 are unchanged; emitted SVG equality checked for those stages. The approved default scheme and gallery artifacts are unchanged.
 
 Visually checked the reported desktop state, white-boundary pixels at grain 0 / 0.12 / 0.4, actual 1920×1080 PNG, 320×320 GIF and 24 fps MP4, and Chinese text on a colored background. The filter correction is shared by preview and all exports, including animated SVG. Numeric regression evaluates the emitted arithmetic for all four palettes and multiple noise/grain values. Browser console clean.
+
+
+## 2026-10-06 editable-type correction
+
+Typing lowercase `pro` previously left the canonical PRO path branch and used Inter 500 with CSS em-based sizing and a 193.5-unit mask. That changed apparent weight, height and material wavelength even though the size control remained 400.
+
+The canonical PRO branch is now case-insensitive. The portable default selects the shared Archivo Black 900 font for editable content. Editable masks normalize actual ink height to the same 129-unit coordinate system as the canonical paths; only compositions wider than the canvas fit limit shrink. A fixed 486-unit material wavelength preserves band/blur scale across text lengths, while the initial reveal extends for long text. Explicit global/row font selection turns off canonical PRO outlines so the selected font applies to every word. Saved font choices are preserved on import.
+
+Verified default PRO versus typed pro at paused 2.64 seconds with exact rendered-pixel equality. Actual 1920×1080 ink bounds: PRO/pro 400 px, ABC 396 px, Chinese 393 px, centered within rasterization tolerance. Font selection remains Inter / 400 after further typing when explicitly chosen. Tested mobile 390×844 with no horizontal overflow, new text PNG at 1920×1080, GIF and H.264 MP4 at 320×320 / 24 fps / 1 second. Visually inspected actual exported frames. Numeric regressions cover multiple font metrics, centered ink, long-text fitting and invariant material wavelength. Original default path rendering and existing gallery artifact bytes remain unchanged; default font metadata is corrected for editable text.
