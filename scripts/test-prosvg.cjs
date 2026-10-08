@@ -7,16 +7,13 @@ vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync('site/vendor/pro-svg-lab/renderer.js','utf8'),sandbox);
 vm.runInContext(fs.readFileSync('site/prosvg.js','utf8'),sandbox);
 const extension = sandbox.window.MEMorphPortExtension;
-// Timeline resizing converts displayed seconds through master speed and flow repeats.
+// Timeline resizing converts displayed seconds through master speed.
 const resizeScheme = JSON.parse(JSON.stringify(extension.port.scheme));
 resizeScheme.motion.speed=2;
 resizeScheme.material.promoEnabled=true;
 resizeScheme.material.promoScans=3;
 resizeScheme.material.promoCaptions=[{id:'second',text:'第二条',hold:2}];
-let resizeTarget=extension.phaseResizeTarget(resizeScheme,0,'色谱流动');
-extension.resizePhase(resizeScheme,resizeTarget,6);
-assert.equal(resizeScheme.material.period,4);
-resizeTarget=extension.phaseResizeTarget(resizeScheme,0,'柔和揭示');
+let resizeTarget=extension.phaseResizeTarget(resizeScheme,0,'柔和揭示');
 extension.resizePhase(resizeScheme,resizeTarget,0);
 assert.equal(resizeScheme.material.revealDuration,.1,'reveal respects minimum duration');
 resizeTarget=extension.phaseResizeTarget(resizeScheme,0,'文案停留',1);
@@ -26,16 +23,16 @@ assert.equal(resizeScheme.material.promoHold,extension.port.scheme.material.prom
 resizeTarget=extension.phaseResizeTarget(resizeScheme,0,'材质停留');
 extension.resizePhase(resizeScheme,resizeTarget,.75);
 assert.equal(resizeScheme.rows[0].hold,1500,'row milliseconds use the same displayed time scale');
-console.log('PASS timeline resize speed, flow repeats, bounds and independent caption hold');
+console.log('PASS timeline resize speed, bounds and independent caption hold');
 const s = JSON.parse(JSON.stringify(extension.port.scheme));
 const geometry = { W:337,H:129,markup:'',scale:2 };
-assert.equal(extension.segments(s)[0].durationMs,8800);
+assert.equal(extension.segments(s)[0].durationMs,4400);
 s.rows[0].hold=750;
-assert.equal(extension.segments(s)[0].durationMs,9550,'row hold extends the actual timeline');
+assert.equal(extension.segments(s)[0].durationMs,5150,'row hold extends the actual timeline');
 s.rows.push({...s.rows[0],id:'next',backgroundTransition:'crossfade',backgroundTransitionDuration:350});
 assert.equal(extension.segments(s)[0].transitionMs,350,'incoming page owns the background transition');
 s.motion.introEnabled=false;
-assert.equal(extension.segments(s)[0].durationMs,5500,'intro-off removes a full period, retaining hold and transition');
+assert.equal(extension.segments(s)[0].durationMs,1100,'intro-off removes a full period, retaining hold and transition');
 const bad=extension.normalize({period:-5,grain:99,stage:999,palette:'missing'});
 assert.equal(bad.period,1);assert.equal(bad.grain,.4);assert.equal(bad.stage,5);assert.equal(bad.palette,'original');
 const sanitized=extension.normalizeScheme({...s,canvas:{width:321,height:-1},motion:{speed:0}});
@@ -101,33 +98,33 @@ legacyHashes.forEach((hash,stage)=>{const oldMode={...clean,material:{...clean.m
   assert.equal(crypto.createHash('sha256').update(extension.createSvg(oldMode,oldMode.rows[0],geometry,1.5)).digest('hex'),hash,'original material output remains unchanged');});
 const promo=JSON.parse(JSON.stringify(clean));promo.material.promoEnabled=true;
 const m=promo.material,row=promo.rows[0];
-assert.equal(extension.segments(promo)[0].durationMs,16000,'original 8.8s remains before the additional 7.2s');
-for(const t of [0,2.2,4.4,8.8]) {
+assert.equal(extension.segments(promo)[0].durationMs,11600,'reveal directly precedes the additional 7.2s');
+for(const t of [0,2.2,4.4]) {
   const pose=extension.promoPose(m,row,t);
   assert.equal(pose.zoom,1,'original phases keep original framing');assert.equal(pose.opacity,0);
   assert.equal(extension.createSvg(promo,row,geometry,t),extension.createSvg(clean,row,geometry,t),'promo cannot replace the original material clock or reveal');
 }
-assert(Math.abs(extension.promoPose(m,row,9.2).zoom-2.2)<1e-10,'zoom-in passes through its midpoint');
-assert.equal(extension.promoPose(m,row,9.6).zoom,3.4);
-assert.equal(extension.promoPose(m,row,11).opacity,1);
-assert.equal(extension.promoPose(m,row,14).opacity,0);
-assert(Math.abs(extension.promoPose(m,row,14.4).zoom-2.2)<1e-10,'zoom-out passes through its midpoint');
-for(const t of [14.8,15.4,16,20]) {
+assert(Math.abs(extension.promoPose(m,row,4.8).zoom-2.2)<1e-10,'zoom-in passes through its midpoint');
+assert.equal(extension.promoPose(m,row,5.2).zoom,3.4);
+assert.equal(extension.promoPose(m,row,6.6).opacity,1);
+assert.equal(extension.promoPose(m,row,9.6).opacity,0);
+assert(Math.abs(extension.promoPose(m,row,10).zoom-2.2)<1e-10,'zoom-out passes through its midpoint');
+for(const t of [10.4,11,11.6,20]) {
   const pose=extension.promoPose(m,row,t);assert.equal(pose.zoom,1,'full original framing is restored');assert.equal(pose.opacity,0,'caption is gone after return');
 }
 m.promoBreath=.4;
-assert(extension.promoPose(m,row,11.8).zoom>m.promoZoom);
-assert.equal(extension.promoPose(m,row,9.6).zoom,m.promoZoom,'breathing starts without a jump');
-assert.equal(extension.promoPose(m,row,14).zoom,m.promoZoom,'breathing ends without a jump');
+assert(extension.promoPose(m,row,7.4).zoom>m.promoZoom);
+assert.equal(extension.promoPose(m,row,5.2).zoom,m.promoZoom,'breathing starts without a jump');
+assert.equal(extension.promoPose(m,row,9.6).zoom,m.promoZoom,'breathing ends without a jump');
 row.hold=800;m.promoGap=.3;
-assert.equal(extension.segments(promo)[0].durationMs,17100,'row hold extends the original phase; loop gap extends the end');
-assert.equal(extension.promoPose(m,row,9.6).zoom,1,'row hold must delay zoom, not silently extend the caption');
+assert.equal(extension.segments(promo)[0].durationMs,12700,'row hold extends the original phase; loop gap extends the end');
+assert.equal(extension.promoPose(m,row,5.2).zoom,1,'row hold must delay zoom, not silently extend the caption');
 m.promoReveal=1.2;
-assert.equal(extension.segments(promo)[0].durationMs,17700,'caption entrance edit changes only that interval');
+assert.equal(extension.segments(promo)[0].durationMs,13300,'caption entrance edit changes only that interval');
 m.promoScans=2;
-assert.equal(extension.segments(promo)[0].durationMs,22100,'extra normal flow cycle keeps the original scan period');
+assert.equal(extension.segments(promo)[0].durationMs,13300,'legacy flow count no longer inserts a phase');
 promo.motion.introEnabled=false;
-assert.equal(extension.segments(promo)[0].durationMs,17700,'intro remains independently editable in promo mode');
+assert.equal(extension.segments(promo)[0].durationMs,8900,'intro remains independently editable in promo mode');
 for(const intro of [true,false])for(const count of [1,3])for(const zoom of [1,8]) {
   m.promoScans=count;m.promoZoom=zoom;
   const end=extension.segments({...promo,motion:{...promo.motion,introEnabled:intro}})[0].holdMs/1000;
@@ -143,16 +140,16 @@ const story=JSON.parse(JSON.stringify(clean));
 story.material.revealDuration=.5;story.material.promoEnabled=true;story.material.promoHold=1;
 story.material.promoCaptions=[{id:'second',text:'第二条',hold:2},{id:'third',text:'第三条',hold:.5}];
 assert.equal(story.material.period,4.4);
-assert.equal(extension.segments(story)[0].durationMs,14800);
+assert.equal(extension.segments(story)[0].durationMs,10400);
 const windows=extension.captionWindows(story.material);
 assert.equal(windows[1].start,2.2);
 assert.equal(windows[2].start,5.4);
-for(const [time,index,text,opacity] of [[5.7,0,'How I made this',0],[6.8,0,'How I made this',1],[7.9,1,'第二条',0],[9,1,'第二条',1],[11.1,2,'第三条',0],[11.8,2,'第三条',1],[12.8,-1,'',0]]){
+for(const [time,index,text,opacity] of [[1.3,0,'How I made this',0],[2.4,0,'How I made this',1],[3.5,1,'第二条',0],[4.6,1,'第二条',1],[6.7,2,'第三条',0],[7.4,2,'第三条',1],[8.4,-1,'',0]]){
   const pose=extension.promoPose(story.material,story.rows[0],time);
   assert.equal(pose.captionIndex,index,'caption switch uses its exact timeline boundary');
   assert.equal(pose.captionText,text);assert.equal(pose.opacity,opacity);
 }
-assert.equal(extension.promoPose(story.material,story.rows[0],14.8).zoom,1);
+assert.equal(extension.promoPose(story.material,story.rows[0],10.4).zoom,1);
 const revealSvg=extension.createSvg(story,story.rows[0],geometry,.5);
 assert.match(revealSvg,/cm-reveal[^>]*gradientTransform="[^"]*translate\(594 0\)/,'short reveal reaches full mask without changing scan period');
 const animatedStory=extension.createSvg(story,story.rows[0],geometry,0,true);

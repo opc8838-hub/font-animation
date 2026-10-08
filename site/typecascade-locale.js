@@ -3,6 +3,7 @@
   if (!document.body.classList.contains('tc-workspace')) return;
   const body = document.body;
   const dictionary = new Map(Object.entries({
+    "柔和揭示后直接放大、展示文案、缩回原构图。扫描周期控制材质纹理的运动；总速度调节整轮节奏。每段停留保留在原构图阶段，完整循环导出包含缩回与停留。": "After the soft reveal, zoom in, show captions and return. Scan period controls the material texture; master speed adjusts the full cycle. Row hold stays before zoom. Complete-loop exports include the return and hold.",
     "拖动色块右边缘调整时长；方向键微调。共用阶段会同步调整。": "Drag the right edge to change duration; use arrow keys to fine-tune. Shared phases update together.",
     "拖动调整共用时长": "Drag to change shared duration",
     "拖动调整时长": "Drag to change duration",

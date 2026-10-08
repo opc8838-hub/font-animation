@@ -6,7 +6,7 @@
   const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, Number.isFinite(+n) ? +n : lo));
   const promoDefaults = {"promoEnabled":false,"promoText":"How I made this","promoFont":"stg:instrument-serif","promoZoom":3.4,"promoBreath":0,"promoSize":110,"promoColor":"#16181b","promoY":0,"promoTyping":false,"promoReveal":0.6,"promoHold":3.2,"promoFade":0.6,"promoGap":0,"promoScans":1,"promoZoomIn":0.8,"promoZoomOut":0.8,"promoReturnHold":1.2,"promoCaptions":[]};
   const defaults = { palette: 'original', stage: 5, blur: 7.3, grain: .12, period: 4.4, revealDuration: 4.4, warp: 0, light: 0, direction: 1, proShape: true, ...promoDefaults };
-  const fields = { palette: 'materialPalette', stage: 'materialStage', blur: 'materialBlur', grain: 'materialGrain', period: 'materialPeriod', revealDuration: 'materialRevealDuration', warp: 'materialWarp', light: 'materialLight', direction: 'materialDirection', proShape: 'materialProShape', promoEnabled: 'promoEnabled', promoText: 'promoText', promoFont: 'promoFont', promoZoom: 'promoZoom', promoBreath: 'promoBreath', promoSize: 'promoSize', promoColor: 'promoColor', promoY: 'promoY', promoTyping: 'promoTyping', promoReveal: 'promoReveal', promoHold: 'promoHold', promoFade: 'promoFade', promoGap: 'promoGap', promoScans: 'promoScans', promoZoomIn: 'promoZoomIn', promoZoomOut: 'promoZoomOut', promoReturnHold: 'promoReturnHold' };
+  const fields = { palette: 'materialPalette', stage: 'materialStage', blur: 'materialBlur', grain: 'materialGrain', period: 'materialPeriod', revealDuration: 'materialRevealDuration', warp: 'materialWarp', light: 'materialLight', direction: 'materialDirection', proShape: 'materialProShape', promoEnabled: 'promoEnabled', promoText: 'promoText', promoFont: 'promoFont', promoZoom: 'promoZoom', promoBreath: 'promoBreath', promoSize: 'promoSize', promoColor: 'promoColor', promoY: 'promoY', promoTyping: 'promoTyping', promoReveal: 'promoReveal', promoHold: 'promoHold', promoFade: 'promoFade', promoGap: 'promoGap', promoZoomIn: 'promoZoomIn', promoZoomOut: 'promoZoomOut', promoReturnHold: 'promoReturnHold' };
   const copy = value => JSON.parse(JSON.stringify(value));
   function normalizeCaptions(value,hold) {
     const seen=new Set();
@@ -39,7 +39,7 @@
   };
   const smooth = p => { p=clamp(p,0,1); return p<1e-9?0:p>1-1e-9?1:p*p*(3-2*p); };
   function originalBeats(m,row,introEnabled) {
-    return [...(introEnabled?[['柔和揭示',m.revealDuration*1000]]:[]),['色谱流动',m.period*1000*(m.promoEnabled?m.promoScans:1)],...(row.hold?[['材质停留',row.hold]]:[])];
+    return [...(introEnabled?[['柔和揭示',m.revealDuration*1000]]:[]),...(row.hold?[['材质停留',row.hold]]:[])];
   }
   function captions(m) { return [{text:m.promoText,hold:m.promoHold},...m.promoCaptions]; }
   function captionWindows(m) {
@@ -85,21 +85,21 @@
   }
   function segments(s) {
     const m=normalize(s.material);
-    const duration = ((s.motion.introEnabled?m.revealDuration:0)+m.period)*1000;
+    const duration = (s.motion.introEnabled?m.revealDuration:0)*1000;
     return s.rows.map((row, index) => {
       const to = s.rows[(index + 1) % s.rows.length];
       const canTransition = s.rows.length > 1 && (s.motion.loop || index < s.rows.length - 1);
       const transitionMs = canTransition && to.backgroundTransition === 'crossfade' ? clamp(to.backgroundTransitionDuration,10,2000) : 0;
       const holdMs=m.promoEnabled?promoDuration(m,row,s.motion.introEnabled):duration+row.hold;
-      return { from: row, to, durationMs: holdMs + transitionMs, holdMs, transitionMs, morphMs: transitionMs, tailMs: 0, introMs: 0, terminal: false };
+      return { from: row, to, durationMs: Math.max(1,holdMs + transitionMs), holdMs, transitionMs, morphMs: transitionMs, tailMs: 0, introMs: 0, terminal: false };
     });
   }
   function phaseResizeTarget(s,rowIndex,name,captionIndex) {
     const m=normalize(s.material),row=s.rows[rowIndex];
     if(!row)return null;
     const shared={rowId:row.id,name,scope:'material',scale:1000/s.motion.speed,step:.1};
-    const keys={'柔和揭示':['revealDuration',.1,12],'色谱流动':['period',1,12],'材质放大':['promoZoomIn',.1,10],'文案出现':['promoReveal',.1,10],'文案逐字':['promoReveal',.1,10],'文案淡出':['promoFade',.1,10],'缩回原构图':['promoZoomOut',.1,10],'原构图停留':['promoReturnHold',0,20],'轮间空隙':['promoGap',0,10]};
-    if(keys[name]){const [key,min,max]=keys[name];return {...shared,key,min,max,scale:shared.scale*(key==='period'&&m.promoEnabled?m.promoScans:1)};}
+    const keys={'柔和揭示':['revealDuration',.1,12],'材质放大':['promoZoomIn',.1,10],'文案出现':['promoReveal',.1,10],'文案逐字':['promoReveal',.1,10],'文案淡出':['promoFade',.1,10],'缩回原构图':['promoZoomOut',.1,10],'原构图停留':['promoReturnHold',0,20],'轮间空隙':['promoGap',0,10]};
+    if(keys[name]){const [key,min,max]=keys[name];return {...shared,key,min,max};}
     if(name==='文案停留')return {...shared,scope:'caption',captionId:captionIndex>0?m.promoCaptions[captionIndex-1]?.id:'first',key:'hold',min:.1,max:20};
     if(name==='材质停留')return {...shared,scope:'row',key:'hold',min:0,max:5000,step:100,scale:1/s.motion.speed};
     if(name==='背景淡化'){const to=s.rows[(rowIndex+1)%s.rows.length];return {...shared,scope:'row',ownerId:to.id,key:'backgroundTransitionDuration',min:10,max:2000,step:10,scale:1/s.motion.speed};}
@@ -130,7 +130,7 @@
         button.dataset.seekMs = String(cursor);button.dataset.durationMs=String(duration);
         const target=phaseResizeTarget(s,index,name,captionIndex);
         if(target){button.dataset.resizePhase=name;button.dataset.resizeRow=row.id;button.dataset.resizeCaption=target.captionId||'';button.dataset.captionIndex=String(captionIndex??-1);button.setAttribute('aria-describedby','prosvgTimelineHint');button.setAttribute('aria-keyshortcuts','ArrowLeft ArrowRight');}
-        button.style.background = ({'材质放大':'#bfa6ff','缩回原构图':'#ffb47e','原构图停留':'#9de7d7','文案出现':'#d7ff2f','文案逐字':'#d7ff2f','文案停留':'#8ec8ff','文案淡出':'#ffc4d6','轮间空隙':'#d4b8ff','背景淡化':'#9de7d7','柔和揭示':'#d7ff2f','色谱流动':'#8ec8ff','材质停留':'#ffd27d'})[name];
+        button.style.background = ({'材质放大':'#bfa6ff','缩回原构图':'#ffb47e','原构图停留':'#9de7d7','文案出现':'#d7ff2f','文案逐字':'#d7ff2f','文案停留':'#8ec8ff','文案淡出':'#ffc4d6','轮间空隙':'#d4b8ff','背景淡化':'#9de7d7','柔和揭示':'#d7ff2f','材质停留':'#ffd27d'})[name];
         button.dataset.phaseColor=button.style.background;
         const strong = document.createElement('strong'); strong.textContent = Number.isInteger(captionIndex)&&captions(m).length>1?String(captionIndex+1).padStart(2,'0')+' · '+name:name;
         const small = document.createElement('small'); small.textContent = ((Number.isInteger(captionIndex)?captions(m)[captionIndex].text:row.text) || '留白') + ' · ' + (duration / 1000).toFixed(2) + 's';
@@ -389,21 +389,21 @@
       $('materialProShape').checked=false;api.changed();sync(api.getScheme());
     });
     Object.entries(fields).forEach(([key,id])=>$(id).addEventListener('input',()=>{
-      const bridge=window.CellMotionEffectBridge, previous=api.getScheme().material.period;
+      const bridge=window.CellMotionEffectBridge;
       const playing=window.__morphPortTest.isPlaying(), elapsed=api.getElapsedMs(), rowIndex=api.resolveTimeline(elapsed).index;
-      const timing=['revealDuration','promoReveal','promoHold','promoFade','promoGap','promoZoomIn','promoZoomOut','promoReturnHold','promoScans'].includes(key);
+      const timing=['revealDuration','promoReveal','promoHold','promoFade','promoGap','promoZoomIn','promoZoomOut','promoReturnHold'].includes(key);
       api.changed({restart:key==='promoEnabled'||timing});sync(api.getScheme());
       const s=api.getScheme(),m=s.material;
       if(bridge&&(key==='revealDuration'&&s.motion.introEnabled||m.promoEnabled&&key.startsWith('promo'))&&(!playing||timing)){
         const row=s.rows[rowIndex];
         const beats=[...originalBeats(m,row,s.motion.introEnabled),...promoBeats(m)];
-        const phaseName={revealDuration:'柔和揭示',promoZoomIn:'材质放大',promoReveal:m.promoTyping?'文案逐字':'文案出现',promoHold:'文案停留',promoFade:'文案淡出',promoZoomOut:'缩回原构图',promoReturnHold:'原构图停留',promoGap:'轮间空隙',promoScans:'色谱流动'}[key]||'文案停留';
+        const phaseName={revealDuration:'柔和揭示',promoZoomIn:'材质放大',promoReveal:m.promoTyping?'文案逐字':'文案出现',promoHold:'文案停留',promoFade:'文案淡出',promoZoomOut:'缩回原构图',promoReturnHold:'原构图停留',promoGap:'轮间空隙'}[key]||'文案停留';
         const phase=beats.findIndex(b=>b[0]===phaseName);
         const offset=phase<0?promoDuration(m,row,s.motion.introEnabled):beats.slice(0,phase).reduce((sum,b)=>sum+b[1],0)+beats[phase][1]/2;
         const base=segments(s).slice(0,rowIndex).reduce((sum,seg)=>sum+seg.durationMs,0);
         bridge.seek((base+offset)/s.motion.speed/1000);if(playing)bridge.play();
       }
-      if(key==='period'&&bridge)bridge.seek((window.__morphPortTest.getElapsedMs()/1000)*m.period/previous);
+
     }));
     $('addPromoCaption').addEventListener('click',()=>{
       const s=api.getScheme();s.material.promoCaptions.push({id:'caption-'+crypto.randomUUID(),text:'新文案',hold:s.material.promoHold});
@@ -505,5 +505,5 @@
     queueMicrotask(()=>{if(new URLSearchParams(location.search).get('promo')==='1'){$('promoEnabled').checked=true;api.changed({restart:true});sync(api.getScheme());}});
     setTimeout(record,0);
   }
-  window.MEMorphPortExtension={port:{mode:'material',slug:'prosvg',zh:'彩铸',en:'PRO SVG Lab',amountMin:0,amountMax:1,amountStep:.01,amountUnit:'',scheme},minimumRows:1,materialLayout,normalizeScheme,invalidate:()=>shapeCache.clear(),normalize,segments,renderTimeline,editOffset:s=>{const m=normalize(s.material);return m.promoEnabled?(s.motion.introEnabled?m.revealDuration*1000:0)+m.period*500:m.period*600;},render,sync,collect,busy,bind,createSvg,promoPose,promoBeats,captionWindows,phaseResizeTarget,resizePhase,getLastSvg:()=>lastSvg};
+  window.MEMorphPortExtension={port:{mode:'material',slug:'prosvg',zh:'彩铸',en:'PRO SVG Lab',amountMin:0,amountMax:1,amountStep:.01,amountUnit:'',scheme},minimumRows:1,materialLayout,normalizeScheme,invalidate:()=>shapeCache.clear(),normalize,segments,renderTimeline,editOffset:s=>{const m=normalize(s.material);return s.motion.introEnabled?m.revealDuration*500:0;},render,sync,collect,busy,bind,createSvg,promoPose,promoBeats,captionWindows,phaseResizeTarget,resizePhase,getLastSvg:()=>lastSvg};
 })();
