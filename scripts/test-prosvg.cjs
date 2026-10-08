@@ -80,24 +80,40 @@ const legacyHashes=["65e5055cb376e12516ca1942f25dd78e6b262296067236475796865f6e3
 legacyHashes.forEach((hash,stage)=>{const oldMode={...clean,material:{...clean.material,stage}};
   assert.equal(crypto.createHash('sha256').update(extension.createSvg(oldMode,oldMode.rows[0],geometry,1.5)).digest('hex'),hash,'original material output remains unchanged');});
 const promo=JSON.parse(JSON.stringify(clean));promo.material.promoEnabled=true;
-assert.equal(extension.segments(promo)[0].durationMs,4400);
-assert.equal(extension.promoPose(promo.material,promo.rows[0],0).opacity,0);
-assert.equal(extension.promoPose(promo.material,promo.rows[0],1.5).opacity,1);
-assert.equal(extension.promoPose(promo.material,promo.rows[0],4.4).opacity,0);
-promo.material.promoBreath=.4;
-const beginning=extension.promoPose(promo.material,promo.rows[0],0);
-const ending=extension.promoPose(promo.material,promo.rows[0],4.4);
-assert.equal(beginning.zoom,ending.zoom,'zoom has no jump at the loop seam');
-assert(extension.promoPose(promo.material,promo.rows[0],2.2).zoom>beginning.zoom);
-promo.rows[0].hold=800;promo.material.promoGap=.3;
-assert.equal(extension.segments(promo)[0].durationMs,5500,'row hold and loop gap are included');
-promo.material.promoReveal=1.2;
-assert.equal(extension.segments(promo)[0].durationMs,6100,'entrance edit changes that interval exactly');
-const loopMaterial={...promo,motion:{...promo.motion,introEnabled:false},material:{...promo.material,warp:12,light:1}};
-for(const scans of [1,3,8]){const timing={scanPeriod:6.1/scans,loopPeriod:6.1};
-  const start=extension.createSvg(loopMaterial,promo.rows[0],geometry,0,false,timing);
-  const end=extension.createSvg(loopMaterial,promo.rows[0],geometry,6.1,false,timing);
-  assert.equal(start,end,'sweep, displacement and lighting all return to their initial state');}
+const m=promo.material,row=promo.rows[0];
+assert.equal(extension.segments(promo)[0].durationMs,16000,'original 8.8s remains before the additional 7.2s');
+for(const t of [0,2.2,4.4,8.8]) {
+  const pose=extension.promoPose(m,row,t);
+  assert.equal(pose.zoom,1,'original phases keep original framing');assert.equal(pose.opacity,0);
+  assert.equal(extension.createSvg(promo,row,geometry,t),extension.createSvg(clean,row,geometry,t),'promo cannot replace the original material clock or reveal');
+}
+assert(Math.abs(extension.promoPose(m,row,9.2).zoom-2.2)<1e-10,'zoom-in passes through its midpoint');
+assert.equal(extension.promoPose(m,row,9.6).zoom,3.4);
+assert.equal(extension.promoPose(m,row,11).opacity,1);
+assert.equal(extension.promoPose(m,row,14).opacity,0);
+assert(Math.abs(extension.promoPose(m,row,14.4).zoom-2.2)<1e-10,'zoom-out passes through its midpoint');
+for(const t of [14.8,15.4,16,20]) {
+  const pose=extension.promoPose(m,row,t);assert.equal(pose.zoom,1,'full original framing is restored');assert.equal(pose.opacity,0,'caption is gone after return');
+}
+m.promoBreath=.4;
+assert(extension.promoPose(m,row,11.8).zoom>m.promoZoom);
+assert.equal(extension.promoPose(m,row,9.6).zoom,m.promoZoom,'breathing starts without a jump');
+assert.equal(extension.promoPose(m,row,14).zoom,m.promoZoom,'breathing ends without a jump');
+row.hold=800;m.promoGap=.3;
+assert.equal(extension.segments(promo)[0].durationMs,17100,'row hold extends the original phase; loop gap extends the end');
+assert.equal(extension.promoPose(m,row,9.6).zoom,1,'row hold must delay zoom, not silently extend the caption');
+m.promoReveal=1.2;
+assert.equal(extension.segments(promo)[0].durationMs,17700,'caption entrance edit changes only that interval');
+m.promoScans=2;
+assert.equal(extension.segments(promo)[0].durationMs,22100,'extra normal flow cycle keeps the original scan period');
+promo.motion.introEnabled=false;
+assert.equal(extension.segments(promo)[0].durationMs,17700,'intro remains independently editable in promo mode');
+for(const intro of [true,false])for(const count of [1,3])for(const zoom of [1,8]) {
+  m.promoScans=count;m.promoZoom=zoom;
+  const end=extension.segments({...promo,motion:{...promo.motion,introEnabled:intro}})[0].holdMs/1000;
+  assert.equal(extension.promoPose(m,row,0,intro).zoom,1);
+  assert.equal(extension.promoPose(m,row,end,intro).zoom,1);
+}
 const oldScheme=extension.normalize(JSON.parse(fs.readFileSync('site/assets/presets/prosvg-default.json')).material);
 assert.equal(oldScheme.promoEnabled,false,'old schemes do not accidentally enable a new motion mode');
-console.log('PASS prosvg promo phase timing, original rendering, legacy schemes and loop seams');
+console.log('PASS prosvg promo phase timing, original rendering, legacy schemes and complete zoom return');

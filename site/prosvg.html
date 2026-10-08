@@ -100,7 +100,7 @@
       <details class="gm-row-background prosvg-promo-card" open>
         <summary>宣发构图</summary>
         <div class="prosvg-promo-content">
-          <label class="gm-check"><input id="promoEnabled" type="checkbox"><span>放大材质并叠加文案</span></label>
+          <label class="gm-check"><input id="promoEnabled" type="checkbox"><span>追加放大、文案与缩回</span></label>
           <div id="promoSettings" hidden>
             <label class="gm-field gm-field-wide">全局叠加文案<textarea id="promoText" rows="3" maxlength="1000" placeholder="输入宣发文案，支持换行"></textarea></label>
             <label class="gm-field gm-field-wide">文案字体<select id="promoFont"><option value="stg:instrument-serif">Instrument Serif</option></select></label>
@@ -110,16 +110,19 @@
               <label class="gm-field">文案垂直位置<input id="promoY" type="range" min="-40" max="40" step="1"><output for="promoY"></output></label>
               <label class="gm-field">材质放大倍数<input id="promoZoom" type="range" min="1" max="8" step="0.1"><output for="promoZoom"></output></label>
               <label class="gm-field">缩放呼吸幅度<input id="promoBreath" type="range" min="0" max="0.5" step="0.01"><output for="promoBreath"></output></label>
-              <label class="gm-field">每轮色谱次数<input id="promoScans" type="range" min="1" max="8" step="1"><output for="promoScans"></output></label>
+              <label class="gm-field">放大前流动次数<input id="promoScans" type="range" min="1" max="8" step="1"><output for="promoScans"></output></label>
             </div>
             <label class="gm-check"><input id="promoTyping" type="checkbox"><span>文案逐字出现</span></label>
             <div class="gm-grid-2">
+              <label class="gm-field">放大时间<input id="promoZoomIn" type="range" min="0.1" max="10" step="0.1"><output for="promoZoomIn"></output></label>
+              <label class="gm-field">缩回时间<input id="promoZoomOut" type="range" min="0.1" max="10" step="0.1"><output for="promoZoomOut"></output></label>
+              <label class="gm-field">缩回后停留<input id="promoReturnHold" type="range" min="0" max="20" step="0.1"><output for="promoReturnHold"></output></label>
               <label class="gm-field">文案出现时间<input id="promoReveal" type="range" min="0.1" max="10" step="0.1"><output for="promoReveal"></output></label>
               <label class="gm-field">文案停留时间<input id="promoHold" type="range" min="0.1" max="20" step="0.1"><output for="promoHold"></output></label>
               <label class="gm-field">文案淡出时间<input id="promoFade" type="range" min="0.1" max="10" step="0.1"><output for="promoFade"></output></label>
               <label class="gm-field">轮间空隙<input id="promoGap" type="range" min="0" max="10" step="0.1"><output for="promoGap"></output></label>
             </div>
-            <p class="gm-help">文案固定在前层，材质在底层流动。总速度调节整轮节奏；每段停留叠加到文案停留。宣发模式按整轮色谱次数播放，完整循环可直接导出。</p>
+            <p class="gm-help">保留原有材质动效，再放大、展示文案、缩回原构图。扫描周期继续控制材质；总速度调节整轮节奏。每段停留保留在原构图阶段，完整循环导出包含缩回与停留。</p>
           </div>
         </div>
       </details>
@@ -225,13 +228,13 @@
   <script src="shared-icon-library.js?v=20260902-1"></script>
   <script src="cellmotion-animated-image.js?v=20260909-1"></script>
   <script src="vendor/pro-svg-lab/renderer.js?v=20261005-1"></script>
-  <script src="prosvg.js?v=20261008-promo2"></script>
+  <script src="prosvg.js?v=20261008-return1"></script>
   <script src="morphports-reviewed.js?v=20261005-prosvg1"></script>
   <script src="stg-cn.js?v=20261005-prosvg1"></script>
   <script src="typecascade-workspace.js?v=20261006-notr1"></script>
   <script src="typecascade-polish.js?v=20260909-coloriso"></script>
   <script src="typecascade-selects.js?v=20261005-prosvg1"></script>
-  <script src="typecascade-locale.js?v=20261008-prosvg-promo1"></script>
+  <script src="typecascade-locale.js?v=20261008-prosvg-return1"></script>
   <script src="cellmotion-ai-manifest.js?v=20260909-ai-manifest"></script>
   <script src="cellmotion-ai-menu.js?v=20261005-prosvg1"></script>
 <script defer src="site-preferences.js?v=20261006-breath1"></script>

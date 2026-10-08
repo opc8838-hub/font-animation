@@ -4,9 +4,9 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, Number.isFinite(+n) ? +n : lo));
-  const promoDefaults = {"promoEnabled":false,"promoText":"How I made this","promoFont":"stg:instrument-serif","promoZoom":3.4,"promoBreath":0,"promoSize":110,"promoColor":"#16181b","promoY":0,"promoTyping":false,"promoReveal":0.6,"promoHold":3.2,"promoFade":0.6,"promoGap":0,"promoScans":1};
+  const promoDefaults = {"promoEnabled":false,"promoText":"How I made this","promoFont":"stg:instrument-serif","promoZoom":3.4,"promoBreath":0,"promoSize":110,"promoColor":"#16181b","promoY":0,"promoTyping":false,"promoReveal":0.6,"promoHold":3.2,"promoFade":0.6,"promoGap":0,"promoScans":1,"promoZoomIn":0.8,"promoZoomOut":0.8,"promoReturnHold":1.2};
   const defaults = { palette: 'original', stage: 5, blur: 7.3, grain: .12, period: 4.4, warp: 0, light: 0, direction: 1, proShape: true, ...promoDefaults };
-  const fields = { palette: 'materialPalette', stage: 'materialStage', blur: 'materialBlur', grain: 'materialGrain', period: 'materialPeriod', warp: 'materialWarp', light: 'materialLight', direction: 'materialDirection', proShape: 'materialProShape', promoEnabled: 'promoEnabled', promoText: 'promoText', promoFont: 'promoFont', promoZoom: 'promoZoom', promoBreath: 'promoBreath', promoSize: 'promoSize', promoColor: 'promoColor', promoY: 'promoY', promoTyping: 'promoTyping', promoReveal: 'promoReveal', promoHold: 'promoHold', promoFade: 'promoFade', promoGap: 'promoGap', promoScans: 'promoScans' };
+  const fields = { palette: 'materialPalette', stage: 'materialStage', blur: 'materialBlur', grain: 'materialGrain', period: 'materialPeriod', warp: 'materialWarp', light: 'materialLight', direction: 'materialDirection', proShape: 'materialProShape', promoEnabled: 'promoEnabled', promoText: 'promoText', promoFont: 'promoFont', promoZoom: 'promoZoom', promoBreath: 'promoBreath', promoSize: 'promoSize', promoColor: 'promoColor', promoY: 'promoY', promoTyping: 'promoTyping', promoReveal: 'promoReveal', promoHold: 'promoHold', promoFade: 'promoFade', promoGap: 'promoGap', promoScans: 'promoScans', promoZoomIn: 'promoZoomIn', promoZoomOut: 'promoZoomOut', promoReturnHold: 'promoReturnHold' };
   const copy = value => JSON.parse(JSON.stringify(value));
   function normalize(value = {}) {
     const v = { ...defaults, ...value };
@@ -18,6 +18,7 @@
       promoZoom: clamp(v.promoZoom,1,8), promoBreath: clamp(v.promoBreath,0,.5),
       promoSize: clamp(v.promoSize,24,240), promoY: clamp(v.promoY,-40,40),
       promoReveal: clamp(v.promoReveal,.1,10), promoHold: clamp(v.promoHold,.1,20),
+      promoZoomIn: clamp(v.promoZoomIn,.1,10), promoZoomOut: clamp(v.promoZoomOut,.1,10), promoReturnHold: clamp(v.promoReturnHold,0,20),
       promoFade: clamp(v.promoFade,.1,10), promoGap: clamp(v.promoGap,0,10), promoScans: Math.round(clamp(v.promoScans,1,8)) };
   }
   const scheme = {
@@ -28,16 +29,25 @@
     material: { ...defaults },
     rows: [{ id: 'prosvg-01', text: 'PRO', hold: 0, icons: [], fontFamily: '', textColor: '#16181b', backgroundColor: '#ffffff', backgroundMedia: null, backgroundTransition: 'direct', backgroundTransitionDuration: 120 }]
   };
-  const smooth = p => { p=clamp(p,0,1); return p*p*(3-2*p); };
-  function promoBeats(m,row) {
-    return [[m.promoTyping?'文案逐字':'文案出现',m.promoReveal*1000],['文案停留',m.promoHold*1000+row.hold],['文案淡出',m.promoFade*1000],...(m.promoGap?[['轮间空隙',m.promoGap*1000]]:[])];
+  const smooth = p => { p=clamp(p,0,1); return p<1e-9?0:p>1-1e-9?1:p*p*(3-2*p); };
+  function originalBeats(m,row,introEnabled) {
+    return [...(introEnabled?[['柔和揭示',m.period*1000]]:[]),['色谱流动',m.period*1000*(m.promoEnabled?m.promoScans:1)],...(row.hold?[['材质停留',row.hold]]:[])];
   }
-  function promoDuration(m,row) { return promoBeats(m,row).reduce((sum,beat)=>sum+beat[1],0); }
-  function promoPose(m,row,seconds) {
-    const duration=promoDuration(m,row)/1000;
-    const local=clamp(seconds,0,duration), reveal=m.promoReveal, hold=m.promoHold+row.hold/1000;
-    return {duration, zoom:m.promoZoom*(1+m.promoBreath*Math.pow(Math.sin(Math.PI*local/duration),2)),
-      reveal:clamp(local/reveal,0,1), opacity:local<reveal?(m.promoTyping?1:smooth(local/reveal)):1-smooth((local-reveal-hold)/m.promoFade)};
+  function promoBeats(m) {
+    return [['材质放大',m.promoZoomIn*1000],[m.promoTyping?'文案逐字':'文案出现',m.promoReveal*1000],['文案停留',m.promoHold*1000],['文案淡出',m.promoFade*1000],['缩回原构图',m.promoZoomOut*1000],...(m.promoReturnHold?[['原构图停留',m.promoReturnHold*1000]]:[]),...(m.promoGap?[['轮间空隙',m.promoGap*1000]]:[])];
+  }
+  function promoDuration(m,row,introEnabled) { return [...originalBeats(m,row,introEnabled),...promoBeats(m)].reduce((sum,beat)=>sum+beat[1],0); }
+  function promoPose(m,row,seconds,introEnabled=true) {
+    const base=originalBeats(m,row,introEnabled).reduce((sum,beat)=>sum+beat[1],0)/1000;
+    const duration=promoDuration(m,row,introEnabled)/1000;
+    const local=clamp(seconds-base,0,duration-base), captionTime=local-m.promoZoomIn;
+    const captionDuration=m.promoReveal+m.promoHold+m.promoFade;
+    const zoomOutStart=m.promoZoomIn+captionDuration;
+    let zoom=1+(m.promoZoom-1)*smooth(local/m.promoZoomIn);
+    if(local>=zoomOutStart)zoom=m.promoZoom+(1-m.promoZoom)*smooth((local-zoomOutStart)/m.promoZoomOut);
+    if(captionTime>0&&captionTime<captionDuration)zoom*=1+m.promoBreath*Math.pow(Math.sin(Math.PI*captionTime/captionDuration),2);
+    const opacity=captionTime<=0||captionTime>=captionDuration?0:captionTime<m.promoReveal?(m.promoTyping?1:smooth(captionTime/m.promoReveal)):1-smooth((captionTime-m.promoReveal-m.promoHold)/m.promoFade);
+    return {duration,base,zoom,reveal:clamp(captionTime/m.promoReveal,0,1),opacity};
   }
   const graphemes = text => typeof Intl.Segmenter==='function' ? [...new Intl.Segmenter(undefined,{granularity:'grapheme'}).segment(text)].map(s=>s.segment) : Array.from(text);
   function drawPromoCaption(ctx,m,pose,width,height) {
@@ -64,7 +74,7 @@
       const to = s.rows[(index + 1) % s.rows.length];
       const canTransition = s.rows.length > 1 && (s.motion.loop || index < s.rows.length - 1);
       const transitionMs = canTransition && to.backgroundTransition === 'crossfade' ? clamp(to.backgroundTransitionDuration,10,2000) : 0;
-      const holdMs=m.promoEnabled?promoDuration(m,row):duration+row.hold;
+      const holdMs=m.promoEnabled?promoDuration(m,row,s.motion.introEnabled):duration+row.hold;
       return { from: row, to, durationMs: holdMs + transitionMs, holdMs, transitionMs, morphMs: transitionMs, tailMs: 0, introMs: 0, terminal: false };
     });
   }
@@ -72,16 +82,16 @@
     const track = $('timeline');
     track.replaceChildren();
     let cursor = 0;
-    const period = normalize(s.material).period * 1000 / s.motion.speed;
     s.rows.forEach((row,index) => {
       const transition = segments(s)[index].transitionMs / s.motion.speed;
       const m=normalize(s.material);
-      const beats = m.promoEnabled ? [...promoBeats(m,row).map(([name,duration])=>[name,duration/s.motion.speed]),...(transition?[['背景淡化',transition]]:[])] : [...(s.motion.introEnabled ? [['柔和揭示', period]] : []), ['色谱流动', period], ...(row.hold ? [['材质停留', row.hold / s.motion.speed]] : []), ...(transition ? [['背景淡化',transition]] : [])];
+      const beats = [...originalBeats(m,row,s.motion.introEnabled),...(m.promoEnabled?promoBeats(m):[])].map(([name,duration])=>[name,duration/s.motion.speed]);
+      if(transition)beats.push(['背景淡化',transition]);
       beats.forEach(([name, duration], i) => {
         const button = document.createElement('button');
         button.type = 'button'; button.className = 'gm-timeline-block me-choreo-block'; button.setAttribute('role','listitem');
         button.dataset.seekMs = String(cursor);
-        button.style.background = ({'文案出现':'#d7ff2f','文案逐字':'#d7ff2f','文案停留':'#8ec8ff','文案淡出':'#ffc4d6','轮间空隙':'#d4b8ff','背景淡化':'#9de7d7','柔和揭示':'#d7ff2f','色谱流动':'#8ec8ff','材质停留':'#ffd27d'})[name];
+        button.style.background = ({'材质放大':'#bfa6ff','缩回原构图':'#ffb47e','原构图停留':'#9de7d7','文案出现':'#d7ff2f','文案逐字':'#d7ff2f','文案停留':'#8ec8ff','文案淡出':'#ffc4d6','轮间空隙':'#d4b8ff','背景淡化':'#9de7d7','柔和揭示':'#d7ff2f','色谱流动':'#8ec8ff','材质停留':'#ffd27d'})[name];
         const strong = document.createElement('strong'); strong.textContent = name;
         const small = document.createElement('small'); small.textContent = (row.text || '留白') + ' · ' + (duration / 1000).toFixed(2) + 's';
         button.append(strong, small); track.append(button); cursor += duration;
@@ -225,14 +235,17 @@
       const timeline = resolveTimeline(timeSeconds*1000);
       const s = state.scheme, m = normalize(s.material), row = timeline.segment.from;
       const geometry = shapeFor(args,timeline);
-      const scanDuration = m.period*(s.motion.introEnabled?2:1);
-      let seconds = s.rows.length === 1 && !row.hold ? timeSeconds*s.motion.speed : timeline.segmentTime/1000;
-      if (timeline.segmentTime/1000 >= scanDuration && row.hold > 0) seconds = m.period*1.5;
-      if (!s.motion.loop) seconds = Math.min(seconds,scanDuration);
-      const pose=m.promoEnabled?promoPose(m,row,timeline.segmentTime/1000):null;
-      const materialScheme=pose?{...s,motion:{...s.motion,introEnabled:false},material:{...m,period:pose.duration/m.promoScans}}:s;
-      const materialSeconds=pose?clamp(timeline.segmentTime/1000,0,pose.duration):seconds;
-      const svg = createSvg(materialScheme,row,geometry,materialSeconds,false,pose?{scanPeriod:pose.duration/m.promoScans,loopPeriod:pose.duration}:null);
+      const scanDuration=m.period*(s.motion.introEnabled?2:1);
+      const local=timeline.segmentTime/1000;
+      const pose=m.promoEnabled?promoPose(m,row,local,s.motion.introEnabled):null;
+      let seconds=s.rows.length===1&&!row.hold?timeSeconds*s.motion.speed:local;
+      const flowEnd=m.period*((s.motion.introEnabled?1:0)+(m.promoEnabled?m.promoScans:1));
+      if(row.hold>0&&local>=flowEnd&&(!pose||local<pose.base))seconds=m.period*1.5;
+      else if(pose&&row.hold>0&&local>=pose.base)seconds=m.period*1.5+(local-pose.base);
+      if(!s.motion.loop)seconds=Math.min(seconds,pose?timeline.segment.holdMs/1000:scanDuration);
+      // Zoom and caption are extra channels; the original material clock and reveal remain intact.
+      const svg=createSvg(s,row,geometry,seconds);
+
       if(pose){
         const key=m.promoFont+'|'+m.promoText;
         if(!captionFonts.has(key)){if(captionFonts.size>8)captionFonts.clear();const f=window.STGFontLibrary.preset(m.promoFont);captionFonts.set(key,document.fonts.load(f.style+' '+f.weight+' 40px '+window.STGFontLibrary.family(m.promoFont),m.promoText||'中文ABC'));}
@@ -269,10 +282,8 @@
   function sync(s) {
     shapeCache.clear();
     const m=normalize(s.material);
-    Object.entries(fields).forEach(([key,id])=>{if($(id).type==='checkbox')$(id).checked=m[key];else $(id).value=m[key];const out=document.querySelector('output[for="'+id+'"]');if(out)out.value=String(m[key])+(['period','promoReveal','promoHold','promoFade','promoGap'].includes(key)?'s':key==='promoZoom'?'×':'');});
+    Object.entries(fields).forEach(([key,id])=>{if($(id).type==='checkbox')$(id).checked=m[key];else $(id).value=m[key];const out=document.querySelector('output[for="'+id+'"]');if(out)out.value=String(m[key])+(['period','promoReveal','promoHold','promoFade','promoGap','promoZoomIn','promoZoomOut','promoReturnHold'].includes(key)?'s':key==='promoZoom'?'×':'');});
     $('promoSettings').hidden=!m.promoEnabled;
-    $('materialPeriod').disabled=m.promoEnabled;
-    $('introEnabled').disabled=m.promoEnabled;
   }
   function collect(s){for(const key of ['width','height']) { s.canvas[key]=Math.round(clamp(s.canvas[key],320,3840)/2)*2; const input=$('canvas'+key[0].toUpperCase()+key.slice(1));if(document.activeElement!==input)input.value=s.canvas[key]; } const value={};Object.entries(fields).forEach(([key,id])=>value[key]=$(id).type==='checkbox'?$(id).checked:$(id).value);s.material=normalize(value);}
   let disabled=[];
@@ -300,14 +311,15 @@
     Object.entries(fields).forEach(([key,id])=>$(id).addEventListener('input',()=>{
       const bridge=window.CellMotionEffectBridge, previous=api.getScheme().material.period;
       const playing=window.__morphPortTest.isPlaying(), elapsed=api.getElapsedMs();
-      const timing=['promoReveal','promoHold','promoFade','promoGap'].includes(key);
+      const timing=['promoReveal','promoHold','promoFade','promoGap','promoZoomIn','promoZoomOut','promoReturnHold','promoScans'].includes(key);
       api.changed({restart:key==='promoEnabled'||timing});sync(api.getScheme());
       const s=api.getScheme(),m=s.material;
       if(m.promoEnabled&&bridge&&key.startsWith('promo')&&(!playing||timing)){
         const rowIndex=api.resolveTimeline(elapsed).index,row=s.rows[rowIndex];
-        const beats=promoBeats(m,row);let offset=m.promoReveal*1000+m.promoHold*500;
-        const phase={promoReveal:0,promoHold:1,promoFade:2,promoGap:3}[key];
-        if(phase!==undefined&&beats[phase])offset=beats.slice(0,phase).reduce((sum,b)=>sum+b[1],0)+beats[phase][1]/2;
+        const beats=[...originalBeats(m,row,s.motion.introEnabled),...promoBeats(m)];
+        const phaseName={promoZoomIn:'材质放大',promoReveal:m.promoTyping?'文案逐字':'文案出现',promoHold:'文案停留',promoFade:'文案淡出',promoZoomOut:'缩回原构图',promoReturnHold:'原构图停留',promoGap:'轮间空隙',promoScans:'色谱流动'}[key]||'文案停留';
+        const phase=beats.findIndex(b=>b[0]===phaseName);
+        const offset=phase<0?promoDuration(m,row,s.motion.introEnabled):beats.slice(0,phase).reduce((sum,b)=>sum+b[1],0)+beats[phase][1]/2;
         const base=segments(s).slice(0,rowIndex).reduce((sum,seg)=>sum+seg.durationMs,0);
         bridge.seek((base+offset)/s.motion.speed/1000);if(playing)bridge.play();
       }
@@ -334,5 +346,5 @@
     queueMicrotask(()=>{if(new URLSearchParams(location.search).get('promo')==='1'){$('promoEnabled').checked=true;api.changed({restart:true});sync(api.getScheme());}});
     setTimeout(record,0);
   }
-  window.MEMorphPortExtension={port:{mode:'material',slug:'prosvg',zh:'彩铸',en:'PRO SVG Lab',amountMin:0,amountMax:1,amountStep:.01,amountUnit:'',scheme},minimumRows:1,materialLayout,normalizeScheme,invalidate:()=>shapeCache.clear(),normalize,segments,renderTimeline,editOffset:s=>{const m=normalize(s.material);return m.promoEnabled?m.promoReveal*1000+m.promoHold*500:m.period*600;},render,sync,collect,busy,bind,createSvg,promoPose,promoBeats,getLastSvg:()=>lastSvg};
+  window.MEMorphPortExtension={port:{mode:'material',slug:'prosvg',zh:'彩铸',en:'PRO SVG Lab',amountMin:0,amountMax:1,amountStep:.01,amountUnit:'',scheme},minimumRows:1,materialLayout,normalizeScheme,invalidate:()=>shapeCache.clear(),normalize,segments,renderTimeline,editOffset:s=>{const m=normalize(s.material);return m.promoEnabled?m.period*(s.motion.introEnabled?1500:500):m.period*600;},render,sync,collect,busy,bind,createSvg,promoPose,promoBeats,getLastSvg:()=>lastSvg};
 })();
