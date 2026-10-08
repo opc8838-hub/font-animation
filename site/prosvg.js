@@ -4,12 +4,21 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, Number.isFinite(+n) ? +n : lo));
-  const defaults = { palette: 'original', stage: 5, blur: 7.3, grain: .12, period: 4.4, warp: 0, light: 0, direction: 1, proShape: true };
-  const fields = { palette: 'materialPalette', stage: 'materialStage', blur: 'materialBlur', grain: 'materialGrain', period: 'materialPeriod', warp: 'materialWarp', light: 'materialLight', direction: 'materialDirection', proShape: 'materialProShape' };
+  const promoDefaults = {"promoEnabled":false,"promoText":"How I made this","promoFont":"stg:instrument-serif","promoZoom":3.4,"promoBreath":0,"promoSize":110,"promoColor":"#16181b","promoY":0,"promoTyping":false,"promoReveal":0.6,"promoHold":3.2,"promoFade":0.6,"promoGap":0,"promoScans":1};
+  const defaults = { palette: 'original', stage: 5, blur: 7.3, grain: .12, period: 4.4, warp: 0, light: 0, direction: 1, proShape: true, ...promoDefaults };
+  const fields = { palette: 'materialPalette', stage: 'materialStage', blur: 'materialBlur', grain: 'materialGrain', period: 'materialPeriod', warp: 'materialWarp', light: 'materialLight', direction: 'materialDirection', proShape: 'materialProShape', promoEnabled: 'promoEnabled', promoText: 'promoText', promoFont: 'promoFont', promoZoom: 'promoZoom', promoBreath: 'promoBreath', promoSize: 'promoSize', promoColor: 'promoColor', promoY: 'promoY', promoTyping: 'promoTyping', promoReveal: 'promoReveal', promoHold: 'promoHold', promoFade: 'promoFade', promoGap: 'promoGap', promoScans: 'promoScans' };
   const copy = value => JSON.parse(JSON.stringify(value));
   function normalize(value = {}) {
     const v = { ...defaults, ...value };
-    return { palette: ['original','silver','lava','violet'].includes(v.palette) ? v.palette : 'original', stage: Math.round(clamp(v.stage, 0, 5)), blur: clamp(v.blur, 0, 16), grain: clamp(v.grain, 0, .4), period: clamp(v.period, 1, 12), warp: clamp(v.warp, 0, 24), light: clamp(v.light, 0, 2), direction: +v.direction === -1 ? -1 : 1, proShape: v.proShape !== false };
+    return { palette: ['original','silver','lava','violet'].includes(v.palette) ? v.palette : 'original', stage: Math.round(clamp(v.stage, 0, 5)), blur: clamp(v.blur, 0, 16), grain: clamp(v.grain, 0, .4), period: clamp(v.period, 1, 12), warp: clamp(v.warp, 0, 24), light: clamp(v.light, 0, 2), direction: +v.direction === -1 ? -1 : 1, proShape: v.proShape !== false,
+      promoEnabled: v.promoEnabled === true, promoTyping: v.promoTyping === true,
+      promoText: String(v.promoText ?? promoDefaults.promoText).slice(0,1000),
+      promoFont: window.STGFontLibrary?.preset(v.promoFont) ? v.promoFont : promoDefaults.promoFont,
+      promoColor: /^#[0-9a-f]{6}$/i.test(v.promoColor) ? v.promoColor : promoDefaults.promoColor,
+      promoZoom: clamp(v.promoZoom,1,8), promoBreath: clamp(v.promoBreath,0,.5),
+      promoSize: clamp(v.promoSize,24,240), promoY: clamp(v.promoY,-40,40),
+      promoReveal: clamp(v.promoReveal,.1,10), promoHold: clamp(v.promoHold,.1,20),
+      promoFade: clamp(v.promoFade,.1,10), promoGap: clamp(v.promoGap,0,10), promoScans: Math.round(clamp(v.promoScans,1,8)) };
   }
   const scheme = {
     version: 7,
@@ -19,14 +28,44 @@
     material: { ...defaults },
     rows: [{ id: 'prosvg-01', text: 'PRO', hold: 0, icons: [], fontFamily: '', textColor: '#16181b', backgroundColor: '#ffffff', backgroundMedia: null, backgroundTransition: 'direct', backgroundTransitionDuration: 120 }]
   };
+  const smooth = p => { p=clamp(p,0,1); return p*p*(3-2*p); };
+  function promoBeats(m,row) {
+    return [[m.promoTyping?'文案逐字':'文案出现',m.promoReveal*1000],['文案停留',m.promoHold*1000+row.hold],['文案淡出',m.promoFade*1000],...(m.promoGap?[['轮间空隙',m.promoGap*1000]]:[])];
+  }
+  function promoDuration(m,row) { return promoBeats(m,row).reduce((sum,beat)=>sum+beat[1],0); }
+  function promoPose(m,row,seconds) {
+    const duration=promoDuration(m,row)/1000;
+    const local=clamp(seconds,0,duration), reveal=m.promoReveal, hold=m.promoHold+row.hold/1000;
+    return {duration, zoom:m.promoZoom*(1+m.promoBreath*Math.pow(Math.sin(Math.PI*local/duration),2)),
+      reveal:clamp(local/reveal,0,1), opacity:local<reveal?(m.promoTyping?1:smooth(local/reveal)):1-smooth((local-reveal-hold)/m.promoFade)};
+  }
+  const graphemes = text => typeof Intl.Segmenter==='function' ? [...new Intl.Segmenter(undefined,{granularity:'grapheme'}).segment(text)].map(s=>s.segment) : Array.from(text);
+  function drawPromoCaption(ctx,m,pose,width,height) {
+    if(!m.promoText || pose.opacity<=0)return;
+    const preset=window.STGFontLibrary.preset(m.promoFont), family=window.STGFontLibrary.family(m.promoFont);
+    let size=m.promoSize*Math.min(width,height)/1080;
+    const setFont=()=>{ctx.font=preset.style+' '+preset.weight+' '+size+'px '+family;};
+    setFont();
+    const lines=m.promoText.split('\n');
+    const widest=Math.max(1,...lines.map(line=>ctx.measureText(line).width));
+    size*=Math.min(1,width*.9/widest,height*.8/(size*1.2*lines.length));setFont();
+    const chars=graphemes(m.promoText), count=m.promoTyping?Math.floor(chars.length*pose.reveal):chars.length;
+    const visible=chars.slice(0,count).join('').split('\n');
+    ctx.save();ctx.globalAlpha=pose.opacity;ctx.fillStyle=m.promoColor;ctx.textAlign='left';ctx.textBaseline='middle';
+    lines.forEach((line,index)=>{const x=(width-ctx.measureText(line).width)/2;
+      const y=height*(.5+m.promoY/100)+(index-(lines.length-1)/2)*size*1.2;
+      ctx.fillText(visible[index]||'',x,y);});ctx.restore();
+  }
   function segments(s) {
-    const period = normalize(s.material).period * 1000;
+    const m=normalize(s.material);
+    const period = m.period * 1000;
     const duration = period * (s.motion.introEnabled ? 2 : 1);
     return s.rows.map((row, index) => {
       const to = s.rows[(index + 1) % s.rows.length];
       const canTransition = s.rows.length > 1 && (s.motion.loop || index < s.rows.length - 1);
       const transitionMs = canTransition && to.backgroundTransition === 'crossfade' ? clamp(to.backgroundTransitionDuration,10,2000) : 0;
-      return { from: row, to, durationMs: duration + row.hold + transitionMs, holdMs: duration + row.hold, transitionMs, morphMs: transitionMs, tailMs: 0, introMs: 0, terminal: false };
+      const holdMs=m.promoEnabled?promoDuration(m,row):duration+row.hold;
+      return { from: row, to, durationMs: holdMs + transitionMs, holdMs, transitionMs, morphMs: transitionMs, tailMs: 0, introMs: 0, terminal: false };
     });
   }
   function renderTimeline(s) {
@@ -36,12 +75,13 @@
     const period = normalize(s.material).period * 1000 / s.motion.speed;
     s.rows.forEach((row,index) => {
       const transition = segments(s)[index].transitionMs / s.motion.speed;
-      const beats = [...(s.motion.introEnabled ? [['柔和揭示', period]] : []), ['色谱流动', period], ...(row.hold ? [['材质停留', row.hold / s.motion.speed]] : []), ...(transition ? [['背景淡化',transition]] : [])];
+      const m=normalize(s.material);
+      const beats = m.promoEnabled ? [...promoBeats(m,row).map(([name,duration])=>[name,duration/s.motion.speed]),...(transition?[['背景淡化',transition]]:[])] : [...(s.motion.introEnabled ? [['柔和揭示', period]] : []), ['色谱流动', period], ...(row.hold ? [['材质停留', row.hold / s.motion.speed]] : []), ...(transition ? [['背景淡化',transition]] : [])];
       beats.forEach(([name, duration], i) => {
         const button = document.createElement('button');
         button.type = 'button'; button.className = 'gm-timeline-block me-choreo-block'; button.setAttribute('role','listitem');
         button.dataset.seekMs = String(cursor);
-        button.style.background = ['#d7ff2f','#8ec8ff','#ffc4d6'][i % 3];
+        button.style.background = ({'文案出现':'#d7ff2f','文案逐字':'#d7ff2f','文案停留':'#8ec8ff','文案淡出':'#ffc4d6','轮间空隙':'#d4b8ff','背景淡化':'#9de7d7','柔和揭示':'#d7ff2f','色谱流动':'#8ec8ff','材质停留':'#ffd27d'})[name];
         const strong = document.createElement('strong'); strong.textContent = name;
         const small = document.createElement('small'); small.textContent = (row.text || '留白') + ' · ' + (duration / 1000).toFixed(2) + 's';
         button.append(strong, small); track.append(button); cursor += duration;
@@ -118,8 +158,9 @@
     if (shapeCache.size > 8) shapeCache.clear();
     shapeCache.set(key,result); return result;
   }
-  function createSvg(s, row, geometry, seconds, animated = false) {
+  function createSvg(s, row, geometry, seconds, animated = false, timing = null) {
     const m = normalize(s.material), {W,H,markup} = geometry;
+    if(timing)m.period=timing.scanPeriod;
     const id = 'cm';
     let svg = window.SVGMaterial.create({ ...m, id, intro: s.motion.introEnabled, period: m.period / (animated ? s.motion.speed : 1) });
     if (markup) {
@@ -151,11 +192,11 @@
     if (!animated) {
       const phase = ((seconds / m.period) % 1 + 1) % 1;
       const sweep = 109 + 486 * (m.direction === 1 ? phase : 1-phase);
-      const reveal = 109 + (485 + Math.max(0,W-337)) * Math.min(1,Math.max(0,seconds) / Math.max(.1,m.period-.01));
+      const reveal = 109 + (485 + Math.max(0,W-337)) * (timing ? 1 : Math.min(1,Math.max(0,seconds) / Math.max(.1,m.period-.01)));
       svg = svg.replace(/(<linearGradient id="cm-sweep"[^>]*gradientTransform=")([^"]*)"/, '$1$2 translate('+sweep+' 0)"')
         .replace(/(<linearGradient id="cm-reveal"[^>]*gradientTransform=")([^"]*)"/, '$1$2 translate('+reveal+' 0)"')
         .replace(/<animateTransform\b[^>]*\/>/g,'');
-      const phase2 = ((seconds / (m.period * 2)) % 1 + 1) % 1;
+      const phase2 = ((seconds / (timing?.loopPeriod || m.period * 2)) % 1 + 1) % 1;
       const triangle = 1-Math.abs(2*phase2-1);
       svg = svg.replace('baseFrequency=".018 .035"','baseFrequency="'+(.018+.009*triangle)+' '+(.035-.015*triangle)+'"')
         .replace('<fePointLight x="-60"','<fePointLight x="'+(-60+457*triangle)+'"')
@@ -175,6 +216,7 @@
     try { const img = new Image(); img.src = url; await img.decode(); decodedSvg = svg; decodedImage = img; return img; }
     finally { URL.revokeObjectURL(url); }
   }
+  const captionFonts=new Map();
   async function render(args) {
     const {targetCanvas,width,height,timeSeconds,state,canvas,resolveTimeline,renderBackground,syncPresentationBackdrop,drawToken} = args;
     const preview = targetCanvas === canvas;
@@ -187,7 +229,15 @@
       let seconds = s.rows.length === 1 && !row.hold ? timeSeconds*s.motion.speed : timeline.segmentTime/1000;
       if (timeline.segmentTime/1000 >= scanDuration && row.hold > 0) seconds = m.period*1.5;
       if (!s.motion.loop) seconds = Math.min(seconds,scanDuration);
-      const svg = createSvg(s,row,geometry,seconds);
+      const pose=m.promoEnabled?promoPose(m,row,timeline.segmentTime/1000):null;
+      const materialScheme=pose?{...s,motion:{...s.motion,introEnabled:false},material:{...m,period:pose.duration/m.promoScans}}:s;
+      const materialSeconds=pose?clamp(timeline.segmentTime/1000,0,pose.duration):seconds;
+      const svg = createSvg(materialScheme,row,geometry,materialSeconds,false,pose?{scanPeriod:pose.duration/m.promoScans,loopPeriod:pose.duration}:null);
+      if(pose){
+        const key=m.promoFont+'|'+m.promoText;
+        if(!captionFonts.has(key)){if(captionFonts.size>8)captionFonts.clear();const f=window.STGFontLibrary.preset(m.promoFont);captionFonts.set(key,document.fonts.load(f.style+' '+f.weight+' 40px '+window.STGFontLibrary.family(m.promoFont),m.promoText||'中文ABC'));}
+        await captionFonts.get(key);
+      }
       const img = await decode(svg);
       if (targetCanvas.width !== width || targetCanvas.height !== height || state.scheme !== s) return timeline;
       const ctx = targetCanvas.getContext('2d',{willReadFrequently:true});
@@ -204,8 +254,10 @@
         for(let i=0;i<d.length;i+=4){const white=Math.min(d[i],d[i+1],d[i+2]);const a=1-white/255;if(a<=0){d[i+3]=0;continue;}for(let c=0;c<3;c++)d[i+c]=(d[i+c]-white)/a;d[i+3]*=a;}
         lc.putImageData(pixels,0,0);artwork=layer;
       }
+      if(pose){ctx.save();ctx.translate(width/2,height/2);ctx.scale(pose.zoom,pose.zoom);ctx.translate(-width/2,-height/2);}
       ctx.drawImage(artwork,geometry.x-18*geometry.scale,geometry.y-24*geometry.scale,(geometry.W+36)*geometry.scale,(geometry.H+48)*geometry.scale);
       geometry.layout.slots.filter(slot=>slot.token.type==='icon').forEach(slot=>drawToken(ctx,slot,geometry.layout,1,1,timeSeconds));
+      if(pose){ctx.restore();drawPromoCaption(ctx,m,pose,width,height);}
       ctx.restore();
       if(preview){lastGeometry=geometry;lastSvg=svg;targetCanvas.dataset.materialTime=String(timeSeconds);}
       return timeline;
@@ -217,12 +269,15 @@
   function sync(s) {
     shapeCache.clear();
     const m=normalize(s.material);
-    Object.entries(fields).forEach(([key,id])=>{if(key==='proShape')$(id).checked=m[key];else $(id).value=m[key];const out=document.querySelector('output[for="'+id+'"]');if(out)out.value=String(m[key])+(key==='period'?'s':'');});
+    Object.entries(fields).forEach(([key,id])=>{if($(id).type==='checkbox')$(id).checked=m[key];else $(id).value=m[key];const out=document.querySelector('output[for="'+id+'"]');if(out)out.value=String(m[key])+(['period','promoReveal','promoHold','promoFade','promoGap'].includes(key)?'s':key==='promoZoom'?'×':'');});
+    $('promoSettings').hidden=!m.promoEnabled;
+    $('materialPeriod').disabled=m.promoEnabled;
+    $('introEnabled').disabled=m.promoEnabled;
   }
-  function collect(s){for(const key of ['width','height']) { s.canvas[key]=Math.round(clamp(s.canvas[key],320,3840)/2)*2; const input=$('canvas'+key[0].toUpperCase()+key.slice(1));if(document.activeElement!==input)input.value=s.canvas[key]; } const value={};Object.entries(fields).forEach(([key,id])=>value[key]=key==='proShape'?$(id).checked:$(id).value);s.material=normalize(value);}
+  function collect(s){for(const key of ['width','height']) { s.canvas[key]=Math.round(clamp(s.canvas[key],320,3840)/2)*2; const input=$('canvas'+key[0].toUpperCase()+key.slice(1));if(document.activeElement!==input)input.value=s.canvas[key]; } const value={};Object.entries(fields).forEach(([key,id])=>value[key]=$(id).type==='checkbox'?$(id).checked:$(id).value);s.material=normalize(value);}
   let disabled=[];
   function busy(value){
-    if(value){disabled=[...document.querySelectorAll('input,select,button')].map(node=>[node,node.disabled]);disabled.forEach(([node])=>node.disabled=true);document.body.classList.add('prosvg-exporting');}
+    if(value){disabled=[...document.querySelectorAll('input,textarea,select,button')].map(node=>[node,node.disabled]);disabled.forEach(([node])=>node.disabled=true);document.body.classList.add('prosvg-exporting');}
     else{disabled.forEach(([node,was])=>node.disabled=was);disabled=[];document.body.classList.remove('prosvg-exporting');}
   }
   function normalizeScheme(input) {
@@ -242,7 +297,23 @@
       // A deliberate font choice applies to PRO as well as other content.
       $('materialProShape').checked=false;api.changed();sync(api.getScheme());
     });
-    Object.entries(fields).forEach(([key,id])=>$(id).addEventListener('input',()=>{const bridge=window.CellMotionEffectBridge;const previous=api.getScheme().material.period;api.changed();sync(api.getScheme());if(key==='period'&&bridge)bridge.seek((window.__morphPortTest.getElapsedMs()/1000)*api.getScheme().material.period/previous);}));
+    Object.entries(fields).forEach(([key,id])=>$(id).addEventListener('input',()=>{
+      const bridge=window.CellMotionEffectBridge, previous=api.getScheme().material.period;
+      const playing=window.__morphPortTest.isPlaying(), elapsed=api.getElapsedMs();
+      const timing=['promoReveal','promoHold','promoFade','promoGap'].includes(key);
+      api.changed({restart:key==='promoEnabled'||timing});sync(api.getScheme());
+      const s=api.getScheme(),m=s.material;
+      if(m.promoEnabled&&bridge&&key.startsWith('promo')&&(!playing||timing)){
+        const rowIndex=api.resolveTimeline(elapsed).index,row=s.rows[rowIndex];
+        const beats=promoBeats(m,row);let offset=m.promoReveal*1000+m.promoHold*500;
+        const phase={promoReveal:0,promoHold:1,promoFade:2,promoGap:3}[key];
+        if(phase!==undefined&&beats[phase])offset=beats.slice(0,phase).reduce((sum,b)=>sum+b[1],0)+beats[phase][1]/2;
+        const base=segments(s).slice(0,rowIndex).reduce((sum,seg)=>sum+seg.durationMs,0);
+        bridge.seek((base+offset)/s.motion.speed/1000);if(playing)bridge.play();
+      }
+      if(key==='period'&&bridge)bridge.seek((window.__morphPortTest.getElapsedMs()/1000)*m.period/previous);
+    }));
+    $('clearScheme').addEventListener('click',()=>{const s=api.getScheme();s.material.promoText='';sync(s);api.changed({restart:true});});
     $('exportDuration').addEventListener('change',()=>$('customDurationField').hidden=$('exportDuration').value!=='custom');
     $('exportSvg').addEventListener('click',async()=>{
       const time=api.getElapsedMs()/1000;
@@ -259,7 +330,8 @@
     const schedule=()=>{clearTimeout(timer);timer=setTimeout(record,200);};
     document.addEventListener('input',schedule);document.addEventListener('change',schedule);document.addEventListener('click',schedule);
     document.addEventListener('keydown',event=>{if(!(event.ctrlKey||event.metaKey)||event.altKey||event.target.matches('input,textarea,[contenteditable]'))return;const key=event.key.toLowerCase();if(key!=='z'&&key!=='y')return;event.preventDefault();record();const next=cursor+((key==='y'||event.shiftKey)?1:-1);if(next<0||next>=history.length)return;cursor=next;restoring=true;api.applyScheme(JSON.parse(history[cursor]),'已'+(key==='y'||event.shiftKey?'重做':'撤销'));restoring=false;});
+    if(new URLSearchParams(location.search).get('promo')==='1'){$('promoEnabled').checked=true;api.changed({restart:true});sync(api.getScheme());}
     setTimeout(record,0);
   }
-  window.MEMorphPortExtension={port:{mode:'material',slug:'prosvg',zh:'彩铸',en:'PRO SVG Lab',amountMin:0,amountMax:1,amountStep:.01,amountUnit:'',scheme},minimumRows:1,materialLayout,normalizeScheme,invalidate:()=>shapeCache.clear(),normalize,segments,renderTimeline,editOffset:s=>normalize(s.material).period*600,render,sync,collect,busy,bind,createSvg,getLastSvg:()=>lastSvg};
+  window.MEMorphPortExtension={port:{mode:'material',slug:'prosvg',zh:'彩铸',en:'PRO SVG Lab',amountMin:0,amountMax:1,amountStep:.01,amountUnit:'',scheme},minimumRows:1,materialLayout,normalizeScheme,invalidate:()=>shapeCache.clear(),normalize,segments,renderTimeline,editOffset:s=>{const m=normalize(s.material);return m.promoEnabled?m.promoReveal*1000+m.promoHold*500:m.period*600;},render,sync,collect,busy,bind,createSvg,promoPose,promoBeats,getLastSvg:()=>lastSvg};
 })();

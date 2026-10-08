@@ -17,3 +17,8 @@
 
 /* Keep size controls at the right edge of the live-stage toolbar. */
 body.tc-workspace[data-morph-port="prosvg"] .tc-canvas-toolbar .gm-canvas-card { flex:0 1 230px; width:230px; max-width:100%; margin-left:auto; margin-right:0; }
+
+.prosvg-promo-card { margin-top:16px; }
+.prosvg-promo-content { padding:12px; }
+#promoSettings .gm-grid-2 { margin-top:12px; }
+#promoText { width:100%; min-height:90px; resize:vertical; border:1px solid var(--tc-line,#39393f); border-radius:10px; background:var(--tc-field,#29292e); color:inherit; font:inherit; padding:10px; }
