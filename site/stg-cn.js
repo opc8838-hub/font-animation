@@ -10,6 +10,7 @@
     return;
   }
   const effects = [
+    ["curvedgallery", "弧廊归标", "Curved Gallery"],
     ["prosvg", "彩铸", "PRO SVG Lab"],
     ["sproutshift", "字芽", "Sprout Shift"], ["mistlift", "雾升", "Mist Lift"],
     ["typecascade", "字倾", "Type Cascade"], ["letterpulse", "字阶", "Letter Pulse"], ["dotresolve", "点解", "Dot Resolve"],

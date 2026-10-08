@@ -17,6 +17,8 @@ for (const id of pendingRelease) {
   if (!knownIds.has(id)) throw new Error(`Unknown pending effect: ${id}`);
 }
 const videos = {
+  curvedgallery:'curvedgallery-card',
+  zerogflip:'zerogflip-card', letterpulse:'letterpulse-1920x1080',
   prosvg:'prosvg-card', citystack:'citystack-card',
   continuation:'continuation-card-centered', 'split-flip':'split-flip-card', iconburst:'iconburst-card', glyphmorph:'glyphmorph-card',
   sproutshift:'sproutshift-wide-card', mistlift:'mistlift-wide-card', typecascade:'typecascade-wide-card',
@@ -25,15 +27,20 @@ const videos = {
   pathwriter:'pathwriter-card', ribbonink:'ribbon-ink-card', scrapbin:'delete-card',
   colorrecompose:'color-recompose-card', impactbuild:'impactbuild-card', typegarden:'typegarden-card'
 };
-const media = new Set(['mediacascade','beforeafter','shutterafter','phoneframe','laptopframe','orbitgallery','moodboard']);
+const media = new Set(['curvedgallery','mediacascade','beforeafter','shutterafter','phoneframe','laptopframe','orbitgallery','moodboard']);
 // Newest releases first, shown on the homepage as 最近上新. Dates are the public release of each editor.
 const recent = [
-  ['citystack','2026-10-06'], ['prosvg','2026-10-05'], ['letterpulse','2026-09-27'], ['zerogflip','2026-09-18'],
+  ['curvedgallery','2026-10-09'],
+  ['zerogflip','2026-10-06'], ['typegarden','2026-10-06'],
+  ['citystack','2026-10-06'], ['prosvg','2026-10-06'], ['letterpulse','2026-09-27'],
   ['split-flip','2026-09-07'], ['glyphreveal','2026-09-04'], ['typecascade','2026-09-02'], ['sproutshift','2026-09-02'],
   ['mistlift','2026-09-02'], ['dotresolve','2026-09-02'], ['ribbonink','2026-09-01'], ['glyphmorph','2026-09-01']
 ];
 for (const [id] of recent) if (!knownIds.has(id)) throw new Error(`Unknown recent effect: ${id}`);
-const featured = ['prosvg','sproutshift','typecascade','dotresolve','glyphmorph','iconburst','pathwriter'];
+const featured = ['prosvg','sproutshift','typecascade','dotresolve','glyphmorph','iconburst','pathwriter','letterpulse'];
+// Keep the existing published entry routes and approved preview revisions when rebuilding.
+const entryRoutes = { prosvg:'prosvg.html?from=gallery&v=20261005-1', citystack:'citystack.html?from=gallery&v=20261006-1', typegarden:'typegarden.html?from=gallery&v=20261006-1' };
+const previewRevisions = { iconburst:'20260926-5', zerogflip:'20261006' };
 async function exists(path) { try { await access(new URL(path, site)); return true; } catch { return false; } }
 const effects = [];
 for (const [id,name,english,group,description] of rows) {
@@ -42,12 +49,13 @@ for (const [id,name,english,group,description] of rows) {
   let poster = null;
   if (await exists(`assets/cellmotion/poster-${id}.jpg`)) poster=`assets/cellmotion/poster-${id}.jpg`;
   for (const ext of ['svg','png']) if (!poster && await exists(`final_${id}.${ext}`)) { poster=`final_${id}.${ext}`; break; }
-  const video = videos[id] ? `assets/previews/${videos[id]}.mp4` : null;
+  let video = videos[id] ? `assets/previews/${videos[id]}.mp4` : null;
   if (video && !await exists(video)) throw new Error(`Missing preview: ${video}`);
+  if (previewRevisions[id]) { if (poster) poster += `?v=${previewRevisions[id]}`; if (video) video += `?v=${previewRevisions[id]}`; }
   effects.push({
     id,name,english,description,
     category:media.has(id)?'media':group,
-    href,poster,video,
+    href:entryRoutes[id] || href,poster,video,
     status:pendingRelease.has(id)?'pending':'ready'
   });
 }

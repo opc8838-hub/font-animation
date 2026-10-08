@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "curvedgallery",
+      "date": "2026-10-09"
+    },
+    {
       "id": "zerogflip",
       "date": "2026-10-06"
     },
@@ -66,6 +70,17 @@
     }
   ],
   "effects": [
+    {
+      "id": "curvedgallery",
+      "name": "弧廊归标",
+      "english": "Curved Gallery",
+      "description": "弯曲图片旋转 · 缩小归标 · 文字揭开",
+      "category": "media",
+      "href": "curvedgallery.html",
+      "poster": "assets/cellmotion/poster-curvedgallery.jpg",
+      "video": "assets/previews/curvedgallery-card.mp4",
+      "status": "ready"
+    },
     {
       "id": "prosvg",
       "name": "彩铸",

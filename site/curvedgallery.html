@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>弧廊归标 Curved Gallery | CellMotion</title>
+  <meta name="description" content="将自己的图片弯成旋转圆环，缩小归成品牌标志，再揭开文字。可编辑、保存方案并导出视频。">
+  <link rel="icon" href="favicon.svg">
+  <link rel="stylesheet" href="shared-fonts.css?v=20260824-2">
+  <link rel="stylesheet" href="me-motion-editor.css?v=20260909-timeline-color">
+  <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-1">
+  <link rel="stylesheet" href="typecascade-polish.css?v=20260909-1">
+  <link rel="stylesheet" href="curvedgallery.css?v=20261009-1">
+</head>
+<body class="tc-workspace me-motion-editor cg-editor" data-editor-theme="dark">
+  <header class="tc-header">
+    <a class="tc-brand" href="cellmotion.html"><img class="tc-logo-dark" src="assets/cellmotion/logo-dark-original.png" alt="CellMotion"><img class="tc-logo-light" src="assets/cellmotion/logo-original.png" alt="" aria-hidden="true"></a>
+    <div><small data-en="Let creativity grow">让创意，自由生长</small><h1><span data-en="Curved Gallery">弧廊归标</span> <span>Curved Gallery</span></h1></div>
+    <a class="tc-back" href="cellmotion-components.html" data-en="Effects">动效库</a>
+    <button id="themeButton" type="button">☀ 浅色</button><button id="languageButton" type="button">EN</button>
+    <button class="tc-export-shortcut" id="exportShortcut" type="button" data-en="Export">导出作品</button>
+  </header>
+  <aside class="tc-content" aria-label="内容与方案">
+    <div class="tc-panel-heading"><div><small data-en="CONTENT">内容</small><h2 data-en="Images & brand">图片与品牌</h2></div></div>
+    <p class="tc-hint" data-en="Curved panels become your brand mark">弯曲图片，旋转归成品牌标志</p>
+    <button class="tc-row-select" id="selectBrand" type="button" aria-pressed="true"><strong data-en="Brand lockup">品牌组合</strong><small data-en="Text · font · colors">文字 · 字体 · 颜色</small></button>
+    <div id="contentList" class="tc-row-list"></div>
+    <label class="cg-upload" data-en="＋ Upload images">＋ 上传图片<input id="imageUpload" type="file" accept="image/*" multiple></label>
+    <label class="cg-upload cg-secondary" data-en="Import Parallax Studio backup">导入视差工坊备份<input id="parallaxImport" type="file" accept=".json,application/json"></label>
+    <button id="openLibrary" type="button" data-en="Open shared library">打开共享图库</button>
+    <section class="gm-card tc-scheme me-scheme-panel">
+      <h2 data-en="Scheme">方案</h2>
+      <div class="me-scheme-actions"><button id="saveScheme" type="button" data-en="Save scheme">保存方案</button><label class="cg-upload" data-en="Import scheme">导入方案<input id="importScheme" type="file" accept=".json,application/json"></label><button id="resetScheme" type="button" data-en="Restore default">恢复默认</button><button id="clearScheme" type="button" data-en="Clear / rebuild">清理重做</button></div>
+      <p id="schemeStatus" class="gm-status" role="status">自动保存在此浏览器；保存方案包含全部图片。</p>
+    </section>
+  </aside>
+  <main class="tc-center">
+    <section class="tc-canvas-toolbar"><span class="tc-preview-label" data-en="Canvas">画布预览</span><div class="gm-card gm-canvas-card">
+      <label class="gm-field">画布尺寸<select id="canvasPreset"><option value="1920x1080" selected>16:9 · 1920 × 1080</option><option value="1080x1080">1:1 · 1080 × 1080</option><option value="1080x1350">4:5 · 1080 × 1350</option><option value="1080x1920">9:16 · 1080 × 1920</option><option value="custom">自定义 / Custom</option></select></label>
+      <div id="customSize" class="gm-grid-2" hidden><label>宽 / W<input id="canvasWidth" type="number" min="240" max="3840" step="2" value="1920"></label><label>高 / H<input id="canvasHeight" type="number" min="240" max="3840" step="2" value="1080"></label></div>
+    </div></section>
+    <section class="gm-stage" id="stage"><div class="gm-composition-frame"><canvas id="canvas" aria-label="弧廊归标实时预览"></canvas></div>
+      <div class="me-stage-controls"><button id="playButton" type="button">暂停</button><button id="replayButton" type="button" data-en="Replay">重播</button></div>
+    </section>
+    <section class="tc-timeline"><div class="cg-time"><span id="timeReadout">0.00 / 4.60s</span><span id="phaseReadout"></span></div>
+      <div class="me-choreo-track"><div class="me-choreo-scroll"><div class="me-choreo-bar" id="timeline"><i class="me-choreo-playhead" id="playhead"></i></div></div><div class="me-choreo-legend" id="legend"></div></div>
+      <label class="cg-seek"><span data-en="Seek">定位</span><input id="seek" type="range" min="0" max="4.6" step="0.001" value="0"></label>
+    </section>
+  </main>
+  <aside class="gm-inspector" id="inspector" aria-label="属性">
+    <nav class="tc-tabs"><button data-panel="content" type="button" aria-pressed="true" data-en="Content">当前内容</button><button data-panel="motion" type="button" aria-pressed="false" data-en="Motion">动效设置</button><button data-panel="export" type="button" aria-pressed="false" data-en="Export">导出</button></nav>
+    <section class="tc-properties" data-panel="content">
+      <section class="gm-card" id="brandEditor"><h2 data-en="Brand lockup">品牌组合</h2>
+        <label class="gm-field" data-en="Brand text">品牌文字<input id="text" data-setting="text" maxlength="120" value="Sentr"></label>
+        <label class="gm-field" data-en="Font">字体<select id="fontFamily" data-setting="font"><option value="stg:inter">Inter</option></select></label>
+        <div class="gm-grid-2"><label class="gm-field" data-en="Weight">字重<select data-setting="weight"><option value="300">300</option><option value="400">400</option><option value="500">500</option><option value="700">700</option><option value="900">900</option></select></label><label class="gm-field" data-en="Font size">字号<input data-setting="fontSize" type="number" min="30" max="400" value="186"></label></div>
+        <label class="gm-field" data-en="Mark / text gap">图标与文字间距<input data-setting="textGap" type="range" min="0" max="240" value="65"><output></output></label>
+        <div class="gm-grid-2"><label class="gm-field" data-en="Background">背景<input id="backgroundColor" data-setting="background" type="color" value="#eeeeed"></label><label class="gm-field" data-en="Text color">文字颜色<input id="textColor" data-setting="color" type="color" value="#000000"></label><label class="gm-field" data-en="Mark color">标志颜色<input data-setting="markColor" type="color" value="#000000"></label></div>
+        <label class="gm-check"><input data-setting="solidMark" type="checkbox" checked><span data-en="Photos settle into a solid mark">收尾图片归成纯色标志</span></label>
+      </section>
+      <section class="gm-card me-layer-panel" id="assetManager"><button class="me-layer-toggle" id="assetToggle" type="button" aria-expanded="false" data-en="Selected images">已添加图片</button><div class="me-layer-items" id="selectedAssets" hidden></div></section>
+      <section class="gm-card me-asset-editor" id="assetEditor" hidden><h2 id="assetTitle"></h2><img id="assetPreview" alt="当前图片"><label class="gm-field" data-en="Name">名称<input id="assetName" maxlength="200"></label><label class="cg-upload" data-en="Replace image">替换图片<input id="replaceImage" type="file" accept="image/*"></label>
+        <label class="gm-field" data-en="Fit">图片裁切<select id="assetFit"><option value="cover">铺满裁切 / Cover</option><option value="stretch">拉伸 / Stretch</option></select></label>
+        <label class="gm-field" data-en="Crop X">裁切水平位置<input id="cropX" type="range" min="0" max="1" step="0.01"></label><label class="gm-field" data-en="Crop Y">裁切垂直位置<input id="cropY" type="range" min="0" max="1" step="0.01"></label>
+        <div class="gm-grid-2"><button id="moveUp" type="button" data-en="Move earlier">向前</button><button id="moveDown" type="button" data-en="Move later">向后</button></div><button id="deleteAsset" type="button" data-en="Delete image">删除图片</button>
+      </section>
+    </section>
+    <section class="tc-properties" data-panel="motion" hidden><section class="gm-card"><h2 data-en="Cylinder geometry">圆环与图片</h2><div id="geometryControls"></div><label class="gm-field" data-en="Direction">旋转方向<select data-setting="direction"><option value="1">向右 / Right</option><option value="-1">向左 / Left</option></select></label></section><section class="gm-card"><h2 data-en="Timing">动作节奏</h2><div id="timingControls"></div></section></section>
+    <section class="tc-properties" data-panel="export" hidden><section class="gm-card"><h2 data-en="Export artwork">导出作品</h2><p class="gm-help" data-en="Uses the canvas dimensions above. All formats use the same animation.">使用上方画布尺寸，图片、动图和视频共用同一条动画。</p>
+      <label class="gm-field" data-en="Duration">导出时长<select id="exportDuration"><option value="cycle">完整一轮 / Full cycle</option><option value="3">3s</option><option value="5">5s</option><option value="10">10s</option><option value="custom">自定义 / Custom</option></select></label><label id="durationLabel" class="gm-field" hidden>秒 / Seconds<input id="customDuration" type="number" min="0.5" max="30" step="0.1" value="4.6"></label>
+      <label class="gm-field">FPS<select id="exportFps"><option value="15">15</option><option value="24">24</option><option value="30" selected>30</option><option value="60">60</option></select></label>
+      <div class="cg-export-actions"><button id="exportPng" type="button">PNG</button><button id="exportGif" type="button">GIF</button><button id="exportVideo" type="button">MP4</button></div><p id="exportStatus" class="gm-status" role="status" data-en="PNG saves the current frame; GIF / MP4 starts at frame zero.">PNG 导出当前帧；GIF / MP4 从第一帧开始。</p>
+    </section></section>
+  </aside>
+  <aside class="me-asset-drawer" id="libraryDrawer" hidden aria-label="共享图库"><header><h2 data-en="Shared library">共享图库</h2><button id="closeLibrary" type="button" data-en="Close">关闭</button></header><div class="me-asset-library" id="library"></div><p class="gm-help" data-en="Select a candidate, then insert. Uploads stay in this browser.">选择候选，再点插入。上传图片只保存在此浏览器。</p><button class="me-asset-commit" id="insertCandidate" type="button" disabled data-en="Insert selected image">插入选中图片</button></aside>
+  <script src="shared-font-library.js?v=20260824-2"></script><script src="shared-icon-library.js?v=20261009-1"></script><script src="cellmotion-animated-image.js"></script>
+  <script src="js/continuation-gif.js"></script><script src="js/h264-mp4-encoder.web.js"></script>
+  <script src="curvedgallery-motion.js?v=20261009-1"></script><script src="curvedgallery.js?v=20261009-1"></script><script src="typecascade-selects.js?v=20260909-1"></script>
+</body></html>
