@@ -3,6 +3,9 @@
   if (!document.body.classList.contains('tc-workspace')) return;
   const body = document.body;
   const dictionary = new Map(Object.entries({
+    "拖动色块右边缘调整时长；方向键微调。共用阶段会同步调整。": "Drag the right edge to change duration; use arrow keys to fine-tune. Shared phases update together.",
+    "拖动调整共用时长": "Drag to change shared duration",
+    "拖动调整时长": "Drag to change duration",
     "柔和揭示时长": "Soft reveal duration",
     "首条叠加文案": "First overlay caption",
     "首条文案停留时间": "First caption hold time",

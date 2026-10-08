@@ -94,6 +94,27 @@
       return { from: row, to, durationMs: holdMs + transitionMs, holdMs, transitionMs, morphMs: transitionMs, tailMs: 0, introMs: 0, terminal: false };
     });
   }
+  function phaseResizeTarget(s,rowIndex,name,captionIndex) {
+    const m=normalize(s.material),row=s.rows[rowIndex];
+    if(!row)return null;
+    const shared={rowId:row.id,name,scope:'material',scale:1000/s.motion.speed,step:.1};
+    const keys={'柔和揭示':['revealDuration',.1,12],'色谱流动':['period',1,12],'材质放大':['promoZoomIn',.1,10],'文案出现':['promoReveal',.1,10],'文案逐字':['promoReveal',.1,10],'文案淡出':['promoFade',.1,10],'缩回原构图':['promoZoomOut',.1,10],'原构图停留':['promoReturnHold',0,20],'轮间空隙':['promoGap',0,10]};
+    if(keys[name]){const [key,min,max]=keys[name];return {...shared,key,min,max,scale:shared.scale*(key==='period'&&m.promoEnabled?m.promoScans:1)};}
+    if(name==='文案停留')return {...shared,scope:'caption',captionId:captionIndex>0?m.promoCaptions[captionIndex-1]?.id:'first',key:'hold',min:.1,max:20};
+    if(name==='材质停留')return {...shared,scope:'row',key:'hold',min:0,max:5000,step:100,scale:1/s.motion.speed};
+    if(name==='背景淡化'){const to=s.rows[(rowIndex+1)%s.rows.length];return {...shared,scope:'row',ownerId:to.id,key:'backgroundTransitionDuration',min:10,max:2000,step:10,scale:1/s.motion.speed};}
+    return null;
+  }
+  function resizePhase(s,target,displaySeconds) {
+    const value=clamp(Math.round(clamp(displaySeconds*1000/target.scale,target.min,target.max)/target.step)*target.step,target.min,target.max);
+    const exact=Number(value.toFixed(6));
+    if(target.scope==='material')s.material[target.key]=exact;
+    else if(target.scope==='caption'){
+      if(target.captionId==='first')s.material.promoHold=exact;
+      else {const caption=s.material.promoCaptions.find(c=>c.id===target.captionId);if(caption)caption.hold=exact;}
+    } else {const row=s.rows.find(row=>row.id===(target.ownerId||target.rowId));if(row)row[target.key]=exact;}
+    return exact*target.scale/1000;
+  }
   function renderTimeline(s) {
     const track = $('timeline');
     track.replaceChildren();
@@ -106,11 +127,16 @@
       beats.forEach(([name, duration, captionIndex], i) => {
         const button = document.createElement('button');
         button.type = 'button'; button.className = 'gm-timeline-block me-choreo-block'; button.setAttribute('role','listitem');
-        button.dataset.seekMs = String(cursor);
+        button.dataset.seekMs = String(cursor);button.dataset.durationMs=String(duration);
+        const target=phaseResizeTarget(s,index,name,captionIndex);
+        if(target){button.dataset.resizePhase=name;button.dataset.resizeRow=row.id;button.dataset.resizeCaption=target.captionId||'';button.dataset.captionIndex=String(captionIndex??-1);button.setAttribute('aria-describedby','prosvgTimelineHint');button.setAttribute('aria-keyshortcuts','ArrowLeft ArrowRight');}
         button.style.background = ({'材质放大':'#bfa6ff','缩回原构图':'#ffb47e','原构图停留':'#9de7d7','文案出现':'#d7ff2f','文案逐字':'#d7ff2f','文案停留':'#8ec8ff','文案淡出':'#ffc4d6','轮间空隙':'#d4b8ff','背景淡化':'#9de7d7','柔和揭示':'#d7ff2f','色谱流动':'#8ec8ff','材质停留':'#ffd27d'})[name];
+        button.dataset.phaseColor=button.style.background;
         const strong = document.createElement('strong'); strong.textContent = Number.isInteger(captionIndex)&&captions(m).length>1?String(captionIndex+1).padStart(2,'0')+' · '+name:name;
         const small = document.createElement('small'); small.textContent = ((Number.isInteger(captionIndex)?captions(m)[captionIndex].text:row.text) || '留白') + ' · ' + (duration / 1000).toFixed(2) + 's';
-        button.append(strong, small); track.append(button); cursor += duration;
+        button.append(strong, small);
+        if(target){const handle=document.createElement('span');handle.className='prosvg-phase-resize';handle.setAttribute('aria-hidden','true');handle.title=target.scope==='material'?'拖动调整共用时长':'拖动调整时长';button.append(handle);}
+        track.append(button); cursor += duration;
       });
     });
     syncCaptionEditor(s);
@@ -418,11 +444,66 @@
     let history=[],cursor=-1,restoring=false,timer;
     const record=()=>{if(restoring)return;const serialized=JSON.stringify(api.getScheme());if(history[cursor]===serialized)return;history=history.slice(0,cursor+1);history.push(serialized);if(history.length>40)history.shift();cursor=history.length-1;};
     const schedule=()=>{clearTimeout(timer);timer=setTimeout(record,200);};
+
+    // Capture on the persistent track: live edits replace its phase buttons.
+    const track=$('timeline'), bridge=()=>window.CellMotionEffectBridge;
+    let drag=null,suppressClickUntil=0;
+    const findBlock=t=>[...track.children].find(b=>b.dataset.resizeRow===t.rowId&&b.dataset.resizePhase===t.name&&(!t.captionId||b.dataset.resizeCaption===t.captionId));
+    const targetFor=b=>phaseResizeTarget(api.getScheme(),api.getScheme().rows.findIndex(r=>r.id===b.dataset.resizeRow),b.dataset.resizePhase,Number(b.dataset.captionIndex));
+    const previewPhase=t=>{const b=findBlock(t);if(b){b.classList.toggle('is-resizing',!!drag);bridge()?.seek((Number(b.dataset.seekMs)+Number(b.dataset.durationMs)/2)/1000);}return b;};
+    const applyResize=(t,seconds)=>{
+      const s=api.getScheme(),duration=resizePhase(s,t,seconds);sync(s);
+      if(t.scope==='row'){
+        const row=s.rows.find(r=>r.id===(t.ownerId||t.rowId));
+        const card=[...document.querySelectorAll('[data-row-id]')].find(n=>n.dataset.rowId===row.id);
+        const input=card?.querySelector(t.key==='hold'?'[data-key="hold"]':'[data-background-key="backgroundTransitionDuration"]');
+        if(input)input.value=String(row[t.key]);
+      }
+      api.changed();previewPhase(t);
+      $('prosvgResizeStatus').textContent=(document.body.dataset.editorLanguage==='en'?'Duration':'时长')+' · '+duration.toFixed(2)+'s';
+    };
+    const finishResize=cancel=>{
+      if(!drag)return;const finished=drag;drag=null;
+      delete track.dataset.resizeScale;document.body.classList.remove('prosvg-timeline-resizing');
+      if(track.hasPointerCapture(finished.pointerId))track.releasePointerCapture(finished.pointerId);
+      if(cancel){api.applyScheme(finished.before);bridge()?.seek(finished.elapsed/1000);if(finished.playing)bridge()?.play();}
+      else if(finished.moved){api.applyScheme(api.getScheme());const b=previewPhase(finished.target);b?.focus({preventScroll:true});record();}
+      else{api.applyScheme(finished.before);bridge()?.seek(finished.start/1000);}
+      suppressClickUntil=performance.now()+500;
+    };
+    track.addEventListener('pointerdown',event=>{
+      const handle=event.target.closest('.prosvg-phase-resize');if(!handle||event.button!==0)return;
+      const b=handle.parentElement,target=targetFor(b);if(!target)return;
+      event.preventDefault();event.stopPropagation();clearTimeout(timer);record();
+      const scroll=track.closest('.tc-phase-scroll')||track.parentElement;
+      const surface=track.closest('.tc-phase-surface');
+      const scale=(surface?.getBoundingClientRect().width||track.getBoundingClientRect().width)/(Number($('scrubber').max)/1000);
+      drag={pointerId:event.pointerId,target,before:structuredClone(api.getScheme()),elapsed:api.getElapsedMs(),playing:window.__morphPortTest.isPlaying(),start:Number(b.dataset.seekMs),seconds:Number(b.dataset.durationMs)/1000,x:event.clientX,scroll,scrollLeft:scroll.scrollLeft,scale,moved:false};
+      bridge()?.pause();track.dataset.resizeScale=String(scale);document.body.classList.add('prosvg-timeline-resizing');b.classList.add('is-resizing');track.setPointerCapture(event.pointerId);
+    });
+    track.addEventListener('pointermove',event=>{
+      if(!drag||event.pointerId!==drag.pointerId)return;event.preventDefault();
+      const delta=event.clientX-drag.x+drag.scroll.scrollLeft-drag.scrollLeft;
+      if(!drag.moved&&Math.abs(delta)<3)return;drag.moved=true;
+      applyResize(drag.target,drag.seconds+delta/drag.scale);
+    });
+    track.addEventListener('pointerup',event=>{if(drag&&event.pointerId===drag.pointerId){event.preventDefault();finishResize(false);}});
+    track.addEventListener('pointercancel',()=>finishResize(true));
+    track.addEventListener('lostpointercapture',()=>{if(drag)finishResize(true);});
+    track.addEventListener('click',event=>{if(drag||performance.now()<suppressClickUntil){event.preventDefault();event.stopImmediatePropagation();}},true);
+    document.addEventListener('keydown',event=>{if(drag&&event.key==='Escape'){event.preventDefault();finishResize(true);}});
+    track.addEventListener('keydown',event=>{
+      const b=event.target.closest('[data-resize-phase]');if(!b||!['ArrowLeft','ArrowRight'].includes(event.key)||event.ctrlKey||event.metaKey||event.altKey)return;
+      event.preventDefault();event.stopPropagation();clearTimeout(timer);record();const t=targetFor(b);
+      applyResize(t,Number(b.dataset.durationMs)/1000+(event.key==='ArrowRight'?1:-1)*t.step*t.scale/1000*(event.shiftKey?10:1));
+      api.applyScheme(api.getScheme());previewPhase(t)?.focus({preventScroll:true});record();
+    });
+
     document.addEventListener('input',schedule);document.addEventListener('change',schedule);document.addEventListener('click',schedule);
     document.addEventListener('keydown',event=>{if(!(event.ctrlKey||event.metaKey)||event.altKey||event.target.matches('input,textarea,[contenteditable]'))return;const key=event.key.toLowerCase();if(key!=='z'&&key!=='y')return;event.preventDefault();record();const next=cursor+((key==='y'||event.shiftKey)?1:-1);if(next<0||next>=history.length)return;cursor=next;restoring=true;api.applyScheme(JSON.parse(history[cursor]),'已'+(key==='y'||event.shiftKey?'重做':'撤销'));restoring=false;});
     // Apply explicit entry mode after the shared runtime loads its default/autosave.
     queueMicrotask(()=>{if(new URLSearchParams(location.search).get('promo')==='1'){$('promoEnabled').checked=true;api.changed({restart:true});sync(api.getScheme());}});
     setTimeout(record,0);
   }
-  window.MEMorphPortExtension={port:{mode:'material',slug:'prosvg',zh:'彩铸',en:'PRO SVG Lab',amountMin:0,amountMax:1,amountStep:.01,amountUnit:'',scheme},minimumRows:1,materialLayout,normalizeScheme,invalidate:()=>shapeCache.clear(),normalize,segments,renderTimeline,editOffset:s=>{const m=normalize(s.material);return m.promoEnabled?(s.motion.introEnabled?m.revealDuration*1000:0)+m.period*500:m.period*600;},render,sync,collect,busy,bind,createSvg,promoPose,promoBeats,captionWindows,getLastSvg:()=>lastSvg};
+  window.MEMorphPortExtension={port:{mode:'material',slug:'prosvg',zh:'彩铸',en:'PRO SVG Lab',amountMin:0,amountMax:1,amountStep:.01,amountUnit:'',scheme},minimumRows:1,materialLayout,normalizeScheme,invalidate:()=>shapeCache.clear(),normalize,segments,renderTimeline,editOffset:s=>{const m=normalize(s.material);return m.promoEnabled?(s.motion.introEnabled?m.revealDuration*1000:0)+m.period*500:m.period*600;},render,sync,collect,busy,bind,createSvg,promoPose,promoBeats,captionWindows,phaseResizeTarget,resizePhase,getLastSvg:()=>lastSvg};
 })();

@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-coloriso">
   <link rel="stylesheet" href="typecascade-polish.css?v=20261006-garden1">
 <link rel="stylesheet" href="site-preferences.css?v=20260926-18">
-  <link rel="stylesheet" href="prosvg.css?v=20261008-captions1">
+  <link rel="stylesheet" href="prosvg.css?v=20261008-resize1">
 </head>
 <body class="glyphmorph-editor" data-morph-port="prosvg" data-language-motion="breath">
   <aside id="glyphMorphInspector" class="gm-inspector" aria-label="彩铸编辑器">
@@ -140,7 +140,8 @@
       <div class="gm-card-title"><span>06</span><h2>时间轴</h2></div>
       <div class="me-choreo-scroll"><div id="timeline" class="gm-timeline me-choreo-track me-choreo-bar" role="list" aria-label="彩铸动效时间轴"></div></div>
       <input id="scrubber" class="gm-scrubber me-choreo-playhead" type="range" min="0" max="1" step="0.001" value="0" aria-label="时间轴播放头">
-      <div class="gm-time-readout"><span id="timeNow">0.00s</span><span id="timeTotal">0.00s</span></div>
+      <p id="prosvgTimelineHint" class="gm-help prosvg-timeline-hint">拖动色块右边缘调整时长；方向键微调。共用阶段会同步调整。</p>
+      <div class="gm-time-readout"><strong id="prosvgResizeStatus" aria-live="polite"></strong><span id="timeNow">0.00s</span><span id="timeTotal">0.00s</span></div>
     </section>
 
     <section class="gm-card">
@@ -234,13 +235,13 @@
   <script src="shared-icon-library.js?v=20260902-1"></script>
   <script src="cellmotion-animated-image.js?v=20260909-1"></script>
   <script src="vendor/pro-svg-lab/renderer.js?v=20261005-1"></script>
-  <script src="prosvg.js?v=20261008-captions1"></script>
+  <script src="prosvg.js?v=20261008-resize1"></script>
   <script src="morphports-reviewed.js?v=20261005-prosvg1"></script>
   <script src="stg-cn.js?v=20261005-prosvg1"></script>
   <script src="typecascade-workspace.js?v=20261006-notr1"></script>
-  <script src="typecascade-polish.js?v=20260909-coloriso"></script>
+  <script src="typecascade-polish.js?v=20261008-resize1"></script>
   <script src="typecascade-selects.js?v=20261005-prosvg1"></script>
-  <script src="typecascade-locale.js?v=20261008-prosvg-captions1"></script>
+  <script src="typecascade-locale.js?v=20261008-resize1"></script>
   <script src="cellmotion-ai-manifest.js?v=20260909-ai-manifest"></script>
   <script src="cellmotion-ai-menu.js?v=20261005-prosvg1"></script>
 <script defer src="site-preferences.js?v=20261006-breath1"></script>

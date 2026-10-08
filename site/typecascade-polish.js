@@ -226,7 +226,8 @@
   }
   function fitTrack() {
     // One scale for blocks, ticks and playhead; gaps are inset inside time slots.
-    width = Math.max(scroll.clientWidth - 4, total / 1000 * 200);
+    const resizeScale=Number(timeline.dataset.resizeScale);
+    width = resizeScale>0 ? total/1000*resizeScale : Math.max(scroll.clientWidth - 4, total / 1000 * 200);
     surface.style.width = `${width}px`;
     phases.forEach(({ block, start, end }) => {
       const slot = (end - start) / total * width;
@@ -279,7 +280,7 @@
         [phases[activeIndex], phases[index]].forEach(p => { if (p) { const active = p === phases[index]; p.block.classList.toggle('is-active', active); p.block.setAttribute('aria-current', String(active)); p.item.classList.toggle('is-active', active); } });
         activeIndex = index;
       }
-      if (followPlayback && (x > scroll.scrollLeft + scroll.clientWidth - 20 || x < scroll.scrollLeft)) scroll.scrollLeft = Math.max(0, x - 30);
+      if (!timeline.dataset.resizeScale && followPlayback && (x > scroll.scrollLeft + scroll.clientWidth - 20 || x < scroll.scrollLeft)) scroll.scrollLeft = Math.max(0, x - 30);
       lastTime = time;
     }
     requestAnimationFrame(updatePlayhead);

@@ -36,3 +36,14 @@ body.tc-workspace[data-morph-port="prosvg"] .tc-canvas-toolbar .gm-canvas-card {
 #promoSettings .prosvg-caption-actions button:not(#previewFirstCaption) { min-width:30px; padding:4px 8px; }
 #promoSettings button:disabled { opacity:.4; cursor:default; }
 #promoSettings :is(.prosvg-caption-actions button, [data-caption-action="preview"], #addPromoCaption):hover:not(:disabled) { border-color:var(--tc-accent,#b994ff); }
+
+/* Duration editing stays within the existing phase strip. */
+#timeline [data-resize-phase]{padding-right:26px}
+#timeline .prosvg-phase-resize{position:absolute;right:0;top:0;bottom:0;width:18px;cursor:ew-resize;touch-action:none;border-radius:0 10px 10px 0;background:rgba(0,0,0,.07)}
+#timeline .prosvg-phase-resize::after{content:"";position:absolute;top:50%;right:5px;height:20px;width:3px;transform:translateY(-50%);border-left:1px solid rgba(0,0,0,.4);border-right:1px solid rgba(0,0,0,.4)}
+#timeline .tc-phase-narrow[data-resize-phase]{padding:0}
+#timeline .is-resizing{outline:2px solid var(--tc-accent,#7950ef);outline-offset:-2px}
+.prosvg-timeline-resizing,.prosvg-timeline-resizing *{cursor:ew-resize!important;user-select:none!important}
+.prosvg-timeline-hint{margin:6px 0;font-size:11px}
+#prosvgResizeStatus{font-size:11px;font-weight:500;margin-right:auto}
+.gm-time-readout{gap:8px}
