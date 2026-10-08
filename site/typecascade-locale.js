@@ -3,6 +3,21 @@
   if (!document.body.classList.contains('tc-workspace')) return;
   const body = document.body;
   const dictionary = new Map(Object.entries({
+    "柔和揭示时长": "Soft reveal duration",
+    "首条叠加文案": "First overlay caption",
+    "首条文案停留时间": "First caption hold time",
+    "叠加文案": "Overlay caption",
+    "叠加文案列表": "Overlay captions",
+    "＋ 新增文案": "+ Add caption",
+    "本条停留 / 秒": "Caption hold / seconds",
+    "本条开始": "Caption starts",
+    "切换下一条": "Next caption starts",
+    "开始缩回": "Zoom-out starts",
+    "预览这条文案": "Preview this caption",
+    "文案上移": "Move caption up",
+    "文案下移": "Move caption down",
+    "删除文案": "Delete caption",
+    "每条文案按出现、停留、淡出的顺序播放，再切换下一条；最后一条结束后缩回。每条可独立调整停留，字体与出现、淡出设置共用。每段放大时播放该序列。上方为首段内时刻，其他段落请查看时间轴。": "Each caption enters, holds and fades before the next one starts. Zoom returns after the last caption. Hold is independent; font, entrance and fade settings are shared. The sequence plays whenever a block zooms in. Times above are within the first block; use the timeline for other blocks.",
     "宣发构图": "Promo composition",
     "追加放大、文案与缩回": "Append zoom, caption and return",
     "放大时间": "Zoom-in time",

@@ -117,3 +117,32 @@ for(const intro of [true,false])for(const count of [1,3])for(const zoom of [1,8]
 const oldScheme=extension.normalize(JSON.parse(fs.readFileSync('site/assets/presets/prosvg-default.json')).material);
 assert.equal(oldScheme.promoEnabled,false,'old schemes do not accidentally enable a new motion mode');
 console.log('PASS prosvg promo phase timing, original rendering, legacy schemes and complete zoom return');
+
+// Reveal duration is independent from scanning; captions own hold and switch windows.
+const story=JSON.parse(JSON.stringify(clean));
+story.material.revealDuration=.5;story.material.promoEnabled=true;story.material.promoHold=1;
+story.material.promoCaptions=[{id:'second',text:'第二条',hold:2},{id:'third',text:'第三条',hold:.5}];
+assert.equal(story.material.period,4.4);
+assert.equal(extension.segments(story)[0].durationMs,14800);
+const windows=extension.captionWindows(story.material);
+assert.equal(windows[1].start,2.2);
+assert.equal(windows[2].start,5.4);
+for(const [time,index,text,opacity] of [[5.7,0,'How I made this',0],[6.8,0,'How I made this',1],[7.9,1,'第二条',0],[9,1,'第二条',1],[11.1,2,'第三条',0],[11.8,2,'第三条',1],[12.8,-1,'',0]]){
+  const pose=extension.promoPose(story.material,story.rows[0],time);
+  assert.equal(pose.captionIndex,index,'caption switch uses its exact timeline boundary');
+  assert.equal(pose.captionText,text);assert.equal(pose.opacity,opacity);
+}
+assert.equal(extension.promoPose(story.material,story.rows[0],14.8).zoom,1);
+const revealSvg=extension.createSvg(story,story.rows[0],geometry,.5);
+assert.match(revealSvg,/cm-reveal[^>]*gradientTransform="[^"]*translate\(594 0\)/,'short reveal reaches full mask without changing scan period');
+const animatedStory=extension.createSvg(story,story.rows[0],geometry,0,true);
+assert.match(animatedStory,/cm-sweep[\s\S]*?dur="4.4s"/);
+assert.match(animatedStory,/cm-reveal[\s\S]*?dur="0.49s"/);
+assert.equal(extension.normalize({period:2}).revealDuration,2,'old schemes retain their old reveal time');
+const migrated=extension.normalize({promoText:'旧文案',promoHold:2});
+assert.equal(migrated.promoText,'旧文案');assert.equal(migrated.promoCaptions.length,0);
+const ordered=extension.normalize({promoCaptions:[{id:'a',text:'A',hold:1},{id:'b',text:'B',hold:3}]});
+assert.equal(ordered.promoCaptions[1].id,'b');
+const reordered=extension.normalize({...ordered,promoCaptions:ordered.promoCaptions.slice().reverse()});
+assert.equal(reordered.promoCaptions[0].text,'B');assert.equal(reordered.promoCaptions[0].hold,3);assert.equal(reordered.promoCaptions[0].id,'b');
+console.log('PASS independent soft reveal, ordered captions, switch boundaries and migration');

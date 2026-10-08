@@ -4,13 +4,21 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, Number.isFinite(+n) ? +n : lo));
-  const promoDefaults = {"promoEnabled":false,"promoText":"How I made this","promoFont":"stg:instrument-serif","promoZoom":3.4,"promoBreath":0,"promoSize":110,"promoColor":"#16181b","promoY":0,"promoTyping":false,"promoReveal":0.6,"promoHold":3.2,"promoFade":0.6,"promoGap":0,"promoScans":1,"promoZoomIn":0.8,"promoZoomOut":0.8,"promoReturnHold":1.2};
-  const defaults = { palette: 'original', stage: 5, blur: 7.3, grain: .12, period: 4.4, warp: 0, light: 0, direction: 1, proShape: true, ...promoDefaults };
-  const fields = { palette: 'materialPalette', stage: 'materialStage', blur: 'materialBlur', grain: 'materialGrain', period: 'materialPeriod', warp: 'materialWarp', light: 'materialLight', direction: 'materialDirection', proShape: 'materialProShape', promoEnabled: 'promoEnabled', promoText: 'promoText', promoFont: 'promoFont', promoZoom: 'promoZoom', promoBreath: 'promoBreath', promoSize: 'promoSize', promoColor: 'promoColor', promoY: 'promoY', promoTyping: 'promoTyping', promoReveal: 'promoReveal', promoHold: 'promoHold', promoFade: 'promoFade', promoGap: 'promoGap', promoScans: 'promoScans', promoZoomIn: 'promoZoomIn', promoZoomOut: 'promoZoomOut', promoReturnHold: 'promoReturnHold' };
+  const promoDefaults = {"promoEnabled":false,"promoText":"How I made this","promoFont":"stg:instrument-serif","promoZoom":3.4,"promoBreath":0,"promoSize":110,"promoColor":"#16181b","promoY":0,"promoTyping":false,"promoReveal":0.6,"promoHold":3.2,"promoFade":0.6,"promoGap":0,"promoScans":1,"promoZoomIn":0.8,"promoZoomOut":0.8,"promoReturnHold":1.2,"promoCaptions":[]};
+  const defaults = { palette: 'original', stage: 5, blur: 7.3, grain: .12, period: 4.4, revealDuration: 4.4, warp: 0, light: 0, direction: 1, proShape: true, ...promoDefaults };
+  const fields = { palette: 'materialPalette', stage: 'materialStage', blur: 'materialBlur', grain: 'materialGrain', period: 'materialPeriod', revealDuration: 'materialRevealDuration', warp: 'materialWarp', light: 'materialLight', direction: 'materialDirection', proShape: 'materialProShape', promoEnabled: 'promoEnabled', promoText: 'promoText', promoFont: 'promoFont', promoZoom: 'promoZoom', promoBreath: 'promoBreath', promoSize: 'promoSize', promoColor: 'promoColor', promoY: 'promoY', promoTyping: 'promoTyping', promoReveal: 'promoReveal', promoHold: 'promoHold', promoFade: 'promoFade', promoGap: 'promoGap', promoScans: 'promoScans', promoZoomIn: 'promoZoomIn', promoZoomOut: 'promoZoomOut', promoReturnHold: 'promoReturnHold' };
   const copy = value => JSON.parse(JSON.stringify(value));
+  function normalizeCaptions(value,hold) {
+    const seen=new Set();
+    return (Array.isArray(value)?value:[]).filter(c=>c&&typeof c==='object').map((c,i)=>{
+      let id=String(c.id||'caption-'+i).slice(0,80);while(seen.has(id))id+='-copy';seen.add(id);
+      return {id,text:String(c.text??'').slice(0,1000),hold:clamp(c.hold??hold,.1,20)};
+    });
+  }
   function normalize(value = {}) {
     const v = { ...defaults, ...value };
-    return { palette: ['original','silver','lava','violet'].includes(v.palette) ? v.palette : 'original', stage: Math.round(clamp(v.stage, 0, 5)), blur: clamp(v.blur, 0, 16), grain: clamp(v.grain, 0, .4), period: clamp(v.period, 1, 12), warp: clamp(v.warp, 0, 24), light: clamp(v.light, 0, 2), direction: +v.direction === -1 ? -1 : 1, proShape: v.proShape !== false,
+    return { palette: ['original','silver','lava','violet'].includes(v.palette) ? v.palette : 'original', stage: Math.round(clamp(v.stage, 0, 5)), blur: clamp(v.blur, 0, 16), grain: clamp(v.grain, 0, .4), period: clamp(v.period, 1, 12), revealDuration: clamp(value.revealDuration ?? clamp(v.period,1,12),.1,12), warp: clamp(v.warp, 0, 24), light: clamp(v.light, 0, 2), direction: +v.direction === -1 ? -1 : 1, proShape: v.proShape !== false,
+      promoCaptions: normalizeCaptions(v.promoCaptions,v.promoHold),
       promoEnabled: v.promoEnabled === true, promoTyping: v.promoTyping === true,
       promoText: String(v.promoText ?? promoDefaults.promoText).slice(0,1000),
       promoFont: window.STGFontLibrary?.preset(v.promoFont) ? v.promoFont : promoDefaults.promoFont,
@@ -31,35 +39,44 @@
   };
   const smooth = p => { p=clamp(p,0,1); return p<1e-9?0:p>1-1e-9?1:p*p*(3-2*p); };
   function originalBeats(m,row,introEnabled) {
-    return [...(introEnabled?[['柔和揭示',m.period*1000]]:[]),['色谱流动',m.period*1000*(m.promoEnabled?m.promoScans:1)],...(row.hold?[['材质停留',row.hold]]:[])];
+    return [...(introEnabled?[['柔和揭示',m.revealDuration*1000]]:[]),['色谱流动',m.period*1000*(m.promoEnabled?m.promoScans:1)],...(row.hold?[['材质停留',row.hold]]:[])];
+  }
+  function captions(m) { return [{text:m.promoText,hold:m.promoHold},...m.promoCaptions]; }
+  function captionWindows(m) {
+    let cursor=0;
+    return captions(m).map((caption,index)=>{const start=cursor;cursor+=m.promoReveal+caption.hold+m.promoFade;
+      return {...caption,index,start,holdStart:start+m.promoReveal,fadeStart:start+m.promoReveal+caption.hold,end:cursor};});
   }
   function promoBeats(m) {
-    return [['材质放大',m.promoZoomIn*1000],[m.promoTyping?'文案逐字':'文案出现',m.promoReveal*1000],['文案停留',m.promoHold*1000],['文案淡出',m.promoFade*1000],['缩回原构图',m.promoZoomOut*1000],...(m.promoReturnHold?[['原构图停留',m.promoReturnHold*1000]]:[]),...(m.promoGap?[['轮间空隙',m.promoGap*1000]]:[])];
+    return [['材质放大',m.promoZoomIn*1000],...captions(m).flatMap((c,i)=>[[m.promoTyping?'文案逐字':'文案出现',m.promoReveal*1000,i],['文案停留',c.hold*1000,i],['文案淡出',m.promoFade*1000,i]]),['缩回原构图',m.promoZoomOut*1000],...(m.promoReturnHold?[['原构图停留',m.promoReturnHold*1000]]:[]),...(m.promoGap?[['轮间空隙',m.promoGap*1000]]:[])];
   }
   function promoDuration(m,row,introEnabled) { return [...originalBeats(m,row,introEnabled),...promoBeats(m)].reduce((sum,beat)=>sum+beat[1],0); }
   function promoPose(m,row,seconds,introEnabled=true) {
     const base=originalBeats(m,row,introEnabled).reduce((sum,beat)=>sum+beat[1],0)/1000;
     const duration=promoDuration(m,row,introEnabled)/1000;
     const local=clamp(seconds-base,0,duration-base), captionTime=local-m.promoZoomIn;
-    const captionDuration=m.promoReveal+m.promoHold+m.promoFade;
+    const windows=captionWindows(m), captionDuration=windows.at(-1).end;
+    const active=windows.find(c=>captionTime>=c.start-1e-9&&captionTime<c.end-1e-9);
+    const phase=active?Math.max(0,captionTime-active.start):0;
     const zoomOutStart=m.promoZoomIn+captionDuration;
     let zoom=1+(m.promoZoom-1)*smooth(local/m.promoZoomIn);
     if(local>=zoomOutStart)zoom=m.promoZoom+(1-m.promoZoom)*smooth((local-zoomOutStart)/m.promoZoomOut);
     if(captionTime>0&&captionTime<captionDuration)zoom*=1+m.promoBreath*Math.pow(Math.sin(Math.PI*captionTime/captionDuration),2);
-    const opacity=captionTime<=0||captionTime>=captionDuration?0:captionTime<m.promoReveal?(m.promoTyping?1:smooth(captionTime/m.promoReveal)):1-smooth((captionTime-m.promoReveal-m.promoHold)/m.promoFade);
-    return {duration,base,zoom,reveal:clamp(captionTime/m.promoReveal,0,1),opacity};
+    const opacity=!active?0:phase<m.promoReveal?(m.promoTyping?1:smooth(phase/m.promoReveal)):1-smooth((phase-m.promoReveal-active.hold)/m.promoFade);
+    return {duration,base,zoom,reveal:clamp(phase/m.promoReveal,0,1),opacity,captionIndex:active?.index??-1,captionText:active?.text??''};
   }
   const graphemes = text => typeof Intl.Segmenter==='function' ? [...new Intl.Segmenter(undefined,{granularity:'grapheme'}).segment(text)].map(s=>s.segment) : Array.from(text);
   function drawPromoCaption(ctx,m,pose,width,height) {
-    if(!m.promoText || pose.opacity<=0)return;
+    const text=pose.captionText;
+    if(!text || pose.opacity<=0)return;
     const preset=window.STGFontLibrary.preset(m.promoFont), family=window.STGFontLibrary.family(m.promoFont);
     let size=m.promoSize*Math.min(width,height)/1080;
     const setFont=()=>{ctx.font=preset.style+' '+preset.weight+' '+size+'px '+family;};
     setFont();
-    const lines=m.promoText.split('\n');
+    const lines=text.split('\n');
     const widest=Math.max(1,...lines.map(line=>ctx.measureText(line).width));
     size*=Math.min(1,width*.9/widest,height*.8/(size*1.2*lines.length));setFont();
-    const chars=graphemes(m.promoText), count=m.promoTyping?Math.floor(chars.length*pose.reveal):chars.length;
+    const chars=graphemes(text), count=m.promoTyping?Math.floor(chars.length*pose.reveal):chars.length;
     const visible=chars.slice(0,count).join('').split('\n');
     ctx.save();ctx.globalAlpha=pose.opacity;ctx.fillStyle=m.promoColor;ctx.textAlign='left';ctx.textBaseline='middle';
     lines.forEach((line,index)=>{const x=(width-ctx.measureText(line).width)/2;
@@ -68,8 +85,7 @@
   }
   function segments(s) {
     const m=normalize(s.material);
-    const period = m.period * 1000;
-    const duration = period * (s.motion.introEnabled ? 2 : 1);
+    const duration = ((s.motion.introEnabled?m.revealDuration:0)+m.period)*1000;
     return s.rows.map((row, index) => {
       const to = s.rows[(index + 1) % s.rows.length];
       const canTransition = s.rows.length > 1 && (s.motion.loop || index < s.rows.length - 1);
@@ -85,18 +101,19 @@
     s.rows.forEach((row,index) => {
       const transition = segments(s)[index].transitionMs / s.motion.speed;
       const m=normalize(s.material);
-      const beats = [...originalBeats(m,row,s.motion.introEnabled),...(m.promoEnabled?promoBeats(m):[])].map(([name,duration])=>[name,duration/s.motion.speed]);
+      const beats = [...originalBeats(m,row,s.motion.introEnabled),...(m.promoEnabled?promoBeats(m):[])].map(([name,duration,captionIndex])=>[name,duration/s.motion.speed,captionIndex]);
       if(transition)beats.push(['背景淡化',transition]);
-      beats.forEach(([name, duration], i) => {
+      beats.forEach(([name, duration, captionIndex], i) => {
         const button = document.createElement('button');
         button.type = 'button'; button.className = 'gm-timeline-block me-choreo-block'; button.setAttribute('role','listitem');
         button.dataset.seekMs = String(cursor);
         button.style.background = ({'材质放大':'#bfa6ff','缩回原构图':'#ffb47e','原构图停留':'#9de7d7','文案出现':'#d7ff2f','文案逐字':'#d7ff2f','文案停留':'#8ec8ff','文案淡出':'#ffc4d6','轮间空隙':'#d4b8ff','背景淡化':'#9de7d7','柔和揭示':'#d7ff2f','色谱流动':'#8ec8ff','材质停留':'#ffd27d'})[name];
-        const strong = document.createElement('strong'); strong.textContent = name;
-        const small = document.createElement('small'); small.textContent = (row.text || '留白') + ' · ' + (duration / 1000).toFixed(2) + 's';
+        const strong = document.createElement('strong'); strong.textContent = Number.isInteger(captionIndex)&&captions(m).length>1?String(captionIndex+1).padStart(2,'0')+' · '+name:name;
+        const small = document.createElement('small'); small.textContent = ((Number.isInteger(captionIndex)?captions(m)[captionIndex].text:row.text) || '留白') + ' · ' + (duration / 1000).toFixed(2) + 's';
         button.append(strong, small); track.append(button); cursor += duration;
       });
     });
+    syncCaptionEditor(s);
     $('scrubber').max = String(Math.max(1,cursor)); $('timeTotal').textContent = (cursor / 1000).toFixed(2) + 's';
   }
   let api;
@@ -199,10 +216,11 @@
         svg = svg.replace('tableValues="'+tables[i]+'"','tableValues="'+table+'"');
       });
     }
+    if(animated&&m.revealDuration!==m.period)svg=svg.replace(/(id="cm-reveal"[\s\S]*?<animateTransform[^>]*dur=")[^"]+/, '$1'+Math.max(.1,m.revealDuration-.01)/s.motion.speed+'s');
     if (!animated) {
       const phase = ((seconds / m.period) % 1 + 1) % 1;
       const sweep = 109 + 486 * (m.direction === 1 ? phase : 1-phase);
-      const reveal = 109 + (485 + Math.max(0,W-337)) * (timing ? 1 : Math.min(1,Math.max(0,seconds) / Math.max(.1,m.period-.01)));
+      const reveal = 109 + (485 + Math.max(0,W-337)) * (timing ? 1 : Math.min(1,Math.max(0,seconds) / Math.max(.1,m.revealDuration-.01)));
       svg = svg.replace(/(<linearGradient id="cm-sweep"[^>]*gradientTransform=")([^"]*)"/, '$1$2 translate('+sweep+' 0)"')
         .replace(/(<linearGradient id="cm-reveal"[^>]*gradientTransform=")([^"]*)"/, '$1$2 translate('+reveal+' 0)"')
         .replace(/<animateTransform\b[^>]*\/>/g,'');
@@ -235,20 +253,21 @@
       const timeline = resolveTimeline(timeSeconds*1000);
       const s = state.scheme, m = normalize(s.material), row = timeline.segment.from;
       const geometry = shapeFor(args,timeline);
-      const scanDuration=m.period*(s.motion.introEnabled?2:1);
+      const scanDuration=(s.motion.introEnabled?m.revealDuration:0)+m.period;
       const local=timeline.segmentTime/1000;
       const pose=m.promoEnabled?promoPose(m,row,local,s.motion.introEnabled):null;
       let seconds=s.rows.length===1&&!row.hold?timeSeconds*s.motion.speed:local;
-      const flowEnd=m.period*((s.motion.introEnabled?1:0)+(m.promoEnabled?m.promoScans:1));
-      if(row.hold>0&&local>=flowEnd&&(!pose||local<pose.base))seconds=m.period*1.5;
-      else if(pose&&row.hold>0&&local>=pose.base)seconds=m.period*1.5+(local-pose.base);
+      const flowEnd=(s.motion.introEnabled?m.revealDuration:0)+m.period*(m.promoEnabled?m.promoScans:1);
+      const holdTime=s.motion.introEnabled?m.revealDuration+m.period*.5:m.period*1.5;
+      if(row.hold>0&&local>=flowEnd&&(!pose||local<pose.base))seconds=holdTime;
+      else if(pose&&row.hold>0&&local>=pose.base)seconds=holdTime+(local-pose.base);
       if(!s.motion.loop)seconds=Math.min(seconds,pose?timeline.segment.holdMs/1000:scanDuration);
       // Zoom and caption are extra channels; the original material clock and reveal remain intact.
       const svg=createSvg(s,row,geometry,seconds);
 
       if(pose){
-        const key=m.promoFont+'|'+m.promoText;
-        if(!captionFonts.has(key)){if(captionFonts.size>8)captionFonts.clear();const f=window.STGFontLibrary.preset(m.promoFont);captionFonts.set(key,document.fonts.load(f.style+' '+f.weight+' 40px '+window.STGFontLibrary.family(m.promoFont),m.promoText||'中文ABC'));}
+        const text=captions(m).map(c=>c.text).join('\n'),key=m.promoFont+'|'+text;
+        if(!captionFonts.has(key)){if(captionFonts.size>8)captionFonts.clear();const f=window.STGFontLibrary.preset(m.promoFont);captionFonts.set(key,document.fonts.load(f.style+' '+f.weight+' 40px '+window.STGFontLibrary.family(m.promoFont),text||'中文ABC'));}
         await captionFonts.get(key);
       }
       const img = await decode(svg);
@@ -279,13 +298,48 @@
     try{return await job;}catch(error){if(!preview)throw error;$('exportStatus').textContent='材质渲染失败：'+error.message;console.error(error);}
     finally{if(preview)jobs.delete(targetCanvas);}
   }
+  function timingMarkup(start,end,last) {
+    return '<span>本条开始</span> <b>'+start.toFixed(2)+'s</b> · <span>'+(last?'开始缩回':'切换下一条')+'</span> <b>'+end.toFixed(2)+'s</b>';
+  }
+  function syncCaptionEditor(s) {
+    const m=normalize(s.material), row=s.rows[0];
+    const offset=originalBeats(m,row,s.motion.introEnabled).reduce((sum,b)=>sum+b[1],0)/1000+m.promoZoomIn;
+    const windows=captionWindows(m), speed=s.motion.speed;
+    // Readouts describe the first row; the full timeline includes every row and hold.
+    $('promoFirstTiming').innerHTML=timingMarkup((offset+windows[0].start)/speed,(offset+windows[0].end)/speed,windows.length===1);
+    $('moveFirstCaptionDown').disabled=!m.promoCaptions.length;
+    const list=$('promoCaptionList');
+    [...list.children].filter(node=>!m.promoCaptions.some(c=>c.id===node.dataset.captionId)).forEach(node=>node.remove());
+    m.promoCaptions.forEach((caption,i)=>{
+      let node=[...list.children].find(node=>node.dataset.captionId===caption.id);
+      if(!node){node=document.createElement('section');node.className='prosvg-caption-card';node.dataset.captionId=caption.id;
+        node.innerHTML='<header><strong><span>叠加文案</span> <b data-caption-number></b></strong><div class="prosvg-caption-actions"><button type="button" data-caption-action="up" aria-label="文案上移">↑</button><button type="button" data-caption-action="down" aria-label="文案下移">↓</button><button type="button" data-caption-action="delete" aria-label="删除文案">×</button></div></header><label class="gm-field gm-field-wide"><span>叠加文案</span><textarea data-caption-text rows="2" maxlength="1000" placeholder="输入宣发文案，支持换行"></textarea></label><label class="gm-field gm-field-wide"><span>本条停留 / 秒</span><input data-caption-hold type="number" min="0.1" max="20" step="0.1"></label><p class="gm-help prosvg-caption-timing" data-caption-timing></p><button type="button" data-caption-action="preview">预览这条文案</button>';}
+      if(list.children[i]!==node)list.insertBefore(node,list.children[i]||null);
+      node.querySelector('[data-caption-number]').textContent=String(i+2).padStart(2,'0');
+      const text=node.querySelector('[data-caption-text]'),hold=node.querySelector('[data-caption-hold]');
+      if(document.activeElement!==text)text.value=caption.text;
+      if(document.activeElement!==hold)hold.value=caption.hold;
+      node.querySelector('[data-caption-action="up"]').disabled=false;
+      node.querySelector('[data-caption-action="down"]').disabled=i===m.promoCaptions.length-1;
+      const w=windows[i+1];node.querySelector('[data-caption-timing]').innerHTML=timingMarkup((offset+w.start)/speed,(offset+w.end)/speed,i===m.promoCaptions.length-1);
+    });
+  }
+  function previewCaption(index) {
+    const bridge=window.CellMotionEffectBridge;if(!bridge)return;
+    const s=api.getScheme(),m=normalize(s.material),timeline=api.resolveTimeline(api.getElapsedMs());
+    const rowIndex=timeline.index,row=s.rows[rowIndex],entry=captionWindows(m)[index];if(!entry)return;
+    const start=segments(s).slice(0,rowIndex).reduce((sum,seg)=>sum+seg.durationMs,0);
+    const original=originalBeats(m,row,s.motion.introEnabled).reduce((sum,b)=>sum+b[1],0);
+    bridge.seek((start+original+(m.promoZoomIn+entry.holdStart+entry.hold/2)*1000)/s.motion.speed/1000);bridge.pause();
+  }
   function sync(s) {
     shapeCache.clear();
     const m=normalize(s.material);
-    Object.entries(fields).forEach(([key,id])=>{if($(id).type==='checkbox')$(id).checked=m[key];else $(id).value=m[key];const out=document.querySelector('output[for="'+id+'"]');if(out)out.value=String(m[key])+(['period','promoReveal','promoHold','promoFade','promoGap','promoZoomIn','promoZoomOut','promoReturnHold'].includes(key)?'s':key==='promoZoom'?'×':'');});
+    Object.entries(fields).forEach(([key,id])=>{if($(id).type==='checkbox')$(id).checked=m[key];else $(id).value=m[key];const out=document.querySelector('output[for="'+id+'"]');if(out)out.value=String(m[key])+(['period','revealDuration','promoReveal','promoHold','promoFade','promoGap','promoZoomIn','promoZoomOut','promoReturnHold'].includes(key)?'s':key==='promoZoom'?'×':'');});
     $('promoSettings').hidden=!m.promoEnabled;
+    syncCaptionEditor(s);
   }
-  function collect(s){for(const key of ['width','height']) { s.canvas[key]=Math.round(clamp(s.canvas[key],320,3840)/2)*2; const input=$('canvas'+key[0].toUpperCase()+key.slice(1));if(document.activeElement!==input)input.value=s.canvas[key]; } const value={};Object.entries(fields).forEach(([key,id])=>value[key]=$(id).type==='checkbox'?$(id).checked:$(id).value);s.material=normalize(value);}
+  function collect(s){for(const key of ['width','height']) { s.canvas[key]=Math.round(clamp(s.canvas[key],320,3840)/2)*2; const input=$('canvas'+key[0].toUpperCase()+key.slice(1));if(document.activeElement!==input)input.value=s.canvas[key]; } const value={};Object.entries(fields).forEach(([key,id])=>value[key]=$(id).type==='checkbox'?$(id).checked:$(id).value);value.promoCaptions=[...$('promoCaptionList').children].map(node=>({id:node.dataset.captionId,text:node.querySelector('[data-caption-text]').value,hold:node.querySelector('[data-caption-hold]').value}));s.material=normalize(value);}
   let disabled=[];
   function busy(value){
     if(value){disabled=[...document.querySelectorAll('input,textarea,select,button')].map(node=>[node,node.disabled]);disabled.forEach(([node])=>node.disabled=true);document.body.classList.add('prosvg-exporting');}
@@ -310,14 +364,14 @@
     });
     Object.entries(fields).forEach(([key,id])=>$(id).addEventListener('input',()=>{
       const bridge=window.CellMotionEffectBridge, previous=api.getScheme().material.period;
-      const playing=window.__morphPortTest.isPlaying(), elapsed=api.getElapsedMs();
-      const timing=['promoReveal','promoHold','promoFade','promoGap','promoZoomIn','promoZoomOut','promoReturnHold','promoScans'].includes(key);
+      const playing=window.__morphPortTest.isPlaying(), elapsed=api.getElapsedMs(), rowIndex=api.resolveTimeline(elapsed).index;
+      const timing=['revealDuration','promoReveal','promoHold','promoFade','promoGap','promoZoomIn','promoZoomOut','promoReturnHold','promoScans'].includes(key);
       api.changed({restart:key==='promoEnabled'||timing});sync(api.getScheme());
       const s=api.getScheme(),m=s.material;
-      if(m.promoEnabled&&bridge&&key.startsWith('promo')&&(!playing||timing)){
-        const rowIndex=api.resolveTimeline(elapsed).index,row=s.rows[rowIndex];
+      if(bridge&&(key==='revealDuration'&&s.motion.introEnabled||m.promoEnabled&&key.startsWith('promo'))&&(!playing||timing)){
+        const row=s.rows[rowIndex];
         const beats=[...originalBeats(m,row,s.motion.introEnabled),...promoBeats(m)];
-        const phaseName={promoZoomIn:'材质放大',promoReveal:m.promoTyping?'文案逐字':'文案出现',promoHold:'文案停留',promoFade:'文案淡出',promoZoomOut:'缩回原构图',promoReturnHold:'原构图停留',promoGap:'轮间空隙',promoScans:'色谱流动'}[key]||'文案停留';
+        const phaseName={revealDuration:'柔和揭示',promoZoomIn:'材质放大',promoReveal:m.promoTyping?'文案逐字':'文案出现',promoHold:'文案停留',promoFade:'文案淡出',promoZoomOut:'缩回原构图',promoReturnHold:'原构图停留',promoGap:'轮间空隙',promoScans:'色谱流动'}[key]||'文案停留';
         const phase=beats.findIndex(b=>b[0]===phaseName);
         const offset=phase<0?promoDuration(m,row,s.motion.introEnabled):beats.slice(0,phase).reduce((sum,b)=>sum+b[1],0)+beats[phase][1]/2;
         const base=segments(s).slice(0,rowIndex).reduce((sum,seg)=>sum+seg.durationMs,0);
@@ -325,7 +379,31 @@
       }
       if(key==='period'&&bridge)bridge.seek((window.__morphPortTest.getElapsedMs()/1000)*m.period/previous);
     }));
-    $('clearScheme').addEventListener('click',()=>{const s=api.getScheme();s.material.promoText='';sync(s);api.changed({restart:true});});
+    $('addPromoCaption').addEventListener('click',()=>{
+      const s=api.getScheme();s.material.promoCaptions.push({id:'caption-'+crypto.randomUUID(),text:'新文案',hold:s.material.promoHold});
+      sync(s);api.changed();previewCaption(s.material.promoCaptions.length);
+      const input=$('promoCaptionList').lastElementChild.querySelector('[data-caption-text]');input.focus();input.select();
+    });
+    $('previewFirstCaption').addEventListener('click',()=>previewCaption(0));
+    const swapFirst=s=>{const first=s.material.promoCaptions[0];if(!first)return;[s.material.promoText,first.text]=[first.text,s.material.promoText];[s.material.promoHold,first.hold]=[first.hold,s.material.promoHold];};
+    $('moveFirstCaptionDown').addEventListener('click',()=>{const s=api.getScheme();swapFirst(s);sync(s);api.changed();previewCaption(1);});
+    $('deleteFirstCaption').addEventListener('click',()=>{const s=api.getScheme(),next=s.material.promoCaptions.shift();s.material.promoText=next?.text??'';if(next)s.material.promoHold=next.hold;sync(s);api.changed();previewCaption(0);});
+    $('promoCaptionList').addEventListener('input',event=>{
+      const card=event.target.closest('[data-caption-id]');if(!card)return;
+      const playing=window.__morphPortTest.isPlaying(),index=[...card.parentElement.children].indexOf(card)+1;
+      api.changed();sync(api.getScheme());if(!playing||event.target.matches('[data-caption-hold]')){previewCaption(index);if(playing)window.CellMotionEffectBridge.play();}
+    });
+    $('promoCaptionList').addEventListener('click',event=>{
+      const button=event.target.closest('[data-caption-action]');if(!button)return;
+      const card=button.closest('[data-caption-id]'),s=api.getScheme(),items=s.material.promoCaptions,index=items.findIndex(c=>c.id===card.dataset.captionId),action=button.dataset.captionAction;
+      if(action==='preview'){previewCaption(index+1);return;}
+      if(index<0)return;
+      if(action==='up'&&index===0)swapFirst(s);
+      else if(action==='delete')items.splice(index,1);
+      else {const next=index+(action==='up'?-1:1);if(next<0||next>=items.length)return;[items[index],items[next]]=[items[next],items[index]];}
+      sync(s);api.changed();previewCaption(Math.min(index+1,items.length));
+    });
+    $('clearScheme').addEventListener('click',()=>{const s=api.getScheme();s.material.promoText='';s.material.promoCaptions=[];sync(s);api.changed({restart:true});});
     $('exportDuration').addEventListener('change',()=>$('customDurationField').hidden=$('exportDuration').value!=='custom');
     $('exportSvg').addEventListener('click',async()=>{
       const time=api.getElapsedMs()/1000;
@@ -346,5 +424,5 @@
     queueMicrotask(()=>{if(new URLSearchParams(location.search).get('promo')==='1'){$('promoEnabled').checked=true;api.changed({restart:true});sync(api.getScheme());}});
     setTimeout(record,0);
   }
-  window.MEMorphPortExtension={port:{mode:'material',slug:'prosvg',zh:'彩铸',en:'PRO SVG Lab',amountMin:0,amountMax:1,amountStep:.01,amountUnit:'',scheme},minimumRows:1,materialLayout,normalizeScheme,invalidate:()=>shapeCache.clear(),normalize,segments,renderTimeline,editOffset:s=>{const m=normalize(s.material);return m.promoEnabled?m.period*(s.motion.introEnabled?1500:500):m.period*600;},render,sync,collect,busy,bind,createSvg,promoPose,promoBeats,getLastSvg:()=>lastSvg};
+  window.MEMorphPortExtension={port:{mode:'material',slug:'prosvg',zh:'彩铸',en:'PRO SVG Lab',amountMin:0,amountMax:1,amountStep:.01,amountUnit:'',scheme},minimumRows:1,materialLayout,normalizeScheme,invalidate:()=>shapeCache.clear(),normalize,segments,renderTimeline,editOffset:s=>{const m=normalize(s.material);return m.promoEnabled?(s.motion.introEnabled?m.revealDuration*1000:0)+m.period*500:m.period*600;},render,sync,collect,busy,bind,createSvg,promoPose,promoBeats,captionWindows,getLastSvg:()=>lastSvg};
 })();
