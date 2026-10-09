@@ -45,13 +45,14 @@ with sync_playwright() as p:
     page.screenshot(path=str(OUT / 'desktop.png'))
 
     # v1 autosaves upgrade untouched timing defaults without dropping uploaded images.
-    legacy = {**original, 'version': 1, 'settings': {**original['settings'], 'spin': 1.2, 'pullback': 1.15, 'markHold': 0.45, 'reveal': 0.55, 'hold': 1.05, 'cardHeight': 570, 'text': 'My brand'}, 'assets': [
+    legacy = {**original, 'version': 1, 'settings': {**original['settings'], 'spin': 1.2, 'pullback': 1.15, 'markHold': 0.45, 'reveal': 0.55, 'hold': 1.05, 'cardHeight': 570, 'text': 'My brand', 'solidMark': True}, 'assets': [
         {'id': 'legacy-photo', 'imageName': 'old.png', 'originalDataUrl': image_data('#e23b48'), 'fileType': 'image/png'}
     ]}
     page.evaluate('(s)=>CurvedGallery.applyScheme(s)', legacy)
     upgraded = scheme(page)
     assert upgraded['version'] == 2 and upgraded['settings']['text'] == 'My brand'
     assert upgraded['assets'][0]['id'] == 'legacy-photo'
+    assert 'solidMark' not in upgraded['settings'], 'legacy recolor flag must not survive'
     assert upgraded['settings']['pullback'] == original['settings']['pullback']
     page.evaluate('(s)=>CurvedGallery.applyScheme(s)', original)
 
@@ -62,20 +63,26 @@ with sync_playwright() as p:
     ]}
     page.locator('#parallaxImport').set_input_files({'name': 'parallax.json', 'mimeType': 'application/json', 'buffer': json.dumps(backup).encode()})
     page.wait_for_function('CurvedGallery.collectScheme().assets.length === 2')
-    # Opaque photos must not expose a preset black skeleton during initial rotation.
+    # Black reference surfaces are replaced by photo pixels, including the final strips.
     pixels = page.evaluate("""()=>{
       const c=document.createElement('canvas');c.width=592;c.height=333;
       const ctx=c.getContext('2d'), s=CurvedGallery.collectScheme().settings;
       const line=CurvedGalleryMotion.timeline(s);
-      return [0,.3,.8,line.pullStart/s.speed,line.pullEnd/s.speed].map(t=>{
+      return [0,.3,.8,line.pullStart/s.speed,1.6,2,2.3,line.pullEnd/s.speed,3.5].map(t=>{
         CurvedGallery.render(ctx,c.width,c.height,t);
-        const a=ctx.getImageData(0,0,c.width,c.height).data;let black=0;
-        for(let i=0;i<a.length;i+=4)if(Math.max(a[i],a[i+1],a[i+2])<25)black++;
-        return black;
+        const a=ctx.getImageData(0,0,c.width,c.height).data;let black=0,color=0,strips=0;
+        for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){
+          if(t>=line.revealStart/s.speed && x>=290)continue; // Exclude black logo text.
+          const i=(y*c.width+x)*4, rgb=[a[i],a[i+1],a[i+2]];
+          if(Math.max(...rgb)<25)black++;
+          if(Math.max(...rgb)-Math.min(...rgb)>25){color++;if(x>180&&x<255&&y>=176&&y<210)strips++;}
+        }
+        return {black,color,strips};
       });
     }""")
-    assert pixels[:4] == [0,0,0,0], ('early black strokes',pixels)
-    assert pixels[4] > 1000, ('final black mark missing',pixels)
+    assert all(frame['black']==0 for frame in pixels), ('photos forced to black',pixels)
+    assert pixels[-1]['color'] > 1000, ('final photos disappeared',pixels)
+    assert pixels[-1]['strips'] > 80, ('thin rear strips lost their image colors',pixels)
 
     page.locator('#contentList button').first.click()
     page.locator('#cropX').fill('0.2')
@@ -183,5 +190,5 @@ with sync_playwright() as p:
     drawer = mobile.locator('#libraryDrawer').bounding_box()
     assert drawer['y'] > stage['y'] + stage['height']
     assert not errors, errors
-    print('PASS no early black strokes, images, backup conversion, reorder, replacement, reload, save/import/reset/clear, library, four fonts, theme/language, ratios, seek, mobile and real PNG/GIF/H264 exports')
+    print('PASS photo colors preserved through final thin strips, images, backup conversion, reorder, replacement, reload, save/import/reset/clear, library, four fonts, theme/language, ratios, seek, mobile and real PNG/GIF/H264 exports')
     browser.close()

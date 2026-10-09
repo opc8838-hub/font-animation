@@ -7,7 +7,7 @@
     text: 'Sentr', font: 'stg:inter', weight: 400, fontSize: 186,
     background: '#eeeeed', color: '#000000', markColor: '#000000',
     slots: 12, gap: 0.16, cardHeight: 530, curvature: 0.36, turns: 0.625,
-    direction: 1, finalSize: 174, textGap: 65, solidMark: true,
+    direction: 1, finalSize: 174, textGap: 65,
     spin: 1.23, pullback: 1.42, overlap: 0.05, markHold: 0,
     shiftOverlap: 0.12, shift: 0.85, textDelay: 0.40,
     reveal: 0.45, hold: 1.02, fade: 0.25, speed: 1,
@@ -59,7 +59,6 @@
       y: mix(870, 546, pull),
       x: 960 - (textWidth + s.textGap) * 0.5 * cameraEase((t - line.shiftStart) / s.shift, 0.79439918, 0.37476227),
       angle: angle - s.turns * Math.PI * 2 * s.direction,
-      fold: s.solidMark ? smooth((pull - 0.50) / 0.48) : 0,
       alpha: 1 - smooth((t - line.fadeStart) / Math.max(0.001, s.fade)),
     };
   }
@@ -67,7 +66,6 @@
     return smooth((0.08 - Math.cos(index * Math.PI * 2 / s.slots + p.angle)) / 0.28);
   }
   function edgeFold(s, p, index) { return rearFacing(s, p, index) * smooth(p.pull); }
-  function faceScale(s, p, index) { return (1 - p.fold) * (1 - edgeFold(s, p, index)); }
   function panelPoints(s, p, index, u, v) {
     let a = index * Math.PI * 2 / s.slots + p.angle;
     const width = (Math.PI * 2 / s.slots) * (1 - s.gap) * mix(1, 0.13, edgeFold(s, p, index));
@@ -101,26 +99,29 @@
         vectorCtx.save(); vectorCtx.translate(128, 128); root.STGIconLibrary.drawVector(vectorCtx, asset, 230, time); vectorCtx.restore();
         texture = resource.canvas;
       }
-      const textureWidth = faceScale(s, p, i), slices = 32;
-      const outline = (face = 1) => {
+      // Keep each texture strip at least about one output pixel wide; many
+      // subpixel draws otherwise wash thin pictures into the background.
+      const xs = [0, .5, 1].map(u => panelPoints(s, p, i, u, 0).x);
+      const pixelWidth = (Math.max(...xs) - Math.min(...xs)) * scale;
+      const slices = Math.max(2, Math.min(32, Math.ceil(pixelWidth / 2) * 2));
+      const outline = () => {
         ctx.beginPath();
         // One compound fill keeps curved strips seamless. Match their winding so
         // a side panel's overlapping front/back projections form one rounded cap.
         for (let j = 0; j < 48; j++) {
-          const u0 = 0.5 + (j / 48 - 0.5) * face, u1 = 0.5 + ((j + 1) / 48 - 0.5) * face;
+          const u0 = j / 48, u1 = (j + 1) / 48;
           const q = [panelPoints(s, p, i, u0, 0), panelPoints(s, p, i, u1, 0), panelPoints(s, p, i, u1, 1), panelPoints(s, p, i, u0, 1)];
           if (q[1].x < q[0].x) q.reverse();
           ctx.moveTo(q[0].x, q[0].y); for (let k = 1; k < 4; k++) ctx.lineTo(q[k].x, q[k].y); ctx.closePath();
         }
       };
-      // The black back belongs to this same panel. Its photo face folds toward the
-      // center edge geometrically; there is no full-photo opacity overlay or logo swap.
-      // An intact photo has no visible black backing, including rear panels.
-      if (!texture || textureWidth < 1) { ctx.fillStyle = s.markColor; outline(); ctx.fill(); }
-      ctx.save(); outline(textureWidth); ctx.clip();
-      for (let j = 0; texture && textureWidth > 0.0001 && j < slices; j++) {
+      // Black in the reference is the source material, not a recoloring stage.
+      // A photo fills the same panel geometry even when it becomes a thin strip.
+      if (!texture) { ctx.fillStyle = s.markColor; outline(); ctx.fill(); continue; }
+      ctx.save(); outline(); ctx.clip();
+      for (let j = 0; j < slices; j++) {
         const u0 = j / slices, u1 = (j + 1) / slices;
-        const q = [panelPoints(s, p, i, 0.5 + (u0 - 0.5) * textureWidth, 0), panelPoints(s, p, i, 0.5 + (u1 - 0.5) * textureWidth, 0)];
+        const q = [panelPoints(s, p, i, u0, 0), panelPoints(s, p, i, u1, 0)];
         ctx.save(); ctx.globalAlpha = p.alpha * (asset.opacity ?? 1);
         const iw = texture.width || texture.naturalWidth, ih = texture.height || texture.naturalHeight;
         const aspect = p.radius * Math.PI * 2 / s.slots * (1 - s.gap) / p.cardHeight;
@@ -154,6 +155,6 @@
     }
     ctx.restore();
   }
-  root.CurvedGalleryMotion = Object.freeze({ defaults, timeline, pose, panelPoints, faceScale, render });
+  root.CurvedGalleryMotion = Object.freeze({ defaults, timeline, pose, panelPoints, render });
   if (typeof module !== 'undefined') module.exports = root.CurvedGalleryMotion;
 })(typeof window === 'undefined' ? globalThis : window);

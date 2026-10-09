@@ -2,69 +2,52 @@
 
 ## Source material
 
-Private desktop file: `微信视频2026-10-09_073417_351.mp4`. Do not commit it or extracted frames.
-2026-10-09: ffprobe reports HEVC, 592 × 1280, 5.766667 seconds, 115 variable-rate frames, nominal 30 fps. Watch: twelve chronological frames, followed by a 12 fps contact sheet of the actual 592 × 333 composition at y=415. Phone UI, AssistiveTouch, author caption and playback controls are excluded.
+Private desktop recording: `微信视频2026-10-09_073417_351.mp4`; never commit the recording or extracted frames. HEVC, 592 × 1280, 5.766667s, 115 variable-rate frames, nominal 30fps. Actual composition: x=0, y=415, 592 × 333. Exclude phone UI, AssistiveTouch and the paused 0–1.17s recording lead-in. Inspected using Watch overview and dense FFmpeg frames, including 20fps fold/word transitions.
 
-## Target
+## Current contract: replace the source material, preserve its motion
 
-Curved photo panels rotate, fold their image faces into edges, and continuously pull back into the same black segmented ring. The complete group moves left before the brand word emerges through an upward mask, with a small letter stagger.
+The user clarified that black is the reference pictures’ color, not a required recoloring phase. Every uploaded image replaces a source panel and retains its own pixels/colors throughout, including the final thin rear strips. This supersedes all earlier interpretations that made photos become black.
 
-## Latest correction: intact pictures first, strokes only after retreat
+- Start with complete curved pictures rotating, without preset rear strokes.
+- The same panels retreat and shrink continuously. Rear picture geometry progressively narrows to 13% of its original angular width; the image fills that complete geometry rather than shrinking inside a black plate.
+- Do not darken pictures, expose black backs, crossfade to a solid mark or substitute a separate logo. Black/other solid color is only the fallback for a panel that has no image.
+- The whole image group moves left before the editable brand word rises behind a mask with slight letter stagger.
+- Freeze camera timing, initial intact-picture stage, final geometry, left shift, word reveal and the existing editor/export model. Correct the material mapping everywhere, including arbitrary replacements, not only the portrait demo.
+- Removed `solidMark`. Old v1/v2 schemes keep their images and known settings; the removed recoloring switch is ignored. The IndexedDB key and scheme version stay compatible.
 
-The user rejects rear strokes visible during the initial rotation. At `0 <= t <= pullStart`, every panel is a full curved picture: no pre-compressed rear geometry, no black back exposed beneath a picture, and no separate stroke objects. Camera retreat/shrink must begin before any narrow black edge appears. The rear faces start below the composition and join the same continuously shrinking ring during retreat. Keep all image identities, camera radius/timing, final ring, left shift, word reveal, editor and exports frozen. Correct only the initial panel width/face visibility and its coupled rear depth; verify actual initial-frame pixels with opaque colored pictures and real photo exports.
+## Geometry and motion evidence
 
-## 2026-10-09 user correction: motion contract superseding the first reconstruction
+Measured ring horizontal half-span at source 2.8/2.9/3.0/3.1/3.2/3.3/3.4/3.5/3.6s: approximately 282/254/219/161/113/83.5/67/61/53.5px. Camera Bézier x handles .760/.249, y handles 0/1, interval approximately source 2.35–3.77s. Do not launch shrink at peak speed using an ease-out.
 
-The first release is not accepted: camera pullback starts too quickly, changing front/rear widths at `cos(angle)=0` introduces a discontinuity, photos become black through a full-area opacity overlay, and the mark shifts only when the whole word starts revealing. Preserve image import/editing/export and the single persistent ring. Correct only these coupled motion channels.
+Measured upper-ring x center at source 3.7/3.8/3.9/4.0/4.1/4.2/4.3/4.4/4.5s: 293/290.5/286.5/282/268.5/237.5/225.5/221.5/220.5px. Left-shift Bézier x handles .794/.375. The shift begins before visible letters.
 
-- Black panels are replaceable photo surfaces. Texture must follow the curved geometry and visibly compress toward its edge; black backs are part of those same panels. Do not fade a complete photo rectangle to black or swap in a separate logo.
-- Source measurements (592px crop, excluding phone/AssistiveTouch): ring horizontal half-span at 2.8/2.9/3.0/3.1/3.2/3.3/3.4/3.5/3.6s is approximately 282/254/219/161/113/83.5/67/61/53.5px. Fit a continuous accelerated-then-braked camera curve; do not use an ease-out that launches the shrink at peak speed.
-- Fitted camera interval approximately 2.35–3.77s, cubic Bézier x handles .76/.249 and y handles 0/1. Recording lead-in remains 1.17s. This evidence replaces the original rough phase timing.
-- Upper-ring center at 3.7/3.8/3.9/4.0/4.1/4.2/4.3/4.4/4.5s is 293/290.5/286.5/282/268.5/237.5/225.5/221.5/220.5px. Left movement starts before the first visible letter and continues smoothly; the whole ring owns that shift. Its independently fitted Bézier x handles are .794/.375.
-- Word begins emerging around source 4.2s, after left shift starts, and is readable by 4.5s. Left-to-right letter reveal has a slight stagger rather than revealing every letter at once.
-- Both front/rear geometry and the image-to-black edge compression must be continuous at every angle/time, including rear/front boundaries. Stable final mark and editable text remain in the same composition coordinates. Preview and exports continue sharing one renderer.
-
-## Revised default timing (source / animation seconds)
-
-| Source time | Animation time | Observed and implemented channel |
+| Source time | Animation time | Channel |
 | --- | --- | --- |
-| 0–1.17 | excluded | Paused recording lead-in; phone UI excluded |
-| 1.17–2.40 | 0–1.23 | Continuous cylinder rotation |
-| 2.35–3.77 | 1.18–2.60 | Accelerated-then-braked pullback, overlapping rotation; photo faces compress into black panel edges |
-| 3.65–4.50 | 2.48–3.33 | Whole group shifts left before the word is visible |
-| 4.05–4.50 | 2.88–3.33 | Letters rise behind their masks; first visible tops near 4.2s |
-| 4.50–5.52 | 3.33–4.35 | Final lockup hold |
-| 5.52–5.77 | 4.35–4.60 | Whole lockup fades together |
+| 1.17–2.40 | 0–1.23 | Complete curved pictures rotate |
+| 2.35–3.77 | 1.18–2.60 | Accelerated-then-braked retreat and shrink; rear photos narrow |
+| 3.65–4.50 | 2.48–3.33 | Entire image group moves left |
+| 4.05–4.50 | 2.88–3.33 | Word rises behind masks; visible tops near source 4.2s |
+| 4.50–5.52 | 3.33–4.35 | Final textured lockup holds |
+| 5.52–5.77 | 4.35–4.60 | Entire lockup fades together |
 
-The same twelve curved panels persist through the entire sequence. Front/rear widths and rear-stroke vertical placement depend on a continuous fold channel; no binary geometry change at `cos(angle)=0`. Back strokes stay lower during pullback, calibrated from the source; this extra depth continuously reaches zero at the final mark. Textures compress in their own clipped geometry, with black backs underneath and constant photo opacity. There is no full-photo fade to black and no swap to a separate logo. Curved strips use one compound path with matching winding; overlapping side projections form a connected end cap rather than cancelling into detached fragments.
+Panels remain in one persistent cylinder. Front/rear widths and depth use continuous functions, including `cos(angle)=0`. Rear depth begins below the composition and reaches zero in the final ring. One compound curved path with matched winding prevents side projections from cancelling into detached fragments. Texture-strip count adapts to output pixel width; using many subpixel image draws washed the thinnest colored strips into the background. Camera positions/geometry remain independent of that sampling detail.
+
+## Shared implementation and controls
+
+Preview, scrubbing, PNG, GIF and H.264 MP4 use one deterministic renderer. Textures use affine cylinder strips clipped to the same panel geometry; photo opacity is only the user value multiplied by the whole-group exit opacity. Shared Type Cascade shell, font/icon catalogs, animated-image decoder and encoders are reused. Assets keep stable ids, original embedded images, crop/order and library metadata; runtime decoders stay out of backups.
+
+Controls: upload/replace/crop/order, shared media, brand/font/weight/colors, background, fallback panel color when no image exists, slot count/gap/height/curvature/rotation, final size and text gap; rotation/retreat overlap, group-shift interval, word delay/reveal, holds, fade and global speed. Four scheme actions, responsive ratios and real exports remain available. Parallax Studio backups import embedded original pictures; interactive hover shaders are not baked into those originals.
+
+`curvedgallery.html?demo=portraits` loads the existing public `xiaoguo-/gallery/01.png` through `07.png` into this same renderer. `&preview` uses the existing full-stage view. Initial demo loading does not overwrite the user's saved composition. No copied picture catalog or special demo renderer. The companion portrait MP4 is a real 1280 × 720 / 30fps / 138-frame / 4.600s export.
+
+## Verification
+
+- The old renderer fails the photo-color regression: after retreat, colored fixture pixels fall to zero and turn into black pixels. The correction must retain photo pixels through the final lockup and within the thin rear strips.
+- Pure motion checks: initial full rear geometry, continuous narrowing, front/back continuity, monotonic radius, stable final pose, early left shift, fade/speed and measured camera/shift positions. Reference radius error <10px and x-center error <5.5px in the 592px crop.
+- Browser regression: opaque red/blue replacement pictures remain colored without any forced black pixels throughout rotation, shrink, narrow-strip lockup (excluding logo text), plus the actual PNG/GIF/H.264 exports; legacy imports drop the removed switch without losing photos. Backup conversion, reorder/crop/replace, reload, save/import/default/clear, explicit library insertion, four fonts, theme/language, aspect ratios, seeking and mobile remain checked.
+- Portrait example checks all seven public image bytes against yesterday's local pictures, saved-user-scheme preservation, editor/full-stage loading and actual 1280 × 720 / 30fps MP4 export. Inspect decoded exported frames as well as live canvas colors before publishing.
+- Editor/shared contract checks and console checks remain required. Only this effect's portrait demonstration is replaced; unrelated catalog entries, approved previews and the default black-reference artifact remain unchanged.
 
 ## Uncertainties
 
-- Source is a compressed screen recording, not original design files. Exact camera perspective, hidden panel count and source font cannot be recovered with certainty.
-- Only black panels are present in the video. User photos are an extension: texture follows the curved panels and its visible face geometrically folds to an edge, revealing the same panels’ black backs during pullback. This can be disabled to retain photos in the final ring.
-- Visible brand appears to read `Sentr`; it remains editable. Default uses the shared Inter font, the closest available neutral sans-serif.
-
-## Reuse
-
-Type Cascade workspace surfaces and rounded select adapter; shared `me-motion-editor.css` timeline, scheme, asset and playback primitives; shared font and icon catalogs; canonical animated-image decoder; existing GIF and H.264 encoders. Media state uses stable `id`, `source`, `originalDataUrl`, `fileType`, `imageName`, `libraryId`; runtime resources stay out of backups. A Parallax Studio v1 backup imports embedded image textures only (hover shaders are interactive and are not baked into the photo backup).
-
-Preview, PNG, GIF and MP4 call the same deterministic renderer. Curved cylinder panels use overlapping affine Canvas texture strips inside a shared curved outline; no separate export geometry. The cylinder's vertical sides are parallel, so triangles are unnecessary and introduced avoidable diagonal antialias seams.
-
-## Controls
-
-Images and their order/crop, brand text/font/weight/color, background and mark color, twelve-slot count, card gaps, height, curvature/tilt, direction and turns, pullback size, logo/text spacing, photo-to-mark transition; spin/pullback/overlap/mark hold/group left shift/word delay/text reveal/final hold/fade and global speed. Save, import, restore default and clear/rebuild; responsive canvas sizes and deterministic exports.
-
-## Acceptance evidence for the correction
-
-- Source inspected at normal cadence and 20 fps around both disputed transitions. Fifteen aligned source/render frame pairs compared from source 2.30–4.50s; seven actual Parallax Studio portraits inspected throughout rotation, photo compression, black lockup, left shift and word emergence. Private footage, frame sheets and scratch videos remain outside Git.
-- Camera regression uses nine measured source radii at 2.8–3.6s; reconstruction differs by less than 10px in the 592px composition crop. The left-shift regression follows nine measured centers within 5.5px. This is a measured reconstruction, not recovered original camera/font data or proof of pixel-identical frames.
-- Initial-picture regression: all twelve photo faces remain complete through `pullStart`. Four opaque-photo frames (0 / .3 / .8 / 1.18s) contain zero black pixels at RGB < 25; the final mark contains over 1000. The previous renderer fails the complete-picture assertion before this fix. Seven real portraits and their 30fps export were rechecked.
-- Pure renderer checks: measured camera timing, monotonic radius, front/back continuity, geometric photo compression, optional retained photos, group shift before word, curvature, stable final orientation, fade and global speed.
-- Editor and shared contract checks pass. Browser regression passes image backup conversion, reorder/crop/replace, IndexedDB reload, portable save/import, invalid-import rejection, legacy v1 upgrade without losing images/custom text, default/clear, explicit shared-library insertion, four shared fonts, theme/language preservation, aspect ratios, playback/seek and mobile layout. Zero page errors.
-- Authoritative real exports: default H.264 MP4 1920 × 1080 / 30fps / 138 frames / 4.600s; all seven original portraits exported at 640 × 360 / 30fps / 138 frames / 4.600s. PNG, portrait H.264 and GIF also checked. GIF cumulative centisecond delays match the complete timeline.
-- Scheme version 2 adds independent left-shift and word-delay settings. v1 imports/autosaves retain all images and custom values; untouched v1 timing/height defaults upgrade to the corrected defaults. IndexedDB retains its existing key.
-- Only this effect's unaccepted video/poster artifacts are regenerated. Existing catalog entries, featured order, recent releases and unrelated preview files remain frozen.
-
-## Portrait example requested by the user
-
-`curvedgallery.html?demo=portraits` loads the seven existing `xiaoguo-/gallery/01.png` through `07.png` pictures into the same editor and renderer. Adding `&preview` uses the existing full-stage presentation. Photos are fetched from their existing published paths, embedded into the ordinary media model and remain replaceable; no image copies or parallel renderer. Initial example loading does not save over the user’s IndexedDB composition. The companion `assets/previews/curvedgallery-portraits-demo.mp4` is an actual 1280 × 720 / 30fps / 4.600s export of this preset.
+This compressed recording does not reveal the exact original camera, hidden panel topology or font. Default text appears to read `Sentr`, with shared Inter used as an approximation. The reconstruction follows measured geometry and rhythm; it is not proof of pixel-identical source frames. The required photo-color behavior comes from the user's clarification rather than from the recording's entirely black materials.

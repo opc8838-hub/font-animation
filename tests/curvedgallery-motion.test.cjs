@@ -1,13 +1,11 @@
 const assert = require('node:assert/strict');
-const { defaults, timeline, pose, panelPoints, faceScale } = require('../site/curvedgallery-motion.js');
+const { defaults, timeline, pose, panelPoints } = require('../site/curvedgallery-motion.js');
 const s = { ...defaults }, line = timeline(s);
 assert.ok(Math.abs(line.total - 4.6) < 1e-8);
 assert.ok(line.pullStart < s.spin, 'rotation and pullback overlap');
 for (const t of [0, 0.3, 0.8, line.pullStart]) {
   const initial = pose(s, t);
   assert.equal(initial.pull, 0, 'rotation precedes camera retreat');
-  assert.equal(initial.fold, 0, 'picture does not fold before retreat');
-  for (let i = 0; i < s.slots; i++) assert.equal(faceScale(s, initial, i), 1, 'every initial panel is a complete picture, without preset black strokes');
 }
 const before = pose(s, line.pullStart - 0.001), after = pose(s, line.pullStart + 0.001);
 assert.ok(Math.abs(before.angle - after.angle) < 0.02, 'continuous orientation across pullback');
@@ -32,15 +30,17 @@ for (const pull of [0, 0.5, 1]) {
 assert.ok(line.shiftStart < line.revealStart, 'the whole mark moves left before the word');
 const shiftPose = pose(s, line.revealStart - 0.01, 425);
 assert.ok(shiftPose.x < 940 && shiftPose.reveal === 0, 'visible left movement with no text yet');
-let previousFace = 1;
-for (let t = line.pullStart; t <= line.pullEnd; t += 0.005) {
-  const fixedFront = { ...pose(s, t), angle: 0 };
-  const face = faceScale(s, fixedFront, 0);
-  assert.ok(face <= previousFace + 1e-9, 'photo face compresses continuously');
-  previousFace = face;
+// The picture's panel itself narrows; its texture does not shrink inside a black plate.
+const span = (p, i) => Math.abs(panelPoints(s, p, i, 1, .5).x - panelPoints(s, p, i, 0, .5).x) / p.radius;
+const initial = { ...pose(s, 0), angle: 0 };
+assert.ok(Math.abs(span(initial, 0) - span(initial, 6)) < 1e-8, 'initial rear picture has full geometry');
+let previousSpan = Infinity;
+for (let t = 0; t <= line.pullEnd; t += .005) {
+  const width = span({ ...pose(s, t), angle: 0 }, 6);
+  assert.ok(width <= previousSpan + 1e-9, 'the same rear picture narrows continuously');
+  previousSpan = width;
 }
-assert.equal(faceScale(s, { ...end, angle: 0 }, 0), 0, 'photo contracts to an edge');
-assert.equal(faceScale({ ...s, solidMark: false }, { ...pose({ ...s, solidMark: false }, line.pullEnd), angle: 0 }, 0), 1, 'optional preserved photo face');
+assert.ok(span(end, 6) < span(initial, 6) * .15, 'rear pictures become thin geometry');
 // Measurements come from the 592px reference crop, offset by its 1.17s recording lead-in.
 const reference = [[2.8, 282], [2.9, 254], [3.0, 219], [3.1, 161], [3.2, 113], [3.3, 83.5], [3.4, 67], [3.5, 61], [3.6, 53.5]];
 for (const [sourceTime, radius] of reference) assert.ok(Math.abs(pose(s, sourceTime - 1.17).radius * 592 / 1920 - radius) < 10, 'camera follows reference width');
@@ -48,4 +48,4 @@ const centers = [[3.7, 293], [3.8, 290.5], [3.9, 286.5], [4.0, 282], [4.1, 268.5
 for (const [sourceTime, x] of centers) assert.ok(Math.abs(pose(s, sourceTime - 1.17, 425).x * 592 / 1920 - x) < 5.5, 'group shift follows measured source centers');
 const p = pose(s, line.pullEnd), edge = panelPoints(s, p, 1, 0, 0), mid = panelPoints(s, p, 1, 0.5, 0), other = panelPoints(s, p, 1, 1, 0);
 assert.ok(Math.abs(mid.y - (edge.y + other.y) / 2) > 0.1, 'panel is curved, not a flat quadrilateral');
-console.log('PASS measured camera timing, front/back continuity, geometric photo folding, early left shift and final pose');
+console.log('PASS measured camera timing, front/back continuity, geometric picture narrowing, early left shift and final pose');
