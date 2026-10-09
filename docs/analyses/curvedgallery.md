@@ -9,6 +9,10 @@ Private desktop file: `微信视频2026-10-09_073417_351.mp4`. Do not commit it 
 
 Curved photo panels rotate, fold their image faces into edges, and continuously pull back into the same black segmented ring. The complete group moves left before the brand word emerges through an upward mask, with a small letter stagger.
 
+## Latest correction: intact pictures first, strokes only after retreat
+
+The user rejects rear strokes visible during the initial rotation. At `0 <= t <= pullStart`, every panel is a full curved picture: no pre-compressed rear geometry, no black back exposed beneath a picture, and no separate stroke objects. Camera retreat/shrink must begin before any narrow black edge appears. The rear faces start below the composition and join the same continuously shrinking ring during retreat. Keep all image identities, camera radius/timing, final ring, left shift, word reveal, editor and exports frozen. Correct only the initial panel width/face visibility and its coupled rear depth; verify actual initial-frame pixels with opaque colored pictures and real photo exports.
+
 ## 2026-10-09 user correction: motion contract superseding the first reconstruction
 
 The first release is not accepted: camera pullback starts too quickly, changing front/rear widths at `cos(angle)=0` introduces a discontinuity, photos become black through a full-area opacity overlay, and the mark shifts only when the whole word starts revealing. Preserve image import/editing/export and the single persistent ring. Correct only these coupled motion channels.
@@ -54,6 +58,7 @@ Images and their order/crop, brand text/font/weight/color, background and mark c
 
 - Source inspected at normal cadence and 20 fps around both disputed transitions. Fifteen aligned source/render frame pairs compared from source 2.30–4.50s; seven actual Parallax Studio portraits inspected throughout rotation, photo compression, black lockup, left shift and word emergence. Private footage, frame sheets and scratch videos remain outside Git.
 - Camera regression uses nine measured source radii at 2.8–3.6s; reconstruction differs by less than 10px in the 592px composition crop. The left-shift regression follows nine measured centers within 5.5px. This is a measured reconstruction, not recovered original camera/font data or proof of pixel-identical frames.
+- Initial-picture regression: all twelve photo faces remain complete through `pullStart`. Four opaque-photo frames (0 / .3 / .8 / 1.18s) contain zero black pixels at RGB < 25; the final mark contains over 1000. The previous renderer fails the complete-picture assertion before this fix. Seven real portraits and their 30fps export were rechecked.
 - Pure renderer checks: measured camera timing, monotonic radius, front/back continuity, geometric photo compression, optional retained photos, group shift before word, curvature, stable final orientation, fade and global speed.
 - Editor and shared contract checks pass. Browser regression passes image backup conversion, reorder/crop/replace, IndexedDB reload, portable save/import, invalid-import rejection, legacy v1 upgrade without losing images/custom text, default/clear, explicit shared-library insertion, four shared fonts, theme/language preservation, aspect ratios, playback/seek and mobile layout. Zero page errors.
 - Authoritative real exports: default H.264 MP4 1920 × 1080 / 30fps / 138 frames / 4.600s; all seven original portraits exported at 640 × 360 / 30fps / 138 frames / 4.600s. PNG, portrait H.264 and GIF also checked. GIF cumulative centisecond delays match the complete timeline.

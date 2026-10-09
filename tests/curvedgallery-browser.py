@@ -62,6 +62,21 @@ with sync_playwright() as p:
     ]}
     page.locator('#parallaxImport').set_input_files({'name': 'parallax.json', 'mimeType': 'application/json', 'buffer': json.dumps(backup).encode()})
     page.wait_for_function('CurvedGallery.collectScheme().assets.length === 2')
+    # Opaque photos must not expose a preset black skeleton during initial rotation.
+    pixels = page.evaluate("""()=>{
+      const c=document.createElement('canvas');c.width=592;c.height=333;
+      const ctx=c.getContext('2d'), s=CurvedGallery.collectScheme().settings;
+      const line=CurvedGalleryMotion.timeline(s);
+      return [0,.3,.8,line.pullStart/s.speed,line.pullEnd/s.speed].map(t=>{
+        CurvedGallery.render(ctx,c.width,c.height,t);
+        const a=ctx.getImageData(0,0,c.width,c.height).data;let black=0;
+        for(let i=0;i<a.length;i+=4)if(Math.max(a[i],a[i+1],a[i+2])<25)black++;
+        return black;
+      });
+    }""")
+    assert pixels[:4] == [0,0,0,0], ('early black strokes',pixels)
+    assert pixels[4] > 1000, ('final black mark missing',pixels)
+
     page.locator('#contentList button').first.click()
     page.locator('#cropX').fill('0.2')
     first_id = scheme(page)['assets'][0]['id']
@@ -168,5 +183,5 @@ with sync_playwright() as p:
     drawer = mobile.locator('#libraryDrawer').bounding_box()
     assert drawer['y'] > stage['y'] + stage['height']
     assert not errors, errors
-    print('PASS images, backup conversion, reorder, replacement, reload, save/import/reset/clear, library, four fonts, theme/language, ratios, seek, mobile and real PNG/GIF/H264 exports')
+    print('PASS no early black strokes, images, backup conversion, reorder, replacement, reload, save/import/reset/clear, library, four fonts, theme/language, ratios, seek, mobile and real PNG/GIF/H264 exports')
     browser.close()

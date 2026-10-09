@@ -10,7 +10,7 @@ CellMotion is a browser-based motion design system. Text, icons, images, and sha
 
 **Move · Connect · Recombine · Grow.**
 
-**2026-10-09 Curved Gallery / 弧廊归标** rotates photos on curved panels, folds their faces into black edges and pulls the ring back into a brand mark. The entire group moves left before the editable word rises, letter by letter. Upload, replace, crop and reorder photos, import an embedded-image backup from [Parallax Studio](https://opc8838-hub.github.io/xiaoguo-/), and export PNG, GIF or H.264 MP4 from the same deterministic renderer. Backups contain original images, not interactive hover shaders. See [motion evidence and validation](docs/analyses/curvedgallery.md).
+**2026-10-09 Curved Gallery / 弧廊归标** starts with intact curved pictures and no preset black strokes. Only as the ring retreats and shrinks do the pictures progressively compress into the black mark. The entire group moves left before the editable word rises, letter by letter. Upload, replace, crop and reorder photos, import an embedded-image backup from [Parallax Studio](https://opc8838-hub.github.io/xiaoguo-/), and export PNG, GIF or H.264 MP4 from the same deterministic renderer. Backups contain original images, not interactive hover shaders. See [motion evidence and validation](docs/analyses/curvedgallery.md).
 
 **PRO SVG Lab / 彩铸** adapts [Johnlzx/pro-svg-lab](https://github.com/Johnlzx/pro-svg-lab), inspired by Mike Bespalov / Refero. The material is not original work by this repository’s maintainer. CellMotion contributes the Sprout Shift editor integration, editable content, responsive sizes and deterministic PNG/GIF/MP4 export. See [attribution and upstream license status](docs/PRO_SVG_LAB_ATTRIBUTION.md).
 

@@ -3,6 +3,12 @@ const { defaults, timeline, pose, panelPoints, faceScale } = require('../site/cu
 const s = { ...defaults }, line = timeline(s);
 assert.ok(Math.abs(line.total - 4.6) < 1e-8);
 assert.ok(line.pullStart < s.spin, 'rotation and pullback overlap');
+for (const t of [0, 0.3, 0.8, line.pullStart]) {
+  const initial = pose(s, t);
+  assert.equal(initial.pull, 0, 'rotation precedes camera retreat');
+  assert.equal(initial.fold, 0, 'picture does not fold before retreat');
+  for (let i = 0; i < s.slots; i++) assert.equal(faceScale(s, initial, i), 1, 'every initial panel is a complete picture, without preset black strokes');
+}
 const before = pose(s, line.pullStart - 0.001), after = pose(s, line.pullStart + 0.001);
 assert.ok(Math.abs(before.angle - after.angle) < 0.02, 'continuous orientation across pullback');
 let previousRadius = Infinity;

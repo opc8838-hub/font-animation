@@ -63,16 +63,17 @@
       alpha: 1 - smooth((t - line.fadeStart) / Math.max(0.001, s.fade)),
     };
   }
-  function edgeFold(s, p, index) {
+  function rearFacing(s, p, index) {
     return smooth((0.08 - Math.cos(index * Math.PI * 2 / s.slots + p.angle)) / 0.28);
   }
+  function edgeFold(s, p, index) { return rearFacing(s, p, index) * smooth(p.pull); }
   function faceScale(s, p, index) { return (1 - p.fold) * (1 - edgeFold(s, p, index)); }
   function panelPoints(s, p, index, u, v) {
     let a = index * Math.PI * 2 / s.slots + p.angle;
     const width = (Math.PI * 2 / s.slots) * (1 - s.gap) * mix(1, 0.13, edgeFold(s, p, index));
     a += (u - 0.5) * width;
     return { x: p.x + Math.sin(a) * p.radius,
-      y: p.y - Math.cos(a) * p.radius * p.tilt + (v - 0.5) * p.cardHeight + edgeFold(s, p, index) * s.cardHeight * 0.33 * (1 - p.pull) };
+      y: p.y - Math.cos(a) * p.radius * p.tilt + (v - 0.5) * p.cardHeight + rearFacing(s, p, index) * s.cardHeight * (0.33 * (1 - p.pull) + 0.67 * (1 - p.pull) ** 8) };
   }
   function render(ctx, width, height, time, s, assets = [], resources = new Map(), fonts = root.STGFontLibrary) {
     ctx.clearRect(0, 0, width, height);
@@ -114,7 +115,8 @@
       };
       // The black back belongs to this same panel. Its photo face folds toward the
       // center edge geometrically; there is no full-photo opacity overlay or logo swap.
-      ctx.fillStyle = s.markColor; outline(); ctx.fill();
+      // An intact photo has no visible black backing, including rear panels.
+      if (!texture || textureWidth < 1) { ctx.fillStyle = s.markColor; outline(); ctx.fill(); }
       ctx.save(); outline(textureWidth); ctx.clip();
       for (let j = 0; texture && textureWidth > 0.0001 && j < slices; j++) {
         const u0 = j / slices, u1 = (j + 1) / slices;
