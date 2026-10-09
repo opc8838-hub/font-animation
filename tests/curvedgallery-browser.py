@@ -44,6 +44,17 @@ with sync_playwright() as p:
     page.evaluate('CurvedGallery.seek(3.5)')
     page.screenshot(path=str(OUT / 'desktop.png'))
 
+    # v1 autosaves upgrade untouched timing defaults without dropping uploaded images.
+    legacy = {**original, 'version': 1, 'settings': {**original['settings'], 'spin': 1.2, 'pullback': 1.15, 'markHold': 0.45, 'reveal': 0.55, 'hold': 1.05, 'cardHeight': 570, 'text': 'My brand'}, 'assets': [
+        {'id': 'legacy-photo', 'imageName': 'old.png', 'originalDataUrl': image_data('#e23b48'), 'fileType': 'image/png'}
+    ]}
+    page.evaluate('(s)=>CurvedGallery.applyScheme(s)', legacy)
+    upgraded = scheme(page)
+    assert upgraded['version'] == 2 and upgraded['settings']['text'] == 'My brand'
+    assert upgraded['assets'][0]['id'] == 'legacy-photo'
+    assert upgraded['settings']['pullback'] == original['settings']['pullback']
+    page.evaluate('(s)=>CurvedGallery.applyScheme(s)', original)
+
     # Parallax Studio backup conversion, complete media state follows reorder.
     backup = {'version': 1, 'title': '我的画廊', 'settings': {}, 'images': [
         {'id': 'red', 'name': '红色图片', 'src': image_data('#ff3e42'), 'effect': 2},

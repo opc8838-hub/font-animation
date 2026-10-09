@@ -74,11 +74,11 @@
       "id": "curvedgallery",
       "name": "弧廊归标",
       "english": "Curved Gallery",
-      "description": "弯曲图片旋转 · 缩小归标 · 文字揭开",
+      "description": "弯曲图片旋转 · 压窄归标 · 左移揭字",
       "category": "media",
       "href": "curvedgallery.html",
-      "poster": "assets/cellmotion/poster-curvedgallery.jpg",
-      "video": "assets/previews/curvedgallery-card.mp4",
+      "poster": "assets/cellmotion/poster-curvedgallery.jpg?v=20261009-2",
+      "video": "assets/previews/curvedgallery-card.mp4?v=20261009-2",
       "status": "ready"
     },
     {

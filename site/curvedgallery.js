@@ -17,12 +17,15 @@
   ];
   const timings = [
     ['speed', '整体速度', 'Speed', 0.25, 3, 0.05],
-    ['spin', '环形转动时长', 'Rotation duration', 0.2, 5, 0.05],
-    ['pullback', '缩小归标时长', 'Pullback duration', 0.2, 4, 0.05],
+    ['spin', '环形转动时长', 'Rotation duration', 0.2, 5, 0.01],
+    ['pullback', '缩小归标时长', 'Pullback duration', 0.2, 4, 0.01],
     ['overlap', '旋转与缩小重叠', 'Rotation / pullback overlap', 0, 0.8, 0.05],
+    ['shiftOverlap', '聚拢与左移重叠', 'Pullback / shift overlap', 0, 0.5, 0.01],
+    ['shift', '整组左移时长', 'Left shift duration', 0.2, 3, 0.05],
+    ['textDelay', '左移后文字延迟', 'Word delay after shift starts', 0, 3, 0.05],
     ['markHold', '标志单独停留', 'Mark-only hold', 0, 3, 0.05],
-    ['reveal', '文字揭开时长', 'Word reveal duration', 0.1, 3, 0.05],
-    ['hold', '组合停留时长', 'Lockup hold', 0, 5, 0.05],
+    ['reveal', '文字揭开时长', 'Word reveal duration', 0.1, 3, 0.01],
+    ['hold', '组合停留时长', 'Lockup hold', 0, 5, 0.01],
     ['fade', '最后淡出时长', 'Fade duration', 0, 2, 0.05],
   ];
   function controls(target, rows) {
@@ -69,11 +72,11 @@
   function renderTimeline() {
     const line = motion.timeline(state.settings), bar = $('timeline');
     bar.querySelectorAll('button').forEach(node => node.remove()); $('legend').replaceChildren();
-    line.phases.forEach((phase, index) => {
+    line.phases.forEach(phase => {
       if (phase.end <= phase.start) return;
       const button = document.createElement('button'); button.type = 'button'; button.className = 'me-choreo-block';
       button.style.left = `${phase.start / line.total * 100}%`; button.style.width = `${(phase.end - phase.start) / line.total * 100}%`;
-      button.style.setProperty('--cg-phase', phase.color); button.style.top = index === 1 ? '12px' : '0';
+      button.style.setProperty('--cg-phase', phase.color); button.style.top = phase.en === 'Fold / pull back' || phase.en === 'Word reveal' ? '12px' : '0';
       const strong = document.createElement('strong'); strong.textContent = en() ? phase.en : phase.name;
       const small = document.createElement('small'); small.textContent = `${(phase.end - phase.start).toFixed(2)}s`;
       button.append(strong, small); button.title = `${strong.textContent}: ${phase.start.toFixed(2)}–${phase.end.toFixed(2)}s`;
@@ -220,12 +223,12 @@
     const db = await dbPromise;
     return new Promise((resolve, reject) => { const tx = db.transaction('schemes', 'readwrite'); tx.objectStore('schemes').put(collectScheme(), 'current'); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error); });
   }
-  function collectScheme() { return { effect: 'curvedgallery', version: 1, settings: { ...state.settings }, assets: state.assets.map(a => ({ ...a })) }; }
+  function collectScheme() { return { effect: 'curvedgallery', version: 2, settings: { ...state.settings }, assets: state.assets.map(a => ({ ...a })) }; }
   function scheduleSave() {
     clearTimeout(saveTimer); saveTimer = setTimeout(() => persist().then(() => status('已自动保存；保存方案可带图片下载。', 'Autosaved. Save a scheme to download it with images.')).catch(() => status('浏览器存储不可用，请用“保存方案”下载备份。', 'Browser storage unavailable. Download a scheme backup.')), 350);
   }
   function parseScheme(value) {
-    if (value?.effect !== 'curvedgallery' || value.version !== 1 || !value.settings || !Array.isArray(value.assets) || value.assets.length > 100) throw new Error('无效的弧廊归标方案 / Invalid scheme');
+    if (value?.effect !== 'curvedgallery' || ![1, 2].includes(value.version) || !value.settings || !Array.isArray(value.assets) || value.assets.length > 100) throw new Error('无效的弧廊归标方案 / Invalid scheme');
     const settings = { ...motion.defaults };
     for (const key of Object.keys(settings)) {
       const v = value.settings[key]; if (v === undefined) continue;
@@ -233,6 +236,11 @@
       if (['background', 'color', 'markColor'].includes(key) && !/^#[0-9a-f]{6}$/i.test(v)) throw new Error('无效颜色 / Invalid color');
       if (key === 'font' && !STGFontLibrary.preset(v)) throw new Error('无效字体 / Invalid font');
       if (key === 'text' && v.length > 120) throw new Error('文字过长 / Text too long'); settings[key] = v;
+    }
+    // Upgrade untouched v1 defaults while preserving all photos and custom settings.
+    if (value.version === 1) {
+      const previousDefaults = { cardHeight: 570, spin: 1.20, pullback: 1.15, markHold: 0.45, reveal: 0.55, hold: 1.05 };
+      for (const [key, oldDefault] of Object.entries(previousDefaults)) if (settings[key] === oldDefault) settings[key] = motion.defaults[key];
     }
     if (!Number.isInteger(settings.slots) || ![1, -1].includes(settings.direction) || settings.width % 2 || settings.height % 2) throw new Error('无效画布或卡片数量 / Invalid canvas or count');
     const ids = new Set();
@@ -265,7 +273,7 @@
     try { await applyScheme(JSON.parse(await event.target.files[0].text())); scheduleSave(); status('方案已导入。', 'Scheme imported.'); } catch (error) { status(error.message); }
     event.target.value = '';
   };
-  $('resetScheme').onclick = async () => { if (busy) return; await applyScheme({ effect: 'curvedgallery', version: 1, settings: { ...motion.defaults }, assets: [] }); scheduleSave(); };
+  $('resetScheme').onclick = async () => { if (busy) return; await applyScheme({ effect: 'curvedgallery', version: 2, settings: { ...motion.defaults }, assets: [] }); scheduleSave(); };
   $('clearScheme').onclick = () => { if (busy) return; resources.forEach(r => CellMotionAnimatedImage.dispose(r.animated)); resources.clear(); state.assets = []; $('selectBrand').click(); renderSelectedAssets(); scheduleSave(); };
   $('parallaxImport').onchange = async event => {
     if (!event.target.files[0] || busy) return;
@@ -276,7 +284,7 @@
         if (typeof image.name !== 'string' || !/^data:image\/(png|jpeg|webp|gif|avif);base64,[a-z0-9+/=\s]+$/i.test(image.src || '')) throw new Error('请在视差工坊使用“导出备份”，让图片嵌入 JSON / Export a backup with embedded images');
         return assetFrom(image.src, image.name, image.src.slice(5, image.src.indexOf(';')));
       });
-      await applyScheme({ effect: 'curvedgallery', version: 1, settings: state.settings, assets }); scheduleSave();
+      await applyScheme({ effect: 'curvedgallery', version: 2, settings: state.settings, assets }); scheduleSave();
       status(`已导入 ${assets.length} 张原图；悬停效果不会烘焙进图片。`, `${assets.length} original images imported; hover effects are not baked into backups.`);
     } catch (error) { status(error.message); } event.target.value = '';
   };

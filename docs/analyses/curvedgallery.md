@@ -7,26 +7,37 @@ Private desktop file: `微信视频2026-10-09_073417_351.mp4`. Do not commit it 
 
 ## Target
 
-Curved image panels rotate around a cylinder, continuously pull back into a small segmented ring mark, then make room for an upward-masked brand word.
+Curved photo panels rotate, fold their image faces into edges, and continuously pull back into the same black segmented ring. The complete group moves left before the brand word emerges through an upward mask, with a small letter stagger.
 
-## Evidence / motion contract
+## 2026-10-09 user correction: motion contract superseding the first reconstruction
 
-| Source time | Visible evidence | Interpretation | Confidence |
-| --- | --- | --- | --- |
-| 0–1.17s | Same large curved black panels; player shows pause | Recording lead-in, excluded from animation | high |
-| 1.17–2.30s | Panel gaps travel horizontally while upper and lower contours remain arcs | One cylinder rotating about its vertical axis; panels themselves are curved | high |
-| 2.30–3.45s | Radius and height shrink together; rear narrow vertical strokes become visible | Camera pullback of the complete ring, overlapping rotation deceleration | high |
-| 3.45–3.90s | Small mark stabilizes, no word yet | Short mark-only hold | high |
-| 3.90–4.45s | Ring moves left; tops of letters emerge from bottom edge | Whole lockup centers; word rises behind a fixed mask | high |
-| 4.45–5.50s | Black segmented mark and `Sentr` word remain steady | Final lockup hold | high |
-| 5.50–5.77s | Complete lockup turns gray together | Short opacity exit | medium |
+The first release is not accepted: camera pullback starts too quickly, changing front/rear widths at `cos(angle)=0` introduces a discontinuity, photos become black through a full-area opacity overlay, and the mark shifts only when the whole word starts revealing. Preserve image import/editing/export and the single persistent ring. Correct only these coupled motion channels.
 
-The mark is one persistent group. No per-card flyout, spiral, bounce or crossfade to an unrelated logo. Rotation and pullback overlap; no artificial stop between them. Final rear panels reduce to narrow posts while front panels keep their arc. Default twelve slots produce seven upper panels and five visible rear posts. All coordinates derive from output dimensions; aspect changes preserve the composition's geometry rather than stretching it.
+- Black panels are replaceable photo surfaces. Texture must follow the curved geometry and visibly compress toward its edge; black backs are part of those same panels. Do not fade a complete photo rectangle to black or swap in a separate logo.
+- Source measurements (592px crop, excluding phone/AssistiveTouch): ring horizontal half-span at 2.8/2.9/3.0/3.1/3.2/3.3/3.4/3.5/3.6s is approximately 282/254/219/161/113/83.5/67/61/53.5px. Fit a continuous accelerated-then-braked camera curve; do not use an ease-out that launches the shrink at peak speed.
+- Fitted camera interval approximately 2.35–3.77s, cubic Bézier x handles .76/.249 and y handles 0/1. Recording lead-in remains 1.17s. This evidence replaces the original rough phase timing.
+- Upper-ring center at 3.7/3.8/3.9/4.0/4.1/4.2/4.3/4.4/4.5s is 293/290.5/286.5/282/268.5/237.5/225.5/221.5/220.5px. Left movement starts before the first visible letter and continues smoothly; the whole ring owns that shift. Its independently fitted Bézier x handles are .794/.375.
+- Word begins emerging around source 4.2s, after left shift starts, and is readable by 4.5s. Left-to-right letter reveal has a slight stagger rather than revealing every letter at once.
+- Both front/rear geometry and the image-to-black edge compression must be continuous at every angle/time, including rear/front boundaries. Stable final mark and editable text remain in the same composition coordinates. Preview and exports continue sharing one renderer.
+
+## Revised default timing (source / animation seconds)
+
+| Source time | Animation time | Observed and implemented channel |
+| --- | --- | --- |
+| 0–1.17 | excluded | Paused recording lead-in; phone UI excluded |
+| 1.17–2.40 | 0–1.23 | Continuous cylinder rotation |
+| 2.35–3.77 | 1.18–2.60 | Accelerated-then-braked pullback, overlapping rotation; photo faces compress into black panel edges |
+| 3.65–4.50 | 2.48–3.33 | Whole group shifts left before the word is visible |
+| 4.05–4.50 | 2.88–3.33 | Letters rise behind their masks; first visible tops near 4.2s |
+| 4.50–5.52 | 3.33–4.35 | Final lockup hold |
+| 5.52–5.77 | 4.35–4.60 | Whole lockup fades together |
+
+The same twelve curved panels persist through the entire sequence. Front/rear widths and rear-stroke vertical placement depend on a continuous fold channel; no binary geometry change at `cos(angle)=0`. Back strokes stay lower during pullback, calibrated from the source; this extra depth continuously reaches zero at the final mark. Textures compress in their own clipped geometry, with black backs underneath and constant photo opacity. There is no full-photo fade to black and no swap to a separate logo.
 
 ## Uncertainties
 
 - Source is a compressed screen recording, not original design files. Exact camera perspective, hidden panel count and source font cannot be recovered with certainty.
-- Only black panels are present in the video. User photos are an extension: texture follows the curved panels and settles into the same solid-color mark during pullback. This can be disabled to retain photos in the final ring.
+- Only black panels are present in the video. User photos are an extension: texture follows the curved panels and its visible face geometrically folds to an edge, revealing the same panels’ black backs during pullback. This can be disabled to retain photos in the final ring.
 - Visible brand appears to read `Sentr`; it remains editable. Default uses the shared Inter font, the closest available neutral sans-serif.
 
 ## Reuse
@@ -37,15 +48,14 @@ Preview, PNG, GIF and MP4 call the same deterministic renderer. Curved cylinder 
 
 ## Controls
 
-Images and their order/crop, brand text/font/weight/color, background and mark color, twelve-slot count, card gaps, height, curvature/tilt, direction and turns, pullback size, logo/text spacing, photo-to-mark transition; spin/pullback/overlap/mark hold/text reveal/final hold/fade and global speed. Save, import, restore default and clear/rebuild; responsive canvas sizes and deterministic exports.
+Images and their order/crop, brand text/font/weight/color, background and mark color, twelve-slot count, card gaps, height, curvature/tilt, direction and turns, pullback size, logo/text spacing, photo-to-mark transition; spin/pullback/overlap/mark hold/group left shift/word delay/text reveal/final hold/fade and global speed. Save, import, restore default and clear/rebuild; responsive canvas sizes and deterministic exports.
 
-## Acceptance evidence
+## Acceptance evidence for the correction
 
-- Watch twelve-frame overview and 12 fps source crop inspected; normal-cadence exported frames inspected at 8 fps, including rotation/pullback overlap and upward text reveal.
-- Final source vs export compared at source 4.60s / export 3.40s. Final radius, word size and gap adjusted to 174 / 186 / 65 logical pixels to match the lockup bounds. Original camera/font remain approximate; this is a reconstruction, not recovered source geometry.
-- `node tests/curvedgallery-motion.test.cjs`: continuity, monotonic pullback, phase overlap, curvature and stable final pose pass.
-- Project editor-contract and shared-contract checks pass.
-- `python tests/curvedgallery-browser.py`: batch backup conversion, per-image replacement/crop, complete-state reorder, IndexedDB reload, portable save/import, invalid-import rejection, immutable reset, clear, selection-before-insertion, four shared font families, theme/language preservation, three ratios, seeking/replay, mobile/no horizontal overflow and console pass.
-- Real PNG, GIF and H.264 MP4 generated and inspected. Full-size gallery video: 1920 × 1080, 30 fps, 138 frames, exactly 4.600s. Portrait video: 360 × 640, 15 fps, 69 frames, exactly 4.600s. GIF: 360 × 640, 69 frames, corrected cumulative centisecond delays total exactly 4600ms (individual 15 fps delays alternate 60/70ms instead of rounding every frame to 70ms).
-- Private source, extracted frames, browser screenshots and scratch exports remain outside Git. Gallery poster/video are generated by the authoritative renderer.
-- Additional latest-renderer checks: original gallery portrait uploaded and exported; shared hand GIF, Bot GIF and vector line recipe rendered/exported without console errors; 640 × 360 H.264 at 60 fps has 30 frames / 0.500s. Homepage and component catalog contain the new live editor link. All pre-existing catalog entries, featured ids, recent-release order and approved preview revisions compare identical to the remote baseline after removing the one new entry.
+- Source inspected at normal cadence and 20 fps around both disputed transitions. Fifteen aligned source/render frame pairs compared from source 2.30–4.50s; seven actual Parallax Studio portraits inspected throughout rotation, photo compression, black lockup, left shift and word emergence. Private footage, frame sheets and scratch videos remain outside Git.
+- Camera regression uses nine measured source radii at 2.8–3.6s; reconstruction differs by less than 10px in the 592px composition crop. The left-shift regression follows nine measured centers within 5.5px. This is a measured reconstruction, not recovered original camera/font data or proof of pixel-identical frames.
+- Pure renderer checks: measured camera timing, monotonic radius, front/back continuity, geometric photo compression, optional retained photos, group shift before word, curvature, stable final orientation, fade and global speed.
+- Editor and shared contract checks pass. Browser regression passes image backup conversion, reorder/crop/replace, IndexedDB reload, portable save/import, invalid-import rejection, legacy v1 upgrade without losing images/custom text, default/clear, explicit shared-library insertion, four shared fonts, theme/language preservation, aspect ratios, playback/seek and mobile layout. Zero page errors.
+- Authoritative real exports: default H.264 MP4 1920 × 1080 / 30fps / 138 frames / 4.600s; all seven original portraits exported at 640 × 360 / 30fps / 138 frames / 4.600s. PNG, portrait H.264 and GIF also checked. GIF cumulative centisecond delays match the complete timeline.
+- Scheme version 2 adds independent left-shift and word-delay settings. v1 imports/autosaves retain all images and custom values; untouched v1 timing/height defaults upgrade to the corrected defaults. IndexedDB retains its existing key.
+- Only this effect's unaccepted video/poster artifacts are regenerated. Existing catalog entries, featured order, recent releases and unrelated preview files remain frozen.

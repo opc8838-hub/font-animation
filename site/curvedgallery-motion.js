@@ -3,61 +3,76 @@
   const clamp = (v) => Math.max(0, Math.min(1, v));
   const mix = (a, b, t) => a + (b - a) * t;
   const smooth = (t) => { t = clamp(t); return t * t * (3 - 2 * t); };
-  const out = (t) => 1 - Math.pow(1 - clamp(t), 4);
   const defaults = Object.freeze({
     text: 'Sentr', font: 'stg:inter', weight: 400, fontSize: 186,
     background: '#eeeeed', color: '#000000', markColor: '#000000',
-    slots: 12, gap: 0.16, cardHeight: 570, curvature: 0.36, turns: 0.625,
+    slots: 12, gap: 0.16, cardHeight: 530, curvature: 0.36, turns: 0.625,
     direction: 1, finalSize: 174, textGap: 65, solidMark: true,
-    spin: 1.20, pullback: 1.15, overlap: 0.05, markHold: 0.45,
-    reveal: 0.55, hold: 1.05, fade: 0.25, speed: 1,
+    spin: 1.23, pullback: 1.42, overlap: 0.05, markHold: 0,
+    shiftOverlap: 0.12, shift: 0.85, textDelay: 0.40,
+    reveal: 0.45, hold: 1.02, fade: 0.25, speed: 1,
     width: 1920, height: 1080,
   });
+  // Camera curve fitted to the reference's measured ring width: accelerate, then brake.
+  function cameraEase(value, handle1 = 0.76038327, handle2 = 0.24865819) {
+    const t = clamp(value);
+    if (t === 0 || t === 1) return t;
+    const cubic = (u, a, b) => 3 * (1 - u) ** 2 * u * a + 3 * (1 - u) * u * u * b + u ** 3;
+    let lo = 0, hi = 1;
+    for (let i = 0; i < 24; i++) { const u = (lo + hi) / 2; if (cubic(u, handle1, handle2) < t) lo = u; else hi = u; }
+    return cubic((lo + hi) / 2, 0, 1);
+  }
   function timeline(s) {
     const pullStart = Math.max(0, s.spin - s.overlap);
     const pullEnd = pullStart + s.pullback;
-    const revealStart = pullEnd + s.markHold;
+    const shiftStart = Math.max(pullStart, pullEnd + s.markHold - s.shiftOverlap);
+    const shiftEnd = shiftStart + s.shift;
+    const revealStart = shiftStart + s.textDelay;
     const revealEnd = revealStart + s.reveal;
-    const fadeStart = revealEnd + s.hold;
-    return { pullStart, pullEnd, revealStart, revealEnd, fadeStart,
+    const fadeStart = Math.max(shiftEnd, revealEnd) + s.hold;
+    return { pullStart, pullEnd, shiftStart, shiftEnd, revealStart, revealEnd, fadeStart,
       total: (fadeStart + s.fade) / s.speed,
       phases: [
         { name: '环形转动', en: 'Rotate', start: 0, end: s.spin, color: '#8ec8ff' },
-        { name: '缩小归标', en: 'Pull back', start: pullStart, end: pullEnd, color: '#d4b8ff' },
-        { name: '标志停留', en: 'Mark hold', start: pullEnd, end: revealStart, color: '#9de7d7' },
+        { name: '压弯聚拢', en: 'Fold / pull back', start: pullStart, end: pullEnd, color: '#d4b8ff' },
+        ...(s.markHold > 0 ? [{ name: '标志停留', en: 'Mark hold', start: pullEnd, end: pullEnd + s.markHold, color: '#a8dfbf' }] : []),
+        { name: '整组左移', en: 'Move left', start: shiftStart, end: shiftEnd, color: '#9de7d7' },
         { name: '文字揭开', en: 'Word reveal', start: revealStart, end: revealEnd, color: '#ffc4d6' },
-        { name: '组合停留', en: 'Lockup hold', start: revealEnd, end: fadeStart, color: '#ffd27d' },
+        { name: '组合停留', en: 'Lockup hold', start: Math.max(shiftEnd, revealEnd), end: fadeStart, color: '#ffd27d' },
         { name: '淡出', en: 'Fade', start: fadeStart, end: fadeStart + s.fade, color: '#d7ff2f' },
       ].map(p => ({ ...p, start: p.start / s.speed, end: p.end / s.speed })),
     };
   }
   function pose(s, time, textWidth = 0) {
     const t = Math.max(0, time) * s.speed, line = timeline(s);
-    const pull = 1 - Math.pow(1 - clamp((t - line.pullStart) / s.pullback), 2.2);
-    const reveal = out((t - line.revealStart) / s.reveal);
-    // Integrate a constant velocity followed by smooth braking: no stop at pullback onset.
+    const pull = cameraEase((t - line.pullStart) / s.pullback);
+    const word = clamp((t - line.revealStart) / s.reveal);
+    // Integrate velocity with continuous braking; rotation never jumps at pullback onset.
     const brake = clamp((t - line.pullStart) / s.pullback);
     const distance = Math.min(t, line.pullStart) + s.pullback * (brake - brake * brake + brake ** 3 / 3);
     const angularSpeed = s.turns * Math.PI * 2 / (line.pullStart + s.pullback / 3);
     const angle = distance * angularSpeed * s.direction;
-    return { pull, reveal,
+    return { pull, word, reveal: smooth(word),
       radius: mix(1000, s.finalSize, pull),
-      cardHeight: mix(s.cardHeight, s.finalSize * 0.62, pull),
-      tilt: mix(s.curvature, 0.40, pull),
-      y: mix(822, 540, pull),
-      x: 960 - (textWidth + s.textGap) * 0.5 * smooth((t - line.revealStart) / s.reveal),
+      cardHeight: mix(s.cardHeight, s.finalSize * 0.50, Math.pow(pull, 0.85)),
+      tilt: mix(s.curvature, 0.45, pull),
+      y: mix(870, 546, pull),
+      x: 960 - (textWidth + s.textGap) * 0.5 * cameraEase((t - line.shiftStart) / s.shift, 0.79439918, 0.37476227),
       angle: angle - s.turns * Math.PI * 2 * s.direction,
-      solid: s.solidMark ? smooth((pull - 0.25) / 0.65) : 0,
+      fold: s.solidMark ? smooth((pull - 0.50) / 0.48) : 0,
       alpha: 1 - smooth((t - line.fadeStart) / Math.max(0.001, s.fade)),
     };
   }
+  function edgeFold(s, p, index) {
+    return smooth((0.08 - Math.cos(index * Math.PI * 2 / s.slots + p.angle)) / 0.28);
+  }
+  function faceScale(s, p, index) { return (1 - p.fold) * (1 - edgeFold(s, p, index)); }
   function panelPoints(s, p, index, u, v) {
     let a = index * Math.PI * 2 / s.slots + p.angle;
-    const rear = Math.cos(a) < 0;
-    const width = (Math.PI * 2 / s.slots) * (1 - s.gap) * (rear ? mix(1, 0.09, clamp(p.pull * 1.8)) : 1);
+    const width = (Math.PI * 2 / s.slots) * (1 - s.gap) * mix(1, 0.13, edgeFold(s, p, index));
     a += (u - 0.5) * width;
     return { x: p.x + Math.sin(a) * p.radius,
-      y: p.y - Math.cos(a) * p.radius * p.tilt + (v - 0.5) * p.cardHeight + (rear ? s.cardHeight * (1 - p.pull) : 0) };
+      y: p.y - Math.cos(a) * p.radius * p.tilt + (v - 0.5) * p.cardHeight + edgeFold(s, p, index) * s.cardHeight * 0.33 * (1 - p.pull) };
   }
   function render(ctx, width, height, time, s, assets = [], resources = new Map(), fonts = root.STGFontLibrary) {
     ctx.clearRect(0, 0, width, height);
@@ -85,45 +100,53 @@
         vectorCtx.save(); vectorCtx.translate(128, 128); root.STGIconLibrary.drawVector(vectorCtx, asset, 230, time); vectorCtx.restore();
         texture = resource.canvas;
       }
-      const slices = texture && p.solid < 1 ? 32 : 12;
-      const outline = () => {
+      const textureWidth = faceScale(s, p, i), slices = 32;
+      const outline = (face = 1) => {
         ctx.beginPath();
-        for (let j = 0; j <= 48; j++) { const q = panelPoints(s, p, i, j / 48, 0); j ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); }
-        for (let j = 48; j >= 0; j--) { const q = panelPoints(s, p, i, j / 48, 1); ctx.lineTo(q.x, q.y); }
+        for (let j = 0; j <= 48; j++) { const q = panelPoints(s, p, i, 0.5 + (j / 48 - 0.5) * face, 0); j ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); }
+        for (let j = 48; j >= 0; j--) { const q = panelPoints(s, p, i, 0.5 + (j / 48 - 0.5) * face, 1); ctx.lineTo(q.x, q.y); }
         ctx.closePath();
       };
-      ctx.save(); outline(); ctx.clip();
-      for (let j = 0; j < slices; j++) {
+      // The black back belongs to this same panel. Its photo face folds toward the
+      // center edge geometrically; there is no full-photo opacity overlay or logo swap.
+      ctx.fillStyle = s.markColor; outline(); ctx.fill();
+      ctx.save(); outline(textureWidth); ctx.clip();
+      for (let j = 0; texture && textureWidth > 0.0001 && j < slices; j++) {
         const u0 = j / slices, u1 = (j + 1) / slices;
-        const q = [panelPoints(s, p, i, u0, 0), panelPoints(s, p, i, u1, 0), panelPoints(s, p, i, u1, 1), panelPoints(s, p, i, u0, 1)];
-        if (texture && p.solid < 1) {
-          ctx.save(); ctx.globalAlpha = p.alpha * (asset.opacity ?? 1);
-          const iw = texture.width || texture.naturalWidth, ih = texture.height || texture.naturalHeight;
-          const aspect = p.radius * Math.PI * 2 / s.slots * (1 - s.gap) / p.cardHeight;
-          let sw = iw, sh = ih;
-          if (asset.fit !== 'stretch') { if (iw / ih > aspect) sw = ih * aspect; else sh = iw / aspect; }
-          const sx = (iw - sw) * (asset.cropX ?? 0.5), sy = (ih - sh) * (asset.cropY ?? 0.5);
-          // A cylinder strip has parallel vertical sides, so one affine image strip is exact.
-          // Slightly overlapping source strips avoid Canvas triangle-diagonal antialias seams.
-          const strip = sw * (u1 - u0), dx = q[1].x - q[0].x, dy = q[1].y - q[0].y;
-          const overlap = Math.min(strip * 0.9, strip * 6 / Math.max(0.1, Math.abs(dx)));
-          ctx.transform(dx / strip, dy / strip, 0, p.cardHeight / sh, q[0].x, q[0].y);
-          ctx.drawImage(texture, sx + sw * u0, sy, strip + overlap, sh, 0, 0, strip + overlap, sh);
-          ctx.restore();
-        }
+        const q = [panelPoints(s, p, i, 0.5 + (u0 - 0.5) * textureWidth, 0), panelPoints(s, p, i, 0.5 + (u1 - 0.5) * textureWidth, 0)];
+        ctx.save(); ctx.globalAlpha = p.alpha * (asset.opacity ?? 1);
+        const iw = texture.width || texture.naturalWidth, ih = texture.height || texture.naturalHeight;
+        const aspect = p.radius * Math.PI * 2 / s.slots * (1 - s.gap) / p.cardHeight;
+        let sw = iw, sh = ih;
+        if (asset.fit !== 'stretch') { if (iw / ih > aspect) sw = ih * aspect; else sh = iw / aspect; }
+        const sx = (iw - sw) * (asset.cropX ?? 0.5), sy = (ih - sh) * (asset.cropY ?? 0.5);
+        // A cylinder strip has parallel vertical sides, so one affine image strip is exact.
+        // Slightly overlapping source strips avoid Canvas triangle-diagonal antialias seams.
+        const strip = sw * (u1 - u0), dx = q[1].x - q[0].x, dy = q[1].y - q[0].y;
+        const overlap = Math.min(strip * 0.9, strip * 6 / Math.max(0.1, Math.abs(dx)));
+        ctx.transform(dx / strip, dy / strip, 0, p.cardHeight / sh, q[0].x, q[0].y);
+        ctx.drawImage(texture, sx + sw * u0, sy, strip + overlap, sh, 0, 0, strip + overlap, sh);
+        ctx.restore();
       }
       ctx.restore();
-      // Fill the entire curved outline once: adjacent slice antialiasing must not create white stripes.
-      ctx.save(); ctx.globalAlpha = p.alpha * (texture ? p.solid : 1); ctx.fillStyle = s.markColor; outline(); ctx.fill(); ctx.restore();
     }
     if (p.reveal > 0 && s.text) {
       const x = p.x + p.radius + s.textGap, baseline = 540 + s.fontSize * 0.35;
       ctx.save(); ctx.beginPath(); ctx.rect(x - 2, baseline - s.fontSize * 1.35, textWidth + 4, s.fontSize * 1.48); ctx.clip();
       ctx.fillStyle = s.color; ctx.textBaseline = 'alphabetic';
-      ctx.fillText(s.text, x, baseline + (1 - p.reveal) * s.fontSize * 1.5); ctx.restore();
+      // Keep the word's kerning, but reveal letters through their own vertical masks.
+      const letters = Array.from(s.text);
+      for (let i = 0; i < letters.length; i++) {
+        const start = ctx.measureText(letters.slice(0, i).join('')).width;
+        const end = ctx.measureText(letters.slice(0, i + 1).join('')).width;
+        const reveal = smooth((p.word - 0.20 * i / Math.max(1, letters.length - 1)) / 0.80);
+        ctx.save(); ctx.beginPath(); ctx.rect(x + start - (i ? 0 : 2), baseline - s.fontSize * 1.35, end - start + (i === letters.length - 1 ? 4 : 0), s.fontSize * 1.48); ctx.clip();
+        ctx.fillText(s.text, x, baseline + (1 - reveal) * s.fontSize * 1.5); ctx.restore();
+      }
+      ctx.restore();
     }
     ctx.restore();
   }
-  root.CurvedGalleryMotion = Object.freeze({ defaults, timeline, pose, panelPoints, render });
+  root.CurvedGalleryMotion = Object.freeze({ defaults, timeline, pose, panelPoints, faceScale, render });
   if (typeof module !== 'undefined') module.exports = root.CurvedGalleryMotion;
 })(typeof window === 'undefined' ? globalThis : window);

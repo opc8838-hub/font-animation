@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="me-motion-editor.css?v=20260909-timeline-color">
   <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-1">
   <link rel="stylesheet" href="typecascade-polish.css?v=20260909-1">
-  <link rel="stylesheet" href="curvedgallery.css?v=20261009-1">
+  <link rel="stylesheet" href="curvedgallery.css?v=20261009-2">
 </head>
 <body class="tc-workspace me-motion-editor cg-editor" data-editor-theme="dark">
   <header class="tc-header">
@@ -55,7 +55,7 @@
         <div class="gm-grid-2"><label class="gm-field" data-en="Weight">字重<select data-setting="weight"><option value="300">300</option><option value="400">400</option><option value="500">500</option><option value="700">700</option><option value="900">900</option></select></label><label class="gm-field" data-en="Font size">字号<input data-setting="fontSize" type="number" min="30" max="400" value="186"></label></div>
         <label class="gm-field" data-en="Mark / text gap">图标与文字间距<input data-setting="textGap" type="range" min="0" max="240" value="65"><output></output></label>
         <div class="gm-grid-2"><label class="gm-field" data-en="Background">背景<input id="backgroundColor" data-setting="background" type="color" value="#eeeeed"></label><label class="gm-field" data-en="Text color">文字颜色<input id="textColor" data-setting="color" type="color" value="#000000"></label><label class="gm-field" data-en="Mark color">标志颜色<input data-setting="markColor" type="color" value="#000000"></label></div>
-        <label class="gm-check"><input data-setting="solidMark" type="checkbox" checked><span data-en="Photos settle into a solid mark">收尾图片归成纯色标志</span></label>
+        <label class="gm-check"><input data-setting="solidMark" type="checkbox" checked><span data-en="Fold photos into black edges">图片压成黑色细线</span></label>
       </section>
       <section class="gm-card me-layer-panel" id="assetManager"><button class="me-layer-toggle" id="assetToggle" type="button" aria-expanded="false" data-en="Selected images">已添加图片</button><div class="me-layer-items" id="selectedAssets" hidden></div></section>
       <section class="gm-card me-asset-editor" id="assetEditor" hidden><h2 id="assetTitle"></h2><img id="assetPreview" alt="当前图片"><label class="gm-field" data-en="Name">名称<input id="assetName" maxlength="200"></label><label class="cg-upload" data-en="Replace image">替换图片<input id="replaceImage" type="file" accept="image/*"></label>
@@ -74,5 +74,5 @@
   <aside class="me-asset-drawer" id="libraryDrawer" hidden aria-label="共享图库"><header><h2 data-en="Shared library">共享图库</h2><button id="closeLibrary" type="button" data-en="Close">关闭</button></header><div class="me-asset-library" id="library"></div><p class="gm-help" data-en="Select a candidate, then insert. Uploads stay in this browser.">选择候选，再点插入。上传图片只保存在此浏览器。</p><button class="me-asset-commit" id="insertCandidate" type="button" disabled data-en="Insert selected image">插入选中图片</button></aside>
   <script src="shared-font-library.js?v=20260824-2"></script><script src="shared-icon-library.js?v=20261009-1"></script><script src="cellmotion-animated-image.js"></script>
   <script src="js/continuation-gif.js"></script><script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="curvedgallery-motion.js?v=20261009-1"></script><script src="curvedgallery.js?v=20261009-1"></script><script src="typecascade-selects.js?v=20260909-1"></script>
+  <script src="curvedgallery-motion.js?v=20261009-2"></script><script src="curvedgallery.js?v=20261009-2"></script><script src="typecascade-selects.js?v=20260909-1"></script>
 </body></html>
