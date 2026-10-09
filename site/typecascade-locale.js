@@ -229,6 +229,26 @@
     '光的颜色与形状': 'Light colour & shape', '光球与光源': 'Orb & source', '光柱颜色': 'Beam colour', '地面光色': 'Floor light colour', '背景': 'Background',
     '光源水平位置': 'Source X', '光源最终升高': 'Final source lift', '地面位置': 'Floor position', '光芒数量': 'Rays', '光柱粗细': 'Beam width', '地面光斑宽度': 'Floor light width',
     '整体速度同时缩放所有阶段：2× 用一半时间播完，0.5× 慢放一倍。': 'Overall speed scales every phase: 2× plays in half the time, 0.5× at half speed.',
+    '降临': 'Switch Drop', '降临编辑器': 'Switch Drop editor', '降临效果预览': 'Switch Drop preview', '降临动效时间轴': 'Switch Drop timeline',
+    '画面内容': 'Content', '选择主体或标题，在右侧修改；灯光与节奏在「动效设置」': 'Select the subject or the title to edit it; light and timing live in Motion',
+    '两行内容：主体（图标、图片或文字）和右侧标题。': 'Two blocks: the subject (icon, image or text) and the title on its right.',
+    '主体': 'Subject', '标题': 'Title', '主体名称': 'Subject name', '主体文字': 'Subject text', '标题文字': 'Title text',
+    '主体降临': 'Subject drops', '落点停顿': 'Settle', '关灯': 'Lights off', '开灯': 'Lights on', '关灯 · 左移': 'Lights off · slide', '开灯 · 左移': 'Lights on · slide', '左移 · 标题': 'Slide · title',
+    '主体类型': 'Subject type', '图标 / 图片': 'Icon / image', '主体大小': 'Subject size', '文字主体颜色': 'Text subject colour', '关灯后轮廓光': 'Rim light after lights off',
+    'Hely Logo 关灯后切换夜光版本': 'Hely Logo switches to its glow version in the dark', '夜光强度': 'Glow strength', '主体图片': 'Subject image', '上传图片': 'Upload image',
+    '上传时自动去背景并裁掉透明空白': 'Remove background and trim transparent edges on upload',
+    '图片只在浏览器本地处理，不会上传到服务器。关灯后，普通图片会留下一圈轮廓光，Hely Logo 换成夜光版本。': 'Images are processed locally in your browser. In the dark, images keep a rim light and the Hely Logo switches to its glow version.',
+    '手表': 'Watch', '闪电': 'Bolt', '播放': 'Play', '云朵': 'Cloud',
+    '字号': 'Size', '与主体间距': 'Gap to subject', '字距': 'Tracking', '字重': 'Weight', '文字颜色': 'Text colour', '标点颜色': 'Punctuation colour',
+    '标题在主体左移时从右侧弹出，字体在「动效设置 → 标题字体」里换。关灯时标题用浅色，开灯时用深色。': 'The title pops out as the subject slides left; change its font under Motion → Title font. Lights off uses a light title, lights on a dark one.',
+    '灯光开关': 'Light switch', '方向': 'Direction', '关灯 · 亮 → 黑': 'Lights off · lit → black', '开灯 · 黑 → 亮': 'Lights on · black → lit',
+    '开关曲线': 'Switch curve', '苹果关灯 · 慢入快出（原片）': 'Apple lights-off · slow in, fast out (reference)', '平衡丝滑': 'Balanced', '快速开关': 'Snappy',
+    '光的形态': 'Light shape', '聚光收拢 · 四周先暗（原片）': 'Spot closes · edges first (reference)', '整屏均匀变暗': 'Even dim',
+    '开关时长': 'Switch length', '相对左移延后': 'Delay after slide starts', '亮灯时四周暗角': 'Lit vignette', '亮灯背景': 'Lit background', '关灯后颜色': 'Dark colour',
+    '原片逐帧测得：关灯约 0.24 秒，四周比中心先暗，越暗越快，最后一下直接黑掉。': 'Measured frame by frame: the light goes off in about 0.24 s, edges before the centre, faster and faster, then straight to black.',
+    '速度与节奏': 'Speed & timing', '下降时长': 'Drop length', '开始高度': 'Start height', '落点高度': 'Landing height', '下降惯性': 'Drop overshoot', '到底停顿': 'Settle',
+    '左移时长': 'Slide length', '标题延后': 'Title delay', '标题弹出': 'Title pop', '标题弹性': 'Title spring', '结束定格': 'Final hold', '标题字体': 'Title font', '字体': 'Font', '标题颜色': 'Title colour',
+    '背景图片或视频处在灯光下，关灯时会和主体一起暗下去。': 'A background image or video sits under the light and goes dark with the subject.',
     '按参考视频逐帧测得的 9 个阶段。每个阶段可改名称、时长和亮度；“添加停顿”会把画面停在上一阶段的结尾。': 'Nine phases measured frame by frame from the reference. Rename, retime or dim any phase; Add pause holds the end of the previous phase.',
     '阶段已恢复为原片节奏；颜色、形状和画布保持不变。': 'Phases restored to the reference timing; colours, shape and canvas unchanged.',
     '城市字塔编辑器': 'City Stack editor', '城市字塔效果预览': 'City Stack preview', '城市字塔动效时间轴': 'City Stack timeline',
@@ -489,6 +509,9 @@
           .replace(/^(\d+:\d+) (方形|竖版|全屏|横版)/, (_, ratio, kind) => `${ratio} ${{方形:'Square',竖版:'Portrait',全屏:'Portrait',横版:'Landscape'}[kind]}`)
           .replace(/^段落 (\d+)$/, 'Block $1')
           .replace(/^阶段 (\d+)$/, 'Phase $1')
+          .replace(/^动物 (\d+)$/, 'Animal $1')
+          .replace(/^文字 · (.+)$/, 'Text · $1')
+          .replace(/^图片 · (.+)$/, 'Image · $1')
           .replace(/^(\d+(?:\.\d+)?)s 停留 · (\d+) 个图标$/, (_,time,count) => `${time}s hold · ${count} ${count === '1' ? 'icon' : 'icons'}`)
           .replace(/^(\d+) 个图标$/, (_,count) => `${count} ${count === '1' ? 'icon' : 'icons'}`)
           .replace(/^位置 (\d+)$/, 'Pos. $1')

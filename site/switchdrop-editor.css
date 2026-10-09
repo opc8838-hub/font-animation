@@ -1,0 +1,27 @@
+/* Switch Drop (降临) additions on top of the shared CellMotion row editor. */
+.sd-wide { grid-column: 1 / -1; }
+.sd-row-grid { padding: 0; }
+.sd-row-grid .gm-help.sd-wide { margin: 0; }
+.sd-background .gm-row-background-grid { padding: 0; }
+.sd-background .gm-background-upload { text-align: center; }
+.sd-check { display: flex !important; align-items: center; gap: 8px; flex-direction: row !important; font-size: 13px; }
+.sd-check input { width: 16px !important; height: 16px !important; min-height: 0 !important; flex: 0 0 auto; accent-color: var(--tc-accent, #a18aff); }
+.sd-asset-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.sd-asset-head strong { font-size: 13px; }
+.sd-upload { position: relative; display: inline-flex !important; align-items: center; height: 34px; padding: 0 14px; border: 1px solid var(--tc-line, #36363d); border-radius: 10px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+.sd-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.sd-asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; }
+.sd-asset { position: relative; }
+.sd-asset > button[data-action="pick-asset"] { display: grid; justify-items: center; gap: 6px; width: 100%; padding: 10px 6px 8px; border: 1px solid var(--tc-line, #36363d); border-radius: 12px; background: var(--tc-input, #2b2b30); color: var(--tc-text, #ededf1); cursor: pointer; transition: border-color 160ms ease, background-color 160ms ease; }
+.sd-asset > button[data-action="pick-asset"]:hover { border-color: color-mix(in srgb, var(--tc-accent, #a18aff) 55%, transparent); }
+.sd-asset.is-selected > button[data-action="pick-asset"] { border-color: var(--tc-accent, #a18aff); background: var(--tc-selected, #352b4c); }
+.sd-asset img { width: 40px; height: 40px; object-fit: contain; }
+.sd-asset span { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; line-height: 1.2; }
+.sd-asset-remove { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .55); color: #fff; font-size: 13px; line-height: 20px; cursor: pointer; }
+body[data-switchdrop] .gm-row-meta { flex-wrap: wrap; row-gap: 6px; }
+body[data-switchdrop] .gm-row-meta .gm-row-pause { white-space: nowrap !important; width: auto !important; min-width: max-content !important; height: auto !important; flex: 0 0 auto; }
+/* Canvas size sits at the right end of the preview toolbar on wide screens. */
+@media (min-width: 1201px) {
+  body.tc-workspace[data-switchdrop] .tc-canvas-toolbar { width: 100%; box-sizing: border-box; align-self: stretch; justify-self: stretch; }
+  body.tc-workspace[data-switchdrop] .tc-canvas-toolbar > .gm-canvas-card { flex: 0 0 auto; width: max-content !important; max-width: 100%; margin-left: auto; }
+}

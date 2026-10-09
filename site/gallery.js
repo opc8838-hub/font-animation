@@ -32,7 +32,7 @@ const effects = [
   ["dotresolve", "点解", "Dot Resolve", "type", "像素解析"],
   ["glyphreveal", "字现", "Glyph Reveal", "type", "逐字缩放显现"],
   ["phrasebuild", "组句", "Phrase Build", "type", "累计组词"],
-  ["switchdrop", "降临", "Switch Drop", "graphic", "主体降临 × 明暗开关"],
+  ["switchdrop", "降临", "Switch Drop", "graphic", "主体降临 × 苹果式关灯"],
   ["searchtyping", "搜写", "Search Typing", "type", "搜索框逐字打入"],
   ["beforeafter", "图片对比", "Before After", "type", "原图对比 · 生成切成片"],
   ["shutterafter", "快门对比", "Shutter After", "type", "原图快门 · 划过成片"],
@@ -120,7 +120,7 @@ const emptyState = document.querySelector("#emptyState");
 const filterButtons = [...document.querySelectorAll(".filter")];
 let activeFilter = "all";
 const livePreviews = new Set(["textswell"]);
-const featuredPreviews = new Set(["spotlight", "citystack", "zerogflip", "prosvg", "textswell", "impactbuild", "currentwall", "verticalwall", "iconburst", "glyphmorph", "sproutshift", "mistlift", "typecascade", "dotresolve", "glyphreveal", "continuation", "split-flip", "beforeafter", "shutterafter", "pathwriter", "ribbonink", "scrapbin"]);
+const featuredPreviews = new Set(["spotlight", "switchdrop", "citystack", "zerogflip", "prosvg", "textswell", "impactbuild", "currentwall", "verticalwall", "iconburst", "glyphmorph", "sproutshift", "mistlift", "typecascade", "dotresolve", "glyphreveal", "continuation", "split-flip", "beforeafter", "shutterafter", "pathwriter", "ribbonink", "scrapbin"]);
 const liveObserver = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
     const frame = entry.target;
@@ -148,9 +148,11 @@ function render() {
   grid.innerHTML = visible.map(([slug, zh, en, , categoryName]) => {
     const index = effects.findIndex((effect) => effect[0] === slug) + 1;
     const imageName = slug === "crashclock" ? "final_crashclock.png" : ["letterpulse", "iconburst", "focuswheel", "gradienttype", "glyphrelay", "glyphmorph", "wordgather", "focusportal", "rapidsequence", "citystack", "colorcanvas", "liquidtype", "scrapbin", "terminalbrand", "slotstories", "mediacascade", "colorrecompose", "phrasebuild", "switchdrop", "searchtyping", "beforeafter", "shutterafter", "assemble", "verbcue", "tighten", "titlecard", "lockup", "promptcue", "pullback", "textswell", "impactbuild", "wordflip", "textbuild", "textswap", "textreveal", "phoneframe", "laptopframe", "orbitgallery", "followerrush", "logoassemble", "moodboard"].includes(slug) ? `final_${slug}.svg` : `final_${slug}.png`;
-    const target = slug === "spotlight" ? "spotlight.html?from=gallery&v=20261010-1" : slug === "curvedgallery" ? "curvedgallery.html?from=gallery&v=20261009-8" : slug === "citystack" ? "citystack.html?from=gallery&v=20261006-1" : slug === "prosvg" ? "prosvg.html?from=gallery&v=20261005-1" : slug === "flash" ? "flash-scenes.html" : slug === "iconburst" ? "iconburst.html?from=gallery&v=20260925-default1" : slug === "glyphmorph" ? "glyphmorph.html?from=gallery&v=20260904-4" : ["sproutshift", "mistlift", "typecascade", "dotresolve", "glyphreveal"].includes(slug) ? `${slug}.html?from=gallery&v=20260909-1` : slug === "continuation" ? "continuation.html?from=gallery&v=20260904-center1" : slug === "split-flip" ? "split-flip.html?from=gallery&v=20260907-1" : slug === "currentwall" ? "currentwall.html?from=gallery&v=20260830-28" : slug === "verticalwall" ? "verticalwall.html?from=gallery&v=20260901-57" : slug === "beforeafter" ? "beforeafter.html?from=gallery&v=20260825-latest1" : slug === "shutterafter" ? "shutterafter.html?from=gallery&v=20260827-1" : slug === "pathwriter" ? "pathwriter.html?from=gallery&v=20260827-default2" : slug === "ribbonink" ? "ribbonink.html?from=gallery&v=20260909-1" : slug === "impactbuild" ? "impactbuild.html?from=gallery&v=20260901-final2" : slug === "scrapbin" ? "scrapbin.html?from=gallery&v=20260826-delete11" : slug === "liquidtype" ? "liquidtype.html?from=gallery&v=20260824-scatter3" : `${slug}.html`;
+    const target = slug === "switchdrop" ? "switchdrop.html?from=gallery&v=20261010-1" : slug === "spotlight" ? "spotlight.html?from=gallery&v=20261010-1" : slug === "curvedgallery" ? "curvedgallery.html?from=gallery&v=20261009-8" : slug === "citystack" ? "citystack.html?from=gallery&v=20261006-1" : slug === "prosvg" ? "prosvg.html?from=gallery&v=20261005-1" : slug === "flash" ? "flash-scenes.html" : slug === "iconburst" ? "iconburst.html?from=gallery&v=20260925-default1" : slug === "glyphmorph" ? "glyphmorph.html?from=gallery&v=20260904-4" : ["sproutshift", "mistlift", "typecascade", "dotresolve", "glyphreveal"].includes(slug) ? `${slug}.html?from=gallery&v=20260909-1` : slug === "continuation" ? "continuation.html?from=gallery&v=20260904-center1" : slug === "split-flip" ? "split-flip.html?from=gallery&v=20260907-1" : slug === "currentwall" ? "currentwall.html?from=gallery&v=20260830-28" : slug === "verticalwall" ? "verticalwall.html?from=gallery&v=20260901-57" : slug === "beforeafter" ? "beforeafter.html?from=gallery&v=20260825-latest1" : slug === "shutterafter" ? "shutterafter.html?from=gallery&v=20260827-1" : slug === "pathwriter" ? "pathwriter.html?from=gallery&v=20260827-default2" : slug === "ribbonink" ? "ribbonink.html?from=gallery&v=20260909-1" : slug === "impactbuild" ? "impactbuild.html?from=gallery&v=20260901-final2" : slug === "scrapbin" ? "scrapbin.html?from=gallery&v=20260826-delete11" : slug === "liquidtype" ? "liquidtype.html?from=gallery&v=20260824-scatter3" : `${slug}.html`;
     const detail = slug === "flash" ? "13 个独立子风格" : categoryName;
-    const preview = slug === "spotlight"
+    const preview = slug === "switchdrop"
+      ? `<video class="effect-loop" src="assets/previews/switchdrop-card.mp4?v=20261010-1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
+      : slug === "spotlight"
       ? `<video class="effect-loop" src="assets/previews/spotlight-card.mp4?v=20261010-1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
       : slug === "curvedgallery"
       ? `<video class="effect-loop" src="assets/previews/curvedgallery-card.mp4?v=20261009-4" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
