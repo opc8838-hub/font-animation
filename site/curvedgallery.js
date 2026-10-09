@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const $ = id => document.getElementById(id), motion = window.CurvedGalleryMotion;
+  const $ = id => document.getElementById(id), motion = window.CurvedGalleryMotion, effects = window.CurvedGalleryEffects;
   const KEY = 'cellmotion-curvedgallery-v1', resources = new Map();
   let state = { settings: { ...motion.defaults }, assets: [] }, selectedId = null, candidate = null;
   let paused = matchMedia('(prefers-reduced-motion: reduce)').matches, time = 0, started = performance.now();
@@ -38,6 +38,29 @@
     }
   }
   controls('geometryControls', geometry); controls('timingControls', timings);
+  const imageControls = [
+    ['strength', '特效强度', 'Effect strength', 0, 1, .01],
+    ['hoverDistortionStrength', '扭曲强度', 'Distortion', 0, .2, .005],
+    ['grainStrength', '颗粒强度', 'Grain', 0, .3, .005],
+    ['effectRadius', '效果范围', 'Effect radius', .1, 1, .01],
+    ['uvScale', '图片缩放', 'Image UV scale', .7, 1, .01],
+    ['parallaxIntensity', '图片内视差', 'Image parallax', 0, 1, .01],
+    ['shaderMultiplier', '视差倍率', 'Parallax multiplier', 0, 2, .1],
+    ['speed', '特效速度', 'Effect speed', 0, 3, .05],
+    ['focusX', '效果中心 X', 'Effect center X', 0, 1, .01],
+    ['focusY', '效果中心 Y', 'Effect center Y', 0, 1, .01],
+    ['hoverTransitionSpeed', '悬停跟随速度', 'Hover response', .02, .3, .01],
+  ];
+  for (const [target, rows] of [['lookControls', [['lookStrength', '外观强度', 'Look strength', 0, 1, .01], ['lookScale', '纹理尺寸 / 柔度', 'Texture scale / softness', .5, 3, .05]]], ['imageEffectControls', imageControls]]) {
+    for (const [key, zh, english, min, max, step] of rows) {
+      const label = document.createElement('label'); label.className = 'gm-field'; label.dataset.en = english; label.append(document.createTextNode(zh));
+      const input = document.createElement('input'); Object.assign(input, { type: 'range', min, max, step, value: effects.defaults[key] }); input.dataset.imageEffect = key;
+      label.append(input, document.createElement('output')); $(target).append(label);
+    }
+  }
+  const option = (value, zh, english) => { const node = new Option(zh, value); node.dataset.en = english; return node; };
+  $('imageEffect').append(option(-1, '无特效', 'No effect'), ...effects.effects.map((name, i) => option(i, name, effects.effectNames[i])));
+  $('imageLook').append(...effects.looks.map((name, i) => option(name, effects.lookNames[i], effects.lookEnglish[i])));
   window.STGFontLibrary.enhanceSelect($('fontFamily'));
   const en = () => language === 'en';
   const status = (zh, english = zh) => { $('schemeStatus').textContent = en() ? english : zh; };
@@ -118,24 +141,33 @@
   function draw() {
     const canvas = $('canvas'), line = motion.timeline(state.settings);
     const at = paused ? Math.min(time, line.total) : current() % line.total;
-    motion.render(canvas.getContext('2d'), canvas.width, canvas.height, at, state.settings, state.assets, resources);
+    motion.render(canvas.getContext('2d'), canvas.width, canvas.height, at, state.settings, state.assets, resources, undefined, pointer);
     $('seek').value = at; $('playhead').style.left = `${Math.min(1, at / line.total) * 100}%`;
     $('timeReadout').textContent = `${at.toFixed(2)} / ${line.total.toFixed(2)}s`;
     const phase = line.phases.findLast(p => at >= p.start && at <= p.end); $('phaseReadout').textContent = phase ? (en() ? phase.en : phase.name) : '';
   }
   let lastFrame = 0;
-  function tick(stamp) { if (ready && !paused && !busy && stamp - lastFrame > 30) { lastFrame = stamp; draw(); } requestAnimationFrame(tick); }
+  const pointer = { active: false, x: .5, y: .5 };
+  $('canvas').onpointermove = event => { const box = $('canvas').getBoundingClientRect(); Object.assign(pointer, { active: true, x: (event.clientX - box.left) / box.width, y: (event.clientY - box.top) / box.height }); if (ready && !busy) draw(); };
+  $('canvas').onpointerleave = () => { pointer.active = false; if (ready && !busy) draw(); };
+  function tick(stamp) {
+    const hovering = state.assets.some(a => a.effects.activation === 'hover' && (pointer.active || resources.get(a.id)?.hoverProgress > .002));
+    if (ready && (!paused || hovering) && !busy && stamp - lastFrame > 30) { lastFrame = stamp; draw(); }
+    requestAnimationFrame(tick);
+  }
   requestAnimationFrame(tick);
 
   // Portable media fields match the shared CellMotion resource model. Decoded images never enter schemes.
-  const assetFrom = (source, name, type = 'image/png', extra = {}) => ({ id: crypto.randomUUID(), source: 'image', originalDataUrl: source, fileType: type, imageName: name, fit: 'cover', cropX: 0.5, cropY: 0.5, opacity: 1, ...extra });
+  const assetFrom = (source, name, type = 'image/png', extra = {}) => ({ id: crypto.randomUUID(), source: 'image', originalDataUrl: source, fileType: type, imageName: name, fit: 'cover', cropX: 0.5, cropY: 0.5, opacity: 1, ...extra, effects: effects.normalize(extra.effects) });
+  function disposeResource(resource) { CellMotionAnimatedImage.dispose(resource?.animated); effects.dispose(resource); }
   async function loadAsset(asset, cache = resources) {
+    if ((asset.effects.effect >= 0 && asset.effects.strength > 0) || (!asset.effects.lookBaked && asset.effects.look !== 'none') || asset.effects.uvScale !== 1 || asset.effects.parallaxIntensity > 0) effects.ensureAvailable();
     const old = cache.get(asset.id); if (old?.source === asset.originalDataUrl) return old;
     const image = new Image(); image.decoding = 'async'; image.src = asset.originalDataUrl; await image.decode();
     const resource = { source: asset.originalDataUrl, image, animated: null, canvas: null };
     if (asset.fileType === 'image/gif') resource.animated = await CellMotionAnimatedImage.decode({ url: asset.originalDataUrl, type: asset.fileType });
     if (asset.kind === 'vector') { resource.canvas = document.createElement('canvas'); resource.canvas.width = resource.canvas.height = 256; }
-    if (old && cache === resources) CellMotionAnimatedImage.dispose(old.animated);
+    if (old && cache === resources) disposeResource(old);
     cache.set(asset.id, resource); return resource;
   }
   function readFile(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = () => reject(reader.error); reader.readAsDataURL(file); }); }
@@ -145,12 +177,14 @@
       const incoming = [];
       for (const file of files) {
         if (!file.type.startsWith('image/')) throw new Error(en() ? 'Choose an image file.' : '请选择图片文件。');
-        const asset = assetFrom(await readFile(file), file.name, file.type, replaceId ? { id: replaceId } : {});
+        const previous = replaceId ? state.assets.find(a => a.id === replaceId) : null;
+        const extra = previous ? { id: previous.id, fit: previous.fit, cropX: previous.cropX, cropY: previous.cropY, opacity: previous.opacity, effects: { ...previous.effects, lookBaked: false } } : {};
+        const asset = assetFrom(await readFile(file), file.name, file.type, extra);
         await loadAsset(asset); incoming.push(asset);
       }
       if (replaceId) state.assets[state.assets.findIndex(a => a.id === replaceId)] = incoming[0]; else state.assets.push(...incoming);
       selectedId = incoming.at(-1)?.id || selectedId; renderSelectedAssets(); editAsset(selectedId); scheduleSave();
-      status(`已添加 ${incoming.length} 张图片。`, `${incoming.length} image(s) added.`);
+      status(replaceId ? '图片已替换，原效果和裁切设置已保留。' : `已添加 ${incoming.length} 张图片。`, replaceId ? 'Image replaced; effects and crop settings kept.' : `${incoming.length} image(s) added.`);
     } catch (error) { status(error.message); }
   }
   $('imageUpload').onchange = async event => { await addFiles([...event.target.files]); event.target.value = ''; };
@@ -178,8 +212,26 @@
     selectedId = id; setPanel('content'); $('brandEditor').hidden = true; $('assetEditor').hidden = false; $('selectBrand').setAttribute('aria-pressed', 'false');
     $('assetTitle').textContent = asset.imageName; $('assetPreview').src = asset.originalDataUrl; $('assetName').value = asset.imageName;
     $('assetFit').value = asset.fit; $('cropX').value = asset.cropX; $('cropY').value = asset.cropY; $('assetFit').dispatchEvent(new Event('change'));
-    renderSelectedAssets(); setTime(0.30 / state.settings.speed);
+    syncImageEffects(asset); renderSelectedAssets(); setTime(0.30 / state.settings.speed);
   }
+  function syncImageEffects(asset) {
+    document.querySelectorAll('[data-image-effect]').forEach(input => {
+      const value = asset.effects[input.dataset.imageEffect]; input.value = String(value);
+      const output = input.parentElement.querySelector('output'); if (output) output.textContent = value;
+      input.dispatchEvent(new Event('change'));
+    });
+    $('bakedLookNotice').hidden = !asset.effects.lookBaked;
+  }
+  document.addEventListener('input', event => {
+    const input = event.target, key = input.dataset.imageEffect, asset = state.assets.find(a => a.id === selectedId);
+    if (!key || !asset || busy || !ready) return;
+    const next = { ...asset.effects, [key]: typeof effects.defaults[key] === 'number' ? Number(input.value) : input.value };
+    if (key.startsWith('look')) next.lookBaked = false;
+    if (key === 'look') next.lookColor = effects.colors[effects.looks.indexOf(next.look)];
+    if (!key.startsWith('look') && key !== 'strength' && next.effect >= 0 && next.strength === 0) next.strength = 1;
+    try { const normalized = effects.normalize(next); effects.ensureAvailable(); asset.effects = normalized; } catch (error) { status(error.message); syncImageEffects(asset); return; }
+    syncImageEffects(asset); scheduleSave(); draw();
+  });
   $('selectBrand').onclick = () => { selectedId = null; setPanel('content'); $('brandEditor').hidden = false; $('assetEditor').hidden = true; $('selectBrand').setAttribute('aria-pressed', 'true'); renderSelectedAssets(); setTime(motion.timeline(state.settings).revealEnd / state.settings.speed + 0.05); };
   for (const [id, key] of [['assetName', 'imageName'], ['assetFit', 'fit'], ['cropX', 'cropX'], ['cropY', 'cropY']]) {
     $(id).oninput = () => { const asset = state.assets.find(a => a.id === selectedId); if (!asset || busy) return; asset[key] = key.startsWith('crop') ? Number($(id).value) : $(id).value; renderSelectedAssets(); scheduleSave(); draw(); };
@@ -190,7 +242,7 @@
   }
   $('moveUp').onclick = () => moveAsset(-1); $('moveDown').onclick = () => moveAsset(1);
   $('deleteAsset').onclick = () => {
-    if (busy) return; CellMotionAnimatedImage.dispose(resources.get(selectedId)?.animated); resources.delete(selectedId); state.assets = state.assets.filter(a => a.id !== selectedId);
+    if (busy) return; disposeResource(resources.get(selectedId)); resources.delete(selectedId); state.assets = state.assets.filter(a => a.id !== selectedId);
     $('selectBrand').click(); scheduleSave();
   };
   function setLibrary(open) { $('libraryDrawer').hidden = !open; $('inspector').hidden = open; }
@@ -250,7 +302,7 @@
       ids.add(a.id); const library = a.libraryId ? STGIconLibrary.byId.get(a.libraryId) : null;
       if (!library && !/^data:image\/(png|jpeg|webp|gif|avif|svg\+xml);base64,[a-z0-9+/=\s]+$/i.test(a.originalDataUrl)) throw new Error('图片必须嵌入方案 / Images must be embedded');
       for (const key of ['cropX', 'cropY', 'opacity']) if (a[key] !== undefined && (typeof a[key] !== 'number' || !Number.isFinite(a[key]) || a[key] < 0 || a[key] > 1)) throw new Error('无效裁切 / Invalid crop');
-      return assetFrom(library?.url || a.originalDataUrl, a.imageName, library?.fileType || a.fileType || 'image/png', { id: a.id, fit: a.fit === 'stretch' ? 'stretch' : 'cover', cropX: a.cropX ?? 0.5, cropY: a.cropY ?? 0.5, opacity: a.opacity ?? 1, ...(library ? { libraryId: library.libraryId, kind: library.kind, vectorType: library.vectorType, vectorStyle: library.vectorStyle } : {}) });
+      return assetFrom(library?.url || a.originalDataUrl, a.imageName, library?.fileType || a.fileType || 'image/png', { id: a.id, fit: a.fit === 'stretch' ? 'stretch' : 'cover', cropX: a.cropX ?? 0.5, cropY: a.cropY ?? 0.5, opacity: a.opacity ?? 1, effects: a.effects, ...(library ? { libraryId: library.libraryId, kind: library.kind, vectorType: library.vectorType, vectorStyle: library.vectorStyle } : {}) });
     });
     return { settings, assets };
   }
@@ -259,8 +311,8 @@
     // Preload all candidates before changing the active composition.
     const pending = new Map(resources);
     try { for (const asset of next.assets) await loadAsset(asset, pending); }
-    catch (error) { for (const [id, resource] of pending) if (resource !== resources.get(id)) CellMotionAnimatedImage.dispose(resource.animated); throw error; }
-    for (const [id, resource] of resources) if (!next.assets.some(a => a.id === id) || pending.get(id) !== resource) CellMotionAnimatedImage.dispose(resource.animated);
+    catch (error) { for (const [id, resource] of pending) if (resource !== resources.get(id)) disposeResource(resource); throw error; }
+    for (const [id, resource] of resources) if (!next.assets.some(a => a.id === id) || pending.get(id) !== resource) disposeResource(resource);
     resources.clear(); next.assets.forEach(asset => resources.set(asset.id, pending.get(asset.id)));
     state = next; selectedId = null; syncControls(); $('brandEditor').hidden = false; $('assetEditor').hidden = true; setTime(0, false);
   }
@@ -275,7 +327,7 @@
     event.target.value = '';
   };
   $('resetScheme').onclick = async () => { if (busy) return; await applyScheme({ effect: 'curvedgallery', version: 2, settings: { ...motion.defaults }, assets: [] }); scheduleSave(); };
-  $('clearScheme').onclick = () => { if (busy) return; resources.forEach(r => CellMotionAnimatedImage.dispose(r.animated)); resources.clear(); state.assets = []; $('selectBrand').click(); renderSelectedAssets(); scheduleSave(); };
+  $('clearScheme').onclick = () => { if (busy) return; resources.forEach(disposeResource); resources.clear(); state.assets = []; $('selectBrand').click(); renderSelectedAssets(); scheduleSave(); };
   $('parallaxImport').onchange = async event => {
     if (!event.target.files[0] || busy) return;
     try {
@@ -283,10 +335,11 @@
       if (project.version !== 1 || !Array.isArray(project.images) || project.images.length > 100 || !project.settings) throw new Error('请选择视差工坊导出的备份 / Choose a Parallax Studio backup');
       const assets = project.images.map(image => {
         if (typeof image.name !== 'string' || !/^data:image\/(png|jpeg|webp|gif|avif);base64,[a-z0-9+/=\s]+$/i.test(image.src || '')) throw new Error('请在视差工坊使用“导出备份”，让图片嵌入 JSON / Export a backup with embedded images');
-        return assetFrom(image.src, image.name, image.src.slice(5, image.src.indexOf(';')));
+        const values = Object.fromEntries(['uvScale', 'parallaxIntensity', 'shaderMultiplier', 'hoverDistortionStrength', 'grainStrength', 'effectRadius', 'hoverTransitionSpeed'].filter(key => project.settings[key] !== undefined).map(key => [key, project.settings[key]]));
+        return assetFrom(image.src, image.name, image.src.slice(5, image.src.indexOf(';')), { effects: { ...values, effect: image.effect ?? -1 } });
       });
       await applyScheme({ effect: 'curvedgallery', version: 2, settings: state.settings, assets }); scheduleSave();
-      status(`已导入 ${assets.length} 张原图；悬停效果不会烘焙进图片。`, `${assets.length} original images imported; hover effects are not baked into backups.`);
+      status(`已导入 ${assets.length} 张图片及其可编辑视差效果。`, `${assets.length} images and editable parallax effects imported.`);
     } catch (error) { status(error.message); } event.target.value = '';
   };
 
@@ -298,6 +351,7 @@
       if (!text) return; if (!node.dataset.zh) node.dataset.zh = text.textContent; text.textContent = en() ? node.dataset.en : node.dataset.zh;
     });
     $('languageButton').textContent = en() ? '中文' : 'EN'; setTheme(document.body.dataset.editorTheme); syncPlayback(); renderTimeline(); renderSelectedAssets(); localStorage.setItem('cellmotion-editor-language', lang);
+    document.dispatchEvent(new Event('tc-languagechange'));
   }
   $('themeButton').onclick = () => setTheme(document.body.dataset.editorTheme === 'dark' ? 'light' : 'dark');
   $('languageButton').onclick = () => setLanguage(en() ? 'zh' : 'en');
@@ -346,7 +400,7 @@
           const name = `${String(i + 1).padStart(2, '0')}.png`;
           const response = await fetch(`https://opc8838-hub.github.io/xiaoguo-/gallery/${name}`);
           if (!response.ok) throw new Error(`图片载入失败 / Image load failed: ${name}`);
-          return assetFrom(await readFile(await response.blob()), name);
+          return assetFrom(await readFile(await response.blob()), name, 'image/png', { effects: { effect: i, strength: 0, look: effects.looks[i + 1], lookColor: effects.colors[i + 1], lookBaked: true } });
         }));
         // Loading the example does not replace the user's stored composition.
         await applyScheme({ effect: 'curvedgallery', version: 2, settings: { ...motion.defaults }, assets });

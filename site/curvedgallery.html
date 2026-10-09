@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="me-motion-editor.css?v=20260909-timeline-color">
   <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-1">
   <link rel="stylesheet" href="typecascade-polish.css?v=20260909-1">
-  <link rel="stylesheet" href="curvedgallery.css?v=20261009-3">
+  <link rel="stylesheet" href="curvedgallery.css?v=20261009-7">
 </head>
 <body class="tc-workspace me-motion-editor cg-editor" data-editor-theme="dark">
   <header class="tc-header">
@@ -58,6 +58,15 @@
       </section>
       <section class="gm-card me-layer-panel" id="assetManager"><button class="me-layer-toggle" id="assetToggle" type="button" aria-expanded="false" data-en="Selected images">已添加图片</button><div class="me-layer-items" id="selectedAssets" hidden></div></section>
       <section class="gm-card me-asset-editor" id="assetEditor" hidden><h2 id="assetTitle"></h2><img id="assetPreview" alt="当前图片"><label class="gm-field" data-en="Name">名称<input id="assetName" maxlength="200"></label><label class="cg-upload" data-en="Replace image">替换图片<input id="replaceImage" type="file" accept="image/*"></label>
+        <p class="gm-help" data-en="Replacing an image keeps its effects and crop settings.">替换图片会保留此图的效果和裁切设置。</p>
+        <label class="gm-field" data-en="Photo look">图片外观<select id="imageLook" data-image-effect="look"></select></label>
+        <p class="gm-help" id="bakedLookNotice" hidden data-en="This sample already contains its look. Replacement activates the editable look; changing a look control applies it to the current image.">示例图已有此外观；换图后自动套用可调外观，调整外观参数也会应用到当前图。</p>
+        <div id="lookControls"></div>
+        <label class="gm-field" data-en="Look tint">外观颜色<input id="lookColor" data-image-effect="lookColor" type="color" value="#eeeeed"></label>
+        <label class="gm-field" data-en="Parallax effect">视差特效<select id="imageEffect" data-image-effect="effect"></select></label>
+        <label class="gm-field" data-en="Activation">作用方式<select id="effectActivation" data-image-effect="activation"><option value="always" data-en="Always on">持续生效</option><option value="hover" data-en="Mouse hover">鼠标悬停</option></select></label>
+        <p class="gm-help" data-en="Exports play effects using the center, strength and speed below, without a mouse.">导出按下方效果中心、强度和速度播放，无需鼠标。</p>
+        <div id="imageEffectControls"></div>
         <label class="gm-field" data-en="Fit">图片裁切<select id="assetFit"><option value="cover">铺满裁切 / Cover</option><option value="stretch">拉伸 / Stretch</option></select></label>
         <label class="gm-field" data-en="Crop X">裁切水平位置<input id="cropX" type="range" min="0" max="1" step="0.01"></label><label class="gm-field" data-en="Crop Y">裁切垂直位置<input id="cropY" type="range" min="0" max="1" step="0.01"></label>
         <div class="gm-grid-2"><button id="moveUp" type="button" data-en="Move earlier">向前</button><button id="moveDown" type="button" data-en="Move later">向后</button></div><button id="deleteAsset" type="button" data-en="Delete image">删除图片</button>
@@ -73,5 +82,5 @@
   <aside class="me-asset-drawer" id="libraryDrawer" hidden aria-label="共享图库"><header><h2 data-en="Shared library">共享图库</h2><button id="closeLibrary" type="button" data-en="Close">关闭</button></header><div class="me-asset-library" id="library"></div><p class="gm-help" data-en="Select a candidate, then insert. Uploads stay in this browser.">选择候选，再点插入。上传图片只保存在此浏览器。</p><button class="me-asset-commit" id="insertCandidate" type="button" disabled data-en="Insert selected image">插入选中图片</button></aside>
   <script src="shared-font-library.js?v=20260824-2"></script><script src="shared-icon-library.js?v=20261009-1"></script><script src="cellmotion-animated-image.js"></script>
   <script src="js/continuation-gif.js"></script><script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="curvedgallery-motion.js?v=20261009-6"></script><script src="curvedgallery.js?v=20261009-5"></script><script src="typecascade-selects.js?v=20260909-1"></script>
+  <script src="curvedgallery-effects.js?v=20261009-7"></script><script src="curvedgallery-motion.js?v=20261009-7"></script><script src="curvedgallery.js?v=20261009-7"></script><script src="typecascade-selects.js?v=20260909-1"></script>
 </body></html>

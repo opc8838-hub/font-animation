@@ -66,7 +66,7 @@ body.cg-editor.is-preview .tc-center, body.cg-editor.is-preview .gm-stage { widt
 body.cg-editor.is-preview .me-stage-controls { display: none !important; }
 @media(max-width: 1100px) and (min-width: 861px) { body.cg-editor { grid-template-columns: 190px minmax(200px,1fr) 300px; } body.cg-editor .tc-header h1 > span + span { display: none; } }
 @media(max-width: 860px) {
-  body.cg-editor { display: flex; flex-direction: column; height: auto; min-height: 100dvh; overflow: visible; padding: 8px; }
+  body.cg-editor { display: flex; flex-direction: column; box-sizing: border-box; width: 100%; height: auto; min-height: 100dvh; overflow: visible; padding: 8px; }
   body.cg-editor .tc-header { order: 0; flex-wrap: wrap; padding: 10px; gap: 8px; }
   body.cg-editor .tc-brand { width: 96px; }
   body.cg-editor .tc-header h1 > span + span, body.cg-editor .tc-header small, body.cg-editor .tc-back { display: none; }

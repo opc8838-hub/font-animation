@@ -73,7 +73,7 @@
     return { x: p.x + Math.sin(a) * p.radius,
       y: p.y - Math.cos(a) * p.radius * p.tilt + (v - 0.5) * p.cardHeight + rearFacing(s, p, index) * s.cardHeight * (0.33 * (1 - p.pull) + 0.67 * (1 - p.pull) ** 8) };
   }
-  function render(ctx, width, height, time, s, assets = [], resources = new Map(), fonts = root.STGFontLibrary) {
+  function render(ctx, width, height, time, s, assets = [], resources = new Map(), fonts = root.STGFontLibrary, pointer = null) {
     ctx.clearRect(0, 0, width, height);
     ctx.fillStyle = s.background; ctx.fillRect(0, 0, width, height);
     const scale = Math.min(width / 1920, height / 1080);
@@ -118,6 +118,19 @@
       // Black in the reference is the source material, not a recoloring stage.
       // A photo fills the same panel geometry even when it becomes a thin strip.
       if (!texture) { ctx.fillStyle = s.markColor; outline(); ctx.fill(); continue; }
+      if (root.CurvedGalleryEffects && asset.effects) {
+        let focus = pointer ? { inside: false, x: .5, y: .5, panel: i } : null;
+        if (pointer?.active) {
+          const px = (pointer.x * width - (width - 1920 * scale) / 2) / scale;
+          const py = (pointer.y * height - (height - 1080 * scale) / 2) / scale;
+          for (let j = 0; j < 48; j++) {
+            const a = panelPoints(s, p, i, j / 48, 0), b = panelPoints(s, p, i, (j + 1) / 48, 0);
+            const t = (px - a.x) / (b.x - a.x), v = (py - a.y - (b.y - a.y) * t) / p.cardHeight;
+            if (t >= 0 && t <= 1 && v >= 0 && v <= 1) focus = { inside: true, x: (j + t) / 48, y: v, panel: i };
+          }
+        }
+        texture = root.CurvedGalleryEffects.texture(texture, resource, asset.effects, time, Math.sin(i * Math.PI * 2 / s.slots + p.angle) * .15, focus);
+      }
       ctx.save(); outline(); ctx.clip();
       for (let j = 0; j < slices; j++) {
         const u0 = j / slices, u1 = (j + 1) / slices;

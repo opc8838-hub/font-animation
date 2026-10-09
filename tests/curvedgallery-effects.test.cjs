@@ -1,0 +1,11 @@
+const assert = require('node:assert/strict');
+const { normalize, defaults, looks } = require('../site/curvedgallery-effects.js');
+assert.equal(normalize().effect, -1, 'old schemes retain the original pixels');
+for (let effect = -1; effect <= 6; effect++) assert.equal(normalize({ effect }).effect, effect);
+for (const look of looks) assert.equal(normalize({ look }).look, look);
+for (const invalid of [{ effect: 7 }, { effect: .5 }, { look: 'missing' }, { strength: NaN }, { uvScale: .1 }, { lookStrength: 2 }, { lookColor: 'red' }, { activation: 'invalid' }]) assert.throws(() => normalize(invalid));
+const a = normalize({ effect: 3, look: 'crystal', focusX: .2 });
+const b = normalize({ effect: 5 });
+a.strength = .4;
+assert.equal(b.strength, defaults.strength, 'different images own independent effect settings');
+console.log('PASS legacy defaults, all effects/looks, invalid import rejection and independent image state');
