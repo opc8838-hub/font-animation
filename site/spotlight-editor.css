@@ -1,0 +1,8 @@
+/* Spotlight additions on top of the shared CellMotion row editor. */
+.spot-wide { grid-column: 1 / -1; }
+.spot-row-grid { padding: 0; }
+.spot-row-grid .gm-help.spot-wide { margin: 0; }
+@media (min-width: 1201px) {
+  body.tc-workspace[data-spotlight] .tc-canvas-toolbar { width: 100%; box-sizing: border-box; align-self: stretch; justify-self: stretch; }
+  body.tc-workspace[data-spotlight] .tc-canvas-toolbar > .gm-canvas-card { flex: 0 0 auto; width: max-content !important; max-width: 100%; margin-left: auto; }
+}

@@ -10,6 +10,7 @@
     return;
   }
   const effects = [
+    ["spotlight", "聚光", "Spotlight"],
     ["curvedgallery", "弧廊归标", "Curved Gallery"],
     ["prosvg", "彩铸", "PRO SVG Lab"],
     ["sproutshift", "字芽", "Sprout Shift"], ["mistlift", "雾升", "Mist Lift"],

@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="聚光：强光绽放后收成光锥，从高处射下一道光柱，在地面亮起弧形光斑。逐帧复刻参考视频，可调整体快慢。">
+  <link rel="icon" href="favicon.svg">
+  <title>聚光 Spotlight | CellMotion</title>
+  <link rel="stylesheet" href="workspace-editor.css?v=20260901-1">
+  <link rel="stylesheet" href="me-motion-editor.css?v=20260909-timeline-color">
+  <link rel="stylesheet" href="shared-fonts.css?v=20261005-hk1">
+  <link rel="stylesheet" href="stg-cn.css?v=20260824-1">
+  <link rel="stylesheet" href="glyphmorph-reviewed.css?v=20260909-media-crop">
+  <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-coloriso">
+  <link rel="stylesheet" href="typecascade-polish.css?v=20260909-coloriso">
+  <link rel="stylesheet" href="spotlight-editor.css?v=20261010-1">
+<link rel="stylesheet" href="site-preferences.css?v=20260926-18">
+</head>
+<body class="glyphmorph-editor" data-spotlight="true" data-editor-capabilities="text-only">
+  <aside id="glyphMorphInspector" class="gm-inspector" aria-label="聚光编辑器">
+    <header class="gm-header">
+      <a class="tc-brand" href="cellmotion.html" aria-label="CellMotion 首页"><img src="assets/cellmotion/logo-original-transparent.png?v=20260926-1" alt="CellMotion"></a>
+      <div><small>让创意，自由生长</small><h1>聚光 <span>Spotlight</span></h1></div>
+    </header>
+
+    <section class="gm-card gm-canvas-card">
+      <div class="gm-card-title"><span>01</span><h2>画布尺寸</h2></div>
+      <label class="gm-field gm-field-wide">预设
+        <select id="canvasPreset">
+          <option value="1920x1080">16:9 横版 · 1920 × 1080</option>
+          <option value="1440x1080">4:3 横版 · 1440 × 1080</option>
+          <option value="1620x1080">3:2 横版 · 1620 × 1080</option>
+          <option value="1080x1080">1:1 方形 · 1080 × 1080</option>
+          <option value="1080x1350">4:5 竖版 · 1080 × 1350</option>
+          <option value="1080x1920">9:16 全屏 · 1080 × 1920</option>
+          <option value="custom">自定义</option>
+        </select>
+      </label>
+      <div class="gm-grid-2 gm-custom-size" hidden>
+        <label class="gm-field">宽度 <input id="canvasWidth" type="number" min="320" max="3840" step="1" value="1920"></label>
+        <label class="gm-field">高度 <input id="canvasHeight" type="number" min="320" max="3840" step="1" value="1080"></label>
+      </div>
+    </section>
+
+    <section class="gm-card">
+      <div class="gm-card-title"><span>02</span><h2>光效阶段</h2><button id="addRow" class="gm-text-button" type="button">＋ 添加停顿</button></div>
+      <p class="gm-help">按参考视频逐帧测得的 9 个阶段。每个阶段可改名称、时长和亮度；“添加停顿”会把画面停在上一阶段的结尾。</p>
+      <div id="sequenceRows" class="gm-sequence"></div>
+    </section>
+
+    <section class="gm-card" data-spot-global-card>
+      <div class="gm-card-title"><span>03</span><h2>速度与亮度</h2></div>
+      <div class="gm-grid-2">
+        <label class="gm-field">整体速度 <input id="speed" type="range" min="0.25" max="3" step="0.05"><output for="speed"></output></label>
+        <label class="gm-field">整体亮度 <input id="brightness" type="range" min="20" max="200" step="1"><output for="brightness"></output></label>
+        <label class="gm-field">结束后停留 <input id="finalHold" type="range" min="0" max="5000" step="50"><output for="finalHold"></output></label>
+      </div>
+      <label class="gm-check"><input id="loop" type="checkbox"><span>循环播放</span></label>
+      <p class="gm-help">整体速度同时缩放所有阶段：2× 用一半时间播完，0.5× 慢放一倍。</p>
+    </section>
+
+    <section class="gm-card" data-spot-global-card>
+      <div class="gm-card-title"><span>04</span><h2>光的颜色与形状</h2></div>
+      <div class="gm-grid-2 spot-colors">
+        <label class="gm-field">光球与光源 <input id="textColor" type="color"></label>
+        <label class="gm-field">光柱颜色 <input id="beamColor" type="color"></label>
+        <label class="gm-field">地面光色 <input id="poolColor" type="color"></label>
+        <label class="gm-field">背景 <input id="backgroundColor" type="color"></label>
+      </div>
+      <div class="gm-grid-2">
+        <label class="gm-field">光源水平位置 <input id="sourceX" type="range" min="-60" max="60" step="1"><output for="sourceX"></output></label>
+        <label class="gm-field">光源最终升高 <input id="sourceTop" type="range" min="-20" max="30" step="1"><output for="sourceTop"></output></label>
+        <label class="gm-field">地面位置 <input id="floorY" type="range" min="-25" max="15" step="1"><output for="floorY"></output></label>
+        <label class="gm-field">光芒数量 <input id="rayCount" type="range" min="0" max="8" step="1"><output for="rayCount"></output></label>
+        <label class="gm-field">光柱粗细 <input id="beamWidth" type="range" min="40" max="250" step="1"><output for="beamWidth"></output></label>
+        <label class="gm-field">地面光斑宽度 <input id="poolWidth" type="range" min="40" max="250" step="1"><output for="poolWidth"></output></label>
+      </div>
+    </section>
+
+    <section class="gm-card">
+      <div class="gm-card-title"><span>05</span><h2>时间轴</h2></div>
+      <div class="me-choreo-scroll"><div id="timeline" class="gm-timeline me-choreo-track me-choreo-bar" role="list" aria-label="聚光动效时间轴"></div></div>
+      <input id="scrubber" class="gm-scrubber me-choreo-playhead" type="range" min="0" max="1" step="0.001" value="0" aria-label="时间轴播放头">
+      <div class="gm-time-readout"><span id="timeNow">0.00s</span><span id="timeTotal">0.00s</span></div>
+    </section>
+
+    <section class="gm-card">
+      <div class="gm-card-title"><span>06</span><h2>方案</h2></div>
+      <div class="gm-actions gm-actions-4">
+        <button id="saveScheme" type="button">保存方案</button>
+        <button id="importScheme" type="button">导入方案</button>
+        <button id="restoreScheme" type="button">恢复默认</button>
+        <button id="clearScheme" type="button" aria-label="恢复默认阶段">清理重做</button>
+      </div>
+      <input id="schemeFile" type="file" accept="application/json,.json" hidden>
+    </section>
+
+    <section class="gm-card">
+      <div class="gm-card-title"><span>07</span><h2>真实导出</h2></div>
+      <div class="gm-grid-2">
+        <label class="gm-field">时长
+          <select id="exportDuration"><option value="cycle">完整循环</option><option value="3">3 秒</option><option value="5">5 秒</option><option value="10">10 秒</option></select>
+        </label>
+        <label class="gm-field">帧率
+          <select id="exportFps"><option value="24">24 fps</option><option value="30" selected>30 fps</option><option value="60">60 fps</option></select>
+        </label>
+      </div>
+      <div class="gm-actions gm-actions-3">
+        <button id="exportPng" type="button">PNG</button>
+        <button id="exportGif" type="button">GIF</button>
+        <button id="exportMp4" type="button">MP4</button>
+      </div>
+      <p id="exportStatus" class="gm-status" aria-live="polite">输出将严格使用当前画布尺寸。</p>
+    </section>
+  </aside>
+
+  <main id="glyphMorphStage" class="gm-stage">
+    <div id="compositionFrame" class="gm-composition-frame">
+      <canvas id="glyphMorphCanvas" width="1920" height="1080" aria-label="聚光效果预览"></canvas>
+    </div>
+    <div class="gm-stage-controls me-stage-controls" aria-label="预览控制">
+      <button id="toggleInspector" type="button" aria-pressed="false">▤ <span>编辑器</span></button>
+      <i aria-hidden="true"></i>
+      <button id="restartPreview" type="button">↺ <span>重播</span></button>
+      <button id="togglePlayback" type="button" aria-pressed="false">Ⅱ <span>暂停</span></button>
+    </div>
+  </main>
+
+  <script src="js/continuation-gif.js?v=20260824-1"></script>
+  <script src="shared-font-library.js?v=20261005-hk1"></script>
+  <script src="spotlight-render.js?v=20261010-1"></script>
+  <script src="spotlight-editor.js?v=20261010-1"></script>
+  <script src="stg-cn.js?v=20261010-spot1"></script>
+  <script src="typecascade-workspace.js?v=20261005-city"></script>
+  <script src="typecascade-polish.js?v=20260909-coloriso"></script>
+  <script src="typecascade-selects.js?v=20260909-1"></script>
+  <script src="typecascade-locale.js?v=20261010-spot"></script>
+  <script src="cellmotion-ai-manifest.js?v=20260909-ai-manifest"></script>
+  <script src="cellmotion-ai-menu.js?v=20260909-standard"></script>
+<script defer src="site-preferences.js?v=20261006-spot"></script>
+</body>
+</html>

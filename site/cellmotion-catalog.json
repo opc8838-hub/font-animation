@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "spotlight",
+      "date": "2026-10-10"
+    },
+    {
       "id": "curvedgallery",
       "date": "2026-10-09"
     },
@@ -70,6 +74,17 @@
     }
   ],
   "effects": [
+    {
+      "id": "spotlight",
+      "name": "聚光",
+      "english": "Spotlight",
+      "description": "光球绽放 · 收成光锥 · 光柱射下",
+      "category": "graphic",
+      "href": "spotlight.html?from=gallery&v=20261010-1",
+      "poster": "assets/cellmotion/poster-spotlight.jpg?v=20261010-1",
+      "video": "assets/previews/spotlight-card.mp4?v=20261010-1",
+      "status": "ready"
+    },
     {
       "id": "curvedgallery",
       "name": "弧廊归标",

@@ -221,6 +221,16 @@
     '在这里打字，花园会长出来': 'Type here and the garden grows',
     '全部文字': 'All text', '直接修改任意一行；点一行，下方显示这一行的设置': 'Edit any line directly; select a line to show its settings below',
     '主汉字': 'Chinese', '英文行': 'English', '副标题': 'Subtitle', '署名': 'Signature',
+    '选择一个阶段，在右侧调整时长和亮度': 'Select a phase to adjust its length and brightness', '聚光': 'Spotlight', '聚光编辑器': 'Spotlight editor', '聚光效果预览': 'Spotlight preview', '聚光动效时间轴': 'Spotlight timeline',
+    '光效阶段': 'Light phases', '＋ 添加停顿': '＋ Add pause', '光点亮起': 'Spark', '光球绽放': 'Orb bloom', '光球收拢': 'Orb gathers', '化为光锥': 'Becomes a cone',
+    '收窄上移': 'Narrows and rises', '光柱停驻': 'Beam holds', '地面光斑': 'Floor light', '渐暗熄灭': 'Fade out', '黑场': 'Black', '停顿': 'Pause',
+    '本阶段时长': 'Phase length', '本阶段亮度': 'Phase brightness', '暂停查看': 'Pause here', '▶ 从这里播放': '▶ Play from here', '恢复原片时长': 'Reset to reference timing',
+    '速度与亮度': 'Speed & brightness', '整体速度': 'Overall speed', '整体亮度': 'Overall brightness', '结束后停留': 'Hold at end',
+    '光的颜色与形状': 'Light colour & shape', '光球与光源': 'Orb & source', '光柱颜色': 'Beam colour', '地面光色': 'Floor light colour', '背景': 'Background',
+    '光源水平位置': 'Source X', '光源最终升高': 'Final source lift', '地面位置': 'Floor position', '光芒数量': 'Rays', '光柱粗细': 'Beam width', '地面光斑宽度': 'Floor light width',
+    '整体速度同时缩放所有阶段：2× 用一半时间播完，0.5× 慢放一倍。': 'Overall speed scales every phase: 2× plays in half the time, 0.5× at half speed.',
+    '按参考视频逐帧测得的 9 个阶段。每个阶段可改名称、时长和亮度；“添加停顿”会把画面停在上一阶段的结尾。': 'Nine phases measured frame by frame from the reference. Rename, retime or dim any phase; Add pause holds the end of the previous phase.',
+    '阶段已恢复为原片节奏；颜色、形状和画布保持不变。': 'Phases restored to the reference timing; colours, shape and canvas unchanged.',
     '城市字塔编辑器': 'City Stack editor', '城市字塔效果预览': 'City Stack preview', '城市字塔动效时间轴': 'City Stack timeline',
     '本行类型': 'Block role', '主汉字 · 逐字点亮': 'Chinese · per character', '英文行 · 整行点亮': 'English · whole line',
     '副标题 · 两端先亮': 'Subtitle · ends first', '署名 · 最后淡入': 'Signature · fade in',
@@ -478,6 +488,7 @@
         out = s
           .replace(/^(\d+:\d+) (方形|竖版|全屏|横版)/, (_, ratio, kind) => `${ratio} ${{方形:'Square',竖版:'Portrait',全屏:'Portrait',横版:'Landscape'}[kind]}`)
           .replace(/^段落 (\d+)$/, 'Block $1')
+          .replace(/^阶段 (\d+)$/, 'Phase $1')
           .replace(/^(\d+(?:\.\d+)?)s 停留 · (\d+) 个图标$/, (_,time,count) => `${time}s hold · ${count} ${count === '1' ? 'icon' : 'icons'}`)
           .replace(/^(\d+) 个图标$/, (_,count) => `${count} ${count === '1' ? 'icon' : 'icons'}`)
           .replace(/^位置 (\d+)$/, 'Pos. $1')

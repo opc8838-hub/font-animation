@@ -8,7 +8,7 @@ function inCategory(effect, category) {
   return category === 'all' || effect.category === category;
 }
 const escapeHTML = (text) => String(text).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-const mediaURL = (url) => `${url}?v=20261006-citystack1`;
+const mediaURL = (url) => `${url}${url.includes('?') ? '&' : '?'}v=20261010-spotlight1`;
 const play = async (video) => { try { await video.play(); return true; } catch { return false; } };
 let effects = [], featured = [], recent = [], activeCategory = 'all', limit = 12;
 let activeUsage = 'all';
@@ -22,6 +22,7 @@ const ribbonSeed = [
   {id:'currentwall',name:'水流',href:'currentwall.html',poster:'assets/cellmotion/poster-currentwall.jpg',video:'assets/previews/water-flow-card.mp4'},
   {id:'pathwriter',name:'轨书',href:'pathwriter.html',poster:'assets/cellmotion/poster-pathwriter.jpg',video:'assets/previews/pathwriter-card.mp4'},
   {id:'sproutshift',name:'字芽',href:'sproutshift.html',poster:'assets/cellmotion/poster-sproutshift.jpg',video:'assets/previews/sproutshift-wide-card.mp4'},
+  {id:'spotlight',name:'聚光',href:'spotlight.html?from=gallery&v=20261010-1',poster:'assets/cellmotion/poster-spotlight.jpg',video:'assets/previews/spotlight-card.mp4'},
   {id:'citystack',name:'城市字塔',href:'citystack.html?from=gallery&v=20261006-1',poster:'assets/cellmotion/poster-citystack.jpg',video:'assets/previews/citystack-card.mp4'},
   {id:'ribbonink',name:'流彩笔迹',href:'ribbonink.html',poster:'assets/cellmotion/poster-ribbonink.jpg',video:'assets/previews/ribbon-ink-card.mp4'},
   {id:'prosvg',name:'彩铸',href:'prosvg.html?from=gallery',poster:'final_prosvg.png',video:'assets/previews/prosvg-card.mp4'}
@@ -274,7 +275,7 @@ document.addEventListener('visibilitychange',()=>{
 });
 async function loadCatalogData() {
   try {
-    const response=await fetch('cellmotion-catalog.json?v=20261009-curvedgallery8');
+    const response=await fetch('cellmotion-catalog.json?v=20261010-spotlight1');
     if(!response.ok)throw new Error(`Catalog HTTP ${response.status}`);
     const catalog=await response.json();
     effects=catalog.effects;
