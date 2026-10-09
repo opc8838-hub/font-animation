@@ -76,7 +76,7 @@
       "english": "Curved Gallery",
       "description": "弯曲图片旋转 · 压窄归标 · 左移揭字",
       "category": "media",
-      "href": "curvedgallery.html",
+      "href": "curvedgallery.html?from=gallery&v=20261009-8",
       "poster": "assets/cellmotion/poster-curvedgallery.jpg?v=20261009-4",
       "video": "assets/previews/curvedgallery-card.mp4?v=20261009-4",
       "status": "ready"
