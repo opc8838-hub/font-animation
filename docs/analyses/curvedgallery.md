@@ -64,3 +64,7 @@ Images and their order/crop, brand text/font/weight/color, background and mark c
 - Authoritative real exports: default H.264 MP4 1920 × 1080 / 30fps / 138 frames / 4.600s; all seven original portraits exported at 640 × 360 / 30fps / 138 frames / 4.600s. PNG, portrait H.264 and GIF also checked. GIF cumulative centisecond delays match the complete timeline.
 - Scheme version 2 adds independent left-shift and word-delay settings. v1 imports/autosaves retain all images and custom values; untouched v1 timing/height defaults upgrade to the corrected defaults. IndexedDB retains its existing key.
 - Only this effect's unaccepted video/poster artifacts are regenerated. Existing catalog entries, featured order, recent releases and unrelated preview files remain frozen.
+
+## Portrait example requested by the user
+
+`curvedgallery.html?demo=portraits` loads the seven existing `xiaoguo-/gallery/01.png` through `07.png` pictures into the same editor and renderer. Adding `&preview` uses the existing full-stage presentation. Photos are fetched from their existing published paths, embedded into the ordinary media model and remain replaceable; no image copies or parallel renderer. Initial example loading does not save over the user’s IndexedDB composition. The companion `assets/previews/curvedgallery-portraits-demo.mp4` is an actual 1280 × 720 / 30fps / 4.600s export of this preset.

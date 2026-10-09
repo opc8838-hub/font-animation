@@ -5,7 +5,8 @@
   let state = { settings: { ...motion.defaults }, assets: [] }, selectedId = null, candidate = null;
   let paused = matchMedia('(prefers-reduced-motion: reduce)').matches, time = 0, started = performance.now();
   let ready = false, busy = false, saveTimer, language = localStorage.getItem('cellmotion-editor-language') || 'zh';
-  const preview = new URLSearchParams(location.search).has('preview');
+  const params = new URLSearchParams(location.search), preview = params.has('preview');
+  const portraitsDemo = params.get('demo') === 'portraits';
   if (preview) document.body.classList.add('is-preview');
   const geometry = [
     ['slots', '圆环卡片数量', 'Panel count', 4, 36, 1],
@@ -340,7 +341,16 @@
   window.CurvedGallery = { seek: setTime, collectScheme, applyScheme, render: (ctx, w, h, seconds) => motion.render(ctx, w, h, seconds, state.settings, state.assets, resources), exportFile };
   (async () => {
     try {
-      if (!preview) {
+      if (portraitsDemo) {
+        const assets = await Promise.all(Array.from({ length: 7 }, async (_, i) => {
+          const name = `${String(i + 1).padStart(2, '0')}.png`;
+          const response = await fetch(`https://opc8838-hub.github.io/xiaoguo-/gallery/${name}`);
+          if (!response.ok) throw new Error(`图片载入失败 / Image load failed: ${name}`);
+          return assetFrom(await readFile(await response.blob()), name);
+        }));
+        // Loading the example does not replace the user's stored composition.
+        await applyScheme({ effect: 'curvedgallery', version: 2, settings: { ...motion.defaults }, assets });
+      } else if (!preview) {
         const db = await dbPromise, saved = await new Promise((resolve, reject) => { const request = db.transaction('schemes').objectStore('schemes').get('current'); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
         if (saved) await applyScheme(saved);
       }
