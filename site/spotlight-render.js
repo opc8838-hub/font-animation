@@ -6,17 +6,32 @@
   // a 16:9 frame; refTime is the reference clock in milliseconds (0 … REF_DURATION).
   const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
   const smooth = (t) => t * t * (3 - 2 * t);
+  // Monotone cubic (Fritsch–Carlson) through the keyframes: velocity stays continuous across
+  // keyframes, so motion never stalls at a key, and it never overshoots between two keys.
   function track(points) {
+    const n = points.length;
+    const slopes = [];
+    for (let index = 0; index < n - 1; index += 1) {
+      slopes.push((points[index + 1][1] - points[index][1]) / Math.max(1e-6, points[index + 1][0] - points[index][0]));
+    }
+    const tangents = points.map((_, index) => {
+      if (index === 0 || index === n - 1) return 0;
+      const a = slopes[index - 1], b = slopes[index];
+      if (a * b <= 0) return 0;
+      const ha = points[index][0] - points[index - 1][0], hb = points[index + 1][0] - points[index][0];
+      return 3 * (ha + hb) / ((2 * hb + ha) / a + (hb + 2 * ha) / b);
+    });
     return (time) => {
       if (time <= points[0][0]) return points[0][1];
-      for (let index = 1; index < points.length; index += 1) {
+      for (let index = 1; index < n; index += 1) {
         const [t1, v1] = points[index];
         if (time <= t1) {
           const [t0, v0] = points[index - 1];
-          return v0 + (v1 - v0) * smooth((time - t0) / Math.max(1e-6, t1 - t0));
+          const h = Math.max(1e-6, t1 - t0), t = (time - t0) / h, t2 = t * t, t3 = t2 * t;
+          return (2 * t3 - 3 * t2 + 1) * v0 + (t3 - 2 * t2 + t) * h * tangents[index - 1] + (-2 * t3 + 3 * t2) * v1 + (t3 - t2) * h * tangents[index];
         }
       }
-      return points[points.length - 1][1];
+      return points[n - 1][1];
     };
   }
 
@@ -33,7 +48,7 @@
     ring: track([[2600, 0], [2900, 0.6], [3600, 0.5], [4300, 0.32], [4800, 0.1], [5200, 0]]),
     haze: track([[2600, 0], [3000, 1], [3800, 0.8], [4600, 0.35], [5400, 0.15], [11000, 0.12], [11500, 0]]),
     // Source point (top of the cone), travelling upward while the cone narrows.
-    srcY: track([[0, 0.5], [2600, 0.5], [3000, 0.485], [3200, 0.478], [3600, 0.468], [4000, 0.453], [4400, 0.423], [4800, 0.375], [5200, 0.31], [5600, 0.252], [6000, 0.225], [6600, 0.21], [8000, 0.216], [10000, 0.222], [11200, 0.24]]),
+    srcY: track([[0, 0.5], [2600, 0.5], [3200, 0.491], [4000, 0.462], [4400, 0.428], [4800, 0.378], [5200, 0.312], [5600, 0.255], [6000, 0.225], [6600, 0.21], [8000, 0.216], [10000, 0.222], [11200, 0.24]]),
     cone: track([[2600, 0], [2900, 0.6], [3200, 1], [10200, 1], [10600, 0.92], [11000, 0.8], [11200, 0.66], [11400, 0.25], [11600, 0]]),
     // Beam width at the source (U) and spread half-angle (deg) derived from the measured widths.
     bw: track([[2600, 0.012], [4000, 0.018], [4400, 0.026], [5000, 0.04], [5600, 0.038], [6000, 0.034], [8000, 0.04], [10200, 0.05], [10600, 0.04], [10800, 0.026], [11000, 0.017], [11200, 0.008], [11450, 0.004]]),
@@ -42,8 +57,8 @@
     dot: track([[2600, 0], [3000, 0.85], [3400, 1.15], [5200, 1.3], [6000, 1.0], [8000, 1.05], [10200, 1.45], [10600, 1.15], [11000, 0.55], [11300, 0.15], [11450, 0]]),
     // Floor arc: circle of radius 0.39U whose top sits at poolY; hw is the half-width at 50% brightness.
     poolI: track([[6500, 0], [6700, 0.35], [7000, 0.7], [7600, 0.9], [8000, 1], [10600, 1], [11000, 0.8], [11200, 0.45], [11400, 0.15], [11600, 0]]),
-    poolY: track([[6600, 0.85], [6800, 0.85], [7200, 0.823], [7600, 0.811], [8000, 0.802], [8400, 0.793], [9000, 0.787], [9600, 0.778], [10200, 0.772], [10800, 0.769], [11400, 0.766]]),
-    poolHW: track([[6600, 0.012], [6800, 0.022], [7200, 0.027], [7600, 0.039], [8000, 0.047], [9000, 0.06], [9600, 0.062], [10600, 0.063], [11200, 0.05], [11400, 0.045]])
+    poolY: track([[6600, 0.85], [6800, 0.848], [7200, 0.825], [8000, 0.803], [9000, 0.786], [10200, 0.773], [11400, 0.766]]),
+    poolHW: track([[6600, 0.012], [6800, 0.02], [7200, 0.029], [7600, 0.038], [8000, 0.046], [9000, 0.058], [9600, 0.062], [10600, 0.063], [11200, 0.05], [11400, 0.045]])
   };
 
   // Measured orb radial profile at 1.2 s (fraction of white vs radius in U).
@@ -74,9 +89,12 @@
   // settings: lightColor, beamColor, poolColor, backgroundColor, brightness (%), sourceX (% of U),
   // sourceTop (% of U, raises the final source), floorY (% of U), rayCount, beamWidth (%), poolWidth (%)
   function renderFrame(ctx, width, height, refTime, settings = {}, phaseGain = 1) {
-    const U = Math.min(height, width * 9 / 16);
+    // U sizes the light (calibrated at 1920×1080, where U = 1080); V places it vertically, so a
+    // tall canvas stretches the beam from the source down to the floor instead of shrinking it.
+    const U = Math.min(height, width);
+    const V = Math.min(height, U * 1.6);
     const cx = width / 2 + (Number(settings.sourceX) || 0) / 100 * U;
-    const top = (height - U) / 2;
+    const top = (height - V) / 2;
     const light = hexToRgb(settings.lightColor, [234, 238, 255]);
     const beamRgb = hexToRgb(settings.beamColor, [186, 188, 240]);
     const poolRgb = hexToRgb(settings.poolColor, [226, 196, 236]);
@@ -105,8 +123,8 @@
     sc.clearRect(0, 0, width, height);
     sc.globalCompositeOperation = "lighter";
 
-    const orbY = top + s.orbY * U;
-    const srcY = top + (s.srcY - riseNow) * U;
+    const orbY = top + s.orbY * V;
+    const srcY = top + (s.srcY - riseNow) * V;
 
     // 1. Orb: measured radial profile, white core shading to blue-grey haze.
     if (s.orbI > 0.001) {
@@ -131,12 +149,12 @@
       if (s.ghost > 0.001) {
         sc.strokeStyle = rgba([175, 190, 225], 0.1 * s.ghost * gain);
         sc.lineWidth = 0.012 * U;
-        sc.beginPath(); sc.arc(cx, top + 0.81 * U, 0.075 * U, 0, Math.PI * 2); sc.stroke();
-        const blue = sc.createRadialGradient(cx, top + U, 0, cx, top + U, 0.2 * U);
+        sc.beginPath(); sc.arc(cx, top + 0.81 * V, 0.075 * U, 0, Math.PI * 2); sc.stroke();
+        const blue = sc.createRadialGradient(cx, top + V, 0, cx, top + V, 0.2 * U);
         blue.addColorStop(0, rgba([60, 100, 210], 0.6 * s.ghost * gain));
         blue.addColorStop(1, "rgba(60,100,210,0)");
         sc.fillStyle = blue;
-        sc.fillRect(cx - 0.25 * U, top + 0.75 * U, 0.5 * U, 0.4 * U);
+        sc.fillRect(cx - 0.25 * U, top + V - 0.25 * U, 0.5 * U, 0.4 * U);
       }
     }
     if (s.spark > 0.001) {
@@ -182,7 +200,7 @@
 
     // 4. Cone / beam: angular Gaussian (conic gradient) × axial falloff (radial gradient), from a
     // virtual apex placed so the beam already has width bw at the source.
-    const endY = top + (s.beamEnd - riseNow) * U;
+    const endY = top + (s.beamEnd - riseNow) * V;
     if (s.cone > 0.001) {
       coneCanvas.width = soft.width; coneCanvas.height = soft.height;
       const cc = coneContext;
@@ -194,7 +212,7 @@
       const bw = s.bw * beamScale * U;
       const k = bw / 2 / Math.tan(theta);
       const apexY = srcY - k;
-      const length = Math.max(1, Math.min(endY, top + 1.25 * U) - srcY);
+      const length = Math.max(1, Math.min(endY, top + 1.25 * V) - srcY);
       const sigma = theta / 1.03; // 35% brightness at the measured edge with the super-Gaussian profile
       const conic = cc.createConicGradient(0, cx, apexY);
       const down = 0.25; // conic angle 0 = +x; down = π/2 → 0.25 of a turn
@@ -256,7 +274,7 @@
     // Floor arc: brightness along the arc is Gaussian with 50% at ±hw; two parallel rims.
     if (s.poolI > 0.001) {
       const R = 0.39 * U;
-      const topY = top + (s.poolY + floorShift) * U;
+      const topY = top + (s.poolY + floorShift) * V;
       const cy = topY + R;
       const hw = s.poolHW * 1.12 * poolScale * U;
       const sigma = hw / 0.833;
