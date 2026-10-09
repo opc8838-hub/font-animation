@@ -103,9 +103,14 @@
       const textureWidth = faceScale(s, p, i), slices = 32;
       const outline = (face = 1) => {
         ctx.beginPath();
-        for (let j = 0; j <= 48; j++) { const q = panelPoints(s, p, i, 0.5 + (j / 48 - 0.5) * face, 0); j ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); }
-        for (let j = 48; j >= 0; j--) { const q = panelPoints(s, p, i, 0.5 + (j / 48 - 0.5) * face, 1); ctx.lineTo(q.x, q.y); }
-        ctx.closePath();
+        // One compound fill keeps curved strips seamless. Match their winding so
+        // a side panel's overlapping front/back projections form one rounded cap.
+        for (let j = 0; j < 48; j++) {
+          const u0 = 0.5 + (j / 48 - 0.5) * face, u1 = 0.5 + ((j + 1) / 48 - 0.5) * face;
+          const q = [panelPoints(s, p, i, u0, 0), panelPoints(s, p, i, u1, 0), panelPoints(s, p, i, u1, 1), panelPoints(s, p, i, u0, 1)];
+          if (q[1].x < q[0].x) q.reverse();
+          ctx.moveTo(q[0].x, q[0].y); for (let k = 1; k < 4; k++) ctx.lineTo(q[k].x, q[k].y); ctx.closePath();
+        }
       };
       // The black back belongs to this same panel. Its photo face folds toward the
       // center edge geometrically; there is no full-photo opacity overlay or logo swap.

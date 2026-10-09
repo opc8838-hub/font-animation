@@ -32,7 +32,7 @@ The first release is not accepted: camera pullback starts too quickly, changing 
 | 4.50–5.52 | 3.33–4.35 | Final lockup hold |
 | 5.52–5.77 | 4.35–4.60 | Whole lockup fades together |
 
-The same twelve curved panels persist through the entire sequence. Front/rear widths and rear-stroke vertical placement depend on a continuous fold channel; no binary geometry change at `cos(angle)=0`. Back strokes stay lower during pullback, calibrated from the source; this extra depth continuously reaches zero at the final mark. Textures compress in their own clipped geometry, with black backs underneath and constant photo opacity. There is no full-photo fade to black and no swap to a separate logo.
+The same twelve curved panels persist through the entire sequence. Front/rear widths and rear-stroke vertical placement depend on a continuous fold channel; no binary geometry change at `cos(angle)=0`. Back strokes stay lower during pullback, calibrated from the source; this extra depth continuously reaches zero at the final mark. Textures compress in their own clipped geometry, with black backs underneath and constant photo opacity. There is no full-photo fade to black and no swap to a separate logo. Curved strips use one compound path with matching winding; overlapping side projections form a connected end cap rather than cancelling into detached fragments.
 
 ## Uncertainties
 
