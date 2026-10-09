@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="me-motion-editor.css?v=20260909-timeline-color">
   <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-1">
   <link rel="stylesheet" href="typecascade-polish.css?v=20260909-1">
-  <link rel="stylesheet" href="curvedgallery.css?v=20261009-7">
+  <link rel="stylesheet" href="curvedgallery.css?v=20261009-8">
 </head>
 <body class="tc-workspace me-motion-editor cg-editor" data-editor-theme="dark">
   <header class="tc-header">
@@ -39,6 +39,7 @@
       <div id="customSize" class="gm-grid-2" hidden><label>宽 / W<input id="canvasWidth" type="number" min="240" max="3840" step="2" value="1920"></label><label>高 / H<input id="canvasHeight" type="number" min="240" max="3840" step="2" value="1080"></label></div>
     </div></section>
     <section class="gm-stage" id="stage"><div class="gm-composition-frame"><canvas id="canvas" aria-label="弧廊归标实时预览"></canvas></div>
+      <div class="cg-focus-status" id="focusStatus" hidden><span id="focusName"></span><button id="exitImagePreview" type="button" data-en="Back to animation">返回完整动效</button></div>
       <div class="me-stage-controls"><button id="playButton" type="button">暂停</button><button id="replayButton" type="button" data-en="Replay">重播</button></div>
     </section>
     <section class="tc-timeline"><div class="cg-time"><span id="timeReadout">0.00 / 4.60s</span><span id="phaseReadout"></span></div>
@@ -57,7 +58,7 @@
         <div class="gm-grid-2"><label class="gm-field" data-en="Background">背景<input id="backgroundColor" data-setting="background" type="color" value="#eeeeed"></label><label class="gm-field" data-en="Text color">文字颜色<input id="textColor" data-setting="color" type="color" value="#000000"></label><label class="gm-field" data-en="Empty panel color">未上传时颜色<input data-setting="markColor" type="color" value="#000000"></label></div>
       </section>
       <section class="gm-card me-layer-panel" id="assetManager"><button class="me-layer-toggle" id="assetToggle" type="button" aria-expanded="false" data-en="Selected images">已添加图片</button><div class="me-layer-items" id="selectedAssets" hidden></div></section>
-      <section class="gm-card me-asset-editor" id="assetEditor" hidden><h2 id="assetTitle"></h2><img id="assetPreview" alt="当前图片"><label class="gm-field" data-en="Name">名称<input id="assetName" maxlength="200"></label><label class="cg-upload" data-en="Replace image">替换图片<input id="replaceImage" type="file" accept="image/*"></label>
+      <section class="gm-card me-asset-editor" id="assetEditor" hidden><h2 id="assetTitle"></h2><p class="gm-help" data-en="Original image below; edit effects in the large center preview.">下方为原图；中央大图实时显示编辑效果。</p><img id="assetPreview" alt="当前图片"><label class="gm-field" data-en="Name">名称<input id="assetName" maxlength="200"></label><label class="cg-upload" data-en="Replace image">替换图片<input id="replaceImage" type="file" accept="image/*"></label>
         <p class="gm-help" data-en="Replacing an image keeps its effects and crop settings.">替换图片会保留此图的效果和裁切设置。</p>
         <label class="gm-field" data-en="Photo look">图片外观<select id="imageLook" data-image-effect="look"></select></label>
         <p class="gm-help" id="bakedLookNotice" hidden data-en="This sample already contains its look. Replacement activates the editable look; changing a look control applies it to the current image.">示例图已有此外观；换图后自动套用可调外观，调整外观参数也会应用到当前图。</p>
@@ -82,5 +83,5 @@
   <aside class="me-asset-drawer" id="libraryDrawer" hidden aria-label="共享图库"><header><h2 data-en="Shared library">共享图库</h2><button id="closeLibrary" type="button" data-en="Close">关闭</button></header><div class="me-asset-library" id="library"></div><p class="gm-help" data-en="Select a candidate, then insert. Uploads stay in this browser.">选择候选，再点插入。上传图片只保存在此浏览器。</p><button class="me-asset-commit" id="insertCandidate" type="button" disabled data-en="Insert selected image">插入选中图片</button></aside>
   <script src="shared-font-library.js?v=20260824-2"></script><script src="shared-icon-library.js?v=20261009-1"></script><script src="cellmotion-animated-image.js"></script>
   <script src="js/continuation-gif.js"></script><script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="curvedgallery-effects.js?v=20261009-7"></script><script src="curvedgallery-motion.js?v=20261009-7"></script><script src="curvedgallery.js?v=20261009-7"></script><script src="typecascade-selects.js?v=20260909-1"></script>
+  <script src="curvedgallery-effects.js?v=20261009-7"></script><script src="curvedgallery-motion.js?v=20261009-8"></script><script src="curvedgallery.js?v=20261009-8"></script><script src="typecascade-selects.js?v=20260909-1"></script>
 </body></html>

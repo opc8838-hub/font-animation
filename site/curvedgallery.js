@@ -5,6 +5,7 @@
   let state = { settings: { ...motion.defaults }, assets: [] }, selectedId = null, candidate = null;
   let paused = matchMedia('(prefers-reduced-motion: reduce)').matches, time = 0, started = performance.now();
   let ready = false, busy = false, saveTimer, language = localStorage.getItem('cellmotion-editor-language') || 'zh';
+  let imagePreview = false, imagePreviewStarted = 0;
   const params = new URLSearchParams(location.search), preview = params.has('preview');
   const portraitsDemo = params.get('demo') === 'portraits';
   if (preview) document.body.classList.add('is-preview');
@@ -65,9 +66,11 @@
   const en = () => language === 'en';
   const status = (zh, english = zh) => { $('schemeStatus').textContent = en() ? english : zh; };
   function setPanel(name) {
+    if (name !== 'content') imagePreview = false;
     document.querySelectorAll('.tc-properties').forEach(node => { node.hidden = node.dataset.panel !== name; });
     document.querySelectorAll('.tc-tabs button').forEach(node => node.setAttribute('aria-pressed', String(node.dataset.panel === name)));
     $('libraryDrawer').hidden = true; $('inspector').hidden = false;
+    if (ready) draw();
   }
   document.querySelector('.tc-tabs').addEventListener('click', event => { if (event.target.dataset.panel) setPanel(event.target.dataset.panel); });
   $('exportShortcut').onclick = () => setPanel('export');
@@ -90,9 +93,10 @@
     paused = pause; started = performance.now() - time * 1000; syncPlayback(); draw();
   }
   function syncPlayback() { $('playButton').textContent = paused ? (en() ? 'Play' : '播放') : (en() ? 'Pause' : '暂停'); }
-  $('playButton').onclick = () => { if (busy) return; time = current() % motion.timeline(state.settings).total; paused = !paused; started = performance.now() - time * 1000; syncPlayback(); };
-  $('replayButton').onclick = () => { if (!busy) setTime(0, false); };
-  $('seek').oninput = () => { if (!busy) setTime(Number($('seek').value)); };
+  $('playButton').onclick = () => { if (busy) return; imagePreview = false; time = current() % motion.timeline(state.settings).total; paused = !paused; started = performance.now() - time * 1000; syncPlayback(); draw(); };
+  $('replayButton').onclick = () => { if (!busy) { imagePreview = false; setTime(0, false); } };
+  $('seek').oninput = () => { if (!busy) { imagePreview = false; setTime(Number($('seek').value)); } };
+  $('exitImagePreview').onclick = () => { imagePreview = false; draw(); };
   function renderTimeline() {
     const line = motion.timeline(state.settings), bar = $('timeline');
     bar.querySelectorAll('button').forEach(node => node.remove()); $('legend').replaceChildren();
@@ -104,7 +108,7 @@
       const strong = document.createElement('strong'); strong.textContent = en() ? phase.en : phase.name;
       const small = document.createElement('small'); small.textContent = `${(phase.end - phase.start).toFixed(2)}s`;
       button.append(strong, small); button.title = `${strong.textContent}: ${phase.start.toFixed(2)}–${phase.end.toFixed(2)}s`;
-      button.onclick = () => { if (!busy) setTime(phase.start + 0.001); }; bar.append(button);
+      button.onclick = () => { if (!busy) { imagePreview = false; setTime(phase.start + 0.001); } }; bar.append(button);
       const legend = document.createElement('span'); legend.style.setProperty('--phase', phase.color); legend.textContent = strong.textContent; $('legend').append(legend);
     });
     $('seek').max = line.total;
@@ -141,10 +145,14 @@
   function draw() {
     const canvas = $('canvas'), line = motion.timeline(state.settings);
     const at = paused ? Math.min(time, line.total) : current() % line.total;
-    motion.render(canvas.getContext('2d'), canvas.width, canvas.height, at, state.settings, state.assets, resources, undefined, pointer);
+    const selected = imagePreview ? state.assets.find(a => a.id === selectedId) : null;
+    const renderTime = selected ? .3 + (performance.now() - imagePreviewStarted) / 1000 : at;
+    motion.render(canvas.getContext('2d'), canvas.width, canvas.height, renderTime, state.settings, state.assets, resources, undefined, pointer, selected?.id);
+    $('focusStatus').hidden = !selected;
+    if (selected) $('focusName').textContent = `${en() ? 'Image preview' : '单图效果预览'} · ${state.assets.indexOf(selected) + 1} · ${selected.imageName}`;
     $('seek').value = at; $('playhead').style.left = `${Math.min(1, at / line.total) * 100}%`;
     $('timeReadout').textContent = `${at.toFixed(2)} / ${line.total.toFixed(2)}s`;
-    const phase = line.phases.findLast(p => at >= p.start && at <= p.end); $('phaseReadout').textContent = phase ? (en() ? phase.en : phase.name) : '';
+    const phase = line.phases.findLast(p => at >= p.start && at <= p.end); $('phaseReadout').textContent = selected ? (en() ? 'Image preview' : '单图效果预览') : phase ? (en() ? phase.en : phase.name) : '';
   }
   let lastFrame = 0;
   const pointer = { active: false, x: .5, y: .5 };
@@ -152,7 +160,7 @@
   $('canvas').onpointerleave = () => { pointer.active = false; if (ready && !busy) draw(); };
   function tick(stamp) {
     const hovering = state.assets.some(a => a.effects.activation === 'hover' && (pointer.active || resources.get(a.id)?.hoverProgress > .002));
-    if (ready && (!paused || hovering) && !busy && stamp - lastFrame > 30) { lastFrame = stamp; draw(); }
+    if (ready && (!paused || imagePreview || hovering) && !busy && stamp - lastFrame > 30) { lastFrame = stamp; draw(); }
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
@@ -212,7 +220,12 @@
     selectedId = id; setPanel('content'); $('brandEditor').hidden = true; $('assetEditor').hidden = false; $('selectBrand').setAttribute('aria-pressed', 'false');
     $('assetTitle').textContent = asset.imageName; $('assetPreview').src = asset.originalDataUrl; $('assetName').value = asset.imageName;
     $('assetFit').value = asset.fit; $('cropX').value = asset.cropX; $('cropY').value = asset.cropY; $('assetFit').dispatchEvent(new Event('change'));
-    syncImageEffects(asset); renderSelectedAssets(); setTime(0.30 / state.settings.speed);
+    syncImageEffects(asset); renderSelectedAssets(); showImagePreview(true);
+    $('inspector').scrollTop = 0; document.querySelector('.tc-properties[data-panel="content"]').scrollTop = 0;
+  }
+  function showImagePreview(reset = false) {
+    if (reset || !imagePreview) imagePreviewStarted = performance.now();
+    imagePreview = true; setTime(current() % motion.timeline(state.settings).total);
   }
   function syncImageEffects(asset) {
     document.querySelectorAll('[data-image-effect]').forEach(input => {
@@ -230,11 +243,11 @@
     if (key === 'look') next.lookColor = effects.colors[effects.looks.indexOf(next.look)];
     if (!key.startsWith('look') && key !== 'strength' && next.effect >= 0 && next.strength === 0) next.strength = 1;
     try { const normalized = effects.normalize(next); effects.ensureAvailable(); asset.effects = normalized; } catch (error) { status(error.message); syncImageEffects(asset); return; }
-    syncImageEffects(asset); scheduleSave(); draw();
+    syncImageEffects(asset); scheduleSave(); showImagePreview();
   });
-  $('selectBrand').onclick = () => { selectedId = null; setPanel('content'); $('brandEditor').hidden = false; $('assetEditor').hidden = true; $('selectBrand').setAttribute('aria-pressed', 'true'); renderSelectedAssets(); setTime(motion.timeline(state.settings).revealEnd / state.settings.speed + 0.05); };
+  $('selectBrand').onclick = () => { imagePreview = false; selectedId = null; setPanel('content'); $('brandEditor').hidden = false; $('assetEditor').hidden = true; $('selectBrand').setAttribute('aria-pressed', 'true'); renderSelectedAssets(); setTime(motion.timeline(state.settings).revealEnd / state.settings.speed + 0.05); };
   for (const [id, key] of [['assetName', 'imageName'], ['assetFit', 'fit'], ['cropX', 'cropX'], ['cropY', 'cropY']]) {
-    $(id).oninput = () => { const asset = state.assets.find(a => a.id === selectedId); if (!asset || busy) return; asset[key] = key.startsWith('crop') ? Number($(id).value) : $(id).value; renderSelectedAssets(); scheduleSave(); draw(); };
+    $(id).oninput = () => { const asset = state.assets.find(a => a.id === selectedId); if (!asset || busy) return; asset[key] = key.startsWith('crop') ? Number($(id).value) : $(id).value; renderSelectedAssets(); scheduleSave(); showImagePreview(); };
   }
   function moveAsset(delta) {
     if (busy) return; const i = state.assets.findIndex(a => a.id === selectedId), j = i + delta; if (i < 0 || j < 0 || j >= state.assets.length) return;
@@ -314,7 +327,7 @@
     catch (error) { for (const [id, resource] of pending) if (resource !== resources.get(id)) disposeResource(resource); throw error; }
     for (const [id, resource] of resources) if (!next.assets.some(a => a.id === id) || pending.get(id) !== resource) disposeResource(resource);
     resources.clear(); next.assets.forEach(asset => resources.set(asset.id, pending.get(asset.id)));
-    state = next; selectedId = null; syncControls(); $('brandEditor').hidden = false; $('assetEditor').hidden = true; setTime(0, false);
+    state = next; selectedId = null; imagePreview = false; syncControls(); $('brandEditor').hidden = false; $('assetEditor').hidden = true; setTime(0, false);
   }
   function download(blob, name) { const link = document.createElement('a'), url = URL.createObjectURL(blob); link.href = url; link.download = name; link.click(); setTimeout(() => URL.revokeObjectURL(url), 10000); }
   $('saveScheme').onclick = async () => {
@@ -367,7 +380,7 @@
     } else { disabledBeforeExport.forEach((disabled, node) => { node.disabled = disabled; }); disabledBeforeExport.clear(); }
   }
   async function exportFile(format) {
-    if (busy) return; const exportState = structuredClone(state), at = current() % motion.timeline(state.settings).total;
+    if (busy) return; imagePreview = false; const exportState = structuredClone(state), at = current() % motion.timeline(state.settings).total;
     setTime(at); setBusy(true); $('exportStatus').textContent = en() ? 'Preparing…' : '正在准备…'; let encoder;
     try {
       await document.fonts.load(`${exportState.settings.weight} 64px ${STGFontLibrary.family(exportState.settings.font)}`);

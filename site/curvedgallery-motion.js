@@ -73,7 +73,7 @@
     return { x: p.x + Math.sin(a) * p.radius,
       y: p.y - Math.cos(a) * p.radius * p.tilt + (v - 0.5) * p.cardHeight + rearFacing(s, p, index) * s.cardHeight * (0.33 * (1 - p.pull) + 0.67 * (1 - p.pull) ** 8) };
   }
-  function render(ctx, width, height, time, s, assets = [], resources = new Map(), fonts = root.STGFontLibrary, pointer = null) {
+  function render(ctx, width, height, time, s, assets = [], resources = new Map(), fonts = root.STGFontLibrary, pointer = null, focusId = null) {
     ctx.clearRect(0, 0, width, height);
     ctx.fillStyle = s.background; ctx.fillRect(0, 0, width, height);
     const scale = Math.min(width / 1920, height / 1080);
@@ -86,12 +86,19 @@
       ctx.font = `${preset?.style || 'normal'} ${s.weight} ${s.fontSize * availableText / textWidth}px ${fonts?.family(s.font) || 'sans-serif'}`;
       textWidth = availableText;
     }
+    const focusAsset = focusId ? assets.find(a => a.id === focusId) : null;
     const p = pose(s, time, textWidth);
+    if (focusAsset) {
+      const panelWidth = 2000 * Math.sin(Math.PI / s.slots * (1 - s.gap));
+      const bow = 1000 * s.curvature * (1 - Math.cos(Math.PI / s.slots * (1 - s.gap)));
+      const zoom = Math.min(780 / (s.cardHeight + bow), 1380 / panelWidth);
+      Object.assign(p, { radius: 1000 * zoom, cardHeight: s.cardHeight * zoom, x: 960, y: 540 + (1000 * s.curvature - bow / 2) * zoom, tilt: s.curvature, angle: 0, pull: 0, reveal: 0, alpha: 1 });
+    }
     ctx.globalAlpha = p.alpha;
-    const order = Array.from({ length: s.slots }, (_, i) => i).sort((a, b) =>
+    const order = focusAsset ? [0] : Array.from({ length: s.slots }, (_, i) => i).sort((a, b) =>
       Math.cos(a * Math.PI * 2 / s.slots + p.angle) - Math.cos(b * Math.PI * 2 / s.slots + p.angle));
     for (const i of order) {
-      const asset = assets.length ? assets[i % assets.length] : null;
+      const asset = focusAsset || (assets.length ? assets[i % assets.length] : null);
       const resource = asset ? resources.get(asset.id) : null;
       let texture = root.CellMotionAnimatedImage?.frameAt(resource?.animated, time) || resource?.image;
       if (asset?.kind === 'vector' && resource?.canvas && root.STGIconLibrary) {
@@ -153,7 +160,10 @@
     }
     if (p.reveal > 0 && s.text) {
       const x = p.x + p.radius + s.textGap, baseline = 540 + s.fontSize * 0.35;
-      ctx.save(); ctx.beginPath(); ctx.rect(x - 2, baseline - s.fontSize * 1.35, textWidth + 4, s.fontSize * 1.48); ctx.clip();
+      ctx.textBaseline = 'alphabetic';
+      const descent = ctx.measureText(s.text).actualBoundingBoxDescent ?? s.fontSize * .35;
+      const maskHeight = s.fontSize * 1.35 + Math.max(s.fontSize * .13, descent + 2);
+      ctx.save(); ctx.beginPath(); ctx.rect(x - 2, baseline - s.fontSize * 1.35, textWidth + 4, maskHeight); ctx.clip();
       ctx.fillStyle = s.color; ctx.textBaseline = 'alphabetic';
       // Keep the word's kerning, but reveal letters through their own vertical masks.
       const letters = Array.from(s.text);
@@ -161,7 +171,7 @@
         const start = ctx.measureText(letters.slice(0, i).join('')).width;
         const end = ctx.measureText(letters.slice(0, i + 1).join('')).width;
         const reveal = smooth((p.word - 0.20 * i / Math.max(1, letters.length - 1)) / 0.80);
-        ctx.save(); ctx.beginPath(); ctx.rect(x + start - (i ? 0 : 2), baseline - s.fontSize * 1.35, end - start + (i === letters.length - 1 ? 4 : 0), s.fontSize * 1.48); ctx.clip();
+        ctx.save(); ctx.beginPath(); ctx.rect(x + start - (i ? 0 : 2), baseline - s.fontSize * 1.35, end - start + (i === letters.length - 1 ? 4 : 0), maskHeight); ctx.clip();
         ctx.fillText(s.text, x, baseline + (1 - reveal) * s.fontSize * 1.5); ctx.restore();
       }
       ctx.restore();

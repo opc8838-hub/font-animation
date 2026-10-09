@@ -110,6 +110,7 @@ with sync_playwright() as p:
     page.locator('#contentList button').first.click()
     edit(page,'activation','hover');edit(page,'strength',1)
     page.evaluate('CurvedGallery.seek(.3)')
+    page.locator('#exitImagePreview').click()
     fixed=pixels(page)
     preview_before=page.locator('#canvas').screenshot()
     canvas=page.locator('#canvas').bounding_box()

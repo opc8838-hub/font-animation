@@ -54,6 +54,12 @@ Preview supports continuous effects or mouse hover using each curved panel's inv
 
 Checks include actual pixel changes for all seven shader types and all seven looks; neutral pixels restored at zero strength; real hover changes in the stage; per-image isolation, retained effects/crops after replacement, reorder/save/reload/import, invalid effects rejected, source-gallery shader parameters imported, baked samples unchanged until replaced, bilingual/theme/mobile checks, and filtered PNG/GIF/MP4 exports. Decoded H.264 frames and landscape/square PNGs are compared with the same deterministic renderer. The user's desktop `20261009-110332.jpg` is used only in private validation artifacts; it is not added to the public repository.
 
+## Selected-picture preview and text bounds (2026-10-09)
+
+Clicking an image pauses the animation and displays that selected image at a readable size in the center stage, including images beyond the ring's slot count. Crop, curvature, shader and look rendering share the existing panel renderer; animated image/effect time continues while the composition timeline stays paused. Playback, replay, seeking, brand editing and exports return to the complete animation. This editing view is never serialized into a scheme or exported as the movie composition.
+
+The word and per-letter reveal masks now include the rendered font's actual descender bounds. The old fixed bottom edge clipped `g`, `y`, `p`, `q` and `j`; fonts and words without deeper descenders retain the existing reveal bounds. Regression checks compare 36 font/text/size combinations against direct unmasked glyph rendering, selected-image visibility and isolation, mobile layout, and real PNG/GIF/H.264 exports. Approved camera timing and gallery preview bytes remain unchanged.
+
 ## Verification
 
 - The old renderer fails the photo-color regression: after retreat, colored fixture pixels fall to zero and turn into black pixels. The correction must retain photo pixels through the final lockup and within the thin rear strips.
