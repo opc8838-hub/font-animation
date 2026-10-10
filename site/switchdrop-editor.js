@@ -82,14 +82,14 @@
     canvas: { width: 1920, height: 1080, preset: "1920x1080" },
     subject: { name: "主体", mode: "asset", assetId: "hely", text: "ME", color: "#8277f5", size: 190, rim: 70, nightLogo: true, nightGlow: 100 },
     title: { text: "hely.fun", fontFamily: "stg:manrope", fontWeight: 700, size: 112, gap: 42, tracking: -3, color: "#ffffff", dotColor: "#8277f5" },
-    light: { direction: "off", curve: "apple", shape: "spot", duration: 240, delay: 0, litColor: "#ffffff", darkColor: "#010002", vignette: 45 },
+    light: { direction: "off", curve: "apple", shape: "spot", duration: 800, delay: 0, litColor: "#ffffff", darkColor: "#010002", vignette: 0, pool: 180 },
     motion: { speed: 1, drop: 1150, startY: -24, endY: 50, overshoot: 0, settle: 0, shift: 460, titleDelay: 60, titleDuration: 420, titleSpring: 18, hold: 3500, loop: true },
     background: { opacity: 100, media: null }
   });
   const RANGES = {
     subject: { size: [50, 420], rim: [0, 150], nightGlow: [30, 180] },
     title: { fontWeight: [100, 900], size: [28, 260], gap: [0, 180], tracking: [-12, 40] },
-    light: { duration: [80, 3000], delay: [0, 1500], vignette: [0, 200] },
+    light: { duration: [80, 3000], delay: [0, 1500], vignette: [0, 200], pool: [0, 400] },
     motion: { speed: [0.25, 3], drop: [250, 3200], startY: [-70, 0], endY: [25, 75], overshoot: [0, 22], settle: [0, 5000], shift: [100, 1800], titleDelay: [0, 1500], titleDuration: [80, 1800], titleSpring: [0, 55], hold: [0, 12000] }
   };
 
@@ -190,6 +190,13 @@
     const p = direction === "on" ? 1 - clamp(progress) : clamp(progress);
     if (curve === "apple" || !CURVES[curve]?.fn) return p;
     return tauForCentre(1 - CURVES[curve].fn(p));
+  }
+  // 光源收拢: strengthens (>1) or softens (<1) how far the edges lead the centre, keeping the
+  // measured centre curve; 1 = the reference.
+  function pooledLight(r, tau, strength) {
+    const centre = lightAt(0, tau);
+    if (centre <= 1e-4) return 0;
+    return centre * Math.pow(clamp(lightAt(r, tau) / centre), strength);
   }
   function lightAt(r, tau) {
     if (state.scheme.light.shape === "uniform") return centreLight(tau);
@@ -540,7 +547,7 @@
     const [dr, dg, db] = [1, 3, 5].map((offset) => parseInt(dark.slice(offset, offset + 2), 16));
     for (let i = 0; i <= steps; i += 1) {
       const r = i / steps * rMax;
-      const remaining = litFalloff(r, light.vignette / 100) * lightAt(r, f.tau);
+      const remaining = litFalloff(r, light.vignette / 100) * pooledLight(r, f.tau, light.pool / 100);
       gradient.addColorStop(i / steps, `rgba(${dr},${dg},${db},${clamp(1 - remaining).toFixed(4)})`);
     }
     ctx.fillStyle = gradient;
@@ -549,7 +556,7 @@
 
     // 3. Self-lit layers: rim light / night logo as the front light goes, then the title.
     const sr = Math.hypot((subjectX - cx) / (width / 2), (subjectY - cy) / (height / 2));
-    const darkness = clamp(1 - lightAt(sr, f.tau));
+    const darkness = clamp(1 - pooledLight(sr, f.tau, state.scheme.light.pool / 100));
     ctx.save();
     ctx.translate(subjectX, subjectY); ctx.scale(dropScale, dropScale); ctx.translate(-subjectX, -subjectY);
     drawNight(ctx, subjectX, subjectY, size, darkness);
@@ -730,14 +737,14 @@
 
   // ---------- Global controls ----------
   const CONTROL_MAP = {
-    switchMode: ["light", "direction"], switchEase: ["light", "curve"], switchShape: ["light", "shape"], switchDuration: ["light", "duration"], switchDelay: ["light", "delay"], vignette: ["light", "vignette"],
+    switchMode: ["light", "direction"], switchEase: ["light", "curve"], switchShape: ["light", "shape"], switchDuration: ["light", "duration"], switchDelay: ["light", "delay"], vignette: ["light", "vignette"], pool: ["light", "pool"],
     backgroundColor: ["light", "litColor"], darkColor: ["light", "darkColor"],
     speed: ["motion", "speed"], dropDuration: ["motion", "drop"], startY: ["motion", "startY"], endY: ["motion", "endY"], dropOvershoot: ["motion", "overshoot"], settleDuration: ["motion", "settle"],
     shiftDuration: ["motion", "shift"], titleDelay: ["motion", "titleDelay"], titleDuration: ["motion", "titleDuration"], titleSpring: ["motion", "titleSpring"], holdDuration: ["motion", "hold"], loop: ["motion", "loop"],
     fontFamily: ["title", "fontFamily"], textColor: ["title", "color"], backgroundOpacity: ["background", "opacity"]
   };
   const ms = (v) => `${Math.round(Number(v))}ms`;
-  const OUTPUT_FORMAT = { switchDuration: ms, switchDelay: ms, vignette: (v) => `${v}%`, speed: (v) => `${Number(v).toFixed(2)}×`, dropDuration: ms, startY: (v) => `${v}%`, endY: (v) => `${v}%`, dropOvershoot: (v) => `${v}%`, settleDuration: ms, shiftDuration: ms, titleDelay: ms, titleDuration: ms, titleSpring: (v) => `${v}%`, holdDuration: ms, backgroundOpacity: (v) => `${v}%` };
+  const OUTPUT_FORMAT = { switchDuration: ms, switchDelay: ms, vignette: (v) => `${v}%`, pool: (v) => `${v}%`, speed: (v) => `${Number(v).toFixed(2)}×`, dropDuration: ms, startY: (v) => `${v}%`, endY: (v) => `${v}%`, dropOvershoot: (v) => `${v}%`, settleDuration: ms, shiftDuration: ms, titleDelay: ms, titleDuration: ms, titleSpring: (v) => `${v}%`, holdDuration: ms, backgroundOpacity: (v) => `${v}%` };
   function updateOutputs() {
     Object.entries(OUTPUT_FORMAT).forEach(([id, format]) => { const output = document.querySelector(`output[for="${id}"]`); if (output && $(id)) output.value = format(Number($(id).value)); });
   }
@@ -880,7 +887,7 @@
     state.scheme.canvas[id === "canvasWidth" ? "width" : "height"] = clamp(Number($(id).value) || 1080, 320, 3840);
     changed();
   })));
-  const LIGHT_CONTROLS = new Set(["switchMode", "switchEase", "switchShape", "switchDuration", "switchDelay", "vignette", "darkColor"]);
+  const LIGHT_CONTROLS = new Set(["switchMode", "switchEase", "switchShape", "switchDuration", "switchDelay", "vignette", "pool", "darkColor"]);
   Object.keys(CONTROL_MAP).forEach((id) => {
     const input = $(id);
     if (!input) return;

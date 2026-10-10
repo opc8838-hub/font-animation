@@ -245,7 +245,7 @@
     '开关曲线': 'Switch curve', '苹果关灯 · 慢入快出（原片）': 'Apple lights-off · slow in, fast out (reference)', '平衡丝滑': 'Balanced', '快速开关': 'Snappy',
     '光的形态': 'Light shape', '聚光收拢 · 四周先暗（原片）': 'Spot closes · edges first (reference)', '整屏均匀变暗': 'Even dim',
     '开关时长': 'Switch length', '相对左移延后': 'Delay after slide starts', '亮灯时四周暗角': 'Lit vignette', '亮灯背景': 'Lit background', '关灯后颜色': 'Dark colour',
-    '原片逐帧测得：关灯约 0.24 秒，四周比中心先暗，越暗越快，最后一下直接黑掉。': 'Measured frame by frame: the light goes off in about 0.24 s, edges before the centre, faster and faster, then straight to black.',
+    '关灯时四周先暗、光往中间收，越暗越快，最后一下黑掉。「光源收拢」越大，中间那团光越明显；100% 为原片。': 'Edges go dark first and the light gathers to the centre, faster and faster, then cuts to black. Higher Light gather makes the central pool stronger; 100% matches the reference.', '光源收拢': 'Light gather',
     '速度与节奏': 'Speed & timing', '下降时长': 'Drop length', '开始高度': 'Start height', '落点高度': 'Landing height', '下降惯性': 'Drop overshoot', '到底停顿': 'Settle',
     '左移时长': 'Slide length', '标题延后': 'Title delay', '标题弹出': 'Title pop', '标题弹性': 'Title spring', '结束定格': 'Final hold', '标题字体': 'Title font', '字体': 'Font', '标题颜色': 'Title colour',
     '背景图片或视频处在灯光下，关灯时会和主体一起暗下去。': 'A background image or video sits under the light and goes dark with the subject.',

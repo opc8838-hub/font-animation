@@ -64,11 +64,12 @@
         </label>
         <label class="gm-field">开关时长 <input id="switchDuration" type="range" min="80" max="3000" step="10"><output for="switchDuration"></output></label>
         <label class="gm-field">相对左移延后 <input id="switchDelay" type="range" min="0" max="1500" step="10"><output for="switchDelay"></output></label>
+        <label class="gm-field">光源收拢 <input id="pool" type="range" min="0" max="400" step="5"><output for="pool"></output></label>
         <label class="gm-field">亮灯时四周暗角 <input id="vignette" type="range" min="0" max="200" step="1"><output for="vignette"></output></label>
         <label class="gm-field">亮灯背景 <input id="backgroundColor" type="color"></label>
         <label class="gm-field">关灯后颜色 <input id="darkColor" type="color"></label>
       </div>
-      <p class="gm-help">原片逐帧测得：关灯约 0.24 秒，四周比中心先暗，越暗越快，最后一下直接黑掉。</p>
+      <p class="gm-help">关灯时四周先暗、光往中间收，越暗越快，最后一下黑掉。「光源收拢」越大，中间那团光越明显；100% 为原片。</p>
     </section>
 
     <section class="gm-card" data-sd-global-card>
@@ -186,12 +187,12 @@
   <script src="shared-font-library.js?v=20261006-garden1"></script>
   <script src="cellmotion-animated-image.js?v=20260909-1"></script>
   <script src="token-asset-tools.js"></script>
-  <script src="switchdrop-editor.js?v=20261010-3"></script>
+  <script src="switchdrop-editor.js?v=20261010-4"></script>
   <script src="stg-cn.js?v=20261010-spot1"></script>
   <script src="typecascade-workspace.js?v=20261006-notr1"></script>
   <script src="typecascade-polish.js?v=20260909-coloriso"></script>
   <script src="typecascade-selects.js?v=20260909-1"></script>
-  <script src="typecascade-locale.js?v=20261010-sd1"></script>
+  <script src="typecascade-locale.js?v=20261010-sd2"></script>
   <script src="cellmotion-ai-manifest.js?v=20260909-ai-manifest"></script>
   <script src="cellmotion-ai-menu.js?v=20260909-standard"></script>
 <script defer src="site-preferences.js?v=20261006-spot"></script>
