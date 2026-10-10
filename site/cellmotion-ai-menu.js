@@ -10,22 +10,22 @@
   const exportButton = header?.querySelector(isReferenceEditor ? ".rm-export-shortcut" : isStgEditor ? (".stg-standard-export-shortcut, .stg-workspace-top") : ".tc-export-shortcut");
   if (!header || !exportButton || !window.CellMotionAI) return;
 
-  let language = (localStorage.getItem(isReferenceEditor ? "cellmotion-lang" : "cellmotion-site-language") || "zh") === "en" ? "en" : "zh";
+  let language = (document.body.dataset.editorLanguage || localStorage.getItem(isReferenceEditor ? "cellmotion-lang" : "cellmotion-site-language") || "zh") === "en" ? "en" : "zh";
   let definitionPromise;
-  const authoredComponentDefinitions = new Set(["prosvg", "typecascade", "sproutshift", "mistlift", "letterpulse", "iconburst", "glyphreveal"]);
+  const authoredComponentDefinitions = new Set(["prosvg", "typecascade", "sproutshift", "mistlift", "letterpulse", "iconburst", "glyphreveal", "curvedgallery"]);
   const title = (isReferenceEditor ? document.querySelector(".rm-title strong") : document.querySelector(".tc-header h1")?.childNodes[0])?.textContent?.trim() || slug;
   const words = {
     zh: {
       trigger: "用于 AI", preview: "预览 AI 组件", prompt: "复制 AI 提示词", code: "复制配置代码",
       json: "下载组件 JSON", params: "查看参数说明", copied: "已复制，可直接交给 AI",
       downloaded: "组件 JSON 已下载", title: `${title} · AI 参数说明`, close: "关闭",
-      global: "全局", effect: "动效", row: "逐段"
+      global: "全局", effect: "动效", row: "逐段", asset: "逐图"
     },
     en: {
       trigger: "For AI", preview: "Preview AI component", prompt: "Copy AI prompt", code: "Copy configured code",
       json: "Download component JSON", params: "View parameter guide", copied: "Copied — ready for AI",
       downloaded: "Component JSON downloaded", title: `${title} · AI parameters`, close: "Close",
-      global: "Global", effect: "Effect", row: "Per row"
+      global: "Global", effect: "Effect", row: "Per row", asset: "Per image"
     }
   };
 
@@ -136,13 +136,13 @@
   }
   function showParameters(def) {
     const t = words[language];
-    dialog.querySelector("h2").textContent = t.title;
+    dialog.querySelector("h2").textContent = `${def.effect?.name?.[language] || title} · ${language === 'en' ? 'AI parameters' : 'AI 参数说明'}`;
     dialog.querySelector(".tc-ai-summary").textContent = def.behavior?.summary?.[language] || "";
     const grouped = (def.parameters || []).reduce((result, item) => {
       (result[item.scope || "effect"] ||= []).push(item);
       return result;
     }, {});
-    dialog.querySelector(".tc-ai-params").innerHTML = ["global", "effect", "row"]
+    dialog.querySelector(".tc-ai-params").innerHTML = ["global", "effect", "row", "asset"]
       .filter((scope) => grouped[scope]?.length)
       .map((scope) => "<section><h3>" + t[scope] + "</h3>" + grouped[scope].map((item) => "<div><strong>" + (item.name?.[language] || item.path) + "</strong><code>" + item.path + "</code><span>" + item.type + (item.unit ? " · " + item.unit : "") + "</span></div>").join("") + "</section>")
       .join("");
@@ -192,7 +192,7 @@
   dialog.querySelector("[data-ai-close]").addEventListener("click", () => dialog.close());
   dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
   const onLanguageChange = (event) => {
-    language = event.detail?.language === "en" ? "en" : "zh";
+    language = (event.detail?.language || document.body.dataset.editorLanguage) === "en" ? "en" : "zh";
     renderLanguage();
   };
   document.addEventListener("tc-languagechange", onLanguageChange);

@@ -275,7 +275,7 @@ document.addEventListener('visibilitychange',()=>{
 });
 async function loadCatalogData() {
   try {
-    const response=await fetch('cellmotion-catalog.json?v=20261010-switchdrop2');
+    const response=await fetch('cellmotion-catalog.json?v=20261010-curvedgallery-ai1');
     if(!response.ok)throw new Error(`Catalog HTTP ${response.status}`);
     const catalog=await response.json();
     effects=catalog.effects;

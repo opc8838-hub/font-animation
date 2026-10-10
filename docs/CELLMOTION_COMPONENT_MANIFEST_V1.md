@@ -21,6 +21,8 @@ The JSON Schema is [`site/schemas/cellmotion-component-v1.schema.json`](../site/
 
 `composition` remains the rendering source of truth. It contains canvas geometry, typography, motion values, stable row ids, text, per-row font and color choices, inline icons, background media, video trim values, and transitions. `assets` is an index for integration and inspection; it does not replace the composition fields.
 
+Curved Gallery is also verified with its native `{effect: "curvedgallery", version: 2, settings, assets}` composition. Canvas geometry comes from `settings.width/height`; ordered image assets retain their embedded data, crop, opacity, shared library identity and per-image effects. Its [descriptor](../site/effects/curvedgallery.component.json) declares 55 editable parameter paths. The asset index references `composition.assets[i]` instead of duplicating embedded image bytes. No synthetic rows are introduced.
+
 ## Creating a live Manifest
 
 Load `cellmotion-ai-manifest.js`, fetch the effect descriptor, and pass the current scheme exposed by the editor bridge:
@@ -34,7 +36,7 @@ const manifest = CellMotionAI.createManifest({
 });
 ```
 
-Always create the Manifest on demand. Do not cache an earlier payload after the user changes text, fonts, icons, row backgrounds, media trim, canvas size, or motion values. The existing `typecascade-scheme.json` remains the editor save/import format; the component Manifest is an additional integration format.
+Always create the Manifest on demand. Do not cache an earlier payload after the user changes text, fonts, icons, row backgrounds, media trim, canvas size, or motion values. Each effect's existing scheme remains its editor save/import format; the component Manifest is an additional integration format.
 
 ## Rendering without reimplementing the effect
 
@@ -48,7 +50,7 @@ Load the generic custom element and assign the complete Manifest:
 </script>
 ```
 
-The player preserves the composition aspect ratio, opens the effect's existing preview renderer in an iframe, waits for `cellmotion:ready`, and sends `cellmotion:configure`. Its public methods are `play()`, `pause()`, `restart()`, `seek(seconds)`, and `update(composition)`.
+Generated code loads the shared player script from the renderer's `runtime.entry` host using a classic script before assigning the Manifest. The player preserves the composition aspect ratio, opens the effect's existing preview renderer in an iframe, waits for `cellmotion:ready`, and sends `cellmotion:configure`. Its public methods are `play()`, `pause()`, `restart()`, `seek(seconds)`, and `update(composition)`.
 
 The iframe bridge accepts the matching `cellmotion:play`, `cellmotion:pause`, `cellmotion:restart`, and `cellmotion:seek` messages. Preview and exported media therefore continue to use the effect's deterministic Canvas timeline and geometry.
 
@@ -56,7 +58,7 @@ The iframe bridge accepts the matching `cellmotion:play`, `cellmotion:pause`, `c
 
 AI compatibility is graduated: **Described** (descriptor), **Connected** (live editor Manifest), **Playable** (ready/configure/play/pause/restart/seek/duration/live-update bridge), then **Verified** (real player and media checks). A descriptor or standalone demonstration page alone is not an AI-ready integration.
 
-Type Cascade is the v1 pilot and currently the only effect represented as Verified. Other effects should reuse the shared Manifest/player/bridge modules and add a small effect-owned adapter; they must not copy the Type Cascade bridge into parallel implementations. The v1 composition schema is row-oriented because it reflects Type Cascade. Before onboarding scene-, layer-, or glyph-oriented effects, generalize the shared schema without coercing their native state into rows.
+Type Cascade and Curved Gallery are Verified. Other effects should reuse the shared Manifest/player/bridge modules and add a small effect-owned adapter; they must not copy the Type Cascade bridge into parallel implementations. The v1 schema accepts the existing row composition and Curved Gallery's native settings/assets composition. Future adapters must preserve their native models when extending the shared schema.
 
 System and uploaded GIFs use `CellMotionAnimatedImage`; source frame delays are authoritative. Preview, pause/seek, export, and AI player playback must derive the displayed frame from the same composition time.
 
@@ -64,7 +66,7 @@ System and uploaded GIFs use `CellMotionAnimatedImage`; source frame delays are 
 
 `runtime.entry` in an effect descriptor is relative to the editor/site base used by `createManifest`; generated Manifests contain an absolute URL. Built-in fonts and icons use stable library ids. Uploaded images and background media may be embedded as data URLs in `composition` and `assets`, so consumers must treat Manifest content as untrusted user data and avoid inserting names or strings as HTML.
 
-The v1 pilot sends iframe messages with `"*"` so same-origin local and static-site demos work without deployment-specific configuration. Production hosts should restrict both the target origin and accepted sender origin, serve the renderer from a trusted location, and apply an iframe Content Security Policy appropriate to their asset sources.
+The shared player sends messages only to the renderer's origin and accepts messages only from its iframe with that origin. Curved Gallery registers a small adapter with `cellmotion-effect-bridge.js`; the bridge accepts only its parent window and the parent origin derived from the document referrer (same-origin fallback). Configure and subsequent playback commands are serialized so asynchronous image/font loading completes first. Integrations must retain a usable referrer when hosting the renderer across origins. Unsupported schema/bridge versions raise a clear player error. The earlier Type Cascade effect-side pilot bridge still uses wildcard replies; its receiver has not been migrated by this change. Serve renderer scripts from a trusted location and use an iframe Content Security Policy appropriate to the assets.
 
 ## Compatibility rules
 
@@ -77,4 +79,6 @@ The v1 pilot sends iframe messages with `"*"` so same-origin local and static-si
 
 ## Verification
 
-For every effect descriptor, generate a Manifest from changed live state and verify text, fonts, colors, icons, custom assets, background image/GIF/video data, trim values, transitions, motion parameters, and canvas size. Open the component demo, confirm there is no editor chrome inside the iframe, and exercise play, pause, restart, seek, live update, ready, and duration reporting with a clean console at desktop and mobile widths.
+For every effect descriptor, generate a Manifest from changed live state and verify every declared capability: text, fonts, colors, icons, custom assets, image/GIF data, motion parameters and canvas size; verify video trim and transitions when supported. Open the component demo, confirm there is no editor chrome inside the iframe, and exercise play, pause, restart, seek, live update, ready, and duration reporting with a clean console at desktop and mobile widths.
+
+Curved Gallery's `tests/curvedgallery-ai-browser.py` validates all 55 parameter paths against edited live state and the JSON Schema, all five For AI actions, exact editor/player pixel equality for photos, variable-delay GIFs, vectors and effects, playback/seek/update/duration, real cross-origin copied-code embedding, invalid sender/protocol rejection, Type Cascade compatibility, and mobile/theme/language layout. Timeline checks verify full available width, true duration-scaled positions, separate non-overlapping lanes and correct phase seeking.

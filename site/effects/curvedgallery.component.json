@@ -1,0 +1,711 @@
+{
+  "effect": {
+    "id": "curvedgallery",
+    "name": {
+      "zh": "弧廊归标",
+      "en": "Curved Gallery"
+    },
+    "version": "1.0.0",
+    "category": "media"
+  },
+  "runtime": {
+    "kind": "iframe-bridge",
+    "entry": "curvedgallery.html?preview=1&embed=1&v=20261010-ai1",
+    "bridgeVersion": "1.0.0",
+    "renderer": "canvas2d-webgl-textures"
+  },
+  "capabilities": {
+    "editableBrandText": true,
+    "customImageAssets": true,
+    "animatedImageAssets": true,
+    "sharedIcons": true,
+    "imageCrop": true,
+    "imageEffects": true,
+    "timeline": true,
+    "responsiveCanvas": true,
+    "exports": [
+      "png",
+      "gif",
+      "mp4"
+    ],
+    "preview": true
+  },
+  "behavior": {
+    "summary": {
+      "zh": "完整图片沿弧面旋转，后退缩小并压成细条，始终保留图片颜色；组合向左移动，右侧品牌文字逐字揭开。每张图独立保留裁切、外观和视差参数。",
+      "en": "Intact curved pictures rotate, retreat, shrink and narrow into colored strips; the group moves left as brand text rises letter by letter. Every stable image retains its crop, look and parallax settings."
+    },
+    "phases": [
+      {
+        "id": "rotate",
+        "name": {
+          "zh": "环形转动",
+          "en": "Rotate"
+        },
+        "colorToken": "phase.sky"
+      },
+      {
+        "id": "pullback",
+        "name": {
+          "zh": "压弯聚拢",
+          "en": "Fold / pull back"
+        },
+        "colorToken": "phase.violet"
+      },
+      {
+        "id": "markHold",
+        "name": {
+          "zh": "标志停留",
+          "en": "Mark hold"
+        },
+        "colorToken": "phase.mint"
+      },
+      {
+        "id": "shift",
+        "name": {
+          "zh": "整组左移",
+          "en": "Move left"
+        },
+        "colorToken": "phase.mint"
+      },
+      {
+        "id": "reveal",
+        "name": {
+          "zh": "文字揭开",
+          "en": "Word reveal"
+        },
+        "colorToken": "phase.coral"
+      },
+      {
+        "id": "hold",
+        "name": {
+          "zh": "组合停留",
+          "en": "Lockup hold"
+        },
+        "colorToken": "phase.amber"
+      },
+      {
+        "id": "fade",
+        "name": {
+          "zh": "淡出",
+          "en": "Fade"
+        },
+        "colorToken": "phase.lime"
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "path": "composition.settings.width",
+      "scope": "global",
+      "type": "integer",
+      "name": {
+        "zh": "画布宽度",
+        "en": "Canvas width"
+      },
+      "unit": "px",
+      "minimum": 240,
+      "maximum": 3840
+    },
+    {
+      "path": "composition.settings.height",
+      "scope": "global",
+      "type": "integer",
+      "name": {
+        "zh": "画布高度",
+        "en": "Canvas height"
+      },
+      "unit": "px",
+      "minimum": 240,
+      "maximum": 3840
+    },
+    {
+      "path": "composition.settings.text",
+      "scope": "global",
+      "type": "string",
+      "name": {
+        "zh": "品牌文字",
+        "en": "Brand text"
+      }
+    },
+    {
+      "path": "composition.settings.font",
+      "scope": "global",
+      "type": "font",
+      "name": {
+        "zh": "品牌字体",
+        "en": "Brand font"
+      }
+    },
+    {
+      "path": "composition.settings.weight",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "字重",
+        "en": "Font weight"
+      },
+      "minimum": 100,
+      "maximum": 900
+    },
+    {
+      "path": "composition.settings.fontSize",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "字号",
+        "en": "Font size"
+      },
+      "unit": "px",
+      "minimum": 30,
+      "maximum": 400
+    },
+    {
+      "path": "composition.settings.background",
+      "scope": "global",
+      "type": "color",
+      "name": {
+        "zh": "背景颜色",
+        "en": "Background color"
+      }
+    },
+    {
+      "path": "composition.settings.color",
+      "scope": "global",
+      "type": "color",
+      "name": {
+        "zh": "文字颜色",
+        "en": "Text color"
+      }
+    },
+    {
+      "path": "composition.settings.markColor",
+      "scope": "global",
+      "type": "color",
+      "name": {
+        "zh": "未上传时颜色",
+        "en": "Empty panel color"
+      }
+    },
+    {
+      "path": "composition.settings.textGap",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "图标与文字间距",
+        "en": "Mark / text gap"
+      },
+      "unit": "px",
+      "minimum": 0,
+      "maximum": 240
+    },
+    {
+      "path": "composition.settings.slots",
+      "scope": "effect",
+      "type": "integer",
+      "name": {
+        "zh": "圆环卡片数量",
+        "en": "Panel count"
+      },
+      "minimum": 4,
+      "maximum": 36
+    },
+    {
+      "path": "composition.settings.gap",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "卡片间距",
+        "en": "Panel gap"
+      },
+      "minimum": 0.02,
+      "maximum": 0.45
+    },
+    {
+      "path": "composition.settings.cardHeight",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "图片高度",
+        "en": "Panel height"
+      },
+      "unit": "px",
+      "minimum": 180,
+      "maximum": 820
+    },
+    {
+      "path": "composition.settings.curvature",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "弧面倾斜",
+        "en": "Arc tilt"
+      },
+      "minimum": 0.08,
+      "maximum": 0.55
+    },
+    {
+      "path": "composition.settings.turns",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "旋转圈数",
+        "en": "Turns"
+      },
+      "minimum": 0.1,
+      "maximum": 3
+    },
+    {
+      "path": "composition.settings.finalSize",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "收尾标志大小",
+        "en": "Final mark size"
+      },
+      "unit": "px",
+      "minimum": 70,
+      "maximum": 300
+    },
+    {
+      "path": "composition.settings.speed",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "整体速度",
+        "en": "Speed"
+      },
+      "unit": "x",
+      "minimum": 0.25,
+      "maximum": 3
+    },
+    {
+      "path": "composition.settings.spin",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "环形转动时长",
+        "en": "Rotation duration"
+      },
+      "unit": "s",
+      "minimum": 0.2,
+      "maximum": 5
+    },
+    {
+      "path": "composition.settings.pullback",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "缩小归标时长",
+        "en": "Pullback duration"
+      },
+      "unit": "s",
+      "minimum": 0.2,
+      "maximum": 4
+    },
+    {
+      "path": "composition.settings.overlap",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "旋转与缩小重叠",
+        "en": "Rotation / pullback overlap"
+      },
+      "unit": "s",
+      "minimum": 0,
+      "maximum": 0.8
+    },
+    {
+      "path": "composition.settings.shiftOverlap",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "聚拢与左移重叠",
+        "en": "Pullback / shift overlap"
+      },
+      "unit": "s",
+      "minimum": 0,
+      "maximum": 0.5
+    },
+    {
+      "path": "composition.settings.shift",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "整组左移时长",
+        "en": "Left shift duration"
+      },
+      "unit": "s",
+      "minimum": 0.2,
+      "maximum": 3
+    },
+    {
+      "path": "composition.settings.textDelay",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "左移后文字延迟",
+        "en": "Word delay after shift starts"
+      },
+      "unit": "s",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "path": "composition.settings.markHold",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "标志单独停留",
+        "en": "Mark-only hold"
+      },
+      "unit": "s",
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "path": "composition.settings.reveal",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "文字揭开时长",
+        "en": "Word reveal duration"
+      },
+      "unit": "s",
+      "minimum": 0.1,
+      "maximum": 3
+    },
+    {
+      "path": "composition.settings.hold",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "组合停留时长",
+        "en": "Lockup hold"
+      },
+      "unit": "s",
+      "minimum": 0,
+      "maximum": 5
+    },
+    {
+      "path": "composition.settings.fade",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "最后淡出时长",
+        "en": "Fade duration"
+      },
+      "unit": "s",
+      "minimum": 0,
+      "maximum": 2
+    },
+    {
+      "path": "composition.settings.direction",
+      "scope": "effect",
+      "type": "enum",
+      "name": {
+        "zh": "旋转方向",
+        "en": "Rotation direction"
+      },
+      "enum": [
+        -1,
+        1
+      ]
+    },
+    {
+      "path": "composition.assets",
+      "scope": "global",
+      "type": "array",
+      "name": {
+        "zh": "有序图片和图标",
+        "en": "Ordered pictures and icons"
+      }
+    },
+    {
+      "path": "composition.assets[].id",
+      "scope": "asset",
+      "type": "string",
+      "name": {
+        "zh": "稳定图片 ID",
+        "en": "Stable image ID"
+      }
+    },
+    {
+      "path": "composition.assets[].imageName",
+      "scope": "asset",
+      "type": "string",
+      "name": {
+        "zh": "图片名称",
+        "en": "Image name"
+      }
+    },
+    {
+      "path": "composition.assets[].originalDataUrl",
+      "scope": "asset",
+      "type": "media",
+      "name": {
+        "zh": "图片 / GIF 素材",
+        "en": "Image / GIF source"
+      }
+    },
+    {
+      "path": "composition.assets[].libraryId",
+      "scope": "asset",
+      "type": "string",
+      "name": {
+        "zh": "共享图库 ID",
+        "en": "Shared library ID"
+      }
+    },
+    {
+      "path": "composition.assets[].fit",
+      "scope": "asset",
+      "type": "enum",
+      "name": {
+        "zh": "裁切模式",
+        "en": "Image fit"
+      },
+      "enum": [
+        "cover",
+        "stretch"
+      ]
+    },
+    {
+      "path": "composition.assets[].cropX",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "裁切水平位置",
+        "en": "Crop X"
+      },
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "path": "composition.assets[].cropY",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "裁切垂直位置",
+        "en": "Crop Y"
+      },
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "path": "composition.assets[].opacity",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "图片透明度",
+        "en": "Image opacity"
+      },
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "path": "composition.assets[].effects.effect",
+      "scope": "asset",
+      "type": "integer",
+      "name": {
+        "zh": "视差特效类型",
+        "en": "Parallax effect type"
+      },
+      "minimum": -1,
+      "maximum": 6
+    },
+    {
+      "path": "composition.assets[].effects.strength",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "特效强度",
+        "en": "Effect strength"
+      },
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "path": "composition.assets[].effects.uvScale",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "图片缩放",
+        "en": "Image UV scale"
+      },
+      "minimum": 0.7,
+      "maximum": 1
+    },
+    {
+      "path": "composition.assets[].effects.parallaxIntensity",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "图片内视差",
+        "en": "Image parallax"
+      },
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "path": "composition.assets[].effects.shaderMultiplier",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "视差倍率",
+        "en": "Parallax multiplier"
+      },
+      "minimum": 0,
+      "maximum": 2
+    },
+    {
+      "path": "composition.assets[].effects.hoverDistortionStrength",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "扭曲强度",
+        "en": "Distortion"
+      },
+      "minimum": 0,
+      "maximum": 0.2
+    },
+    {
+      "path": "composition.assets[].effects.grainStrength",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "颗粒强度",
+        "en": "Grain"
+      },
+      "minimum": 0,
+      "maximum": 0.3
+    },
+    {
+      "path": "composition.assets[].effects.effectRadius",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "效果范围",
+        "en": "Effect radius"
+      },
+      "minimum": 0.1,
+      "maximum": 1
+    },
+    {
+      "path": "composition.assets[].effects.hoverTransitionSpeed",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "悬停跟随速度",
+        "en": "Hover response"
+      },
+      "minimum": 0.02,
+      "maximum": 0.3
+    },
+    {
+      "path": "composition.assets[].effects.focusX",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "效果中心 X",
+        "en": "Effect center X"
+      },
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "path": "composition.assets[].effects.focusY",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "效果中心 Y",
+        "en": "Effect center Y"
+      },
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "path": "composition.assets[].effects.speed",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "特效速度",
+        "en": "Effect speed"
+      },
+      "minimum": 0,
+      "maximum": 3
+    },
+    {
+      "path": "composition.assets[].effects.lookStrength",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "外观强度",
+        "en": "Look strength"
+      },
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "path": "composition.assets[].effects.lookScale",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "纹理尺寸 / 柔度",
+        "en": "Texture scale / softness"
+      },
+      "minimum": 0.5,
+      "maximum": 3
+    },
+    {
+      "path": "composition.assets[].effects.look",
+      "scope": "asset",
+      "type": "enum",
+      "name": {
+        "zh": "图片外观",
+        "en": "Photo look"
+      },
+      "enum": [
+        "none",
+        "fog",
+        "neon",
+        "trail",
+        "reed",
+        "frost",
+        "crystal",
+        "pink"
+      ]
+    },
+    {
+      "path": "composition.assets[].effects.lookColor",
+      "scope": "asset",
+      "type": "color",
+      "name": {
+        "zh": "外观颜色",
+        "en": "Look color"
+      }
+    },
+    {
+      "path": "composition.assets[].effects.lookBaked",
+      "scope": "asset",
+      "type": "boolean",
+      "name": {
+        "zh": "原图已含外观",
+        "en": "Look baked in source"
+      }
+    },
+    {
+      "path": "composition.assets[].effects.activation",
+      "scope": "asset",
+      "type": "enum",
+      "name": {
+        "zh": "特效触发",
+        "en": "Effect activation"
+      },
+      "enum": [
+        "always",
+        "hover"
+      ]
+    }
+  ]
+}

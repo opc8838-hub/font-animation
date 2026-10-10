@@ -17,16 +17,27 @@
     },
     "runtime": {
       "type": "object",
-      "required": ["kind", "entry"],
+      "required": ["kind", "entry", "bridgeVersion"],
       "properties": {
         "kind": { "const": "iframe-bridge" },
         "entry": { "type": "string" },
-        "bridgeVersion": { "type": "string" }
+        "bridgeVersion": { "const": "1.0.0" }
       }
     },
     "composition": {
       "type": "object",
-      "required": ["canvas", "motion", "rows"],
+      "anyOf": [
+        { "required": ["canvas", "motion", "rows"] },
+        {
+          "required": ["effect", "version", "settings", "assets"],
+          "properties": {
+            "effect": { "const": "curvedgallery" },
+            "version": { "enum": [1, 2] },
+            "settings": { "type": "object", "required": ["width", "height"], "properties": { "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 } } },
+            "assets": { "type": "array", "items": { "type": "object" } }
+          }
+        }
+      ],
       "properties": {
         "canvas": { "type": "object" },
         "typography": { "type": "object" },

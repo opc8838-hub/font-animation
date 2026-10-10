@@ -66,6 +66,7 @@
     }
   });
   player.addEventListener("cellmotion-ready", () => { status.textContent = `${livePreview ? "编辑器当前配置" : "默认方案"}已就绪 · Preview 与 Code 使用同一份 Manifest`; });
+  player.addEventListener('cellmotion-error', event => { status.textContent = `组件加载失败：${event.detail.message}`; });
   document.querySelector(".demo-tabs").addEventListener("click", (event) => {
     const button = event.target.closest("[data-tab]");
     if (!button) return;

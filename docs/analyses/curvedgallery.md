@@ -60,6 +60,14 @@ Clicking an image pauses the animation and displays that selected image at a rea
 
 The word and per-letter reveal masks now include the rendered font's actual descender bounds. The old fixed bottom edge clipped `g`, `y`, `p`, `q` and `j`; fonts and words without deeper descenders retain the existing reveal bounds. Regression checks compare 36 font/text/size combinations against direct unmasked glyph rendering, selected-image visibility and isolation, mobile layout, and real PNG/GIF/H.264 exports. Approved camera timing and gallery preview bytes remain unchanged.
 
+## For AI and timeline alignment (2026-10-10)
+
+The native editor now uses the shared five-action For AI menu: component preview, prompt, configured HTML, component JSON and parameter guide. Its descriptor declares 55 editable paths covering brand typography, canvas, ring geometry, choreography and ordered image assets with crop/opacity/all shader and look controls. The Manifest preserves the native v2 scheme without converting images into rows or duplicating embedded image bytes. Shared font/icon dependency indexing and a small authoritative-renderer bridge provide ready/configure/play/pause/restart/seek/duration/live update; no second renderer is introduced.
+
+The timeline fills the available width, uses a normalized time ruler and assigns overlapping stages to separate aligned lanes. Bar positions and widths reflect the actual phase intervals; clicks still seek those phases. The seek label stays on one line. Narrow screens scroll the minimum readable track inside the editor. These are editor layout changes; choreography and approved MP4 preview bytes remain unchanged.
+
+`tests/curvedgallery-ai-browser.py` passes all 55 path checks and JSON Schema validation; edited photos, variable-delay GIFs, vector assets and effects match the editor pixels exactly at multiple seek times. It also verifies all menu actions, configured HTML at a real separate HTTP origin, strict sender/protocol handling, player updates and duration, Type Cascade compatibility, mobile/theme/language, full-width interval geometry and non-overlapping lanes. Existing focus/text and seven-shader/looks/export browser regressions also pass.
+
 ## Verification
 
 - The old renderer fails the photo-color regression: after retreat, colored fixture pixels fall to zero and turn into black pixels. The correction must retain photo pixels through the final lockup and within the thin rear strips.

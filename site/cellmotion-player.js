@@ -25,7 +25,12 @@
 
     _mount() {
       if (!this.isConnected || !this._manifest?.runtime?.entry) return;
-      const canvas = this._manifest.composition?.canvas || {};
+      if (this._manifest.schemaVersion !== '1.0.0' || this._manifest.runtime.bridgeVersion !== '1.0.0') {
+        this._ready = false; this.iframe.src = 'about:blank'; this._setDuration(0);
+        this.dispatchEvent(new CustomEvent('cellmotion-error', { detail: { message: 'Unsupported CellMotion schema/bridge version' } }));
+        return;
+      }
+      const canvas = this._manifest.composition?.canvas || this._manifest.composition?.settings || {};
       const width = Number(canvas.width) || 1080;
       const height = Number(canvas.height) || 1080;
       this.style.aspectRatio = `${width} / ${height}`;
@@ -40,6 +45,12 @@
 
     _onMessage(event) {
       if (event.source !== this.iframe.contentWindow) return;
+      if (event.origin !== new URL(this.iframe.src).origin) return;
+      if (event.data?.bridgeVersion && event.data.bridgeVersion !== '1.0.0') return;
+      if (event.data?.type === 'cellmotion:error') {
+        this.dispatchEvent(new CustomEvent('cellmotion-error', { detail: { message: event.data.message } }));
+        return;
+      }
       if (event.data?.type === "cellmotion:duration") {
         this._setDuration(event.data.durationMs);
         return;
@@ -58,7 +69,7 @@
       this.dispatchEvent(new CustomEvent("cellmotion-durationchange", { detail: { duration: this.duration } }));
     }
 
-    _post(type, detail = {}) { this.iframe.contentWindow?.postMessage({ type, ...detail }, "*"); }
+    _post(type, detail = {}) { if (this.iframe.src) this.iframe.contentWindow?.postMessage({ type, bridgeVersion: '1.0.0', ...detail }, new URL(this.iframe.src).origin); }
     play() { this._post("cellmotion:play"); }
     pause() { this._post("cellmotion:pause"); }
     restart() { this._post("cellmotion:restart"); }

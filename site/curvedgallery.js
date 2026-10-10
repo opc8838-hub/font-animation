@@ -100,17 +100,27 @@
   function renderTimeline() {
     const line = motion.timeline(state.settings), bar = $('timeline');
     bar.querySelectorAll('button').forEach(node => node.remove()); $('legend').replaceChildren();
+    $('timelineRuler').replaceChildren();
+    for (let i = 0; i <= 5; i++) {
+      const tick = document.createElement('span'); tick.style.left = `${i * 20}%`; tick.textContent = `${(line.total * i / 5).toFixed(2)}s`;
+      if (i === 5) tick.style.transform = 'translateX(-100%)'; $('timelineRuler').append(tick);
+    }
+    const lanes = [];
     line.phases.forEach(phase => {
       if (phase.end <= phase.start) return;
       const button = document.createElement('button'); button.type = 'button'; button.className = 'me-choreo-block';
       button.style.left = `${phase.start / line.total * 100}%`; button.style.width = `${(phase.end - phase.start) / line.total * 100}%`;
-      button.style.setProperty('--cg-phase', phase.color); button.style.top = phase.en === 'Fold / pull back' || phase.en === 'Word reveal' ? '12px' : '0';
+      let lane = lanes.findIndex(end => end <= phase.start + .000001); if (lane < 0) lane = lanes.length; lanes[lane] = phase.end;
+      button.style.setProperty('--cg-phase', phase.color); button.style.top = `${lane * 60}px`;
+      button.dataset.start = phase.start; button.dataset.end = phase.end;
       const strong = document.createElement('strong'); strong.textContent = en() ? phase.en : phase.name;
       const small = document.createElement('small'); small.textContent = `${(phase.end - phase.start).toFixed(2)}s`;
       button.append(strong, small); button.title = `${strong.textContent}: ${phase.start.toFixed(2)}–${phase.end.toFixed(2)}s`;
+      button.setAttribute('aria-label', button.title);
       button.onclick = () => { if (!busy) { imagePreview = false; setTime(phase.start + 0.001); } }; bar.append(button);
       const legend = document.createElement('span'); legend.style.setProperty('--phase', phase.color); legend.textContent = strong.textContent; $('legend').append(legend);
     });
+    bar.style.height = `${Math.max(1, lanes.length) * 60 - 6}px`;
     $('seek').max = line.total;
   }
   const bounds = Object.fromEntries([...geometry, ...timings].map(([key, , , min, max]) => [key, [min, max]]));
@@ -153,6 +163,7 @@
     $('seek').value = at; $('playhead').style.left = `${Math.min(1, at / line.total) * 100}%`;
     $('timeReadout').textContent = `${at.toFixed(2)} / ${line.total.toFixed(2)}s`;
     const phase = line.phases.findLast(p => at >= p.start && at <= p.end); $('phaseReadout').textContent = selected ? (en() ? 'Image preview' : '单图效果预览') : phase ? (en() ? phase.en : phase.name) : '';
+    $('timeline').querySelectorAll('button').forEach(button => button.classList.toggle('is-active', at >= Number(button.dataset.start) && at < Number(button.dataset.end)));
   }
   let lastFrame = 0;
   const pointer = { active: false, x: .5, y: .5 };
@@ -364,7 +375,7 @@
       if (!text) return; if (!node.dataset.zh) node.dataset.zh = text.textContent; text.textContent = en() ? node.dataset.en : node.dataset.zh;
     });
     $('languageButton').textContent = en() ? '中文' : 'EN'; setTheme(document.body.dataset.editorTheme); syncPlayback(); renderTimeline(); renderSelectedAssets(); localStorage.setItem('cellmotion-editor-language', lang);
-    document.dispatchEvent(new Event('tc-languagechange'));
+    document.dispatchEvent(new CustomEvent('tc-languagechange', { detail: { language: lang } }));
   }
   $('themeButton').onclick = () => setTheme(document.body.dataset.editorTheme === 'dark' ? 'light' : 'dark');
   $('languageButton').onclick = () => setLanguage(en() ? 'zh' : 'en');
@@ -424,5 +435,19 @@
       await document.fonts.load(`400 64px ${STGFontLibrary.family(state.settings.font)}`);
     } catch (error) { status(`已使用默认方案：${error.message}`, `Default scheme loaded: ${error.message}`); }
     ready = true; syncControls(); syncPlayback(); started = performance.now(); draw();
+    window.CellMotionBridge.register({
+      effectId: 'curvedgallery', getScheme: collectScheme,
+      applyScheme: async (composition, presentation = {}) => {
+        await applyScheme(composition);
+        await document.fonts.load(`${state.settings.weight} 64px ${STGFontLibrary.family(state.settings.font)}`);
+        const autoplay = presentation.autoplay !== false && !(presentation.reducedMotion === 'pause' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+        setTime(0, !autoplay);
+      },
+      play: () => { imagePreview = false; setTime(current() % motion.timeline(state.settings).total, false); },
+      pause: () => { imagePreview = false; setTime(current() % motion.timeline(state.settings).total); },
+      restart: () => { imagePreview = false; setTime(0, false); },
+      seek: seconds => { imagePreview = false; setTime(Number.isFinite(seconds) ? seconds : 0); },
+      durationMs: () => motion.timeline(state.settings).total * 1000,
+    });
   })();
 })();

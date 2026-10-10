@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="me-motion-editor.css?v=20260909-timeline-color">
   <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-1">
   <link rel="stylesheet" href="typecascade-polish.css?v=20260909-1">
-  <link rel="stylesheet" href="curvedgallery.css?v=20261009-8">
+  <link rel="stylesheet" href="curvedgallery.css?v=20261010-ai1">
 </head>
 <body class="tc-workspace me-motion-editor cg-editor" data-editor-theme="dark">
   <header class="tc-header">
@@ -43,7 +43,7 @@
       <div class="me-stage-controls"><button id="playButton" type="button">暂停</button><button id="replayButton" type="button" data-en="Replay">重播</button></div>
     </section>
     <section class="tc-timeline"><div class="cg-time"><span id="timeReadout">0.00 / 4.60s</span><span id="phaseReadout"></span></div>
-      <div class="me-choreo-track"><div class="me-choreo-scroll"><div class="me-choreo-bar" id="timeline"><i class="me-choreo-playhead" id="playhead"></i></div></div><div class="me-choreo-legend" id="legend"></div></div>
+      <div class="me-choreo-track"><div class="me-choreo-scroll"><div class="cg-timeline-grid"><div class="me-choreo-ruler" id="timelineRuler"></div><div class="me-choreo-bar" id="timeline"><i class="me-choreo-playhead" id="playhead"></i></div></div></div><div class="me-choreo-legend" id="legend"></div></div>
       <label class="cg-seek"><span data-en="Seek">定位</span><input id="seek" type="range" min="0" max="4.6" step="0.001" value="0"></label>
     </section>
   </main>
@@ -83,5 +83,6 @@
   <aside class="me-asset-drawer" id="libraryDrawer" hidden aria-label="共享图库"><header><h2 data-en="Shared library">共享图库</h2><button id="closeLibrary" type="button" data-en="Close">关闭</button></header><div class="me-asset-library" id="library"></div><p class="gm-help" data-en="Select a candidate, then insert. Uploads stay in this browser.">选择候选，再点插入。上传图片只保存在此浏览器。</p><button class="me-asset-commit" id="insertCandidate" type="button" disabled data-en="Insert selected image">插入选中图片</button></aside>
   <script src="shared-font-library.js?v=20260824-2"></script><script src="shared-icon-library.js?v=20261009-1"></script><script src="cellmotion-animated-image.js"></script>
   <script src="js/continuation-gif.js"></script><script src="js/h264-mp4-encoder.web.js"></script>
-  <script src="curvedgallery-effects.js?v=20261009-7"></script><script src="curvedgallery-motion.js?v=20261009-8"></script><script src="curvedgallery.js?v=20261009-8"></script><script src="typecascade-selects.js?v=20260909-1"></script>
+  <script src="curvedgallery-effects.js?v=20261009-7"></script><script src="curvedgallery-motion.js?v=20261009-8"></script><script src="cellmotion-effect-bridge.js?v=20261010-ai1"></script><script src="curvedgallery.js?v=20261010-ai1"></script><script src="typecascade-selects.js?v=20260909-1"></script>
+  <script src="cellmotion-ai-manifest.js?v=20261010-ai1"></script><script src="cellmotion-ai-menu.js?v=20261010-ai1"></script>
 </body></html>

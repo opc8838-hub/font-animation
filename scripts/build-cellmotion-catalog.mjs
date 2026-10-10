@@ -39,7 +39,7 @@ const recent = [
 for (const [id] of recent) if (!knownIds.has(id)) throw new Error(`Unknown recent effect: ${id}`);
 const featured = ['prosvg','sproutshift','typecascade','dotresolve','glyphmorph','iconburst','pathwriter','letterpulse'];
 // Keep the existing published entry routes and approved preview revisions when rebuilding.
-const entryRoutes = { curvedgallery:'curvedgallery.html?from=gallery&v=20261009-8', prosvg:'prosvg.html?from=gallery&v=20261005-1', citystack:'citystack.html?from=gallery&v=20261006-1', typegarden:'typegarden.html?from=gallery&v=20261006-1' };
+const entryRoutes = { curvedgallery:'curvedgallery.html?from=gallery&v=20261010-ai1', prosvg:'prosvg.html?from=gallery&v=20261005-1', citystack:'citystack.html?from=gallery&v=20261006-1', typegarden:'typegarden.html?from=gallery&v=20261006-1' };
 const previewRevisions = { curvedgallery:'20261009-4', iconburst:'20260926-5', zerogflip:'20261006' };
 async function exists(path) { try { await access(new URL(path, site)); return true; } catch { return false; } }
 const effects = [];
