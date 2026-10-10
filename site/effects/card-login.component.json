@@ -159,7 +159,11 @@
       "type": "number",
       "minimum": 0.1,
       "maximum": 0.6,
-      "unit": "%"
+      "unit": "ratio",
+      "description": {
+        "zh": "以倍率保存，0.32 表示 32%；界面显示百分比。",
+        "en": "Stored as a ratio: 0.32 means 32%; the editor displays percentages."
+      }
     },
     {
       "path": "composition.motion.contentDelay",
@@ -195,7 +199,11 @@
       "type": "number",
       "minimum": 0.15,
       "maximum": 1,
-      "unit": "%"
+      "unit": "ratio",
+      "description": {
+        "zh": "以倍率保存，0.32 表示 32%；界面显示百分比。",
+        "en": "Stored as a ratio: 0.32 means 32%; the editor displays percentages."
+      }
     },
     {
       "path": "composition.motion.scaleY",
@@ -207,7 +215,11 @@
       "type": "number",
       "minimum": 0.15,
       "maximum": 1,
-      "unit": "%"
+      "unit": "ratio",
+      "description": {
+        "zh": "以倍率保存，0.32 表示 32%；界面显示百分比。",
+        "en": "Stored as a ratio: 0.32 means 32%; the editor displays percentages."
+      }
     },
     {
       "path": "composition.motion.startZ",
@@ -267,7 +279,11 @@
       "type": "number",
       "minimum": 0,
       "maximum": 0.06,
-      "unit": "%"
+      "unit": "ratio",
+      "description": {
+        "zh": "以倍率保存，0.32 表示 32%；界面显示百分比。",
+        "en": "Stored as a ratio: 0.32 means 32%; the editor displays percentages."
+      }
     },
     {
       "path": "composition.backgroundMedia",

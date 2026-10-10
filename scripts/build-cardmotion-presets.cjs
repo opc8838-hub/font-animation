@@ -13,7 +13,8 @@ for (const [index,id,name,en] of [[0,'card-login','翻牌登录','Card Login'],[
   const preset = context.window.CardMotion.defaults(id,library);
   fs.writeFileSync(path.join(site,`assets/presets/${id}-default.json`),JSON.stringify(preset,null,2)+'\n');
   const parameters = [...lists[index].matchAll(/\['([^']+)','([^']+)','([^']+)',(-?[\d.]+),(-?[\d.]+),([\d.]+),'([^']*)'\]/g)].map(([,key,zh,en,lo,hi,,unit])=>({
-    path:`composition.${key}`,scope:'effect',name:pair(zh,en),type:'number',minimum:Number(lo),maximum:Number(hi),unit
+    path:`composition.${key}`,scope:'effect',name:pair(zh,en),type:'number',minimum:Number(lo),maximum:Number(hi),unit:unit==='%'?'ratio':unit,
+    ...(unit==='%'?{description:pair('以倍率保存，0.32 表示 32%；界面显示百分比。','Stored as a ratio: 0.32 means 32%; the editor displays percentages.')}:{})
   }));
   parameters.unshift(...[['canvas.width','画布宽度','Canvas width','integer','px'],['canvas.height','画布高度','Canvas height','integer','px'],['backgroundColor','画面背景','Background','color',''],['motion.speed','整体速度','Overall speed','number','×'],['motion.loop','循环播放','Loop playback','boolean','']].map(([key,zh,en,type,unit])=>({path:`composition.${key}`,scope:'global',name:pair(zh,en),type,unit})));
   parameters.push(...[['backgroundMedia','背景素材','Background media','media'],['backgroundMedia.videoStart','视频起点','Video trim start','number'],['backgroundMedia.videoEnd','视频终点','Video trim end','number'],['customAssets','上传素材','Embedded uploads','array']].map(([key,zh,en,type])=>({path:`composition.${key}`,scope:'global',name:pair(zh,en),type})));

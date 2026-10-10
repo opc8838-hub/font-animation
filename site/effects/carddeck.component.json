@@ -147,7 +147,11 @@
       "type": "number",
       "minimum": 0,
       "maximum": 0.3,
-      "unit": "%"
+      "unit": "ratio",
+      "description": {
+        "zh": "以倍率保存，0.32 表示 32%；界面显示百分比。",
+        "en": "Stored as a ratio: 0.32 means 32%; the editor displays percentages."
+      }
     },
     {
       "path": "composition.motion.size",
@@ -159,7 +163,11 @@
       "type": "number",
       "minimum": 0.65,
       "maximum": 1.25,
-      "unit": "%"
+      "unit": "ratio",
+      "description": {
+        "zh": "以倍率保存，0.32 表示 32%；界面显示百分比。",
+        "en": "Stored as a ratio: 0.32 means 32%; the editor displays percentages."
+      }
     },
     {
       "path": "composition.motion.derive",
@@ -243,7 +251,11 @@
       "type": "number",
       "minimum": 0.5,
       "maximum": 1,
-      "unit": "%"
+      "unit": "ratio",
+      "description": {
+        "zh": "以倍率保存，0.32 表示 32%；界面显示百分比。",
+        "en": "Stored as a ratio: 0.32 means 32%; the editor displays percentages."
+      }
     },
     {
       "path": "composition.motion.angle",

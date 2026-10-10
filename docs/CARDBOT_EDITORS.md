@@ -53,7 +53,7 @@
 1. 预览 AI 组件：把当前编辑内容传给独立预览页，而不是打开默认效果。
 2. 复制 AI 提示词：包含当前配置、资源、字体和接入边界。
 3. 复制配置代码：可嵌入的 `<cellmotion-player>`，使用网站同一渲染器。
-4. 下载组件 JSON：保存 `cellmotion.component.v1` 清单及当前完整状态。
+4. 下载组件 JSON：保存 `cellmotion-component/v1` 清单及当前完整状态。
 5. 查看参数说明：原生参数、范围、动作阶段和能力限制。
 
 登录使用 `scene` 模型，卡牌使用 `cards` 模型，不伪装成文字行。文字、卡牌顺序、逐卡设置、自有图片/GIF与背景视频的裁剪都包含在实时配置里。播放器支持 configure、play、pause、restart、seek、update 和 duration；可用于网页内的响应式动效组件。生产环境请进一步限定允许通信的域名。
