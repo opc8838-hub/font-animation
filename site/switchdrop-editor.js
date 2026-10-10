@@ -72,7 +72,7 @@
   const litFalloff = (r, amount) => clamp(1 - 0.12 * amount * Math.pow(r, 2.7), 0, 1);
 
   const CURVES = {
-    apple: { label: "苹果关灯 · 慢入快出（原片）" },
+    apple: { label: "慢入快出 · 关灯（原片）" },
     balanced: { label: "平衡丝滑", fn: smoother },
     snappy: { label: "快速开关", fn: easeOut }
   };
@@ -1108,7 +1108,7 @@
     try { applyScheme(JSON.parse(await file.text()), "方案已导入。"); } catch (error) { $("exportStatus").textContent = `导入失败：${error.message}`; }
     $("schemeFile").value = "";
   });
-  $("restoreScheme").addEventListener("click", () => { try { localStorage.removeItem(STORAGE_KEY); } catch (_) {} applyScheme(clone(DEFAULT_SCHEME), "已恢复默认方案（苹果关灯原片节奏）。"); });
+  $("restoreScheme").addEventListener("click", () => { try { localStorage.removeItem(STORAGE_KEY); } catch (_) {} applyScheme(clone(DEFAULT_SCHEME), "已恢复默认方案。"); });
   $("clearScheme").addEventListener("click", () => {
     const next = clone(state.scheme);
     next.light = clone(DEFAULT_SCHEME.light);

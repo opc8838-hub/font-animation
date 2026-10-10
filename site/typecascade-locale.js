@@ -242,7 +242,7 @@
     '字号': 'Size', '与主体间距': 'Gap to subject', '字距': 'Tracking', '字重': 'Weight', '文字颜色': 'Text colour', '标点颜色': 'Punctuation colour',
     '标题在主体左移时从右侧弹出，字体在「动效设置 → 标题字体」里换。关灯时标题用浅色，开灯时用深色。': 'The title pops out as the subject slides left; change its font under Motion → Title font. Lights off uses a light title, lights on a dark one.',
     '灯光开关': 'Light switch', '方向': 'Direction', '关灯 · 亮 → 黑': 'Lights off · lit → black', '开灯 · 黑 → 亮': 'Lights on · black → lit',
-    '开关曲线': 'Switch curve', '苹果关灯 · 慢入快出（原片）': 'Apple lights-off · slow in, fast out (reference)', '平衡丝滑': 'Balanced', '快速开关': 'Snappy',
+    '开关曲线': 'Switch curve', '慢入快出 · 关灯（原片）': 'Slow in, fast out · lights off (reference)', '平衡丝滑': 'Balanced', '快速开关': 'Snappy',
     '光的形态': 'Light shape', '聚光收拢 · 四周先暗（原片）': 'Spot closes · edges first (reference)', '整屏均匀变暗': 'Even dim',
     '开关时长': 'Switch length', '相对左移延后': 'Delay after slide starts', '亮灯时四周暗角': 'Lit vignette', '亮灯背景': 'Lit background', '关灯后颜色': 'Dark colour',
     '关灯时四周先暗、光往中间收，越暗越快，最后一下黑掉。「光源收拢」越大，中间那团光越明显；100% 为原片。': 'Edges go dark first and the light gathers to the centre, faster and faster, then cuts to black. Higher Light gather makes the central pool stronger; 100% matches the reference.', '光源收拢': 'Light gather',

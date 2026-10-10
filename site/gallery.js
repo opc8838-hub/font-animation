@@ -34,7 +34,7 @@ const effects = [
   ["dotresolve", "点解", "Dot Resolve", "type", "像素解析"],
   ["glyphreveal", "字现", "Glyph Reveal", "type", "逐字缩放显现"],
   ["phrasebuild", "组句", "Phrase Build", "type", "累计组词"],
-  ["switchdrop", "降临", "Switch Drop", "graphic", "主体降临 × 苹果式关灯"],
+  ["switchdrop", "降临", "Switch Drop", "graphic", "主体降临 × 聚光关灯"],
   ["searchtyping", "搜写", "Search Typing", "type", "搜索框逐字打入"],
   ["beforeafter", "图片对比", "Before After", "type", "原图对比 · 生成切成片"],
   ["shutterafter", "快门对比", "Shutter After", "type", "原图快门 · 划过成片"],
