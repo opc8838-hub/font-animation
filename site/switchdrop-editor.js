@@ -1049,7 +1049,26 @@
     event.preventDefault();
   }));
   $("scrubber").addEventListener("input", () => pauseAt(Number($("scrubber").value)));
-  $("timeline").addEventListener("click", (event) => { const block = event.target.closest("[data-seek-ms]"); if (block) pauseAt(Number(block.dataset.seekMs) + 1); });
+  // Drag anywhere on the timeline (blocks included) to scrub; a plain click still jumps to the block start.
+  let timelineDrag = null;
+  const timelineMs = (event) => { const rect = $("timeline").getBoundingClientRect(); return clamp((event.clientX - rect.left) / Math.max(1, rect.width)) * cycleDurationMs(); };
+  $("timeline").addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    timelineDrag = { pointerId: event.pointerId, x: event.clientX, moved: false };
+    $("timeline").setPointerCapture(event.pointerId);
+  });
+  $("timeline").addEventListener("pointermove", (event) => {
+    if (!timelineDrag || timelineDrag.pointerId !== event.pointerId) return;
+    if (!timelineDrag.moved && Math.abs(event.clientX - timelineDrag.x) < 4) return;
+    timelineDrag.moved = true;
+    pauseAt(timelineMs(event));
+  });
+  ["pointerup", "pointercancel"].forEach((name) => $("timeline").addEventListener(name, () => { setTimeout(() => { timelineDrag = null; }, 0); }));
+  $("timeline").addEventListener("click", (event) => {
+    if (timelineDrag?.moved) return;
+    const block = event.target.closest("[data-seek-ms]");
+    if (block) pauseAt(Number(block.dataset.seekMs) + 1);
+  });
   $("togglePlayback").addEventListener("click", () => {
     if (!state.playing && !state.scheme.motion.loop && state.elapsedMs >= cycleDurationMs()) state.elapsedMs = 0;
     state.playing = !state.playing; state.lastFrame = performance.now(); updatePlaybackButton();
