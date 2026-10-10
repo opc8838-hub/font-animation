@@ -82,7 +82,7 @@
     canvas: { width: 1920, height: 1080, preset: "1920x1080" },
     subject: { name: "主体", mode: "asset", assetId: "hely", text: "ME", color: "#8277f5", size: 190, rim: 70, nightLogo: true, nightGlow: 100 },
     title: { text: "hely.fun", fontFamily: "stg:manrope", fontWeight: 700, size: 112, gap: 42, tracking: -3, color: "#ffffff", dotColor: "#8277f5" },
-    light: { direction: "off", curve: "apple", shape: "spot", duration: 240, delay: 0, litColor: "#dcdbe4", darkColor: "#010002", vignette: 100 },
+    light: { direction: "off", curve: "apple", shape: "spot", duration: 240, delay: 0, litColor: "#ffffff", darkColor: "#010002", vignette: 45 },
     motion: { speed: 1, drop: 1150, startY: -24, endY: 50, overshoot: 0, settle: 0, shift: 460, titleDelay: 60, titleDuration: 420, titleSpring: 18, hold: 3500, loop: true },
     background: { opacity: 100, media: null }
   });
