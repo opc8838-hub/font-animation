@@ -194,21 +194,20 @@ function catalogCard(effect) {
 function renderCatalog() {
   stopAllCards();cardsObserver.disconnect();
   const query=($('#search')?.value||'').trim().toLocaleLowerCase();
-  // Existing editors are video-creation materials, not verified distributable web components.
-  // Do not infer React/SDK availability or supported export formats from a preview MP4.
-  const matches=effects.filter(effect=>activeUsage!=='web'&&inCategory(effect,activeCategory)&&`${effect.name} ${effect.english} ${effect.id} ${effect.description}`.toLocaleLowerCase().includes(query));
+  // Only explicitly verified components enter Web; a preview MP4 is not an SDK.
+  const matches=effects.filter(effect=>(activeUsage!=='web'||!!effect.webComponent)&&inCategory(effect,activeCategory)&&`${effect.name} ${effect.english} ${effect.id} ${effect.description}`.toLocaleLowerCase().includes(query));
   const homeIds=['prosvg','sproutshift','iconburst','shutterafter','currentwall','impactbuild','pathwriter'];
   const showing=homePreview?homeIds.map(id=>effects.find(effect=>effect.id===id)).filter(effect=>effect && !isPending(effect)):matches.slice(0,limit);
-  if($('#result-count'))$('#result-count').textContent=activeUsage==='web'?'0 个已适配组件':`${matches.length} 个动效`;
+  if($('#result-count'))$('#result-count').textContent=activeUsage==='web'?`${matches.length} 个已适配组件`:`${matches.length} 个动效`;
   if($('#catalog-empty'))$('#catalog-empty').hidden=matches.length>0||activeUsage==='web';
-  if($('#web-planned'))$('#web-planned').hidden=activeUsage!=='web';
+  if($('#web-planned'))$('#web-planned').hidden=activeUsage!=='web'||matches.length>0;
   if($('#load-more'))$('#load-more').hidden=matches.length<=limit;
-  if($('#usage-note'))$('#usage-note').textContent=activeUsage==='web'?'网页使用是独立适配方向，不等同于把 MP4 嵌入网页。当前尚无已发布的网页组件。':activeUsage==='video'?'选择动效，进入工作台编辑，再使用该编辑器提供的导出功能。视频拼接器尚未开放。':'当前提供动效预览与独立编辑器；具体导出格式以各编辑器为准。网页组件正在规划，尚未提供代码安装。';
+  if($('#usage-note'))$('#usage-note').textContent=activeUsage==='web'?'已适配组件可从编辑器右上角 For AI 预览并复制配置代码；使用同一动效渲染器，不是嵌入 MP4。':activeUsage==='video'?'选择动效，进入工作台编辑，再使用该编辑器提供的导出功能。视频拼接器尚未开放。':'提供独立编辑器与导出。翻牌登录、卡牌剧场已支持 For AI 网页组件，其余组件逐步适配。';
   $('#catalog-grid').innerHTML=showing.map(catalogCard).join('');
   $('#catalog-grid').querySelectorAll('.catalog-preview').forEach(preview=>{
     const pending=preview.closest('.catalog-card')?.classList.contains('is-pending');
     if(pending)return;
-    if(capabilityLabels){const badges=document.createElement('div');badges.className='card-capabilities';badges.innerHTML='<span>独立编辑器</span><span>网页待适配</span>';preview.closest('.catalog-card').append(badges);}
+    if(capabilityLabels){const badges=document.createElement('div');badges.className='card-capabilities';const href=preview.querySelector('a')?.getAttribute('href'),effect=effects.find(e=>e.href===href);badges.innerHTML=`<span>独立编辑器</span><span>${effect?.webComponent?'AI 组件可用':'网页待适配'}</span>`;preview.closest('.catalog-card').append(badges);}
     preview.querySelector('.card-play')?.addEventListener('click',()=>{
       const video=preview.querySelector('video');
       if(video&&!video.paused)stopCard(preview,{remember:true});else startCard(preview,{manual:true});
@@ -275,7 +274,7 @@ document.addEventListener('visibilitychange',()=>{
 });
 async function loadCatalogData() {
   try {
-    const response=await fetch('cellmotion-catalog.json?v=20261010-curvedgallery-ai1');
+    const response=await fetch('cellmotion-catalog.json?v=20261010-cards2');
     if(!response.ok)throw new Error(`Catalog HTTP ${response.status}`);
     const catalog=await response.json();
     effects=catalog.effects;

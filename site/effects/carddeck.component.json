@@ -1,0 +1,424 @@
+{
+  "effect": {
+    "id": "carddeck",
+    "name": {
+      "zh": "卡牌剧场",
+      "en": "Card Deck"
+    },
+    "version": "1.0.0",
+    "category": "card-motion"
+  },
+  "runtime": {
+    "kind": "iframe-bridge",
+    "entry": "carddeck.html?preview=1&embed=1",
+    "bridgeVersion": "1.0.0",
+    "renderer": "canvas2d"
+  },
+  "capabilities": {
+    "compositionModel": "cards",
+    "timeline": true,
+    "responsiveCanvas": true,
+    "exports": [
+      "png",
+      "gif",
+      "mp4"
+    ],
+    "customImageAssets": true,
+    "backgrounds": [
+      "color",
+      "image",
+      "gif",
+      "video"
+    ],
+    "videoTrim": true,
+    "animatedCardFaces": true,
+    "authentication": false
+  },
+  "behavior": {
+    "summary": {
+      "zh": "卡牌从叠放中向上抽出或横向分排，交错横移后同步或逐排收回；表情使用源 SVG 的时间数据。",
+      "en": "Cards lift from behind or fan into rows, drift in alternating directions, and gather together or row by row; faces follow source SVG keyframes."
+    },
+    "phases": [
+      {
+        "id": "stack",
+        "name": {
+          "zh": "单卡叠放",
+          "en": "Single-card stack"
+        },
+        "colorToken": "phase.sky"
+      },
+      {
+        "id": "spread",
+        "name": {
+          "zh": "展开分排",
+          "en": "Spread into rows"
+        },
+        "colorToken": "phase.violet"
+      },
+      {
+        "id": "drift",
+        "name": {
+          "zh": "交错横移",
+          "en": "Alternating drift"
+        },
+        "colorToken": "phase.coral"
+      },
+      {
+        "id": "gather",
+        "name": {
+          "zh": "收拢归位",
+          "en": "Gather & settle"
+        },
+        "colorToken": "phase.mint"
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "path": "composition.canvas.width",
+      "scope": "global",
+      "name": {
+        "zh": "画布宽度",
+        "en": "Canvas width"
+      },
+      "type": "integer",
+      "unit": "px"
+    },
+    {
+      "path": "composition.canvas.height",
+      "scope": "global",
+      "name": {
+        "zh": "画布高度",
+        "en": "Canvas height"
+      },
+      "type": "integer",
+      "unit": "px"
+    },
+    {
+      "path": "composition.backgroundColor",
+      "scope": "global",
+      "name": {
+        "zh": "画面背景",
+        "en": "Background"
+      },
+      "type": "color",
+      "unit": ""
+    },
+    {
+      "path": "composition.motion.speed",
+      "scope": "global",
+      "name": {
+        "zh": "整体速度",
+        "en": "Overall speed"
+      },
+      "type": "number",
+      "unit": "×"
+    },
+    {
+      "path": "composition.motion.loop",
+      "scope": "global",
+      "name": {
+        "zh": "循环播放",
+        "en": "Loop playback"
+      },
+      "type": "boolean",
+      "unit": ""
+    },
+    {
+      "path": "composition.motion.rows",
+      "scope": "effect",
+      "name": {
+        "zh": "行数",
+        "en": "Rows"
+      },
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "unit": ""
+    },
+    {
+      "path": "composition.motion.gap",
+      "scope": "effect",
+      "name": {
+        "zh": "卡片间距",
+        "en": "Card gap"
+      },
+      "type": "number",
+      "minimum": 0,
+      "maximum": 0.3,
+      "unit": "%"
+    },
+    {
+      "path": "composition.motion.size",
+      "scope": "effect",
+      "name": {
+        "zh": "卡片大小",
+        "en": "Card size"
+      },
+      "type": "number",
+      "minimum": 0.65,
+      "maximum": 1.25,
+      "unit": "%"
+    },
+    {
+      "path": "composition.motion.derive",
+      "scope": "effect",
+      "name": {
+        "zh": "横移速度",
+        "en": "Drift speed"
+      },
+      "type": "number",
+      "minimum": 0,
+      "maximum": 0.8,
+      "unit": ""
+    },
+    {
+      "path": "composition.motion.repos",
+      "scope": "effect",
+      "name": {
+        "zh": "单卡停留",
+        "en": "Stack hold"
+      },
+      "type": "number",
+      "minimum": 0,
+      "maximum": 4,
+      "unit": "s"
+    },
+    {
+      "path": "composition.motion.ouvre",
+      "scope": "effect",
+      "name": {
+        "zh": "展开时长",
+        "en": "Spread duration"
+      },
+      "type": "number",
+      "minimum": 0.2,
+      "maximum": 4,
+      "unit": "s"
+    },
+    {
+      "path": "composition.motion.tenue",
+      "scope": "effect",
+      "name": {
+        "zh": "横移时长",
+        "en": "Drift duration"
+      },
+      "type": "number",
+      "minimum": 0,
+      "maximum": 8,
+      "unit": "s"
+    },
+    {
+      "path": "composition.motion.repli",
+      "scope": "effect",
+      "name": {
+        "zh": "收拢时长",
+        "en": "Gather duration"
+      },
+      "type": "number",
+      "minimum": 0.2,
+      "maximum": 4,
+      "unit": "s"
+    },
+    {
+      "path": "composition.motion.stagger",
+      "scope": "effect",
+      "name": {
+        "zh": "抽出交错",
+        "en": "Card stagger"
+      },
+      "type": "number",
+      "minimum": 0,
+      "maximum": 0.5,
+      "unit": "s"
+    },
+    {
+      "path": "composition.motion.pile",
+      "scope": "effect",
+      "name": {
+        "zh": "展开缩小倍率",
+        "en": "Spread scale"
+      },
+      "type": "number",
+      "minimum": 0.5,
+      "maximum": 1,
+      "unit": "%"
+    },
+    {
+      "path": "composition.motion.angle",
+      "scope": "effect",
+      "name": {
+        "zh": "叠放角度",
+        "en": "Stack angle"
+      },
+      "type": "number",
+      "minimum": -20,
+      "maximum": 20,
+      "unit": "°"
+    },
+    {
+      "path": "composition.motion.inclinaison",
+      "scope": "effect",
+      "name": {
+        "zh": "飞行倾角",
+        "en": "Flight tilt"
+      },
+      "type": "number",
+      "minimum": 0,
+      "maximum": 18,
+      "unit": "°"
+    },
+    {
+      "path": "composition.motion.ratio",
+      "scope": "effect",
+      "name": {
+        "zh": "卡片高宽比",
+        "en": "Height / width"
+      },
+      "type": "number",
+      "minimum": 1,
+      "maximum": 2,
+      "unit": ""
+    },
+    {
+      "path": "composition.backgroundMedia",
+      "scope": "global",
+      "name": {
+        "zh": "背景素材",
+        "en": "Background media"
+      },
+      "type": "media"
+    },
+    {
+      "path": "composition.backgroundMedia.videoStart",
+      "scope": "global",
+      "name": {
+        "zh": "视频起点",
+        "en": "Video trim start"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.backgroundMedia.videoEnd",
+      "scope": "global",
+      "name": {
+        "zh": "视频终点",
+        "en": "Video trim end"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.customAssets",
+      "scope": "global",
+      "name": {
+        "zh": "上传素材",
+        "en": "Embedded uploads"
+      },
+      "type": "array"
+    },
+    {
+      "path": "composition.motion.mode",
+      "scope": "effect",
+      "type": "string",
+      "enum": [
+        "dos",
+        "eventail"
+      ],
+      "name": {
+        "zh": "展开方式",
+        "en": "Spread style"
+      }
+    },
+    {
+      "path": "composition.motion.modeRepli",
+      "scope": "effect",
+      "type": "string",
+      "enum": [
+        "synchrone",
+        "rangees"
+      ],
+      "name": {
+        "zh": "收拢方式",
+        "en": "Gather style"
+      }
+    },
+    {
+      "path": "composition.motion.rythme",
+      "scope": "effect",
+      "type": "string",
+      "enum": [
+        "fluide",
+        "regulier",
+        "vif"
+      ],
+      "name": {
+        "zh": "快慢节奏",
+        "en": "Easing"
+      }
+    },
+    {
+      "path": "composition.cards[].libraryId",
+      "scope": "card",
+      "type": "string",
+      "name": {
+        "zh": "素材来源",
+        "en": "Asset reference"
+      }
+    },
+    {
+      "path": "composition.cards[].scale",
+      "scope": "card",
+      "type": "number",
+      "name": {
+        "zh": "卡牌大小",
+        "en": "Card size"
+      }
+    },
+    {
+      "path": "composition.cards[].opacity",
+      "scope": "card",
+      "type": "number",
+      "name": {
+        "zh": "不透明度",
+        "en": "Opacity"
+      }
+    },
+    {
+      "path": "composition.cards[].color",
+      "scope": "card",
+      "type": "color",
+      "name": {
+        "zh": "卡牌颜色",
+        "en": "Card color"
+      }
+    },
+    {
+      "path": "composition.cards[].x",
+      "scope": "card",
+      "type": "number",
+      "name": {
+        "zh": "水平偏移",
+        "en": "Horizontal offset"
+      }
+    },
+    {
+      "path": "composition.cards[].y",
+      "scope": "card",
+      "type": "number",
+      "name": {
+        "zh": "垂直偏移",
+        "en": "Vertical offset"
+      }
+    },
+    {
+      "path": "composition.cards[].rotation",
+      "scope": "card",
+      "type": "number",
+      "name": {
+        "zh": "旋转角度",
+        "en": "Rotation"
+      }
+    }
+  ]
+}

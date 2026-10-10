@@ -1,0 +1,475 @@
+{
+  "effect": {
+    "id": "card-login",
+    "name": {
+      "zh": "翻牌登录",
+      "en": "Card Login"
+    },
+    "version": "1.0.0",
+    "category": "card-motion"
+  },
+  "runtime": {
+    "kind": "iframe-bridge",
+    "entry": "card-login.html?preview=1&embed=1",
+    "bridgeVersion": "1.0.0",
+    "renderer": "canvas2d"
+  },
+  "capabilities": {
+    "compositionModel": "scene",
+    "timeline": true,
+    "responsiveCanvas": true,
+    "exports": [
+      "png",
+      "gif",
+      "mp4"
+    ],
+    "customImageAssets": true,
+    "backgrounds": [
+      "color",
+      "image",
+      "gif",
+      "video"
+    ],
+    "videoTrim": true,
+    "animatedCardFaces": false,
+    "authentication": false
+  },
+  "behavior": {
+    "summary": {
+      "zh": "卡牌保持原尺寸衔接，旋转放大时中途变白，登录内容渐入并轻柔归位。",
+      "en": "A size-matched card rotates and grows, turns white during the flip, and reveals its login face with a soft settle."
+    },
+    "phases": [
+      {
+        "id": "match",
+        "name": {
+          "zh": "同尺寸交接",
+          "en": "Match footprint"
+        },
+        "colorToken": "phase.sky"
+      },
+      {
+        "id": "flip",
+        "name": {
+          "zh": "旋转 · 变白",
+          "en": "Flip & turn white"
+        },
+        "colorToken": "phase.violet"
+      },
+      {
+        "id": "settle",
+        "name": {
+          "zh": "轻柔归位",
+          "en": "Soft settle"
+        },
+        "colorToken": "phase.coral"
+      },
+      {
+        "id": "hold",
+        "name": {
+          "zh": "登录停留",
+          "en": "Login hold"
+        },
+        "colorToken": "phase.mint"
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "path": "composition.canvas.width",
+      "scope": "global",
+      "name": {
+        "zh": "画布宽度",
+        "en": "Canvas width"
+      },
+      "type": "integer",
+      "unit": "px"
+    },
+    {
+      "path": "composition.canvas.height",
+      "scope": "global",
+      "name": {
+        "zh": "画布高度",
+        "en": "Canvas height"
+      },
+      "type": "integer",
+      "unit": "px"
+    },
+    {
+      "path": "composition.backgroundColor",
+      "scope": "global",
+      "name": {
+        "zh": "画面背景",
+        "en": "Background"
+      },
+      "type": "color",
+      "unit": ""
+    },
+    {
+      "path": "composition.motion.speed",
+      "scope": "global",
+      "name": {
+        "zh": "整体速度",
+        "en": "Overall speed"
+      },
+      "type": "number",
+      "unit": "×"
+    },
+    {
+      "path": "composition.motion.loop",
+      "scope": "global",
+      "name": {
+        "zh": "循环播放",
+        "en": "Loop playback"
+      },
+      "type": "boolean",
+      "unit": ""
+    },
+    {
+      "path": "composition.motion.duration",
+      "scope": "effect",
+      "name": {
+        "zh": "翻转时长",
+        "en": "Flip duration"
+      },
+      "type": "number",
+      "minimum": 0.6,
+      "maximum": 4,
+      "unit": "s"
+    },
+    {
+      "path": "composition.motion.hold",
+      "scope": "effect",
+      "name": {
+        "zh": "登录停留",
+        "en": "Login hold"
+      },
+      "type": "number",
+      "minimum": 0,
+      "maximum": 5,
+      "unit": "s"
+    },
+    {
+      "path": "composition.motion.faceSwitch",
+      "scope": "effect",
+      "name": {
+        "zh": "翻面变白时机",
+        "en": "White face switch"
+      },
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 0.6,
+      "unit": "%"
+    },
+    {
+      "path": "composition.motion.contentDelay",
+      "scope": "effect",
+      "name": {
+        "zh": "文字出现延迟",
+        "en": "Content delay"
+      },
+      "type": "number",
+      "minimum": 0,
+      "maximum": 3,
+      "unit": "s"
+    },
+    {
+      "path": "composition.motion.contentDuration",
+      "scope": "effect",
+      "name": {
+        "zh": "文字渐入时长",
+        "en": "Content reveal"
+      },
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 2,
+      "unit": "s"
+    },
+    {
+      "path": "composition.motion.scaleX",
+      "scope": "effect",
+      "name": {
+        "zh": "起始卡片宽度",
+        "en": "Starting width"
+      },
+      "type": "number",
+      "minimum": 0.15,
+      "maximum": 1,
+      "unit": "%"
+    },
+    {
+      "path": "composition.motion.scaleY",
+      "scope": "effect",
+      "name": {
+        "zh": "起始卡片高度",
+        "en": "Starting height"
+      },
+      "type": "number",
+      "minimum": 0.15,
+      "maximum": 1,
+      "unit": "%"
+    },
+    {
+      "path": "composition.motion.startZ",
+      "scope": "effect",
+      "name": {
+        "zh": "起始倾角",
+        "en": "Starting tilt"
+      },
+      "type": "number",
+      "minimum": -30,
+      "maximum": 30,
+      "unit": "°"
+    },
+    {
+      "path": "composition.motion.startY",
+      "scope": "effect",
+      "name": {
+        "zh": "起始旋转",
+        "en": "Starting rotation"
+      },
+      "type": "number",
+      "minimum": -25,
+      "maximum": 25,
+      "unit": "°"
+    },
+    {
+      "path": "composition.motion.offsetY",
+      "scope": "effect",
+      "name": {
+        "zh": "衔接垂直偏移",
+        "en": "Handoff offset"
+      },
+      "type": "number",
+      "minimum": -100,
+      "maximum": 100,
+      "unit": "px"
+    },
+    {
+      "path": "composition.motion.perspective",
+      "scope": "effect",
+      "name": {
+        "zh": "透视距离",
+        "en": "Perspective"
+      },
+      "type": "number",
+      "minimum": 600,
+      "maximum": 3000,
+      "unit": "px"
+    },
+    {
+      "path": "composition.motion.overshoot",
+      "scope": "effect",
+      "name": {
+        "zh": "归位缓冲",
+        "en": "Settle overshoot"
+      },
+      "type": "number",
+      "minimum": 0,
+      "maximum": 0.06,
+      "unit": "%"
+    },
+    {
+      "path": "composition.backgroundMedia",
+      "scope": "global",
+      "name": {
+        "zh": "背景素材",
+        "en": "Background media"
+      },
+      "type": "media"
+    },
+    {
+      "path": "composition.backgroundMedia.videoStart",
+      "scope": "global",
+      "name": {
+        "zh": "视频起点",
+        "en": "Video trim start"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.backgroundMedia.videoEnd",
+      "scope": "global",
+      "name": {
+        "zh": "视频终点",
+        "en": "Video trim end"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.customAssets",
+      "scope": "global",
+      "name": {
+        "zh": "上传素材",
+        "en": "Embedded uploads"
+      },
+      "type": "array"
+    },
+    {
+      "path": "composition.scene.brand",
+      "scope": "scene",
+      "name": {
+        "zh": "品牌",
+        "en": "Brand"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.scene.title",
+      "scope": "scene",
+      "name": {
+        "zh": "标题",
+        "en": "Title"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.scene.subtitle",
+      "scope": "scene",
+      "name": {
+        "zh": "说明",
+        "en": "Subtitle"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.scene.account",
+      "scope": "scene",
+      "name": {
+        "zh": "账号标签",
+        "en": "Account label"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.scene.password",
+      "scope": "scene",
+      "name": {
+        "zh": "密码标签",
+        "en": "Password label"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.scene.button",
+      "scope": "scene",
+      "name": {
+        "zh": "按钮文字",
+        "en": "Button text"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.scene.footer",
+      "scope": "scene",
+      "name": {
+        "zh": "底部文字",
+        "en": "Footer"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.scene.frontColor",
+      "scope": "scene",
+      "name": {
+        "zh": "登录正面",
+        "en": "Login face"
+      },
+      "type": "color"
+    },
+    {
+      "path": "composition.scene.backColor",
+      "scope": "scene",
+      "name": {
+        "zh": "卡牌背面",
+        "en": "Card back"
+      },
+      "type": "color"
+    },
+    {
+      "path": "composition.scene.textColor",
+      "scope": "scene",
+      "name": {
+        "zh": "文字颜色",
+        "en": "Text color"
+      },
+      "type": "color"
+    },
+    {
+      "path": "composition.scene.accent",
+      "scope": "scene",
+      "name": {
+        "zh": "强调色",
+        "en": "Accent"
+      },
+      "type": "color"
+    },
+    {
+      "path": "composition.scene.width",
+      "scope": "scene",
+      "name": {
+        "zh": "登录卡宽度",
+        "en": "Card width"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.scene.height",
+      "scope": "scene",
+      "name": {
+        "zh": "登录卡高度",
+        "en": "Card height"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.scene.radius",
+      "scope": "scene",
+      "name": {
+        "zh": "圆角",
+        "en": "Corner radius"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.scene.x",
+      "scope": "scene",
+      "name": {
+        "zh": "水平位置",
+        "en": "Horizontal position"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.scene.y",
+      "scope": "scene",
+      "name": {
+        "zh": "垂直位置",
+        "en": "Vertical position"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.typography.fontFamily",
+      "scope": "global",
+      "type": "font",
+      "name": {
+        "zh": "字体",
+        "en": "Font"
+      }
+    },
+    {
+      "path": "composition.motion.direction",
+      "scope": "effect",
+      "type": "integer",
+      "enum": [
+        -1,
+        1
+      ],
+      "name": {
+        "zh": "翻转方向",
+        "en": "Flip direction"
+      }
+    }
+  ]
+}

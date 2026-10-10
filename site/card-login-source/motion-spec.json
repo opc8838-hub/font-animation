@@ -1,0 +1,99 @@
+{
+  "name": "cardbot-card-to-login-handoff",
+  "version": 1,
+  "fps": 60,
+  "durationMs": 1800,
+  "frames": 108,
+  "anchor": "viewport-center",
+  "perspectivePx": 1500,
+  "animatedProperties": ["transform", "opacity"],
+  "layoutPropertiesAnimated": [],
+  "frameStops": [0, 6, 96, 108],
+  "segments": [
+    {
+      "name": "matched-hold",
+      "fromFrame": 0,
+      "toFrame": 6,
+      "fromMs": 0,
+      "toMs": 100,
+      "transform": {
+        "translateYpx": -14,
+        "scaleX": 0.47,
+        "scaleY": 0.445,
+        "rotateYdeg": -2,
+        "rotateZdeg": -5
+      },
+      "easing": "cubic-bezier(.25,.1,.25,1)"
+    },
+    {
+      "name": "turn-and-grow",
+      "fromFrame": 6,
+      "toFrame": 96,
+      "fromMs": 100,
+      "toMs": 1600,
+      "toTransform": {
+        "translateYpx": 0,
+        "scaleX": 1.01,
+        "scaleY": 1.01,
+        "rotateYdeg": 180,
+        "rotateZdeg": 0
+      },
+      "easing": "cubic-bezier(.25,.1,.25,1)"
+    },
+    {
+      "name": "settle",
+      "fromFrame": 96,
+      "toFrame": 108,
+      "fromMs": 1600,
+      "toMs": 1800,
+      "toTransform": {
+        "translateYpx": 0,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotateYdeg": 180,
+        "rotateZdeg": 0
+      },
+      "easing": "cubic-bezier(.22,1,.36,1)"
+    }
+  ],
+  "faceSwitch": {
+    "percent": 32.001,
+    "approxFrame": 35,
+    "approxMs": 576,
+    "before": "black-back",
+    "after": "white-front"
+  },
+  "contentReveal": {
+    "delayMs": 1050,
+    "durationMs": 600,
+    "from": {"opacity": 0, "translateYpx": 18},
+    "to": {"opacity": 1, "translateYpx": 0},
+    "easing": "cubic-bezier(.22,1,.36,1)"
+  },
+  "filmCrossfade": {
+    "delayMs": 60,
+    "durationMs": 120,
+    "easing": "linear"
+  },
+  "desktopCard": {
+    "widthPx": 440,
+    "heightPx": 590,
+    "borderRadiusPx": 24
+  },
+  "calibratedStart": {
+    "scaleX": 0.47,
+    "scaleY": 0.445,
+    "offsetYpx": -14,
+    "rotateYdeg": -2,
+    "rotateZdeg": -5,
+    "measuredReferenceFootprintPx": {"width": 230, "height": 279},
+    "note": "Measured bounding box includes the small Z rotation and perspective; raw width/height times scale is not the final axis-aligned box."
+  },
+  "continuityRules": [
+    "Keep the decoded video tail in the same DOM layer during handoff.",
+    "Match video-tail and login-card centers.",
+    "Hold the matched geometry for the first six frames.",
+    "Switch faces near edge-on; never show a fully enlarged black back.",
+    "Use one compositor transform curve and a short final settle."
+  ]
+}

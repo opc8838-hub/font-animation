@@ -28,6 +28,32 @@ def main() -> int:
     js = js_path.read_text(encoding="utf-8")
     errors: list[str] = []
 
+    if 'cardmotion-editor.js' in html:
+        shared = html_path.parent / 'cardmotion-editor.js'
+        js += '\n' + shared.read_text(encoding='utf-8')
+        required = {
+            'scheme': ['id="saveScheme"', 'id="importScheme"', 'id="restoreScheme"', 'id="clearScheme"'],
+            'canvas/playback': ['id="canvasPreset"', 'id="canvas"', 'id="playButton"', 'id="replayButton"'],
+            'timeline': ['me-choreo-track', 'me-choreo-block', 'me-choreo-playhead', 'data-seek'],
+            'assets': ['me-layer-panel', 'me-layer-toggle', 'me-layer-items', 'me-asset-drawer', 'me-asset-library', 'me-asset-choice', 'me-asset-commit', 'me-asset-editor', 'setAssetManager', 'renderAssets'],
+            'export': ['id="exportPng"', 'id="exportGif"', 'id="exportMp4"', 'createH264MP4Encoder'],
+            'AI': ['CellMotionAI.createManifest', 'CellMotionBridge.register'],
+        }
+        for label, tokens in required.items():
+            for token in tokens:
+                if token not in js:
+                    errors.append(f'missing {label}: {token}')
+        if 'cardmotion-editor.css' not in html:
+            errors.append('missing shared card editor stylesheet')
+        if 'cellmotion-effect-bridge.js' not in html:
+            errors.append('missing shared versioned/queued AI bridge')
+        for error in errors:
+            fail(error)
+        if errors:
+            return 1
+        print(f'PASS: {html_path.name} uses the CellMotion card shell; real-browser checks remain required.')
+        return 0
+
     # New CellMotion pages may build the shared three-column shell at runtime.
     # Check the actual shared template and interactions rather than requiring
     # obsolete static Icon Burst markup in every effect HTML file.

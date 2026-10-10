@@ -41,6 +41,10 @@ for(const id of catalog.featured||[]){
   assert.equal(catalog.effects.find(effect=>effect.id===id)?.status,'ready',`${id} is featured while still pending`);
 }
 for(const effect of catalog.effects){
+  if(effect.webComponent)for(const value of Object.values(effect.webComponent)){
+    const target=new URL(value,site);target.search='';target.hash='';
+    assert((await stat(fileURLToPath(target))).isFile(),`${effect.id}: missing verified web component file`);checked++;
+  }
   for(const field of ['href','poster','video'])if(effect[field]){
     const target=new URL(effect[field],site);target.search='';target.hash='';
     assert((await stat(fileURLToPath(target))).isFile(),`${effect.id}: missing ${field}`);checked++;

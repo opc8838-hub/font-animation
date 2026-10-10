@@ -28,6 +28,8 @@
       "type": "object",
       "anyOf": [
         { "required": ["canvas", "motion", "rows"] },
+        { "required": ["canvas", "motion", "cards"] },
+        { "required": ["canvas", "motion", "scene"] },
         {
           "required": ["effect", "version", "settings", "assets"],
           "properties": {
@@ -42,7 +44,9 @@
         "canvas": { "type": "object" },
         "typography": { "type": "object" },
         "motion": { "type": "object" },
-        "rows": { "type": "array", "items": { "type": "object" } }
+        "rows": { "type": "array", "items": { "type": "object" } },
+        "cards": { "type": "array", "items": { "type": "object" } },
+        "scene": { "type": "object" }
       }
     },
     "parameterDefinitions": { "type": "array" },

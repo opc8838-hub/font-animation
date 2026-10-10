@@ -1,0 +1,322 @@
+:root {
+  --ink: #101111;
+  --paper: #f8f8f6;
+  --line: #d9dad5;
+  --purple: #6d4aff;
+  --handoff-duration: 1800ms;
+}
+
+* { box-sizing: border-box; }
+html, body { width: 100%; min-height: 100%; margin: 0; }
+body {
+  overflow: hidden;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: Inter, "Helvetica Neue", "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+button, input { font: inherit; }
+
+.demo-stage {
+  position: relative;
+  width: 100vw;
+  height: 100svh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 48%, #202121 0, #101111 42%, #090a0a 100%);
+}
+
+.demo-toolbar {
+  position: absolute;
+  z-index: 20;
+  top: 24px;
+  left: 28px;
+  right: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+  font: 10px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: .1em;
+}
+.demo-toolbar button {
+  pointer-events: auto;
+  border: 1px solid #555;
+  border-radius: 999px;
+  padding: 9px 14px;
+  background: #171818;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* 在真实项目里，这一层就是保留在原位的视频末帧。 */
+.film-tail-sim {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  opacity: 1;
+}
+.film-tail-card {
+  width: 230px;
+  height: 279px;
+  border: 1px solid #222;
+  border-radius: 13px;
+  background: #090a0a;
+  box-shadow: 0 24px 70px #0008;
+  transform: translateY(-14px) rotateZ(-5deg);
+}
+
+.handoff-video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.handoff-active > .film-tail-sim,
+.handoff-active > .handoff-video {
+  opacity: 0;
+  transition: opacity 120ms linear 60ms;
+}
+
+.login-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: transparent;
+}
+.handoff-active > .login-overlay { pointer-events: auto; }
+
+.login-perspective {
+  width: 100%;
+  height: 100svh;
+  display: grid;
+  place-items: center;
+  perspective: 1500px;
+  padding: 78px 20px 28px;
+}
+
+.card-handoff {
+  --handoff-scale-x: .47;
+  --handoff-scale-y: .445;
+  --handoff-offset-y: -14px;
+  --handoff-rotate-y: -2deg;
+  --handoff-rotate-z: -5deg;
+  position: relative;
+  width: min(440px, calc(100vw - 40px));
+  height: min(590px, calc(100svh - 118px));
+  min-height: 520px;
+  color: #171819;
+  opacity: 0;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+  animation: card-to-login var(--handoff-duration) linear both;
+}
+
+.handoff-active .card-handoff {
+  opacity: 1;
+  transition: opacity 120ms linear 60ms;
+}
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  transform-style: flat;
+}
+
+.card-back {
+  z-index: 2;
+  pointer-events: none;
+  background: #090a0a;
+  border-color: #191a1a;
+  box-shadow: 0 24px 70px #0007;
+  transform: rotateY(0);
+  animation: black-back-hide var(--handoff-duration) linear both;
+}
+
+.card-front {
+  z-index: 1;
+  background: var(--paper);
+  box-shadow: 0 28px 90px #0008;
+  transform: rotateY(180deg);
+  backface-visibility: visible;
+  animation: white-front-show var(--handoff-duration) linear both;
+}
+
+.card-eyes {
+  position: absolute;
+  left: calc(50% + 18px);
+  top: calc(50% - 36px);
+  display: flex;
+  gap: 63px;
+  transform: translate(-50%, -50%);
+}
+.card-eyes i {
+  display: block;
+  width: 66px;
+  height: 132px;
+  border-radius: 100px;
+  background: #fff;
+  transform: rotate(-13deg);
+}
+.card-eyes i + i { transform: rotate(-13deg) translateY(-50px); }
+
+.login-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 46px 42px 32px;
+  opacity: 0;
+  transform: translateY(18px);
+  animation: login-content-in 600ms cubic-bezier(.22,1,.36,1) 1050ms both;
+}
+.login-kicker {
+  color: var(--purple);
+  font: 11px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: .09em;
+}
+.login-content h1 {
+  margin: 24px 0 0;
+  font-size: 46px;
+  font-weight: 480;
+  letter-spacing: -.055em;
+  line-height: 1;
+}
+.login-content > p {
+  margin: 13px 0 38px;
+  color: #676967;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.login-content label {
+  display: grid;
+  gap: 8px;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--line);
+}
+.login-content label span {
+  color: #676967;
+  font: 10px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: .06em;
+}
+.login-content input {
+  width: 100%;
+  padding: 2px 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #171819;
+  font-size: 17px;
+  line-height: 1.6;
+}
+.login-content label:focus-within { border-color: var(--purple); }
+.login-submit {
+  width: 100%;
+  margin-top: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #171819;
+  border-radius: 999px;
+  padding: 12px 20px;
+  background: #171819;
+  color: var(--paper);
+  cursor: pointer;
+}
+.login-content footer {
+  margin-top: auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  color: #676967;
+  font: 9px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: .04em;
+}
+.login-content footer b { color: #171819; font-weight: 500; }
+
+@keyframes card-to-login {
+  0%, 5.556% {
+    transform:
+      translateY(var(--handoff-offset-y))
+      translateZ(0)
+      scale3d(var(--handoff-scale-x), var(--handoff-scale-y), 1)
+      rotateY(var(--handoff-rotate-y))
+      rotateZ(var(--handoff-rotate-z));
+    animation-timing-function: cubic-bezier(.25,.1,.25,1);
+  }
+  88.889% {
+    transform:
+      translateY(0)
+      translateZ(0)
+      scale3d(1.01, 1.01, 1)
+      rotateY(180deg)
+      rotateZ(0);
+    animation-timing-function: cubic-bezier(.22,1,.36,1);
+  }
+  100% {
+    transform:
+      translateY(0)
+      translateZ(0)
+      scale3d(1, 1, 1)
+      rotateY(180deg)
+      rotateZ(0);
+  }
+}
+
+@keyframes black-back-hide {
+  0%, 32% { visibility: visible; }
+  32.001%, 100% { visibility: hidden; }
+}
+@keyframes white-front-show {
+  0%, 32% { visibility: hidden; }
+  32.001%, 100% { visibility: visible; }
+}
+@keyframes login-content-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card-handoff.is-rest {
+  animation: none;
+  opacity: 1;
+  transform: rotateY(180deg);
+}
+.card-handoff.is-rest .card-back { display: none; }
+.card-handoff.is-rest .card-front {
+  animation: none;
+  visibility: visible;
+}
+.card-handoff.is-rest .login-content {
+  animation: none;
+  opacity: 1;
+  transform: none;
+}
+
+@media (max-width: 760px) {
+  .demo-toolbar { top: 18px; left: 18px; right: 18px; }
+  .login-perspective { padding: 66px 14px 18px; }
+  .card-handoff {
+    width: min(440px, calc(100vw - 28px));
+    height: min(590px, calc(100svh - 88px));
+  }
+  .login-content { padding: 38px 28px 26px; }
+  .login-content h1 { font-size: 39px; }
+  .login-content > p { margin-bottom: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .film-tail-sim { display: none; }
+  .card-handoff {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: rotateY(180deg) !important;
+  }
+  .card-back { display: none !important; }
+  .card-front { visibility: visible !important; animation: none !important; }
+  .login-content { opacity: 1 !important; transform: none !important; animation: none !important; }
+}

@@ -1,0 +1,8 @@
+CardBot card-to-login handoff motion kit
+Extracted from https://github.com/opc8838-hub/cardbot
+Published by the CardBot project under Apache-2.0; see LICENSE.
+
+The kit contains the standalone login handoff code and reference frames.
+It does not bundle the source card film, music, or the separate Bot editor.
+The Bot editor is maintained at https://github.com/opc8838-hub/bot
+and retains its own upstream authorship and MIT license.

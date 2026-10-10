@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>卡牌组件预览 | CellMotion</title><link rel="icon" href="favicon.svg"><link rel="stylesheet" href="shared-fonts.css?v=20261006-garden1">
+<link rel="stylesheet" href="typecascade-component-demo.css?v=20260909-editor-shell">
+<script src="cellmotion-ai-manifest.js?v=20261010-cards2" defer></script><script src="cellmotion-player.js?v=20261010-ai1" defer></script><script src="cardmotion-component-demo.js?v=20261010-1" defer></script>
+<style>.demo-controls{flex-wrap:wrap}.demo-controls label{flex:1;min-width:150px}.demo-header{flex-wrap:wrap}.demo-stage cellmotion-player{max-height:65vh;max-width:100%}.demo-theme{border:1px solid #7775;border-radius:10px;padding:8px;background:transparent;color:inherit}</style>
+</head><body data-editor-theme="dark">
+<header class="demo-header"><a class="demo-brand" href="cellmotion.html"><img class="demo-logo-dark" src="assets/cellmotion/logo-dark-original.png" alt="CellMotion"><img class="demo-logo-light" src="assets/cellmotion/logo-original-transparent.png" alt="" aria-hidden="true"></a><span>COMPONENT / V1</span><a class="demo-back" href="card-login.html" data-zh="返回编辑器" data-en="Editor">返回编辑器</a><button class="demo-theme" id="theme">☀</button><button class="demo-theme" id="language">EN</button></header>
+<main><section class="demo-intro"><p>AI COMPONENT PREVIEW</p><h1 id="title">Card Motion</h1><p class="demo-lead" data-zh="使用编辑器当前配置与同一渲染器。可播放、暂停、定位，并直接交给 AI 接入。" data-en="Your current configuration, using the same renderer. Play, pause, seek, and hand it to AI.">使用编辑器当前配置与同一渲染器。可播放、暂停、定位，并直接交给 AI 接入。</p></section>
+<section class="demo-card"><div class="demo-card-head"><h2 id="demoTitle">Live component</h2><nav class="demo-tabs"><button data-tab="preview" aria-pressed="true">Preview</button><button data-tab="code" aria-pressed="false">Code</button></nav></div>
+<div class="demo-panel" data-panel="preview"><div class="demo-stage"><cellmotion-player id="demoPlayer"></cellmotion-player></div><div class="demo-controls"><button data-player-action="play" data-zh="播放" data-en="Play">播放</button><button data-player-action="pause" data-zh="暂停" data-en="Pause">暂停</button><button data-player-action="restart" data-zh="重播" data-en="Restart">重播</button><label>Seek <input id="demoSeek" type="range" min="0" max="3" step=".001"></label></div></div>
+<div class="demo-panel" data-panel="code" hidden><div class="demo-code-head"><span>Configured HTML</span><button id="copyDemoCode" data-zh="复制代码" data-en="Copy code">复制代码</button></div><pre><code id="demoCode"></code></pre></div><p id="demoStatus" class="demo-status" role="status">Loading…</p></section></main>
+</body></html>

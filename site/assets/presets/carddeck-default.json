@@ -1,0 +1,440 @@
+{
+  "version": 1,
+  "effect": "carddeck",
+  "canvas": {
+    "width": 1920,
+    "height": 1080
+  },
+  "typography": {
+    "fontFamily": "stg:inter"
+  },
+  "backgroundColor": "#0b0b0d",
+  "customAssets": [],
+  "cards": [
+    {
+      "id": "card-0",
+      "libraryId": "cardbot-00",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-1",
+      "libraryId": "cardbot-01",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-2",
+      "libraryId": "cardbot-02",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-3",
+      "libraryId": "cardbot-03",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-4",
+      "libraryId": "cardbot-04",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-5",
+      "libraryId": "cardbot-05",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-6",
+      "libraryId": "cardbot-06",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-7",
+      "libraryId": "cardbot-07",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-8",
+      "libraryId": "cardbot-08",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-9",
+      "libraryId": "cardbot-09",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-10",
+      "libraryId": "cardbot-10",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-11",
+      "libraryId": "cardbot-11",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-12",
+      "libraryId": "cardbot-12",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-13",
+      "libraryId": "cardbot-13",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-14",
+      "libraryId": "cardbot-14",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-15",
+      "libraryId": "cardbot-15",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-16",
+      "libraryId": "cardbot-16",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-17",
+      "libraryId": "cardbot-17",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-18",
+      "libraryId": "cardbot-18",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-19",
+      "libraryId": "cardbot-19",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-20",
+      "libraryId": "cardbot-20",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-21",
+      "libraryId": "cardbot-21",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-22",
+      "libraryId": "cardbot-22",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-23",
+      "libraryId": "cardbot-23",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-24",
+      "libraryId": "cardbot-24",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-25",
+      "libraryId": "cardbot-25",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-26",
+      "libraryId": "cardbot-26",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-27",
+      "libraryId": "cardbot-27",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-28",
+      "libraryId": "cardbot-28",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-29",
+      "libraryId": "cardbot-29",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-30",
+      "libraryId": "cardbot-30",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-31",
+      "libraryId": "cardbot-31",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-32",
+      "libraryId": "cardbot-32",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-33",
+      "libraryId": "cardbot-33",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-34",
+      "libraryId": "cardbot-34",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-35",
+      "libraryId": "cardbot-35",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-36",
+      "libraryId": "cardbot-36",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-37",
+      "libraryId": "cardbot-37",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-38",
+      "libraryId": "cardbot-38",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-39",
+      "libraryId": "cardbot-39",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-40",
+      "libraryId": "cardbot-40",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-41",
+      "libraryId": "cardbot-41",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-42",
+      "libraryId": "cardbot-42",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-43",
+      "libraryId": "cardbot-43",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    },
+    {
+      "id": "card-44",
+      "libraryId": "cardbot-44",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    }
+  ],
+  "motion": {
+    "speed": 1,
+    "loop": true,
+    "rows": 3,
+    "gap": 0.08,
+    "ratio": 1.4,
+    "size": 1.11,
+    "derive": 0.8,
+    "repos": 0.9,
+    "ouvre": 0.6,
+    "tenue": 0.9,
+    "repli": 1,
+    "stagger": 0.08,
+    "angle": -12,
+    "mode": "dos",
+    "modeRepli": "synchrone",
+    "inclinaison": 18,
+    "pile": 0.82,
+    "rythme": "fluide"
+  }
+}

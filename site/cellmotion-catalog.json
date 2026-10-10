@@ -13,6 +13,14 @@
   ],
   "recent": [
     {
+      "id": "card-login",
+      "date": "2026-10-10"
+    },
+    {
+      "id": "carddeck",
+      "date": "2026-10-10"
+    },
+    {
       "id": "spotlight",
       "date": "2026-10-10"
     },
@@ -74,6 +82,36 @@
     }
   ],
   "effects": [
+    {
+      "id": "card-login",
+      "name": "翻牌登录",
+      "english": "Card Login",
+      "description": "同尺寸衔接 · 丝滑旋转变白 · 登录显现",
+      "category": "space",
+      "href": "card-login.html?from=gallery&v=20261010-cards1",
+      "poster": "assets/cellmotion/poster-card-login.jpg?v=20261010-cards1",
+      "video": "assets/previews/card-login-card.mp4?v=20261010-cards1",
+      "webComponent": {
+        "preview": "cardmotion-component-demo.html?effect=card-login",
+        "descriptor": "effects/card-login.component.json"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "carddeck",
+      "name": "卡牌剧场",
+      "english": "Card Deck",
+      "description": "表情卡牌 · 展开交错 · 收拢归位",
+      "category": "space",
+      "href": "carddeck.html?from=gallery&v=20261010-cards1",
+      "poster": "assets/cellmotion/poster-carddeck.jpg?v=20261010-cards1",
+      "video": "assets/previews/carddeck-card.mp4?v=20261010-cards1",
+      "webComponent": {
+        "preview": "cardmotion-component-demo.html?effect=carddeck",
+        "descriptor": "effects/carddeck.component.json"
+      },
+      "status": "ready"
+    },
     {
       "id": "spotlight",
       "name": "聚光",

@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "effect": "card-login",
+  "canvas": {
+    "width": 1920,
+    "height": 1080
+  },
+  "typography": {
+    "fontFamily": "stg:inter"
+  },
+  "backgroundColor": "#0b0b0d",
+  "customAssets": [],
+  "cards": [
+    {
+      "id": "cover",
+      "libraryId": "cardbot-00",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0
+    }
+  ],
+  "motion": {
+    "speed": 1,
+    "loop": true,
+    "duration": 1.8,
+    "hold": 1.2,
+    "scaleX": 0.47,
+    "scaleY": 0.445,
+    "offsetY": -14,
+    "startY": -2,
+    "startZ": -5,
+    "perspective": 1500,
+    "direction": 1,
+    "faceSwitch": 0.32001,
+    "contentDelay": 1.05,
+    "contentDuration": 0.6,
+    "overshoot": 0.01
+  },
+  "scene": {
+    "brand": "CARDBOT WORKSPACE",
+    "title": "Welcome back.",
+    "subtitle": "Continue to your company workspace.",
+    "account": "Account",
+    "password": "Password",
+    "button": "Log in",
+    "footer": "One workday. Every conversation.",
+    "frontColor": "#f8f8f6",
+    "backColor": "#090a0a",
+    "textColor": "#171819",
+    "accent": "#6d4aff",
+    "width": 440,
+    "height": 590,
+    "radius": 24,
+    "x": 0,
+    "y": 25
+  }
+}
