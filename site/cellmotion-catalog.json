@@ -87,6 +87,51 @@
   ],
   "effects": [
     {
+      "id": "botvoice",
+      "name": "Bot 语音",
+      "english": "Bot Voice",
+      "description": "手机唤醒 · 方块流动 · 语音展开",
+      "category": "media",
+      "href": "botvoice.html?from=gallery&v=20261013-1",
+      "poster": "final_botvoice.png",
+      "video": "assets/previews/botvoice-card.mp4",
+      "webComponent": {
+        "preview": "archive-motion-demo.html?effect=botvoice",
+        "descriptor": "effects/botvoice.component.json"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "patentwall",
+      "name": "专利墙",
+      "english": "Patent Wall",
+      "description": "Logo 翻转 · 证书特写 · 墙面铺展",
+      "category": "media",
+      "href": "patentwall.html?from=gallery&v=20261013-1",
+      "poster": "final_patentwall.png",
+      "video": "assets/previews/patentwall-card.mp4",
+      "webComponent": {
+        "preview": "archive-motion-demo.html?effect=patentwall",
+        "descriptor": "effects/patentwall.component.json"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "animalwave",
+      "name": "动物浪潮",
+      "english": "Animal Wave",
+      "description": "头像递增 · 波浪队列 · 品牌收尾",
+      "category": "media",
+      "href": "animalwave.html?from=gallery&v=20261013-1",
+      "poster": "final_animalwave.png",
+      "video": "assets/previews/animalwave-card.mp4",
+      "webComponent": {
+        "preview": "archive-motion-demo.html?effect=animalwave",
+        "descriptor": "effects/animalwave.component.json"
+      },
+      "status": "ready"
+    },
+    {
       "id": "card-login",
       "name": "翻牌登录",
       "english": "Card Login",

@@ -3,6 +3,8 @@
   if (window.STGFontLibrary) return;
 
   const fonts = [
+    ["bahnschrift", "Bahnschrift · 系统字体", "Bahnschrift", 600, "normal", "系统字体"],
+    ["segoe-ui", "Segoe UI · 系统字体", "Segoe UI", 400, "normal", "系统字体"],
     ["inter", "Inter", "STG Inter", 500, "normal", "常用拉丁"],
     ["space-grotesk", "Space Grotesk", "STG Space Grotesk", 500, "normal", "常用拉丁"],
     ["manrope", "Manrope", "STG Manrope", 500, "normal", "常用拉丁"],

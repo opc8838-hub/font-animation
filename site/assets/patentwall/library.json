@@ -1,0 +1,58 @@
+{
+  "cards": [
+    {
+      "libraryId": "patentwall-logo",
+      "name": "JOMOO",
+      "kind": "image",
+      "src": "assets/patentwall/logo.jpg"
+    },
+    {
+      "libraryId": "patentwall-p1",
+      "name": "证书 1",
+      "kind": "image",
+      "src": "assets/patentwall/p1.jpg",
+      "blankSrc": "assets/patentwall/p1_blank.jpg",
+      "rowsKey": "p1"
+    },
+    {
+      "libraryId": "patentwall-p2",
+      "name": "证书 2",
+      "kind": "image",
+      "src": "assets/patentwall/p2.jpg",
+      "blankSrc": "assets/patentwall/p2_blank.jpg",
+      "rowsKey": "p2"
+    },
+    {
+      "libraryId": "patentwall-p3",
+      "name": "证书 3",
+      "kind": "image",
+      "src": "assets/patentwall/p3.jpg",
+      "blankSrc": "assets/patentwall/p3_blank.jpg",
+      "rowsKey": "p3"
+    },
+    {
+      "libraryId": "patentwall-p4",
+      "name": "证书 4",
+      "kind": "image",
+      "src": "assets/patentwall/p4.jpg",
+      "blankSrc": "assets/patentwall/p4_blank.jpg",
+      "rowsKey": "p4"
+    },
+    {
+      "libraryId": "patentwall-p5",
+      "name": "证书 5",
+      "kind": "image",
+      "src": "assets/patentwall/p5.jpg",
+      "blankSrc": "assets/patentwall/p5_blank.jpg",
+      "rowsKey": "p5"
+    },
+    {
+      "libraryId": "patentwall-p6",
+      "name": "证书 6",
+      "kind": "image",
+      "src": "assets/patentwall/p6.jpg",
+      "blankSrc": "assets/patentwall/p6_blank.jpg",
+      "rowsKey": "p6"
+    }
+  ]
+}

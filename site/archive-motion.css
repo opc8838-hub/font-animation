@@ -1,0 +1,43 @@
+/* The imported tools share CellMotion cards in a 420px independently scrolling inspector. */
+body.archive-editor.tc-workspace{grid-template-columns:420px minmax(0,1fr);grid-template-rows:72px minmax(0,1fr)}
+.archive-editor .tc-content{grid-column:1;grid-row:2;display:block;overflow:auto;padding:16px;}
+.archive-editor .tc-center{grid-column:2;grid-row:2;grid-template-rows:minmax(0,1fr) auto;}
+.archive-editor #inspector{display:none!important}
+.archive-editor .tc-canvas-toolbar{display:block;padding:0 0 16px;border:0;}
+.archive-editor .tc-preview-label{display:block;margin-bottom:8px;font-weight:600}
+.archive-editor .cm-size{width:100%;margin:0}.archive-editor .cm-size select{width:100%;max-width:100%}
+.archive-editor .tc-tabs{position:sticky;top:-16px;z-index:5;background:var(--tc-panel);margin:0 -4px 16px;}
+.archive-editor .tc-properties{padding:0;overflow:visible;}
+.archive-editor .tc-row-list{flex:none;max-height:180px;min-height:0;overflow:auto;margin-bottom:12px;}
+.archive-editor .tc-row-select{margin-bottom:6px;padding:8px}.archive-editor .tc-panel-heading{margin-bottom:8px;}
+.archive-editor .tc-timeline{grid-row:2;min-height:160px;}
+.archive-editor .tc-scheme{padding:16px;border:1px solid var(--tc-line);border-radius:14px;background:var(--tc-panel)}
+.archive-editor .gm-stage{grid-row:1}
+.archive-editor .me-asset-drawer{grid-column:1;grid-row:2;z-index:20;}
+.archive-editor:has(#libraryDrawer:not([hidden])) .tc-content{visibility:hidden;}
+.archive-editor.is-preview{display:block!important}.archive-editor.is-preview .tc-center{display:block}
+.archive-editor.is-preview .tc-timeline{display:none}.archive-editor.is-preview .gm-stage{height:100dvh;padding:0}
+@media(min-width:1500px){body.archive-editor:has(#libraryDrawer:not([hidden])){grid-template-columns:420px minmax(0,1fr) 340px}.archive-editor:has(#libraryDrawer:not([hidden])) .me-asset-drawer{grid-column:3}.archive-editor:has(#libraryDrawer:not([hidden])) .tc-content{visibility:visible}}
+@media(max-width:860px){
+ body.archive-editor.tc-workspace{display:flex;height:auto;min-height:100dvh;overflow:visible;padding:0;}
+ .archive-editor .tc-header{position:relative;order:0;flex-wrap:wrap;min-height:64px;padding:10px 12px;gap:8px;}
+ .archive-editor .tc-brand{flex:0 0 135px;width:135px;height:32px}
+ .archive-editor .cm-title{display:none}.archive-editor .tc-header .tc-back{margin-left:auto}
+ .archive-editor .tc-center{order:1;display:grid;grid-template-rows:minmax(230px,40dvh) auto;position:sticky;top:0;z-index:10;background:var(--tc-bg);width:100%;}
+ .archive-editor .gm-stage{height:40dvh;min-height:230px;padding:12px 12px 60px;}
+ .archive-editor .tc-timeline{min-height:0;padding:10px 12px;}.archive-editor .me-choreo-legend{display:none}
+ .archive-editor .me-choreo-bar{height:44px;min-width:420px}.archive-editor .me-choreo-block{height:38px!important;min-height:38px!important;padding:4px 6px}
+ .archive-editor .me-choreo-block small{display:none}.archive-editor .cm-time{margin-bottom:4px;}
+ .archive-editor .tc-content{order:2;width:100%;overflow:visible;}
+ .archive-editor .tc-tabs{position:static;}.archive-editor .tc-row-list{max-height:160px}
+ .archive-editor .me-asset-drawer{order:2;position:relative;width:100%;height:55dvh;min-height:300px;}
+ .archive-editor:has(#libraryDrawer:not([hidden])) .tc-content{display:none}
+ .archive-editor.is-preview .tc-center{position:static;display:block}.archive-editor.is-preview .gm-stage{height:100dvh;}
+}
+
+@media(max-width:860px){.archive-editor .me-choreo-legend{display:none!important}.archive-editor .tc-timeline{height:112px!important;min-height:112px!important;padding:8px 12px!important}.archive-editor .me-choreo-bar{height:42px!important;min-height:42px!important}.archive-editor .me-choreo-block{height:38px!important;min-height:38px!important}.archive-editor .me-choreo-block small{display:none!important}.archive-editor .tc-center{grid-template-rows:40dvh 112px!important;gap:8px!important}.archive-editor .tc-content .tc-canvas-toolbar .cm-size select{max-width:100%!important}}
+.archive-editor .tc-content .cm-size select{width:100%!important;max-width:100%!important}
+
+.archive-editor select.tc-native-select{width:1px!important;max-width:1px!important}
+
+body.archive-editor .tc-content .cm-size select.tc-native-select{width:1px!important;max-width:1px!important;min-width:0!important}

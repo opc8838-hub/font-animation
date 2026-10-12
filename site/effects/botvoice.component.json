@@ -1,0 +1,462 @@
+{
+  "effect": {
+    "id": "botvoice",
+    "name": {
+      "zh": "Bot 语音",
+      "en": "Bot Voice"
+    },
+    "version": "1.0.0",
+    "category": "media-motion"
+  },
+  "runtime": {
+    "kind": "iframe-bridge",
+    "entry": "botvoice.html?preview=1&embed=1",
+    "bridgeVersion": "1.0.0",
+    "renderer": "canvas2d"
+  },
+  "capabilities": {
+    "compositionModel": "media",
+    "timeline": true,
+    "responsiveCanvas": true,
+    "exports": [
+      "png",
+      "gif",
+      "mp4"
+    ],
+    "customImageAssets": true,
+    "backgrounds": [
+      "color",
+      "image",
+      "gif",
+      "video"
+    ],
+    "videoTrim": true
+  },
+  "behavior": {
+    "summary": {
+      "zh": "手机亮屏、Bot 连续飞行变为流动方块，收成圆点并展开语音。",
+      "en": "Phone glow, Bot flight, flowing blocks, and a living voice waveform."
+    },
+    "phases": [
+      {
+        "id": "phase0",
+        "name": {
+          "zh": "手机特写·按键",
+          "en": "Press & glow"
+        },
+        "colorToken": "phase.sky"
+      },
+      {
+        "id": "phase1",
+        "name": {
+          "zh": "Bot 挤进屏幕",
+          "en": "Bot enters"
+        },
+        "colorToken": "phase.sky"
+      },
+      {
+        "id": "phase2",
+        "name": {
+          "zh": "12:00 · 猫 · 拉远",
+          "en": "Clock & pullback"
+        },
+        "colorToken": "phase.sky"
+      },
+      {
+        "id": "phase3",
+        "name": {
+          "zh": "Bot 边飞边变方块",
+          "en": "Fly & reshape"
+        },
+        "colorToken": "phase.sky"
+      },
+      {
+        "id": "phase4",
+        "name": {
+          "zh": "方块流动",
+          "en": "Flowing blocks"
+        },
+        "colorToken": "phase.sky"
+      },
+      {
+        "id": "phase5",
+        "name": {
+          "zh": "语音",
+          "en": "Voice"
+        },
+        "colorToken": "phase.sky"
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "path": "composition.motion.phase0",
+      "scope": "effect",
+      "name": {
+        "zh": "手机特写·按键时长",
+        "en": "Press duration"
+      },
+      "type": "number",
+      "minimum": 0.15,
+      "maximum": 20,
+      "unit": "s"
+    },
+    {
+      "path": "composition.motion.phase1",
+      "scope": "effect",
+      "name": {
+        "zh": "Bot 挤进屏幕时长",
+        "en": "Bot enters duration"
+      },
+      "type": "number",
+      "minimum": 0.15,
+      "maximum": 20,
+      "unit": "s"
+    },
+    {
+      "path": "composition.motion.phase2",
+      "scope": "effect",
+      "name": {
+        "zh": "12:00 · 猫 · 拉远时长",
+        "en": "Pullback duration"
+      },
+      "type": "number",
+      "minimum": 0.15,
+      "maximum": 20,
+      "unit": "s"
+    },
+    {
+      "path": "composition.motion.phase3",
+      "scope": "effect",
+      "name": {
+        "zh": "Bot 边飞边变方块时长",
+        "en": "Flight duration"
+      },
+      "type": "number",
+      "minimum": 0.15,
+      "maximum": 20,
+      "unit": "s"
+    },
+    {
+      "path": "composition.motion.phase4",
+      "scope": "effect",
+      "name": {
+        "zh": "方块流动时长",
+        "en": "Blocks duration"
+      },
+      "type": "number",
+      "minimum": 0.15,
+      "maximum": 20,
+      "unit": "s"
+    },
+    {
+      "path": "composition.motion.phase5",
+      "scope": "effect",
+      "name": {
+        "zh": "语音时长",
+        "en": "Voice duration"
+      },
+      "type": "number",
+      "minimum": 0.15,
+      "maximum": 20,
+      "unit": "s"
+    },
+    {
+      "path": "composition.scene.clock",
+      "scope": "global",
+      "name": {
+        "zh": "屏幕时间 / 文字",
+        "en": "Clock / text"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.scene.textColor",
+      "scope": "global",
+      "name": {
+        "zh": "文字颜色",
+        "en": "Text color"
+      },
+      "type": "color"
+    },
+    {
+      "path": "composition.scene.accent",
+      "scope": "global",
+      "name": {
+        "zh": "强调色",
+        "en": "Accent"
+      },
+      "type": "color"
+    },
+    {
+      "path": "composition.scene.handColor",
+      "scope": "global",
+      "name": {
+        "zh": "手与语音圆点",
+        "en": "Hand & dots"
+      },
+      "type": "color"
+    },
+    {
+      "path": "composition.scene.frameColor",
+      "scope": "global",
+      "name": {
+        "zh": "手机边框",
+        "en": "Phone frame"
+      },
+      "type": "color"
+    },
+    {
+      "path": "composition.scene.pillWidth",
+      "scope": "global",
+      "name": {
+        "zh": "语音胶囊宽度",
+        "en": "Voice width"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.scene.iconGap",
+      "scope": "global",
+      "name": {
+        "zh": "图标与文字间距",
+        "en": "Icon / text gap"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.scene.iconSize",
+      "scope": "global",
+      "name": {
+        "zh": "图标大小",
+        "en": "Icon size"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.scene.size",
+      "scope": "global",
+      "name": {
+        "zh": "画面大小",
+        "en": "Composition size"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.scene.x",
+      "scope": "global",
+      "name": {
+        "zh": "水平位置",
+        "en": "Horizontal position"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.scene.y",
+      "scope": "global",
+      "name": {
+        "zh": "垂直位置",
+        "en": "Vertical position"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.scene.direction",
+      "scope": "global",
+      "name": {
+        "zh": "画面方向",
+        "en": "Direction"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.canvas.width",
+      "scope": "global",
+      "name": {
+        "zh": "canvas.width",
+        "en": "canvas.width"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.canvas.height",
+      "scope": "global",
+      "name": {
+        "zh": "canvas.height",
+        "en": "canvas.height"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.motion.speed",
+      "scope": "global",
+      "name": {
+        "zh": "motion.speed",
+        "en": "motion.speed"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.motion.loop",
+      "scope": "global",
+      "name": {
+        "zh": "motion.loop",
+        "en": "motion.loop"
+      },
+      "type": "boolean"
+    },
+    {
+      "path": "composition.typography.fontFamily",
+      "scope": "global",
+      "name": {
+        "zh": "typography.fontFamily",
+        "en": "typography.fontFamily"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.backgroundColor",
+      "scope": "global",
+      "name": {
+        "zh": "backgroundColor",
+        "en": "backgroundColor"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.cards",
+      "scope": "global",
+      "name": {
+        "zh": "cards",
+        "en": "cards"
+      },
+      "type": "array"
+    },
+    {
+      "path": "composition.customAssets",
+      "scope": "global",
+      "name": {
+        "zh": "customAssets",
+        "en": "customAssets"
+      },
+      "type": "array"
+    },
+    {
+      "path": "composition.backgroundMedia",
+      "scope": "global",
+      "name": {
+        "zh": "backgroundMedia",
+        "en": "backgroundMedia"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.backgroundMedia.videoStart",
+      "scope": "global",
+      "name": {
+        "zh": "backgroundMedia.videoStart",
+        "en": "backgroundMedia.videoStart"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.backgroundMedia.videoEnd",
+      "scope": "global",
+      "name": {
+        "zh": "backgroundMedia.videoEnd",
+        "en": "backgroundMedia.videoEnd"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.cards[].libraryId",
+      "scope": "asset",
+      "name": {
+        "zh": "libraryId",
+        "en": "libraryId"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.cards[].caption",
+      "scope": "asset",
+      "name": {
+        "zh": "caption",
+        "en": "caption"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.cards[].scale",
+      "scope": "asset",
+      "name": {
+        "zh": "scale",
+        "en": "scale"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.cards[].opacity",
+      "scope": "asset",
+      "name": {
+        "zh": "opacity",
+        "en": "opacity"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.cards[].rotation",
+      "scope": "asset",
+      "name": {
+        "zh": "rotation",
+        "en": "rotation"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.cards[].x",
+      "scope": "asset",
+      "name": {
+        "zh": "x",
+        "en": "x"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.cards[].y",
+      "scope": "asset",
+      "name": {
+        "zh": "y",
+        "en": "y"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.cards[].gap",
+      "scope": "asset",
+      "name": {
+        "zh": "gap",
+        "en": "gap"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.cards[].fontFamily",
+      "scope": "asset",
+      "name": {
+        "zh": "fontFamily",
+        "en": "fontFamily"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.cards[].textColor",
+      "scope": "asset",
+      "name": {
+        "zh": "textColor",
+        "en": "textColor"
+      },
+      "type": "string"
+    }
+  ]
+}

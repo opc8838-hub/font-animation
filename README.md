@@ -10,9 +10,11 @@ CellMotion 是一个自由、灵活的动态设计系统。字体、图标、图
 
 **Move · Connect · Recombine · Grow.** 运动 · 连接 · 重组 · 生长。
 
+**2026-10-13 本地待检查**：新增 [Bot 语音](site/botvoice.html)、[专利墙](site/patentwall.html)、[动物浪潮](site/animalwave.html)。保留三个本地存档的原生编舞与素材，统一接入 420px 编辑栏、响应式舞台、共享图库与字体、阶段时间轴、方案保存/导入/恢复/清理、PNG/GIF/H.264 MP4 和 For AI。此批次尚未推送或部署，等待检查。见 [接入与验证说明](docs/ARCHIVE_MOTION_EDITORS.md)。
+
 **2026-10-12 降临 / Switch Drop 更新**：标题紫色标点改为圆点；结束停留默认 6 秒，可自定义为 2–30 秒，参数可自动保存及导出。已保存[默认方案](site/assets/presets/switchdrop-default.json)，重制官网动态封面，并加入「最近上新」；首页该标题移除末尾句号。
 
-目前收录 75 个动效，支持中文与多语种字体、字图混排、图片 / GIF / 视频背景、响应式画布，以及浏览器内的预览与导出。官网的「全部动效」和各内容分类只展示已完成的 43 个。另外 32 个尚未完成：原分类保留，只出现在「待上新」，封面写着「待上新，未完成」，暂时不能点进编辑器。名单和恢复方式见 [docs/PENDING_RELEASE.md](docs/PENDING_RELEASE.md)。
+目前收录 78 个动效，支持中文与多语种字体、字图混排、图片 / GIF / 视频背景、响应式画布，以及浏览器内的预览与导出。官网的「全部动效」和各内容分类只展示已完成的 46 个。另外 32 个尚未完成：原分类保留，只出现在「待上新」，封面写着「待上新，未完成」，暂时不能点进编辑器。名单和恢复方式见 [docs/PENDING_RELEASE.md](docs/PENDING_RELEASE.md)。
 
 **2026-10-10 两款 CardBot 独立编辑器**：[翻牌登录 / Card Login](https://opc8838-hub.github.io/font-animation/card-login.html?from=gallery) 保留同尺寸衔接、旋转中变白及登录渐入，文字、字体、颜色和动作参数可编辑；[卡牌剧场 / Card Deck](https://opc8838-hub.github.io/font-animation/carddeck.html?from=gallery) 保留表情卡牌的展开、交错横移与收拢，支持共享图库、自有素材和逐卡调整。两款均采用 CellMotion 三栏工作台，支持手机/平板、主流及自定义画幅、方案管理、PNG/GIF/H.264 MP4 与实时配置的 For AI 组件。登录编辑器是视觉动效，不提供账号认证；真正可输入的原始 HTML/CSS 表单转场另附源码包。详见 [使用与集成说明](docs/CARDBOT_EDITORS.md)、[动效保真与验证](docs/analyses/cardmotion-preservation.md) 和 [来源许可](docs/licenses/CARDBOT_MOTION.md)。
 

@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "effect": "patentwall",
+  "canvas": {
+    "width": 1920,
+    "height": 1080
+  },
+  "typography": {
+    "fontFamily": "stg:inter"
+  },
+  "backgroundColor": "#ffffff",
+  "cards": [
+    {
+      "id": "item-0",
+      "libraryId": "patentwall-logo",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "gap": 0,
+      "caption": "",
+      "fontFamily": ""
+    },
+    {
+      "id": "item-1",
+      "libraryId": "patentwall-p1",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "gap": 0,
+      "caption": "",
+      "fontFamily": ""
+    },
+    {
+      "id": "item-2",
+      "libraryId": "patentwall-p2",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "gap": 0,
+      "caption": "",
+      "fontFamily": ""
+    },
+    {
+      "id": "item-3",
+      "libraryId": "patentwall-p3",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "gap": 0,
+      "caption": "",
+      "fontFamily": ""
+    },
+    {
+      "id": "item-4",
+      "libraryId": "patentwall-p4",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "gap": 0,
+      "caption": "",
+      "fontFamily": ""
+    },
+    {
+      "id": "item-5",
+      "libraryId": "patentwall-p5",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "gap": 0,
+      "caption": "",
+      "fontFamily": ""
+    },
+    {
+      "id": "item-6",
+      "libraryId": "patentwall-p6",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "gap": 0,
+      "caption": "",
+      "fontFamily": ""
+    }
+  ],
+  "customAssets": [],
+  "scene": {
+    "clock": "12:00",
+    "first": "is here",
+    "many": "and {n} friend{s} are here",
+    "brandA": "hely.",
+    "brandB": "Animals",
+    "brandId": "animalwave-brand",
+    "textColor": "#0f1419",
+    "accent": "#3f7bf6",
+    "handColor": "#4272fe",
+    "frameColor": "#272523",
+    "pillWidth": 960,
+    "iconGap": 24,
+    "iconSize": 1,
+    "spacing": 0.78,
+    "amplitude": 92,
+    "size": 1,
+    "x": 0,
+    "y": 0,
+    "direction": 1
+  },
+  "motion": {
+    "speed": 1,
+    "loop": true,
+    "phase0": 2.6,
+    "phase1": 3.541117396980177,
+    "phase2": 1.9583720930232547,
+    "phase3": 1.9569767441860453,
+    "phase4": 1.9588372093023256,
+    "phase5": 3.8000000000000007
+  }
+}

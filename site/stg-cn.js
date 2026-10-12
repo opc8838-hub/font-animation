@@ -10,6 +10,7 @@
     return;
   }
   const effects = [
+    ["botvoice", "Bot 语音", "Bot Voice"], ["patentwall", "专利墙", "Patent Wall"], ["animalwave", "动物浪潮", "Animal Wave"],
     ["spotlight", "聚光", "Spotlight"],
     ["curvedgallery", "弧廊归标", "Curved Gallery"],
     ["prosvg", "彩铸", "PRO SVG Lab"],

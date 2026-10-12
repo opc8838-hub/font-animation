@@ -1,7 +1,8 @@
-/* Shared CellMotion shell for two independent card tools. No server or build dependency. */
+/* Shared CellMotion shell with optional composition adapters. No build dependency. */
 (async () => {
   'use strict';
   const $ = id => document.getElementById(id), M = window.CardMotion, effect = document.body.dataset.cardmotion;
+  const extension = window.CellMotionEditorExtension;
   const login = effect === 'card-login', params = new URLSearchParams(location.search), preview = params.has('preview');
   const storageKey = `cellmotion-${effect}-v1`, resources = new Map(), clone = v => JSON.parse(JSON.stringify(v));
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
@@ -11,9 +12,9 @@
   const readPath = (o, p) => p.split('.').reduce((a, k) => a?.[k], o);
   const putPath = (o, p, v) => { const keys = p.split('.'), key = keys.pop(); keys.reduce((a, k) => a[k], o)[key] = v; };
   let state, selected = login ? 'scene' : 'card-0', candidate = null, time = 0, playing = !matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let customCanvas = false;
+  let customCanvas = false, replacementTarget = null;
   let busy = false, last = performance.now(), autosave, ready = false, history = [], future = [], definition;
-  const fields = login ? [
+  const fields = extension?.fields || (login ? [
     ['motion.duration','翻转时长','Flip duration',.6,4,.01,'s'], ['motion.hold','登录停留','Login hold',0,5,.1,'s'],
     ['motion.faceSwitch','翻面变白时机','White face switch',.1,.6,.001,'%'],
     ['motion.contentDelay','文字出现延迟','Content delay',0,3,.01,'s'], ['motion.contentDuration','文字渐入时长','Content reveal',.1,2,.01,'s'],
@@ -29,17 +30,17 @@
     ['motion.stagger','抽出交错','Card stagger',0,.5,.01,'s'], ['motion.pile','展开缩小倍率','Spread scale',.5,1,.01,'%'],
     ['motion.angle','叠放角度','Stack angle',-20,20,1,'°'], ['motion.inclinaison','飞行倾角','Flight tilt',0,18,1,'°'],
     ['motion.ratio','卡片高宽比','Height / width',1,2,.01,'']
-  ];
+  ]);
   const input = (path, zh, en, type = 'text', extra = '') => `<label class="gm-field"><span>${t(zh,en)}</span><input data-path="${path}" type="${type}" ${extra}></label>`;
   const range = ([path, zh, en, min, max, step, unit]) => `<label class="gm-field"><span>${t(zh,en)}<output data-value="${path}" data-unit="${unit}"></output></span><input data-path="${path}" type="range" min="${min}" max="${max}" step="${step}"></label>`;
   const options = values => values.map(([value, zh, en]) => `<option value="${value}" data-zh="${esc(zh)}" data-en="${esc(en)}">${esc(tr(zh,en))}</option>`).join('');
   const select = (path, zh, en, values) => `<label class="gm-field"><span>${t(zh,en)}</span><select data-path="${path}">${options(values)}</select></label>`;
   const check = (path, zh, en) => `<label class="cm-check"><input data-path="${path}" type="checkbox">${t(zh,en)}</label>`;
-  const title = tr(login ? '翻牌登录' : '卡牌剧场', login ? 'Card Login' : 'Card Deck');
+  const title = extension ? tr(...extension.title) : tr(login ? '翻牌登录' : '卡牌剧场', login ? 'Card Login' : 'Card Deck');
   document.body.insertAdjacentHTML('afterbegin', `
     <header class="tc-header">
       <a class="tc-brand" href="cellmotion.html" aria-label="CellMotion"><img src="assets/cellmotion/logo-original-transparent.png?v=20260926-3" alt="CellMotion"></a>
-      <div class="cm-title"><small>${t('让创意，自由生长','Let creativity grow')}</small><h1>${t(login?'翻牌登录':'卡牌剧场',login?'Card Login':'Card Deck')} <span>${login?'Card Login':'Card Deck'}</span></h1></div>
+      <div class="cm-title"><small>${t('让创意，自由生长','Let creativity grow')}</small><h1>${extension?t(...extension.title):t(login?'翻牌登录':'卡牌剧场',login?'Card Login':'Card Deck')} <span>${extension?extension.title[1]:login?'Card Login':'Card Deck'}</span></h1></div>
       <a class="tc-back" href="cellmotion-components.html">${t('动效库','Effects')}</a>
       <button id="themeButton" type="button"></button><button id="languageButton" type="button">EN</button>
       <div class="cm-ai"><button id="aiButton" type="button" aria-haspopup="menu" aria-expanded="false">${t('用于 AI','For AI')}⌄</button>
@@ -53,10 +54,10 @@
       <button class="tc-export-shortcut" id="exportShortcut">${t('导出作品','Export')}</button>
     </header>
     <aside class="tc-content" aria-label="Content & scheme">
-      <div class="tc-panel-heading"><div><small>CONTENT</small><h2>${t(login?'登录转场':'卡牌素材',login?'Login transition':'Card collection')}</h2></div><span id="cardCount"></span></div>
-      <p class="tc-hint">${login?t('尺寸不跳变，在翻面中变白。','Match the card. Turn white while flipping.'):t('叠放、分排、交错横移，再收回。','Stack, spread, drift, and gather.')}</p>
+      <div class="tc-panel-heading"><div><small>CONTENT</small><h2>${extension?t('素材与方案','Assets & scheme'):t(login?'登录转场':'卡牌素材',login?'Login transition':'Card collection')}</h2></div><span id="cardCount"></span></div>
+      <p class="tc-hint">${extension?t('选择素材，再单独编辑。修改会自动保存。','Select an asset to edit. Changes are autosaved.'):login?t('尺寸不跳变，在翻面中变白。','Match the card. Turn white while flipping.'):t('叠放、分排、交错横移，再收回。','Stack, spread, drift, and gather.')}</p>
       <div class="tc-row-list" id="contentList"></div>
-      ${login?'':`<button id="openLibrary">${t('＋ 添加卡牌 / 素材','＋ Add cards / media')}</button>`}
+      ${login?'':`<button id="openLibrary">${extension?t('＋ 添加素材','＋ Add assets'):t('＋ 添加卡牌 / 素材','＋ Add cards / media')}</button>`}
       <section class="gm-card tc-scheme me-scheme-panel"><h2>${t('方案','Scheme')}</h2>
         <div class="me-scheme-actions"><button id="saveScheme">${t('保存方案','Save scheme')}</button><button id="importScheme">${t('导入方案','Import scheme')}</button><button id="restoreScheme">${t('恢复默认','Restore default')}</button><button id="clearScheme">${t('清理重做','Clear / rebuild')}</button></div>
         <input id="schemeFile" type="file" accept="application/json,.json" hidden><p id="schemeStatus" class="gm-status" role="status">${t('自动保存于此浏览器。Ctrl / ⌘ Z 撤销。','Autosaved in this browser. Ctrl / ⌘ Z to undo.')}</p>
@@ -78,7 +79,7 @@
     <aside class="gm-inspector" id="inspector" aria-label="Properties">
       <nav class="tc-tabs"><button data-panel="content" aria-pressed="true">${t('当前内容','Content')}</button><button data-panel="motion" aria-pressed="false">${t('动效设置','Motion')}</button><button data-panel="export" aria-pressed="false">${t('导出','Export')}</button></nav>
       <section class="tc-properties" data-panel="content" id="contentPanel">
-        ${login?`<section class="gm-card"><h2>${t('登录内容','Login content')}</h2>
+        ${extension?extension.content({input,range,select,t}):login?`<section class="gm-card"><h2>${t('登录内容','Login content')}</h2>
           ${input('scene.brand','品牌','Brand')}${input('scene.title','标题','Title')}${input('scene.subtitle','说明','Subtitle')}
           <label class="gm-field"><span>${t('字体','Font')}</span><select id="fontFamily" data-path="typography.fontFamily"></select></label>
           <div class="gm-grid-2">${input('scene.account','账号标签','Account label')}${input('scene.password','密码标签','Password label')}</div>
@@ -94,9 +95,9 @@
       </section>
       <section class="tc-properties" data-panel="motion" hidden><section class="gm-card"><h2>${t('动作节奏','Motion rhythm')}</h2>
         ${range(['motion.speed','整体速度','Overall speed',.25,3,.05,'×'])}
-        ${login?select('motion.direction','翻转方向','Flip direction',[[1,'向右','Right'],[-1,'向左','Left']]):select('motion.mode','展开方式','Spread style',[['dos','背后向上','Lift from behind'],['eventail','横向分排','Horizontal fan']])+select('motion.modeRepli','收拢方式','Gather style',[['synchrone','同步收拢','Together'],['rangees','逐排收回','Row by row']])+select('motion.rythme','快慢节奏','Easing',[['fluide','丝滑','Smooth'],['regulier','匀速','Linear'],['vif','利落','Snappy']])}
-        ${fields.slice(0,login?5:8).map(range).join('')}${check('motion.loop','循环播放','Loop playback')}
-      </section><details><summary>${t('精细调整','Fine adjustments')}</summary><div>${fields.slice(login?5:8).map(range).join('')}</div></details></section>
+        ${extension?'':login?select('motion.direction','翻转方向','Flip direction',[[1,'向右','Right'],[-1,'向左','Left']]):select('motion.mode','展开方式','Spread style',[['dos','背后向上','Lift from behind'],['eventail','横向分排','Horizontal fan']])+select('motion.modeRepli','收拢方式','Gather style',[['synchrone','同步收拢','Together'],['rangees','逐排收回','Row by row']])+select('motion.rythme','快慢节奏','Easing',[['fluide','丝滑','Smooth'],['regulier','匀速','Linear'],['vif','利落','Snappy']])}
+        ${fields.slice(0,extension?fields.length:login?5:8).map(range).join('')}${check('motion.loop','循环播放','Loop playback')}
+      </section>${extension?'':`<details><summary>${t('精细调整','Fine adjustments')}</summary><div>${fields.slice(login?5:8).map(range).join('')}</div></details>`}</section>
       <section class="tc-properties" data-panel="export" hidden><section class="gm-card"><h2>${t('导出作品','Export artwork')}</h2>
         <p class="gm-help">${t('使用上方画布尺寸。PNG 保存当前帧，GIF / MP4 从第一帧开始。','Uses the canvas size above. PNG saves this frame; GIF / MP4 starts at frame zero.')}</p>
         <label class="gm-field"><span>${t('时长','Duration')}</span><select id="exportDuration">${options([['cycle','完整一轮','Full cycle'],['3','3 秒','3 seconds'],['5','5 秒','5 seconds'],['10','10 秒','10 seconds'],['custom','自定义','Custom']])}</select></label>
@@ -116,6 +117,7 @@
     <dialog class="cm-dialog" id="parameterGuide"><header><h2>${t('AI 组件 · 参数说明','AI component · Parameters')}</h2><button id="closeGuide" aria-label="Close">×</button></header><div id="guideBody"></div></dialog>
     <div class="cm-toast" id="toast" role="status" hidden></div>`);
 
+  extension?.layout();
   function notify(zh, en = zh) { $('toast').textContent = tr(zh,en); $('toast').hidden = false; clearTimeout(notify.timer); notify.timer = setTimeout(() => $('toast').hidden = true, 2600); }
   function download(blob, name) { const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(url), 2000); }
   function historyPush() { if (busy) return; history.push(clone(state)); if (history.length > 30) history.shift(); future = []; }
@@ -171,7 +173,7 @@
     document.querySelectorAll('[data-seek]').forEach(b => b.setAttribute('aria-current', String(b.dataset.phase === beat?.id)));
   }
   function seek(seconds) { time = M.clamp(Number(seconds) || 0,0,M.duration(state)); playing = false; playbackUI(); draw();if(state.backgroundMedia)prepareFrame(state,time).then(draw).catch(e=>notify(e.message)); }
-  function stable() { return login ? state.motion.duration / state.motion.speed : (state.motion.repos + state.motion.ouvre + Math.min(.1,state.motion.tenue / 2)) / state.motion.speed; }
+  function stable() { if(extension)return extension.stable(state,selected); return login ? state.motion.duration / state.motion.speed : (state.motion.repos + state.motion.ouvre + Math.min(.1,state.motion.tenue / 2)) / state.motion.speed; }
   function timeline() {
     const phases = M.phases(state), total = M.duration(state);
     $('timeline').innerHTML = phases.map(b => `<button class="me-choreo-block" data-phase="${b.id}" data-seek="${b.start}" style="left:${b.start / total * 100}%;width:calc(${b.duration / total * 100}% - 4px);--phase:${b.color}" title="${esc(tr(b.zh,b.en))} · ${b.start.toFixed(2)}–${(b.start+b.duration).toFixed(2)}s"><strong>${esc(tr(b.zh,b.en))}</strong><small>${b.duration.toFixed(2)}s</small></button>`).join('')+'<i class="me-choreo-playhead" id="playhead"></i>';
@@ -212,8 +214,9 @@
     return {kind:'cardbot',body:paths[0].getAttribute('d'),eyes,duration,color:doc.querySelector('g[mask] rect')?.getAttribute('fill')||'#111111',dataUrl};
   }
   async function prepareAsset(asset) {
+    asset = {...asset, src:asset.src || asset.url, type:asset.type || asset.fileType};
     const prior=resources.get(asset.libraryId);
-    if (prior && ['dataUrl','src','kind','type','body','color','duration'].every(k=>prior[k]===asset[k]) && JSON.stringify(prior.eyes)===JSON.stringify(asset.eyes)) return;
+    if (prior && (prior.image || prior.video || ['vector','cardbot'].includes(prior.kind)) && ['dataUrl','src','kind','type','body','color','duration'].every(k=>prior[k]===asset[k]) && JSON.stringify(prior.eyes)===JSON.stringify(asset.eyes)) return;
     const record = { ...asset };
     if (/^video\//.test(asset.type||'')) {
       const video=document.createElement('video');video.muted=true;video.playsInline=true;video.preload='auto';
@@ -229,6 +232,7 @@
     prior?.video?.pause();resources.set(asset.libraryId,record);
   }
   async function prepare(s) {
+    if(extension)await extension.prepare(s,resources,prepareAsset,builtins);
     for (const a of s.customAssets) await prepareAsset(a);
     for (const c of s.cards) {
       const a = window.STGIconLibrary.byId.get(c.libraryId);
@@ -252,8 +256,8 @@
     for (const [path,,,lo,hi] of [...fields,['motion.speed','','',.25,3],...(login?[['scene.width','','',280,700],['scene.height','','',460,850],['scene.radius','','',0,60],['scene.x','','',-400,400],['scene.y','','',-200,200]]:[])]) {
       const value = Number(readPath(s,path)); putPath(s,path,Number.isFinite(value) ? M.clamp(value,lo,hi) : readPath(defaultState,path));
     }
-    if (!login) { s.motion.rows = Math.round(s.motion.rows); if (!['dos','eventail'].includes(s.motion.mode)) s.motion.mode = 'dos'; if (!['synchrone','rangees'].includes(s.motion.modeRepli)) s.motion.modeRepli = 'synchrone'; if (!['fluide','regulier','vif'].includes(s.motion.rythme)) s.motion.rythme = 'fluide'; }
-    else { s.motion.direction = Number(s.motion.direction) === -1 ? -1 : 1; for (const k of ['brand','title','subtitle','account','password','button','footer']) s.scene[k] = String(s.scene[k] ?? '').slice(0,300); }
+    if (!login && !extension) { s.motion.rows = Math.round(s.motion.rows); if (!['dos','eventail'].includes(s.motion.mode)) s.motion.mode = 'dos'; if (!['synchrone','rangees'].includes(s.motion.modeRepli)) s.motion.modeRepli = 'synchrone'; if (!['fluide','regulier','vif'].includes(s.motion.rythme)) s.motion.rythme = 'fluide'; }
+    else if(login) { s.motion.direction = Number(s.motion.direction) === -1 ? -1 : 1; for (const k of ['brand','title','subtitle','account','password','button','footer']) s.scene[k] = String(s.scene[k] ?? '').slice(0,300); }
     s.customAssets = Array.isArray(s.customAssets) ? s.customAssets.slice(0,100).filter(a => a.libraryId?.startsWith('custom:') && /^data:(image\/(png|jpeg|gif|webp|svg\+xml)|video\/(mp4|webm));/i.test(a.dataUrl || '')) : [];
     for (const a of s.customAssets) if (/^data:image\/svg\+xml/i.test(a.dataUrl)) {
       // Revalidate imported SVGs rather than trusting a JSON file.
@@ -270,6 +274,7 @@
       return { ...c,id,scale:M.clamp(Number(c.scale)||1,.2,2),opacity:M.clamp(Number(c.opacity) || 0,0,1),x:M.clamp(Number(c.x)||0,-800,800),y:M.clamp(Number(c.y)||0,-500,500),rotation:M.clamp(Number(c.rotation)||0,-180,180) };
     });
     if(s.backgroundMedia&&!s.customAssets.some(a=>a.libraryId===s.backgroundMedia.libraryId))s.backgroundMedia=null;
+    extension?.normalize(raw,s,defaultState);
     return s;
   }
   async function apply(raw, remember = true) {
@@ -281,39 +286,42 @@
   function renderAssets() {
     $('cardCount').textContent = login ? '01' : String(state.cards.length);
     if (login) { $('contentList').innerHTML = `<button class="tc-row-select" aria-pressed="true"><span>01</span><strong>${esc(state.scene.title || tr('登录界面','Login face'))}</strong><small>${tr('文字 · 色彩 · 尺寸','Text · colors · dimensions')}</small></button>`; return; }
-    $('contentList').innerHTML = state.cards.map((c,i) => { const a = resources.get(c.libraryId); return `<button class="tc-row-select" data-card="${esc(c.id)}" draggable="true" aria-pressed="${c.id===selected}">${a?.src||a?.dataUrl?`<img src="${esc(a.src||a.dataUrl)}" alt="">`:`<span>${String(i+1).padStart(2,'0')}</span>`}<strong>${esc(assetName(c))}</strong><small>${i===0?tr('主卡 · 收拢封面','Cover · stack face'):tr('卡牌','Card')+' '+String(i+1).padStart(2,'0')}</small></button>`; }).join('');
+    $('contentList').innerHTML = state.cards.map((c,i) => { const a = resources.get(c.libraryId); return `<button class="tc-row-select" data-card="${esc(c.id)}" draggable="true" aria-pressed="${c.id===selected}">${a?.src||a?.dataUrl?`<img src="${esc(a.src||a.dataUrl)}" alt="">`:`<span>${String(i+1).padStart(2,'0')}</span>`}<strong>${esc(assetName(c))}</strong><small>${extension?tr('素材','Asset')+' '+String(i+1).padStart(2,'0'):i===0?tr('主卡 · 收拢封面','Cover · stack face'):tr('卡牌','Card')+' '+String(i+1).padStart(2,'0')}</small></button>`; }).join('');
     $('selectedAssets').innerHTML = state.cards.map(c => `<div class="cm-asset-row"><span>${esc(assetName(c))}</span><button data-edit="${esc(c.id)}">${tr('编辑','Edit')}</button><button data-remove="${esc(c.id)}" aria-label="${tr('移除','Remove')}">×</button></div>`).join('');
     $('editSelected').disabled = !state.cards.length;
   }
   function setAssetManager(open) { $('assetManager').classList.toggle('is-list-expanded',open); $('selectedAssets').hidden = !open; $('assetToggle').setAttribute('aria-expanded',String(open)); }
-  function closeDrawer() { $('libraryDrawer').hidden = true; $('inspector').hidden = false; }
+  function closeDrawer() { replacementTarget=null; $('libraryDrawer').hidden = true; $('inspector').hidden = false; }
   function libraryView() {
     $('libraryDrawer').hidden = false; $('inspector').hidden = true; $('libraryBrowse').hidden = false; $('singleAssetEditor').hidden = true; $('insertCandidate').hidden = false;
     $('drawerTitle').textContent = tr('卡牌与共享图库','Cards & shared library'); renderLibrary();
   }
   function renderLibrary() {
-    const groups = [['CardBot',builtins],['Flow',window.STGIconLibrary.groups.flow],['GIF 动图',window.STGIconLibrary.groups.gifMotion],['Animals',window.STGIconLibrary.groups.animals],['Bots',window.STGIconLibrary.groups.bots], [tr('我的素材','My uploads'),state.customAssets.filter(a=>!/^video\//.test(a.type||''))]];
-    $('libraryGroups').innerHTML = groups.map(([name,items],i) => `<details ${i===0?'open':''}><summary>${esc(name)} · ${items.length}</summary><div class="cm-library-grid">${items.map(a => `<div class="cm-library-item"><button class="me-asset-choice" data-candidate="${esc(a.libraryId)}" aria-pressed="${candidate===a.libraryId}"><img src="${esc(a.dataUrl||a.src)}" loading="lazy" alt=""><span>${esc(a.name)}</span></button><button class="me-asset-commit" data-insert="${esc(a.libraryId)}">${tr('插入','Insert')}</button></div>`).join('')}</div></details>`).join('');
+    const groups = [[extension?tr('随附素材','Included assets'):'CardBot',builtins],['Flow',window.STGIconLibrary.groups.flow],['GIF 动图',window.STGIconLibrary.groups.gifMotion],['Animals',window.STGIconLibrary.groups.animals],['Bots',window.STGIconLibrary.groups.bots], [tr('我的素材','My uploads'),state.customAssets.filter(a=>!/^video\//.test(a.type||''))]];
+    $('libraryGroups').innerHTML = groups.map(([name,items],i) => `<details ${i===0?'open':''}><summary>${esc(name)} · ${items.length}</summary><div class="cm-library-grid">${items.map(a => `<div class="cm-library-item"><button class="me-asset-choice" data-candidate="${esc(a.libraryId)}" aria-pressed="${candidate===a.libraryId}"><img src="${esc(a.dataUrl||a.src||a.url)}" loading="lazy" alt=""><span>${esc(a.name)}</span></button><button class="me-asset-commit" data-insert="${esc(a.libraryId)}">${tr('插入','Insert')}</button></div>`).join('')}</div></details>`).join('');
   }
   function lookup(id) { return resources.get(id) || state.customAssets.find(a => a.libraryId===id) || window.STGIconLibrary.byId.get(id); }
   async function insert(id) {
     if (busy) return;
-    if (state.cards.some(c=>c.libraryId===id)) { notify('此素材已在画面中。','This asset is already selected.'); return; }
+    if (!replacementTarget && state.cards.some(c=>c.libraryId===id)) { notify('此素材已在画面中。','This asset is already selected.'); return; }
     const a = lookup(id); if (!a) return; await prepareAsset(a); historyPush();
-    const c = {id:crypto.randomUUID(),libraryId:id,scale:1,opacity:1,x:0,y:0,rotation:0}; state.cards.push(c); selected = c.id;
-    renderAssets(); saveLocal(); seek(stable()); notify('已插入，素材管理保持折叠状态。','Inserted. The selected manager stays as it was.');
+    if(replacementTarget){const c=state.cards.find(c=>c.id===replacementTarget);if(c)c.libraryId=id;replacementTarget=null;renderAssets();timeline();saveLocal();seek(stable());closeDrawer();return;}
+    const c = {id:crypto.randomUUID(),libraryId:id,scale:1,opacity:1,x:0,y:0,rotation:0,gap:0,caption:'',fontFamily:state.typography.fontFamily}; state.cards.push(c); selected = c.id;
+    renderAssets(); timeline(); saveLocal(); seek(stable()); notify('已插入，素材管理保持折叠状态。','Inserted. The selected manager stays as it was.');
   }
   function editCard(id) {
     selected = id; const card = state.cards.find(c=>c.id===id); if (!card) return;
     renderAssets(); seek(stable()); $('libraryDrawer').hidden = false; $('inspector').hidden = true; $('libraryBrowse').hidden = true;
     $('singleAssetEditor').hidden = false; $('insertCandidate').hidden = true; $('drawerTitle').textContent = tr('单独编辑','Edit one card');
     const a = lookup(card.libraryId);
-    $('singleAssetEditor').innerHTML = `${a?.src||a?.dataUrl?`<img id="assetThumb" src="${esc(a.dataUrl||a.src)}" alt="">`:''}<h3>${esc(assetName(card))}</h3><p class="gm-help">${tr('已定位到卡牌展开后的完整画面。','Paused at the fully spread frame.')}</p>${[
-      ['scale','卡牌大小','Card size',.2,2,.01,'%'],['opacity','不透明度','Opacity',0,1,.01,'%'],['rotation','旋转角度','Rotation',-180,180,1,'°'],['x','水平偏移','Horizontal offset',-800,800,1,'px'],['y','垂直偏移','Vertical offset',-500,500,1,'px']
+    $('singleAssetEditor').innerHTML = `${a?.src||a?.dataUrl?`<img id="assetThumb" src="${esc(a.dataUrl||a.src||a.url)}" alt="">`:''}<h3>${esc(assetName(card))}</h3><p class="gm-help">${extension?tr('已暂停在当前素材的可见画面。','Paused on the selected asset.'):tr('已定位到卡牌展开后的完整画面。','Paused at the fully spread frame.')}</p>${[
+      ['scale',extension?'图标大小':'卡牌大小',extension?'Asset size':'Card size',.2,2,.01,'%'],['opacity','不透明度','Opacity',0,1,.01,'%'],['rotation','旋转角度','Rotation',-180,180,1,'°'],...(extension? [['gap','图标与文字间距','Icon / text gap',0,160,1,'px']]:[]),['x','水平偏移','Horizontal offset',-800,800,1,'px'],['y','垂直偏移','Vertical offset',-500,500,1,'px']
     ].map(([key,zh,en,lo,hi,step,unit])=>`<label class="gm-field"><span>${t(zh,en)}<output data-card-value="${key}">${card[key]}${unit}</output></span><input data-card-key="${key}" type="range" min="${lo}" max="${hi}" step="${step}" value="${card[key]}"></label>`).join('')}
       ${a?.kind==='cardbot'?`<label class="gm-field"><span>${t('卡牌颜色','Card color')}</span><input data-card-key="color" type="color" value="${esc(card.color||a.color)}"></label>`:''}
       <div class="gm-grid-2"><button data-move="-1">${t('向前','Move earlier')}</button><button data-move="1">${t('向后','Move later')}</button></div><button id="backToLibrary">${t('返回图库','Back to library')}</button>`;
-    $('backToLibrary').onclick = libraryView;
+    if(extension){$('singleAssetEditor').insertAdjacentHTML('afterbegin',extension.extraCard({card,input,t}));window.STGFontLibrary.enhanceSelect($('assetFontFamily'));$('assetFontFamily').value=card.fontFamily||state.typography.fontFamily;$('replaceAsset').onclick=()=>{replacementTarget=id;libraryView();};}
+    extension?.bindCard?.({state,card,changed:mutation=>{historyPush();mutation();saveLocal();draw();}});
+    $('backToLibrary').onclick = ()=>{replacementTarget=null;libraryView();};
   }
   function reorder(id,index) { if (busy) return; const from = state.cards.findIndex(c=>c.id===id); if (from<0) return; historyPush(); const [c]=state.cards.splice(from,1); state.cards.splice(M.clamp(index,0,state.cards.length),0,c); renderAssets(); saveLocal(); seek(stable()); }
   function remove(id) { if (busy) return; historyPush(); state.cards = state.cards.filter(c=>c.id!==id); selected=state.cards[0]?.id; renderAssets(); saveLocal(); draw(); }
@@ -340,11 +348,11 @@
       if(action==='preview') {
         if(!popup) throw new Error(tr('请允许弹出预览窗口','Allow the preview pop-up'));
         const receive = e=>{ if(e.source!==popup||e.data?.type!=='cellmotion:demo-ready')return;popup.postMessage({type:'cellmotion:demo-manifest',manifest:current},location.origin);window.removeEventListener('message',receive); };
-        window.addEventListener('message',receive); popup.location.href=`cardmotion-component-demo.html?effect=${effect}&live=1`;
+        window.addEventListener('message',receive); popup.location.href=extension?`archive-motion-demo.html?effect=${effect}&live=1`:`cardmotion-component-demo.html?effect=${effect}&live=1`;
         setTimeout(()=>window.removeEventListener('message',receive),30000);
       } else if(action==='json') window.CellMotionAI.downloadJson(current,`${effect}-component.json`);
       else if(action==='guide') {
-        $('guideBody').innerHTML=`<p>${esc(current.behavior.summary[language])}</p><p>${t('组件是视觉动效，不包含账号认证。生产接入须限制消息来源域名。','This is a visual component, not authentication. Restrict message origins in production.')}</p>`+current.parameterDefinitions.map(p=>`<section><strong>${esc(p.name?.[language]||p.path)}</strong><br><code>${esc(p.path)}</code><p>${esc(p.description?.[language]||p.type)}${p.unit?' · '+esc(p.unit):''}</p></section>`).join(''); $('parameterGuide').showModal();
+        $('guideBody').innerHTML=`<p>${esc(current.behavior.summary[language])}</p><p>${extension?t('组件保留当前素材与全部编辑参数。','The component keeps your current assets and editing parameters.'):t('组件是视觉动效，不包含账号认证。生产接入须限制消息来源域名。','This is a visual component, not authentication. Restrict message origins in production.')}</p>`+current.parameterDefinitions.map(p=>`<section><strong>${esc(p.name?.[language]||p.path)}</strong><br><code>${esc(p.path)}</code><p>${esc(p.description?.[language]||p.type)}${p.unit?' · '+esc(p.unit):''}</p></section>`).join(''); $('parameterGuide').showModal();
       } else { await window.CellMotionAI.copyText(action==='code'?window.CellMotionAI.configuredCode(current):window.CellMotionAI.aiPrompt(current,language)); notify('已复制当前配置，可直接交给 AI。','Copied the current configuration for AI.'); }
     } catch(e) { popup?.close();notify(e.message); }
   }
@@ -364,7 +372,7 @@
       else if(format==='gif') {
         encoder=new GIF({workers:2,quality:10,width:w,height:h,workerScript:'js/continuation-gif.worker.js'});
         const frames=Math.max(1,Math.ceil(duration*fps));
-        for(let i=0;i<frames;i++) {const t=(i/fps)%M.duration(snapshot);await prepareFrame(snapshot,t);render(t);encoder.addFrame(c,{copy:true,delay:1000/fps});report((i+1)/frames*.65);if(i%4===0)await new Promise(r=>setTimeout(r,0));}
+        for(let i=0;i<frames;i++) {const t=(i/fps)%M.duration(snapshot);await prepareFrame(snapshot,t);render(t);encoder.addFrame(c,{copy:true,delay:Math.max(10,(Math.round(Math.min(duration,(i+1)/fps)*100)-Math.round(i/fps*100))*10)});report((i+1)/frames*.65);if(i%4===0)await new Promise(r=>setTimeout(r,0));}
         blob=await new Promise((resolve,reject)=>{encoder.on('finished',resolve);encoder.on('progress',p=>report(.65+.35*p));encoder.on('abort',()=>reject(new Error('GIF encoding aborted')));encoder.render();});
       } else {
         encoder=await window.HME.createH264MP4Encoder();encoder.width=w;encoder.height=h;encoder.frameRate=fps;encoder.speed=10;encoder.kbps=8000;encoder.groupOfPictures=fps*2;encoder.initialize();
@@ -380,11 +388,11 @@
   // Load only the packaged originals. No runtime dependency on the bot repository.
   let builtins, defaultState;
   try {
-    const response=await fetch('assets/cardbot/library.json');if(!response.ok)throw new Error('CardBot assets unavailable');builtins=(await response.json()).cards;
+    const response=await fetch(extension?.assetLibrary || 'assets/cardbot/library.json');if(!response.ok)throw new Error('CardBot assets unavailable');builtins=(await response.json()).cards;
     builtins.forEach(a=>resources.set(a.libraryId,a));defaultState=M.defaults(effect,builtins);state=clone(defaultState);
     // Gallery always opens the immutable default; a normal refresh resumes this browser's work.
     if(!preview&&!params.has('from')) {const saved=localStorage.getItem(storageKey);if(saved)try{state=normalize(JSON.parse(saved));}catch{notify('已使用默认方案，旧方案未被覆盖。','Using the default; incompatible saved data was not applied.');}}
-    await prepare(state);if(state.backgroundMedia){await filmstrip();await prepareFrame(state,0);}ready=true;$('editorLoading').remove();if(preview)document.body.classList.add('is-preview');
+    selected=login?'scene':state.cards[0]?.id;await prepare(state);if(state.backgroundMedia){await filmstrip();await prepareFrame(state,0);}ready=true;$('editorLoading').remove();if(preview)document.body.classList.add('is-preview');
     window.STGFontLibrary.enhanceSelect($('fontFamily')||document.createElement('select'));
     theme(localStorage.getItem('cellmotion-editor-theme')!=='light');syncControls();renderAssets();timeline();fit();translate();
   }catch(e){$('editorLoading').textContent=tr('加载失败，请刷新：','Loading failed. Refresh: ')+e.message;return;}
@@ -397,7 +405,8 @@
     if(path==='motion.rows')state.motion.rows=Math.round(value);
     if(path==='typography.fontFamily')await prepare(state);
     if(path.startsWith('motion.')) {timeline();const key=path.split('.')[1];
-      if(login)seek(['hold','contentDelay','contentDuration'].includes(key)?stable():state.motion.duration*.45/state.motion.speed);
+      if(extension)seek(extension.seekForPath(state,path));
+      else if(login)seek(['hold','contentDelay','contentDuration'].includes(key)?stable():state.motion.duration*.45/state.motion.speed);
       else seek(['repos','ouvre','mode','stagger','inclinaison'].includes(key)?(state.motion.repos+state.motion.ouvre*.55)/state.motion.speed:['repli','modeRepli'].includes(key)?(state.motion.repos+state.motion.ouvre+state.motion.tenue+state.motion.repli*.5)/state.motion.speed:stable());
     } else seek(stable());
     syncControls();saveLocal();renderAssets();fit();
@@ -411,7 +420,7 @@
   $('languageButton').onclick=()=>{language=language==='en'?'zh':'en';localStorage.setItem('cellmotion-language',language);translate();};
   $('saveScheme').onclick=()=>{let cached=true;try{localStorage.setItem(storageKey,JSON.stringify(state));}catch{cached=false;}window.CellMotionAI.downloadJson(state,`${effect}-scheme.json`);if(cached)notify('方案已保存并下载。','Scheme saved and downloaded.');else notify('浏览器存储已满；方案已下载，请妥善保存。','Browser storage is full. Your scheme was downloaded; keep the file safe.');};
   $('importScheme').onclick=()=>$('schemeFile').click();$('schemeFile').onchange=async e=>{try{if(e.target.files[0])await apply(JSON.parse(await e.target.files[0].text()));notify('方案已导入。','Scheme imported.');}catch(err){notify(err.message);}e.target.value='';};
-  $('restoreScheme').onclick=()=>apply(defaultState);$('clearScheme').onclick=()=>{const s=clone(defaultState);if(login)for(const key of ['brand','title','subtitle','account','password','button','footer'])s.scene[key]='';else s.cards=[];s.customAssets=[];apply(s);};
+  $('restoreScheme').onclick=()=>apply(defaultState);$('clearScheme').onclick=()=>{const s=clone(defaultState);if(extension)for(const k of ['clock','first','many','brandA','brandB'])s.scene[k]='';if(login)for(const key of ['brand','title','subtitle','account','password','button','footer'])s.scene[key]='';else s.cards=[];s.customAssets=[];apply(s);};
   $('aiButton').onclick=()=>{const open=$('aiMenu').hidden;$('aiMenu').hidden=!open;$('aiButton').setAttribute('aria-expanded',String(open));};
   $('aiMenu').onclick=e=>{const n=e.target.closest('[data-ai]');if(n)aiAction(n.dataset.ai);};
   document.addEventListener('click',e=>{if(!e.target.closest('.cm-ai'))closeAI();});$('closeGuide').onclick=()=>$('parameterGuide').close();
@@ -435,16 +444,16 @@
     $('openLibrary').onclick=libraryView;$('assetToggle').onclick=()=>setAssetManager($('selectedAssets').hidden);
     $('editSelected').onclick=()=>editCard(selected);$('contentList').onclick=e=>{const n=e.target.closest('[data-card]');if(n){selected=n.dataset.card;renderAssets();setPanel('content');seek(stable());}};
     $('selectedAssets').onclick=e=>{const n=e.target.closest('[data-edit],[data-remove]');if(n?.dataset.edit)editCard(n.dataset.edit);else if(n)remove(n.dataset.remove);};
-    $('libraryGroups').onclick=async e=>{const n=e.target.closest('[data-candidate],[data-insert]');if(n?.dataset.candidate){candidate=n.dataset.candidate;$('insertCandidate').disabled=false;document.querySelectorAll('[data-candidate]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.candidate===candidate)));}else if(n?.dataset.insert)await insert(n.dataset.insert);};
-    $('insertCandidate').onclick=()=>insert(candidate);$('uploadAssets').onchange=e=>{upload([...e.target.files]);e.target.value='';};
-    $('singleAssetEditor').oninput=e=>{const n=e.target;if(!n.dataset.cardKey||busy)return;const card=state.cards.find(c=>c.id===selected);if(!card)return;historyPush();card[n.dataset.cardKey]=n.type==='color'?n.value:Number(n.value);const o=$('singleAssetEditor').querySelector(`[data-card-value="${n.dataset.cardKey}"]`);if(o)o.textContent=n.value;saveLocal();draw();};
+    $('libraryGroups').onclick=async e=>{const n=e.target.closest('[data-candidate],[data-insert]');if(n?.dataset.candidate){candidate=n.dataset.candidate;$('insertCandidate').disabled=false;document.querySelectorAll('[data-candidate]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.candidate===candidate)));}else if(n?.dataset.insert)try{await insert(n.dataset.insert);}catch(err){notify(err.message);}};
+    $('insertCandidate').onclick=()=>insert(candidate).catch(err=>notify(err.message));$('uploadAssets').onchange=e=>{upload([...e.target.files]);e.target.value='';};
+    $('singleAssetEditor').oninput=e=>{const n=e.target;if(!n.dataset.cardKey||busy)return;const card=state.cards.find(c=>c.id===selected);if(!card)return;historyPush();card[n.dataset.cardKey]=['color','text','select-one'].includes(n.type)?n.value:Number(n.value);if(n.dataset.cardKey==='fontFamily')document.fonts.load('500 24px '+STGFontLibrary.family(n.value)).then(draw);const o=$('singleAssetEditor').querySelector(`[data-card-value="${n.dataset.cardKey}"]`);if(o)o.textContent=n.value;saveLocal();draw();};
     $('singleAssetEditor').addEventListener('click',e=>{const n=e.target.closest('[data-move]');if(n)reorder(selected,state.cards.findIndex(c=>c.id===selected)+Number(n.dataset.move));});
     let dragged;
     $('contentList').ondragstart=e=>{dragged=e.target.closest('[data-card]')?.dataset.card;};$('contentList').ondragover=e=>e.preventDefault();$('contentList').ondrop=e=>{e.preventDefault();const id=e.target.closest('[data-card]')?.dataset.card;if(dragged&&id)reorder(dragged,state.cards.findIndex(c=>c.id===id));};
     $('contentList').onkeydown=e=>{if(e.altKey&&['ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();const id=e.target.closest('[data-card]')?.dataset.card;if(id)reorder(id,state.cards.findIndex(c=>c.id===id)+(e.key==='ArrowUp'?-1:1));}};
   }
   document.addEventListener('keydown',async e=>{
-    if(e.key==='Escape'){closeAI();if(!$('singleAssetEditor').hidden)libraryView();else closeDrawer();}
+    if(e.key==='Escape'){closeAI();if(!$('singleAssetEditor').hidden)libraryView();else if($('selectedAssets')&&!$('selectedAssets').hidden)setAssetManager(false);else closeDrawer();}
     if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!e.target.matches('input,textarea')&&!busy){e.preventDefault();const from=e.shiftKey?future:history,to=e.shiftKey?history:future;if(from.length){to.push(clone(state));await apply(from.pop(),false);}}
     if(e.code==='Space'&&!e.target.matches('input,textarea,button,select')){e.preventDefault();$('playButton').click();}
   });

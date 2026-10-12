@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "effect": "botvoice",
+  "canvas": {
+    "width": 1080,
+    "height": 1920
+  },
+  "typography": {
+    "fontFamily": "stg:bahnschrift"
+  },
+  "backgroundColor": "#f3f3f3",
+  "cards": [
+    {
+      "id": "item-0",
+      "libraryId": "botvoice-cat",
+      "scale": 1,
+      "opacity": 1,
+      "x": 0,
+      "y": 0,
+      "rotation": 0,
+      "caption": "",
+      "fontFamily": "",
+      "gap": 0
+    }
+  ],
+  "customAssets": [],
+  "scene": {
+    "clock": "12:00",
+    "first": "is here",
+    "many": "and {n} friend{s} are here",
+    "brandA": "hely.",
+    "brandB": "Animals",
+    "brandId": "animalwave-brand",
+    "textColor": "#151515",
+    "accent": "#3f7bf6",
+    "handColor": "#4272fe",
+    "frameColor": "#272523",
+    "pillWidth": 960,
+    "iconGap": 24,
+    "iconSize": 1,
+    "spacing": 0.78,
+    "amplitude": 92,
+    "size": 1,
+    "x": 0,
+    "y": 0,
+    "direction": 1
+  },
+  "motion": {
+    "speed": 1,
+    "loop": true,
+    "phase0": 1.12,
+    "phase1": 1.23,
+    "phase2": 1.0499999999999998,
+    "phase3": 1.0000000000000004,
+    "phase4": 3.1999999999999993,
+    "phase5": 4.199999999999999
+  }
+}
