@@ -61,6 +61,15 @@
 - 现有 HME 逐帧 H.264 编码保持不变；将其压缩视频包原样拷贝到最终 MP4，并加入处理后的 AAC 音轨。全部关闭或选中素材本身无声时保留原有无声 MP4。
 - 声音设置归属稳定视频槽位，替换视频时保留；JSON、IndexedDB 与撤销/重做均保存。导出期间锁定声音与时间设置，支持取消。
 
+## Upload blank-preview fix (2026-10-13)
+
+- Reproduced the reported appearance (only greeting and logo visible) using a genuine AAC-only MP4 uploaded as video: native loadeddata fires with finite duration but videoWidth / videoHeight both zero. The old automatic aspect became NaN and erased both video boxes and labels. The user's original file was unavailable; this reproduces the same symptom and can also occur when only a file's audio codec is decodable.
+- Readiness now requires a decoded video picture with positive dimensions and finite duration. A failure names H.264 MP4 / AAC compatibility, preserves a previously uploaded video, and allows selecting the same file again.
+- Validated source dimensions are cached for layout and source information. Transient zero live dimensions cannot poison automatic aspect or the other video; drawing falls back to the upload placeholder until a valid frame is available.
+- Only the preview decoder is required to upload. Filmstrips are optional background work and release their decoder afterwards. Export decoders are created only when needed and released at export completion. Thumbnail failure cannot reject a valid video upload.
+- Old upload and thumbnail tasks check runtime ownership before publishing results. Scheme restore retains embedded files and shows per-slot decode errors instead of clearing user data.
+- tests/video-compare-upload-browser.cjs failed on the previous version, then passed: invalid audio-only input; previous-video preservation and retry; transient dimension loss plus continued playback; visible decoded pixels after recovery; failed filmstrip decoder isolated from the preview. Browser errors are empty.
+
 ## Acceptance evidence
 
 Windows 上使用 Node Playwright + Microsoft Edge 执行 tests/video-compare-browser.cjs，第二轮共 22 项检查全部通过：

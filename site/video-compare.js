@@ -20,7 +20,7 @@
   };
   let scheme = clone(defaults), elapsed = 0, playing = false, busy = false, cancelled = false;
   let last = performance.now(), revision = 0, persistTimer, historyTimer, dbRef;
-  const runtime = new Map(), uploadTokens = new Map();
+  const runtime = new Map(), uploadTokens = new Map(), uploadErrors = new Map();
   const undoStack = [], redoStack = [];
   const canvas = $('glyphMorphCanvas'), frame = $('compositionFrame');
   const previewMode = new URLSearchParams(location.search).has('preview');
@@ -77,7 +77,7 @@
     return Math.min(rt.duration-.001,start+local);
   }
   let audioModule;
-  function loadAudio(){return audioModule ||= import('./video-compare-audio.js?v=20261013-4');}
+  function loadAudio(){return audioModule ||= import('./video-compare-audio.js?v=20261013-5');}
   function syncPreviewAudio(start=false){
     const enabled=scheme.rows.filter(r=>r.audioEnabled&&runtime.get(r.id)?.ready&&runtime.get(r.id).hasAudio!==false);
     for(const row of scheme.rows){const rt=runtime.get(row.id);if(!rt?.ready)continue;
@@ -86,18 +86,21 @@
       if(!playing||busy)rt.video.pause();
     }
   }
-  function makeVideo(url) {
+  function makeVideo(url,role) {
     const video=document.createElement('video');
-    video.muted=true; video.playsInline=true; video.preload='auto'; video.src=url;
+    video.dataset.vcRole=role;video.muted=true; video.playsInline=true; video.preload='auto'; video.src=url;
     return video;
   }
+  function videoError() {return new Error(tr('无法解码视频画面，请使用 H.264 MP4（可含 AAC 声音）。','Cannot decode the video picture. Use H.264 MP4 (AAC audio is supported).'));}
   function readyVideo(video) {
     return new Promise((resolve,reject) => {
-      if(video.readyState>=2 && Number.isFinite(video.duration)) return resolve();
-      const timer=setTimeout(()=>finish(new Error('Video decode timed out')),15000);
-      const ok=()=>finish(), error=()=>finish(new Error('Unsupported or damaged video'));
-      function finish(err) { clearTimeout(timer);video.removeEventListener('loadeddata',ok);video.removeEventListener('error',error);err?reject(err):resolve(); }
+      let finished=false;
+      const timer=setTimeout(()=>finish(videoError()),15000);
+      const ok=()=>{if(video.readyState>=2)finish(Number.isFinite(video.duration)&&video.duration>0&&video.videoWidth>0&&video.videoHeight>0?null:videoError());};
+      const error=()=>finish(videoError());
+      function finish(err) {if(finished)return;finished=true;clearTimeout(timer);video.removeEventListener('loadeddata',ok);video.removeEventListener('error',error);err?reject(err):resolve();}
       video.addEventListener('loadeddata',ok);video.addEventListener('error',error);
+      if(video.error)error();else ok();
     });
   }
   // Wait for decoded source frames. No real-time capture or guessed fixed seek delay.
@@ -115,23 +118,25 @@
   async function loadMedia(row) {
     const old=runtime.get(row.id); dispose(old);runtime.delete(row.id);
     if(!row.media)return;
-    const m=row.media, rt={media:m,video:makeVideo(m.url),exportVideo:makeVideo(m.url),filmVideo:makeVideo(m.url),ready:false};
+    const m=row.media, rt={media:m,video:makeVideo(m.url,'preview'),exportVideo:null,filmVideo:null,ready:false};
     runtime.set(row.id,rt);
     try {
-      await Promise.all([readyVideo(rt.video),readyVideo(rt.exportVideo),readyVideo(rt.filmVideo)]);
+      await readyVideo(rt.video);
       if(runtime.get(row.id)!==rt)return;
-      rt.duration=rt.video.duration;rt.ready=true;
+      rt.duration=rt.video.duration;rt.width=rt.video.videoWidth;rt.height=rt.video.videoHeight;rt.ready=true;
       rt.audioInfo=loadAudio().then(module=>module.inspectAudio(m.url)).then(has=>{if(runtime.get(row.id)===rt){rt.hasAudio=has;syncMediaUi(row);syncPreviewAudio();}}).catch(()=>{});
       syncPreviewAudio();
       m.trimStart=clamp(m.trimStart,0,Math.max(0,rt.duration-.01));
       m.trimEnd=clamp(m.trimEnd||rt.duration,m.trimStart+.01,rt.duration);
-      await Promise.all([seekVideo(rt.video,m.trimStart),seekVideo(rt.exportVideo,m.trimStart)]);
-      syncMediaUi(row);syncLayoutInfo();renderTimeline(); await buildFilmstrip(row,rt);renderFrame(canvas);
+      await seekVideo(rt.video,m.trimStart);
+      if(runtime.get(row.id)!==rt)return;
+      syncMediaUi(row);syncLayoutInfo();renderTimeline();renderFrame(canvas);
+      // Filmstrips are optional background work; their decoder must never block or discard the preview.
+      rt.filmVideo=makeVideo(m.url,'film');
+      rt.filmReady=readyVideo(rt.filmVideo).then(()=>buildFilmstrip(row,rt)).catch(()=>{if(runtime.get(row.id)===rt){rt.filmError=true;syncMediaUi(row);}}).finally(()=>{dispose({filmVideo:rt.filmVideo});rt.filmVideo=null;});
     } catch(error) {
       if(runtime.get(row.id)!==rt)return;
-      dispose(rt);runtime.delete(row.id);
-      const name=document.querySelector('[data-row-id="'+row.id+'"] .vc-file-name');
-      if(name){name.textContent=tr('无法读取视频，请换成浏览器可播放的 MP4 或 WebM。','Cannot decode video. Use a browser-compatible MP4 or WebM.');name.classList.add('is-error');}
+      rt.ready=false;rt.error=error.message;dispose(rt);syncMediaUi(row);renderFrame(canvas);
       throw error;
     }
   }
@@ -140,6 +145,7 @@
     for(let i=0;i<8;i++) {
       if(runtime.get(row.id)!==rt)return;
       await seekVideo(rt.filmVideo,Math.max(0,rt.duration-.01)*i/8);
+      if(runtime.get(row.id)!==rt)return;
       const sw=rt.filmVideo.videoWidth,sh=rt.filmVideo.videoHeight,s=Math.max(80/sw,80/sh);
       c.save();c.beginPath();c.rect(i*80,0,80,80);c.clip();c.drawImage(rt.filmVideo,i*80+(80-sw*s)/2,(80-sh*s)/2,sw*s,sh*s);c.restore();
     }
@@ -167,9 +173,10 @@
     const m=row.media,rt=runtime.get(row.id);
     shell.querySelector('[data-key="audioEnabled"]').checked=row.audioEnabled;
     shell.querySelector('.vc-audio-status').textContent=rt?.hasAudio===false?tr('素材无音轨','Source has no audio track'):row.audioEnabled?tr('已开启 · 预览与 MP4','On · Preview & MP4'):tr('已关闭 · 预览与 MP4','Off · Preview & MP4');
-    shell.querySelector('.vc-media-tools').hidden=!m;
-    const name=shell.querySelector('.vc-file-name');name.classList.remove('is-error');
-    name.textContent=m ? m.name+(rt?.ready?' · '+tr('素材 ','Source ')+rt.video.videoWidth+' × '+rt.video.videoHeight+' · '+ratioLabel(rt.video.videoWidth/rt.video.videoHeight)+' '+tr(rt.video.videoWidth>=rt.video.videoHeight?'横屏':'竖屏',rt.video.videoWidth>=rt.video.videoHeight?'landscape':'portrait')+' · '+rt.duration.toFixed(2)+'s':' · '+tr('读取中…','Loading…')) : tr('未上传视频 · 素材尺寸将自动识别','No video selected · Source dimensions detected on upload');
+    shell.querySelector('.vc-media-tools').hidden=!m||!!rt?.error;
+    const name=shell.querySelector('.vc-file-name'),failure=uploadErrors.get(row.id)||rt?.error;name.classList.toggle('is-error',!!failure);
+    if(failure){name.textContent=(m?m.name+' · ':'')+failure;return;}
+    name.textContent=m ? m.name+(rt?.ready?' · '+tr('素材 ','Source ')+rt.width+' × '+rt.height+' · '+ratioLabel(rt.width/rt.height)+' '+tr(rt.width>=rt.height?'横屏':'竖屏',rt.width>=rt.height?'landscape':'portrait')+' · '+rt.duration.toFixed(2)+'s'+(rt.filmError?tr(' · 缩略图暂不可用，视频仍可播放',' · Thumbnails unavailable; video still plays'):''):' · '+tr('读取中…','Loading…')) : tr('未上传视频 · 素材尺寸将自动识别','No video selected · Source dimensions detected on upload');
     if(!m)return;
     for(const key of ['fit','zoom','panX','panY','trimStart','trimEnd']){const field=shell.querySelector('[data-key="'+key+'"]');if(field!==document.activeElement)field.value=m[key];}
     if(rt?.ready) {
@@ -182,9 +189,9 @@
   function videoAspect() {
     const mode=scheme.layout.videoAspect;
     if(mode==='16:9'||mode==='9:16')return {ratio:mode==='16:9'?16/9:9/16,owner:null};
-    const owner=['after','before'].find(id=>runtime.get(id)?.ready);
-    const video=runtime.get(owner)?.video;
-    return {ratio:video?video.videoWidth/video.videoHeight:16/9,owner};
+    const owner=['after','before'].find(id=>{const rt=runtime.get(id);return rt?.ready&&rt.width>0&&rt.height>0;});
+    const rt=runtime.get(owner);
+    return {ratio:rt?rt.width/rt.height:16/9,owner};
   }
   function ratioLabel(ratio) {
     for(const [label,value]of [['16:9',16/9],['9:16',9/16],['1:1',1],['4:3',4/3]])if(Math.abs(ratio-value)<.015)return label;
@@ -243,7 +250,7 @@
       ctx.textAlign='right';drawText(ctx,row.caption,b.x+b.w,b.y-size*.5,size*.60,b.w*.42,l.fontFamily,500);
       ctx.save();ctx.beginPath();ctx.roundRect(b.x,b.y,b.w,b.h,l.frameRadius*w/1920);ctx.clip();
       ctx.fillStyle=dark?'#1b1b1d':'#eeedeb';ctx.fillRect(b.x,b.y,b.w,b.h);
-      if(m && rt?.ready && image?.readyState>=2) {
+      if(m && rt?.ready && image?.readyState>=2 && image.videoWidth>0 && image.videoHeight>0) {
         const sw=image.videoWidth,sh=image.videoHeight;
         const placement=mediaPlacement(b,sw,sh,m);
         ctx.drawImage(image,placement.x,placement.y,placement.w,placement.h);
@@ -258,7 +265,7 @@
     if(logo?.complete && logo.naturalWidth){const lw=w*l.logoSize/100,lh=lw*logo.naturalHeight/logo.naturalWidth;ctx.drawImage(logo,(w-lw)/2,logoY-lh/2,lw,lh);}
     return target;
   }
-  async function prepareFrame(seconds) { await Promise.all(scheme.rows.map(async row=>{const rt=runtime.get(row.id);if(rt?.ready)await seekVideo(rt.exportVideo,sourceTime(row,seconds));})); }
+  async function prepareFrame(seconds) { await Promise.all(scheme.rows.map(async row=>{const rt=runtime.get(row.id);if(!rt?.ready)return;if(!rt.exportVideo){rt.exportVideo=makeVideo(row.media.url,'export');rt.exportReady=readyVideo(rt.exportVideo);}await rt.exportReady;await seekVideo(rt.exportVideo,sourceTime(row,seconds));})); }
   function resizePreview() {
     const stage=$('glyphMorphStage'),style=getComputedStyle(stage),ratio=scheme.canvas.width/scheme.canvas.height;
     const aw=Math.max(1,stage.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight));
@@ -312,7 +319,7 @@
   }
   async function applyScheme(input) {
     const next=normalize(input);const myRevision=++revision;
-    for(const rt of runtime.values())dispose(rt);runtime.clear();scheme=next;elapsed=0;playing=false;
+    for(const rt of runtime.values())dispose(rt);runtime.clear();uploadErrors.clear();scheme=next;elapsed=0;playing=false;
     renderRows();syncControls();resizePreview();renderTimeline();playbackButton();
     const loaded=await Promise.allSettled([loadFont(),...scheme.rows.map(loadMedia)]);
     if(myRevision!==revision)return;
@@ -325,13 +332,13 @@
     const myToken=Symbol(),previousMedia=row.media;uploadTokens.set(row.id,myToken);
     const name=e.target.closest('.vc-row').querySelector('.vc-file-name');
     if(!file.type.startsWith('video/') || file.size>200*1024*1024){name.textContent=tr('请选择 200 MB 以内的视频文件。','Choose a video file smaller than 200 MB.');name.classList.add('is-error');return;}
-    name.textContent=tr('正在读取视频…','Reading video…');
+    uploadErrors.delete(row.id);name.textContent=tr('正在读取视频…','Reading video…');
     try {
       const url=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(file);});
       if(uploadTokens.get(row.id)!==myToken || !scheme.rows.includes(row))return;
       checkpoint();row.media={kind:'video',url,name:file.name,fileType:file.type,trimStart:0,trimEnd:0,fit:'contain',zoom:1,panX:.5,panY:.5};
-      await loadMedia(row);await setTime(0);syncMediaUi(row);edited();refreshShell();
-    }catch{if(uploadTokens.get(row.id)===myToken && scheme.rows.includes(row)){row.media=previousMedia;try{await loadMedia(row);}catch{}syncMediaUi(row);edited();}status('schemeStatus','视频无法读取，已保留原视频。','Cannot read video. Your previous video is preserved.');}
+      await loadMedia(row);if(uploadTokens.get(row.id)!==myToken||!scheme.rows.includes(row))return;await setTime(0);syncMediaUi(row);edited();refreshShell();
+    }catch(error){if(uploadTokens.get(row.id)===myToken && scheme.rows.includes(row)){row.media=previousMedia;try{await loadMedia(row);}catch{}uploadErrors.set(row.id,file.name+' · '+error.message+(previousMedia?tr(' 已保留原视频。',' Your previous video is preserved.'):''));syncMediaUi(row);edited();}status('schemeStatus',error.message,error.message);}finally{e.target.value='';}
   });
   $('sequenceRows').addEventListener('input',e=>{
     const key=e.target.dataset.key,shell=e.target.closest('.vc-row');if(!key||!shell||busy)return;
@@ -348,7 +355,7 @@
     const row=scheme.rows.find(r=>r.id===shell.dataset.rowId);
     if(action==='pause-row')void setTime(elapsed);
     if(action==='reset-crop'&&row.media){checkpoint();Object.assign(row.media,{fit:'contain',zoom:1,panX:.5,panY:.5});syncMediaUi(row);edited();}
-    if(action==='remove-video'){checkpoint();uploadTokens.set(row.id,Symbol());row.media=null;dispose(runtime.get(row.id));runtime.delete(row.id);syncMediaUi(row);edited();}
+    if(action==='remove-video'){checkpoint();uploadErrors.delete(row.id);uploadTokens.set(row.id,Symbol());row.media=null;dispose(runtime.get(row.id));runtime.delete(row.id);syncMediaUi(row);edited();}
   });
   let drag=null;
   $('sequenceRows').addEventListener('pointerdown',e=>{const handle=e.target.closest('[data-edge]');if(!handle||busy)return;const row=scheme.rows.find(r=>r.id===handle.closest('.vc-row').dataset.rowId);if(!runtime.get(row.id)?.ready)return;checkpoint();drag={row,handle,edge:handle.dataset.edge};handle.setPointerCapture(e.pointerId);e.preventDefault();trimAt(e);});
@@ -418,7 +425,7 @@
       download(blob,SLUG+'-'+output.width+'x'+output.height+'.'+format);
       status('exportStatus',format.toUpperCase()+' 已生成 · '+output.width+' × '+output.height,format.toUpperCase()+' ready · '+output.width+' × '+output.height);
     } catch(error){status('exportStatus',error.message,error.message);}
-    finally{try{encoder?.delete();}catch{}if(workerUrl)URL.revokeObjectURL(workerUrl);setBusy(false);playing=wasPlaying;last=performance.now();syncPreviewAudio(true);playbackButton();syncControls();}
+    finally{try{encoder?.delete();}catch{}for(const rt of runtime.values()){dispose({exportVideo:rt.exportVideo});rt.exportVideo=null;rt.exportReady=null;}if(workerUrl)URL.revokeObjectURL(workerUrl);setBusy(false);playing=wasPlaying;last=performance.now();syncPreviewAudio(true);playbackButton();syncControls();}
   }
   for(const format of ['png','gif','mp4'])$('export'+format[0].toUpperCase()+format.slice(1)).addEventListener('click',()=>void exportComposition(format));
   function refreshShell(){
