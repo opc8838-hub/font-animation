@@ -16,7 +16,7 @@
     ["sproutshift", "字芽", "Sprout Shift"], ["mistlift", "雾升", "Mist Lift"],
     ["typecascade", "字倾", "Type Cascade"], ["letterpulse", "字阶", "Letter Pulse"], ["dotresolve", "点解", "Dot Resolve"],
     ["glyphreveal", "字现", "Glyph Reveal"],
-    ["index", "圆柱", "Cylinder"], ["field", "场域", "Field"], ["stripes", "条纹", "Stripes"],
+    ["cylinder", "圆柱", "Cylinder"], ["field", "场域", "Field"], ["stripes", "条纹", "Stripes"],
     ["coil", "线圈", "Coil"], ["continuation", "续句", "Continuation"], ["split-flip", "上下翻转", "Split Flip"], ["zerogflip", "无重力翻转", "Zero-G Flip"], ["currentwall", "水流", "Water Flow"], ["verticalwall", "纵跃", "Vertical Rise"], ["creatorstudio", "汇聚", "Creator Merge"], ["focuswheel", "焦轮", "Focus Wheel"], ["gradienttype", "渐字", "Gradient Type"], ["glyphrelay", "字标接力", "Glyph Relay"], ["glyphmorph", "字融", "Glyph Morph"], ["wordgather", "词序汇聚", "Word Gather"], ["focusportal", "焦点转场", "Focus Portal"], ["rapidsequence", "速序轮播", "Rapid Sequence"], ["citystack", "城市字塔", "City Stack"], ["typegarden", "字园", "Type Garden"], ["colorcanvas", "彩幕组句", "Color Canvas"], ["liquidtype", "散", "Scatter"], ["scrapbin", "揉纸入篓", "Scrap Bin"], ["terminalbrand", "终端署名", "Terminal Brand"], ["slotstories", "字位剧场", "Slot Stories"], ["mediacascade", "镜头铺展", "Media Cascade"], ["colorrecompose", "彩组", "Color Recompose"], ["phrasebuild", "组句", "Phrase Build"], ["switchdrop", "降临", "Switch Drop"], ["searchtyping", "搜写", "Search Typing"], ["beforeafter", "图片对比", "Before After"], ["shutterafter", "快门对比", "Shutter After"], ["assemble", "拼字", "Assemble"], ["verbcue", "动令", "Verb Cue"], ["tighten", "收距", "Tighten"], ["titlecard", "标卡", "Title Card"], ["lockup", "夹图", "Lockup"], ["promptcue", "点令", "Prompt Cue"], ["pullback", "退远", "Pullback"], ["textswell", "胀句", "Text Swell"], ["wordflip", "翻词", "Word Flip"], ["textbuild", "垒词", "Text Build"], ["textswap", "换句", "Text Swap"], ["textreveal", "显句", "Text Reveal"], ["phoneframe", "机框", "Phone Frame"], ["laptopframe", "本框", "Laptop Frame"], ["orbitgallery", "旋廊", "Orbit Gallery"], ["followerrush", "涌粉", "Follower Rush"], ["logoassemble", "标聚", "Logo Assemble"], ["moodboard", "图墙", "Moodboard"], ["pathwriter", "轨书", "Path Writer"], ["flag", "旗帜", "Flag"], ["morisawa", "森泽", "Morisawa"],
     ["impactbuild", "冲击接句", "Impact Build"],
     ["cascade", "瀑布", "Cascade"], ["ribbon", "丝带", "Ribbon"], ["layers", "层叠", "Layers"],
@@ -80,11 +80,11 @@
     "Checker": "棋盘格", "Debug": "调试", "Reset Grid": "重置网格", "Reroll": "重新随机"
   }));
 
-  const slug = (location.pathname.split("/").pop() || "index.html").replace(/\.html$/, "");
+  const slug = (location.pathname.split("/").pop() || "cylinder.html").replace(/\.html$/, "");
   const currentIndex = Math.max(0, effects.findIndex((effect) => effect[0] === slug));
   const current = effects[currentIndex];
   const legacyEffects = new Set([
-    "index", "field", "stripes", "coil", "flag", "morisawa",
+    "cylinder", "field", "stripes", "coil", "flag", "morisawa",
     "cascade", "ribbon", "layers", "danger", "string"
   ]);
 

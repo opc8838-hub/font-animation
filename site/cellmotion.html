@@ -3,104 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="CellMotion，让创意，自由生长。探索可编辑动效，把独立片段组合成自己的视觉表达。">
-  <meta name="theme-color" content="#faf9f7">
-  <title>CellMotion — 让创意，自由生长。</title>
-  <link rel="icon" href="assets/cellmotion/logo-original-transparent.png?v=20260926-1" type="image/png">
-  <link rel="stylesheet" href="cellmotion.css?v=20260925-header3">
-  <link rel="stylesheet" href="cellmotion-hero.css?v=20260909-1">
-  <link rel="stylesheet" href="cellmotion-type.css?v=20260907-5">
-  <link rel="stylesheet" href="cellmotion-layout.css?v=20260926-actions7">
-  <link rel="stylesheet" href="cellmotion-showcase.css?v=20260926-3">
-  <link rel="stylesheet" href="site-preferences.css?v=20260926-23">
-  <link rel="stylesheet" href="cellmotion-refinements.css?v=20260926-1">
-<link rel="stylesheet" href="cellmotion-recent.css?v=20261006-1">
+  <title>CellMotion</title>
+  <link rel="canonical" href="./">
+  <script>location.replace('./' + location.search + location.hash);</script>
+  <noscript><meta http-equiv="refresh" content="0;url=./"></noscript>
 </head>
-<body>
-  <a class="skip-link" href="#main">跳到内容</a>
-  <header class="header wrap">
-    <a class="brand original-brand" href="cellmotion.html" aria-label="CellMotion 首页"><img class="logo-source" src="assets/cellmotion/logo-original-transparent.png?v=20260926-1" alt="CellMotion"></a>
-    <nav aria-label="主导航"><a href="cellmotion-components.html">组件库</a><a href="#featured">精选动效</a><a href="#stories">成片案例</a></nav>
-    <div class="header-actions">
-      <a class="button dark small" href="cellmotion-editors.html">打开编辑器 <span aria-hidden="true">↗</span></a>
-      <a class="button outline small" href="https://github.com/opc8838-hub/font-animation" target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a>
-      <button class="button outline small" type="button" data-contact-open>联系</button>
-    </div>
-  </header>
-  <main id="main">
-    <section class="hero hero-immersive" aria-labelledby="hero-title">
-      <div class="hero-full-film"><video id="hero-video" src="assets/cellmotion/hero-11s.mp4" poster="assets/cellmotion/hero-poster.jpg" muted autoplay loop playsinline preload="metadata" aria-label="CellMotion 品牌视频，完整循环播放"></video></div>
-      <div class="hero-safe-copy wrap">
-        <h1 id="hero-title">让创意，自由生长。</h1>
-        <p class="hero-description">可编辑的动效，用于视频创作与网页表达。</p>
-        <div class="hero-center-actions"><a class="button accent" href="cellmotion-editors.html">制作视频 <span aria-hidden="true">→</span></a><a class="button outline" href="cellmotion-components.html">浏览组件</a></div>
-      </div>
-      <button id="hero-toggle" class="round-button" aria-label="暂停品牌视频">Ⅱ</button>
-      <a class="hero-scroll" href="#motion-showcase" aria-label="向下浏览动效">探索更多 <span aria-hidden="true">↓</span></a>
-    </section>
-    <section id="motion-showcase" class="motion-showcase" aria-label="动效轮转展示">
-      <div id="motion-ribbon" class="motion-ribbon" aria-label="横向流动的动效预览"><div id="ribbon-track" class="ribbon-track"></div></div>
-      <div class="ribbon-footer wrap"><span>独立的动效，无限的组合。</span><button id="ribbon-toggle" class="ribbon-toggle" aria-pressed="true">Ⅱ 暂停轮转</button></div>
-    </section>
-
-    <section id="recent" class="section wrap recent-section" aria-labelledby="recent-title">
-      <div class="section-heading"><div><p class="eyebrow">NEW / JUST RELEASED</p><h2 id="recent-title">最近上新<span class="purple">。</span></h2></div><a class="text-link" href="cellmotion-components.html">浏览全部 <span aria-hidden="true">↗</span></a></div>
-      <div id="recent-grid" class="recent-grid" aria-label="最近上新的动效"></div>
-    </section>
-
-    <section id="featured" class="section wrap" aria-labelledby="featured-title">
-      <div class="section-heading"><div><p class="eyebrow">01 / SELECTED MOTIONS</p><h2 id="featured-title">一个动效，一种表达<span class="purple">。</span></h2></div><a class="text-link" href="cellmotion-components.html">浏览全部 <span>↗</span></a></div>
-      <div class="featured-layout">
-        <div class="featured-main">
-          <div class="featured-screen"><span class="screen-label">LIVE PREVIEW</span><video id="featured-video" muted playsinline preload="metadata" aria-label="精选动效预览"></video><p id="featured-error" class="video-message" hidden>预览暂时不可用，仍可打开编辑器。</p><div class="screen-controls"><button id="featured-toggle" class="round-button" aria-label="暂停精选预览">Ⅱ</button><button id="rotation-toggle" class="rotation" aria-pressed="true">自动轮播 · 开</button></div><div class="progress-track"><div id="featured-progress"></div></div></div>
-          <div class="featured-caption"><div><span id="featured-en" class="eyebrow"></span><h3 id="featured-name">正在载入动效</h3><p id="featured-description"></p></div><a id="featured-open" class="button dark" href="cellmotion-editors.html">编辑这个动效 ↗</a></div>
-        </div>
-        <div><p class="rail-label">精选序列 <span>完整播放 · 依次呈现</span></p><div id="featured-list" class="featured-list"></div><p class="rail-note">点击选择后停止自动轮换。<br>每一种运动，都值得被看清。</p></div>
-      </div>
-    </section>
-
-    <section id="stories" class="stories section" aria-labelledby="stories-title"><div class="wrap">
-      <div class="section-heading"><div><p class="eyebrow">02 / MADE OF MOTION</p><h2 id="stories-title">独立成章，连接成片。</h2></div><p class="heading-note">不止看见一个效果，<br>也看见它们在一起的可能。</p></div>
-      <p class="case-gallery-hint">左右滑动，查看三个案例</p>
-      <div class="story-showcase" aria-label="三个真实动效视频案例">
-        <figure class="case-phone-card">
-          <div class="iphone-frame"><div class="iphone-screen"><video class="case-video" src="assets/cellmotion/cases/case-1.mp4" poster="assets/cellmotion/cases/case-1-poster.jpg" muted autoplay loop playsinline preload="none" aria-label="真实成片案例一"></video><span class="dynamic-island" aria-hidden="true"></span></div></div>
-          <figcaption><span><small>CASE 01</small><strong>真实成片</strong></span><button class="case-toggle" type="button" aria-label="播放视频案例" aria-pressed="false">▶</button></figcaption>
-        </figure>
-        <figure class="case-phone-card case-phone-card-featured">
-          <div class="iphone-frame"><div class="iphone-screen"><video class="case-video" src="assets/cellmotion/cases/case-2.mp4" poster="assets/cellmotion/cases/case-2-poster.jpg" muted autoplay loop playsinline preload="none" aria-label="真实成片案例二"></video><span class="dynamic-island" aria-hidden="true"></span></div></div>
-          <figcaption><span><small>CASE 02</small><strong>真实成片</strong></span><button class="case-toggle" type="button" aria-label="播放视频案例" aria-pressed="false">▶</button></figcaption>
-        </figure>
-        <figure class="case-phone-card">
-          <div class="iphone-frame"><div class="iphone-screen"><video class="case-video" src="assets/cellmotion/cases/case-3.mp4" poster="assets/cellmotion/cases/case-3-poster.jpg" muted autoplay loop playsinline preload="none" aria-label="真实成片案例三"></video><span class="dynamic-island" aria-hidden="true"></span></div></div>
-          <figcaption><span><small>CASE 03</small><strong>真实成片</strong></span><button class="case-toggle" type="button" aria-label="播放视频案例" aria-pressed="false">▶</button></figcaption>
-        </figure>
-      </div>
-      <div class="own-film"><p>试试你的成片</p><label class="text-link file-label" for="case-file">选择本地视频预览 <span>＋</span></label><input id="case-file" type="file" accept="video/*" class="file-input"><small id="case-status" role="status">仅在本机预览，不上传。</small><video id="story-video" class="own-film-preview" controls playsinline hidden aria-label="本地成片预览"></video></div>
-    </div></section>
-
-    <section id="library" class="section wrap" aria-labelledby="library-title">
-      <div class="section-heading"><div><p class="eyebrow">03 / THE MOTION LIBRARY</p><h2 id="library-title">找到你的运动语言<span class="purple">。</span></h2></div><a class="text-link" href="cellmotion-components.html">进入组件库 <span>↗</span></a></div>
-      <p class="library-intro">从文字到图形，从一段运动到完整表达。按内容寻找，也按用途选择。</p>
-      <div id="category-links" class="category-links" aria-label="按分类浏览组件"></div>
-      <div id="catalog-grid" class="catalog-grid" data-home-preview="true"></div><p id="catalog-error" class="empty" hidden>动效目录加载失败，请刷新页面重试。</p>
-      <div class="library-destinations"><a href="cellmotion-editors.html"><span class="destination-kicker">CREATE A VIDEO</span><h3>编辑动效，创作视频 <span>↗</span></h3><p>改文字、配图标、调节奏，从一个片段开始。</p></a><a href="cellmotion-components.html?use=web"><span class="destination-kicker">BUILD FOR THE WEB · 规划中</span><h3>把运动带进网页 <span>↗</span></h3><p>查看网页组件适配计划，与视频创作分开标注。</p></a></div>
-    </section>
-
-    <section class="editor-invitation wrap"><div><p class="eyebrow">YOUR NEXT MOVE</p><h2>把「如果」变成「这样」。</h2><p>选一个动效，换上你的文字、图标和节奏。</p></div><a class="button dark" href="cellmotion-editors.html">进入编辑器目录 ↗</a></section>
-  </main>
-  <dialog id="contact-dialog" class="contact-dialog" aria-labelledby="contact-title">
-    <button type="button" data-contact-close aria-label="关闭">×</button>
-    <h2 id="contact-title">联系</h2>
-    <p>合作、咨询，或只是打个招呼。</p>
-    <div class="contact-choices">
-      <a class="button dark small" href="https://x.com/opc_8838" target="_blank" rel="noopener">X ↗</a>
-      <button class="button outline small contact-wechat-action" type="button" data-contact-wechat><img src="assets/cellmotion/wechat-chat-icon.png" alt="" aria-hidden="true">WeChat</button>
-    </div>
-    <img id="contact-wechat" src="assets/cellmotion/contact-wechat.jpg" alt="微信 allen_8838，扫码联系" hidden>
-  </dialog>
-  <footer class="footer wrap"><div class="footer-top"><a class="brand original-brand" href="cellmotion.html" aria-label="CellMotion 首页"><img class="logo-source" src="assets/cellmotion/logo-original-transparent.png?v=20260926-1" alt="CellMotion"></a><p>And let design grow.</p><a href="#main" class="text-link">回到顶部 ↑</a></div><div class="footer-bottom"><span>MOVE · CONNECT · RECOMBINE · GROW</span><span>基于 Space Type Generator 等开源项目持续创作 · 保留原作署名与许可</span><a href="cellmotion-components.html">浏览组件库 ↗</a></div></footer>
-  <script defer src="cellmotion.js?v=20261010-cards2"></script>
-<script defer src="site-preferences.js?v=20260926-24"></script>
-</body>
+<body><a href="./">进入 CellMotion 官网</a></body>
 </html>
