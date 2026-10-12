@@ -1,4 +1,5 @@
 const effects = [
+  ["video-compare", "视频对比", "Video Compare", "graphic", "双视频同步对比 · 黑白版式 · B2W 署名"],
   ["card-login", "翻牌登录", "Card Login", "space", "同尺寸衔接 · 丝滑旋转变白 · 登录显现"],
   ["carddeck", "卡牌剧场", "Card Deck", "space", "表情卡牌 · 展开交错 · 收拢归位"],
   ["spotlight", "聚光", "Spotlight", "graphic", "光球绽放 · 收成光锥 · 光柱射下"],

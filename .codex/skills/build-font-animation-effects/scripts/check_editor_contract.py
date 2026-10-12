@@ -28,6 +28,31 @@ def main() -> int:
     js = js_path.read_text(encoding="utf-8")
     errors: list[str] = []
 
+    # A fixed comparison template owns two video slots, not an icon library.
+    if 'data-editor-capabilities="fixed-video-pair"' in html:
+        required = {
+            'scheme': ['id="saveScheme"', 'id="importScheme"', 'id="restoreScheme"', 'id="clearScheme"'],
+            'canvas/playback': ['id="canvasPreset"', 'id="glyphMorphCanvas"', 'id="togglePlayback"', 'id="restartPreview"'],
+            'timeline': ['me-choreo-track', 'me-choreo-block', 'me-choreo-playhead', 'data-seek-ms'],
+            'video editing': ['data-video-file', 'trimStart', 'trimEnd', 'vc-trim-handle', 'sourceTime', 'seekVideo'],
+            'export': ['id="exportPng"', 'id="exportGif"', 'id="exportMp4"', 'createH264MP4Encoder'],
+            'persistence': ['indexedDB', 'applyScheme', 'version: 1'],
+        }
+        source = html + '\n' + js
+        for label, tokens in required.items():
+            for token in tokens:
+                if token not in source:
+                    errors.append(f'missing {label}: {token}')
+        for shared in ['typecascade-workspace.js', 'typecascade-polish.js', 'typecascade-selects.js', 'typecascade-locale.js', 'site-preferences.js']:
+            if shared not in html:
+                errors.append(f'missing shared editor: {shared}')
+        for error in errors:
+            fail(error)
+        if errors:
+            return 1
+        print(f'PASS: {html_path.name} uses the CellMotion fixed-video-pair shell; browser checks remain required.')
+        return 0
+
     if 'cardmotion-editor.js' in html:
         shared = html_path.parent / 'cardmotion-editor.js'
         js += '\n' + shared.read_text(encoding='utf-8')

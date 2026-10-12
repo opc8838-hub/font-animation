@@ -1,0 +1,44 @@
+/* Video Compare extends the shared CellMotion shell. */
+.video-compare-editor .gm-stage { display:flex; align-items:center; justify-content:center; }
+.video-compare-editor #glyphMorphCanvas { display:block; width:100%; height:100%; cursor:pointer; }
+.video-compare-editor #addRow { display:none!important; }
+.video-compare-editor .vc-row { display:grid; gap:16px; }
+.video-compare-editor .vc-text-field input { font-size:17px!important; min-height:46px!important; width:100%; }
+.video-compare-editor .vc-upload { display:grid; place-content:center; gap:8px; min-height:132px; padding:20px; text-align:center; border:1px dashed var(--tc-accent); border-radius:14px; background:var(--tc-selected); color:var(--tc-text); cursor:pointer; position:relative; overflow:hidden; }
+.video-compare-editor .vc-upload b { font-size:25px; font-weight:400; color:var(--tc-accent); }
+.video-compare-editor .vc-upload input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.video-compare-editor .vc-upload:focus-within { outline:2px solid var(--tc-accent); outline-offset:3px; }
+.video-compare-editor .vc-file-name { margin:0; font-size:12px; color:var(--tc-muted); overflow-wrap:anywhere; }
+.video-compare-editor .vc-file-name.is-error { color:#ee8798; }
+.video-compare-editor .vc-media-tools { display:grid; gap:14px; }
+.video-compare-editor .vc-video-timeline { position:relative; border:1px solid var(--tc-line); border-radius:10px; overflow:hidden; height:56px; touch-action:none; }
+.video-compare-editor .vc-video-timeline canvas { display:block; width:100%; height:100%; }
+.video-compare-editor .vc-trim-selection { position:absolute; inset:0; border:3px solid var(--tc-accent); pointer-events:none; background:transparent; box-shadow:0 0 0 400px #0006; }
+.video-compare-editor .vc-trim-handle { position:absolute; top:0; bottom:0; width:12px; border:0; background:var(--tc-accent); pointer-events:auto; cursor:ew-resize; padding:0; }
+.video-compare-editor .vc-trim-handle[data-edge="start"] { left:-3px; }
+.video-compare-editor .vc-trim-handle[data-edge="end"] { right:-3px; }
+.video-compare-editor .vc-secondary { min-height:38px; padding:8px 12px; border:1px solid var(--tc-line); border-radius:10px; background:var(--tc-input); color:var(--tc-text); cursor:pointer; }
+.video-compare-editor .vc-inline-actions { display:flex; gap:8px; }
+.video-compare-editor .vc-inline-actions button { flex:1; }
+.video-compare-editor .vc-section-label { margin:0; font-size:13px; font-weight:600; color:var(--tc-text); }
+.video-compare-editor .vc-trim { display:grid; gap:10px; }
+.video-compare-editor .vc-media-tools .gm-field { min-width:0; }
+.video-compare-editor .vc-media-tools input { width:100%; }
+.video-compare-editor .vc-note { margin:12px 4px 0; font-size:12px; line-height:1.7; color:var(--tc-muted); }
+.video-compare-editor progress { width:100%; height:6px; accent-color:var(--tc-accent); margin:16px 0 0; }
+.video-compare-editor .tc-content { overflow-y:auto; }
+.video-compare-editor .tc-row-list { flex:0 0 auto; }
+.video-compare-editor .tc-scheme { margin-top:auto!important; }
+.video-compare-editor .tc-canvas-toolbar .gm-canvas-card { flex:1 1 210px; }
+.video-compare-editor .tc-canvas-toolbar #canvasStatus:empty { display:none; }
+.video-compare-editor .gm-custom-size { grid-template-columns:1fr 1fr; }
+.video-compare-editor .gm-custom-size input { width:100%; }
+.video-compare-editor .vc-empty-caption { color:var(--tc-muted); }
+@media (max-width:760px) {
+ .video-compare-editor .tc-header h1 > span:last-child { display:none; }
+ .video-compare-editor .tc-header { gap:8px; }
+ .video-compare-editor .tc-canvas-toolbar { padding:4px 6px; }
+ .video-compare-editor .gm-stage { padding:14px; }
+ .video-compare-editor .tc-content { overflow:visible; }
+ .video-compare-editor .tc-scheme { margin-top:12px!important; }
+}

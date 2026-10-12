@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "video-compare",
+      "date": "2026-10-12"
+    },
+    {
       "id": "switchdrop",
       "date": "2026-10-12"
     },
@@ -86,6 +90,17 @@
     }
   ],
   "effects": [
+    {
+      "id": "video-compare",
+      "name": "视频对比",
+      "english": "Video Compare",
+      "description": "双视频同步对比 · 黑白版式 · B2W 署名",
+      "category": "media",
+      "href": "video-compare.html?v=20261012-1",
+      "poster": "assets/cellmotion/poster-video-compare.jpg",
+      "video": null,
+      "status": "ready"
+    },
     {
       "id": "card-login",
       "name": "翻牌登录",
