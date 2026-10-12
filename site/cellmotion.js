@@ -9,7 +9,11 @@ function inCategory(effect, category) {
 }
 const escapeHTML = (text) => String(text).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const mediaURL = (url) => `${url}${url.includes('?') ? '&' : '?'}v=20261010-spotlight1`;
-const play = async (video) => { try { await video.play(); return true; } catch { return false; } };
+const play = async (video) => { try {
+  if (!video.getAttribute('src') && video.dataset.src) video.src = mediaURL(video.dataset.src);
+  if (!video.getAttribute('poster') && video.dataset.poster) video.poster = video.dataset.poster;
+  await video.play(); return true;
+} catch { return false; } };
 let effects = [], featured = [], recent = [], activeCategory = 'all', limit = 12;
 let activeUsage = 'all';
 const ribbonSeed = [
@@ -46,9 +50,8 @@ function initRibbon() {
   if(ribbon.dataset.ready==='true')return;
   ribbon.dataset.ready='true';
   const items=ribbonSeed.map(seed=>effects.find(effect=>effect.id===seed.id)||seed).filter(effect=>effect?.video && !isPending(effect));
-  $('#ribbon-track').innerHTML=items.map(effect=>`<a class="ribbon-card${effect.id==='iconburst'?' is-landscape':''}" href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器"><img src="${effect.poster}" alt="${escapeHTML(effect.name)}动效"><video data-src="${effect.video}" muted loop playsinline preload="none" aria-hidden="true"></video><span class="ribbon-name">${escapeHTML(effect.name)} ↗</span></a>`).join('');
+  $('#ribbon-track').innerHTML=items.map(effect=>`<a class="ribbon-card${effect.id==='iconburst'?' is-landscape':''}" href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器"><img src="${effect.poster}" loading="lazy" alt="${escapeHTML(effect.name)}动效"><video data-src="${effect.video}" muted loop playsinline preload="none" aria-hidden="true"></video><span class="ribbon-name">${escapeHTML(effect.name)} ↗</span></a>`).join('');
   const cards=[...ribbon.querySelectorAll('.ribbon-card')];
-  cards.forEach((card,index)=>{card.style.backgroundImage=`url("${items[index].poster}")`;});
   let width=ribbon.clientWidth, cardWidth=0, cardSizes=[], offset=0, previous=0, raf=0, visible=false, hovered=false, focused=false, enabled=!reduced.matches;
   const videos=cards.map(card=>card.querySelector('video'));
   videos.forEach((video,index)=>{
@@ -242,7 +245,10 @@ function initStory() {
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
   const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{
     const video=entry.target;
-    if(entry.isIntersecting&&!document.hidden&&!reducedMotion){video.play().catch(()=>{});}
+    if(entry.isIntersecting){
+      if(video.dataset.poster&&!video.getAttribute('poster'))video.poster=video.dataset.poster;
+      if(!document.hidden&&!reducedMotion)play(video);
+    }
     else video.pause();
   }),{threshold:.2});
   videos.forEach(video=>observer.observe(video));
@@ -251,7 +257,7 @@ function initStory() {
     const sync=()=>{button.textContent=video.paused?'▶':'Ⅱ';button.setAttribute('aria-label',video.paused?'播放视频案例':'暂停视频案例');button.setAttribute('aria-pressed',String(!video.paused));};
     video.addEventListener('play',sync);video.addEventListener('pause',sync);sync();
     button.addEventListener('click',()=>{
-      if(video.paused)video.play().catch(()=>{});else video.pause();
+      if(video.paused)play(video);else video.pause();
     });
   });
   const preview=$('#story-video');

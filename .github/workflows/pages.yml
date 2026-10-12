@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+      - name: Prepare fast homepage
+        run: node scripts/prepare-homepage.mjs
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload site
