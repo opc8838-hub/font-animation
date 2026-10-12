@@ -110,7 +110,7 @@
     number.setAttribute('aria-label', `${labelText}数值`);
     const unit = document.createElement('span');
     unit.className = 'tc-number-unit';
-    const factor = range.id === 'characterDelay' ? 100 : 1;
+    const factor = body.dataset.switchdrop === 'true' && range.id === 'holdDuration' ? 0.001 : range.id === 'characterDelay' ? 100 : 1;
     number.min = String(Number(range.min) * factor);
     number.max = String(Number(range.max) * factor);
     number.step = String(Number(range.step) * factor);
