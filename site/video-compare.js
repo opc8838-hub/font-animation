@@ -11,7 +11,7 @@
   const copy = (zh,english) => '<span data-vc-zh="'+esc(zh)+'" data-vc-en="'+esc(english)+'" data-no-translate>'+esc(tr(zh,english))+'</span>';
   const defaults = {
     effect: SLUG, version: 1, canvas: {preset:'1920x1080',width:1920,height:1080},
-    layout: {fontFamily:'stg:manrope',compositionTheme:'light',textColor:'#171717',backgroundColor:'#faf9f7',labelSize:100,marginSize:5,frameGap:4,frameRadius:28,logoSize:22},
+    layout: {fontFamily:'stg:manrope',compositionTheme:'light',textColor:'#171717',backgroundColor:'#faf9f7',labelSize:100,marginSize:5,frameGap:4,frameRadius:28,logoSize:22,videoAspect:'auto',beforeScale:65},
     export: {duration:'cycle',customDuration:6,fps:30,shortClip:'hold'},
     rows: [
       {id:'before',text:'Before',caption:'网上看到的',media:null},
@@ -57,7 +57,7 @@
   }
   window.addEventListener('pagehide',()=>{if(dbRef&&!previewMode){clearTimeout(persistTimer);try{dbRef.transaction('schemes','readwrite').objectStore('schemes').put(clone(scheme),'working');}catch{}}});
   function checkpoint() { undoStack.push(clone(scheme)); if(undoStack.length>30)undoStack.shift(); redoStack.length=0; }
-  function edited() { revision++; persist(); renderTimeline(); renderFrame(canvas); }
+  function edited() { revision++; persist(); syncLayoutInfo(); renderTimeline(); renderFrame(canvas); }
   function clipDuration(row) {
     const rt = runtime.get(row.id);
     if(!row.media || !rt?.ready) return 0;
@@ -114,7 +114,7 @@
       m.trimStart=clamp(m.trimStart,0,Math.max(0,rt.duration-.01));
       m.trimEnd=clamp(m.trimEnd||rt.duration,m.trimStart+.01,rt.duration);
       await Promise.all([seekVideo(rt.video,m.trimStart),seekVideo(rt.exportVideo,m.trimStart)]);
-      syncMediaUi(row);renderTimeline(); await buildFilmstrip(row,rt);renderFrame(canvas);
+      syncMediaUi(row);syncLayoutInfo();renderTimeline(); await buildFilmstrip(row,rt);renderFrame(canvas);
     } catch(error) {
       if(runtime.get(row.id)!==rt)return;
       dispose(rt);runtime.delete(row.id);
@@ -136,7 +136,7 @@
   function rowHtml(row) {
     return '<div class="gm-row-shell vc-row" data-row-id="'+row.id+'" data-row-summary="'+esc(tr('独立视频 · 同步播放','Video · Synchronized'))+'">'+
       '<label class="gm-field vc-text-field">'+copy('主标签','Label')+'<input data-key="text" value="'+esc(row.text)+'" maxlength="100" aria-label="'+esc(tr('主标签','Label'))+'"></label>'+
-      '<label class="gm-field">'+copy('说明文字','Caption')+'<input data-key="caption" value="'+esc(row.caption)+'" maxlength="160"></label>'+
+      '<label class="gm-field">'+copy('说明文字 · 可编辑','Caption · Editable')+'<input data-key="caption" value="'+esc(row.caption)+'" maxlength="160" aria-label="'+esc(row.id+' '+tr('说明文字','caption'))+'"></label>'+
       '<label class="vc-upload"><b aria-hidden="true">＋</b>'+copy('上传 / 替换视频','Upload / replace video')+'<small data-no-translate>MP4 / WebM / MOV</small><input type="file" data-video-file accept="video/mp4,video/webm,video/quicktime,video/*" aria-label="'+esc(row.text)+' video"></label>'+
       '<p class="vc-file-name" data-no-translate></p><div class="vc-media-tools" hidden>'+
       '<div class="gm-grid-2"><label class="gm-field">'+copy('视频适配','Video fit')+'<select data-key="fit"><option value="contain">'+tr('完整显示','Fit inside')+'</option><option value="cover">'+tr('铺满裁切','Fill and crop')+'</option></select></label><label class="gm-field">'+copy('放大','Zoom')+'<input data-key="zoom" type="number" min="1" max="4" step="0.05" value="1"></label><label class="gm-field">'+copy('水平取景','Horizontal position')+'<input data-key="panX" type="range" min="0" max="1" step="0.01" value="0.5"></label><label class="gm-field">'+copy('垂直取景','Vertical position')+'<input data-key="panY" type="range" min="0" max="1" step="0.01" value="0.5"></label></div>'+
@@ -153,7 +153,7 @@
     const m=row.media,rt=runtime.get(row.id);
     shell.querySelector('.vc-media-tools').hidden=!m;
     const name=shell.querySelector('.vc-file-name');name.classList.remove('is-error');
-    name.textContent=m ? m.name+(rt?.ready?' · '+rt.video.videoWidth+' × '+rt.video.videoHeight+' · '+rt.duration.toFixed(2)+'s':' · '+tr('读取中…','Loading…')) : tr('未上传视频','No video selected');
+    name.textContent=m ? m.name+(rt?.ready?' · '+tr('素材 ','Source ')+rt.video.videoWidth+' × '+rt.video.videoHeight+' · '+ratioLabel(rt.video.videoWidth/rt.video.videoHeight)+' '+tr(rt.video.videoWidth>=rt.video.videoHeight?'横屏':'竖屏',rt.video.videoWidth>=rt.video.videoHeight?'landscape':'portrait')+' · '+rt.duration.toFixed(2)+'s':' · '+tr('读取中…','Loading…')) : tr('未上传视频 · 素材尺寸将自动识别','No video selected · Source dimensions detected on upload');
     if(!m)return;
     for(const key of ['fit','zoom','panX','panY','trimStart','trimEnd']){const field=shell.querySelector('[data-key="'+key+'"]');if(field!==document.activeElement)field.value=m[key];}
     if(rt?.ready) {
@@ -163,15 +163,47 @@
       const film=shell.querySelector('.vc-video-timeline canvas');if(rt.film)film.getContext('2d').drawImage(rt.film,0,0,film.width,film.height);
     }
   }
-  // Identical output geometry at every preview/export resolution.
+  function videoAspect() {
+    const mode=scheme.layout.videoAspect;
+    if(mode==='16:9'||mode==='9:16')return {ratio:mode==='16:9'?16/9:9/16,owner:null};
+    const owner=['after','before'].find(id=>runtime.get(id)?.ready);
+    const video=runtime.get(owner)?.video;
+    return {ratio:video?video.videoWidth/video.videoHeight:16/9,owner};
+  }
+  function ratioLabel(ratio) {
+    for(const [label,value]of [['16:9',16/9],['9:16',9/16],['1:1',1],['4:3',4/3]])if(Math.abs(ratio-value)<.015)return label;
+    return ratio.toFixed(2)+':1';
+  }
+  function syncLayoutInfo() {
+    const info=videoAspect(),status=$('videoAspectStatus');if(!status)return;
+    status.textContent=tr('当前视频框：','Video frames: ')+ratioLabel(info.ratio)+(info.owner?tr(' · 自动跟随 ',' · Matched to ')+(info.owner==='after'?'After':'Before'):scheme.layout.videoAspect==='auto'?tr(' · 上传后自动识别',' · Detected after upload'):tr(' · 手动选择',' · Manual selection'));
+  }
+  // One proportionate layout for the live canvas and every export size.
   function geometry(w,h) {
-    const l=scheme.layout,margin=w*l.marginSize/100,gap=w*l.frameGap/100;
-    if(w/h>=1.25) {
-      const width=(w-2*margin-gap)/2,height=Math.min(width*9/16,h*.56),top=(h-height)/2-h*.035;
-      return {boxes:[{x:margin,y:top,w:width,h:height},{x:margin+width+gap,y:top,w:width,h:height}],logoY:h*.84};
+    const l=scheme.layout,ratio=videoAspect().ratio,scale=l.beforeScale/100;
+    const margin=w*l.marginSize/100,gap=w*l.frameGap/100,usableW=w-2*margin;
+    const headerFactor=.085*l.labelSize/100*1.5;
+    const stacked=w/h<1.25&&ratio>=1;
+    const top=h*(stacked?.075:.13),bottom=h*(stacked?.81:.79),bodyH=bottom-top;
+    let afterW,boxes;
+    if(stacked){
+      afterW=Math.min(usableW,(bodyH-gap)/((1+scale)*(1/ratio+headerFactor)));
+      const beforeW=afterW*scale,beforeY=top+beforeW*headerFactor;
+      const afterY=beforeY+beforeW/ratio+gap+afterW*headerFactor;
+      boxes=[{x:(w-beforeW)/2,y:beforeY,w:beforeW,h:beforeW/ratio},{x:(w-afterW)/2,y:afterY,w:afterW,h:afterW/ratio}];
+    }else{
+      afterW=Math.min((usableW-gap)/(1+scale),bodyH/(1/ratio+headerFactor));
+      const beforeW=afterW*scale,afterH=afterW/ratio,beforeH=beforeW/ratio;
+      const x=(w-afterW-beforeW-gap)/2,afterY=top+(bodyH-afterH-afterW*headerFactor)/2+afterW*headerFactor;
+      boxes=[{x,y:afterY+(afterH-beforeH)/2,w:beforeW,h:beforeH},{x:x+beforeW+gap,y:afterY,w:afterW,h:afterH}];
     }
-    const width=Math.min(w*.72,h*.64),height=width*9/16,top=h*.105;
-    return {boxes:[{x:(w-width)/2,y:top,w:width,h:height},{x:(w-width)/2,y:top+height+h*.06,w:width,h:height}],logoY:h*.945};
+    boxes.forEach(b=>{b.textSize=b.w*.085*l.labelSize/100;b.headerHeight=b.textSize*1.5;});
+    return {boxes,logoY:h*.91,ratio,arrangement:stacked?'stacked':'side-by-side'};
+  }
+  function mediaPlacement(box,sw,sh,media) {
+    const scale=(media.fit==='cover'?Math.max(box.w/sw,box.h/sh):Math.min(box.w/sw,box.h/sh))*media.zoom;
+    const w=sw*scale,h=sh*scale;
+    return {x:box.x+(box.w-w)*media.panX,y:box.y+(box.h-h)*media.panY,w,h};
   }
   function drawText(ctx,text,x,y,size,maxWidth,font,weight) {
     const family=window.STGFontLibrary.family(font);
@@ -186,21 +218,20 @@
     const dark=l.compositionTheme==='dark';
     scheme.rows.forEach((row,i)=>{
       const b=boxes[i],m=row.media,rt=runtime.get(row.id),image=exporting?rt?.exportVideo:rt?.video;
-      const size=w*(w/h>=1.25?.031:.043)*l.labelSize/100;
+      const size=b.textSize;
       ctx.fillStyle=l.textColor;ctx.textBaseline='alphabetic';ctx.textAlign='left';
       drawText(ctx,row.text,b.x,b.y-size*.45,size,b.w*.55,l.fontFamily,font.weight||700);
-      ctx.textAlign='right';drawText(ctx,row.caption,b.x+b.w,b.y-size*.5,size*.46,b.w*.42,l.fontFamily,500);
+      ctx.textAlign='right';drawText(ctx,row.caption,b.x+b.w,b.y-size*.5,size*.60,b.w*.42,l.fontFamily,500);
       ctx.save();ctx.beginPath();ctx.roundRect(b.x,b.y,b.w,b.h,l.frameRadius*w/1920);ctx.clip();
       ctx.fillStyle=dark?'#1b1b1d':'#eeedeb';ctx.fillRect(b.x,b.y,b.w,b.h);
       if(m && rt?.ready && image?.readyState>=2) {
         const sw=image.videoWidth,sh=image.videoHeight;
-        const scale=(m.fit==='cover'?Math.max(b.w/sw,b.h/sh):Math.min(b.w/sw,b.h/sh))*m.zoom;
-        const dw=sw*scale,dh=sh*scale;
-        ctx.drawImage(image,b.x+(b.w-dw)*m.panX,b.y+(b.h-dh)*m.panY,dw,dh);
+        const placement=mediaPlacement(b,sw,sh,m);
+        ctx.drawImage(image,placement.x,placement.y,placement.w,placement.h);
       } else {
         ctx.fillStyle=dark?'#858589':'#999795';ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.font='400 '+w*.023+'px '+window.STGFontLibrary.family('stg:manrope');ctx.fillText('+',b.x+b.w/2,b.y+b.h*.42);
-        ctx.font='400 '+w*.009+'px '+window.STGFontLibrary.family('stg:manrope');ctx.fillText(tr('点击上传视频','Click to upload video'),b.x+b.w/2,b.y+b.h*.57);
+        ctx.font='400 '+Math.min(b.w,b.h)*.08+'px '+window.STGFontLibrary.family('stg:manrope');ctx.fillText('+',b.x+b.w/2,b.y+b.h*.42);
+        ctx.font='400 '+Math.min(b.w,b.h)*.034+'px '+window.STGFontLibrary.family('stg:manrope');ctx.fillText(tr('点击上传视频','Click to upload video'),b.x+b.w/2,b.y+b.h*.57);
       }
       ctx.restore();
     });
@@ -238,23 +269,22 @@
   function changeSize() {
     if(busy)return;const preset=$('canvasPreset').value;
     let w,h;if(preset==='custom'){w=Math.round(clamp($('canvasWidth').value,320,3840)/2)*2;h=Math.round(clamp($('canvasHeight').value,320,3840)/2)*2;}else [w,h]=preset.split('x').map(Number);
-    if(h>w){status('canvasStatus','竖屏版式后续开放，请使用横屏或方形。','Portrait layout is coming later. Choose landscape or square.');return;}
     checkpoint();scheme.canvas={preset,width:w,height:h};status('canvasStatus','','');syncControls();resizePreview();edited();
   }
   function syncControls() {
     $('canvasPreset').value=scheme.canvas.preset;$('canvasWidth').value=scheme.canvas.width;$('canvasHeight').value=scheme.canvas.height;document.querySelector('.gm-custom-size').hidden=scheme.canvas.preset!=='custom';
     for(const [id,value]of Object.entries(scheme.layout))if($(id))$(id).value=value;
+    syncLayoutInfo();
     $('exportDuration').value=scheme.export.duration;$('exportFps').value=scheme.export.fps;$('customDuration').value=scheme.export.customDuration;$('shortClip').value=scheme.export.shortClip;$('customDurationField').hidden=scheme.export.duration!=='custom';
-    for(const id of ['labelSize','marginSize','frameGap','frameRadius','logoSize']){const out=document.querySelector('output[for="'+id+'"]');out.value=scheme.layout[id]+(id==='frameRadius'?'px':'%');$(id).dispatchEvent(new CustomEvent('vc-sync'));}
+    for(const id of ['labelSize','marginSize','frameGap','frameRadius','logoSize','beforeScale']){const out=document.querySelector('output[for="'+id+'"]');out.value=scheme.layout[id]+(id==='frameRadius'?'px':'%');$(id).dispatchEvent(new CustomEvent('vc-sync'));}
   }
   function normalize(input) {
     if(!input || input.effect!==SLUG || input.version!==1 || !Array.isArray(input.rows) || input.rows.length!==2)throw new Error(tr('不是有效的视频对比方案。','Invalid Video Compare scheme.'));
     const result=clone(defaults),c=input.canvas||{};
     result.canvas.width=Math.round(clamp(c.width,320,3840)/2)*2;result.canvas.height=Math.round(clamp(c.height,320,3840)/2)*2;
-    if(result.canvas.height>result.canvas.width)throw new Error(tr('竖屏版式后续开放。','Portrait layout is coming later.'));
     result.canvas.preset=[...$('canvasPreset').options].some(o=>o.value===c.preset&&!o.disabled)?c.preset:'custom';
     if(result.canvas.preset!=='custom' && result.canvas.preset!==result.canvas.width+'x'+result.canvas.height)result.canvas.preset='custom';
-    const l=input.layout||{};for(const id of ['labelSize','marginSize','frameGap','frameRadius','logoSize'])result.layout[id]=clamp(l[id]??defaults.layout[id],$(id).min,$(id).max);
+    const l=input.layout||{};result.layout.videoAspect=['auto','16:9','9:16'].includes(l.videoAspect)?l.videoAspect:'auto';for(const id of ['labelSize','marginSize','frameGap','frameRadius','logoSize','beforeScale'])result.layout[id]=clamp(l[id]??defaults.layout[id],$(id).min,$(id).max);
     for(const id of ['textColor','backgroundColor'])if(/^#[0-9a-f]{6}$/i.test(l[id]))result.layout[id]=l[id];
     if(window.STGFontLibrary.preset(l.fontFamily))result.layout.fontFamily=l.fontFamily;
     result.layout.compositionTheme=l.compositionTheme==='dark'?'dark':'light';
@@ -320,7 +350,13 @@
   $('toggleInspector').addEventListener('click',()=>{document.body.classList.toggle('gm-inspector-hidden');requestAnimationFrame(resizePreview);});
   canvas.addEventListener('click',e=>{
     if(busy)return;const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*canvas.width/r.width,y=(e.clientY-r.top)*canvas.height/r.height;
-    geometry(canvas.width,canvas.height).boxes.forEach((b,i)=>{if(x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h){const row=scheme.rows[i];document.querySelector('.tc-row-select[data-row-id="'+row.id+'"]')?.click();if(!row.media)document.querySelector('.vc-row[data-row-id="'+row.id+'"] [data-video-file]')?.click();}});
+    geometry(canvas.width,canvas.height).boxes.forEach((b,i)=>{
+      if(x<b.x||x>b.x+b.w||y<b.y-b.headerHeight||y>b.y+b.h)return;
+      const row=scheme.rows[i];document.querySelector('.tc-row-select[data-row-id="'+row.id+'"]')?.click();
+      const shell=document.querySelector('.vc-row[data-row-id="'+row.id+'"]');
+      if(y<b.y){void setTime(elapsed);const input=shell.querySelector('[data-key="'+(x>b.x+b.w*.58?'caption':'text')+'"]');input.focus();input.select();}
+      else if(!row.media)shell.querySelector('[data-video-file]')?.click();
+    });
   });
   function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);}
   $('saveScheme').addEventListener('click',()=>{download(new Blob([JSON.stringify(scheme,null,2)],{type:'application/json'}),'video-compare-scheme.json');persist();status('schemeStatus','方案已下载，包含两段视频。','Scheme downloaded, including both videos.');});
@@ -365,15 +401,18 @@
   }
   for(const format of ['png','gif','mp4'])$('export'+format[0].toUpperCase()+format.slice(1)).addEventListener('click',()=>void exportComposition(format));
   function refreshShell(){
+    const canvasLabel=document.querySelector('.tc-preview-label');if(canvasLabel){canvasLabel.setAttribute('data-no-translate','');canvasLabel.textContent=tr('整体画布','Output canvas');}
     const leftHeading=document.querySelector('.tc-content .tc-panel-heading h2');if(leftHeading){const count=$('tcRowCount')||document.createElement('span');count.id='tcRowCount';count.textContent='2';leftHeading.replaceChildren(document.createTextNode(tr('对比视频','Compare videos')),count);}
     const hint=document.querySelector('.tc-hint');if(hint)hint.textContent=tr('分别上传视频，标签可自由修改。','Upload each video and edit its labels.');
     const tabs=document.querySelectorAll('.tc-tabs button');if(tabs.length){tabs[0].textContent=tr('当前视频','Video');tabs[1].textContent=tr('版式设置','Layout');}
     const selected=document.querySelector('.tc-row-select[aria-pressed="true"]')?.dataset.rowId;
     const title=$('tcSelectedTitle');const text=selected==='after'?'After':'Before';if(title&&title.textContent!==text)title.textContent=text;
     document.querySelectorAll('[data-vc-zh]').forEach(node=>{const value=node.dataset[en()?'vcEn':'vcZh'];if(node.textContent!==value)node.textContent=value;});
-    for(const row of scheme.rows){const shell=document.querySelector('.vc-row[data-row-id="'+row.id+'"]');if(shell)shell.dataset.rowSummary=tr('独立视频 · 同步播放','Video · Synchronized');syncMediaUi(row);}
+    for(const row of scheme.rows){const shell=document.querySelector('.vc-row[data-row-id="'+row.id+'"]');if(shell){shell.dataset.rowSummary=tr('独立视频 · 同步播放','Video · Synchronized');shell.querySelector('[data-key="caption"]').setAttribute('aria-label',row.id+' '+tr('说明文字','caption'));shell.querySelector('[data-key="text"]').setAttribute('aria-label',row.id+' '+tr('主标签','label'));}syncMediaUi(row);}
     document.querySelectorAll('.tc-row-description').forEach(node=>node.textContent=tr('独立视频 · 同步播放','Video · Synchronized'));
-    const option=$('canvasPreset').querySelector('[value="1080x1920"]');option.textContent=tr('9:16 · 后续开放','9:16 · Coming later');
+    const option=$('canvasPreset').querySelector('[value="1080x1920"]');option.textContent='9:16 · 1080 × 1920';
+    for(const o of $('videoAspect').options)o.textContent=o.value==='auto'?tr('自动跟随素材 · 优先 After','Match source · After first'):o.value==='16:9'?tr('16:9 · 横屏视频','16:9 · Landscape video'):tr('9:16 · 竖屏视频','9:16 · Portrait video');
+    syncLayoutInfo();
     for(const [id,entries]of Object.entries({compositionTheme:{light:['白底 · 黑字','White / black'],dark:['黑底 · 白字','Black / white']},shortClip:{hold:['停在最后一帧','Hold last frame'],loop:['循环播放','Loop']},exportDuration:{cycle:['完整视频','Full duration'],custom:['自定义','Custom']}}))for(const [value,words]of Object.entries(entries))$(id).querySelector('[value="'+value+'"]').textContent=tr(...words);
     document.querySelectorAll('.vc-row select[data-key="fit"] option').forEach(o=>o.textContent=o.value==='cover'?tr('铺满裁切','Fill and crop'):tr('完整显示','Fit inside'));
     renderTimeline();playbackButton();renderFrame(canvas);
@@ -400,5 +439,5 @@
     requestAnimationFrame(tick);
   });
   // Explicit test surface: same renderer and timing, no alternate export implementation.
-  window.VideoCompare={renderFrame,geometry,sourceTime,duration,prepareFrame,applyScheme,getScheme:()=>clone(scheme),setTime,exportComposition,getTime:()=>elapsed/1000};
+  window.VideoCompare={renderFrame,geometry,mediaPlacement,videoAspect,sourceTime,duration,prepareFrame,applyScheme,getScheme:()=>clone(scheme),setTime,exportComposition,getTime:()=>elapsed/1000};
 })();

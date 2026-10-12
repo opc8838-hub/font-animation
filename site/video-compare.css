@@ -42,3 +42,6 @@
  .video-compare-editor .tc-content { overflow:visible; }
  .video-compare-editor .tc-scheme { margin-top:12px!important; }
 }
+
+.video-compare-editor .vc-file-name { line-height:1.7; }
+.video-compare-editor label:has(#videoAspect),.video-compare-editor label:has(#beforeScale) { grid-column:1 / -1; }
