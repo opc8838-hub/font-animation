@@ -14,8 +14,8 @@
     layout: {fontFamily:'stg:manrope',compositionTheme:'light',textColor:'#171717',backgroundColor:'#faf9f7',labelSize:100,marginSize:5,frameGap:4,frameRadius:28,logoSize:22,videoAspect:'auto',beforeScale:65,topText:'have a good day'},
     export: {duration:'cycle',customDuration:6,fps:30,shortClip:'hold'},
     rows: [
-      {id:'before',text:'Before',caption:'网上看到的',media:null},
-      {id:'after',text:'After',caption:'我做的',media:null}
+      {id:'before',text:'Before',caption:'网上看到的',audioEnabled:false,media:null},
+      {id:'after',text:'After',caption:'我做的',audioEnabled:true,media:null}
     ]
   };
   let scheme = clone(defaults), elapsed = 0, playing = false, busy = false, cancelled = false;
@@ -76,6 +76,16 @@
     const local=scheme.export.shortClip==='loop' ? Math.max(0,seconds)%length : Math.min(Math.max(0,seconds),Math.max(0,length-1/120));
     return Math.min(rt.duration-.001,start+local);
   }
+  let audioModule;
+  function loadAudio(){return audioModule ||= import('./video-compare-audio.js?v=20261013-4');}
+  function syncPreviewAudio(start=false){
+    const enabled=scheme.rows.filter(r=>r.audioEnabled&&runtime.get(r.id)?.ready&&runtime.get(r.id).hasAudio!==false);
+    for(const row of scheme.rows){const rt=runtime.get(row.id);if(!rt?.ready)continue;
+      rt.video.muted=!row.audioEnabled;rt.video.volume=enabled.length>1?1/enabled.length:1;
+      if(start&&playing&&!(scheme.export.shortClip==='hold'&&elapsed/1000>=clipDuration(row)))void rt.video.play().catch(()=>{});
+      if(!playing||busy)rt.video.pause();
+    }
+  }
   function makeVideo(url) {
     const video=document.createElement('video');
     video.muted=true; video.playsInline=true; video.preload='auto'; video.src=url;
@@ -111,6 +121,8 @@
       await Promise.all([readyVideo(rt.video),readyVideo(rt.exportVideo),readyVideo(rt.filmVideo)]);
       if(runtime.get(row.id)!==rt)return;
       rt.duration=rt.video.duration;rt.ready=true;
+      rt.audioInfo=loadAudio().then(module=>module.inspectAudio(m.url)).then(has=>{if(runtime.get(row.id)===rt){rt.hasAudio=has;syncMediaUi(row);syncPreviewAudio();}}).catch(()=>{});
+      syncPreviewAudio();
       m.trimStart=clamp(m.trimStart,0,Math.max(0,rt.duration-.01));
       m.trimEnd=clamp(m.trimEnd||rt.duration,m.trimStart+.01,rt.duration);
       await Promise.all([seekVideo(rt.video,m.trimStart),seekVideo(rt.exportVideo,m.trimStart)]);
@@ -138,7 +150,9 @@
       '<label class="gm-field vc-text-field">'+copy('主标签','Label')+'<input data-key="text" value="'+esc(row.text)+'" maxlength="100" aria-label="'+esc(tr('主标签','Label'))+'"></label>'+
       '<label class="gm-field">'+copy('说明文字 · 可编辑','Caption · Editable')+'<input data-key="caption" value="'+esc(row.caption)+'" maxlength="160" aria-label="'+esc(row.id+' '+tr('说明文字','caption'))+'"></label>'+
       '<label class="vc-upload"><b aria-hidden="true">＋</b>'+copy('上传 / 替换视频','Upload / replace video')+'<small data-no-translate>MP4 / WebM / MOV</small><input type="file" data-video-file accept="video/mp4,video/webm,video/quicktime,video/*" aria-label="'+esc(row.text)+' video"></label>'+
-      '<p class="vc-file-name" data-no-translate></p><div class="vc-media-tools" hidden>'+
+      '<p class="vc-file-name" data-no-translate></p>'+
+      '<label class="vc-audio-toggle"><span>'+copy('原视频声音','Source audio')+'<small class="vc-audio-status" data-no-translate></small></span><input type="checkbox" role="switch" data-key="audioEnabled" aria-label="'+row.id+' '+esc(tr('声音','audio'))+'" '+(row.audioEnabled?'checked':'')+'></label>'+
+      '<div class="vc-media-tools" hidden>'+
       '<div class="gm-grid-2"><label class="gm-field">'+copy('视频适配','Video fit')+'<select data-key="fit"><option value="contain">'+tr('完整显示','Fit inside')+'</option><option value="cover">'+tr('铺满裁切','Fill and crop')+'</option></select></label><label class="gm-field">'+copy('放大','Zoom')+'<input data-key="zoom" type="number" min="1" max="4" step="0.05" value="1"></label><label class="gm-field">'+copy('水平取景','Horizontal position')+'<input data-key="panX" type="range" min="0" max="1" step="0.01" value="0.5"></label><label class="gm-field">'+copy('垂直取景','Vertical position')+'<input data-key="panY" type="range" min="0" max="1" step="0.01" value="0.5"></label></div>'+
       '<div class="vc-trim"><p class="vc-section-label">'+copy('视频片段','Video trim')+'</p><div class="vc-video-timeline"><canvas width="640" height="80" aria-label="'+esc(tr('视频缩略时间轴','Video filmstrip'))+'"></canvas><div class="vc-trim-selection"><button type="button" class="vc-trim-handle" data-edge="start" role="slider" aria-label="'+esc(tr('片段开始','Trim start'))+'" aria-valuemin="0" tabindex="0"></button><button type="button" class="vc-trim-handle" data-edge="end" role="slider" aria-label="'+esc(tr('片段结束','Trim end'))+'" aria-valuemin="0" tabindex="0"></button></div></div><div class="gm-grid-2"><label class="gm-field">'+copy('开始 / 秒','Start / seconds')+'<input data-key="trimStart" type="number" min="0" step="0.05"></label><label class="gm-field">'+copy('结束 / 秒','End / seconds')+'<input data-key="trimEnd" type="number" min="0.01" step="0.05"></label></div></div>'+
       '<div class="vc-inline-actions"><button type="button" class="vc-secondary" data-action="reset-crop">'+copy('重置取景','Reset framing')+'</button><button type="button" class="vc-secondary" data-action="remove-video">'+copy('移除视频','Remove video')+'</button></div></div>'+
@@ -151,6 +165,8 @@
   function syncMediaUi(row) {
     const shell=document.querySelector('[data-row-id="'+row.id+'"].vc-row');if(!shell)return;
     const m=row.media,rt=runtime.get(row.id);
+    shell.querySelector('[data-key="audioEnabled"]').checked=row.audioEnabled;
+    shell.querySelector('.vc-audio-status').textContent=rt?.hasAudio===false?tr('素材无音轨','Source has no audio track'):row.audioEnabled?tr('已开启 · 预览与 MP4','On · Preview & MP4'):tr('已关闭 · 预览与 MP4','Off · Preview & MP4');
     shell.querySelector('.vc-media-tools').hidden=!m;
     const name=shell.querySelector('.vc-file-name');name.classList.remove('is-error');
     name.textContent=m ? m.name+(rt?.ready?' · '+tr('素材 ','Source ')+rt.video.videoWidth+' × '+rt.video.videoHeight+' · '+ratioLabel(rt.video.videoWidth/rt.video.videoHeight)+' '+tr(rt.video.videoWidth>=rt.video.videoHeight?'横屏':'竖屏',rt.video.videoWidth>=rt.video.videoHeight?'landscape':'portrait')+' · '+rt.duration.toFixed(2)+'s':' · '+tr('读取中…','Loading…')) : tr('未上传视频 · 素材尺寸将自动识别','No video selected · Source dimensions detected on upload');
@@ -292,7 +308,7 @@
     if(window.STGFontLibrary.preset(l.fontFamily))result.layout.fontFamily=l.fontFamily;
     result.layout.compositionTheme=l.compositionTheme==='dark'?'dark':'light';
     const ex=input.export||{};result.export.duration=['cycle','3','5','10','custom'].includes(ex.duration)?ex.duration:'cycle';result.export.customDuration=clamp(ex.customDuration||6,.1,120);result.export.fps=[24,30,60].includes(Number(ex.fps))?Number(ex.fps):30;result.export.shortClip=ex.shortClip==='loop'?'loop':'hold';
-    result.rows=result.rows.map((row,i)=>{const r=input.rows.find(r=>r.id===row.id);if(!r)throw new Error('Missing video slot');row.text=String(r.text??row.text).slice(0,100);row.caption=String(r.caption??row.caption).slice(0,160);if(r.media){const m=r.media;if(!/^data:video\//i.test(m.url||''))throw new Error(tr('方案视频必须包含在文件内。','Scheme videos must be embedded in the file.'));row.media={kind:'video',url:m.url,name:String(m.name||'Video'),fileType:String(m.fileType||'video/mp4'),fit:m.fit==='cover'?'cover':'contain',zoom:clamp(m.zoom||1,1,4),panX:clamp(m.panX??.5,0,1),panY:clamp(m.panY??.5,0,1),trimStart:Math.max(0,Number(m.trimStart)||0),trimEnd:Math.max(0,Number(m.trimEnd)||0)};}return row;});return result;
+    result.rows=result.rows.map((row,i)=>{const r=input.rows.find(r=>r.id===row.id);if(!r)throw new Error('Missing video slot');row.text=String(r.text??row.text).slice(0,100);row.caption=String(r.caption??row.caption).slice(0,160);row.audioEnabled=typeof r.audioEnabled==='boolean'?r.audioEnabled:row.audioEnabled;if(r.media){const m=r.media;if(!/^data:video\//i.test(m.url||''))throw new Error(tr('方案视频必须包含在文件内。','Scheme videos must be embedded in the file.'));row.media={kind:'video',url:m.url,name:String(m.name||'Video'),fileType:String(m.fileType||'video/mp4'),fit:m.fit==='cover'?'cover':'contain',zoom:clamp(m.zoom||1,1,4),panX:clamp(m.panX??.5,0,1),panY:clamp(m.panY??.5,0,1),trimStart:Math.max(0,Number(m.trimStart)||0),trimEnd:Math.max(0,Number(m.trimEnd)||0)};}return row;});return result;
   }
   async function applyScheme(input) {
     const next=normalize(input);const myRevision=++revision;
@@ -322,6 +338,7 @@
     const row=scheme.rows.find(r=>r.id===shell.dataset.rowId);
     if(!historyTimer){checkpoint();historyTimer=setTimeout(()=>historyTimer=null,500);}
     if(['text','caption'].includes(key))row[key]=e.target.value;
+    else if(key==='audioEnabled'){row.audioEnabled=e.target.checked;syncMediaUi(row);syncPreviewAudio(true);}
     else if(row.media){const m=row.media,rt=runtime.get(row.id);m[key]=key==='fit'?e.target.value:Number(e.target.value);if(key==='zoom')m.zoom=clamp(m.zoom,1,4);if(['panX','panY'].includes(key))m[key]=clamp(m[key],0,1);if(rt?.ready){m.trimStart=clamp(m.trimStart,0,rt.duration-.01);m.trimEnd=clamp(m.trimEnd,m.trimStart+.01,rt.duration);}syncMediaUi(row);}
     if(key==='trimStart'||key==='trimEnd')void setTime(0);
     edited();
@@ -348,8 +365,8 @@
   for(const id of ['exportDuration','exportFps','customDuration','shortClip'])$(id).addEventListener('change',()=>{if(busy)return;checkpoint();scheme.export={duration:$('exportDuration').value,fps:Number($('exportFps').value),customDuration:clamp($('customDuration').value,.1,120),shortClip:$('shortClip').value};syncControls();edited();});
   $('scrubber').addEventListener('input',()=>void setTime(Number($('scrubber').value)));
   $('timeline').addEventListener('click',e=>{const b=e.target.closest('[data-seek-ms]');if(b)void setTime(Number(b.dataset.seekMs));});
-  $('togglePlayback').addEventListener('click',()=>{if(busy)return;playing=!playing;if(playing&&elapsed>=duration()*1000)elapsed=0;last=performance.now();playbackButton();});
-  $('restartPreview').addEventListener('click',async()=>{if(busy)return;await setTime(0);playing=true;playbackButton();});
+  $('togglePlayback').addEventListener('click',()=>{if(busy)return;playing=!playing;if(playing&&elapsed>=duration()*1000)elapsed=0;last=performance.now();syncPreviewAudio(true);playbackButton();});
+  $('restartPreview').addEventListener('click',()=>{if(busy)return;elapsed=0;playing=true;for(const row of scheme.rows){const rt=runtime.get(row.id);if(rt?.ready)rt.video.currentTime=sourceTime(row,0);}last=performance.now();syncPreviewAudio(true);playbackButton();});
   $('toggleInspector').addEventListener('click',()=>{document.body.classList.toggle('gm-inspector-hidden');requestAnimationFrame(resizePreview);});
   canvas.addEventListener('click',e=>{
     if(busy)return;const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*canvas.width/r.width,y=(e.clientY-r.top)*canvas.height/r.height;
@@ -370,18 +387,19 @@
   async function loadFont(){const face=window.STGFontLibrary.preset(scheme.layout.fontFamily);if(face){try{await document.fonts.load((face.style||'normal')+' '+(face.weight||700)+' 60px "'+face.family+'"','Before 网上看到的');}catch{}renderFrame(canvas);}}
   let encoderLoader;
   function loadEncoder(){if(window.HME?.createH264MP4Encoder)return Promise.resolve();if(!encoderLoader)encoderLoader=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='js/h264-mp4-encoder.web.js';s.onload=resolve;s.onerror=()=>{encoderLoader=null;reject(new Error('MP4 encoder unavailable'));};document.head.append(s);});return encoderLoader;}
-  function setBusy(value){busy=value;document.body.classList.toggle('vc-exporting',value);$('cancelExport').hidden=!value;$('exportProgress').hidden=!value;for(const id of ['exportPng','exportGif','exportMp4','saveScheme','importScheme','restoreScheme','clearScheme'])$(id).disabled=value;for(const input of document.querySelectorAll('#sequenceRows input,#sequenceRows select,.gm-custom-size input,#canvasPreset,.tc-properties[data-panel="global"] input,.tc-properties[data-panel="global"] select'))input.disabled=value;}
+  function setBusy(value){busy=value;document.body.classList.toggle('vc-exporting',value);$('cancelExport').hidden=!value;$('exportProgress').hidden=!value;for(const id of ['exportPng','exportGif','exportMp4','saveScheme','importScheme','restoreScheme','clearScheme','exportDuration','exportFps','customDuration','shortClip','togglePlayback','restartPreview','scrubber'])$(id).disabled=value;for(const input of document.querySelectorAll('#sequenceRows input,#sequenceRows select,.gm-custom-size input,#canvasPreset,.tc-properties[data-panel="global"] input,.tc-properties[data-panel="global"] select'))input.disabled=value;}
   $('cancelExport').addEventListener('click',()=>{cancelled=true;});
   async function exportComposition(format){
     if(busy)return;let encoder,workerUrl='',gif;
-    cancelled=false;const wasPlaying=playing;playing=false;playbackButton();setBusy(true);$('exportProgress').value=0;
+    cancelled=false;const wasPlaying=playing;playing=false;syncPreviewAudio();playbackButton();setBusy(true);$('exportProgress').value=0;
     try {
       if(scheme.rows.some(row=>row.media&&!runtime.get(row.id)?.ready))throw new Error(tr('请先等待视频读取完成。','Wait for the videos to finish loading.'));
       if(format!=='png' && scheme.rows.some(row=>!row.media))throw new Error(tr('请先上传两段视频。','Upload both videos first.'));
       await loadFont();await Promise.all(Object.values(logos).map(img=>img.decode()));
       const output=document.createElement('canvas');output.width=scheme.canvas.width;output.height=scheme.canvas.height;
+      let audio=null;
       const fps=format==='gif'?Math.min(30,scheme.export.fps):scheme.export.fps,total=format==='png'?1:Math.max(1,Math.ceil(duration()*fps));
-      if(format==='mp4'){await loadEncoder();encoder=await window.HME.createH264MP4Encoder();encoder.width=output.width;encoder.height=output.height;encoder.frameRate=fps;encoder.kbps=Math.max(5000,Math.min(30000,Math.round(output.width*output.height*fps*.18/1000)));encoder.groupOfPictures=fps;encoder.outputFilename=SLUG+'.mp4';encoder.initialize();}
+      if(format==='mp4'){status('exportStatus','正在处理声音…','Preparing audio…');audio=await (await loadAudio()).mixAudio(scheme.rows,total/fps,scheme.export.shortClip,()=>cancelled);await loadEncoder();encoder=await window.HME.createH264MP4Encoder();encoder.width=output.width;encoder.height=output.height;encoder.frameRate=fps;encoder.kbps=Math.max(5000,Math.min(30000,Math.round(output.width*output.height*fps*.18/1000)));encoder.groupOfPictures=fps;encoder.outputFilename=SLUG+'.mp4';encoder.initialize();}
       if(format==='gif'){const response=await fetch('js/continuation-gif.worker.js');if(!response.ok)throw new Error('GIF worker unavailable');workerUrl=URL.createObjectURL(new Blob([await response.text()],{type:'text/javascript'}));gif=new GIF({workers:2,quality:10,width:output.width,height:output.height,workerScript:workerUrl});}
       for(let i=0;i<total;i++){
         if(cancelled)throw new Error(tr('已取消导出。','Export cancelled.'));
@@ -394,13 +412,13 @@
       }
       let blob;
       if(format==='png')blob=await new Promise(resolve=>output.toBlob(resolve,'image/png'));
-      if(format==='mp4'){encoder.finalize();blob=new Blob([encoder.FS.readFile(encoder.outputFilename)],{type:'video/mp4'});}
+      if(format==='mp4'){encoder.finalize();blob=new Blob([encoder.FS.readFile(encoder.outputFilename)],{type:'video/mp4'});if(audio){status('exportStatus','正在合成 MP4 声音…','Muxing MP4 audio…');blob=await (await loadAudio()).muxAudio(blob,audio,fps,()=>cancelled);}}
       if(format==='gif')blob=await new Promise((resolve,reject)=>{let finished=false;const check=setInterval(()=>{if(cancelled&&!finished){finished=true;clearInterval(check);gif.abort();gif.activeWorkers?.forEach(w=>w.terminate());gif.freeWorkers?.forEach(w=>w.terminate());reject(new Error(tr('已取消导出。','Export cancelled.')));}},100);gif.on('progress',p=>status('exportStatus','正在编码 GIF · '+Math.round(p*100)+'%','Encoding GIF · '+Math.round(p*100)+'%'));gif.on('finished',b=>{if(finished)return;finished=true;clearInterval(check);resolve(b);});gif.on('abort',()=>{if(finished)return;finished=true;clearInterval(check);reject(new Error('GIF encoding aborted'));});gif.render();});
       if(cancelled)throw new Error(tr('已取消导出。','Export cancelled.'));
       download(blob,SLUG+'-'+output.width+'x'+output.height+'.'+format);
       status('exportStatus',format.toUpperCase()+' 已生成 · '+output.width+' × '+output.height,format.toUpperCase()+' ready · '+output.width+' × '+output.height);
     } catch(error){status('exportStatus',error.message,error.message);}
-    finally{try{encoder?.delete();}catch{}if(workerUrl)URL.revokeObjectURL(workerUrl);setBusy(false);playing=wasPlaying;last=performance.now();playbackButton();syncControls();}
+    finally{try{encoder?.delete();}catch{}if(workerUrl)URL.revokeObjectURL(workerUrl);setBusy(false);playing=wasPlaying;last=performance.now();syncPreviewAudio(true);playbackButton();syncControls();}
   }
   for(const format of ['png','gif','mp4'])$('export'+format[0].toUpperCase()+format.slice(1)).addEventListener('click',()=>void exportComposition(format));
   function refreshShell(){
@@ -442,5 +460,5 @@
     requestAnimationFrame(tick);
   });
   // Explicit test surface: same renderer and timing, no alternate export implementation.
-  window.VideoCompare={renderFrame,geometry,mediaPlacement,videoAspect,sourceTime,duration,prepareFrame,applyScheme,getScheme:()=>clone(scheme),setTime,exportComposition,getTime:()=>elapsed/1000};
+  window.VideoCompare={renderFrame,geometry,mediaPlacement,videoAspect,sourceTime,duration,prepareFrame,applyScheme,getScheme:()=>clone(scheme),setTime,exportComposition,getTime:()=>elapsed/1000,getAudioState:()=>scheme.rows.map(r=>({id:r.id,enabled:r.audioEnabled,muted:runtime.get(r.id)?.video.muted,volume:runtime.get(r.id)?.video.volume,paused:runtime.get(r.id)?.video.paused,hasAudio:runtime.get(r.id)?.hasAudio}))};
 })();

@@ -47,3 +47,8 @@
 .video-compare-editor label:has(#videoAspect),.video-compare-editor label:has(#beforeScale) { grid-column:1 / -1; }
 
 .video-compare-editor label:has(#topText) { grid-column:1 / -1; }
+
+.video-compare-editor .vc-audio-toggle { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px; border:1px solid var(--tc-line); border-radius:12px; background:var(--tc-input); color:var(--tc-text); cursor:pointer; font-size:13px; }
+.video-compare-editor .vc-audio-toggle > span { display:grid; gap:6px; }
+.video-compare-editor .vc-audio-status { font-size:11px; color:var(--tc-muted); font-weight:400; }
+.video-compare-editor .vc-audio-toggle input { width:34px!important; height:20px!important; min-height:0!important; margin:0; accent-color:var(--tc-accent); cursor:pointer; flex:0 0 auto; }
