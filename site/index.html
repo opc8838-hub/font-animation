@@ -1,5 +1,11 @@
 <!DOCTYPE html><html lang="zh-CN"><head>
     <meta charset="UTF-8">
+  <script>
+    // Keep explicit index.html links for the Cylinder editor; the site root opens the homepage.
+    if (location.pathname.endsWith('/')) {
+      location.replace('cellmotion.html' + location.search + location.hash);
+    }
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>SPACE TYPE GENERATOR</title>
 
