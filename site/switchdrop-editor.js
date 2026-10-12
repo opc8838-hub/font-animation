@@ -83,14 +83,14 @@
     subject: { name: "主体", mode: "asset", assetId: "hely", text: "ME", color: "#8277f5", size: 190, rim: 70, nightLogo: true, nightGlow: 100 },
     title: { text: "hely.fun", fontFamily: "stg:manrope", fontWeight: 700, size: 112, gap: 42, tracking: -3, color: "#ffffff", dotColor: "#8277f5" },
     light: { direction: "off", curve: "apple", shape: "spot", duration: 800, delay: 0, litColor: "#ffffff", darkColor: "#010002", vignette: 0, pool: 180 },
-    motion: { speed: 1, drop: 1150, startY: -24, endY: 50, overshoot: 0, settle: 0, shift: 460, titleDelay: 60, titleDuration: 420, titleSpring: 18, hold: 3500, loop: true },
+    motion: { speed: 1, drop: 1150, startY: -24, endY: 50, overshoot: 0, settle: 0, shift: 460, titleDelay: 60, titleDuration: 420, titleSpring: 18, hold: 6000, loop: true },
     background: { opacity: 100, media: null }
   });
   const RANGES = {
     subject: { size: [50, 420], rim: [0, 150], nightGlow: [30, 180] },
     title: { fontWeight: [100, 900], size: [28, 260], gap: [0, 180], tracking: [-12, 40] },
     light: { duration: [80, 3000], delay: [0, 1500], vignette: [0, 200], pool: [0, 400] },
-    motion: { speed: [0.25, 3], drop: [250, 3200], startY: [-70, 0], endY: [25, 75], overshoot: [0, 22], settle: [0, 5000], shift: [100, 1800], titleDelay: [0, 1500], titleDuration: [80, 1800], titleSpring: [0, 55], hold: [0, 12000] }
+    motion: { speed: [0.25, 3], drop: [250, 3200], startY: [-70, 0], endY: [25, 75], overshoot: [0, 22], settle: [0, 5000], shift: [100, 1800], titleDelay: [0, 1500], titleDuration: [80, 1800], titleSpring: [0, 55], hold: [0, 30000] }
   };
 
   const state = { scheme: clone(DEFAULT_SCHEME), playing: true, elapsedMs: 0, lastFrame: performance.now(), exportBusy: false, reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches, activeRowId: "sd-subject", previewMode: false, background: null, fontsVersion: 0 };
@@ -576,7 +576,13 @@
       let cursor = 0;
       fitted.glyphs.forEach((glyph, index) => {
         ctx.fillStyle = glyph === "." ? title.dotColor : title.color;
-        ctx.fillText(glyph, cursor, 0);
+        if (glyph === ".") {
+          const dot = ctx.measureText(glyph);
+          const radius = Math.max(1, (dot.actualBoundingBoxLeft + dot.actualBoundingBoxRight) / 2);
+          ctx.beginPath();
+          ctx.arc(cursor - dot.actualBoundingBoxLeft + radius, dot.actualBoundingBoxDescent - radius, radius, 0, Math.PI * 2);
+          ctx.fill();
+        } else ctx.fillText(glyph, cursor, 0);
         cursor += fitted.widths[index] + fittedTracking;
       });
       ctx.restore();

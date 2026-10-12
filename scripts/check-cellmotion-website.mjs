@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile,stat} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 const site=new URL('../site/',import.meta.url);
-const pages=['cellmotion.html','cellmotion-components.html','cellmotion-editors.html'];
+const pages=['index.html','cellmotion-components.html','cellmotion-editors.html'];
 let checked=0;
 for(const page of pages){
   const html=await readFile(new URL(page,site),'utf8');
@@ -11,13 +11,13 @@ for(const page of pages){
   assert.equal(new Set(ids).size,ids.length,`${page}: duplicate IDs`);
   for(const id of ['main','catalog-grid','catalog-error'])assert(ids.includes(id),`${page}: missing ${id}`);
   for(const [,value]of html.matchAll(/\b(?:src|href)="([^"]+)"/g)){
-    if(/^(?:https?:|data:|#)/.test(value))continue;
+    if(/^(?:https?:|data:|#)/.test(value)||value==='./')continue;
     const target=new URL(value,site);target.search='';target.hash='';
     assert((await stat(fileURLToPath(target))).isFile(),`${page}: missing ${value}`);checked++;
   }
   assert(html.includes('site-preferences.js'),`${page}: missing global language/theme controls`);
   assert(html.includes('cellmotion.js'),`${page}: missing shared website script`);
-  assert(html.includes('assets/cellmotion/logo-original-transparent.png'),`${page}: transparent logo required`);
+  assert(html.includes(page==='index.html'?'assets/cellmotion/logo-web.webp':'assets/cellmotion/logo-original-transparent.png'),`${page}: transparent logo required`);
 }
 const home=await readFile(new URL(pages[0],site),'utf8');
 assert(home.includes('data-home-preview="true"'),'Homepage must remain a small preview, not full catalog');

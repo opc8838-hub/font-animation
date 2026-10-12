@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "switchdrop",
+      "date": "2026-10-12"
+    },
+    {
       "id": "card-login",
       "date": "2026-10-10"
     },
@@ -481,9 +485,9 @@
       "english": "Switch Drop",
       "description": "主体降临 × 聚光关灯",
       "category": "graphic",
-      "href": "switchdrop.html?from=gallery&v=20261010-1",
-      "poster": "assets/cellmotion/poster-switchdrop.jpg?v=20261010-1",
-      "video": "assets/previews/switchdrop-card.mp4?v=20261010-2",
+      "href": "switchdrop.html?from=gallery&v=20261012-round-hold1",
+      "poster": "assets/cellmotion/poster-switchdrop.jpg?v=20261012-round-hold1",
+      "video": "assets/previews/switchdrop-card.mp4?v=20261012-round-hold1",
       "status": "ready"
     },
     {
