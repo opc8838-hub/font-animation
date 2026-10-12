@@ -11,7 +11,7 @@
   const copy = (zh,english) => '<span data-vc-zh="'+esc(zh)+'" data-vc-en="'+esc(english)+'" data-no-translate>'+esc(tr(zh,english))+'</span>';
   const defaults = {
     effect: SLUG, version: 1, canvas: {preset:'1920x1080',width:1920,height:1080},
-    layout: {fontFamily:'stg:manrope',compositionTheme:'light',textColor:'#171717',backgroundColor:'#faf9f7',labelSize:100,marginSize:5,frameGap:4,frameRadius:28,logoSize:22,videoAspect:'auto',beforeScale:65},
+    layout: {fontFamily:'stg:manrope',compositionTheme:'light',textColor:'#171717',backgroundColor:'#faf9f7',labelSize:100,marginSize:5,frameGap:4,frameRadius:28,logoSize:22,videoAspect:'auto',beforeScale:65,topText:'have a good day'},
     export: {duration:'cycle',customDuration:6,fps:30,shortClip:'hold'},
     rows: [
       {id:'before',text:'Before',caption:'网上看到的',media:null},
@@ -187,9 +187,10 @@
     const top=h*(stacked?.075:.13),bottom=h*(stacked?.81:.79),bodyH=bottom-top;
     let afterW,boxes;
     if(stacked){
-      afterW=Math.min(usableW,(bodyH-gap)/((1+scale)*(1/ratio+headerFactor)));
+      const verticalGap=h*(.055+l.frameGap/100);
+      afterW=Math.min(usableW,(bodyH-verticalGap)/((1+scale)*(1/ratio+headerFactor)));
       const beforeW=afterW*scale,beforeY=top+beforeW*headerFactor;
-      const afterY=beforeY+beforeW/ratio+gap+afterW*headerFactor;
+      const afterY=beforeY+beforeW/ratio+verticalGap+afterW*headerFactor;
       boxes=[{x:(w-beforeW)/2,y:beforeY,w:beforeW,h:beforeW/ratio},{x:(w-afterW)/2,y:afterY,w:afterW,h:afterW/ratio}];
     }else{
       afterW=Math.min((usableW-gap)/(1+scale),bodyH/(1/ratio+headerFactor));
@@ -216,6 +217,8 @@
     const {boxes,logoY}=geometry(w,h),font=window.STGFontLibrary.preset(l.fontFamily)||{weight:700};
     ctx.clearRect(0,0,w,h);ctx.fillStyle=l.backgroundColor;ctx.fillRect(0,0,w,h);
     const dark=l.compositionTheme==='dark';
+    ctx.save();ctx.fillStyle=l.textColor;ctx.globalAlpha=.55;ctx.textAlign='center';ctx.textBaseline='middle';
+    drawText(ctx,l.topText,w/2,h*.035,Math.min(w,h)*.016,w*.6,l.fontFamily,400);ctx.restore();
     scheme.rows.forEach((row,i)=>{
       const b=boxes[i],m=row.media,rt=runtime.get(row.id),image=exporting?rt?.exportVideo:rt?.video;
       const size=b.textSize;
@@ -284,7 +287,7 @@
     result.canvas.width=Math.round(clamp(c.width,320,3840)/2)*2;result.canvas.height=Math.round(clamp(c.height,320,3840)/2)*2;
     result.canvas.preset=[...$('canvasPreset').options].some(o=>o.value===c.preset&&!o.disabled)?c.preset:'custom';
     if(result.canvas.preset!=='custom' && result.canvas.preset!==result.canvas.width+'x'+result.canvas.height)result.canvas.preset='custom';
-    const l=input.layout||{};result.layout.videoAspect=['auto','16:9','9:16'].includes(l.videoAspect)?l.videoAspect:'auto';for(const id of ['labelSize','marginSize','frameGap','frameRadius','logoSize','beforeScale'])result.layout[id]=clamp(l[id]??defaults.layout[id],$(id).min,$(id).max);
+    const l=input.layout||{};result.layout.topText=typeof l.topText==='string'?l.topText.slice(0,100):defaults.layout.topText;result.layout.videoAspect=['auto','16:9','9:16'].includes(l.videoAspect)?l.videoAspect:'auto';for(const id of ['labelSize','marginSize','frameGap','frameRadius','logoSize','beforeScale'])result.layout[id]=clamp(l[id]??defaults.layout[id],$(id).min,$(id).max);
     for(const id of ['textColor','backgroundColor'])if(/^#[0-9a-f]{6}$/i.test(l[id]))result.layout[id]=l[id];
     if(window.STGFontLibrary.preset(l.fontFamily))result.layout.fontFamily=l.fontFamily;
     result.layout.compositionTheme=l.compositionTheme==='dark'?'dark':'light';

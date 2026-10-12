@@ -45,3 +45,5 @@
 
 .video-compare-editor .vc-file-name { line-height:1.7; }
 .video-compare-editor label:has(#videoAspect),.video-compare-editor label:has(#beforeScale) { grid-column:1 / -1; }
+
+.video-compare-editor label:has(#topText) { grid-column:1 / -1; }
