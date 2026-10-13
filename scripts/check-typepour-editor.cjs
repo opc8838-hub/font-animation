@@ -1,5 +1,6 @@
 /* Run against scripts/preview-typepour.cjs. PLAYWRIGHT_MODULE and CHROMIUM_PATH are optional. */
 const assert=require('node:assert/strict');
+const digest=value=>require('node:crypto').createHash('sha256').update(value).digest('hex');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 (async()=>{
  const browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{})});
@@ -14,7 +15,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
  assert.ok(await page.locator('#font option').count()>100);
  const prototype=await browser.newPage();await prototype.goto(base+'/typepour-prototype.html');await prototype.waitForFunction(()=>window.TypePour?.state.ready);
  const render=()=>{const c=document.createElement('canvas');c.width=1080;c.height=1920;TypePour.renderFrame(c,5);return c.toDataURL();};
- assert.equal(await page.evaluate(render),await prototype.evaluate(render),'approved portrait must remain pixel-identical');
+ assert.equal(digest(await page.evaluate(render)),digest(await prototype.evaluate(render)),'approved portrait must remain pixel-identical');
  await page.locator('#pureVariant').click();await page.evaluate(()=>TypePourEditor.whenIdle());assert.equal(await page.evaluate(()=>TypePour.style.squares),0);
  await page.locator('#undo').click();await page.evaluate(()=>TypePourEditor.whenIdle());assert.equal(await page.evaluate(()=>TypePour.style.squares),.84);
  await page.locator('#redo').click();await page.evaluate(()=>TypePourEditor.whenIdle());assert.equal(await page.evaluate(()=>TypePour.style.squares),0);

@@ -166,3 +166,7 @@ Phase edits remap the same cached 60 FPS physics and procedural Foley. Preview, 
 ### Remaining interpretation limits
 
 The water is a deterministic 2D visual simulation, not a physical 3D fluid. Glass highlights are layered from the approved transparent asset. The procedural water Foley is synthesized, not a recorded pour. The single source has composition-level background ownership; multi-page sequencing is not part of this effect.
+
+### Published startup check
+
+The site is available at https://cellmotion.cn/typepour.html. GitHub Pages currently redirects its repository URL to HTTP; direct HTTPS preserves secure browser media APIs. English default text no longer preloads the large Chinese fallback font; it is loaded when non-Latin text is edited. A trial WebP conversion changed browser pixels and was discarded: the approved PNG glass is retained. The complete editor regression, including exact PNG hash comparison and Chinese input, passed after the font loading change.

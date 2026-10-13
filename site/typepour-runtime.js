@@ -19,7 +19,7 @@
     glyphs = Array.from(segmenter.segment(style.text), s => s.segment).filter(s => !/^\s+$/.test(s));
     preset = STGFontLibrary.preset(style.font) || STGFontLibrary.preset('stg:georgia');
     await document.fonts.load(`${preset.style} ${preset.weight} 24px "${preset.family}"`, style.text || '水');
-    await document.fonts.load('400 24px "STG Noto Sans SC"', style.text || '水');
+    if (/[^\u0000-\u024f]/.test(style.text)) await document.fonts.load('400 24px "STG Noto Sans SC"', style.text);
     atlas = new Map();
     for (const glyph of new Set(glyphs)) {
       const tile = document.createElement('canvas'); tile.width = tile.height = 88;
