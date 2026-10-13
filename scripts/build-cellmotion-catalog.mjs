@@ -17,6 +17,7 @@ for (const id of pendingRelease) {
   if (!knownIds.has(id)) throw new Error(`Unknown pending effect: ${id}`);
 }
 const videos = {
+  typepour: "typepour-card",
   'card-login':'card-login-card', carddeck:'carddeck-card',
   spotlight:'spotlight-card', switchdrop:'switchdrop-card',
   curvedgallery:'curvedgallery-card',
@@ -32,6 +33,7 @@ const videos = {
 const media = new Set(['curvedgallery','mediacascade','beforeafter','shutterafter','phoneframe','laptopframe','orbitgallery','moodboard']);
 // Newest releases first, shown on the homepage as 最近上新. Dates are the public release of each editor.
 const recent = [
+  ["typepour","2026-10-14"],
   ['switchdrop','2026-10-12'],
   ['card-login','2026-10-10'], ['carddeck','2026-10-10'], ['spotlight','2026-10-10'],
   ['curvedgallery','2026-10-09'],
@@ -61,6 +63,7 @@ for (const [id,name,english,group,description] of rows) {
     id,name,english,description,
     category:media.has(id)?'media':group,
     href:entryRoutes[id] || href,poster,video,
+    ...(id==='typepour'?{webComponent:{preview:'typecascade-component-demo.html?effect=typepour',descriptor:'effects/typepour.component.json'}}:{}),
     ...(['card-login','carddeck'].includes(id)?{webComponent:{preview:`cardmotion-component-demo.html?effect=${id}`,descriptor:`effects/${id}.component.json`}}:{}),
     status:pendingRelease.has(id)?'pending':'ready'
   });

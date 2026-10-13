@@ -15,7 +15,7 @@
       if (message.bridgeVersion && message.bridgeVersion !== version) return;
       if (message.manifest?.effect?.id && message.manifest.effect.id !== adapter.effectId) return;
       pending = pending.then(async () => {
-        if (message.type === 'cellmotion:configure') {
+        if (message.type === 'cellmotion:configure' || message.type === 'cellmotion:update') {
           await adapter.applyScheme(message.manifest?.composition || message.composition, message.manifest?.presentation || {});
           post('cellmotion:duration');
         } else if (message.type === 'cellmotion:request-duration') post('cellmotion:duration');

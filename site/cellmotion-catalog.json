@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "typepour",
+      "date": "2026-10-14"
+    },
+    {
       "id": "switchdrop",
       "date": "2026-10-12"
     },
@@ -86,6 +90,21 @@
     }
   ],
   "effects": [
+    {
+      "id": "typepour",
+      "name": "字水",
+      "english": "Type Pour",
+      "description": "字体如水 · 透明玻璃杯 · 同步倒水声",
+      "category": "physics",
+      "href": "typepour.html",
+      "poster": "assets/cellmotion/poster-typepour.jpg",
+      "video": "assets/previews/typepour-card.mp4",
+      "webComponent": {
+        "preview": "typecascade-component-demo.html?effect=typepour",
+        "descriptor": "effects/typepour.component.json"
+      },
+      "status": "ready"
+    },
     {
       "id": "card-login",
       "name": "翻牌登录",

@@ -39,9 +39,10 @@
         window.opener.postMessage({ type: "cellmotion:demo-ready" }, location.origin);
         return;
       }
+      const effect = new URLSearchParams(location.search).get('effect') === 'typepour' ? 'typepour' : 'typecascade';
       const [definitionResponse, presetResponse] = await Promise.all([
-        fetch("effects/typecascade.component.json"),
-        fetch("assets/presets/typecascade-default.json")
+        fetch(`effects/${effect}.component.json`),
+        fetch(`assets/presets/${effect}-default.json`)
       ]);
       if (!definitionResponse.ok || !presetResponse.ok) throw new Error("组件描述或默认方案加载失败");
       const manifest = window.CellMotionAI.createManifest({
@@ -66,6 +67,7 @@
     }
   });
   player.addEventListener("cellmotion-ready", () => { status.textContent = `${livePreview ? "编辑器当前配置" : "默认方案"}已就绪 · Preview 与 Code 使用同一份 Manifest`; });
+  player.addEventListener('cellmotion-durationchange', () => { seek.max = player.duration; });
   player.addEventListener('cellmotion-error', event => { status.textContent = `组件加载失败：${event.detail.message}`; });
   document.querySelector(".demo-tabs").addEventListener("click", (event) => {
     const button = event.target.closest("[data-tab]");
