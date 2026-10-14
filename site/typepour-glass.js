@@ -9,6 +9,15 @@
     ctx.drawImage(asset,120,110,810,1010,288,414,374,451);
     ctx.drawImage(asset,120,1120,810,280,288,865,374,74);
   }
+  // Clip painted glyph/marker/asset extents, not just simulated particle centers.
+  // The open top preserves the incoming stream; walls follow the photographed inner glass.
+  function clipLiquid(ctx, x = 0, y = 0) {
+    ctx.beginPath();
+    ctx.moveTo(x - 100000, y - 100000);ctx.lineTo(x + 100000, y - 100000);
+    ctx.lineTo(x + 100000, y + 450);ctx.lineTo(x + 636, y + 450);
+    ctx.lineTo(x + 618, y + 852);ctx.quadraticCurveTo(x + 475, y + 878, x + 334, y + 852);
+    ctx.lineTo(x + 314, y + 450);ctx.lineTo(x - 100000, y + 450);ctx.closePath();ctx.clip();
+  }
   function back(ctx) {
     ctx.save();
     const shadow=ctx.createRadialGradient(475,939,8,475,939,180);
@@ -29,10 +38,10 @@
     ctx.clip();drawAsset(ctx);ctx.restore();
     // Fresnel refraction of the current animated content along both sides of the glass.
     if(fluidCanvas){
-      ctx.save();ctx.globalAlpha=.21;
+      ctx.save();clipLiquid(ctx);ctx.globalAlpha=.21;
       ctx.beginPath();ctx.moveTo(315,478);ctx.lineTo(326,853);ctx.lineTo(340,853);ctx.lineTo(326,478);ctx.closePath();ctx.clip();
       ctx.drawImage(fluidCanvas,316,478,22,375,314,478,30,375);ctx.restore();
-      ctx.save();ctx.globalAlpha=.17;
+      ctx.save();clipLiquid(ctx);ctx.globalAlpha=.17;
       ctx.beginPath();ctx.moveTo(634,478);ctx.lineTo(621,853);ctx.lineTo(609,853);ctx.lineTo(622,478);ctx.closePath();ctx.clip();
       ctx.drawImage(fluidCanvas,611,478,22,375,605,478,30,375);ctx.restore();
     }
@@ -41,5 +50,5 @@
     [[0,'#ffffff00'],[.045,'#ffffff8a'],[.10,'#ffffff10'],[.24,'#ffffff00'],[.81,'#ffffff00'],[.90,'#ffffff44'],[1,'#ffffff00']].forEach(([p,c])=>sheen.addColorStop(p,c));
     ctx.beginPath();ctx.moveTo(314,468);ctx.lineTo(334,852);ctx.quadraticCurveTo(475,878,618,852);ctx.lineTo(636,468);ctx.closePath();ctx.fillStyle=sheen;ctx.fill();
   }
-  window.TypePourGlass={ready,back,front};
+  window.TypePourGlass={ready,back,front,clipLiquid};
 })();

@@ -80,9 +80,9 @@
     return Math.min(rt.duration-.001,start+local);
   }
   let audioModule;
-  function loadAudio(){return audioModule ||= import('./video-compare-audio.js?v=20261014-vcompare9');}
+  function loadAudio(){return audioModule ||= import('./video-compare-audio.js?v=20261014-vcompare10');}
   let transcoderModule;
-  function loadTranscoder(){return transcoderModule ||= import('./video-compare-transcode.js?v=20261014-vcompare9');}
+  function loadTranscoder(){return transcoderModule ||= import('./video-compare-transcode.js?v=20261014-vcompare10');}
   function syncPreviewAudio(start=false){
     const enabled=scheme.rows.filter(r=>r.audioEnabled&&runtime.get(r.id)?.ready&&runtime.get(r.id).hasAudio!==false);
     for(const row of scheme.rows){const rt=runtime.get(row.id);if(!rt?.ready)continue;
@@ -142,10 +142,12 @@
       try {await readyVideo(rt.video);}
       catch(nativeError) {
         if(runtime.get(row.id)!==rt)return;
-        const source=await (await loadAudio()).inspectVideoSource(m.url).catch(()=>null);
-        if(source?.codec!=='hevc')throw nativeError;
         const ownsStatus=!uploadStates.has(row.id);
         try {
+          uploadStates.set(row.id,{name:m.name,stage:'check',progress:null});syncMediaUi(row);
+          const source=await (await loadAudio()).inspectVideoSource(m.url).catch(()=>null);
+          if(source?.codec!=='hevc')throw nativeError;
+          uploadStates.set(row.id,{name:m.name,stage:'download',progress:null});syncMediaUi(row);
           const converted=await (await loadTranscoder()).convertHevc(m.url,source,(stage,progress)=>{
             if(runtime.get(row.id)!==rt)return;
             uploadStates.set(row.id,{name:m.name,stage,progress});syncMediaUi(row);
@@ -208,8 +210,8 @@
     shell.querySelector('.vc-audio-status').textContent=rt?.hasAudio===false?tr('素材无音轨','Source has no audio track'):row.audioEnabled?tr('已开启 · 预览与 MP4','On · Preview & MP4'):tr('已关闭 · 预览与 MP4','Off · Preview & MP4');
     shell.querySelector('.vc-media-tools').hidden=!m||!!rt?.error;
     const name=shell.querySelector('.vc-file-name'),pending=uploadStates.get(row.id),failure=uploadErrors.get(row.id)||rt?.error;name.setAttribute('aria-busy',String(!!pending));name.classList.toggle('is-error',!pending&&!!failure);
-    if(pending){const label=pending.stage==='decode'?tr('正在解码视频画面…','Decoding video picture…'):pending.stage==='download'?tr('正在加载 HEVC 兼容转换器','Loading HEVC converter'):pending.stage==='convert'?tr('正在本机转换 HEVC → H.264，保留声音','Converting HEVC → H.264 locally, keeping audio'):tr('正在读取本机视频','Reading video on this device');name.textContent=pending.name+' · '+label+(pending.stage==='decode'?'':pending.progress===null?'…':' · '+pending.progress+'%');return;}
-    if(failure){name.textContent=(m?m.name+' · ':'')+failure;return;}
+    if(pending){const label=pending.stage==='decode'?tr('正在解码视频画面…','Decoding video picture…'):pending.stage==='check'?tr('正在检查视频编码','Checking video codec'):pending.stage==='download'?tr('正在加载 HEVC 兼容转换器','Loading HEVC converter'):pending.stage==='convert'?tr('正在本机转换 HEVC → H.264，保留声音','Converting HEVC → H.264 locally, keeping audio'):tr('正在读取本机视频','Reading video on this device');name.textContent=pending.name+' · '+label+(pending.stage==='decode'?'':pending.progress===null?'…':' · '+pending.progress+'%');renderFrame(canvas);return;}
+    if(failure){name.textContent=(m?m.name+' · ':'')+failure;renderFrame(canvas);return;}
     name.textContent=m ? m.name+(rt?.ready?' · '+tr('素材 ','Source ')+rt.width+' × '+rt.height+' · '+ratioLabel(rt.width/rt.height)+' '+tr(rt.width>=rt.height?'横屏':'竖屏',rt.width>=rt.height?'landscape':'portrait')+' · '+rt.duration.toFixed(2)+'s'+(rt.filmError?tr(' · 缩略图暂不可用，视频仍可播放',' · Thumbnails unavailable; video still plays'):''):' · '+tr('读取中…','Loading…')) : tr('未上传视频 · 素材尺寸将自动识别','No video selected · Source dimensions detected on upload');
     if(!m)return;
     for(const key of ['fit','zoom','panX','panY','trimStart','trimEnd']){const field=shell.querySelector('[data-key="'+key+'"]');if(field!==document.activeElement)field.value=m[key];}
@@ -289,9 +291,11 @@
         const placement=mediaPlacement(b,sw,sh,m);
         ctx.drawImage(image,placement.x,placement.y,placement.w,placement.h);
       } else {
+        const pending=!exporting&&uploadStates.get(row.id),failure=!exporting&&(uploadErrors.get(row.id)||rt?.error);
+        const label=pending?(pending.stage==='convert'?tr('正在转换视频','Converting video'):pending.stage==='download'?tr('加载兼容组件','Loading converter'):pending.stage==='check'?tr('检查视频编码','Checking codec'):pending.stage==='decode'?tr('正在解码画面','Decoding picture'):tr('正在读取视频','Reading video'))+(pending.progress===null?'…':' · '+pending.progress+'%'):failure?tr('视频加载失败，请重试','Video failed to load. Retry.'):tr('点击上传视频','Click to upload video');
         ctx.fillStyle=dark?'#858589':'#999795';ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.font='400 '+Math.min(b.w,b.h)*.08+'px '+window.STGFontLibrary.family('stg:manrope');ctx.fillText('+',b.x+b.w/2,b.y+b.h*.42);
-        ctx.font='400 '+Math.min(b.w,b.h)*.034+'px '+window.STGFontLibrary.family('stg:manrope');ctx.fillText(tr('点击上传视频','Click to upload video'),b.x+b.w/2,b.y+b.h*.57);
+        ctx.font='400 '+Math.min(b.w,b.h)*.08+'px '+window.STGFontLibrary.family('stg:manrope');ctx.fillText(pending?'…':failure?'!':'+',b.x+b.w/2,b.y+b.h*.42);
+        ctx.font='400 '+Math.min(b.w,b.h)*(pending||failure?.045:.034)+'px '+window.STGFontLibrary.family('stg:manrope');ctx.fillText(label,b.x+b.w/2,b.y+b.h*.57,b.w*.9);
       }
       ctx.restore();
     });

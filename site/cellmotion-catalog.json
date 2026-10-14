@@ -119,8 +119,8 @@
       "english": "Video Compare",
       "description": "双视频同步对比 · 黑白版式 · B2W 署名",
       "category": "media",
-      "href": "video-compare.html?v=20261014-vcompare9",
-      "poster": "assets/cellmotion/poster-video-compare.jpg?v=20261014-vcompare9",
+      "href": "video-compare.html?v=20261014-vcompare10",
+      "poster": "assets/cellmotion/poster-video-compare.jpg?v=20261014-vcompare10",
       "video": null,
       "webComponent": {
         "preview": "typecascade-component-demo.html?effect=video-compare",

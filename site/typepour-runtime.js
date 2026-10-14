@@ -45,6 +45,7 @@
   function drawFluid(ctx,time,edgesOnly=false,layout=null){
     if(!state.frames.length)return;
     const {a,b,blend}=sample(time);
+    ctx.save();TypePourGlass.clipLiquid(ctx,layout?.cupX||0,layout?.cupY||0);
     for(let i=0;i<a.length/3;i++){
       const k=i*3,valid=k+2<b.length,x=a[k]+(valid?b[k]-a[k]:0)*blend,y=a[k+1]+(valid?b[k+1]-a[k+1]:0)*blend;
       if(edgesOnly&&(y<470||y>858||(x>342&&x<609)))continue;
@@ -71,6 +72,7 @@
       }
       ctx.restore();
     }
+    ctx.restore();
   }
   function renderFrame(target,time,width=target.width,height=target.height){
     const ctx=target.getContext('2d');

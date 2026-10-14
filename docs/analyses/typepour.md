@@ -170,3 +170,13 @@ The water is a deterministic 2D visual simulation, not a physical 3D fluid. Glas
 ### Published startup check
 
 The site is available at https://cellmotion.cn/typepour.html. GitHub Pages currently redirects its repository URL to HTTP; direct HTTPS preserves secure browser media APIs. English default text no longer preloads the large Chinese fallback font; it is loaded when non-Latin text is edited. A trial WebP conversion changed browser pixels and was discarded: the approved PNG glass is retained. The complete editor regression, including exact PNG hash comparison and Chinese input, passed after the font loading change.
+
+
+## Full-cup containment correction — 2026-10-14
+
+- Report: small glyph/blue-marker fragments extended beyond the glass when filled. The simulation bounded particle centers, but rotated glyphs and attached markers have a larger painted footprint.
+- Motion contract: preserve source drain, flight paths, particle simulation, fill level, timing, cup placement, audio, and approved gallery artifacts. Only confine painted liquid to the photographed inner walls and curved floor; the top remains open for the incoming stream.
+- Added a shared glass clipping path to the editor and both prototype variants, including the wall-refraction passes. The same path is used by preview and all exports; cup offsets and mirrored direction remain supported.
+- Pixel regression: 60 combinations of full/partial phases (4, 7.2, 8.5, 10, 12 s), pure/blue variants, 15/28 px type, and 900×1000 / 540×960 / 960×540 outputs; zero out-of-envelope ink pixels. A shifted, mirrored cup also passed. Disabling the correction reproduces 8,147 out-of-envelope pixels at 10 s, confirming the check detects the reported bug. The airborne source region stays pixel-identical.
+- Full editor regression passed (prototype parity, schemes, Chinese, assets, mobile and AI player); browser reported no page errors. Actual PNG, 180-frame / 12-second GIF and 12.010667-second AAC/MP4 exports at 270×480 were inspected at the full-cup frame. Evidence: output/playwright/typepour-containment/.
+- Physics/source/audio and approved gallery image/video files are unchanged. This is a rendering boundary fix, not a new choreography or gallery redesign.
