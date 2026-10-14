@@ -1,3 +1,5 @@
+**2026-10-15 Thermal Profile released**: [Open editor](https://cellmotion.cn/thermal-profile.html). CellMotion three-column editor, themes/languages, local silhouette extraction and repair, shared candidates, live For AI Manifest/player, PNG/GIF/60fps MP4 export, and homepage recent releases.
+
 # CellMotion — Editable motion and video creation
 
 [简体中文](README.md) · [English](README.en.md)

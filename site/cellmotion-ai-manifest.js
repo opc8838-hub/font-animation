@@ -11,6 +11,7 @@
       scheme?.typography?.fontFamily,
       scheme?.layout?.fontFamily,
       scheme?.settings?.font,
+      scheme?.scene?.fontFamily,
       ...rows.map((row) => row.fontFamily)
     ]).map((id) => ({ id, source: id.startsWith("stg:") ? "cellmotion-font-library" : "css-font-family" }));
     const images = Array.isArray(scheme?.assets) ? scheme.assets : [];
@@ -22,6 +23,7 @@
       .map((row) => ({ rowId: row.id, ...clone(row.backgroundMedia) }));
     if (scheme?.backgroundMedia) backgrounds.push({ owner: 'composition', ...clone(scheme.backgroundMedia) });
     const embedded = [...(Array.isArray(scheme?.customAssets) ? clone(scheme.customAssets) : []), ...images.map((asset, index) => ({ id: asset.id, name: asset.imageName, kind: asset.kind, source: `composition.assets[${index}]`, libraryId: asset.libraryId }))];
+    if(scheme?.scene?.media){const media=scheme.scene.media;embedded.push({id:media.libraryId||'thermal-subject',name:media.imageName,kind:'image',source:'composition.scene.media',embedded:!!media.originalDataUrl?.startsWith('data:')});}
     const result = { fonts, icons, backgrounds, embedded };
     if (cards.length) result.cards = cards.map(card => ({ id: card.id, libraryId: card.libraryId }));
     if(rows.some(row=>row.media?.kind==='video'))result.videos=rows.flatMap((row,index)=>row.media?.kind==='video'?[{rowId:row.id,source:`composition.rows[${index}].media`,kind:'video',name:row.media.name,fileType:row.media.fileType,trimStart:row.media.trimStart,trimEnd:row.media.trimEnd,fit:row.media.fit,audioEnabled:row.audioEnabled}]:[]);

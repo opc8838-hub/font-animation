@@ -10,6 +10,7 @@
     return;
   }
   const effects = [
+    ["thermal-profile", "热感", "Thermal Profile"],
     ["video-compare", "视频对比", "Video Compare"],
     ["spotlight", "聚光", "Spotlight"],
     ["typepour", "字水", "Type Pour"],
