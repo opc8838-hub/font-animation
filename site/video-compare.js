@@ -20,7 +20,7 @@
   };
   let scheme = clone(defaults), elapsed = 0, playing = false, busy = false, cancelled = false;
   let last = performance.now(), revision = 0, persistTimer, historyTimer, dbRef;
-  const runtime = new Map(), uploadTokens = new Map(), uploadErrors = new Map();
+  const runtime = new Map(), uploadTokens = new Map(), uploadErrors = new Map(), uploadStates = new Map();
   const undoStack = [], redoStack = [];
   const canvas = $('glyphMorphCanvas'), frame = $('compositionFrame');
   const previewMode = new URLSearchParams(location.search).has('preview');
@@ -80,7 +80,7 @@
     return Math.min(rt.duration-.001,start+local);
   }
   let audioModule;
-  function loadAudio(){return audioModule ||= import('./video-compare-audio.js?v=20261014-vcompare6');}
+  function loadAudio(){return audioModule ||= import('./video-compare-audio.js?v=20261014-vcompare7');}
   function syncPreviewAudio(start=false){
     const enabled=scheme.rows.filter(r=>r.audioEnabled&&runtime.get(r.id)?.ready&&runtime.get(r.id).hasAudio!==false);
     for(const row of scheme.rows){const rt=runtime.get(row.id);if(!rt?.ready)continue;
@@ -159,7 +159,7 @@
       '<label class="gm-field vc-text-field">'+copy('主标签','Label')+'<input data-key="text" value="'+esc(row.text)+'" maxlength="100" aria-label="'+esc(tr('主标签','Label'))+'"></label>'+
       '<label class="gm-field">'+copy('说明文字 · 可编辑','Caption · Editable')+'<input data-key="caption" value="'+esc(row.caption)+'" maxlength="160" aria-label="'+esc(row.id+' '+tr('说明文字','caption'))+'"></label>'+
       '<label class="vc-upload"><b aria-hidden="true">＋</b>'+copy('上传 / 替换视频','Upload / replace video')+'<small data-no-translate>MP4 / WebM / MOV</small><input type="file" data-video-file accept="video/mp4,video/webm,video/quicktime,video/*" aria-label="'+esc(row.text)+' video"></label>'+
-      '<p class="vc-file-name" data-no-translate></p>'+
+      '<p class="vc-file-name" role="status" aria-live="polite" aria-busy="false" data-no-translate></p>'+
       '<label class="vc-audio-toggle"><span>'+copy('原视频声音','Source audio')+'<small class="vc-audio-status" data-no-translate></small></span><input type="checkbox" role="switch" data-key="audioEnabled" aria-label="'+row.id+' '+esc(tr('声音','audio'))+'" '+(row.audioEnabled?'checked':'')+'></label>'+
       '<div class="vc-media-tools" hidden>'+
       '<div class="gm-grid-2"><label class="gm-field">'+copy('视频适配','Video fit')+'<select data-key="fit"><option value="contain">'+tr('完整显示','Fit inside')+'</option><option value="cover">'+tr('铺满裁切','Fill and crop')+'</option></select></label><label class="gm-field">'+copy('放大','Zoom')+'<input data-key="zoom" type="number" min="1" max="4" step="0.05" value="1"></label><label class="gm-field">'+copy('水平取景','Horizontal position')+'<input data-key="panX" type="range" min="0" max="1" step="0.01" value="0.5"></label><label class="gm-field">'+copy('垂直取景','Vertical position')+'<input data-key="panY" type="range" min="0" max="1" step="0.01" value="0.5"></label></div>'+
@@ -177,7 +177,8 @@
     shell.querySelector('[data-key="audioEnabled"]').checked=row.audioEnabled;
     shell.querySelector('.vc-audio-status').textContent=rt?.hasAudio===false?tr('素材无音轨','Source has no audio track'):row.audioEnabled?tr('已开启 · 预览与 MP4','On · Preview & MP4'):tr('已关闭 · 预览与 MP4','Off · Preview & MP4');
     shell.querySelector('.vc-media-tools').hidden=!m||!!rt?.error;
-    const name=shell.querySelector('.vc-file-name'),failure=uploadErrors.get(row.id)||rt?.error;name.classList.toggle('is-error',!!failure);
+    const name=shell.querySelector('.vc-file-name'),pending=uploadStates.get(row.id),failure=uploadErrors.get(row.id)||rt?.error;name.setAttribute('aria-busy',String(!!pending));name.classList.toggle('is-error',!pending&&!!failure);
+    if(pending){name.textContent=pending.name+' · '+(pending.stage==='decode'?tr('正在解码视频画面…','Decoding video picture…'):tr('正在读取本机视频','Reading video on this device')+(pending.progress===null?'…':' · '+pending.progress+'%'));return;}
     if(failure){name.textContent=(m?m.name+' · ':'')+failure;return;}
     name.textContent=m ? m.name+(rt?.ready?' · '+tr('素材 ','Source ')+rt.width+' × '+rt.height+' · '+ratioLabel(rt.width/rt.height)+' '+tr(rt.width>=rt.height?'横屏':'竖屏',rt.width>=rt.height?'landscape':'portrait')+' · '+rt.duration.toFixed(2)+'s'+(rt.filmError?tr(' · 缩略图暂不可用，视频仍可播放',' · Thumbnails unavailable; video still plays'):''):' · '+tr('读取中…','Loading…')) : tr('未上传视频 · 素材尺寸将自动识别','No video selected · Source dimensions detected on upload');
     if(!m)return;
@@ -322,26 +323,51 @@
   }
   async function applyScheme(input) {
     const next=normalize(input);const myRevision=++revision;
-    for(const rt of runtime.values())dispose(rt);runtime.clear();uploadErrors.clear();scheme=next;elapsed=0;playing=false;
+    for(const rt of runtime.values())dispose(rt);runtime.clear();uploadErrors.clear();uploadStates.clear();uploadTokens.clear();scheme=next;elapsed=0;playing=false;
     renderRows();syncControls();resizePreview();renderTimeline();playbackButton();
     const loaded=await Promise.allSettled([loadFont(),...scheme.rows.map(loadMedia)]);
     if(myRevision!==revision)return;
     if(loaded.some(r=>r.status==='rejected'))throw new Error(tr('部分视频无法解码，请替换。','Some videos could not be decoded. Replace them.'));
     renderFrame(canvas);refreshShell();persist();
   }
+  // Phone file providers may omit MIME or return a generic binary type. Decode the
+  // actual video before accepting it; a filename alone never proves it is valid.
+  function sourceFileType(file) {
+    const type=(file.type||'').toLowerCase();
+    if(type.startsWith('video/'))return type;
+    if(type&&!['application/octet-stream','binary/octet-stream'].includes(type))return null;
+    return ({mp4:'video/mp4',m4v:'video/mp4',mov:'video/quicktime',webm:'video/webm',ogv:'video/ogg'})[file.name.split('.').pop().toLowerCase()]||null;
+  }
+  function readSourceFile(file,type,onProgress) {
+    return new Promise((resolve,reject)=>{
+      const reader=new FileReader();let finished=false;
+      const timer=setTimeout(()=>{finish(new Error(tr('读取视频超时，请确认视频已下载到手机本地后重试。','Reading timed out. Download the video to this device and retry.')));reader.abort();},120000);
+      function finish(error,url){if(finished)return;finished=true;clearTimeout(timer);reader.onload=reader.onerror=reader.onabort=reader.onprogress=null;error?reject(error):resolve(url);}
+      reader.onprogress=e=>onProgress(e.lengthComputable?Math.round(e.loaded/e.total*100):null);
+      reader.onload=()=>finish(null,String(reader.result).replace(/^data:[^;]*;/,'data:'+type+';'));
+      reader.onerror=()=>finish(new Error(tr('无法读取所选视频，请先保存到手机本地后重试。','Could not read the file. Save it on this device and retry.')));
+      reader.onabort=()=>finish(new Error(tr('视频读取已取消，请重新选择。','Video reading cancelled. Select it again.')));
+      reader.readAsDataURL(file);
+    });
+  }
   $('sequenceRows').addEventListener('change',async e=>{
     if(!e.target.matches('[data-video-file]') || busy)return;
-    const row=scheme.rows.find(r=>r.id===e.target.closest('[data-row-id]').dataset.rowId),file=e.target.files[0];if(!file)return;
+    const input=e.target,row=scheme.rows.find(r=>r.id===input.closest('[data-row-id]').dataset.rowId),file=input.files[0];if(!file)return;
     const myToken=Symbol(),previousMedia=row.media;uploadTokens.set(row.id,myToken);
-    const name=e.target.closest('.vc-row').querySelector('.vc-file-name');
-    if(!file.type.startsWith('video/') || file.size>200*1024*1024){name.textContent=tr('请选择 200 MB 以内的视频文件。','Choose a video file smaller than 200 MB.');name.classList.add('is-error');return;}
-    uploadErrors.delete(row.id);name.textContent=tr('正在读取视频…','Reading video…');
+    const type=sourceFileType(file);
+    uploadErrors.delete(row.id);uploadStates.delete(row.id);
+    if(!type||!file.size||file.size>200*1024*1024){
+      uploadErrors.set(row.id,!type?tr('请选择 MP4、MOV 或 WebM 视频文件。','Choose an MP4, MOV or WebM video.'):!file.size?tr('视频文件为空，请先下载到本机。','The video file is empty. Download it to this device first.'):tr('视频超过 200 MB，请选择较短片段。','Video exceeds 200 MB. Choose a shorter clip.'));
+      input.value='';syncMediaUi(row);return;
+    }
+    uploadStates.set(row.id,{name:file.name,stage:'read',progress:null});syncMediaUi(row);
     try {
-      const url=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(file);});
+      const url=await readSourceFile(file,type,progress=>{if(uploadTokens.get(row.id)===myToken){uploadStates.set(row.id,{name:file.name,stage:'read',progress});syncMediaUi(row);}});
       if(uploadTokens.get(row.id)!==myToken || !scheme.rows.includes(row))return;
-      checkpoint();row.media={kind:'video',url,name:file.name,fileType:file.type,trimStart:0,trimEnd:0,fit:'contain',zoom:1,panX:.5,panY:.5};
-      await loadMedia(row);if(uploadTokens.get(row.id)!==myToken||!scheme.rows.includes(row))return;await setTime(0);syncMediaUi(row);edited();refreshShell();
-    }catch(error){if(uploadTokens.get(row.id)===myToken && scheme.rows.includes(row)){row.media=previousMedia;try{await loadMedia(row);}catch{}uploadErrors.set(row.id,file.name+' · '+error.message+(previousMedia?tr(' 已保留原视频。',' Your previous video is preserved.'):''));syncMediaUi(row);edited();}status('schemeStatus',error.message,error.message);}finally{e.target.value='';}
+      uploadStates.set(row.id,{name:file.name,stage:'decode',progress:100});syncMediaUi(row);
+      checkpoint();row.media={kind:'video',url,name:file.name,fileType:type,trimStart:0,trimEnd:0,fit:'contain',zoom:1,panX:.5,panY:.5};
+      await loadMedia(row);if(uploadTokens.get(row.id)!==myToken||!scheme.rows.includes(row))return;await setTime(0);edited();refreshShell();
+    }catch(error){if(uploadTokens.get(row.id)===myToken && scheme.rows.includes(row)){row.media=previousMedia;try{await loadMedia(row);}catch{}uploadErrors.set(row.id,file.name+' · '+error.message+(previousMedia?tr(' 已保留原视频。',' Your previous video is preserved.'):''));edited();}status('schemeStatus',error.message,error.message);}finally{if(uploadTokens.get(row.id)===myToken){uploadStates.delete(row.id);input.value='';syncMediaUi(row);}}
   });
   $('sequenceRows').addEventListener('input',e=>{
     const key=e.target.dataset.key,shell=e.target.closest('.vc-row');if(!key||!shell||busy)return;
@@ -358,7 +384,7 @@
     const row=scheme.rows.find(r=>r.id===shell.dataset.rowId);
     if(action==='pause-row')void setTime(elapsed);
     if(action==='reset-crop'&&row.media){checkpoint();Object.assign(row.media,{fit:'contain',zoom:1,panX:.5,panY:.5});syncMediaUi(row);edited();}
-    if(action==='remove-video'){checkpoint();uploadErrors.delete(row.id);uploadTokens.set(row.id,Symbol());row.media=null;dispose(runtime.get(row.id));runtime.delete(row.id);syncMediaUi(row);edited();}
+    if(action==='remove-video'){checkpoint();uploadErrors.delete(row.id);uploadStates.delete(row.id);uploadTokens.set(row.id,Symbol());row.media=null;dispose(runtime.get(row.id));runtime.delete(row.id);syncMediaUi(row);edited();}
   });
   let drag=null;
   $('sequenceRows').addEventListener('pointerdown',e=>{const handle=e.target.closest('[data-edge]');if(!handle||busy)return;const row=scheme.rows.find(r=>r.id===handle.closest('.vc-row').dataset.rowId);if(!runtime.get(row.id)?.ready)return;checkpoint();drag={row,handle,edge:handle.dataset.edge};handle.setPointerCapture(e.pointerId);e.preventDefault();trimAt(e);});
@@ -403,7 +429,7 @@
     if(busy)return;let encoder,workerUrl='',gif;
     cancelled=false;const wasPlaying=playing;playing=false;syncPreviewAudio();playbackButton();setBusy(true);$('exportProgress').value=0;
     try {
-      if(scheme.rows.some(row=>row.media&&!runtime.get(row.id)?.ready))throw new Error(tr('请先等待视频读取完成。','Wait for the videos to finish loading.'));
+      if(uploadStates.size||scheme.rows.some(row=>row.media&&!runtime.get(row.id)?.ready))throw new Error(tr('请先等待视频读取完成。','Wait for the videos to finish loading.'));
       if(format!=='png' && scheme.rows.some(row=>!row.media))throw new Error(tr('请先上传两段视频。','Upload both videos first.'));
       await loadFont();await Promise.all(Object.values(logos).map(img=>img.decode()));
       const output=document.createElement('canvas');output.width=scheme.canvas.width;output.height=scheme.canvas.height;

@@ -10,7 +10,7 @@
   },
   "runtime": {
     "kind": "iframe-bridge",
-    "entry": "video-compare.html?preview=1&embed=1&v=20261014-vcompare6",
+    "entry": "video-compare.html?preview=1&embed=1&v=20261014-vcompare7",
     "bridgeVersion": "1.0.0",
     "renderer": "canvas2d"
   },
