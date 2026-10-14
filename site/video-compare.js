@@ -80,9 +80,11 @@
     return Math.min(rt.duration-.001,start+local);
   }
   let audioModule;
-  function loadAudio(){return audioModule ||= import('./video-compare-audio.js?v=20261014-vcompare10');}
+  let audioAttempt=0;
+  function loadAudio(){return audioModule ||= import('./video-compare-audio.js?v=20261015-vcompare11'+(audioAttempt++?'&retry='+audioAttempt:'')).catch(error=>{audioModule=null;throw error;});}
   let transcoderModule;
-  function loadTranscoder(){return transcoderModule ||= import('./video-compare-transcode.js?v=20261014-vcompare10');}
+  let transcoderAttempt=0;
+  function loadTranscoder(){return transcoderModule ||= import('./video-compare-transcode.js?v=20261015-vcompare11'+(transcoderAttempt++?'&retry='+transcoderAttempt:'')).catch(error=>{transcoderModule=null;throw error;});}
   function syncPreviewAudio(start=false){
     const enabled=scheme.rows.filter(r=>r.audioEnabled&&runtime.get(r.id)?.ready&&runtime.get(r.id).hasAudio!==false);
     for(const row of scheme.rows){const rt=runtime.get(row.id);if(!rt?.ready)continue;
@@ -132,29 +134,56 @@
       video.addEventListener('seeked',ok);video.addEventListener('error',error);video.currentTime=time;
     });
   }
-  function dispose(rt) { for(const v of [rt?.video,rt?.exportVideo,rt?.filmVideo])if(v){v.pause();v.removeAttribute('src');v.load();} }
+  function dispose(rt) { for(const v of [rt?.video,rt?.exportVideo,rt?.filmVideo])if(v){v.pause();v.removeAttribute('src');v.load();}if(rt?.objectUrl){URL.revokeObjectURL(rt.objectUrl);rt.objectUrl=null;} }
+  // Read container metadata locally, without waiting for the optional audio module.
+  async function recordingSource(url) {
+    const bytes=new Uint8Array(await (await fetch(url)).arrayBuffer()),view=new DataView(bytes.buffer);
+    const text=(at,n=4)=>String.fromCharCode(...bytes.subarray(at,at+n));
+    const boxes=(start,end)=>{const found=[];for(let at=start;at+8<=end;){let size=view.getUint32(at),head=8;if(size===1){if(at+16>end)break;size=view.getUint32(at+8)*4294967296+view.getUint32(at+12);head=16;}if(size===0)size=end-at;if(size<head||at+size>end)break;found.push({type:text(at+4),body:at+head,end:at+size});at+=size;}return found;};
+    const child=(box,type)=>box&&boxes(box.body,box.end).find(b=>b.type===type);
+    const root=boxes(0,bytes.length),moov=root.find(b=>b.type==='moov');
+    if(!moov){if(text(0)==='RIFF'&&text(8)==='AVI '||bytes[0]===0x1a&&bytes[1]===0x45&&bytes[2]===0xdf&&bytes[3]===0xa3)return {codec:'recording',duration:0,audioCodec:null};return null;}
+    let video=null,audioCodec=null;
+    for(const track of boxes(moov.body,moov.end).filter(b=>b.type==='trak')){
+      const mdia=child(track,'mdia'),handler=child(mdia,'hdlr'),stsd=child(child(child(mdia,'minf'),'stbl'),'stsd');
+      if(!handler||!stsd||stsd.body+16>stsd.end)continue;
+      const kind=text(handler.body+8),codec=text(stsd.body+12);
+      if(kind==='soun'){audioCodec=codec==='mp4a'?'aac':codec;continue;}
+      if(kind!=='vide')continue;
+      const mdhd=child(mdia,'mdhd');let duration=0;
+      if(mdhd){const at=mdhd.body,wide=bytes[at]===1,scale=view.getUint32(at+(wide?20:12));const ticks=wide?view.getUint32(at+24)*4294967296+view.getUint32(at+28):view.getUint32(at+16);duration=scale?ticks/scale:0;}
+      video={codec,duration,audioCodec:null};
+    }
+    return video?{...video,audioCodec}:null;
+  }
+  async function blobSource(rt,url) {
+    const blob=await (await fetch(url)).blob();
+    if(rt.objectUrl)URL.revokeObjectURL(rt.objectUrl);
+    rt.sourceUrl=rt.objectUrl=URL.createObjectURL(blob);return rt.sourceUrl;
+  }
   async function loadMedia(row) {
     const old=runtime.get(row.id); dispose(old);runtime.delete(row.id);
     if(!row.media)return;
     const m=row.media, rt={media:m,video:makeVideo(m.url,'preview'),exportVideo:null,filmVideo:null,ready:false};
     runtime.set(row.id,rt);
     try {
-      try {await readyVideo(rt.video);}
+      rt.video.src=await blobSource(rt,m.url);rt.video.load();
+      try {await readyVideo(rt.video);await seekVideo(rt.video,m.trimStart);}
       catch(nativeError) {
         if(runtime.get(row.id)!==rt)return;
         const ownsStatus=!uploadStates.has(row.id);
         try {
           uploadStates.set(row.id,{name:m.name,stage:'check',progress:null});syncMediaUi(row);
-          const source=await (await loadAudio()).inspectVideoSource(m.url).catch(()=>null);
-          if(source?.codec!=='hevc')throw nativeError;
+          const source=await recordingSource(m.url).catch(()=>null);
+          if(!source)throw nativeError;
           uploadStates.set(row.id,{name:m.name,stage:'download',progress:null});syncMediaUi(row);
-          const converted=await (await loadTranscoder()).convertHevc(m.url,source,(stage,progress)=>{
+          const converted=await (await loadTranscoder()).convertVideo(m.url,source,(stage,progress)=>{
             if(runtime.get(row.id)!==rt)return;
             uploadStates.set(row.id,{name:m.name,stage,progress});syncMediaUi(row);
           },()=>runtime.get(row.id)!==rt);
           if(runtime.get(row.id)!==rt)return;
           dispose(rt);m.url=converted;m.fileType='video/mp4';rt.converted=true;
-          rt.video=makeVideo(m.url,'preview');await readyVideo(rt.video);
+          rt.video=makeVideo(await blobSource(rt,m.url),'preview');await readyVideo(rt.video);
         } finally {if(ownsStatus&&runtime.get(row.id)===rt)uploadStates.delete(row.id);}
       }
       if(runtime.get(row.id)!==rt)return;
@@ -167,7 +196,7 @@
       if(runtime.get(row.id)!==rt)return;
       syncMediaUi(row);syncLayoutInfo();renderTimeline();renderFrame(canvas);
       // Filmstrips are optional background work; their decoder must never block or discard the preview.
-      rt.filmVideo=makeVideo(m.url,'film');
+      rt.filmVideo=makeVideo(rt.sourceUrl,'film');
       rt.filmReady=readyVideo(rt.filmVideo).then(()=>buildFilmstrip(row,rt)).catch(()=>{if(runtime.get(row.id)===rt){rt.filmError=true;syncMediaUi(row);}}).finally(()=>{dispose({filmVideo:rt.filmVideo});rt.filmVideo=null;});
     } catch(error) {
       if(runtime.get(row.id)!==rt)return;
@@ -210,7 +239,7 @@
     shell.querySelector('.vc-audio-status').textContent=rt?.hasAudio===false?tr('素材无音轨','Source has no audio track'):row.audioEnabled?tr('已开启 · 预览与 MP4','On · Preview & MP4'):tr('已关闭 · 预览与 MP4','Off · Preview & MP4');
     shell.querySelector('.vc-media-tools').hidden=!m||!!rt?.error;
     const name=shell.querySelector('.vc-file-name'),pending=uploadStates.get(row.id),failure=uploadErrors.get(row.id)||rt?.error;name.setAttribute('aria-busy',String(!!pending));name.classList.toggle('is-error',!pending&&!!failure);
-    if(pending){const label=pending.stage==='decode'?tr('正在解码视频画面…','Decoding video picture…'):pending.stage==='check'?tr('正在检查视频编码','Checking video codec'):pending.stage==='download'?tr('正在加载 HEVC 兼容转换器','Loading HEVC converter'):pending.stage==='convert'?tr('正在本机转换 HEVC → H.264，保留声音','Converting HEVC → H.264 locally, keeping audio'):tr('正在读取本机视频','Reading video on this device');name.textContent=pending.name+' · '+label+(pending.stage==='decode'?'':pending.progress===null?'…':' · '+pending.progress+'%');renderFrame(canvas);return;}
+    if(pending){const label=pending.stage==='decode'?tr('正在解码视频画面…','Decoding video picture…'):pending.stage==='check'?tr('正在检查视频编码','Checking video codec'):pending.stage==='download'?tr('正在加载录屏兼容转换器','Loading recording converter'):pending.stage==='convert'?tr('正在本机转换录屏，保留声音','Converting recording locally, keeping audio'):tr('正在读取本机视频','Reading video on this device');name.textContent=pending.name+' · '+label+(pending.stage==='decode'?'':pending.progress===null?'…':' · '+pending.progress+'%');renderFrame(canvas);return;}
     if(failure){name.textContent=(m?m.name+' · ':'')+failure;renderFrame(canvas);return;}
     name.textContent=m ? m.name+(rt?.ready?' · '+tr('素材 ','Source ')+rt.width+' × '+rt.height+' · '+ratioLabel(rt.width/rt.height)+' '+tr(rt.width>=rt.height?'横屏':'竖屏',rt.width>=rt.height?'landscape':'portrait')+' · '+rt.duration.toFixed(2)+'s'+(rt.filmError?tr(' · 缩略图暂不可用，视频仍可播放',' · Thumbnails unavailable; video still plays'):''):' · '+tr('读取中…','Loading…')) : tr('未上传视频 · 素材尺寸将自动识别','No video selected · Source dimensions detected on upload');
     if(!m)return;
@@ -303,7 +332,7 @@
     if(logo?.complete && logo.naturalWidth){const lw=w*l.logoSize/100,lh=lw*logo.naturalHeight/logo.naturalWidth;ctx.drawImage(logo,(w-lw)/2,logoY-lh/2,lw,lh);}
     return target;
   }
-  async function prepareFrame(seconds) { await Promise.all(scheme.rows.map(async row=>{const rt=runtime.get(row.id);if(!rt?.ready)return;if(!rt.exportVideo){rt.exportVideo=makeVideo(row.media.url,'export');rt.exportReady=readyVideo(rt.exportVideo);}await rt.exportReady;await seekVideo(rt.exportVideo,sourceTime(row,seconds));})); }
+  async function prepareFrame(seconds) { await Promise.all(scheme.rows.map(async row=>{const rt=runtime.get(row.id);if(!rt?.ready)return;if(!rt.exportVideo){rt.exportVideo=makeVideo(rt.sourceUrl||row.media.url,'export');rt.exportReady=readyVideo(rt.exportVideo);}await rt.exportReady;await seekVideo(rt.exportVideo,sourceTime(row,seconds));})); }
   function resizePreview() {
     const stage=$('glyphMorphStage'),style=getComputedStyle(stage),ratio=scheme.canvas.width/scheme.canvas.height;
     const aw=Math.max(1,stage.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight));
@@ -369,8 +398,8 @@
   function sourceFileType(file) {
     const type=(file.type||'').toLowerCase();
     if(type.startsWith('video/'))return type;
-    if(type&&!['application/octet-stream','binary/octet-stream'].includes(type))return null;
-    return ({mp4:'video/mp4',m4v:'video/mp4',mov:'video/quicktime',webm:'video/webm',ogv:'video/ogg'})[file.name.split('.').pop().toLowerCase()]||null;
+    if(type&&!['application/octet-stream','binary/octet-stream','application/mp4'].includes(type))return null;
+    return ({mp4:'video/mp4',m4v:'video/mp4',mov:'video/quicktime',webm:'video/webm',ogv:'video/ogg',mkv:'video/x-matroska',avi:'video/x-msvideo'})[file.name.split('.').pop().toLowerCase()]||null;
   }
   function readSourceFile(file,type,onProgress) {
     return new Promise((resolve,reject)=>{

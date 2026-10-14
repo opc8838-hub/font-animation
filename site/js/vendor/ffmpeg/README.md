@@ -19,3 +19,5 @@ Runtime SHA-256:
   "core/ffmpeg-core.js": "67a48f11645f85439f3fde4f2119042c16b374b910206b7a7a24f342e28dcae3",
   "core/ffmpeg-core.wasm": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7"
 }
+
+The editor also distributes a reproducible concatenated MIT client/worker bundle in site/video-compare-transcode.js, built by scripts/bundle-video-compare-converter.mjs. Engine JS/WASM stay unchanged; their pinned SHA-256 values are validated for same-origin and public npm mirror downloads before execution.
