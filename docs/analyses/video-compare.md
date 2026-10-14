@@ -107,3 +107,11 @@ Windows 上使用 Node Playwright + Microsoft Edge 执行 tests/video-compare-br
 
 - Public Video Compare and the shared component demo upgrade cellmotion.cn HTTP URLs to HTTPS before loading the editor, retaining path/query/hash. Local development stays on localhost. This keeps WebCodecs audio and clipboard features available and avoids a cross-protocol iframe origin mismatch.
 - Narrow headers reserve space for For AI, Export, theme and language controls; secondary Effects navigation is hidden on mobile. Regression checks each control rectangle at 320–1440 px, rather than relying only on page overflow.
+
+## Live release acceptance
+
+- Source release: 409df6d9559e2df5e59dfb0e5c549348cacd733c; GitHub Pages run https://github.com/opc8838-hub/font-animation/actions/runs/38504181368 completed successfully.
+- https://cellmotion.cn/ serves Video Compare as the first 最近上新 item dated 2026-10-14, with media classification and verified web-component entry. Published editor JS, CSS, shared AI menu (normalized line endings) and descriptor match the release.
+- tests/video-compare-production-browser.cjs passed against the real HTTPS website: homepage-to-editor navigation, HTTP-to-HTTPS upgrade, native AudioEncoder availability, actual landscape/portrait uploads, play/pause and independent sound, actual PNG / ten-frame GIF / H.264 MP4 downloads, decoded AAC frequency identifying the selected After source, edited live-state AI popup and seek, 320/390 px header controls, and no browser errors.
+- Two initial browser runs encountered external navigation/loading timeouts. Final verification selected one of the domain's current public DNS addresses (185.199.111.153); requests still reached the real GitHub Pages HTTPS server with normal TLS certificate checks. No network/content mocks were used for the online acceptance run.
+- Live test files and screenshots remain under ignored output/video-compare/production/; no user video was published.

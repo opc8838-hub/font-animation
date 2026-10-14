@@ -1,17 +1,17 @@
-/* Explicit post-deployment smoke test. Args: node_modules Edge [https base URL]. */
+/* Explicit post-deployment smoke test. Args: node_modules Edge [https base URL] [current public DNS IPv4]. */
 const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
 const {chromium}=require(path.resolve(process.argv[2]||'node_modules','playwright'));
 const sharp=require(path.resolve(process.argv[2]||'node_modules','sharp'));
 const root=path.resolve(__dirname,'..'),out=path.join(root,'output/video-compare/production');
 const base=(process.argv[4]||'https://cellmotion.cn').replace(/\/$/,'');
 (async()=>{
- await fs.mkdir(out,{recursive:true});const browser=await chromium.launch({headless:true,executablePath:process.argv[3]});
+ await fs.mkdir(out,{recursive:true});const browser=await chromium.launch({headless:true,executablePath:process.argv[3],...(process.argv[5]?{args:['--host-resolver-rules=MAP cellmotion.cn '+process.argv[5]]}:{})});
  const context=await browser.newContext({viewport:{width:1440,height:960},permissions:['clipboard-read','clipboard-write']});const errors=[];
- context.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));const page=await context.newPage();
+ context.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));let page=await context.newPage();
  try{
-  await page.goto(base+'/?v=20261014-vcompare6',{waitUntil:'domcontentloaded'});await page.waitForSelector('#recent-grid .recent-card');
-  const card=page.locator('#recent-grid .recent-card').first();assert.ok((await card.getAttribute('href')).startsWith('video-compare.html'));await card.click();
-  await page.waitForSelector('.tc-ai-trigger');await page.evaluate(()=>VideoCompare.readyPromise);assert.equal(await page.evaluate(()=>isSecureContext),true);assert.equal(await page.evaluate(()=>typeof AudioEncoder),'function');
+  await page.goto(base+'/?v=20261014-vcompare6',{waitUntil:'domcontentloaded',timeout:90000});await page.waitForSelector('#recent-grid .recent-card');
+  const card=page.locator('#recent-grid .recent-card').first();assert.ok((await card.getAttribute('href')).startsWith('video-compare.html'));if(await card.getAttribute('target')==='_blank'){const popup=page.waitForEvent('popup');await card.click();page=await popup;}else await card.click();
+  await page.waitForURL('**/video-compare.html*');await page.waitForSelector('.tc-ai-trigger',{timeout:60000});await page.evaluate(()=>VideoCompare.readyPromise);assert.equal(await page.evaluate(()=>isSecureContext),true);assert.equal(await page.evaluate(()=>typeof AudioEncoder),'function');
   assert.equal(await page.locator('#canvasPreset option[value="1080x1350"]').count(),1);console.log('PASS live homepage first release opens secure editor with For AI and 4:5');
   const http=await context.newPage();await http.goto(base.replace('https:','http:')+'/video-compare.html?v=20261014-vcompare6',{waitUntil:'domcontentloaded'});await http.waitForSelector('.tc-ai-trigger');assert.ok(http.url().startsWith('https://'));await http.close();console.log('PASS original HTTP editor link upgrades to HTTPS');
   const fixture=JSON.parse(await fs.readFile(path.join(root,'output/video-compare/audio-regression/audio-scheme.json'),'utf8'));
@@ -30,5 +30,5 @@ const base=(process.argv[4]||'https://cellmotion.cn').replace(/\/$/,'');
   assert.equal(await frame.evaluate(()=>VideoCompare.getScheme().rows[1].caption),'官网验收 · After 声音');await popup.locator('[data-player-action="pause"]').click();await popup.locator('#demoSeek').evaluate(el=>{el.value='.2';el.dispatchEvent(new Event('input',{bubbles:true}));});await frame.waitForFunction(()=>VideoCompare.getTime()===.2);console.log('PASS live For AI popup receives the edited videos/settings and seeks through the same renderer');
   await popup.close();for(const width of [390,320]){await page.setViewportSize({width,height:844});for(const selector of ['.site-theme-toggle','.site-language-toggle','.tc-ai-trigger','.tc-export-shortcut']){const rect=await page.locator(selector).boundingBox();assert.ok(rect&&rect.x>=0&&rect.x+rect.width<=width);}}
   await page.screenshot({path:path.join(out,'live-mobile-editor.png')});assert.deepEqual(errors,[]);console.log('PASS live mobile header controls and clean browser console');
- }finally{await browser.close();}
+ }catch(error){console.error({url:page.url(),browserErrors:errors});await page.screenshot({path:path.join(out,'live-failure.png')}).catch(()=>{});throw error;}finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
