@@ -9,11 +9,11 @@ const base=(process.argv[4]||'https://cellmotion.cn').replace(/\/$/,'');
  const context=await browser.newContext({viewport:{width:1440,height:960},permissions:['clipboard-read','clipboard-write']});const errors=[];
  context.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));let page=await context.newPage();
  try{
-  await page.goto(base+'/?v=20261014-vcompare8',{waitUntil:'domcontentloaded',timeout:90000});await page.waitForSelector('#recent-grid .recent-card');
+  await page.goto(base+'/?v=20261014-vcompare9',{waitUntil:'domcontentloaded',timeout:90000});await page.waitForSelector('#recent-grid .recent-card');
   const card=page.locator('#recent-grid .recent-card').first();assert.ok((await card.getAttribute('href')).startsWith('video-compare.html'));if(await card.getAttribute('target')==='_blank'){const popup=page.waitForEvent('popup');await card.click();page=await popup;}else await card.click();
   await page.waitForURL('**/video-compare.html*');await page.waitForSelector('.tc-ai-trigger',{timeout:60000});await page.evaluate(()=>VideoCompare.readyPromise);assert.equal(await page.evaluate(()=>isSecureContext),true);assert.equal(await page.evaluate(()=>typeof AudioEncoder),'function');
   assert.equal(await page.locator('#canvasPreset option[value="1080x1350"]').count(),1);console.log('PASS live homepage first release opens secure editor with For AI and 4:5');
-  const http=await context.newPage();await http.goto(base.replace('https:','http:')+'/video-compare.html?v=20261014-vcompare8',{waitUntil:'domcontentloaded'});await http.waitForSelector('.tc-ai-trigger');assert.ok(http.url().startsWith('https://'));await http.close();console.log('PASS original HTTP editor link upgrades to HTTPS');
+  const http=await context.newPage();await http.goto(base.replace('https:','http:')+'/video-compare.html?v=20261014-vcompare9',{waitUntil:'domcontentloaded'});await http.waitForSelector('.tc-ai-trigger');assert.ok(http.url().startsWith('https://'));await http.close();console.log('PASS original HTTP editor link upgrades to HTTPS');
   const fixture=JSON.parse(await fs.readFile(path.join(root,'output/video-compare/audio-regression/audio-scheme.json'),'utf8'));
   for(const row of fixture.rows){const file=path.join(out,row.id+'-source.mp4');await fs.writeFile(file,Buffer.from(row.media.url.split(',')[1],'base64'));await page.locator('.tc-row-select[data-row-id="'+row.id+'"]').click();await page.locator('.vc-row[data-row-id="'+row.id+'"] [data-video-file]').setInputFiles(file);await page.waitForFunction(id=>VideoCompare.getScheme().rows.find(r=>r.id===id).media?.trimEnd>0,row.id);}
   await page.waitForFunction(()=>VideoCompare.getAudioState().every(r=>r.hasAudio));

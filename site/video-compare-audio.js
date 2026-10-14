@@ -7,6 +7,13 @@ export async function inspectAudio(url) {
   const input=await open(url);
   try { return !!(await input.getPrimaryAudioTrack()); } finally { input.dispose(); }
 }
+export async function inspectVideoSource(url) {
+  const input=await open(url);
+  try {
+    const video=await input.getPrimaryVideoTrack(),audio=await input.getPrimaryAudioTrack();
+    return video?{codec:video.codec,width:video.codedWidth,height:video.codedHeight,duration:await input.computeDuration(),audioCodec:audio?.codec||null}:null;
+  } finally { input.dispose(); }
+}
 function check(cancelled) { if(cancelled())throw new Error(tr('已取消导出。','Export cancelled.')); }
 // Decode only the selected source interval and retain packet timestamps, including gaps.
 async function trimmedAudio(row,seconds,cancelled) {

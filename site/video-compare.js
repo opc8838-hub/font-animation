@@ -80,7 +80,9 @@
     return Math.min(rt.duration-.001,start+local);
   }
   let audioModule;
-  function loadAudio(){return audioModule ||= import('./video-compare-audio.js?v=20261014-vcompare8');}
+  function loadAudio(){return audioModule ||= import('./video-compare-audio.js?v=20261014-vcompare9');}
+  let transcoderModule;
+  function loadTranscoder(){return transcoderModule ||= import('./video-compare-transcode.js?v=20261014-vcompare9');}
   function syncPreviewAudio(start=false){
     const enabled=scheme.rows.filter(r=>r.audioEnabled&&runtime.get(r.id)?.ready&&runtime.get(r.id).hasAudio!==false);
     for(const row of scheme.rows){const rt=runtime.get(row.id);if(!rt?.ready)continue;
@@ -137,7 +139,22 @@
     const m=row.media, rt={media:m,video:makeVideo(m.url,'preview'),exportVideo:null,filmVideo:null,ready:false};
     runtime.set(row.id,rt);
     try {
-      await readyVideo(rt.video);
+      try {await readyVideo(rt.video);}
+      catch(nativeError) {
+        if(runtime.get(row.id)!==rt)return;
+        const source=await (await loadAudio()).inspectVideoSource(m.url).catch(()=>null);
+        if(source?.codec!=='hevc')throw nativeError;
+        const ownsStatus=!uploadStates.has(row.id);
+        try {
+          const converted=await (await loadTranscoder()).convertHevc(m.url,source,(stage,progress)=>{
+            if(runtime.get(row.id)!==rt)return;
+            uploadStates.set(row.id,{name:m.name,stage,progress});syncMediaUi(row);
+          },()=>runtime.get(row.id)!==rt);
+          if(runtime.get(row.id)!==rt)return;
+          dispose(rt);m.url=converted;m.fileType='video/mp4';rt.converted=true;
+          rt.video=makeVideo(m.url,'preview');await readyVideo(rt.video);
+        } finally {if(ownsStatus&&runtime.get(row.id)===rt)uploadStates.delete(row.id);}
+      }
       if(runtime.get(row.id)!==rt)return;
       rt.duration=rt.video.duration;rt.width=rt.video.videoWidth;rt.height=rt.video.videoHeight;rt.ready=true;
       rt.audioInfo=loadAudio().then(module=>module.inspectAudio(m.url)).then(has=>{if(runtime.get(row.id)===rt){rt.hasAudio=has;syncMediaUi(row);syncPreviewAudio();}}).catch(()=>{});
@@ -191,7 +208,7 @@
     shell.querySelector('.vc-audio-status').textContent=rt?.hasAudio===false?tr('素材无音轨','Source has no audio track'):row.audioEnabled?tr('已开启 · 预览与 MP4','On · Preview & MP4'):tr('已关闭 · 预览与 MP4','Off · Preview & MP4');
     shell.querySelector('.vc-media-tools').hidden=!m||!!rt?.error;
     const name=shell.querySelector('.vc-file-name'),pending=uploadStates.get(row.id),failure=uploadErrors.get(row.id)||rt?.error;name.setAttribute('aria-busy',String(!!pending));name.classList.toggle('is-error',!pending&&!!failure);
-    if(pending){name.textContent=pending.name+' · '+(pending.stage==='decode'?tr('正在解码视频画面…','Decoding video picture…'):tr('正在读取本机视频','Reading video on this device')+(pending.progress===null?'…':' · '+pending.progress+'%'));return;}
+    if(pending){const label=pending.stage==='decode'?tr('正在解码视频画面…','Decoding video picture…'):pending.stage==='download'?tr('正在加载 HEVC 兼容转换器','Loading HEVC converter'):pending.stage==='convert'?tr('正在本机转换 HEVC → H.264，保留声音','Converting HEVC → H.264 locally, keeping audio'):tr('正在读取本机视频','Reading video on this device');name.textContent=pending.name+' · '+label+(pending.stage==='decode'?'':pending.progress===null?'…':' · '+pending.progress+'%');return;}
     if(failure){name.textContent=(m?m.name+' · ':'')+failure;return;}
     name.textContent=m ? m.name+(rt?.ready?' · '+tr('素材 ','Source ')+rt.width+' × '+rt.height+' · '+ratioLabel(rt.width/rt.height)+' '+tr(rt.width>=rt.height?'横屏':'竖屏',rt.width>=rt.height?'landscape':'portrait')+' · '+rt.duration.toFixed(2)+'s'+(rt.filmError?tr(' · 缩略图暂不可用，视频仍可播放',' · Thumbnails unavailable; video still plays'):''):' · '+tr('读取中…','Loading…')) : tr('未上传视频 · 素材尺寸将自动识别','No video selected · Source dimensions detected on upload');
     if(!m)return;
