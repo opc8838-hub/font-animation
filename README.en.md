@@ -6,6 +6,8 @@ Questions and pull requests: see the [bilingual contribution guide](CONTRIBUTING
 
 **Let creativity grow freely.**
 
+**2026-10-14 Type Pour:** [Open the editor](https://cellmotion.cn/typepour.html). Fluid typography with a transparent glass, blue markers or pure type, synchronized procedural water audio, shared fonts/assets, image/GIF/video backgrounds and trimming. Includes the current three-column CellMotion UI, scheme history, responsive canvas, For AI live-state components, PNG/GIF/MP4 and WAV export. [Validation](docs/analyses/typepour.md).
+
 CellMotion is a browser-based motion design system. Text, icons, images, and shapes are independent design cells that can move, connect, separate, and recombine into visual stories.
 
 **Move · Connect · Recombine · Grow.**

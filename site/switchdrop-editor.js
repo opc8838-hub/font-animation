@@ -90,7 +90,7 @@
     subject: { size: [50, 420], rim: [0, 150], nightGlow: [30, 180] },
     title: { fontWeight: [100, 900], size: [28, 260], gap: [0, 180], tracking: [-12, 40] },
     light: { duration: [80, 3000], delay: [0, 1500], vignette: [0, 200], pool: [0, 400] },
-    motion: { speed: [0.25, 3], drop: [250, 3200], startY: [-70, 0], endY: [25, 75], overshoot: [0, 22], settle: [0, 5000], shift: [100, 1800], titleDelay: [0, 1500], titleDuration: [80, 1800], titleSpring: [0, 55], hold: [0, 30000] }
+    motion: { speed: [0.25, 3], drop: [250, 3200], startY: [-70, 0], endY: [25, 75], overshoot: [0, 22], settle: [0, 5000], shift: [100, 1800], titleDelay: [0, 1500], titleDuration: [80, 1800], titleSpring: [0, 55], hold: [2000, 30000] }
   };
 
   const state = { scheme: clone(DEFAULT_SCHEME), playing: true, elapsedMs: 0, lastFrame: performance.now(), exportBusy: false, reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches, activeRowId: "sd-subject", previewMode: false, background: null, fontsVersion: 0 };
@@ -750,7 +750,7 @@
     fontFamily: ["title", "fontFamily"], textColor: ["title", "color"], backgroundOpacity: ["background", "opacity"]
   };
   const ms = (v) => `${Math.round(Number(v))}ms`;
-  const OUTPUT_FORMAT = { switchDuration: ms, switchDelay: ms, vignette: (v) => `${v}%`, pool: (v) => `${v}%`, speed: (v) => `${Number(v).toFixed(2)}×`, dropDuration: ms, startY: (v) => `${v}%`, endY: (v) => `${v}%`, dropOvershoot: (v) => `${v}%`, settleDuration: ms, shiftDuration: ms, titleDelay: ms, titleDuration: ms, titleSpring: (v) => `${v}%`, holdDuration: ms, backgroundOpacity: (v) => `${v}%` };
+  const OUTPUT_FORMAT = { switchDuration: ms, switchDelay: ms, vignette: (v) => `${v}%`, pool: (v) => `${v}%`, speed: (v) => `${Number(v).toFixed(2)}×`, dropDuration: ms, startY: (v) => `${v}%`, endY: (v) => `${v}%`, dropOvershoot: (v) => `${v}%`, settleDuration: ms, shiftDuration: ms, titleDelay: ms, titleDuration: ms, titleSpring: (v) => `${v}%`, holdDuration: (v) => `${Number(v) / 1000}s`, backgroundOpacity: (v) => `${v}%` };
   function updateOutputs() {
     Object.entries(OUTPUT_FORMAT).forEach(([id, format]) => { const output = document.querySelector(`output[for="${id}"]`); if (output && $(id)) output.value = format(Number($(id).value)); });
   }

@@ -1,0 +1,423 @@
+{
+  "effect": {
+    "id": "typepour",
+    "name": {
+      "zh": "字水",
+      "en": "Type Pour"
+    },
+    "version": "1.0.0",
+    "category": "kinetic-typography"
+  },
+  "runtime": {
+    "kind": "iframe-bridge",
+    "entry": "typepour.html?preview=1&embed=1",
+    "bridgeVersion": "1.0.0",
+    "renderer": "canvas2d"
+  },
+  "capabilities": {
+    "editableTextRows": true,
+    "rowFonts": false,
+    "inlineIcons": true,
+    "customImageAssets": true,
+    "localBackgroundRemoval": true,
+    "backgrounds": [
+      "color",
+      "image",
+      "gif",
+      "video"
+    ],
+    "videoTrim": true,
+    "timeline": true,
+    "responsiveCanvas": true,
+    "proceduralAudio": true,
+    "exports": [
+      "png",
+      "gif",
+      "mp4"
+    ]
+  },
+  "behavior": {
+    "summary": {
+      "zh": "英文或中文字符从左侧连续流出，像水一样散开落入玻璃杯，水源排空后消失，杯中文字逐渐平静。可切换蓝色格子或纯字体。",
+      "en": "A continuous sentence pours into a glass, scatters like water and settles. The source drains away. Choose blue markers or pure typography."
+    },
+    "phases": [
+      {
+        "id": "lead",
+        "name": {
+          "zh": "起始停留",
+          "en": "Lead hold"
+        },
+        "colorToken": "phase.hold"
+      },
+      {
+        "id": "pour",
+        "name": {
+          "zh": "倒水",
+          "en": "Pour"
+        },
+        "colorToken": "phase.action"
+      },
+      {
+        "id": "settle",
+        "name": {
+          "zh": "水流平静",
+          "en": "Settle"
+        },
+        "colorToken": "phase.intro"
+      },
+      {
+        "id": "hold",
+        "name": {
+          "zh": "结束停留",
+          "en": "End hold"
+        },
+        "colorToken": "phase.accent"
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "path": "composition.canvas.width",
+      "scope": "global",
+      "type": "integer",
+      "name": {
+        "zh": "画布宽度",
+        "en": "Canvas width"
+      }
+    },
+    {
+      "path": "composition.canvas.height",
+      "scope": "global",
+      "type": "integer",
+      "name": {
+        "zh": "画布高度",
+        "en": "Canvas height"
+      }
+    },
+    {
+      "path": "composition.rows[].text",
+      "scope": "row",
+      "type": "string",
+      "name": {
+        "zh": "文字",
+        "en": "Text"
+      }
+    },
+    {
+      "path": "composition.rows[].icons",
+      "scope": "row",
+      "type": "array",
+      "name": {
+        "zh": "水流素材",
+        "en": "Stream assets"
+      }
+    },
+    {
+      "path": "composition.typography.fontFamily",
+      "scope": "global",
+      "type": "font",
+      "name": {
+        "zh": "字体",
+        "en": "Font"
+      }
+    },
+    {
+      "path": "composition.typography.fontSize",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "字粒大小",
+        "en": "Glyph size"
+      }
+    },
+    {
+      "path": "composition.typography.tracking",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "字距",
+        "en": "Tracking"
+      }
+    },
+    {
+      "path": "composition.typography.color",
+      "scope": "global",
+      "type": "color",
+      "name": {
+        "zh": "文字颜色",
+        "en": "Text color"
+      }
+    },
+    {
+      "path": "composition.markers.density",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "格子密度",
+        "en": "Marker density"
+      }
+    },
+    {
+      "path": "composition.markers.color",
+      "scope": "effect",
+      "type": "color",
+      "name": {
+        "zh": "格子颜色",
+        "en": "Marker color"
+      }
+    },
+    {
+      "path": "composition.backgroundColor",
+      "scope": "global",
+      "type": "color",
+      "name": {
+        "zh": "背景颜色",
+        "en": "Background color"
+      }
+    },
+    {
+      "path": "composition.backgroundMedia",
+      "scope": "global",
+      "type": "media",
+      "name": {
+        "zh": "背景素材",
+        "en": "Background media"
+      }
+    },
+    {
+      "path": "composition.backgroundMedia.videoStart",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "视频起点",
+        "en": "Video trim start"
+      }
+    },
+    {
+      "path": "composition.backgroundMedia.videoEnd",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "视频终点",
+        "en": "Video trim end"
+      }
+    },
+    {
+      "path": "composition.motion.lead",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "起始停留",
+        "en": "Lead hold"
+      }
+    },
+    {
+      "path": "composition.motion.pour",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "倒水时长",
+        "en": "Pour duration"
+      }
+    },
+    {
+      "path": "composition.motion.settle",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "平静时长",
+        "en": "Settle duration"
+      }
+    },
+    {
+      "path": "composition.motion.hold",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "结束停留",
+        "en": "End hold"
+      }
+    },
+    {
+      "path": "composition.motion.cupX",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "杯子水平偏移",
+        "en": "Cup horizontal offset"
+      }
+    },
+    {
+      "path": "composition.motion.cupY",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "杯子垂直偏移",
+        "en": "Cup vertical offset"
+      }
+    },
+    {
+      "path": "composition.motion.sourceY",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "水源高度偏移",
+        "en": "Source vertical offset"
+      }
+    },
+    {
+      "path": "composition.motion.direction",
+      "scope": "effect",
+      "type": "string",
+      "name": {
+        "zh": "方向",
+        "en": "Direction"
+      }
+    },
+    {
+      "path": "composition.audio.volume",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "音量",
+        "en": "Volume"
+      }
+    },
+    {
+      "path": "composition.audio.export",
+      "scope": "global",
+      "type": "boolean",
+      "name": {
+        "zh": "导出倒水声",
+        "en": "Export audio"
+      }
+    },
+    {
+      "path": "composition.backgroundMedia.opacity",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "背景透明度",
+        "en": "Background opacity"
+      }
+    },
+    {
+      "path": "composition.backgroundMedia.zoom",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "背景缩放",
+        "en": "Background zoom"
+      }
+    },
+    {
+      "path": "composition.backgroundMedia.x",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "背景水平位置",
+        "en": "Background X"
+      }
+    },
+    {
+      "path": "composition.backgroundMedia.y",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "背景垂直位置",
+        "en": "Background Y"
+      }
+    },
+    {
+      "path": "composition.backgroundMedia.fit",
+      "scope": "global",
+      "type": "string",
+      "name": {
+        "zh": "背景适配",
+        "en": "Background fit"
+      }
+    },
+    {
+      "path": "composition.motion.speed",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "预览播放速度",
+        "en": "Preview playback speed"
+      }
+    },
+    {
+      "path": "composition.rows[].icons[].size",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "素材大小",
+        "en": "Asset size"
+      }
+    },
+    {
+      "path": "composition.rows[].icons[].gap",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "素材间距",
+        "en": "Asset interval"
+      }
+    },
+    {
+      "path": "composition.rows[].icons[].x",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "素材水平偏移",
+        "en": "Asset X"
+      }
+    },
+    {
+      "path": "composition.rows[].icons[].y",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "素材垂直偏移",
+        "en": "Asset Y"
+      }
+    },
+    {
+      "path": "composition.customAssets",
+      "scope": "global",
+      "type": "array",
+      "name": {
+        "zh": "上传素材",
+        "en": "Uploaded assets"
+      }
+    },
+    {
+      "path": "composition.output.scale",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "输出比例",
+        "en": "Output scale"
+      }
+    },
+    {
+      "path": "composition.output.fps",
+      "scope": "global",
+      "type": "integer",
+      "name": {
+        "zh": "输出帧率",
+        "en": "Output FPS"
+      }
+    },
+    {
+      "path": "composition.output.duration",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "输出时长",
+        "en": "Output duration"
+      }
+    }
+  ]
+}

@@ -12,6 +12,7 @@
   const effects = [
     ["video-compare", "视频对比", "Video Compare"],
     ["spotlight", "聚光", "Spotlight"],
+    ["typepour", "字水", "Type Pour"],
     ["curvedgallery", "弧廊归标", "Curved Gallery"],
     ["prosvg", "彩铸", "PRO SVG Lab"],
     ["sproutshift", "字芽", "Sprout Shift"], ["mistlift", "雾升", "Mist Lift"],

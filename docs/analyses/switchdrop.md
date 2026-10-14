@@ -54,7 +54,8 @@ Frames 1–13 are lit, with a slow camera move. Frames 19–34 are black, with r
 ## Round punctuation and ending hold (2026-10-12)
 
 - Draw title periods as circles using the active font's punctuation bounds, retaining advance width, baseline position and editable punctuation color. Preview and all exports still use `renderFrame()`.
-- Default ending hold is 6000 ms; both the control and scheme normalization permit 0–30000 ms. Existing lighting, drop, shift and title entrance timings are unchanged. At speed 1 the default loop is 7950 ms.
+- Default ending hold is 6000 ms; both the control and scheme normalization permit 2000–30000 ms. Existing lighting, drop, shift and title entrance timings are unchanged. At speed 1 the default loop is 7950 ms.
 - Saved `site/assets/presets/switchdrop-default.json` through the editor's Save action. Runtime defaults remain in `DEFAULT_SCHEME`; the JSON is an importable snapshot of those values.
 - Regenerated the 1280×720 gallery MP4 and website JPEG from the real 1920×1080 export; refreshed cache revisions and added Switch Drop first in recent releases, dated 2026-10-12.
 - `tests/switchdrop-round-hold.py` checks round punctuation pixels, 20-second editing and reload, saved default parity, square/portrait canvases, Chinese text, mobile fit and homepage placement. With `--exports`, it produces PNG, H.264 MP4 and GIF review artifacts.
+- The control is named `结束停留` under `动效设置 → 速度与节奏`. Its precise input uses seconds (2–30, step 0.05); manual edits and imported schemes below 2 seconds clamp to the same minimum. The default scheme and cover remain at 6 seconds.

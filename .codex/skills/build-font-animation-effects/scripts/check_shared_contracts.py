@@ -11,6 +11,7 @@ if decoder_owners != ["cellmotion-animated-image.js"]:
     errors.append(f"ImageDecoder must be owned only by cellmotion-animated-image.js: {decoder_owners}")
 
 consumers = {
+    "typepour-editor.js": ("typepour.html",),
     "colorrecompose.js": ("colorrecompose.html",),
     "continuation.js": ("continuation.html",),
     "currentwall.js": ("currentwall.html",),

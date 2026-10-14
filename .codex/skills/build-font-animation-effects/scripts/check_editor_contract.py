@@ -109,6 +109,30 @@ def main() -> int:
         print(f"PASS: {html_path.name} uses the shared CellMotion editor; browser interaction checks are still required.")
         return 0
 
+    if 'typepour-runtime.js' in html:
+        runtime = (html_path.parent / 'typepour-runtime.js').read_text(encoding='utf-8')
+        source = html + '\n' + js + '\n' + runtime
+        required = {
+            'CellMotion shell': ['tc-workspace', 'tc-content', 'tc-center', 'tc-properties', 'typecascade-polish.css'],
+            'scheme': ['id="saveScheme"', 'id="importScheme"', 'id="resetScheme"', 'id="clearScheme"', 'localStorage', 'id="undo"', 'id="redo"'],
+            'composition': ['id="ratio"', 'id="canvas"', 'id="text"', 'id="font"', 'id="textColor"', 'id="backgroundColor"'],
+            'timeline': ['id="play"', 'id="replay"', 'id="seek"', 'id="phaseTrack"', 'id="playhead"', 'canonicalTime'],
+            'assets': ['STGIconLibrary.groups', 'TokenAssetTools.processFile', 'id="selectedAssets"', 'id="assetDrawer"', 'id="insertAsset"'],
+            'background': ['CellMotionAnimatedImage.decode', 'CellMotionAnimatedImage.frameAt', 'CellMotionAnimatedImage.dispose', 'videoStart', 'videoEnd', 'seekVideo'],
+            'export': ['id="png"', 'id="gif"', 'id="mp4"', 'createH264MP4Encoder', 'await editor.prepareFrame'],
+            'AI': ['cellmotion-ai-menu.js', 'cellmotion-effect-bridge.js', 'CellMotionBridge.register', 'getScheme', 'applyScheme']
+        }
+        for label, tokens in required.items():
+            for token in tokens:
+                if token not in source:
+                    errors.append(f'missing {label}: {token}')
+        for error in errors:
+            fail(error)
+        if errors:
+            return 1
+        print(f'PASS: {html_path.name} uses the CellMotion shell with its native liquid renderer; real-browser checks remain required.')
+        return 0
+
     text_only = 'data-editor-capabilities="text-only"' in html
     required_html = {
         "scheme Save": "保存方案",

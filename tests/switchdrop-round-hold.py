@@ -37,6 +37,21 @@ with sync_playwright() as p:
     original = page.evaluate('CellMotionEffectBridge.getScheme()')
     check(original['motion']['hold'] == 6000, 'Default ending hold must be 6 seconds')
     check(page.locator('#holdDuration').get_attribute('max') == '30000', 'Ending hold must allow 30 seconds')
+    check(page.locator('#holdDuration').get_attribute('min') == '2000', 'Ending hold must have a 2-second minimum')
+    exact = page.locator('#holdDurationExact')
+    check(exact.get_attribute('min') == '2' and exact.get_attribute('max') == '30', 'Custom ending hold input must use seconds')
+    page.locator('.tc-tabs [data-panel="global"]').click()
+    exact.fill('2.5')
+    exact.press('Enter')
+    check(page.evaluate('CellMotionEffectBridge.getScheme().motion.hold') == 2500, 'Custom 2.5-second input must update timing')
+    exact.fill('1')
+    exact.press('Enter')
+    check(page.evaluate('CellMotionEffectBridge.getScheme().motion.hold') == 2000, 'Values below 2 seconds must clamp to 2 seconds')
+    page.screenshot(path=str(OUT/'ending-hold-control.png'))
+    imported = json.loads(json.dumps(original))
+    imported['motion']['hold'] = 500
+    page.evaluate('(s)=>CellMotionEffectBridge.applyScheme(s,{autoplay:false})', imported)
+    check(page.evaluate('CellMotionEffectBridge.getScheme().motion.hold') == 2000, 'Imported timing must respect the 2-second minimum')
 
     # Isolate punctuation pixels using the real renderer and a neutral subject.
     isolated = json.loads(json.dumps(original))

@@ -6,15 +6,18 @@
 
 **让创意，自由生长。**
 
+**2026-10-14 字水 / Type Pour 正式上新**：[打开编辑器](https://cellmotion.cn/typepour.html)。保留已确认的水流、透明玻璃杯与 9:16 构图，支持蓝色格子 / 纯字体、共享字体与素材库、图片 / GIF / 视频背景及视频裁切、阶段时间轴、方案保存 / 导入 / 重置 / 清空、撤销重做、中英与明暗界面。For AI 五项入口携带当前配置并复用同一渲染器。PNG、GIF、带倒水声的 MP4 与 WAV 均可导出。官网新增竖版作品图、横向封面及动态预览。详见 [运动契约与校验](docs/analyses/typepour.md)。
+
 CellMotion 是一个自由、灵活的动态设计系统。字体、图标、图片与图形都是独立的 Cell（设计单元）；它们通过运动彼此连接、拆解与重组，从最小单元生长出新的视觉表达。
 
 **Move · Connect · Recombine · Grow.** 运动 · 连接 · 重组 · 生长。
 
 **2026-10-12 视频对比 / Video Compare（本地模板）**：新增 [双视频工作台](site/video-compare.html)，源视频比例、视频框比例与整体画布分别设置，支持 16:9、9:16、方形及自定义成品。横屏视频在竖屏画布中按参考图上下排列，竖屏视频以并排布局保留原比例；Before 始终比 After 小，可调至其宽高的 45%–85%。两段视频独立上传、取景和裁剪，同步播放；主标签与「网上看到的 / 我做的」说明可编辑，也可点击画面文字修改；上下排版留白加大，所有画幅顶部加入可编辑的微小「have a good day」，底部使用 B2W Logo，无额外动效或工作流信息。沿用三栏 UI、中英文、深浅色界面及独立黑白成品配色，支持嵌入视频的方案保存与 PNG/GIF/确定性 H.264 MP4 导出；Before 与 After 声音独立开关，默认只听 After，支持等量混音，MP4 保留所选声音并跟随裁剪/循环。详见 [模板说明与验证](docs/analyses/video-compare.md)。
 
-**2026-10-12 降临 / Switch Drop 更新**：标题紫色标点改为圆点；结束定格默认 6 秒，可编辑至 30 秒，参数可自动保存及导出。已保存[默认方案](site/assets/presets/switchdrop-default.json)，重制官网动态封面，并加入「最近上新」；首页该标题移除末尾句号。
+**2026-10-12 降临 / Switch Drop 更新**：标题紫色标点改为圆点；结束停留默认 6 秒，可自定义为 2–30 秒，参数可自动保存及导出。已保存[默认方案](site/assets/presets/switchdrop-default.json)，重制官网动态封面，并加入「最近上新」；首页该标题移除末尾句号。
 
 目前收录 76 个动效及视频模板，支持中文与多语种字体、字图混排、图片 / GIF / 视频背景、响应式画布，以及浏览器内的预览与导出。官网的「全部动效」和各内容分类只展示已完成的 44 个。另外 32 个尚未完成：原分类保留，只出现在「待上新」，封面写着「待上新，未完成」，暂时不能点进编辑器。名单和恢复方式见 [docs/PENDING_RELEASE.md](docs/PENDING_RELEASE.md)。
+
 
 **2026-10-10 两款 CardBot 独立编辑器**：[翻牌登录 / Card Login](https://opc8838-hub.github.io/font-animation/card-login.html?from=gallery) 保留同尺寸衔接、旋转中变白及登录渐入，文字、字体、颜色和动作参数可编辑；[卡牌剧场 / Card Deck](https://opc8838-hub.github.io/font-animation/carddeck.html?from=gallery) 保留表情卡牌的展开、交错横移与收拢，支持共享图库、自有素材和逐卡调整。两款均采用 CellMotion 三栏工作台，支持手机/平板、主流及自定义画幅、方案管理、PNG/GIF/H.264 MP4 与实时配置的 For AI 组件。登录编辑器是视觉动效，不提供账号认证；真正可输入的原始 HTML/CSS 表单转场另附源码包。详见 [使用与集成说明](docs/CARDBOT_EDITORS.md)、[动效保真与验证](docs/analyses/cardmotion-preservation.md) 和 [来源许可](docs/licenses/CARDBOT_MOTION.md)。
 

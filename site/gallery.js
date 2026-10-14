@@ -1,5 +1,7 @@
 const effects = [
   ["video-compare", "视频对比", "Video Compare", "graphic", "双视频同步对比 · 黑白版式 · B2W 署名"],
+  ["typepour", "字水", "Type Pour", "physics", "字体如水 · 透明玻璃杯 · 同步倒水声"],
+
   ["card-login", "翻牌登录", "Card Login", "space", "同尺寸衔接 · 丝滑旋转变白 · 登录显现"],
   ["carddeck", "卡牌剧场", "Card Deck", "space", "表情卡牌 · 展开交错 · 收拢归位"],
   ["spotlight", "聚光", "Spotlight", "graphic", "光球绽放 · 收成光锥 · 光柱射下"],
@@ -123,7 +125,7 @@ const emptyState = document.querySelector("#emptyState");
 const filterButtons = [...document.querySelectorAll(".filter")];
 let activeFilter = "all";
 const livePreviews = new Set(["textswell"]);
-const featuredPreviews = new Set(["spotlight", "switchdrop", "citystack", "zerogflip", "prosvg", "textswell", "impactbuild", "currentwall", "verticalwall", "iconburst", "glyphmorph", "sproutshift", "mistlift", "typecascade", "dotresolve", "glyphreveal", "continuation", "split-flip", "beforeafter", "shutterafter", "pathwriter", "ribbonink", "scrapbin"]);
+const featuredPreviews = new Set(["typepour", "spotlight", "switchdrop", "citystack", "zerogflip", "prosvg", "textswell", "impactbuild", "currentwall", "verticalwall", "iconburst", "glyphmorph", "sproutshift", "mistlift", "typecascade", "dotresolve", "glyphreveal", "continuation", "split-flip", "beforeafter", "shutterafter", "pathwriter", "ribbonink", "scrapbin"]);
 const liveObserver = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
     const frame = entry.target;
@@ -153,7 +155,9 @@ function render() {
     const imageName = slug === "crashclock" ? "final_crashclock.png" : ["letterpulse", "iconburst", "focuswheel", "gradienttype", "glyphrelay", "glyphmorph", "wordgather", "focusportal", "rapidsequence", "citystack", "colorcanvas", "liquidtype", "scrapbin", "terminalbrand", "slotstories", "mediacascade", "colorrecompose", "phrasebuild", "switchdrop", "searchtyping", "beforeafter", "shutterafter", "assemble", "verbcue", "tighten", "titlecard", "lockup", "promptcue", "pullback", "textswell", "impactbuild", "wordflip", "textbuild", "textswap", "textreveal", "phoneframe", "laptopframe", "orbitgallery", "followerrush", "logoassemble", "moodboard"].includes(slug) ? `final_${slug}.svg` : `final_${slug}.png`;
     const target = ["card-login","carddeck"].includes(slug) ? `${slug}.html?from=gallery&v=20261010-cards1` : slug === "switchdrop" ? "switchdrop.html?from=gallery&v=20261012-round-hold1" : slug === "spotlight" ? "spotlight.html?from=gallery&v=20261010-1" : slug === "curvedgallery" ? "curvedgallery.html?from=gallery&v=20261010-ai1" : slug === "citystack" ? "citystack.html?from=gallery&v=20261006-1" : slug === "prosvg" ? "prosvg.html?from=gallery&v=20261005-1" : slug === "flash" ? "flash-scenes.html" : slug === "iconburst" ? "iconburst.html?from=gallery&v=20260925-default1" : slug === "glyphmorph" ? "glyphmorph.html?from=gallery&v=20260904-4" : ["sproutshift", "mistlift", "typecascade", "dotresolve", "glyphreveal"].includes(slug) ? `${slug}.html?from=gallery&v=20260909-1` : slug === "continuation" ? "continuation.html?from=gallery&v=20260904-center1" : slug === "split-flip" ? "split-flip.html?from=gallery&v=20260907-1" : slug === "currentwall" ? "currentwall.html?from=gallery&v=20260830-28" : slug === "verticalwall" ? "verticalwall.html?from=gallery&v=20260901-57" : slug === "beforeafter" ? "beforeafter.html?from=gallery&v=20260825-latest1" : slug === "shutterafter" ? "shutterafter.html?from=gallery&v=20260827-1" : slug === "pathwriter" ? "pathwriter.html?from=gallery&v=20260827-default2" : slug === "ribbonink" ? "ribbonink.html?from=gallery&v=20260909-1" : slug === "impactbuild" ? "impactbuild.html?from=gallery&v=20260901-final2" : slug === "scrapbin" ? "scrapbin.html?from=gallery&v=20260826-delete11" : slug === "liquidtype" ? "liquidtype.html?from=gallery&v=20260824-scatter3" : `${slug}.html`;
     const detail = slug === "flash" ? "13 个独立子风格" : categoryName;
-    const preview = ["card-login","carddeck"].includes(slug)
+    const preview = slug === "typepour"
+      ? `<video class="effect-loop" src="assets/previews/typepour-card.mp4" poster="final_typepour.png" autoplay muted loop playsinline preload="metadata" aria-label="Type Pour"></video>`
+      : ["card-login","carddeck"].includes(slug)
       ? `<video class="effect-loop" src="assets/previews/${slug}-card.mp4?v=20261010-cards1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
       : slug === "switchdrop"
       ? `<video class="effect-loop" src="assets/previews/switchdrop-card.mp4?v=20261012-round-hold1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
