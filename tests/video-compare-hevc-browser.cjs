@@ -6,15 +6,15 @@ const root=path.resolve(__dirname,'..'),out=path.join(root,'output/video-compare
  await fs.mkdir(out,{recursive:true});
  const site=path.join(root,'site');
  const server=http.createServer(async(req,res)=>{try{const file=path.resolve(site,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname));if(!file.startsWith(site+path.sep))return res.writeHead(403).end();const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.svg':'image/svg+xml','.woff2':'font/woff2','.ttf':'font/ttf','.otf':'font/otf'};res.setHeader('Content-Type',mime[path.extname(file)]||'application/octet-stream');res.end(await fs.readFile(file));}catch{res.writeHead(404).end();}});
- await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port;
- const browser=await chromium.launch({headless:true,executablePath:process.argv[3]});
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=process.argv[5]||'http://127.0.0.1:'+server.address().port;
+ const browser=await chromium.launch({headless:true,executablePath:process.argv[3],...(process.argv[6]?{args:['--host-resolver-rules=MAP cellmotion.cn '+process.argv[6],...(process.argv[7]==='http1'?['--disable-http2']:[])]}:{})});
  const page=await browser.newPage({viewport:{width:1440,height:960},acceptDownloads:true});
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  try {
   const sample=process.argv[4];assert.ok(sample,'Pass the failing HEVC sample as argument 4');
-  await page.goto(base+'/video-compare.html',{waitUntil:'networkidle'});await page.evaluate(()=>VideoCompare.readyPromise);
+  await page.goto(base+'/video-compare.html?v=20261014-vcompare10',{waitUntil:'domcontentloaded',timeout:90000});await page.waitForFunction(()=>window.VideoCompare,{},{timeout:60000});await page.evaluate(()=>VideoCompare.readyPromise);
   await page.locator('[data-video-file]').first().setInputFiles(sample);
-  await page.waitForFunction(()=>document.querySelector('.vc-file-name').classList.contains('is-error')||(VideoCompare.getScheme().rows[0].media?.trimEnd>0&&document.querySelector('[data-video-file]').value===''),null,{timeout:120000});
+  await page.waitForFunction(()=>document.querySelector('.vc-file-name').classList.contains('is-error')||(document.querySelector('.vc-file-name').getAttribute('aria-busy')==='false'&&document.querySelector('.vc-file-name').textContent.includes('888')&&document.querySelector('[data-video-file]').value===''),null,{timeout:120000});
   assert.equal(await page.locator('.vc-file-name').first().evaluate(e=>e.classList.contains('is-error')),false,await page.locator('.vc-file-name').first().textContent());
   const scheme=await page.evaluate(()=>VideoCompare.getScheme());await fs.writeFile(path.join(out,'compatible.mp4'),Buffer.from(scheme.rows[0].media.url.split(',')[1],'base64'));
   const metadata=await page.evaluate(async()=>{const m=await import('./js/vendor/mediabunny/mediabunny-1.61.3.min.js');const input=new m.Input({source:new m.BlobSource(await (await fetch(VideoCompare.getScheme().rows[0].media.url)).blob()),formats:m.ALL_FORMATS});try{const video=await input.getPrimaryVideoTrack(),audio=await input.getPrimaryAudioTrack();return {codec:video.codec,width:video.codedWidth,height:video.codedHeight,duration:await input.computeDuration(),audio:audio?.codec};}finally{input.dispose();}});
