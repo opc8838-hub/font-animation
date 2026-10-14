@@ -39,7 +39,8 @@
         window.opener.postMessage({ type: "cellmotion:demo-ready" }, location.origin);
         return;
       }
-      const effect = new URLSearchParams(location.search).get('effect') === 'typepour' ? 'typepour' : 'typecascade';
+      const requested = new URLSearchParams(location.search).get('effect');
+      const effect = ['typepour','video-compare'].includes(requested) ? requested : 'typecascade';
       const [definitionResponse, presetResponse] = await Promise.all([
         fetch(`effects/${effect}.component.json`),
         fetch(`assets/presets/${effect}-default.json`)

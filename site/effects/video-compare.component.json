@@ -1,0 +1,425 @@
+{
+  "effect": {
+    "id": "video-compare",
+    "name": {
+      "zh": "视频对比",
+      "en": "Video Compare"
+    },
+    "version": "1.0.0",
+    "category": "media"
+  },
+  "runtime": {
+    "kind": "iframe-bridge",
+    "entry": "video-compare.html?preview=1&embed=1&v=20261014-vcompare6",
+    "bridgeVersion": "1.0.0",
+    "renderer": "canvas2d"
+  },
+  "capabilities": {
+    "compositionModel": "fixed-video-pair",
+    "liveEditorState": true,
+    "preview": true,
+    "editableTextRows": true,
+    "rowFonts": false,
+    "inlineIcons": false,
+    "customImageAssets": false,
+    "videoSources": true,
+    "videoTrim": true,
+    "sourceAudio": true,
+    "audioMixing": true,
+    "timeline": true,
+    "responsiveCanvas": true,
+    "exports": [
+      "png",
+      "gif",
+      "mp4"
+    ]
+  },
+  "behavior": {
+    "summary": {
+      "zh": "固定 Before / After 双视频对比，Before 始终小于 After。素材比例与成品画布独立，保留标签、取景、裁剪及独立声音开关；短片可循环或停在末帧。",
+      "en": "A fixed Before / After video pair with a smaller Before. Source aspect and output canvas are independent. Preserves editable labels, framing, trims and independent audio switches; shorter clips loop or hold their last frame."
+    },
+    "phases": [
+      {
+        "id": "compare",
+        "name": {
+          "zh": "双视频对比",
+          "en": "Video comparison"
+        },
+        "colorToken": "phase.sky"
+      },
+      {
+        "id": "ending",
+        "name": {
+          "zh": "末帧保留 / 短片循环",
+          "en": "Hold last frame / loop short clip"
+        },
+        "colorToken": "phase.violet"
+      }
+    ],
+    "audio": {
+      "zh": "按声音开关保留原视频音轨，两路开启时等量混音。停在末帧时声音结束。浏览器可能要求用户点击播放后才允许有声播放。",
+      "en": "Enabled source tracks are mixed equally and follow trim/loop settings. Hold-last-frame ends the audio. Browsers may require a user play gesture before audible playback."
+    }
+  },
+  "parameters": [
+    {
+      "path": "composition.canvas.preset",
+      "scope": "global",
+      "type": "enum",
+      "name": {
+        "zh": "成品画幅",
+        "en": "Output preset"
+      },
+      "values": [
+        "1920x1080",
+        "1440x1080",
+        "1620x1080",
+        "1080x1080",
+        "1080x1350",
+        "1080x1920",
+        "custom"
+      ]
+    },
+    {
+      "path": "composition.canvas.width",
+      "scope": "global",
+      "type": "integer",
+      "name": {
+        "zh": "画布宽度",
+        "en": "Canvas width"
+      },
+      "min": 320,
+      "max": 3840,
+      "step": 2,
+      "unit": "px"
+    },
+    {
+      "path": "composition.canvas.height",
+      "scope": "global",
+      "type": "integer",
+      "name": {
+        "zh": "画布高度",
+        "en": "Canvas height"
+      },
+      "min": 320,
+      "max": 3840,
+      "step": 2,
+      "unit": "px"
+    },
+    {
+      "path": "composition.layout.videoAspect",
+      "scope": "global",
+      "type": "enum",
+      "name": {
+        "zh": "视频框比例",
+        "en": "Video frame aspect"
+      },
+      "values": [
+        "auto",
+        "16:9",
+        "9:16"
+      ]
+    },
+    {
+      "path": "composition.layout.beforeScale",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "Before 相对大小",
+        "en": "Before size relative to After"
+      },
+      "min": 45,
+      "max": 85,
+      "unit": "%"
+    },
+    {
+      "path": "composition.layout.topText",
+      "scope": "global",
+      "type": "string",
+      "name": {
+        "zh": "顶部小字",
+        "en": "Small top text"
+      }
+    },
+    {
+      "path": "composition.layout.fontFamily",
+      "scope": "global",
+      "type": "font",
+      "name": {
+        "zh": "字体",
+        "en": "Font"
+      }
+    },
+    {
+      "path": "composition.layout.compositionTheme",
+      "scope": "global",
+      "type": "enum",
+      "name": {
+        "zh": "画面配色",
+        "en": "Composition theme"
+      },
+      "values": [
+        "light",
+        "dark"
+      ]
+    },
+    {
+      "path": "composition.layout.textColor",
+      "scope": "global",
+      "type": "color",
+      "name": {
+        "zh": "文字颜色",
+        "en": "Text color"
+      }
+    },
+    {
+      "path": "composition.layout.backgroundColor",
+      "scope": "global",
+      "type": "color",
+      "name": {
+        "zh": "背景颜色",
+        "en": "Background color"
+      }
+    },
+    {
+      "path": "composition.layout.labelSize",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "标签字号",
+        "en": "Label size"
+      },
+      "min": 60,
+      "max": 160,
+      "unit": "%"
+    },
+    {
+      "path": "composition.layout.marginSize",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "边距",
+        "en": "Margins"
+      },
+      "min": 3,
+      "max": 10,
+      "unit": "%"
+    },
+    {
+      "path": "composition.layout.frameGap",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "视频间距",
+        "en": "Video gap"
+      },
+      "min": 2,
+      "max": 9,
+      "unit": "%"
+    },
+    {
+      "path": "composition.layout.frameRadius",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "视频圆角",
+        "en": "Video corners"
+      },
+      "min": 0,
+      "max": 60,
+      "unit": "px at 1920 px width"
+    },
+    {
+      "path": "composition.layout.logoSize",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "Logo 大小",
+        "en": "Logo size"
+      },
+      "min": 12,
+      "max": 32,
+      "unit": "%"
+    },
+    {
+      "path": "composition.export.duration",
+      "scope": "global",
+      "type": "enum",
+      "name": {
+        "zh": "导出时长模式",
+        "en": "Duration mode"
+      },
+      "values": [
+        "cycle",
+        "3",
+        "5",
+        "10",
+        "custom"
+      ]
+    },
+    {
+      "path": "composition.export.customDuration",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "自定义时长",
+        "en": "Custom duration"
+      },
+      "min": 0.1,
+      "max": 120,
+      "unit": "s"
+    },
+    {
+      "path": "composition.export.fps",
+      "scope": "global",
+      "type": "integer",
+      "name": {
+        "zh": "导出帧率",
+        "en": "Export frame rate"
+      },
+      "values": [
+        24,
+        30,
+        60
+      ],
+      "unit": "fps"
+    },
+    {
+      "path": "composition.export.shortClip",
+      "scope": "global",
+      "type": "enum",
+      "name": {
+        "zh": "短片结束方式",
+        "en": "Short clip ending"
+      },
+      "values": [
+        "hold",
+        "loop"
+      ]
+    },
+    {
+      "path": "composition.rows[].text",
+      "scope": "row",
+      "type": "string",
+      "name": {
+        "zh": "主标签",
+        "en": "Label"
+      }
+    },
+    {
+      "path": "composition.rows[].caption",
+      "scope": "row",
+      "type": "string",
+      "name": {
+        "zh": "说明文字",
+        "en": "Caption"
+      }
+    },
+    {
+      "path": "composition.rows[].audioEnabled",
+      "scope": "row",
+      "type": "boolean",
+      "name": {
+        "zh": "原视频声音",
+        "en": "Source audio"
+      }
+    },
+    {
+      "path": "composition.rows[].media",
+      "scope": "row",
+      "type": "media",
+      "name": {
+        "zh": "上传的视频",
+        "en": "Uploaded video"
+      }
+    },
+    {
+      "path": "composition.rows[].media.url",
+      "scope": "row",
+      "type": "string",
+      "name": {
+        "zh": "嵌入视频数据",
+        "en": "Embedded video bytes"
+      }
+    },
+    {
+      "path": "composition.rows[].media.name",
+      "scope": "row",
+      "type": "string",
+      "name": {
+        "zh": "文件名",
+        "en": "Filename"
+      },
+      "readOnly": true
+    },
+    {
+      "path": "composition.rows[].media.fit",
+      "scope": "row",
+      "type": "enum",
+      "name": {
+        "zh": "视频适配",
+        "en": "Video fit"
+      },
+      "values": [
+        "contain",
+        "cover"
+      ]
+    },
+    {
+      "path": "composition.rows[].media.zoom",
+      "scope": "row",
+      "type": "number",
+      "name": {
+        "zh": "放大",
+        "en": "Zoom"
+      },
+      "min": 1,
+      "max": 4
+    },
+    {
+      "path": "composition.rows[].media.panX",
+      "scope": "row",
+      "type": "number",
+      "name": {
+        "zh": "水平取景",
+        "en": "Horizontal position"
+      },
+      "min": 0,
+      "max": 1
+    },
+    {
+      "path": "composition.rows[].media.panY",
+      "scope": "row",
+      "type": "number",
+      "name": {
+        "zh": "垂直取景",
+        "en": "Vertical position"
+      },
+      "min": 0,
+      "max": 1
+    },
+    {
+      "path": "composition.rows[].media.trimStart",
+      "scope": "row",
+      "type": "number",
+      "name": {
+        "zh": "裁剪起点",
+        "en": "Trim start"
+      },
+      "min": 0,
+      "unit": "s"
+    },
+    {
+      "path": "composition.rows[].media.trimEnd",
+      "scope": "row",
+      "type": "number",
+      "name": {
+        "zh": "裁剪终点",
+        "en": "Trim end"
+      },
+      "min": 0,
+      "unit": "s"
+    }
+  ]
+}

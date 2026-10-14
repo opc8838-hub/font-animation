@@ -38,6 +38,126 @@
             "settings": { "type": "object", "required": ["width", "height"], "properties": { "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 } } },
             "assets": { "type": "array", "items": { "type": "object" } }
           }
+        },
+        {
+          "required": [
+            "effect",
+            "version",
+            "canvas",
+            "layout",
+            "export",
+            "rows"
+          ],
+          "properties": {
+            "effect": {
+              "const": "video-compare"
+            },
+            "version": {
+              "const": 1
+            },
+            "canvas": {
+              "type": "object",
+              "required": [
+                "width",
+                "height"
+              ],
+              "properties": {
+                "width": {
+                  "type": "integer",
+                  "minimum": 320,
+                  "maximum": 3840,
+                  "multipleOf": 2
+                },
+                "height": {
+                  "type": "integer",
+                  "minimum": 320,
+                  "maximum": 3840,
+                  "multipleOf": 2
+                }
+              }
+            },
+            "layout": {
+              "type": "object"
+            },
+            "export": {
+              "type": "object"
+            },
+            "rows": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "text",
+                  "caption",
+                  "audioEnabled",
+                  "media"
+                ],
+                "properties": {
+                  "id": {
+                    "enum": [
+                      "before",
+                      "after"
+                    ]
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "caption": {
+                    "type": "string"
+                  },
+                  "audioEnabled": {
+                    "type": "boolean"
+                  },
+                  "media": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "required": [
+                      "kind",
+                      "url"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "video"
+                      },
+                      "url": {
+                        "type": "string",
+                        "pattern": "^data:video/"
+                      },
+                      "trimStart": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "trimEnd": {
+                        "type": "number",
+                        "minimum": 0
+                      }
+                    }
+                  }
+                }
+              },
+              "prefixItems": [
+                {
+                  "properties": {
+                    "id": {
+                      "const": "before"
+                    }
+                  }
+                },
+                {
+                  "properties": {
+                    "id": {
+                      "const": "after"
+                    }
+                  }
+                }
+              ]
+            }
+          }
         }
       ],
       "properties": {

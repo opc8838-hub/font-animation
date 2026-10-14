@@ -14,8 +14,11 @@
   "recent": [
     {
       "id": "video-compare",
-      "date": "2026-10-12"
-
+      "date": "2026-10-14"
+    },
+    {
+      "id": "typepour",
+      "date": "2026-10-14"
     },
     {
       "id": "switchdrop",
@@ -97,10 +100,28 @@
       "english": "Video Compare",
       "description": "双视频同步对比 · 黑白版式 · B2W 署名",
       "category": "media",
-      "href": "video-compare.html?v=20261013-5",
-      "poster": "assets/cellmotion/poster-video-compare.jpg?v=20261013-5",
+      "href": "video-compare.html?v=20261014-vcompare6",
+      "poster": "assets/cellmotion/poster-video-compare.jpg?v=20261014-vcompare6",
       "video": null,
-
+      "webComponent": {
+        "preview": "typecascade-component-demo.html?effect=video-compare",
+        "descriptor": "effects/video-compare.component.json"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "typepour",
+      "name": "字水",
+      "english": "Type Pour",
+      "description": "字体如水 · 透明玻璃杯 · 同步倒水声",
+      "category": "physics",
+      "href": "typepour.html",
+      "poster": "assets/cellmotion/poster-typepour.jpg",
+      "video": "assets/previews/typepour-card.mp4",
+      "webComponent": {
+        "preview": "typecascade-component-demo.html?effect=typepour",
+        "descriptor": "effects/typepour.component.json"
+      },
       "status": "ready"
     },
     {

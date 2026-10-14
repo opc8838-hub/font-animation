@@ -1,0 +1,34 @@
+/* Explicit post-deployment smoke test. Args: node_modules Edge [https base URL]. */
+const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
+const {chromium}=require(path.resolve(process.argv[2]||'node_modules','playwright'));
+const sharp=require(path.resolve(process.argv[2]||'node_modules','sharp'));
+const root=path.resolve(__dirname,'..'),out=path.join(root,'output/video-compare/production');
+const base=(process.argv[4]||'https://cellmotion.cn').replace(/\/$/,'');
+(async()=>{
+ await fs.mkdir(out,{recursive:true});const browser=await chromium.launch({headless:true,executablePath:process.argv[3]});
+ const context=await browser.newContext({viewport:{width:1440,height:960},permissions:['clipboard-read','clipboard-write']});const errors=[];
+ context.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));const page=await context.newPage();
+ try{
+  await page.goto(base+'/?v=20261014-vcompare6',{waitUntil:'domcontentloaded'});await page.waitForSelector('#recent-grid .recent-card');
+  const card=page.locator('#recent-grid .recent-card').first();assert.ok((await card.getAttribute('href')).startsWith('video-compare.html'));await card.click();
+  await page.waitForSelector('.tc-ai-trigger');await page.evaluate(()=>VideoCompare.readyPromise);assert.equal(await page.evaluate(()=>isSecureContext),true);assert.equal(await page.evaluate(()=>typeof AudioEncoder),'function');
+  assert.equal(await page.locator('#canvasPreset option[value="1080x1350"]').count(),1);console.log('PASS live homepage first release opens secure editor with For AI and 4:5');
+  const http=await context.newPage();await http.goto(base.replace('https:','http:')+'/video-compare.html?v=20261014-vcompare6',{waitUntil:'domcontentloaded'});await http.waitForSelector('.tc-ai-trigger');assert.ok(http.url().startsWith('https://'));await http.close();console.log('PASS original HTTP editor link upgrades to HTTPS');
+  const fixture=JSON.parse(await fs.readFile(path.join(root,'output/video-compare/audio-regression/audio-scheme.json'),'utf8'));
+  for(const row of fixture.rows){const file=path.join(out,row.id+'-source.mp4');await fs.writeFile(file,Buffer.from(row.media.url.split(',')[1],'base64'));await page.locator('.tc-row-select[data-row-id="'+row.id+'"]').click();await page.locator('.vc-row[data-row-id="'+row.id+'"] [data-video-file]').setInputFiles(file);await page.waitForFunction(id=>VideoCompare.getScheme().rows.find(r=>r.id===id).media?.trimEnd>0,row.id);}
+  await page.waitForFunction(()=>VideoCompare.getAudioState().every(r=>r.hasAudio));
+  await page.locator('.vc-row[data-row-id="after"] [data-key="caption"]').fill('官网验收 · After 声音');
+  await page.locator('#togglePlayback').click();await page.waitForFunction(()=>VideoCompare.getTime()>.1&&!VideoCompare.getAudioState()[1].paused);assert.deepEqual((await page.evaluate(()=>VideoCompare.getAudioState())).map(r=>r.muted),[true,false]);await page.locator('#togglePlayback').click();
+  console.log('PASS live uploaded landscape/portrait videos decode, play and preserve selected source audio');
+  await page.locator('#canvasPreset').selectOption('custom');await page.locator('#canvasWidth').fill('640');await page.locator('#canvasWidth').dispatchEvent('change');await page.locator('#canvasHeight').fill('360');await page.locator('#canvasHeight').dispatchEvent('change');
+  await page.locator('.tc-tabs [data-panel="export"]').click();await page.locator('#exportDuration').selectOption('custom');await page.locator('#customDuration').fill('.4');await page.locator('#customDuration').dispatchEvent('change');await page.locator('#exportFps').selectOption('24');
+  const files={};for(const format of ['Png','Gif','Mp4']){const event=page.waitForEvent('download',{timeout:90000});event.catch(()=>{});await page.locator('#export'+format).click();await page.waitForFunction(()=>!document.body.classList.contains('vc-exporting'),null,{timeout:90000});const status=await page.locator('#exportStatus').textContent();assert.ok(/ready|已生成/.test(status),status);const d=await event,file=path.join(out,'live.'+format.toLowerCase());await d.saveAs(file);files[format]=file;}
+  assert.equal((await sharp(files.Png).metadata()).width,640);assert.equal((await sharp(files.Gif,{animated:true}).metadata()).pages,10);
+  const audio=await page.evaluate(async bytes=>{const blob=await(await fetch('data:video/mp4;base64,'+bytes)).blob(),m=await import('./js/vendor/mediabunny/mediabunny-1.61.3.min.js'),input=new m.Input({source:new m.BlobSource(blob),formats:m.ALL_FORMATS});const track=await input.getPrimaryVideoTrack(),result={audioTracks:(await input.getAudioTracks()).length,width:await track.getDisplayWidth(),height:await track.getDisplayHeight()};input.dispose();const ctx=new AudioContext();try{const buffer=await ctx.decodeAudioData(await blob.arrayBuffer()),data=buffer.getChannelData(0).slice(Math.round(.1*buffer.sampleRate),Math.round(.18*buffer.sampleRate));let re=0,im=0;for(let i=0;i<data.length;i++){re+=data[i]*Math.cos(2*Math.PI*660*i/buffer.sampleRate);im+=data[i]*Math.sin(2*Math.PI*660*i/buffer.sampleRate);}result.afterTone=2*Math.hypot(re,im)/data.length;return result;}finally{await ctx.close();}},(await fs.readFile(files.Mp4)).toString('base64'));
+  assert.equal(audio.audioTracks,1);assert.equal(audio.width,640);assert.equal(audio.height,360);assert.ok(audio.afterTone>.15);console.log('PASS live PNG/GIF/H.264 MP4 downloads; decoded AAC contains the selected After sound');
+  const event=page.waitForEvent('popup');await page.locator('.tc-ai-trigger').click();await page.locator('[data-ai-action="preview"]').click();const popup=await event;await popup.waitForFunction(()=>document.querySelector('#demoPlayer')?.duration===.4);const frame=popup.frames().find(f=>f.url().includes('video-compare.html'));
+  assert.equal(await frame.evaluate(()=>VideoCompare.getScheme().rows[1].caption),'官网验收 · After 声音');await popup.locator('[data-player-action="pause"]').click();await popup.locator('#demoSeek').evaluate(el=>{el.value='.2';el.dispatchEvent(new Event('input',{bubbles:true}));});await frame.waitForFunction(()=>VideoCompare.getTime()===.2);console.log('PASS live For AI popup receives the edited videos/settings and seeks through the same renderer');
+  await popup.close();for(const width of [390,320]){await page.setViewportSize({width,height:844});for(const selector of ['.site-theme-toggle','.site-language-toggle','.tc-ai-trigger','.tc-export-shortcut']){const rect=await page.locator(selector).boundingBox();assert.ok(rect&&rect.x>=0&&rect.x+rect.width<=width);}}
+  await page.screenshot({path:path.join(out,'live-mobile-editor.png')});assert.deepEqual(errors,[]);console.log('PASS live mobile header controls and clean browser console');
+ }finally{await browser.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});

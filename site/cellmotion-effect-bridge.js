@@ -19,8 +19,8 @@
           await adapter.applyScheme(message.manifest?.composition || message.composition, message.manifest?.presentation || {});
           post('cellmotion:duration');
         } else if (message.type === 'cellmotion:request-duration') post('cellmotion:duration');
-        else if (message.type === 'cellmotion:seek') adapter.seek(Number(message.seconds) || 0);
-        else if (['play', 'pause', 'restart'].includes(message.type.slice(11))) adapter[message.type.slice(11)]();
+        else if (message.type === 'cellmotion:seek') await adapter.seek(Number(message.seconds) || 0);
+        else if (['play', 'pause', 'restart'].includes(message.type.slice(11))) await adapter[message.type.slice(11)]();
       }).catch(error => post('cellmotion:error', { message: error.message }));
     });
     post('cellmotion:ready');

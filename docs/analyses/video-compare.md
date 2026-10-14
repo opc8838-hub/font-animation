@@ -21,7 +21,7 @@
 
 1. **源视频尺寸**是文件实际的宽高，上传后在该视频的上传栏显示，例如 1920 × 1080 · 16:9 横屏、1080 × 1920 · 9:16 竖屏。
 2. **视频框比例**控制版式中的两个视频框。默认自动匹配素材，优先使用 After 的实际比例；没有 After 时取 Before，没有素材时取 16:9。也可手动固定为 16:9 或 9:16，以便上传前排版。
-3. **整体画布尺寸**控制最终 PNG / GIF / MP4 的宽高，支持 16:9、9:16、4:3、3:2、1:1 和 320–3840 范围内的自定义偶数尺寸。修改画布不会改变原素材或拉伸视频。
+3. **整体画布尺寸**控制最终 PNG / GIF / MP4 的宽高，支持 16:9、9:16、4:5、4:3、3:2、1:1 和 320–3840 范围内的自定义偶数尺寸。修改画布不会改变原素材或拉伸视频。
 
 | 同组视频素材 | 16:9 成品 | 9:16 成品 |
 | --- | --- | --- |
@@ -90,9 +90,20 @@ Windows 上使用 Node Playwright + Microsoft Edge 执行 tests/video-compare-br
 
 新增 tests/video-compare-audio-browser.cjs：两段带不同频率音轨的真实 MP4，实际生成 Before / After / mixed / muted / loop 五个文件；重新解码音轨核对频率、裁剪点、混音增益、末帧静音、循环、音视频时长与音轨数量，并检查用户点击播放、独立开关、中英文和方案往返。原有 22 项验收仍通过。
 
-测试视频、导出与截图在被忽略的 output/video-compare/ 中；仓库保存新模板封面、用户 Logo、编辑器与测试。当前为本地版本，未发布网站。
+测试视频、导出与截图在被忽略的 output/video-compare/ 中；仓库保存新模板封面、用户 Logo、编辑器与测试。官网发布目标：2026-10-14，入口 video-compare.html?v=20261014-vcompare6。
 
 ## Uncertainties to verify
 
 - 竖屏源视频在竖屏成品中采用并排一小一大的设计，属于本轮适配方案，待用户视觉确认。
 - AAC 导出需要浏览器支持原生编码；Windows 当前 Edge 已通过真实导出测试。不支持的浏览器会明确提示，禁止悄悄丢弃声音。
+
+## For AI and release verification (2026-10-14)
+
+- Reuses the standard shared five-action AI menu next to Export. All 31 parameter paths describe the native fixed-video-pair scheme; schema validation adds this model explicitly, without inventing a motion field or replacing the saved JSON format.
+- Manifest preserves both embedded source videos, stable row ids, trims, audioEnabled, fit/zoom/pan, source-frame aspect versus output canvas, editable captions/top text, font, palette and export timing. Assets index the selected font and both video ownership paths.
+- The shared versioned bridge awaits asynchronous configure / seek / play operations and enforces parent source, origin and version checks. The authoritative editor renders inside cellmotion-player with all editor chrome hidden; 4:5 joins existing output presets.
+- tests/video-compare-ai-browser.cjs passes formal Draft 2020-12 validation, changed live-state preservation, actual clipboard prompt/code, real popup player controls, exact paused pixel equality, live composition updates, actual copied-code hosting on another origin with selected source sound, invalid origin/version rejection, bilingual/light-dark state preservation, 320–1440 px header/menu fit, homepage first recent entry, and direct default component preview. Console errors are empty.
+- Latest origin/main Type Pour release and Switch Drop fixes are merged and preserved. The combined registry contains 77 effects/templates: 45 ready, 32 pending. Video Compare is dated 2026-10-14 in 最近上新 and marked as a verified web component.
+
+- Public Video Compare and the shared component demo upgrade cellmotion.cn HTTP URLs to HTTPS before loading the editor, retaining path/query/hash. Local development stays on localhost. This keeps WebCodecs audio and clipboard features available and avoids a cross-protocol iframe origin mismatch.
+- Narrow headers reserve space for For AI, Export, theme and language controls; secondary Effects navigation is hidden on mobile. Regression checks each control rectangle at 320–1440 px, rather than relying only on page overflow.

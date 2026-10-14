@@ -24,6 +24,9 @@
   const undoStack = [], redoStack = [];
   const canvas = $('glyphMorphCanvas'), frame = $('compositionFrame');
   const previewMode = new URLSearchParams(location.search).has('preview');
+  if(previewMode)document.body.classList.add('vc-preview-mode');
+  let readyResolve;const readyPromise=new Promise(resolve=>readyResolve=resolve);
+  window.CellMotionEffectBridge={effectId:SLUG,readyPromise,getScheme:()=>clone(scheme)};
   const logos = {};
   for (const color of ['black','white']) {
     const img = new Image(); img.src = 'assets/video-compare/logo-'+color+'.png';
@@ -77,7 +80,7 @@
     return Math.min(rt.duration-.001,start+local);
   }
   let audioModule;
-  function loadAudio(){return audioModule ||= import('./video-compare-audio.js?v=20261013-5');}
+  function loadAudio(){return audioModule ||= import('./video-compare-audio.js?v=20261014-vcompare6');}
   function syncPreviewAudio(start=false){
     const enabled=scheme.rows.filter(r=>r.audioEnabled&&runtime.get(r.id)?.ready&&runtime.get(r.id).hasAudio!==false);
     for(const row of scheme.rows){const rt=runtime.get(row.id);if(!rt?.ready)continue;
@@ -376,7 +379,7 @@
   $('restartPreview').addEventListener('click',()=>{if(busy)return;elapsed=0;playing=true;for(const row of scheme.rows){const rt=runtime.get(row.id);if(rt?.ready)rt.video.currentTime=sourceTime(row,0);}last=performance.now();syncPreviewAudio(true);playbackButton();});
   $('toggleInspector').addEventListener('click',()=>{document.body.classList.toggle('gm-inspector-hidden');requestAnimationFrame(resizePreview);});
   canvas.addEventListener('click',e=>{
-    if(busy)return;const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*canvas.width/r.width,y=(e.clientY-r.top)*canvas.height/r.height;
+    if(busy||previewMode)return;const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*canvas.width/r.width,y=(e.clientY-r.top)*canvas.height/r.height;
     geometry(canvas.width,canvas.height).boxes.forEach((b,i)=>{
       if(x<b.x||x>b.x+b.w||y<b.y-b.headerHeight||y>b.y+b.h)return;
       const row=scheme.rows[i];document.querySelector('.tc-row-select[data-row-id="'+row.id+'"]')?.click();
@@ -464,8 +467,16 @@
     const title=$('tcSelectedTitle');if(title)new MutationObserver(()=>{const selected=document.querySelector('.tc-row-select[aria-pressed="true"]')?.dataset.rowId;const label=selected==='after'?'After':'Before';if(title.textContent!==label)title.textContent=label;}).observe(title,{childList:true});
     await loadFont();
     if(!previewMode)try{const saved=await stored('readonly');if(saved&&revision===0)await applyScheme(saved);}catch{status('schemeStatus','未能恢复本机方案，可导入 JSON。','Could not restore the saved scheme. You can import JSON.');}
-    requestAnimationFrame(tick);
+    requestAnimationFrame(tick);readyResolve();
   });
+  function play(){if(busy)return;playing=true;if(elapsed>=duration()*1000)elapsed=0;last=performance.now();syncPreviewAudio(true);playbackButton();}
+  function pause(){if(busy)return;playing=false;syncPreviewAudio();playbackButton();return setTime(elapsed);}
+  async function restart(){await setTime(0);play();}
+  if(window.CellMotionBridge)readyPromise.then(()=>window.CellMotionBridge.register({
+    effectId:SLUG,readyPromise,getScheme:()=>clone(scheme),durationMs:()=>duration()*1000,
+    applyScheme:async(value,presentation={})=>{await applyScheme(value);await setTime(0);if(presentation.autoplay!==false&&!(presentation.reducedMotion==='pause'&&matchMedia('(prefers-reduced-motion: reduce)').matches))play();},
+    play,pause,restart,seek:seconds=>setTime(seconds*1000)
+  }));
   // Explicit test surface: same renderer and timing, no alternate export implementation.
-  window.VideoCompare={renderFrame,geometry,mediaPlacement,videoAspect,sourceTime,duration,prepareFrame,applyScheme,getScheme:()=>clone(scheme),setTime,exportComposition,getTime:()=>elapsed/1000,getAudioState:()=>scheme.rows.map(r=>({id:r.id,enabled:r.audioEnabled,muted:runtime.get(r.id)?.video.muted,volume:runtime.get(r.id)?.video.volume,paused:runtime.get(r.id)?.video.paused,hasAudio:runtime.get(r.id)?.hasAudio}))};
+  window.VideoCompare={renderFrame,geometry,mediaPlacement,videoAspect,sourceTime,duration,prepareFrame,applyScheme,getScheme:()=>clone(scheme),setTime,exportComposition,getTime:()=>elapsed/1000,play,pause,restart,readyPromise,getAudioState:()=>scheme.rows.map(r=>({id:r.id,enabled:r.audioEnabled,muted:runtime.get(r.id)?.video.muted,volume:runtime.get(r.id)?.video.volume,paused:runtime.get(r.id)?.video.paused,hasAudio:runtime.get(r.id)?.hasAudio}))};
 })();

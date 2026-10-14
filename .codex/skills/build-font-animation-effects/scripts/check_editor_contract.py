@@ -37,13 +37,14 @@ def main() -> int:
             'video editing': ['data-video-file', 'trimStart', 'trimEnd', 'vc-trim-handle', 'sourceTime', 'seekVideo'],
             'export': ['id="exportPng"', 'id="exportGif"', 'id="exportMp4"', 'createH264MP4Encoder'],
             'persistence': ['indexedDB', 'applyScheme', 'version: 1'],
+            'AI': ['CellMotionBridge.register', 'getScheme', 'durationMs', 'seek:'],
         }
         source = html + '\n' + js
         for label, tokens in required.items():
             for token in tokens:
                 if token not in source:
                     errors.append(f'missing {label}: {token}')
-        for shared in ['typecascade-workspace.js', 'typecascade-polish.js', 'typecascade-selects.js', 'typecascade-locale.js', 'site-preferences.js']:
+        for shared in ['typecascade-workspace.js', 'typecascade-polish.js', 'typecascade-selects.js', 'typecascade-locale.js', 'site-preferences.js', 'cellmotion-effect-bridge.js', 'cellmotion-ai-manifest.js', 'cellmotion-ai-menu.js']:
             if shared not in html:
                 errors.append(f'missing shared editor: {shared}')
         for error in errors:
