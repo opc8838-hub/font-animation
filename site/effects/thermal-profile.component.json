@@ -1,0 +1,471 @@
+{
+  "effect": {
+    "id": "thermal-profile",
+    "name": {
+      "zh": "热感",
+      "en": "Thermal Profile"
+    },
+    "version": "1.0.0"
+  },
+  "runtime": {
+    "kind": "iframe-bridge",
+    "entry": "thermal-profile.html",
+    "bridgeVersion": "1.0.0"
+  },
+  "capabilities": {
+    "preview": true,
+    "liveEditorState": true,
+    "compositionModel": "thermal-silhouette",
+    "text": true,
+    "staticImages": true,
+    "localSilhouetteExtraction": true,
+    "maskRepair": true,
+    "deterministicTimeline": true,
+    "exports": [
+      "png",
+      "gif",
+      "mp4"
+    ],
+    "animatedSourceImages": false
+  },
+  "behavior": {
+    "summary": {
+      "zh": "任意静态主体图片提取轮廓，暖色、粉紫和冷色连续流动；文字按字符浮现。透明或纯色背景自动去底，复杂背景可圈选、擦除和补回。GIF 来源只使用首帧，图片全程本机处理。",
+      "en": "Thermal color fields flow through an editable static silhouette with staggered character reveal. Local alpha / solid-background extraction and polygon / erase / restore repair. GIF sources use the first frame."
+    },
+    "phases": [
+      {
+        "id": "flow",
+        "name": {
+          "zh": "热色流动",
+          "en": "Heat flow"
+        },
+        "durationPath": "motion.prelude"
+      },
+      {
+        "id": "reveal",
+        "name": {
+          "zh": "逐字浮现",
+          "en": "Letter reveal"
+        },
+        "durationPath": "motion.reveal"
+      },
+      {
+        "id": "hold",
+        "name": {
+          "zh": "停留流动",
+          "en": "Flow hold"
+        },
+        "durationPath": "motion.hold"
+      },
+      {
+        "id": "return",
+        "name": {
+          "zh": "循环回归",
+          "en": "Loop return"
+        },
+        "durationPath": "motion.return"
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "path": "scene.fontSize",
+      "scope": "effect",
+      "name": {
+        "zh": "文字大小",
+        "en": "fontSize"
+      },
+      "type": "number",
+      "min": 1,
+      "max": 40,
+      "step": 0.1,
+      "unit": "%"
+    },
+    {
+      "path": "scene.tracking",
+      "scope": "effect",
+      "name": {
+        "zh": "字距",
+        "en": "tracking"
+      },
+      "type": "number",
+      "min": -0.1,
+      "max": 0.3,
+      "step": 0.005,
+      "unit": "em"
+    },
+    {
+      "path": "scene.textX",
+      "scope": "effect",
+      "name": {
+        "zh": "文字左右",
+        "en": "textX"
+      },
+      "type": "number",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%"
+    },
+    {
+      "path": "scene.textY",
+      "scope": "effect",
+      "name": {
+        "zh": "文字上下",
+        "en": "textY"
+      },
+      "type": "number",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%"
+    },
+    {
+      "path": "scene.size",
+      "scope": "effect",
+      "name": {
+        "zh": "主体大小",
+        "en": "size"
+      },
+      "type": "number",
+      "min": 50,
+      "max": 170,
+      "step": 1,
+      "unit": "%"
+    },
+    {
+      "path": "scene.x",
+      "scope": "effect",
+      "name": {
+        "zh": "主体左右",
+        "en": "x"
+      },
+      "type": "number",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%"
+    },
+    {
+      "path": "scene.y",
+      "scope": "effect",
+      "name": {
+        "zh": "主体上下",
+        "en": "y"
+      },
+      "type": "number",
+      "min": -40,
+      "max": 40,
+      "step": 1,
+      "unit": "%"
+    },
+    {
+      "path": "scene.softness",
+      "scope": "effect",
+      "name": {
+        "zh": "边缘柔化",
+        "en": "softness"
+      },
+      "type": "number",
+      "min": 0,
+      "max": 5,
+      "step": 0.05,
+      "unit": "%"
+    },
+    {
+      "path": "scene.drift",
+      "scope": "effect",
+      "name": {
+        "zh": "轻微漂移",
+        "en": "drift"
+      },
+      "type": "number",
+      "min": 0,
+      "max": 5,
+      "step": 0.1,
+      "unit": "%"
+    },
+    {
+      "path": "motion.speed",
+      "scope": "effect",
+      "name": {
+        "zh": "整体速度",
+        "en": "speed"
+      },
+      "type": "number",
+      "min": 0.25,
+      "max": 3,
+      "step": 0.05,
+      "unit": "×"
+    },
+    {
+      "path": "motion.prelude",
+      "scope": "effect",
+      "name": {
+        "zh": "热色流动",
+        "en": "prelude"
+      },
+      "type": "number",
+      "min": 0.1,
+      "max": 8,
+      "step": 0.1,
+      "unit": "秒"
+    },
+    {
+      "path": "motion.reveal",
+      "scope": "effect",
+      "name": {
+        "zh": "逐字浮现",
+        "en": "reveal"
+      },
+      "type": "number",
+      "min": 0.1,
+      "max": 4,
+      "step": 0.1,
+      "unit": "秒"
+    },
+    {
+      "path": "motion.hold",
+      "scope": "effect",
+      "name": {
+        "zh": "文字停留",
+        "en": "hold"
+      },
+      "type": "number",
+      "min": 0.1,
+      "max": 10,
+      "step": 0.1,
+      "unit": "秒"
+    },
+    {
+      "path": "motion.return",
+      "scope": "effect",
+      "name": {
+        "zh": "循环回归",
+        "en": "return"
+      },
+      "type": "number",
+      "min": 0.1,
+      "max": 5,
+      "step": 0.1,
+      "unit": "秒"
+    },
+    {
+      "path": "scene.text",
+      "scope": "effect",
+      "name": {
+        "zh": "文字",
+        "en": "Text"
+      },
+      "type": "string"
+    },
+    {
+      "path": "scene.showText",
+      "scope": "effect",
+      "name": {
+        "zh": "显示文字",
+        "en": "Show text"
+      },
+      "type": "boolean"
+    },
+    {
+      "path": "scene.fontFamily",
+      "scope": "effect",
+      "name": {
+        "zh": "字体",
+        "en": "Font"
+      },
+      "type": "string"
+    },
+    {
+      "path": "scene.textColor",
+      "scope": "effect",
+      "name": {
+        "zh": "文字颜色",
+        "en": "Text color"
+      },
+      "type": "color"
+    },
+    {
+      "path": "scene.warm",
+      "scope": "effect",
+      "name": {
+        "zh": "暖色",
+        "en": "Warm color"
+      },
+      "type": "color"
+    },
+    {
+      "path": "scene.cool",
+      "scope": "effect",
+      "name": {
+        "zh": "冷色",
+        "en": "Cool color"
+      },
+      "type": "color"
+    },
+    {
+      "path": "scene.hot",
+      "scope": "effect",
+      "name": {
+        "zh": "热色",
+        "en": "Hot color"
+      },
+      "type": "color"
+    },
+    {
+      "path": "scene.flip",
+      "scope": "effect",
+      "name": {
+        "zh": "水平翻转",
+        "en": "Flip"
+      },
+      "type": "boolean"
+    },
+    {
+      "path": "motion.direction",
+      "scope": "effect",
+      "name": {
+        "zh": "流动方向",
+        "en": "Flow direction"
+      },
+      "type": "number"
+    },
+    {
+      "path": "canvas.width",
+      "scope": "global",
+      "name": {
+        "zh": "画布宽",
+        "en": "Canvas width"
+      },
+      "type": "number"
+    },
+    {
+      "path": "canvas.height",
+      "scope": "global",
+      "name": {
+        "zh": "画布高",
+        "en": "Canvas height"
+      },
+      "type": "number"
+    },
+    {
+      "path": "canvas.fps",
+      "scope": "global",
+      "name": {
+        "zh": "帧率",
+        "en": "FPS"
+      },
+      "type": "number"
+    },
+    {
+      "path": "export.duration",
+      "scope": "global",
+      "name": {
+        "zh": "导出时长",
+        "en": "Export duration"
+      },
+      "type": "string"
+    },
+    {
+      "path": "export.seconds",
+      "scope": "global",
+      "name": {
+        "zh": "自定义秒数",
+        "en": "Custom seconds"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.media.originalDataUrl",
+      "scope": "asset",
+      "name": {
+        "zh": "原始图片",
+        "en": "Original image"
+      },
+      "type": "string"
+    },
+    {
+      "path": "scene.media.imageName",
+      "scope": "asset",
+      "name": {
+        "zh": "图片名称",
+        "en": "Image name"
+      },
+      "type": "string"
+    },
+    {
+      "path": "scene.media.fit",
+      "scope": "asset",
+      "name": {
+        "zh": "取景模式",
+        "en": "Framing"
+      },
+      "type": "string"
+    },
+    {
+      "path": "scene.media.mask.mode",
+      "scope": "asset",
+      "name": {
+        "zh": "轮廓提取方式",
+        "en": "Extraction mode"
+      },
+      "type": "string"
+    },
+    {
+      "path": "scene.media.mask.tolerance",
+      "scope": "asset",
+      "name": {
+        "zh": "去底容差",
+        "en": "Tolerance"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.media.mask.threshold",
+      "scope": "asset",
+      "name": {
+        "zh": "明暗阈值",
+        "en": "Threshold"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.media.mask.background",
+      "scope": "asset",
+      "name": {
+        "zh": "背景取色",
+        "en": "Background color"
+      },
+      "type": "color"
+    },
+    {
+      "path": "scene.media.mask.protect",
+      "scope": "asset",
+      "name": {
+        "zh": "保护主体内部",
+        "en": "Protect interior"
+      },
+      "type": "boolean"
+    },
+    {
+      "path": "scene.media.mask.polygon",
+      "scope": "asset",
+      "name": {
+        "zh": "圈选顶点",
+        "en": "Polygon points"
+      },
+      "type": "array"
+    },
+    {
+      "path": "scene.media.mask.strokes",
+      "scope": "asset",
+      "name": {
+        "zh": "擦除与补回",
+        "en": "Repair strokes"
+      },
+      "type": "array"
+    }
+  ]
+}

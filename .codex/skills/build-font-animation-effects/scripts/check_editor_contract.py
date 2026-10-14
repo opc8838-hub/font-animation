@@ -134,6 +134,31 @@ def main() -> int:
         print(f'PASS: {html_path.name} uses the CellMotion shell with its native liquid renderer; real-browser checks remain required.')
         return 0
 
+    if 'thermal-profile-editor.js' in html:
+        adapter = (html_path.parent / 'thermal-profile-editor.js').read_text(encoding='utf-8')
+        shell = (html_path.parent / 'cellmotion-me-shell.js').read_text(encoding='utf-8')
+        source = html + '\n' + js + '\n' + adapter + '\n' + shell
+        required = {
+            'CellMotion shell': ['tc-content', 'tc-center', 'tc-properties', 'typecascade-polish.css', 'typecascade-selects.js', 'typecascade-locale.js'],
+            'scheme': ['id="saveButton"', 'id="importFile"', 'id="resetButton"', 'id="clearButton"', 'localStorage'],
+            'composition': ['id="exportPreset"', 'id="flowCanvas"', 'id="text"', 'id="fontFamily"', 'id="textColor"', 'id="warm"', 'id="cool"', 'id="hot"'],
+            'timeline': ['me-choreo-track', 'me-choreo-block', 'me-choreo-playhead', 'setTime', 'duration'],
+            'assets': ['STGIconLibrary.groups', 'me-asset-drawer', 'me-asset-library', 'me-asset-choice', 'me-asset-commit', 'me-asset-editor', 'selectedActions', 'openDrawer'],
+            'mask editing': ['ThermalMask.settings', 'id="maskCanvas"', 'id="maskUndo"', 'id="maskComplete"'],
+            'export': ['id="exportPng"', 'id="exportGif"', 'id="exportVideo"', 'createH264MP4Encoder'],
+            'AI': ['cellmotion-ai-menu.js', 'cellmotion-effect-bridge.js', 'CellMotionBridge.register', 'getScheme', 'applyScheme'],
+        }
+        for label, tokens in required.items():
+            for token in tokens:
+                if token not in source:
+                    errors.append(f'missing {label}: {token}')
+        for error in errors:
+            fail(error)
+        if errors:
+            return 1
+        print(f'PASS: {html_path.name} uses the CellMotion thermal silhouette shell; browser checks remain required.')
+        return 0
+
     text_only = 'data-editor-capabilities="text-only"' in html
     required_html = {
         "scheme Save": "保存方案",

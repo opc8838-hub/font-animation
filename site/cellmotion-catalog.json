@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "thermal-profile",
+      "date": "2026-10-15"
+    },
+    {
       "id": "video-compare",
       "date": "2026-10-14"
     },
@@ -94,6 +98,21 @@
     }
   ],
   "effects": [
+    {
+      "id": "thermal-profile",
+      "name": "热感",
+      "english": "Thermal Profile",
+      "description": "人像轮廓 · 热色流动 · 文字浮现",
+      "category": "graphic",
+      "href": "thermal-profile.html?from=gallery&v=20261015-release1",
+      "poster": "final_thermal-profile.png",
+      "video": "assets/previews/thermal-profile-card.mp4",
+      "webComponent": {
+        "preview": "typecascade-component-demo.html?effect=thermal-profile",
+        "descriptor": "effects/thermal-profile.component.json"
+      },
+      "status": "ready"
+    },
     {
       "id": "video-compare",
       "name": "视频对比",
