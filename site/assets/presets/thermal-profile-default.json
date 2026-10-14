@@ -1,0 +1,57 @@
+{
+  "effect": "thermal-profile",
+  "version": 1,
+  "canvas": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 60
+  },
+  "motion": {
+    "speed": 1,
+    "direction": 1,
+    "prelude": 1.6,
+    "reveal": 0.8,
+    "hold": 2.8,
+    "return": 0.8
+  },
+  "scene": {
+    "text": "hely.fun",
+    "showText": true,
+    "fontFamily": "stg:inter",
+    "textColor": "#fff4df",
+    "warm": "#f7cd8d",
+    "cool": "#8966db",
+    "hot": "#c246a2",
+    "fontSize": 13.3,
+    "tracking": -0.025,
+    "textX": 50,
+    "textY": 51,
+    "size": 113,
+    "x": 50,
+    "y": 0,
+    "softness": 0.05,
+    "drift": 1.1,
+    "flip": false,
+    "media": {
+      "source": "image",
+      "originalDataUrl": "assets/thermal/profile.png",
+      "imageName": "侧脸",
+      "fileType": "image/png",
+      "fit": "cover",
+      "mask": {
+        "mode": "auto",
+        "tolerance": 42,
+        "threshold": 160,
+        "background": null,
+        "protect": true,
+        "polygon": [],
+        "strokes": []
+      }
+    }
+  },
+  "export": {
+    "fps": 60,
+    "duration": "cycle",
+    "seconds": 6
+  }
+}

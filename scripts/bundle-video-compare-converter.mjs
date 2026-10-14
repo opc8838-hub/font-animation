@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const vendor=path.join(root,'site/js/vendor/ffmpeg/ffmpeg');
 const strip=text=>text.replace(/^import\s+[\s\S]*?from\s+["'][^"']+["'];\s*/gm,'').replace(/\bexport\s+(?=(?:const|let|var|class|function)\b)/g,'');
-const read=async name=>strip(await fs.readFile(path.join(vendor,name),'utf8'));
+const read=async name=>strip(await fs.readFile(path.join(vendor,name),'utf8')).replace(/[ \t]+$/gm,'');
 const shared=await read('const.js')+'\n'+await read('errors.js');
 const worker=shared+'\n'+await read('worker.js');
 const client=shared+'\n'+await read('utils.js')+'\n'+await read('classes.js');

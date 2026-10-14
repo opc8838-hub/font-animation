@@ -174,7 +174,7 @@ class FFmpeg {
      */
     exec = (
     /** ffmpeg command line args */
-    args, 
+    args,
     /**
      * milliseconds to wait before stopping the command execution.
      *
@@ -202,7 +202,7 @@ class FFmpeg {
      */
     ffprobe = (
     /** ffprobe command line args */
-    args, 
+    args,
     /**
      * milliseconds to wait before stopping the command execution.
      *
@@ -281,7 +281,7 @@ class FFmpeg {
      *
      * @category File System
      */
-    readFile = (path, 
+    readFile = (path,
     /**
      * File content encoding, supports two encodings:
      * - utf8: read file as text file, return data in string type.

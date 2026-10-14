@@ -469,6 +469,7 @@
     "大小": "Size"
   }));
   const phaseNames = ['爆炸拆开', '回正关灯', '片名', '汉字点亮', '英文点亮', '副标题点亮', '署名淡入', '结果定格', '立字开场', '结束停留', '倾倒坠落', '基线长入', '停留', '倾倒', '悬停', '下落', '主词入场', '主词停顿', '居中预备', '后句接入', '本页停留'];
+  Object.entries(window.CellMotionLocaleDictionary || {}).forEach(([zh,en]) => dictionary.set(zh,en));
   const languageButton = document.createElement('button');
   languageButton.type = 'button';
   languageButton.id = 'tcLanguageToggle';
@@ -476,7 +477,7 @@
   document.getElementById('tcThemeToggle').after(languageButton);
   let language = 'zh';
   const originals = new WeakMap();
-  const excluded = 'script,style,textarea,output,.site-preferences,.tc-row-text,#timeline small,.gm-background-video-head strong,.stg-cn-toolbar,.stg-cn-drawer,.stg-cn-backdrop';
+  const excluded = 'script,style,textarea,output,[data-no-translate],.site-preferences,.tc-row-text,#timeline small,.gm-background-video-head strong,.stg-cn-toolbar,.stg-cn-drawer,.stg-cn-backdrop';
 
   function translate(value, element, attribute = '') {
     const s = value.trim();
