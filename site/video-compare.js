@@ -80,7 +80,7 @@
     return Math.min(rt.duration-.001,start+local);
   }
   let audioModule;
-  function loadAudio(){return audioModule ||= import('./video-compare-audio.js?v=20261014-vcompare7');}
+  function loadAudio(){return audioModule ||= import('./video-compare-audio.js?v=20261014-vcompare8');}
   function syncPreviewAudio(start=false){
     const enabled=scheme.rows.filter(r=>r.audioEnabled&&runtime.get(r.id)?.ready&&runtime.get(r.id).hasAudio!==false);
     for(const row of scheme.rows){const rt=runtime.get(row.id);if(!rt?.ready)continue;
@@ -97,13 +97,26 @@
   function videoError() {return new Error(tr('无法解码视频画面，请使用 H.264 MP4（可含 AAC 声音）。','Cannot decode the video picture. Use H.264 MP4 (AAC audio is supported).'));}
   function readyVideo(video) {
     return new Promise((resolve,reject) => {
-      let finished=false;
-      const timer=setTimeout(()=>finish(videoError()),15000);
-      const ok=()=>{if(video.readyState>=2)finish(Number.isFinite(video.duration)&&video.duration>0&&video.videoWidth>0&&video.videoHeight>0?null:videoError());};
+      let finished=false,requestedFrame=false;
+      // Mobile data-saver may omit loadeddata. Trust decoded readiness, not one event.
+      const events=['loadedmetadata','loadeddata','canplay','seeked','resize'];
+      const timer=setTimeout(()=>finish(new Error(tr('视频首帧加载超时，请点击重试；若仍失败，请使用 H.264 MP4 或较短片段。','First video frame timed out. Retry, or use H.264 MP4 / a shorter clip.'))),30000);
+      const probe=setInterval(ok,200);
+      function ok(){
+        if(finished)return;
+        if(video.error)return finish(videoError());
+        if(video.readyState>=2){
+          finish(Number.isFinite(video.duration)&&video.duration>0&&video.videoWidth>0&&video.videoHeight>0?null:videoError());return;
+        }
+        // A small explicit seek requests a frame when metadata-only preload is used.
+        if(!requestedFrame&&video.readyState>=1&&video.videoWidth>0&&video.videoHeight>0&&Number.isFinite(video.duration)&&video.duration>0){
+          requestedFrame=true;try{video.currentTime=Math.min(.001,video.duration/2);}catch{}
+        }
+      }
       const error=()=>finish(videoError());
-      function finish(err) {if(finished)return;finished=true;clearTimeout(timer);video.removeEventListener('loadeddata',ok);video.removeEventListener('error',error);err?reject(err):resolve();}
-      video.addEventListener('loadeddata',ok);video.addEventListener('error',error);
-      if(video.error)error();else ok();
+      function finish(err){if(finished)return;finished=true;clearTimeout(timer);clearInterval(probe);for(const event of events)video.removeEventListener(event,ok);video.removeEventListener('error',error);err?reject(err):resolve();}
+      for(const event of events)video.addEventListener(event,ok);
+      video.addEventListener('error',error);ok();
     });
   }
   // Wait for decoded source frames. No real-time capture or guessed fixed seek delay.

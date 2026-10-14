@@ -23,6 +23,13 @@ const root=path.resolve(__dirname,'..'),out=path.join(root,'output/video-compare
    assert.equal(await page.evaluate(()=>VideoCompare.getScheme().rows[0].media.fileType),'video/mp4');
    console.log('PASS real MP4 with '+(type||'empty MIME')+' decodes and allows retry');
   }
+  // Model mobile data-saver event omission using real decoders and real pixels.
+  // Suppress only loadeddata; no dimensions, readiness or decoding are faked.
+  await page.evaluate(()=>{const add=HTMLMediaElement.prototype.addEventListener;window.originalMediaAdd=add;HTMLMediaElement.prototype.addEventListener=function(type,listener,...rest){if(type==='loadeddata')return;return add.call(this,type,listener,...rest);};});
+  await select('video/mp4','landscape-no-loadeddata.mp4');
+  await page.waitForFunction(()=>VideoCompare.getScheme().rows[0].media?.name==='landscape-no-loadeddata.mp4'&&document.querySelector('[data-video-file]').value==='',null,{timeout:8000});
+  await page.evaluate(()=>HTMLMediaElement.prototype.addEventListener=originalMediaAdd);
+  assert.equal(await name.evaluate(e=>e.classList.contains('is-error')),false);console.log('PASS real landscape decoding succeeds when mobile loadeddata event is omitted');
   const previous=await page.evaluate(()=>VideoCompare.getScheme().rows[0].media.name);
   await select('text/plain','wrong.txt');await page.waitForFunction(()=>document.querySelector('.vc-file-name').classList.contains('is-error'));
   assert.equal(await input.inputValue(),'');assert.equal(await page.evaluate(()=>VideoCompare.getScheme().rows[0].media.name),previous);console.log('PASS rejected file preserves source and resets picker');
