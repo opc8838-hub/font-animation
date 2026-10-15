@@ -79,6 +79,50 @@
             "layout": {
               "type": "object"
             },
+            "logo": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "required": [
+                "kind",
+                "url",
+                "name",
+                "background",
+                "color",
+                "tolerance"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "image"
+                },
+                "url": {
+                  "type": "string",
+                  "pattern": "^data:image/png;base64,"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "background": {
+                  "enum": [
+                    "keep",
+                    "remove-white"
+                  ]
+                },
+                "color": {
+                  "enum": [
+                    "original",
+                    "black",
+                    "white"
+                  ]
+                },
+                "tolerance": {
+                  "type": "number",
+                  "minimum": 1,
+                  "maximum": 100
+                }
+              }
+            },
             "export": {
               "type": "object"
             },

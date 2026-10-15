@@ -10,7 +10,7 @@
   },
   "runtime": {
     "kind": "iframe-bridge",
-    "entry": "video-compare.html?preview=1&embed=1&v=20261015-vcompare11",
+    "entry": "video-compare.html?preview=1&embed=1&v=20261015-vcompare12",
     "bridgeVersion": "1.0.0",
     "renderer": "canvas2d"
   },
@@ -21,7 +21,7 @@
     "editableTextRows": true,
     "rowFonts": false,
     "inlineIcons": false,
-    "customImageAssets": false,
+    "customImageAssets": true,
     "videoSources": true,
     "videoTrim": true,
     "sourceAudio": true,
@@ -36,8 +36,8 @@
   },
   "behavior": {
     "summary": {
-      "zh": "固定 Before / After 双视频对比，Before 始终小于 After。素材比例与成品画布独立，保留标签、取景、裁剪及独立声音开关；短片可循环或停在末帧。",
-      "en": "A fixed Before / After video pair with a smaller Before. Source aspect and output canvas are independent. Preserves editable labels, framing, trims and independent audio switches; shorter clips loop or hold their last frame."
+      "zh": "固定 Before / After 双视频对比，Before 始终小于 After。短片及其声音自动循环，预览持续重播，导出在较长的裁剪片段结束时停止。保留独立音轨开关、素材取景和可上传、去白底、缩放的底部 Logo。",
+      "en": "A fixed Before / After pair with a smaller Before. Shorter clips and their audio loop; preview repeats and exports end with the longest trimmed clip. Preserves audio switches, framing and a custom footer logo with local white removal and sizing."
     },
     "phases": [
       {
@@ -51,15 +51,15 @@
       {
         "id": "ending",
         "name": {
-          "zh": "末帧保留 / 短片循环",
-          "en": "Hold last frame / loop short clip"
+          "zh": "短片循环",
+          "en": "Short clip loops"
         },
         "colorToken": "phase.violet"
       }
     ],
     "audio": {
-      "zh": "按声音开关保留原视频音轨，两路开启时等量混音。停在末帧时声音结束。浏览器可能要求用户点击播放后才允许有声播放。",
-      "en": "Enabled source tracks are mixed equally and follow trim/loop settings. Hold-last-frame ends the audio. Browsers may require a user play gesture before audible playback."
+      "zh": "开启的音轨跟随裁剪区间循环；两路开启时等量混音，导出到最长片段为止。网页有声播放可能需要用户点击播放。",
+      "en": "Enabled tracks loop within their trim intervals and mix equally, ending with the longest clip. Audible browser playback may require a user play gesture."
     }
   },
   "parameters": [
@@ -238,8 +238,8 @@
         "zh": "Logo 大小",
         "en": "Logo size"
       },
-      "min": 12,
-      "max": 32,
+      "min": 1,
+      "max": 100,
       "unit": "%"
     },
     {
@@ -251,24 +251,8 @@
         "en": "Duration mode"
       },
       "values": [
-        "cycle",
-        "3",
-        "5",
-        "10",
-        "custom"
+        "cycle"
       ]
-    },
-    {
-      "path": "composition.export.customDuration",
-      "scope": "global",
-      "type": "number",
-      "name": {
-        "zh": "自定义时长",
-        "en": "Custom duration"
-      },
-      "min": 0.1,
-      "max": 120,
-      "unit": "s"
     },
     {
       "path": "composition.export.fps",
@@ -294,7 +278,6 @@
         "en": "Short clip ending"
       },
       "values": [
-        "hold",
         "loop"
       ]
     },
@@ -420,6 +403,53 @@
       },
       "min": 0,
       "unit": "s"
+    },
+    {
+      "path": "composition.logo.url",
+      "scope": "global",
+      "type": "string",
+      "name": {
+        "zh": "嵌入 Logo 图片",
+        "en": "Embedded logo image"
+      }
+    },
+    {
+      "path": "composition.logo.background",
+      "scope": "global",
+      "type": "enum",
+      "name": {
+        "zh": "白底处理",
+        "en": "White background"
+      },
+      "values": [
+        "keep",
+        "remove-white"
+      ]
+    },
+    {
+      "path": "composition.logo.color",
+      "scope": "global",
+      "type": "enum",
+      "name": {
+        "zh": "Logo 颜色",
+        "en": "Logo color"
+      },
+      "values": [
+        "original",
+        "black",
+        "white"
+      ]
+    },
+    {
+      "path": "composition.logo.tolerance",
+      "scope": "global",
+      "type": "number",
+      "name": {
+        "zh": "去白底强度",
+        "en": "White removal tolerance"
+      },
+      "min": 1,
+      "max": 100
     }
   ]
 }

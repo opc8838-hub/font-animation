@@ -25,7 +25,7 @@ const root=path.resolve(__dirname,'..'),out=path.join(root,'output/video-compare
     const silent=await (await fetch('data:video/mp4;base64,'+fixtures[row.id])).blob();
     const blob=await audio.muxAudio(silent,buffer,24,()=>false);
     const url=await new Promise(resolve=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.readAsDataURL(blob);});
-    row.media={url,name:row.id+'-tone.mp4',fileType:'video/mp4',fit:'contain',zoom:1,panX:.5,panY:.5,trimStart:before?.25:.5,trimEnd:before?.75:1.5};
+    row.media={url,name:row.id+'-tone.mp4',fileType:'video/mp4',fit:'contain',zoom:1,panX:.5,panY:.5,trimStart:before?.25:.5,trimEnd:before?.75:2};
    }
    scheme.rows.forEach(row=>delete row.audioEnabled);await VideoCompare.applyScheme(scheme);
   },fixtures);
@@ -65,12 +65,12 @@ const root=path.resolve(__dirname,'..'),out=path.join(root,'output/video-compare
    console.log('PASS actual '+name+' MP4 export: '+JSON.stringify(tracks));
   }
   const a=results.after.windows,b=results.before.windows,m=results.mixed.windows,l=results.loop.windows;
-  assert.ok(a[0].hz660>.20&&a[2].hz660>.20&&a[0].hz220<.02&&a[3].rms<.004);
-  assert.ok(b[0].hz220>.20&&b[1].hz330>.20&&b[0].hz660<.02&&b[2].rms<.004&&b[3].rms<.004);
-  assert.ok(m[0].hz220>.09&&m[0].hz660>.09&&m[2].hz660>.09&&m[2].hz660<.16&&m[3].rms<.004);
+  assert.ok(a[0].hz660>.20&&a[2].hz660>.20&&a[0].hz220<.02&&a[3].hz660>.20);
+  assert.ok(b[0].hz220>.20&&b[1].hz330>.20&&b[0].hz660<.02&&b[2].hz330>.20&&b[3].hz330>.20);
+  assert.ok(m[0].hz220>.09&&m[0].hz660>.09&&m[2].hz660>.09&&m[2].hz660<.16&&m[3].hz660>.09&&m[3].hz330>.09);
   assert.ok(l[0].hz220>.20&&l[1].hz330>.20&&l[2].hz330>.20&&l[3].hz330>.20);
   await fs.writeFile(path.join(out,'spectra.json'),JSON.stringify(results,null,2));
-  console.log('PASS decoded audio frequencies prove source selection, trim, equal mix, hold silence and loops');
+  console.log('PASS decoded audio frequencies prove source selection, trim, equal mix, automatic short-source loops through the longest trimmed clip');
   // Save the edited switches in the public JSON and reload through the same importer.
   await page.evaluate(async()=>{const s=VideoCompare.getScheme();s.rows[0].audioEnabled=true;s.rows[1].audioEnabled=false;await VideoCompare.applyScheme(s);});
   const event=page.waitForEvent('download');await page.locator('#saveScheme').click();const download=await event,file=path.join(out,'audio-scheme.json');await download.saveAs(file);

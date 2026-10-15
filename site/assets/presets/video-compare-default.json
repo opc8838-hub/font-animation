@@ -24,7 +24,7 @@
     "duration": "cycle",
     "customDuration": 6,
     "fps": 30,
-    "shortClip": "hold"
+    "shortClip": "loop"
   },
   "rows": [
     {
@@ -41,5 +41,6 @@
       "audioEnabled": true,
       "media": null
     }
-  ]
+  ],
+  "logo": null
 }

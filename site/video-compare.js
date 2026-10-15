@@ -12,7 +12,8 @@
   const defaults = {
     effect: SLUG, version: 1, canvas: {preset:'1920x1080',width:1920,height:1080},
     layout: {fontFamily:'stg:manrope',compositionTheme:'light',textColor:'#171717',backgroundColor:'#faf9f7',labelSize:100,marginSize:5,frameGap:4,frameRadius:28,logoSize:22,videoAspect:'auto',beforeScale:65,topText:'have a good day'},
-    export: {duration:'cycle',customDuration:6,fps:30,shortClip:'hold'},
+    logo: null,
+    export: {duration:'cycle',customDuration:6,fps:30,shortClip:'loop'},
     rows: [
       {id:'before',text:'Before',caption:'网上看到的',audioEnabled:false,media:null},
       {id:'after',text:'After',caption:'我做的',audioEnabled:true,media:null}
@@ -28,6 +29,7 @@
   let readyResolve;const readyPromise=new Promise(resolve=>readyResolve=resolve);
   window.CellMotionEffectBridge={effectId:SLUG,readyPromise,getScheme:()=>clone(scheme)};
   const logos = {};
+  let customLogo=null,logoSource=null,logoToken=0,logoPending=false;
   for (const color of ['black','white']) {
     const img = new Image(); img.src = 'assets/video-compare/logo-'+color+'.png';
     img.onload = () => renderFrame(canvas); logos[color] = img;
@@ -67,8 +69,7 @@
     return Math.max(.01,Math.min(rt.duration,row.media.trimEnd||rt.duration)-row.media.trimStart);
   }
   function duration() {
-    if(scheme.export.duration==='cycle') return Math.max(.1,...scheme.rows.map(clipDuration))===.1 ? 6 : Math.max(...scheme.rows.map(clipDuration));
-    return scheme.export.duration==='custom' ? scheme.export.customDuration : Number(scheme.export.duration);
+    return Math.max(...scheme.rows.map(clipDuration))||6;
   }
   function sourceTime(row,seconds) {
     const rt=runtime.get(row.id), m=row.media;
@@ -76,20 +77,20 @@
     const start=clamp(m.trimStart,0,Math.max(0,rt.duration-.01));
     const end=clamp(m.trimEnd||rt.duration,start+.01,rt.duration);
     const length=end-start;
-    const local=scheme.export.shortClip==='loop' ? Math.max(0,seconds)%length : Math.min(Math.max(0,seconds),Math.max(0,length-1/120));
+    const local=Math.max(0,seconds)%length;
     return Math.min(rt.duration-.001,start+local);
   }
   let audioModule;
   let audioAttempt=0;
-  function loadAudio(){return audioModule ||= import('./video-compare-audio.js?v=20261015-vcompare11'+(audioAttempt++?'&retry='+audioAttempt:'')).catch(error=>{audioModule=null;throw error;});}
+  function loadAudio(){return audioModule ||= import('./video-compare-audio.js?v=20261015-vcompare12'+(audioAttempt++?'&retry='+audioAttempt:'')).catch(error=>{audioModule=null;throw error;});}
   let transcoderModule;
   let transcoderAttempt=0;
-  function loadTranscoder(){return transcoderModule ||= import('./video-compare-transcode.js?v=20261015-vcompare11'+(transcoderAttempt++?'&retry='+transcoderAttempt:'')).catch(error=>{transcoderModule=null;throw error;});}
+  function loadTranscoder(){return transcoderModule ||= import('./video-compare-transcode.js?v=20261015-vcompare12'+(transcoderAttempt++?'&retry='+transcoderAttempt:'')).catch(error=>{transcoderModule=null;throw error;});}
   function syncPreviewAudio(start=false){
     const enabled=scheme.rows.filter(r=>r.audioEnabled&&runtime.get(r.id)?.ready&&runtime.get(r.id).hasAudio!==false);
     for(const row of scheme.rows){const rt=runtime.get(row.id);if(!rt?.ready)continue;
       rt.video.muted=!row.audioEnabled;rt.video.volume=enabled.length>1?1/enabled.length:1;
-      if(start&&playing&&!(scheme.export.shortClip==='hold'&&elapsed/1000>=clipDuration(row)))void rt.video.play().catch(()=>{});
+      if(start&&playing)void rt.video.play().catch(()=>{});
       if(!playing||busy)rt.video.pause();
     }
   }
@@ -328,8 +329,8 @@
       }
       ctx.restore();
     });
-    const logo=logos[dark?'white':'black'];
-    if(logo?.complete && logo.naturalWidth){const lw=w*l.logoSize/100,lh=lw*logo.naturalHeight/logo.naturalWidth;ctx.drawImage(logo,(w-lw)/2,logoY-lh/2,lw,lh);}
+    const logo=scheme.logo?customLogo:logos[dark?'white':'black'];
+    if(logo&&(logo.width||logo.naturalWidth)){const iw=logo.naturalWidth||logo.width,ih=logo.naturalHeight||logo.height,scale=Math.min(w*l.logoSize/100/iw,h*.9/ih),lw=iw*scale,lh=ih*scale;ctx.drawImage(logo,(w-lw)/2,Math.min(logoY-lh/2,h*.98-lh),lw,lh);}
     return target;
   }
   async function prepareFrame(seconds) { await Promise.all(scheme.rows.map(async row=>{const rt=runtime.get(row.id);if(!rt?.ready)return;if(!rt.exportVideo){rt.exportVideo=makeVideo(rt.sourceUrl||row.media.url,'export');rt.exportReady=readyVideo(rt.exportVideo);}await rt.exportReady;await seekVideo(rt.exportVideo,sourceTime(row,seconds));})); }
@@ -347,7 +348,7 @@
     const clips=scheme.rows.filter(row=>clipDuration(row)>0).map(row=>clipDuration(row)*1000);
     const shortest=clips.length===2?Math.min(...clips):total;
     const phases=[{from:0,to:Math.min(total,shortest),zh:'双视频对比',english:'Video comparison',color:'#8ec8ff'}];
-    if(shortest<total-.5)phases.push({from:shortest,to:total,zh:scheme.export.shortClip==='loop'?'短片循环':'末帧保留',english:scheme.export.shortClip==='loop'?'Short clip loops':'Hold last frame',color:'#d4b8ff'});
+    if(shortest<total-.5)phases.push({from:shortest,to:total,zh:'短片循环',english:'Short clip loops',color:'#d4b8ff'});
     $('timeline').innerHTML=phases.map(p=>'<button type="button" class="gm-timeline-block me-choreo-block" role="listitem" data-seek-ms="'+p.from+'" data-phase-color="'+p.color+'" style="background:'+p.color+';flex-grow:'+(p.to-p.from)+'"><strong>'+esc(tr(p.zh,p.english))+'</strong><small>'+((p.to-p.from)/1000).toFixed(2)+'s</small></button>').join('');
     $('scrubber').max=String(total);$('timeTotal').textContent=(total/1000).toFixed(2)+'s';
     elapsed=Math.min(elapsed,total);
@@ -367,7 +368,7 @@
   function syncControls() {
     $('canvasPreset').value=scheme.canvas.preset;$('canvasWidth').value=scheme.canvas.width;$('canvasHeight').value=scheme.canvas.height;document.querySelector('.gm-custom-size').hidden=scheme.canvas.preset!=='custom';
     for(const [id,value]of Object.entries(scheme.layout))if($(id))$(id).value=value;
-    syncLayoutInfo();
+    syncLayoutInfo();syncLogoUi();
     $('exportDuration').value=scheme.export.duration;$('exportFps').value=scheme.export.fps;$('customDuration').value=scheme.export.customDuration;$('shortClip').value=scheme.export.shortClip;$('customDurationField').hidden=scheme.export.duration!=='custom';
     for(const id of ['labelSize','marginSize','frameGap','frameRadius','logoSize','beforeScale']){const out=document.querySelector('output[for="'+id+'"]');out.value=scheme.layout[id]+(id==='frameRadius'?'px':'%');$(id).dispatchEvent(new CustomEvent('vc-sync'));}
   }
@@ -381,18 +382,54 @@
     for(const id of ['textColor','backgroundColor'])if(/^#[0-9a-f]{6}$/i.test(l[id]))result.layout[id]=l[id];
     if(window.STGFontLibrary.preset(l.fontFamily))result.layout.fontFamily=l.fontFamily;
     result.layout.compositionTheme=l.compositionTheme==='dark'?'dark':'light';
-    const ex=input.export||{};result.export.duration=['cycle','3','5','10','custom'].includes(ex.duration)?ex.duration:'cycle';result.export.customDuration=clamp(ex.customDuration||6,.1,120);result.export.fps=[24,30,60].includes(Number(ex.fps))?Number(ex.fps):30;result.export.shortClip=ex.shortClip==='loop'?'loop':'hold';
+    const ex=input.export||{};result.export.duration='cycle';result.export.customDuration=clamp(ex.customDuration||6,.1,120);result.export.fps=[24,30,60].includes(Number(ex.fps))?Number(ex.fps):30;result.export.shortClip='loop';
+    if(input.logo){const m=input.logo;if(!/^data:image\/png;base64,/i.test(m.url||'')||m.url.length>24*1024*1024)throw new Error(tr('Logo 必须是嵌入的 PNG 图片。','Logo must be an embedded PNG image.'));result.logo={kind:'image',url:m.url,name:String(m.name||'Logo').slice(0,200),background:m.background==='remove-white'?'remove-white':'keep',color:['black','white'].includes(m.color)?m.color:'original',tolerance:clamp(m.tolerance??24,1,100)};}
     result.rows=result.rows.map((row,i)=>{const r=input.rows.find(r=>r.id===row.id);if(!r)throw new Error('Missing video slot');row.text=String(r.text??row.text).slice(0,100);row.caption=String(r.caption??row.caption).slice(0,160);row.audioEnabled=typeof r.audioEnabled==='boolean'?r.audioEnabled:row.audioEnabled;if(r.media){const m=r.media;if(!/^data:video\//i.test(m.url||''))throw new Error(tr('方案视频必须包含在文件内。','Scheme videos must be embedded in the file.'));row.media={kind:'video',url:m.url,name:String(m.name||'Video'),fileType:String(m.fileType||'video/mp4'),fit:m.fit==='cover'?'cover':'contain',zoom:clamp(m.zoom||1,1,4),panX:clamp(m.panX??.5,0,1),panY:clamp(m.panY??.5,0,1),trimStart:Math.max(0,Number(m.trimStart)||0),trimEnd:Math.max(0,Number(m.trimEnd)||0)};}return row;});return result;
   }
   async function applyScheme(input) {
     const next=normalize(input);const myRevision=++revision;
     for(const rt of runtime.values())dispose(rt);runtime.clear();uploadErrors.clear();uploadStates.clear();uploadTokens.clear();scheme=next;elapsed=0;playing=false;
     renderRows();syncControls();resizePreview();renderTimeline();playbackButton();
-    const loaded=await Promise.allSettled([loadFont(),...scheme.rows.map(loadMedia)]);
+    const loaded=await Promise.allSettled([loadFont(),loadLogo(),...scheme.rows.map(loadMedia)]);
     if(myRevision!==revision)return;
-    if(loaded.some(r=>r.status==='rejected'))throw new Error(tr('部分视频无法解码，请替换。','Some videos could not be decoded. Replace them.'));
+    if(loaded.some(r=>r.status==='rejected'))throw new Error(tr('部分素材无法解码，请替换。','Some media could not be decoded. Replace it.'));
     renderFrame(canvas);refreshShell();persist();
   }
+  function syncLogoUi(){
+    $('logoName').textContent=logoPending?tr('正在处理图片…','Processing image…'):scheme.logo?.name||tr('默认 B2W Logo','Default B2W logo');
+    for(const id of ['logoBackground','logoColor','logoTolerance','restoreLogo','downloadLogoSvg'])$(id).disabled=busy||logoPending||!scheme.logo;
+    $('uploadLogo').disabled=busy||logoPending;
+    $('logoBackground').value=scheme.logo?.background||'keep';$('logoColor').value=scheme.logo?.color||'original';$('logoTolerance').value=scheme.logo?.tolerance||24;
+    document.querySelector('output[for="logoTolerance"]').value=String(scheme.logo?.tolerance||24);
+    for(const [id,words]of Object.entries({logoBackground:{keep:['保留原图','Keep original'],'remove-white':['去掉白底','Remove white background']},logoColor:{original:['保留原色','Original colors'],black:['黑色','Black'],white:['白色','White']}}))for(const [value,labels]of Object.entries(words))$(id).querySelector('[value="'+value+'"]').textContent=tr(...labels);
+  }
+  async function loadLogo(){
+    const token=++logoToken,media=scheme.logo;customLogo=null;logoSource=null;
+    if(!media){logoPending=false;syncLogoUi();return;}
+    logoPending=true;syncLogoUi();
+    try{const source=await VideoCompareLogo.decode(media.url);if(token!==logoToken)return;logoSource=source;customLogo=VideoCompareLogo.process(source,media);}
+    finally{if(token===logoToken){logoPending=false;syncLogoUi();renderFrame(canvas);}}
+  }
+  $('uploadLogo').addEventListener('click',()=>$('logoFile').click());
+  $('logoFile').addEventListener('change',async e=>{
+    const file=e.target.files[0];if(!file||busy)return;
+    const token=++logoToken;logoPending=true;syncLogoUi();
+    try{
+      if(!file.size||file.size>15*1024*1024)throw new Error(tr('请选择 15 MB 以内的图片。','Choose an image under 15 MB.'));
+      const url=URL.createObjectURL(file);let source;try{source=await VideoCompareLogo.decode(url);}finally{URL.revokeObjectURL(url);}
+      if(token!==logoToken)return;
+      checkpoint();scheme.logo={kind:'image',url:source.toDataURL('image/png'),name:file.name,background:'keep',color:'original',tolerance:24};logoSource=source;customLogo=VideoCompareLogo.process(source,scheme.logo);edited();status('logoStatus','Logo 已更新；可保留原图或去掉白底。','Logo updated. Keep the original or remove its white background.');
+    }catch(error){if(token===logoToken)status('logoStatus',tr('无法读取图片：','Could not read image: ')+error.message,tr('无法读取图片：','Could not read image: ')+error.message);}
+    finally{if(token===logoToken){logoPending=false;syncLogoUi();}e.target.value='';}
+  });
+  for(const [id,key]of [['logoBackground','background'],['logoColor','color'],['logoTolerance','tolerance']])$(id).addEventListener('input',()=>{
+    if(busy||logoPending||!scheme.logo||!logoSource)return;checkpoint();scheme.logo[key]=key==='tolerance'?Number($(id).value):$(id).value;customLogo=VideoCompareLogo.process(logoSource,scheme.logo);syncLogoUi();edited();
+  });
+  $('restoreLogo').addEventListener('click',()=>{if(busy||logoPending)return;checkpoint();scheme.logo=null;void loadLogo();edited();status('logoStatus','已恢复默认 Logo。','Default logo restored.');});
+  $('downloadLogoSvg').addEventListener('click',()=>{
+    if(!scheme.logo||!logoSource||busy||logoPending)return;
+    try{const svg=VideoCompareLogo.trace(logoSource,scheme.logo);download(new Blob([svg],{type:'image/svg+xml'}),'logo-monochrome.svg');status('logoStatus','已生成单色路径 SVG。','Monochrome path SVG created.');}catch(error){status('logoStatus',error.message,error.message);}
+  });
   // Phone file providers may omit MIME or return a generic binary type. Decode the
   // actual video before accepting it; a filename alone never proves it is valid.
   function sourceFileType(file) {
@@ -461,7 +498,7 @@
     if(id==='compositionTheme'){Object.assign(scheme.layout,$(id).value==='dark'?{textColor:'#fafafa',backgroundColor:'#101011'}:{textColor:'#171717',backgroundColor:'#faf9f7'});}
     syncControls();void loadFont();resizePreview();edited();
   });
-  for(const id of ['exportDuration','exportFps','customDuration','shortClip'])$(id).addEventListener('change',()=>{if(busy)return;checkpoint();scheme.export={duration:$('exportDuration').value,fps:Number($('exportFps').value),customDuration:clamp($('customDuration').value,.1,120),shortClip:$('shortClip').value};syncControls();edited();});
+  for(const id of ['exportDuration','exportFps','customDuration','shortClip'])$(id).addEventListener('change',()=>{if(busy)return;checkpoint();scheme.export={duration:'cycle',fps:Number($('exportFps').value),customDuration:6,shortClip:'loop'};syncControls();edited();});
   $('scrubber').addEventListener('input',()=>void setTime(Number($('scrubber').value)));
   $('timeline').addEventListener('click',e=>{const b=e.target.closest('[data-seek-ms]');if(b)void setTime(Number(b.dataset.seekMs));});
   $('togglePlayback').addEventListener('click',()=>{if(busy)return;playing=!playing;if(playing&&elapsed>=duration()*1000)elapsed=0;last=performance.now();syncPreviewAudio(true);playbackButton();});
@@ -486,12 +523,13 @@
   async function loadFont(){const face=window.STGFontLibrary.preset(scheme.layout.fontFamily);if(face){try{await document.fonts.load((face.style||'normal')+' '+(face.weight||700)+' 60px "'+face.family+'"','Before 网上看到的');}catch{}renderFrame(canvas);}}
   let encoderLoader;
   function loadEncoder(){if(window.HME?.createH264MP4Encoder)return Promise.resolve();if(!encoderLoader)encoderLoader=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='js/h264-mp4-encoder.web.js';s.onload=resolve;s.onerror=()=>{encoderLoader=null;reject(new Error('MP4 encoder unavailable'));};document.head.append(s);});return encoderLoader;}
-  function setBusy(value){busy=value;document.body.classList.toggle('vc-exporting',value);$('cancelExport').hidden=!value;$('exportProgress').hidden=!value;for(const id of ['exportPng','exportGif','exportMp4','saveScheme','importScheme','restoreScheme','clearScheme','exportDuration','exportFps','customDuration','shortClip','togglePlayback','restartPreview','scrubber'])$(id).disabled=value;for(const input of document.querySelectorAll('#sequenceRows input,#sequenceRows select,.gm-custom-size input,#canvasPreset,.tc-properties[data-panel="global"] input,.tc-properties[data-panel="global"] select'))input.disabled=value;}
+  function setBusy(value){busy=value;syncLogoUi();document.body.classList.toggle('vc-exporting',value);$('cancelExport').hidden=!value;$('exportProgress').hidden=!value;for(const id of ['exportPng','exportGif','exportMp4','saveScheme','importScheme','restoreScheme','clearScheme','exportDuration','exportFps','customDuration','shortClip','togglePlayback','restartPreview','scrubber'])$(id).disabled=value;for(const input of document.querySelectorAll('#sequenceRows input,#sequenceRows select,.gm-custom-size input,#canvasPreset,.tc-properties[data-panel="global"] input,.tc-properties[data-panel="global"] select'))input.disabled=value;}
   $('cancelExport').addEventListener('click',()=>{cancelled=true;});
   async function exportComposition(format){
     if(busy)return;let encoder,workerUrl='',gif;
     cancelled=false;const wasPlaying=playing;playing=false;syncPreviewAudio();playbackButton();setBusy(true);$('exportProgress').value=0;
     try {
+      if(logoPending)throw new Error(tr('请先等待 Logo 处理完成。','Wait for the logo to finish processing.'));
       if(uploadStates.size||scheme.rows.some(row=>row.media&&!runtime.get(row.id)?.ready))throw new Error(tr('请先等待视频读取完成。','Wait for the videos to finish loading.'));
       if(format!=='png' && scheme.rows.some(row=>!row.media))throw new Error(tr('请先上传两段视频。','Upload both videos first.'));
       await loadFont();await Promise.all(Object.values(logos).map(img=>img.decode()));
@@ -532,8 +570,8 @@
     document.querySelectorAll('.tc-row-description').forEach(node=>node.textContent=tr('独立视频 · 同步播放','Video · Synchronized'));
     const option=$('canvasPreset').querySelector('[value="1080x1920"]');option.textContent='9:16 · 1080 × 1920';
     for(const o of $('videoAspect').options)o.textContent=o.value==='auto'?tr('自动跟随素材 · 优先 After','Match source · After first'):o.value==='16:9'?tr('16:9 · 横屏视频','16:9 · Landscape video'):tr('9:16 · 竖屏视频','9:16 · Portrait video');
-    syncLayoutInfo();
-    for(const [id,entries]of Object.entries({compositionTheme:{light:['白底 · 黑字','White / black'],dark:['黑底 · 白字','Black / white']},shortClip:{hold:['停在最后一帧','Hold last frame'],loop:['循环播放','Loop']},exportDuration:{cycle:['完整视频','Full duration'],custom:['自定义','Custom']}}))for(const [value,words]of Object.entries(entries))$(id).querySelector('[value="'+value+'"]').textContent=tr(...words);
+    syncLayoutInfo();syncLogoUi();
+    for(const [id,entries]of Object.entries({compositionTheme:{light:['白底 · 黑字','White / black'],dark:['黑底 · 白字','Black / white']},shortClip:{loop:['自动循环','Automatic loop']},exportDuration:{cycle:['以最长片段结束','End with longest clip']}}))for(const [value,words]of Object.entries(entries))$(id).querySelector('[value="'+value+'"]').textContent=tr(...words);
     document.querySelectorAll('.vc-row select[data-key="fit"] option').forEach(o=>o.textContent=o.value==='cover'?tr('铺满裁切','Fill and crop'):tr('完整显示','Fit inside'));
     renderTimeline();playbackButton();renderFrame(canvas);
   }
@@ -541,7 +579,7 @@
   function tick(now){
     if(!busy){
       if(playing){elapsed+=(now-last);if(elapsed>=duration()*1000)elapsed%=duration()*1000;}
-      for(const row of scheme.rows){const rt=runtime.get(row.id);if(!rt?.ready)continue;const v=rt.video,target=sourceTime(row,elapsed/1000),end=scheme.export.shortClip==='hold'&&elapsed/1000>=clipDuration(row);
+      for(const row of scheme.rows){const rt=runtime.get(row.id);if(!rt?.ready)continue;const v=rt.video,target=sourceTime(row,elapsed/1000),end=false;
         if(!v.seeking && Math.abs(v.currentTime-target)>(playing?.12:.002))v.currentTime=target;
         if(playing&&!end&&v.paused)void v.play().catch(()=>{});if((!playing||end)&&!v.paused)v.pause();
       }
