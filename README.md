@@ -6,6 +6,8 @@
 
 **让创意，自由生长。**
 
+**2026-10-19 方块流动独立上新**：[方块流动](https://cellmotion.cn/blockflow.html) 从 Bot 语音抽出蓝色方块律动，图标可变成方块；可新增、替换、删除和排序方块，调节颜色、起伏、速度、间距与圆角，并使用统一编辑器、For AI 和 PNG / GIF / MP4 导出。[动效分析](docs/analyses/blockflow.md)。
+
 **2026-10-19 新增专利数量**：[专利数量](https://cellmotion.cn/patentcount.html) 按第五段参考视频制作主卡拉远、作品弧墙和数字显现。沿用 Mutedmen 作品图片且默认不重复；标题、数量、说明、作品和背景均可编辑，支持 9:16、时间轴与 PNG / GIF / MP4 导出。相位分析见 [docs/analyses/patentcount.md](docs/analyses/patentcount.md)。
 
 **2026-10-19 三款存档动效正式上新**：[Bot 语音](https://cellmotion.cn/botvoice.html)、[专利墙](https://cellmotion.cn/patentwall.html)、[动物浪潮](https://cellmotion.cn/animalwave.html) 接入统一编辑器、阶段时间轴、画幅与导出、共享素材库及实时 For AI 组件。专利墙使用 Mutedmen 作品图；动物浪潮的头像、名称与数量文案可替换，适合不同群像内容。详见 [接入与验证说明](docs/ARCHIVE_MOTION_EDITORS.md)。
@@ -22,7 +24,7 @@ CellMotion 是一个自由、灵活的动态设计系统。字体、图标、图
 
 **2026-10-12 降临 / Switch Drop 更新**：标题紫色标点改为圆点；结束停留默认 6 秒，可自定义为 2–30 秒，参数可自动保存及导出。已保存[默认方案](site/assets/presets/switchdrop-default.json)，重制官网动态封面，并加入「最近上新」；首页该标题移除末尾句号。
 
-目前收录 82 个动效及视频模板，支持中文与多语种字体、字图混排、图片 / GIF / 视频背景、响应式画布，以及浏览器内的预览与导出。官网的「全部动效」和各内容分类只展示已完成的 50 个。另外 32 个尚未完成：原分类保留，只出现在「待上新」，封面写着「待上新，未完成」，暂时不能点进编辑器。名单和恢复方式见 [docs/PENDING_RELEASE.md](docs/PENDING_RELEASE.md)。
+目前收录 83 个动效及视频模板，支持中文与多语种字体、字图混排、图片 / GIF / 视频背景、响应式画布，以及浏览器内的预览与导出。官网的「全部动效」和各内容分类只展示已完成的 51 个。另外 32 个尚未完成：原分类保留，只出现在「待上新」，封面写着「待上新，未完成」，暂时不能点进编辑器。名单和恢复方式见 [docs/PENDING_RELEASE.md](docs/PENDING_RELEASE.md)。
 
 
 **2026-10-10 两款 CardBot 独立编辑器**：[翻牌登录 / Card Login](https://opc8838-hub.github.io/font-animation/card-login.html?from=gallery) 保留同尺寸衔接、旋转中变白及登录渐入，文字、字体、颜色和动作参数可编辑；[卡牌剧场 / Card Deck](https://opc8838-hub.github.io/font-animation/carddeck.html?from=gallery) 保留表情卡牌的展开、交错横移与收拢，支持共享图库、自有素材和逐卡调整。两款均采用 CellMotion 三栏工作台，支持手机/平板、主流及自定义画幅、方案管理、PNG/GIF/H.264 MP4 与实时配置的 For AI 组件。登录编辑器是视觉动效，不提供账号认证；真正可输入的原始 HTML/CSS 表单转场另附源码包。详见 [使用与集成说明](docs/CARDBOT_EDITORS.md)、[动效保真与验证](docs/analyses/cardmotion-preservation.md) 和 [来源许可](docs/licenses/CARDBOT_MOTION.md)。

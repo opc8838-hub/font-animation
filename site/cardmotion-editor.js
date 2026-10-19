@@ -54,10 +54,10 @@
       <button class="tc-export-shortcut" id="exportShortcut">${t('导出作品','Export')}</button>
     </header>
     <aside class="tc-content" aria-label="Content & scheme">
-      <div class="tc-panel-heading"><div><small>${extension?t('内容','CONTENT'):'CONTENT'}</small><h2>${extension?t(effect==='animalwave'?'头像素材':(effect==='patentwall'||effect==='patentcount')?'作品素材':'语音素材',effect==='animalwave'?'Avatar assets':(effect==='patentwall'||effect==='patentcount')?'Artwork assets':'Voice assets'):t(login?'登录转场':'卡牌素材',login?'Login transition':'Card collection')}</h2></div><span id="cardCount"></span></div>
+      <div class="tc-panel-heading"><div><small>${extension?t('内容','CONTENT'):'CONTENT'}</small><h2>${extension?t(effect==='animalwave'?'头像素材':(effect==='patentwall'||effect==='patentcount')?'作品素材':effect==='blockflow'?'方块素材':'语音素材',effect==='animalwave'?'Avatar assets':(effect==='patentwall'||effect==='patentcount')?'Artwork assets':effect==='blockflow'?'Block assets':'Voice assets'):t(login?'登录转场':'卡牌素材',login?'Login transition':'Card collection')}</h2></div><span id="cardCount"></span></div>
       <p class="tc-hint">${extension?t('选择素材，在右侧编辑。修改会自动保存。','Select an asset and edit it on the right. Changes are autosaved.'):login?t('尺寸不跳变，在翻面中变白。','Match the card. Turn white while flipping.'):t('叠放、分排、交错横移，再收回。','Stack, spread, drift, and gather.')}</p>
       <div class="tc-row-list" id="contentList"></div>
-      ${login?'':`<button id="openLibrary">${extension?t('＋ 添加素材','＋ Add assets'):t('＋ 添加卡牌 / 素材','＋ Add cards / media')}</button>`}
+      ${login?'':`<button id="openLibrary">${extension?t(effect==='blockflow'?'＋ 添加方块':'＋ 添加素材',effect==='blockflow'?'＋ Add block':'＋ Add assets'):t('＋ 添加卡牌 / 素材','＋ Add cards / media')}</button>`}
       <section class="gm-card tc-scheme me-scheme-panel"><h2>${t('方案','Scheme')}</h2>
         <div class="me-scheme-actions"><button id="saveScheme">${t('保存方案','Save scheme')}</button><button id="importScheme">${t('导入方案','Import scheme')}</button><button id="restoreScheme">${t('恢复默认','Restore default')}</button><button id="clearScheme">${t('清理重做','Clear / rebuild')}</button></div>
         <input id="schemeFile" type="file" accept="application/json,.json" hidden><p id="schemeStatus" class="gm-status" role="status">${t('自动保存于此浏览器。Ctrl / ⌘ Z 撤销。','Autosaved in this browser. Ctrl / ⌘ Z to undo.')}</p>
@@ -109,7 +109,7 @@
       </section>${login?`<section class="gm-card"><h2>${t('接入真实登录表单','Use a real login form')}</h2><p class="gm-help">${t('播放器呈现视觉动效；可输入的表单请用原始 HTML / CSS 源码包接入。','The player renders the visual motion. Use the original HTML / CSS kit for interactive form fields.')}</p><a class="cm-upload" href="assets/cardbot-login-handoff.zip" download>${t('下载转场源码','Download source kit')}</a><a class="cm-upload" href="card-login-source/" target="_blank" rel="noopener">${t('打开表单转场示例','Open the form example')}</a></section>`:''}</section>
     </aside>
     <aside class="me-asset-drawer" id="libraryDrawer" aria-label="Asset library" hidden>
-      <header><h2 id="drawerTitle">${t('卡牌与共享图库','Cards & shared library')}</h2><button id="closeLibrary" aria-label="Close">×</button></header>
+      <header><h2 id="drawerTitle">${t(effect==='blockflow'?'方块与共享素材':'卡牌与共享图库',effect==='blockflow'?'Blocks & shared assets':'Cards & shared library')}</h2><button id="closeLibrary" aria-label="Close">×</button></header>
       <div class="me-asset-library" id="libraryBrowse"><label class="cm-upload">${t('上传 SVG / 图片 / GIF','Upload SVG / image / GIF')}<input id="uploadAssets" type="file" accept="image/svg+xml,image/png,image/jpeg,image/webp,image/gif" multiple hidden></label>
         <p class="gm-help">${t('先选择，再点插入。上传不会自动加入画面。','Select, then insert. Uploading alone does not change the canvas.')}</p><div id="libraryGroups"></div></div>
       <section class="me-asset-editor" id="singleAssetEditor" hidden></section>
@@ -287,12 +287,12 @@
   function renderAssets() {
     $('cardCount').textContent = login ? '01' : String(state.cards.length);
     if (login) { $('contentList').innerHTML = `<button class="tc-row-select" aria-pressed="true"><span>01</span><strong>${esc(state.scene.title || tr('登录界面','Login face'))}</strong><small>${tr('文字 · 色彩 · 尺寸','Text · colors · dimensions')}</small></button>`; return; }
-    $('contentList').innerHTML = state.cards.map((c,i) => { const a = resources.get(c.libraryId); return `<button class="tc-row-select" data-card="${esc(c.id)}" draggable="true" aria-pressed="${c.id===selected}">${a?.src||a?.dataUrl?`<img src="${esc(a.src||a.dataUrl)}" alt="">`:`<span>${String(i+1).padStart(2,'0')}</span>`}<strong>${esc(assetName(c))}</strong><small>${extension?tr(effect==='animalwave'?'头像':(effect==='patentwall'||effect==='patentcount')?'作品':'语音素材',effect==='animalwave'?'Avatar':(effect==='patentwall'||effect==='patentcount')?'Artwork':'Voice asset')+' '+String(i+1).padStart(2,'0'):i===0?tr('主卡 · 收拢封面','Cover · stack face'):tr('卡牌','Card')+' '+String(i+1).padStart(2,'0')}</small></button>`; }).join('');
+    $('contentList').innerHTML = state.cards.map((c,i) => { const a = resources.get(c.libraryId); return `<button class="tc-row-select" data-card="${esc(c.id)}" draggable="true" aria-pressed="${c.id===selected}">${a?.src||a?.dataUrl?`<img src="${esc(a.src||a.dataUrl)}" alt="">`:`<span>${String(i+1).padStart(2,'0')}</span>`}<strong>${esc(assetName(c))}</strong><small>${extension?tr(effect==='animalwave'?'头像':(effect==='patentwall'||effect==='patentcount')?'作品':effect==='blockflow'?'方块':'语音素材',effect==='animalwave'?'Avatar':(effect==='patentwall'||effect==='patentcount')?'Artwork':effect==='blockflow'?'Block':'Voice asset')+' '+String(i+1).padStart(2,'0'):i===0?tr('主卡 · 收拢封面','Cover · stack face'):tr('卡牌','Card')+' '+String(i+1).padStart(2,'0')}</small></button>`; }).join('');
     $('selectedAssets').innerHTML = state.cards.map(c => `<div class="cm-asset-row"><span>${esc(assetName(c))}</span><button data-edit="${esc(c.id)}">${tr('编辑','Edit')}</button><button data-remove="${esc(c.id)}" aria-label="${tr('移除','Remove')}">×</button></div>`).join('');
     $('editSelected').disabled = !state.cards.length;
     if (extension) {
       const card = state.cards.find(c => c.id === selected), index = state.cards.indexOf(card), asset = card && resources.get(card.libraryId), caption = $('currentAssetCaption');
-      $('currentAssetIndex').textContent = card ? tr(effect==='animalwave'?'头像 ':(effect==='patentwall'||effect==='patentcount')?'作品 ':'语音素材 ',effect==='animalwave'?'Avatar ':(effect==='patentwall'||effect==='patentcount')?'Artwork ':'Voice asset ') + String(index+1).padStart(2,'0') : tr('未选择素材','No asset selected');
+      $('currentAssetIndex').textContent = card ? tr(effect==='animalwave'?'头像 ':(effect==='patentwall'||effect==='patentcount')?'作品 ':effect==='blockflow'?'方块 ':'语音素材 ',effect==='animalwave'?'Avatar ':(effect==='patentwall'||effect==='patentcount')?'Artwork ':effect==='blockflow'?'Block ':'Voice asset ') + String(index+1).padStart(2,'0') : tr('未选择素材','No asset selected');
       $('currentAssetName').textContent = card ? assetName(card) : '';
       $('currentAssetThumb').src = asset?.src || asset?.dataUrl || '';
       if (caption) { caption.value = card?.caption || ''; caption.placeholder = effect==='animalwave'&&card ? assetName(card) : tr('可选','Optional'); caption.disabled = !card; }
@@ -305,7 +305,7 @@
     $('drawerTitle').textContent = tr('卡牌与共享图库','Cards & shared library'); renderLibrary();
   }
   function renderLibrary() {
-    const groups = [[extension?tr('随附素材','Included assets'):'CardBot',builtins],['Flow',window.STGIconLibrary.groups.flow],['GIF 动图',window.STGIconLibrary.groups.gifMotion],['Animals',window.STGIconLibrary.groups.animals],['Bots',window.STGIconLibrary.groups.bots], [tr('我的素材','My uploads'),state.customAssets.filter(a=>!/^video\//.test(a.type||''))]];
+    const groups = [[extension?tr('随附素材','Included assets'):'CardBot',builtins],['Flow',window.STGIconLibrary.groups.flow],['GIF 动图',window.STGIconLibrary.groups.gifMotion],['Animals',window.STGIconLibrary.groups.animals],['Bots',window.STGIconLibrary.groups.bots], [tr('我的素材','My uploads'),state.customAssets.filter(a=>!/^video\//.test(a.type||''))]].filter(([,items])=>items.length);
     $('libraryGroups').innerHTML = groups.map(([name,items],i) => `<details ${i===0?'open':''}><summary>${esc(name)} · ${items.length}</summary><div class="cm-library-grid">${items.map(a => `<div class="cm-library-item"><button class="me-asset-choice" data-candidate="${esc(a.libraryId)}" aria-pressed="${candidate===a.libraryId}"><img src="${esc(a.dataUrl||a.src||a.url)}" loading="lazy" alt=""><span>${esc(a.name)}</span></button><button class="me-asset-commit" data-insert="${esc(a.libraryId)}">${tr('插入','Insert')}</button></div>`).join('')}</div></details>`).join('');
   }
   function lookup(id) { return resources.get(id) || state.customAssets.find(a => a.libraryId===id) || window.STGIconLibrary.byId.get(id); }
