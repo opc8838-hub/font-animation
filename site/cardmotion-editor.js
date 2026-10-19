@@ -54,7 +54,7 @@
       <button class="tc-export-shortcut" id="exportShortcut">${t('导出作品','Export')}</button>
     </header>
     <aside class="tc-content" aria-label="Content & scheme">
-      <div class="tc-panel-heading"><div><small>${extension?t('内容','CONTENT'):'CONTENT'}</small><h2>${extension?t(effect==='animalwave'?'头像素材':effect==='patentwall'?'作品素材':'语音素材',effect==='animalwave'?'Avatar assets':effect==='patentwall'?'Artwork assets':'Voice assets'):t(login?'登录转场':'卡牌素材',login?'Login transition':'Card collection')}</h2></div><span id="cardCount"></span></div>
+      <div class="tc-panel-heading"><div><small>${extension?t('内容','CONTENT'):'CONTENT'}</small><h2>${extension?t(effect==='animalwave'?'头像素材':(effect==='patentwall'||effect==='patentcount')?'作品素材':'语音素材',effect==='animalwave'?'Avatar assets':(effect==='patentwall'||effect==='patentcount')?'Artwork assets':'Voice assets'):t(login?'登录转场':'卡牌素材',login?'Login transition':'Card collection')}</h2></div><span id="cardCount"></span></div>
       <p class="tc-hint">${extension?t('选择素材，在右侧编辑。修改会自动保存。','Select an asset and edit it on the right. Changes are autosaved.'):login?t('尺寸不跳变，在翻面中变白。','Match the card. Turn white while flipping.'):t('叠放、分排、交错横移，再收回。','Stack, spread, drift, and gather.')}</p>
       <div class="tc-row-list" id="contentList"></div>
       ${login?'':`<button id="openLibrary">${extension?t('＋ 添加素材','＋ Add assets'):t('＋ 添加卡牌 / 素材','＋ Add cards / media')}</button>`}
@@ -274,7 +274,7 @@
       let id = String(c.id || `card-${i}`); if (seen.has(id)) id = `card-${i}-${crypto.randomUUID()}`; seen.add(id);
       return { ...c,id,scale:M.clamp(Number(c.scale)||1,.2,2),opacity:M.clamp(Number(c.opacity) || 0,0,1),x:M.clamp(Number(c.x)||0,-800,800),y:M.clamp(Number(c.y)||0,-500,500),rotation:M.clamp(Number(c.rotation)||0,-180,180) };
     });
-    if(s.backgroundMedia&&!s.customAssets.some(a=>a.libraryId===s.backgroundMedia.libraryId))s.backgroundMedia=null;
+    if(s.backgroundMedia&&!s.customAssets.some(a=>a.libraryId===s.backgroundMedia.libraryId)&&!extension?.builtinBackgroundIds?.includes(s.backgroundMedia.libraryId))s.backgroundMedia=null;
     extension?.normalize(raw,s,defaultState);
     return s;
   }
@@ -287,12 +287,12 @@
   function renderAssets() {
     $('cardCount').textContent = login ? '01' : String(state.cards.length);
     if (login) { $('contentList').innerHTML = `<button class="tc-row-select" aria-pressed="true"><span>01</span><strong>${esc(state.scene.title || tr('登录界面','Login face'))}</strong><small>${tr('文字 · 色彩 · 尺寸','Text · colors · dimensions')}</small></button>`; return; }
-    $('contentList').innerHTML = state.cards.map((c,i) => { const a = resources.get(c.libraryId); return `<button class="tc-row-select" data-card="${esc(c.id)}" draggable="true" aria-pressed="${c.id===selected}">${a?.src||a?.dataUrl?`<img src="${esc(a.src||a.dataUrl)}" alt="">`:`<span>${String(i+1).padStart(2,'0')}</span>`}<strong>${esc(assetName(c))}</strong><small>${extension?tr(effect==='animalwave'?'头像':effect==='patentwall'?'作品':'语音素材',effect==='animalwave'?'Avatar':effect==='patentwall'?'Artwork':'Voice asset')+' '+String(i+1).padStart(2,'0'):i===0?tr('主卡 · 收拢封面','Cover · stack face'):tr('卡牌','Card')+' '+String(i+1).padStart(2,'0')}</small></button>`; }).join('');
+    $('contentList').innerHTML = state.cards.map((c,i) => { const a = resources.get(c.libraryId); return `<button class="tc-row-select" data-card="${esc(c.id)}" draggable="true" aria-pressed="${c.id===selected}">${a?.src||a?.dataUrl?`<img src="${esc(a.src||a.dataUrl)}" alt="">`:`<span>${String(i+1).padStart(2,'0')}</span>`}<strong>${esc(assetName(c))}</strong><small>${extension?tr(effect==='animalwave'?'头像':(effect==='patentwall'||effect==='patentcount')?'作品':'语音素材',effect==='animalwave'?'Avatar':(effect==='patentwall'||effect==='patentcount')?'Artwork':'Voice asset')+' '+String(i+1).padStart(2,'0'):i===0?tr('主卡 · 收拢封面','Cover · stack face'):tr('卡牌','Card')+' '+String(i+1).padStart(2,'0')}</small></button>`; }).join('');
     $('selectedAssets').innerHTML = state.cards.map(c => `<div class="cm-asset-row"><span>${esc(assetName(c))}</span><button data-edit="${esc(c.id)}">${tr('编辑','Edit')}</button><button data-remove="${esc(c.id)}" aria-label="${tr('移除','Remove')}">×</button></div>`).join('');
     $('editSelected').disabled = !state.cards.length;
     if (extension) {
       const card = state.cards.find(c => c.id === selected), index = state.cards.indexOf(card), asset = card && resources.get(card.libraryId), caption = $('currentAssetCaption');
-      $('currentAssetIndex').textContent = card ? tr(effect==='animalwave'?'头像 ':effect==='patentwall'?'作品 ':'语音素材 ',effect==='animalwave'?'Avatar ':effect==='patentwall'?'Artwork ':'Voice asset ') + String(index+1).padStart(2,'0') : tr('未选择素材','No asset selected');
+      $('currentAssetIndex').textContent = card ? tr(effect==='animalwave'?'头像 ':(effect==='patentwall'||effect==='patentcount')?'作品 ':'语音素材 ',effect==='animalwave'?'Avatar ':(effect==='patentwall'||effect==='patentcount')?'Artwork ':'Voice asset ') + String(index+1).padStart(2,'0') : tr('未选择素材','No asset selected');
       $('currentAssetName').textContent = card ? assetName(card) : '';
       $('currentAssetThumb').src = asset?.src || asset?.dataUrl || '';
       if (caption) { caption.value = card?.caption || ''; caption.placeholder = effect==='animalwave'&&card ? assetName(card) : tr('可选','Optional'); caption.disabled = !card; }

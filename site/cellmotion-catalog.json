@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "patentcount",
+      "date": "2026-10-19"
+    },
+    {
       "id": "botvoice",
       "date": "2026-10-19"
     },
@@ -137,6 +141,21 @@
       "webComponent": {
         "preview": "archive-motion-demo.html?effect=patentwall",
         "descriptor": "effects/patentwall.component.json"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "patentcount",
+      "name": "专利数量",
+      "english": "Patent Count",
+      "description": "主卡拉远 · 弧墙铺展 · 数字显现",
+      "category": "media",
+      "href": "patentcount.html?from=gallery&v=20261019-count1",
+      "poster": "final_patentcount.png?v=20261019-count1",
+      "video": "assets/previews/patentcount-card.mp4?v=20261019-count1",
+      "webComponent": {
+        "preview": "archive-motion-demo.html?effect=patentcount",
+        "descriptor": "effects/patentcount.component.json"
       },
       "status": "ready"
     },
