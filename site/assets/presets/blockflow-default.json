@@ -114,7 +114,7 @@
     "flowSpeed": 1,
     "tileGap": 6,
     "roundness": 20,
-    "iconOpacity": 0.08,
+    "iconOpacity": 0,
     "clock": "12:00",
     "first": "is here",
     "many": "and {n} friend{s} are here",
@@ -122,7 +122,7 @@
     "brandB": "Animals",
     "brandId": "animalwave-brand",
     "textColor": "#151515",
-    "accent": "#3f7bf6",
+    "accent": "#4272fe",
     "handColor": "#4272fe",
     "frameColor": "#272523",
     "pillWidth": 960,
@@ -138,8 +138,8 @@
   "motion": {
     "speed": 1,
     "loop": true,
-    "phase0": 0.75,
-    "phase1": 1.7999999999999998,
-    "phase2": 0.75
+    "phase0": 1.35,
+    "phase1": 1.2999999999999998,
+    "phase2": 0.5500000000000003
   }
 }

@@ -32,7 +32,7 @@ A close-up artwork pulls back into a softly moving three-row arc of distinct mut
 
 ## Reuse plan
 - Reuse the shared archive editor, timeline, fonts, card library, image/GIF/video background model, scheme save/import/reset, PNG/GIF/MP4 exporters, and For AI manifest.
-- Reuse `assets/patentwall/library.json` and its image paths; do not duplicate mutedmen works. Copy only the supplied 1920×1080 wall background into the new effect assets.
+- Reuse `assets/patentwall/library.json` and its image paths; do not duplicate mutedmen works. Retain the supplied 1920×1080 blue background for legacy schemes; use a neutral warm gallery background as the new default.
 - Implement a focused Canvas native renderer for the curved wall and kinetic type.
 
 ## Uncertainties to verify
@@ -41,9 +41,13 @@ A close-up artwork pulls back into a softly moving three-row arc of distinct mut
 - Text inside artwork images is pixel content; editable typography applies to the added foreground text.
 
 ## Acceptance evidence
-- [ ] Normal-speed and key-frame comparison
-- [ ] Unique default art mapping
-- [ ] Chinese and English editing
-- [ ] Desktop/mobile, 16:9 and 9:16
-- [ ] No console errors
-- [ ] PNG, GIF and MP4 exported
+- [x] Normal-speed and key-frame comparison
+- [x] Unique default art mapping
+- [x] Chinese and English editing
+- [x] Desktop/mobile, 16:9 and 9:16
+- [x] No console errors
+- [x] PNG, GIF and MP4 exported
+
+## 2026-10-19 product review
+
+The shipped name is “作品展示 2”. The default headline is “图片数量”, the target is 63 distinct default images, the plus suffix is blank, and the lower-left caption defaults to “精选作品 / Selected works”. All seven text fields can be edited or cleared independently; when both lower-left groups are blank, the accent line disappears. The new warm-gray gallery background replaces the blue source background in the default scheme. The original blue image remains available for imported older schemes. The underlying arc and type phase timings are unchanged.

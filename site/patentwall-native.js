@@ -224,7 +224,8 @@ function drawFlip(t) {
     const th = st.rotY * Math.PI / 180, cos = Math.cos(th), sin = Math.sin(th);
   const D = FLIP.perspective * CW * ZK;
   const front = cos >= 0;
-  const featuredSlot=Math.min(14,Math.max(0,state.cards.length-2));
+  // Keep the back face identical to the centered carousel card at the handoff.
+  const featuredSlot=Math.min(state.cards.length-2,Math.max(0,Number(CAROUSEL[0]?.slice(1))-1||0));
   const active=front?state.cards[0]:state.cards[featuredSlot+1];
   if(!active)return;
   const w=CW*ZK*st.scale*active.scale,h=CH*ZK*st.scale*active.scale;

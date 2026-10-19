@@ -6,11 +6,11 @@
 
 **让创意，自由生长。**
 
-**2026-10-19 方块流动独立上新**：[方块流动](https://cellmotion.cn/blockflow.html) 从 Bot 语音抽出蓝色方块律动，图标可变成方块；可新增、替换、删除和排序方块，调节颜色、起伏、速度、间距与圆角，并使用统一编辑器、For AI 和 PNG / GIF / MP4 导出。[动效分析](docs/analyses/blockflow.md)。
+**2026-10-19 方块流动独立上新**：[方块流动](https://cellmotion.cn/blockflow.html) 直接沿用 Bot 语音的亮蓝方块节奏，首帧从单块展开，图标可变成方块；可新增、替换、删除和排序方块，调节颜色、起伏、速度、间距与圆角，并使用统一编辑器、For AI 和 PNG / GIF / MP4 导出。[动效分析](docs/analyses/blockflow.md)。
 
-**2026-10-19 新增专利数量**：[专利数量](https://cellmotion.cn/patentcount.html) 按第五段参考视频制作主卡拉远、作品弧墙和数字显现。沿用 Mutedmen 作品图片且默认不重复；标题、数量、说明、作品和背景均可编辑，支持 9:16、时间轴与 PNG / GIF / MP4 导出。相位分析见 [docs/analyses/patentcount.md](docs/analyses/patentcount.md)。
+**2026-10-19 作品展示 2**：[作品展示 2](https://cellmotion.cn/patentcount.html) 按第五段参考视频制作主卡拉远、作品弧墙和数字显现。沿用 Mutedmen 作品图片且默认不重复；标题、数量、说明、作品和暖灰背景均可编辑，说明可清空，支持 9:16、时间轴与 PNG / GIF / MP4 导出。相位分析见 [docs/analyses/patentcount.md](docs/analyses/patentcount.md)。
 
-**2026-10-19 三款存档动效正式上新**：[Bot 语音](https://cellmotion.cn/botvoice.html)、[专利墙](https://cellmotion.cn/patentwall.html)、[动物浪潮](https://cellmotion.cn/animalwave.html) 接入统一编辑器、阶段时间轴、画幅与导出、共享素材库及实时 For AI 组件。专利墙使用 Mutedmen 作品图；动物浪潮的头像、名称与数量文案可替换，适合不同群像内容。详见 [接入与验证说明](docs/ARCHIVE_MOTION_EDITORS.md)。
+**2026-10-19 三款存档动效正式上新**：[Bot 语音](https://cellmotion.cn/botvoice.html)、[作品展示 1](https://cellmotion.cn/patentwall.html)、[动物浪潮](https://cellmotion.cn/animalwave.html) 接入统一编辑器、阶段时间轴、画幅与导出、共享素材库及实时 For AI 组件。作品展示 1 以 9:16 满幅展示 Mutedmen 作品图；动物浪潮的头像、名称与数量文案可替换，适合不同群像内容。详见 [接入与验证说明](docs/ARCHIVE_MOTION_EDITORS.md)。
 
 **2026-10-15 热感 / Thermal Profile 正式上新**：[打开编辑器](https://cellmotion.cn/thermal-profile.html)。CellMotion 三栏工作台、明暗主题、中英切换、共享素材库及五项 For AI 入口已接入，并加入官网最近上新。任意主体图片可生成热色轮廓：透明图 / 纯色背景自动提取，复杂背景支持本机圈选、擦除和补回，不依赖模型；高清边缘与热色连续流动，中央 hely.fun 可编辑或关闭；支持画幅、人物大小/朝向、颜色、时序、方案和 PNG/GIF/MP4 导出。详见 [分析说明](docs/analyses/thermal-profile.md)。
 

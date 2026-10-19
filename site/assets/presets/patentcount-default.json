@@ -8,9 +8,9 @@
   "typography": {
     "fontFamily": "stg:noto-sc"
   },
-  "backgroundColor": "#ffffff",
+  "backgroundColor": "#eeece6",
   "backgroundMedia": {
-    "libraryId": "patentcount-wallbg"
+    "libraryId": "patentcount-gallery-bg"
   },
   "cards": [
     {
@@ -772,14 +772,14 @@
   ],
   "customAssets": [],
   "scene": {
-    "title": "获得专利数量",
-    "subtitle": "Number of patents obtained >20,000",
-    "countTo": 20000,
-    "plus": "+",
-    "sideA": "国家高新技术企业",
-    "sideAEn": "National High-tech Enterprise",
-    "sideB": "中国质量提名奖",
-    "sideBEn": "China quality nomination award",
+    "title": "图片数量",
+    "subtitle": "Images in this collection",
+    "countTo": 63,
+    "plus": "",
+    "sideA": "精选作品",
+    "sideAEn": "Selected works",
+    "sideB": "",
+    "sideBEn": "",
     "titleSize": 76,
     "numberSize": 124,
     "cardSize": 1,
@@ -791,7 +791,7 @@
     "brandA": "hely.",
     "brandB": "Animals",
     "brandId": "animalwave-brand",
-    "textColor": "#ffffff",
+    "textColor": "#202b37",
     "accent": "#3f7bf6",
     "handColor": "#4272fe",
     "frameColor": "#272523",

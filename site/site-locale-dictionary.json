@@ -284,7 +284,7 @@
   "全局默认字体": "Default font",
   "Default font": "全局默认字体",
   "字号": "Font size",
-  "Font size": "字体大小",
+  "Font size": "文字大小",
   "字距": "Letter spacing",
   "Tracking": "字距",
   "水平": "Horizontal",
@@ -636,7 +636,7 @@
   "Text": "文字",
   "字体": "Font",
   "Font": "字体",
-  "文字大小": "Text size",
+  "文字大小": "Font size",
   "Size": "大小",
   "文字间距": "Letter spacing",
   "文字颜色": "Text color",
@@ -3675,8 +3675,6 @@
   "31 photos": "31 张",
   "添加内置图形": "Add shape",
   "Add shape": "添加内置图形",
-  "文字大小": "Font size",
-  "Font size": "文字大小",
   "透明动物素材 · 31 张": "Transparent animal assets · 31 images",
   "Transparent animal assets · 31 images": "透明动物素材 · 31 张",
   "环绕透明图片素材库": "Surround transparent image library",
@@ -6306,5 +6304,9 @@
   "Logo 翻转 · 证书特写 · 墙面铺展": "Logo flip · certificate close-ups · patent wall",
   "Logo flip · certificate close-ups · patent wall": "Logo 翻转 · 证书特写 · 墙面铺展",
   "头像递增 · 波浪队列 · 品牌收尾": "New avatars · flowing wave · brand reveal",
-  "New avatars · flowing wave · brand reveal": "头像递增 · 波浪队列 · 品牌收尾"
+  "New avatars · flowing wave · brand reveal": "头像递增 · 波浪队列 · 品牌收尾",
+  "作品展示 1": "Artwork Showcase 1",
+  "Artwork Showcase 1": "作品展示 1",
+  "作品展示 2": "Artwork Showcase 2",
+  "Artwork Showcase 2": "作品展示 2"
 }
