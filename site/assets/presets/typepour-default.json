@@ -1,0 +1,48 @@
+{
+  "effect": "typepour",
+  "version": 1,
+  "canvas": {
+    "width": 1080,
+    "height": 1920
+  },
+  "typography": {
+    "fontFamily": "stg:georgia",
+    "fontSize": 15,
+    "tracking": 0.35,
+    "color": "#202321"
+  },
+  "rows": [
+    {
+      "id": "source",
+      "text": "Stress is a constant companion in these days and now, always here.",
+      "icons": []
+    }
+  ],
+  "motion": {
+    "lead": 0.45,
+    "pour": 6.75,
+    "settle": 2.1,
+    "hold": 2.7,
+    "cupX": 0,
+    "cupY": 0,
+    "sourceY": 0,
+    "direction": "right",
+    "speed": 1
+  },
+  "markers": {
+    "density": 84,
+    "color": "#5a80e3"
+  },
+  "backgroundColor": "#ffffff",
+  "backgroundMedia": null,
+  "customAssets": [],
+  "audio": {
+    "volume": 65,
+    "export": true
+  },
+  "output": {
+    "scale": 1,
+    "fps": 30,
+    "duration": 12
+  }
+}

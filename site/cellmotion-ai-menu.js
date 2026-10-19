@@ -12,7 +12,7 @@
 
   let language = (document.body.dataset.editorLanguage || localStorage.getItem(isReferenceEditor ? "cellmotion-lang" : "cellmotion-site-language") || "zh") === "en" ? "en" : "zh";
   let definitionPromise;
-  const authoredComponentDefinitions = new Set(["prosvg", "typecascade", "sproutshift", "mistlift", "letterpulse", "iconburst", "glyphreveal", "curvedgallery"]);
+  const authoredComponentDefinitions = new Set(["thermal-profile", "video-compare", "typepour", "prosvg", "typecascade", "sproutshift", "mistlift", "letterpulse", "iconburst", "glyphreveal", "curvedgallery"]);
   const title = (isReferenceEditor ? document.querySelector(".rm-title strong") : document.querySelector(".tc-header h1")?.childNodes[0])?.textContent?.trim() || slug;
   const words = {
     zh: {
@@ -101,6 +101,7 @@
     const bridge = window.CellMotionEffectBridge;
     const def = await definition();
     let scheme;
+    if(bridge?.readyPromise)await bridge.readyPromise;
     if (bridge?.getScheme) scheme = bridge.getScheme();
     else if (def.capabilities?.nativeEffectPage) {
       const stage = document.querySelector("main, .stg-canvas-stage, .gm-stage, .current-stage") || document.body;
@@ -167,12 +168,12 @@
       if (action === "preview") {
         if (!previewWindow) throw new Error(language === "en" ? "Allow pop-ups to open the preview" : "请允许弹出窗口后再打开预览");
         const receiveReady = (messageEvent) => {
-          if (messageEvent.source !== previewWindow || messageEvent.data?.type !== "cellmotion:demo-ready") return;
+          if (messageEvent.origin !== location.origin || messageEvent.source !== previewWindow || messageEvent.data?.type !== "cellmotion:demo-ready") return;
           previewWindow.postMessage({ type: "cellmotion:demo-manifest", manifest: current }, location.origin);
           window.removeEventListener("message", receiveReady);
         };
         window.addEventListener("message", receiveReady);
-        previewWindow.location.href = "typecascade-component-demo.html?live=1";
+        previewWindow.location.href = "typecascade-component-demo.html?live=1&effect="+encodeURIComponent(slug);
       }
       if (action === "prompt") await window.CellMotionAI.copyText(window.CellMotionAI.aiPrompt(current, language)).then(() => notify(words[language].copied));
       if (action === "code") await window.CellMotionAI.copyText(window.CellMotionAI.configuredCode(current)).then(() => notify(words[language].copied));

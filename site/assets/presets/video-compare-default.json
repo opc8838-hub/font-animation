@@ -1,0 +1,46 @@
+{
+  "effect": "video-compare",
+  "version": 1,
+  "canvas": {
+    "preset": "1920x1080",
+    "width": 1920,
+    "height": 1080
+  },
+  "layout": {
+    "fontFamily": "stg:manrope",
+    "compositionTheme": "light",
+    "textColor": "#171717",
+    "backgroundColor": "#faf9f7",
+    "labelSize": 100,
+    "marginSize": 5,
+    "frameGap": 4,
+    "frameRadius": 28,
+    "logoSize": 22,
+    "videoAspect": "auto",
+    "beforeScale": 65,
+    "topText": "have a good day"
+  },
+  "export": {
+    "duration": "cycle",
+    "customDuration": 6,
+    "fps": 30,
+    "shortClip": "loop"
+  },
+  "rows": [
+    {
+      "id": "before",
+      "text": "Before",
+      "caption": "网上看到的",
+      "audioEnabled": false,
+      "media": null
+    },
+    {
+      "id": "after",
+      "text": "After",
+      "caption": "我做的",
+      "audioEnabled": true,
+      "media": null
+    }
+  ],
+  "logo": null
+}

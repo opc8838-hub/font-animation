@@ -11,7 +11,10 @@
   }
   const effects = [
     ["botvoice", "Bot 语音", "Bot Voice"], ["patentwall", "专利墙", "Patent Wall"], ["animalwave", "动物浪潮", "Animal Wave"],
+    ["thermal-profile", "热感", "Thermal Profile"],
+    ["video-compare", "视频对比", "Video Compare"],
     ["spotlight", "聚光", "Spotlight"],
+    ["typepour", "字水", "Type Pour"],
     ["curvedgallery", "弧廊归标", "Curved Gallery"],
     ["prosvg", "彩铸", "PRO SVG Lab"],
     ["sproutshift", "字芽", "Sprout Shift"], ["mistlift", "雾升", "Mist Lift"],

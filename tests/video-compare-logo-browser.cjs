@@ -1,0 +1,43 @@
+/* Run after the baseline/audio fixtures: node this.cjs <node_modules> <Edge>. */
+const fs=require('node:fs/promises'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
+const {chromium}=require(path.resolve(process.argv[2],'playwright'));
+const sharp=require(path.resolve(process.argv[2],'sharp'));
+const root=path.resolve(__dirname,'..'),site=path.join(root,'site'),out=path.join(root,'output/video-compare/logo-regression');
+(async()=>{
+ await fs.mkdir(out,{recursive:true});
+ const server=http.createServer(async(req,res)=>{try{const file=path.resolve(site,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname));if(!file.startsWith(site+path.sep))return res.writeHead(403).end();res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml','.json':'application/json'})[path.extname(file)]||'application/octet-stream');res.end(await fs.readFile(file));}catch{res.writeHead(404).end();}});
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));
+ const browser=await chromium.launch({headless:true,executablePath:process.argv[3]});const page=await browser.newPage({viewport:{width:1440,height:960},acceptDownloads:true});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ try{
+  await page.goto('http://127.0.0.1:'+server.address().port+'/video-compare.html');await page.evaluate(()=>VideoCompare.readyPromise);await page.waitForLoadState('networkidle');
+  await page.locator('.tc-tabs [data-panel="global"]').click();assert.equal(await page.locator('#uploadLogo').isVisible(),true);
+  const logo=path.join(out,'ring.png');await fs.writeFile(logo,await sharp(Buffer.from('<svg width="160" height="80"><rect width="160" height="80" fill="white"/><path d="M30 10H130V70H30ZM50 25V55H110V25Z" fill="black" fill-rule="evenodd"/></svg>')).png().toBuffer());
+  const picker=page.waitForEvent('filechooser');await page.locator('#uploadLogo').click();await(await picker).setFiles(logo);await page.waitForFunction(()=>VideoCompare.getScheme().logo?.name==='ring.png');
+  assert.equal(await page.locator('#logoBackground').inputValue(),'keep');
+  const processPixels=()=>page.evaluate(async()=>{const s=VideoCompare.getScheme(),src=await VideoCompareLogo.decode(s.logo.url),c=VideoCompareLogo.process(src,s.logo),x=c.getContext('2d');return {bg:Array.from(x.getImageData(0,0,1,1).data),ink:Array.from(x.getImageData(35,15,1,1).data),hole:Array.from(x.getImageData(80,40,1,1).data)};});
+  assert.deepEqual((await processPixels()).bg,[255,255,255,255]);await page.locator('#logoBackground').selectOption('remove-white');let pixels=await processPixels();assert.equal(pixels.bg[3],0);assert.equal(pixels.hole[3],0);assert.deepEqual(pixels.ink,[0,0,0,255]);
+  await page.locator('#logoColor').selectOption('white');assert.deepEqual((await processPixels()).ink,[255,255,255,255]);await page.locator('#logoColor').selectOption('black');
+  const event=page.waitForEvent('download');await page.locator('#downloadLogoSvg').click();const svgFile=path.join(out,'traced.svg');await(await event).saveAs(svgFile);const svg=await fs.readFile(svgFile,'utf8');assert.ok(svg.includes('<path')&&!svg.includes('<image'));const traced=await sharp(Buffer.from(svg)).ensureAlpha().raw().toBuffer({resolveWithObject:true});const alpha=(x,y)=>traced.data[(y*traced.info.width+x)*4+3];assert.equal(alpha(0,0),0);assert.equal(alpha(35,15),255);assert.equal(alpha(80,40),0);
+  console.log('PASS native picker, keep/remove white, enclosed holes, recolor and real path SVG export');
+  await page.locator('#logoSize').fill('48');await page.locator('#logoSize').dispatchEvent('input');assert.equal(await page.evaluate(()=>VideoCompare.getScheme().layout.logoSize),48);
+  const saved=await page.evaluate(()=>VideoCompare.getScheme());await page.waitForFunction(()=>document.querySelector('#schemeStatus').textContent.includes('自动保存'));await page.reload();await page.evaluate(()=>VideoCompare.readyPromise);assert.deepEqual(await page.evaluate(()=>VideoCompare.getScheme()),saved);
+  const oldLogo=await page.evaluate(()=>VideoCompare.getScheme().logo);await page.locator('#logoFile').setInputFiles({name:'invalid.png',mimeType:'image/png',buffer:Buffer.from('not an image')});await page.waitForFunction(()=>document.querySelector('#logoStatus').textContent.includes('无法读取'));assert.deepEqual(await page.evaluate(()=>VideoCompare.getScheme().logo),oldLogo);
+  await page.locator('.tc-tabs [data-panel="global"]').click();
+  const fixture=JSON.parse(await fs.readFile(path.join(root,'output/video-compare/audio-regression/audio-scheme.json'),'utf8'));fixture.logo=saved.logo;fixture.layout.logoSize=35;fixture.canvas={preset:'custom',width:640,height:360};fixture.rows.forEach(r=>r.audioEnabled=false);fixture.export.duration='custom';fixture.export.customDuration=99;fixture.export.shortClip='hold';
+  await page.evaluate(s=>VideoCompare.applyScheme(s),fixture);assert.equal(await page.evaluate(()=>VideoCompare.duration()),1.5);assert.equal(await page.evaluate(()=>VideoCompare.getScheme().export.shortClip),'loop');
+  const times=await page.evaluate(()=>{const s=VideoCompare.getScheme();return {before:VideoCompare.sourceTime(s.rows[0],1.2),after:VideoCompare.sourceTime(s.rows[1],1.2)};});assert.ok(Math.abs(times.before-.45)<.0001);assert.ok(Math.abs(times.after-1.7)<.0001);
+  const frames=await page.evaluate(async()=>{const captures=[];for(const t of [.2,1.2]){await VideoCompare.prepareFrame(t);const c=document.createElement('canvas');c.width=640;c.height=360;VideoCompare.renderFrame(c,t,true);const b=VideoCompare.geometry(640,360).boxes[0];captures.push(Array.from(c.getContext('2d').getImageData(Math.ceil(b.x+3),Math.ceil(b.y+3),Math.floor(b.w-6),Math.floor(b.h-6)).data));}return captures;});assert.deepEqual(frames[0],frames[1]);
+  await page.evaluate(()=>VideoCompare.restart());await page.waitForTimeout(1750);assert.ok(await page.evaluate(()=>VideoCompare.getTime())<1);assert.ok((await page.evaluate(()=>VideoCompare.getAudioState())).every(r=>!r.paused));await page.evaluate(()=>VideoCompare.pause());
+  console.log('PASS old hold/custom schemes migrate to longest duration, short video repeats exact frames, preview repeats the full comparison');
+  const download=async(format,name)=>{const event=page.waitForEvent('download');await page.evaluate(f=>VideoCompare.exportComposition(f),format);const file=path.join(out,name);await(await event).saveAs(file);return file;};
+  for(const [width,height]of [[640,360],[360,640]]){
+   await page.evaluate(async({width,height})=>{const s=VideoCompare.getScheme();s.canvas={preset:'custom',width,height};await VideoCompare.applyScheme(s);await VideoCompare.setTime(200);},{width,height});
+   const live=await page.locator('#glyphMorphCanvas').evaluate(c=>c.toDataURL()),png=await download('png',width+'x'+height+'.png');assert.deepEqual(await sharp(png).raw().toBuffer(),await sharp(Buffer.from(live.split(',')[1],'base64')).raw().toBuffer());
+   const video=await download('mp4',width+'x'+height+'.mp4');const info=await page.evaluate(async bytes=>{const url=URL.createObjectURL(new Blob([new Uint8Array(bytes)],{type:'video/mp4'})),v=document.createElement('video');v.src=url;await new Promise((r,j)=>{v.onloadeddata=r;v.onerror=j;});const c=document.createElement('canvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);const p=c.getContext('2d').getImageData(Math.round(c.width*.41),Math.round(c.height*.91),1,1).data;const result={w:v.videoWidth,h:v.videoHeight,d:v.duration,logo:Array.from(p)};URL.revokeObjectURL(url);return result;},Array.from(await fs.readFile(video)));assert.equal(info.w,width);assert.equal(info.h,height);assert.ok(Math.abs(info.d-1.5)<.002);assert.ok(info.logo[0]<50&&info.logo[1]<50&&info.logo[2]<50,JSON.stringify(info));
+  }
+  const schemeFile=await download('png','last-frame.png');assert.ok((await fs.stat(schemeFile)).size>100);
+  await page.locator('#restoreLogo').click();assert.equal(await page.evaluate(()=>VideoCompare.getScheme().logo),null);assert.equal(await page.locator('#downloadLogoSvg').isEnabled(),false);
+  await page.setViewportSize({width:390,height:844});await page.screenshot({path:path.join(out,'mobile.png'),fullPage:true});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  assert.deepEqual(errors,[]);console.log('PASS logo autosave, invalid replacement recovery, matching PNG and actual longest-duration MP4 in both canvas orientations, default restore and mobile fit');
+ }finally{await browser.close();server.close();}
+})().catch(error=>{console.error(error);process.exitCode=1;});

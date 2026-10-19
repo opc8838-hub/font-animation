@@ -1,0 +1,51 @@
+/* Run after video-compare-browser.cjs, using the same node_modules / Edge arguments. */
+const fs=require('node:fs/promises'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
+const {chromium}=require(path.resolve(process.argv[2]||'node_modules','playwright'));
+const root=path.resolve(__dirname,'..'),out=path.join(root,'output/video-compare/upload-regression');
+(async()=>{
+ await fs.mkdir(out,{recursive:true});
+ const site=path.join(root,'site');
+ const server=http.createServer(async(req,res)=>{try{const file=path.resolve(site,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname));if(!file.startsWith(site+path.sep))return res.writeHead(403).end();const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.svg':'image/svg+xml','.woff2':'font/woff2','.ttf':'font/ttf','.otf':'font/otf'};res.setHeader('Content-Type',mime[path.extname(file)]||'application/octet-stream');res.end(await fs.readFile(file));}catch{res.writeHead(404).end();}});
+ await new Promise(r=>server.listen(0,'127.0.0.1',r));const base='http://127.0.0.1:'+server.address().port;
+ const browser=await chromium.launch({headless:true,executablePath:process.argv[3]});
+ const page=await browser.newPage({viewport:{width:1440,height:960},acceptDownloads:true});
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ try {
+  await page.goto(base+'/video-compare.html',{waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>window.VideoCompare&&window.STGFontLibrary);
+  const file=path.join(root,'output/video-compare/regression/before.mp4');
+  await page.locator('.vc-row[data-row-id="before"] [data-video-file]').setInputFiles(file);
+  await page.waitForFunction(()=>VideoCompare.getScheme().rows[0].media?.trimEnd>0);
+  const valid=await page.evaluate(()=>VideoCompare.getScheme());
+  const audioFile=path.join(out,'audio-only.mp4');
+  const bytes=await page.evaluate(async()=>{const m=await import('./js/vendor/mediabunny/mediabunny-1.61.3.min.js');const target=new m.BufferTarget(),output=new m.Output({target,format:new m.Mp4OutputFormat()});const source=new m.AudioBufferSource({codec:'aac',quality:new m.Quality({bitrate:128000})});output.addAudioTrack(source);await output.start();await source.add(new AudioBuffer({numberOfChannels:2,length:48000,sampleRate:48000}));source.close();await output.finalize();return Array.from(new Uint8Array(target.buffer));});
+  await fs.writeFile(audioFile,Buffer.from(bytes));
+  const broken=structuredClone(valid);broken.rows[1].media={...valid.rows[0].media,url:'data:video/mp4;base64,'+Buffer.from(bytes).toString('base64'),name:'audio-only.mp4'};
+  const diagnostic=await page.evaluate(async s=>{let rejected=false;try{await VideoCompare.applyScheme(s);}catch{rejected=true;}const g=VideoCompare.geometry(1920,1080);return {rejected,finite:g.boxes.every(b=>[b.x,b.y,b.w,b.h].every(Number.isFinite)),ratio:g.ratio};},broken);
+  assert.equal(diagnostic.finite,true,'a source without a video picture must not erase both video slots');
+  assert.equal(diagnostic.rejected,true,'audio-only MP4 must be rejected as a comparison video');
+  assert.equal(diagnostic.ratio,16/9);console.log('PASS invalid video source keeps valid composition geometry');
+  await page.evaluate(s=>VideoCompare.applyScheme(s),valid);
+  await page.locator('.tc-row-select[data-row-id="before"]').click();
+  await page.locator('.vc-row[data-row-id="before"] [data-video-file]').setInputFiles(audioFile);
+  await page.waitForFunction(()=>document.querySelector('.vc-row[data-row-id="before"] .vc-file-name').classList.contains('is-error'));
+  assert.equal(await page.evaluate(()=>VideoCompare.getScheme().rows[0].media.name),valid.rows[0].media.name);
+  assert.ok((await page.locator('.vc-row[data-row-id="before"] .vc-file-name').textContent()).includes('H.264'));
+  assert.equal(await page.locator('.vc-row[data-row-id="before"] [data-video-file]').inputValue(),'');
+  console.log('PASS failed replacement preserves previous video, names the codec issue and allows retry');
+  await page.evaluate(s=>VideoCompare.applyScheme(s),valid);
+  const transient=await page.evaluate(()=>{window.dimensionDescriptors=['videoWidth','videoHeight'].map(key=>[key,Object.getOwnPropertyDescriptor(HTMLVideoElement.prototype,key)]);for(const [key]of dimensionDescriptors)Object.defineProperty(HTMLVideoElement.prototype,key,{configurable:true,get:()=>0});VideoCompare.renderFrame();const g=VideoCompare.geometry(1920,1080);return {finite:g.boxes.every(b=>[b.x,b.y,b.w,b.h].every(Number.isFinite)),ratio:g.ratio};});
+  assert.equal(transient.finite,true);assert.equal(transient.ratio,16/9);
+  await page.locator('#togglePlayback').click();await page.waitForFunction(()=>VideoCompare.getTime()>.15);
+  await page.evaluate(()=>{for(const [key,descriptor]of dimensionDescriptors)Object.defineProperty(HTMLVideoElement.prototype,key,descriptor);});await page.locator('#togglePlayback').click();
+  console.log('PASS transient missing video dimensions preserve layout and playback loop recovers');
+  const pixel=await page.evaluate(()=>{const g=VideoCompare.geometry(1920,1080),b=g.boxes[0];VideoCompare.renderFrame();return Array.from(document.querySelector('#glyphMorphCanvas').getContext('2d').getImageData(Math.round(b.x+b.w/2),Math.round(b.y+b.h/2),1,1).data);});
+  assert.ok(pixel[1]>100&&pixel[1]>pixel[0]);
+  console.log('PASS previously uploaded source remains visible after failed replacement and temporary dimension loss');
+  const filmState=await page.evaluate(async s=>{const create=document.createElement.bind(document);document.createElement=function(tag,...rest){const element=create(tag,...rest);if(tag==='video')element.addEventListener('loadeddata',()=>{if(element.dataset.vcRole==='film')element.dispatchEvent(new Event('error'));},{once:true});return element;};try{await VideoCompare.applyScheme(s);return {loaded:true};}catch(error){return {loaded:false,error:error.message};}finally{document.createElement=create;}},valid);
+  assert.equal(filmState.loaded,true);await page.waitForFunction(()=>document.querySelector('.vc-row[data-row-id="before"] .vc-file-name').textContent.includes('缩略图'));
+  assert.ok(await page.evaluate(()=>VideoCompare.geometry(1920,1080).boxes.every(b=>Number.isFinite(b.w))));
+  console.log('PASS failed filmstrip decoder does not discard the uploaded preview video');
+  assert.deepEqual(errors,[]);await page.screenshot({path:path.join(out,'recovered-editor.png')});
+ }finally{await browser.close();server.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});

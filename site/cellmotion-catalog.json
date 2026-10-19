@@ -13,6 +13,30 @@
   ],
   "recent": [
     {
+      "id": "botvoice",
+      "date": "2026-10-19"
+    },
+    {
+      "id": "patentwall",
+      "date": "2026-10-19"
+    },
+    {
+      "id": "animalwave",
+      "date": "2026-10-19"
+    },
+    {
+      "id": "thermal-profile",
+      "date": "2026-10-15"
+    },
+    {
+      "id": "video-compare",
+      "date": "2026-10-14"
+    },
+    {
+      "id": "typepour",
+      "date": "2026-10-14"
+    },
+    {
       "id": "switchdrop",
       "date": "2026-10-12"
     },
@@ -92,7 +116,7 @@
       "english": "Bot Voice",
       "description": "手机唤醒 · 方块流动 · 语音展开",
       "category": "media",
-      "href": "botvoice.html?from=gallery&v=20261013-1",
+      "href": "botvoice.html?from=gallery&v=20261019-archive2",
       "poster": "final_botvoice.png",
       "video": "assets/previews/botvoice-card.mp4",
       "webComponent": {
@@ -105,9 +129,9 @@
       "id": "patentwall",
       "name": "专利墙",
       "english": "Patent Wall",
-      "description": "Logo 翻转 · 证书特写 · 墙面铺展",
+      "description": "Logo 翻转 · 作品特写 · 墙面铺展",
       "category": "media",
-      "href": "patentwall.html?from=gallery&v=20261013-1",
+      "href": "patentwall.html?from=gallery&v=20261019-archive2",
       "poster": "final_patentwall.png",
       "video": "assets/previews/patentwall-card.mp4",
       "webComponent": {
@@ -122,12 +146,57 @@
       "english": "Animal Wave",
       "description": "头像递增 · 波浪队列 · 品牌收尾",
       "category": "media",
-      "href": "animalwave.html?from=gallery&v=20261013-1",
+      "href": "animalwave.html?from=gallery&v=20261019-archive2",
       "poster": "final_animalwave.png",
       "video": "assets/previews/animalwave-card.mp4",
       "webComponent": {
         "preview": "archive-motion-demo.html?effect=animalwave",
         "descriptor": "effects/animalwave.component.json"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "thermal-profile",
+      "name": "热感",
+      "english": "Thermal Profile",
+      "description": "人像轮廓 · 热色流动 · 文字浮现",
+      "category": "graphic",
+      "href": "thermal-profile.html?from=gallery&v=20261015-release1",
+      "poster": "final_thermal-profile.png",
+      "video": "assets/previews/thermal-profile-card.mp4",
+      "webComponent": {
+        "preview": "typecascade-component-demo.html?effect=thermal-profile",
+        "descriptor": "effects/thermal-profile.component.json"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "video-compare",
+      "name": "视频对比",
+      "english": "Video Compare",
+      "description": "双视频同步对比 · 黑白版式 · B2W 署名",
+      "category": "media",
+      "href": "video-compare.html?v=20261015-vcompare12",
+      "poster": "assets/cellmotion/poster-video-compare.jpg?v=20261015-vcompare12",
+      "video": null,
+      "webComponent": {
+        "preview": "typecascade-component-demo.html?effect=video-compare",
+        "descriptor": "effects/video-compare.component.json"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "typepour",
+      "name": "字水",
+      "english": "Type Pour",
+      "description": "字体如水 · 透明玻璃杯 · 同步倒水声",
+      "category": "physics",
+      "href": "typepour.html",
+      "poster": "assets/cellmotion/poster-typepour.jpg",
+      "video": "assets/previews/typepour-card.mp4",
+      "webComponent": {
+        "preview": "typecascade-component-demo.html?effect=typepour",
+        "descriptor": "effects/typepour.component.json"
       },
       "status": "ready"
     },

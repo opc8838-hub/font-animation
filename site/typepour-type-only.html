@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>纯字体倒水 · Type Pour</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="typepour-prototype.css?v=3">
+  <script defer src="shared-font-library.js"></script>
+  <script defer src="typepour-fluid.js?v=1"></script>
+  <script defer src="js/continuation-gif.js"></script>
+  <script defer src="js/h264-mp4-encoder.web.js"></script>
+  <script defer src="typepour-source.js?v=5"></script>
+  <script defer src="typepour-glass.js?v=3"></script>
+  <script defer src="typepour-audio.js?v=2"></script>
+  <script defer src="typepour-prototype.js?v=9"></script>
+</head>
+<body data-variant="type-only">
+  <header><a href="typepour-prototype.html">ME<span> / MOTION STUDIES</span></a><span class="edition">01 — TYPE POUR</span><span class="tag">动态预览</span></header>
+  <main>
+    <nav class="variants" aria-label="效果版本"><a href="typepour-prototype.html">字体 + 蓝色格子</a><a href="typepour-type-only.html" aria-current="page">纯字体</a></nav>
+    <section class="stage" aria-label="字体倒水动画"><canvas id="canvas" width="900" height="1000"></canvas>
+      <div class="loading" id="loading" role="status">正在准备水流 <span id="progress">0%</span></div>
+      <div class="stage-caption"><h1>Type Pour</h1><p>Letters only.</p></div>
+    </section>
+    <section class="transport" aria-label="播放控制">
+      <button id="play" disabled aria-label="暂停">暂停</button><button id="replay" disabled>重播 ↺</button>
+      <input id="seek" type="range" min="0" max="12" step="0.01" value="0" aria-label="播放时间" disabled>
+      <output id="clock">0.00 / 12.00</output><select id="speed" aria-label="播放速度"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option></select>
+    </section>
+    <section class="sound-controls" aria-label="倒水声音"><button id="sound" aria-pressed="false">试听倒水声</button><label>音量 <input id="volume" type="range" min="0" max="100" value="65"><output id="volume-value">65%</output></label><label><input id="exportSound" type="checkbox" checked>MP4 带声音</label><button id="wav">下载音效</button></section>
+    <section class="settings" aria-label="预览调整">
+      <label class="text-field">流动的文字<input id="text" value="Stress is a constant companion in these days and now, always here."></label>
+      <label>字体<select id="font"><option value="stg:georgia" selected>Georgia</option></select></label>
+      <label hidden>蓝色方块<input id="squares" type="range" min="0" max="100" value="0"><output id="square-value">0%</output></label>
+      <label>字粒大小<input id="size" type="range" min="8" max="19" value="15"></label>
+      <label>画面比例<select id="ratio"><option value="900x1000">9:10</option><option value="1080x1080">1:1</option><option value="1080x1920">9:16</option><option value="1920x1080">16:9</option></select></label>
+    </section>
+    <section class="exports" aria-label="导出预览"><span id="status" role="status">纯粹的文字，像水一样流动</span><label>导出尺寸 <select id="exportScale"><option value="0.5" selected>50%</option><option value="1">100%</option></select></label><label>导出时长 <select id="duration"><option value="12">完整 12 秒</option><option value="6">6 秒</option><option value="3">3 秒</option></select></label><button id="png" disabled>PNG</button><button id="gif" disabled>GIF</button><button id="mp4" disabled>MP4</button></section>
+  </main>
+</body>
+</html>

@@ -205,7 +205,7 @@ function renderCatalog() {
   if($('#catalog-empty'))$('#catalog-empty').hidden=matches.length>0||activeUsage==='web';
   if($('#web-planned'))$('#web-planned').hidden=activeUsage!=='web'||matches.length>0;
   if($('#load-more'))$('#load-more').hidden=matches.length<=limit;
-  if($('#usage-note'))$('#usage-note').textContent=activeUsage==='web'?'已适配组件可从编辑器右上角 For AI 预览并复制配置代码；使用同一动效渲染器，不是嵌入 MP4。':activeUsage==='video'?'选择动效，进入工作台编辑，再使用该编辑器提供的导出功能。视频拼接器尚未开放。':'提供独立编辑器与导出。Bot 语音、专利墙、动物浪潮、翻牌登录、卡牌剧场已支持 For AI 网页组件，其余组件逐步适配。';
+  if($('#usage-note'))$('#usage-note').textContent=activeUsage==='web'?'已适配组件可从编辑器右上角 For AI 预览并复制配置代码；使用同一动效渲染器，不是嵌入 MP4。':activeUsage==='video'?'选择动效，进入工作台编辑，再使用该编辑器提供的导出功能。视频拼接器尚未开放。':'提供独立编辑器与导出。翻牌登录、卡牌剧场已支持 For AI 网页组件，其余组件逐步适配。';
   $('#catalog-grid').innerHTML=showing.map(catalogCard).join('');
   $('#catalog-grid').querySelectorAll('.catalog-preview').forEach(preview=>{
     const pending=preview.closest('.catalog-card')?.classList.contains('is-pending');
@@ -280,7 +280,8 @@ document.addEventListener('visibilitychange',()=>{
 });
 async function loadCatalogData() {
   try {
-    const response=await fetch('cellmotion-catalog.json?v=20261013-archive1');
+    const response=await fetch('cellmotion-catalog.json?v=20261019-archive2');
+
     if(!response.ok)throw new Error(`Catalog HTTP ${response.status}`);
     const catalog=await response.json();
     effects=catalog.effects;

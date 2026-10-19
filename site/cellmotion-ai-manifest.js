@@ -9,7 +9,9 @@
     const rows = Array.isArray(scheme?.rows) ? scheme.rows : [];
     const fonts = unique([
       scheme?.typography?.fontFamily,
+      scheme?.layout?.fontFamily,
       scheme?.settings?.font,
+      scheme?.scene?.fontFamily,
       ...rows.map((row) => row.fontFamily)
     ]).map((id) => ({ id, source: id.startsWith("stg:") ? "cellmotion-font-library" : "css-font-family" }));
     const images = Array.isArray(scheme?.assets) ? scheme.assets : [];
@@ -21,8 +23,11 @@
       .map((row) => ({ rowId: row.id, ...clone(row.backgroundMedia) }));
     if (scheme?.backgroundMedia) backgrounds.push({ owner: 'composition', ...clone(scheme.backgroundMedia) });
     const embedded = [...(Array.isArray(scheme?.customAssets) ? clone(scheme.customAssets) : []), ...images.map((asset, index) => ({ id: asset.id, name: asset.imageName, kind: asset.kind, source: `composition.assets[${index}]`, libraryId: asset.libraryId }))];
+    if(scheme?.scene?.media){const media=scheme.scene.media;embedded.push({id:media.libraryId||'thermal-subject',name:media.imageName,kind:'image',source:'composition.scene.media',embedded:!!media.originalDataUrl?.startsWith('data:')});}
+    if(scheme?.effect==='video-compare'&&scheme.logo)embedded.push({id:'footer-logo',kind:'image',name:scheme.logo.name,source:'composition.logo',embedded:true});
     const result = { fonts, icons, backgrounds, embedded };
     if (cards.length) result.cards = cards.map(card => ({ id: card.id, libraryId: card.libraryId }));
+    if(rows.some(row=>row.media?.kind==='video'))result.videos=rows.flatMap((row,index)=>row.media?.kind==='video'?[{rowId:row.id,source:`composition.rows[${index}].media`,kind:'video',name:row.media.name,fileType:row.media.fileType,trimStart:row.media.trimStart,trimEnd:row.media.trimEnd,fit:row.media.fit,audioEnabled:row.audioEnabled}]:[]);
     return result;
   }
 
@@ -56,7 +61,13 @@
     if (!manifest?.effect?.id) errors.push("缺少 effect.id");
     if (!manifest?.runtime?.entry) errors.push("缺少 runtime.entry");
     if (manifest?.runtime?.kind === 'iframe-bridge' && manifest.runtime.bridgeVersion !== SCHEMA_VERSION) errors.push('不支持的 bridgeVersion / Unsupported bridge version');
-    if (manifest?.effect?.id === 'curvedgallery') {
+    if (manifest?.effect?.id === 'video-compare') {
+      const c=manifest.composition;
+      if(c?.effect!=='video-compare'||c.version!==1||!Array.isArray(c.rows)||c.rows.length!==2||!['before','after'].every(id=>c.rows.some(row=>row.id===id)))errors.push('Invalid Video Compare composition');
+      if(!['width','height'].every(key=>Number.isInteger(c?.canvas?.[key])&&c.canvas[key]>=320&&c.canvas[key]<=3840&&c.canvas[key]%2===0))errors.push('Invalid Video Compare canvas dimensions');
+      if(!c?.layout||!c?.export)errors.push('Missing Video Compare layout/export settings');
+      if(c?.logo&&(!/^data:image\/png;base64,/i.test(c.logo.url||'')||!['keep','remove-white'].includes(c.logo.background)||!['original','black','white'].includes(c.logo.color)))errors.push('Invalid Video Compare logo');
+    } else if (manifest?.effect?.id === 'curvedgallery') {
       const composition = manifest.composition;
       if (composition?.effect !== 'curvedgallery' || ![1, 2].includes(composition?.version) || !Array.isArray(composition?.assets)) errors.push('无效的弧廊归标 composition');
       if (!['width', 'height'].every(key => Number.isFinite(composition?.settings?.[key]) && composition.settings[key] > 0)) errors.push('缺少 composition.settings 画布尺寸');
@@ -70,7 +81,7 @@
 
   function configuredCode(manifest) {
     const json = JSON.stringify(manifest, null, 2).replace(/<\//g, "<\\/");
-    const playerScript = new URL('cellmotion-player.js', manifest.runtime.entry); playerScript.searchParams.set('v', '20261010-ai1');
+    const playerScript = new URL('cellmotion-player.js', manifest.runtime.entry); playerScript.searchParams.set('v', '20261015-vcompare12');
     if (manifest.capabilities?.nativeEffectPage) {
       return `<iframe title="${manifest.effect.name?.en || manifest.effect.id}" src="${manifest.runtime.entry}" style="display:block;width:100%;aspect-ratio:${manifest.composition.canvas.width}/${manifest.composition.canvas.height};border:0"></iframe>\n<script type="application/json" id="cellmotion-editor-config">${json}</script>`;
     }
@@ -86,6 +97,10 @@
     if (manifest.capabilities?.nativeEffectPage) {
       if (language === "en") return `Reuse the existing CellMotion effect page at runtime.entry. Do not redraw or replace its animation. Keep the current text, canvas dimensions, and editor control values from composition.editorState. Place the page inside a responsive frame using composition.canvas dimensions.\n\n${payload}`;
       return `接入现有 CellMotion 动效页面 runtime.entry，不要重画或替换动效。保留 composition.editorState 中的文字、画布尺寸和编辑器控件值，并按 composition.canvas 的比例自适应展示。\n\n${payload}`;
+    }
+    if(manifest.effect?.id==='video-compare') {
+      const intro=language==='en'?'Integrate the existing CellMotion Video Compare component using cellmotion-player.js and this complete live-state Manifest. Preserve the stable before/after slots, embedded source videos, source aspect versus output canvas, smaller Before size, editable labels/captions/top text, font and palette, framing, trim intervals, duration, short-clip looping, longest-clip export ending, custom footer logo and independent source audio switches. MP4 audio follows those switches; browsers may require a user play gesture for audible playback.':'接入现有 CellMotion 视频对比组件，加载 cellmotion-player.js，并把完整实时 Manifest 交给 <cellmotion-player>。保留 before/after 稳定槽位、嵌入原视频、素材比例与成品画布的区别、较小的 Before、可编辑标签/说明/顶部小字、字体配色、取景、裁剪区间、短片循环、最长片段结束导出、自定义底部 Logo 与独立声音开关。MP4 的声音跟随开关；网页有声播放可能需要用户点击播放。';
+      return intro+'\n\n'+payload;
     }
     if (language === "en") {
       return `Integrate this CellMotion component without reimplementing its animation. Load cellmotion-player.js, pass the complete manifest to <cellmotion-player>, preserve its canvas aspect ratio, text, fonts, images/icons, media ownership, crop/effects, backgrounds, timings and reduced-motion behavior. The composition is the user's live editor state.\n\n${payload}`;

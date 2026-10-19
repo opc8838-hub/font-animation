@@ -28,6 +28,32 @@ def main() -> int:
     js = js_path.read_text(encoding="utf-8")
     errors: list[str] = []
 
+    # A fixed comparison template owns two video slots, not an icon library.
+    if 'data-editor-capabilities="fixed-video-pair"' in html:
+        required = {
+            'scheme': ['id="saveScheme"', 'id="importScheme"', 'id="restoreScheme"', 'id="clearScheme"'],
+            'canvas/playback': ['id="canvasPreset"', 'id="glyphMorphCanvas"', 'id="togglePlayback"', 'id="restartPreview"'],
+            'timeline': ['me-choreo-track', 'me-choreo-block', 'me-choreo-playhead', 'data-seek-ms'],
+            'video editing': ['data-video-file', 'trimStart', 'trimEnd', 'vc-trim-handle', 'sourceTime', 'seekVideo'],
+            'export': ['id="exportPng"', 'id="exportGif"', 'id="exportMp4"', 'createH264MP4Encoder'],
+            'persistence': ['indexedDB', 'applyScheme', 'version: 1'],
+            'AI': ['CellMotionBridge.register', 'getScheme', 'durationMs', 'seek:'],
+        }
+        source = html + '\n' + js
+        for label, tokens in required.items():
+            for token in tokens:
+                if token not in source:
+                    errors.append(f'missing {label}: {token}')
+        for shared in ['typecascade-workspace.js', 'typecascade-polish.js', 'typecascade-selects.js', 'typecascade-locale.js', 'site-preferences.js', 'cellmotion-effect-bridge.js', 'cellmotion-ai-manifest.js', 'cellmotion-ai-menu.js']:
+            if shared not in html:
+                errors.append(f'missing shared editor: {shared}')
+        for error in errors:
+            fail(error)
+        if errors:
+            return 1
+        print(f'PASS: {html_path.name} uses the CellMotion fixed-video-pair shell; browser checks remain required.')
+        return 0
+
     if 'cardmotion-editor.js' in html:
         shared = html_path.parent / 'cardmotion-editor.js'
         js += '\n' + shared.read_text(encoding='utf-8')
@@ -82,6 +108,55 @@ def main() -> int:
                 fail(error)
             return 1
         print(f"PASS: {html_path.name} uses the shared CellMotion editor; browser interaction checks are still required.")
+        return 0
+
+    if 'typepour-runtime.js' in html:
+        runtime = (html_path.parent / 'typepour-runtime.js').read_text(encoding='utf-8')
+        source = html + '\n' + js + '\n' + runtime
+        required = {
+            'CellMotion shell': ['tc-workspace', 'tc-content', 'tc-center', 'tc-properties', 'typecascade-polish.css'],
+            'scheme': ['id="saveScheme"', 'id="importScheme"', 'id="resetScheme"', 'id="clearScheme"', 'localStorage', 'id="undo"', 'id="redo"'],
+            'composition': ['id="ratio"', 'id="canvas"', 'id="text"', 'id="font"', 'id="textColor"', 'id="backgroundColor"'],
+            'timeline': ['id="play"', 'id="replay"', 'id="seek"', 'id="phaseTrack"', 'id="playhead"', 'canonicalTime'],
+            'assets': ['STGIconLibrary.groups', 'TokenAssetTools.processFile', 'id="selectedAssets"', 'id="assetDrawer"', 'id="insertAsset"'],
+            'background': ['CellMotionAnimatedImage.decode', 'CellMotionAnimatedImage.frameAt', 'CellMotionAnimatedImage.dispose', 'videoStart', 'videoEnd', 'seekVideo'],
+            'export': ['id="png"', 'id="gif"', 'id="mp4"', 'createH264MP4Encoder', 'await editor.prepareFrame'],
+            'AI': ['cellmotion-ai-menu.js', 'cellmotion-effect-bridge.js', 'CellMotionBridge.register', 'getScheme', 'applyScheme']
+        }
+        for label, tokens in required.items():
+            for token in tokens:
+                if token not in source:
+                    errors.append(f'missing {label}: {token}')
+        for error in errors:
+            fail(error)
+        if errors:
+            return 1
+        print(f'PASS: {html_path.name} uses the CellMotion shell with its native liquid renderer; real-browser checks remain required.')
+        return 0
+
+    if 'thermal-profile-editor.js' in html:
+        adapter = (html_path.parent / 'thermal-profile-editor.js').read_text(encoding='utf-8')
+        shell = (html_path.parent / 'cellmotion-me-shell.js').read_text(encoding='utf-8')
+        source = html + '\n' + js + '\n' + adapter + '\n' + shell
+        required = {
+            'CellMotion shell': ['tc-content', 'tc-center', 'tc-properties', 'typecascade-polish.css', 'typecascade-selects.js', 'typecascade-locale.js'],
+            'scheme': ['id="saveButton"', 'id="importFile"', 'id="resetButton"', 'id="clearButton"', 'localStorage'],
+            'composition': ['id="exportPreset"', 'id="flowCanvas"', 'id="text"', 'id="fontFamily"', 'id="textColor"', 'id="warm"', 'id="cool"', 'id="hot"'],
+            'timeline': ['me-choreo-track', 'me-choreo-block', 'me-choreo-playhead', 'setTime', 'duration'],
+            'assets': ['STGIconLibrary.groups', 'me-asset-drawer', 'me-asset-library', 'me-asset-choice', 'me-asset-commit', 'me-asset-editor', 'selectedActions', 'openDrawer'],
+            'mask editing': ['ThermalMask.settings', 'id="maskCanvas"', 'id="maskUndo"', 'id="maskComplete"'],
+            'export': ['id="exportPng"', 'id="exportGif"', 'id="exportVideo"', 'createH264MP4Encoder'],
+            'AI': ['cellmotion-ai-menu.js', 'cellmotion-effect-bridge.js', 'CellMotionBridge.register', 'getScheme', 'applyScheme'],
+        }
+        for label, tokens in required.items():
+            for token in tokens:
+                if token not in source:
+                    errors.append(f'missing {label}: {token}')
+        for error in errors:
+            fail(error)
+        if errors:
+            return 1
+        print(f'PASS: {html_path.name} uses the CellMotion thermal silhouette shell; browser checks remain required.')
         return 0
 
     text_only = 'data-editor-capabilities="text-only"' in html
