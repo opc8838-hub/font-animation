@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "blockflow",
+      "date": "2026-10-19"
+    },
+    {
       "id": "patentcount",
       "date": "2026-10-19"
     },
@@ -126,6 +130,21 @@
       "webComponent": {
         "preview": "archive-motion-demo.html?effect=botvoice",
         "descriptor": "effects/botvoice.component.json"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "blockflow",
+      "name": "方块流动",
+      "english": "Block Flow",
+      "description": "图标变方块 · 蓝色律动 · 收拢归一",
+      "category": "flow",
+      "href": "blockflow.html?from=gallery&v=20261019-block1",
+      "poster": "final_blockflow.png?v=20261019-block1",
+      "video": "assets/previews/blockflow-card.mp4?v=20261019-block1",
+      "webComponent": {
+        "preview": "archive-motion-demo.html?effect=blockflow",
+        "descriptor": "effects/blockflow.component.json"
       },
       "status": "ready"
     },

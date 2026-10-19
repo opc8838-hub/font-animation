@@ -23,7 +23,7 @@ const server = http.createServer(async (req,res) => {
   const evidence=path.resolve(__dirname,'../output/archive-import');
   await fs.mkdir(evidence,{recursive:true});
   try {
-    for (const [slug,count] of [['botvoice',1],['patentwall',196],['patentcount',63],['animalwave',59]]) {
+    for (const [slug,count] of [['botvoice',1],['blockflow',8],['patentwall',196],['patentcount',63],['animalwave',59]]) {
       const page = await browser.newPage({viewport:{width:1440,height:1000},acceptDownloads:true});
       page.on('pageerror',error=>failures.push(slug + ': ' + error.message));
       page.on('console',message=>{if(message.type()==='error')failures.push(slug + ': ' + message.text());});
@@ -53,6 +53,11 @@ const server = http.createServer(async (req,res) => {
         const changed=await page.evaluate(async()=>{const s=CardMotionEditor.getScheme();CardMotionEditor.seek(.2);const before=document.querySelector('#canvas').toDataURL();s.cards[0].opacity=.15;await CardMotionEditor.apply(s);CardMotionEditor.seek(.2);return before!==document.querySelector('#canvas').toDataURL();});
         assert.equal(changed,true,'flip cover responds to per-asset opacity');
         assert.equal(new Set(preset.cards.map(card=>card.libraryId)).size,196,'every wall card uses a distinct asset');
+        await page.evaluate(s=>CardMotionEditor.apply(s),preset);
+      }
+      if(slug==='blockflow') {
+        const changed=await page.evaluate(async()=>{const s=CardMotionEditor.getScheme();CardMotionEditor.seek(1.5);const before=document.querySelector('#canvas').toDataURL();s.scene.flowSpeed=2;s.scene.waveHeight=1.5;s.cards.push({...s.cards[0],id:'extra-block',libraryId:'rainbow-ring'});await CardMotionEditor.apply(s);CardMotionEditor.seek(1.5);return {changed:before!==document.querySelector('#canvas').toDataURL(),count:CardMotionEditor.getScheme().cards.length};});
+        assert.deepEqual(changed,{changed:true,count:9},'add a block and edit its flow');
         await page.evaluate(s=>CardMotionEditor.apply(s),preset);
       }
       if(slug==='patentcount') {

@@ -6,6 +6,8 @@ Questions and pull requests: see the [bilingual contribution guide](CONTRIBUTING
 
 **Let creativity grow freely.**
 
+**2026-10-19 Block Flow added:** [Block Flow](https://cellmotion.cn/blockflow.html) extracts Bot Voice’s blue block beat into its own editable effect. Add, replace, delete, or reorder blocks; icons morph into blocks, and color, wave, speed, gaps, and corners are editable. The shared editor, For AI component, and PNG/GIF/MP4 exports are included. [Motion analysis](docs/analyses/blockflow.md).
+
 **2026-10-19 Patent Count added:** [Patent Count](https://cellmotion.cn/patentcount.html) follows the supplied fifth-segment reference: hero pullback, arc artwork wall, and count reveal. Its default Mutedmen artworks are unique; headline, count, proof points, images, and background are editable. Portrait canvas, timeline, For AI, and PNG/GIF/MP4 export are supported. [Phase analysis](docs/analyses/patentcount.md).
 
 **2026-10-19 three archived motions released:** [Bot Voice](https://cellmotion.cn/botvoice.html), [Patent Wall](https://cellmotion.cn/patentwall.html), and [Animal Wave](https://cellmotion.cn/animalwave.html) now use the shared editor, timeline, exports, and live For AI components. Patent Wall uses 196 distinct Mutedmen artwork images; Animal Wave lets you replace avatars and names and write follower-count captions. [Integration and validation](docs/ARCHIVE_MOTION_EDITORS.md).
