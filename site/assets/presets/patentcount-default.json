@@ -8,10 +8,7 @@
   "typography": {
     "fontFamily": "stg:noto-sc"
   },
-  "backgroundColor": "#eeece6",
-  "backgroundMedia": {
-    "libraryId": "patentcount-gallery-bg"
-  },
+  "backgroundColor": "#ffffff",
   "cards": [
     {
       "id": "item-0",

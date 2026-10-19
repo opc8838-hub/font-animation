@@ -10,7 +10,7 @@
   },
   "runtime": {
     "kind": "iframe-bridge",
-    "entry": "patentcount.html?preview=1&embed=1&v=20261019-review2",
+    "entry": "patentcount.html?preview=1&embed=1&v=20261019-white3",
     "bridgeVersion": "1.0.0",
     "renderer": "canvas2d"
   },

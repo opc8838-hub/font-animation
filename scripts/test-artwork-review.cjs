@@ -34,7 +34,8 @@ const server=http.createServer(async(req,res)=>{try{const file=path.resolve(root
     assert.ok(result.top>500&&result.bottom>500,'9:16 artwork reaches both screen edges');
    }
    if(id==='patentcount'){
-    assert.equal(preset.scene.title,'图片数量');assert.equal(preset.backgroundMedia.libraryId,'patentcount-gallery-bg');
+    assert.equal(preset.scene.title,'图片数量');assert.equal(preset.backgroundColor,'#ffffff');assert.equal(preset.backgroundMedia,undefined);
+    const white=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=640;c.height=360;const g=c.getContext('2d',{willReadFrequently:true});CardMotionEditor.draw(g,3,640,360);return [...g.getImageData(320,350,1,1).data]});assert.deepEqual(white,[255,255,255,255],'default count backdrop is pure white');
     const empty=await page.evaluate(async()=>{const s=CardMotionEditor.getScheme();for(const k of ['title','subtitle','plus','sideA','sideAEn','sideB','sideBEn'])s.scene[k]='';await CardMotionEditor.apply(s);return ['title','subtitle','plus','sideA','sideAEn','sideB','sideBEn'].every(k=>CardMotionEditor.getScheme().scene[k]==='');});
     assert.ok(empty,'all count labels can be cleared');
    }

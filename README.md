@@ -8,7 +8,7 @@
 
 **2026-10-19 方块流动独立上新**：[方块流动](https://cellmotion.cn/blockflow.html) 直接沿用 Bot 语音的亮蓝方块节奏，首帧从单块展开，图标可变成方块；可新增、替换、删除和排序方块，调节颜色、起伏、速度、间距与圆角，并使用统一编辑器、For AI 和 PNG / GIF / MP4 导出。[动效分析](docs/analyses/blockflow.md)。
 
-**2026-10-19 作品展示 2**：[作品展示 2](https://cellmotion.cn/patentcount.html) 按第五段参考视频制作主卡拉远、作品弧墙和数字显现。沿用 Mutedmen 作品图片且默认不重复；标题、数量、说明、作品和暖灰背景均可编辑，说明可清空，支持 9:16、时间轴与 PNG / GIF / MP4 导出。相位分析见 [docs/analyses/patentcount.md](docs/analyses/patentcount.md)。
+**2026-10-19 作品展示 2**：[作品展示 2](https://cellmotion.cn/patentcount.html) 按第五段参考视频制作主卡拉远、作品弧墙和数字显现。沿用 Mutedmen 作品图片且默认不重复；标题、数量、说明、作品和纯白底色均可编辑，说明可清空，支持 9:16、时间轴与 PNG / GIF / MP4 导出。相位分析见 [docs/analyses/patentcount.md](docs/analyses/patentcount.md)。
 
 **2026-10-19 三款存档动效正式上新**：[Bot 语音](https://cellmotion.cn/botvoice.html)、[作品展示 1](https://cellmotion.cn/patentwall.html)、[动物浪潮](https://cellmotion.cn/animalwave.html) 接入统一编辑器、阶段时间轴、画幅与导出、共享素材库及实时 For AI 组件。作品展示 1 以 9:16 满幅展示 Mutedmen 作品图；动物浪潮的头像、名称与数量文案可替换，适合不同群像内容。详见 [接入与验证说明](docs/ARCHIVE_MOTION_EDITORS.md)。
 

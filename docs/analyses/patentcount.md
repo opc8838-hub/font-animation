@@ -32,7 +32,7 @@ A close-up artwork pulls back into a softly moving three-row arc of distinct mut
 
 ## Reuse plan
 - Reuse the shared archive editor, timeline, fonts, card library, image/GIF/video background model, scheme save/import/reset, PNG/GIF/MP4 exporters, and For AI manifest.
-- Reuse `assets/patentwall/library.json` and its image paths; do not duplicate mutedmen works. Retain the supplied 1920×1080 blue background for legacy schemes; use a neutral warm gallery background as the new default.
+- Reuse `assets/patentwall/library.json` and its image paths; do not duplicate mutedmen works. Retain the supplied 1920×1080 blue background for legacy schemes; use a pure-white editable background as the current default.
 - Implement a focused Canvas native renderer for the curved wall and kinetic type.
 
 ## Uncertainties to verify
@@ -50,4 +50,10 @@ A close-up artwork pulls back into a softly moving three-row arc of distinct mut
 
 ## 2026-10-19 product review
 
-The shipped name is “作品展示 2”. The default headline is “图片数量”, the target is 63 distinct default images, the plus suffix is blank, and the lower-left caption defaults to “精选作品 / Selected works”. All seven text fields can be edited or cleared independently; when both lower-left groups are blank, the accent line disappears. The new warm-gray gallery background replaces the blue source background in the default scheme. The original blue image remains available for imported older schemes. The underlying arc and type phase timings are unchanged.
+The shipped name is “作品展示 2”. The default headline is “图片数量”, the target is 63 distinct default images, the plus suffix is blank, and the lower-left caption defaults to “精选作品 / Selected works”. All seven text fields can be edited or cleared independently; when both lower-left groups are blank, the accent line disappears. The current pure-white background replaces the blue source background in the default scheme. The original blue image remains available for imported older schemes. The underlying arc and type phase timings are unchanged.
+
+## 2026-10-19 white-background and numeral refinement
+
+FFprobe reconfirmed the 1920×1080, 60 fps, 4.8 s source. FFmpeg frames at 1.6, 2.0, 2.4, 2.8, 3.4 and 4.2 s show the original numerals use a dense bold grotesk with narrower glyphs than the default Noto Sans SC Black fallback, aligned with the headline along the upper arc. The default count now uses Inter 700 while the headline retains its editable Chinese font; choosing another font in the editor also changes the count. The default background is solid #fff with no background media; imported warm-gray or blue schemes still resolve their existing assets. The established zoom, arrival, type timing, card motion and portrait camera are frozen.
+
+Uncertainty: the video does not identify the exact numeric font family. Inter 700 is the closest available repository font by measured apparent weight and width; color and timing remain unchanged.
