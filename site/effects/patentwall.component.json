@@ -10,7 +10,7 @@
   },
   "runtime": {
     "kind": "iframe-bridge",
-    "entry": "patentwall.html?preview=1&embed=1",
+    "entry": "patentwall.html?preview=1&embed=1&v=20261019-archive3",
     "bridgeVersion": "1.0.0",
     "renderer": "canvas2d"
   },
@@ -34,15 +34,15 @@
   },
   "behavior": {
     "summary": {
-      "zh": "Logo 翻转、证书展开，逐张特写后拉远形成滚动专利墙。",
-      "en": "Flip a logo into certificates, focus each card, and pull back into a drifting wall."
+      "zh": "封面翻转、作品展开，逐张特写后拉远形成滚动作品墙。",
+      "en": "Flip the cover into artwork, focus each piece, and pull back into a drifting wall."
     },
     "phases": [
       {
         "id": "phase0",
         "name": {
-          "zh": "Logo 翻转",
-          "en": "Logo flip"
+          "zh": "封面翻转",
+          "en": "Cover flip"
         },
         "colorToken": "phase.sky"
       },
@@ -81,8 +81,8 @@
       {
         "id": "phase5",
         "name": {
-          "zh": "拉远·专利墙",
-          "en": "Patent wall"
+          "zh": "拉远·作品墙",
+          "en": "Artwork wall"
         },
         "colorToken": "phase.sky"
       }

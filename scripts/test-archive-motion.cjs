@@ -23,7 +23,7 @@ const server = http.createServer(async (req,res) => {
   const evidence=path.resolve(__dirname,'../output/archive-import');
   await fs.mkdir(evidence,{recursive:true});
   try {
-    for (const [slug,count] of [['botvoice',1],['patentwall',7],['animalwave',59]]) {
+    for (const [slug,count] of [['botvoice',1],['patentwall',196],['animalwave',59]]) {
       const page = await browser.newPage({viewport:{width:1440,height:1000},acceptDownloads:true});
       page.on('pageerror',error=>failures.push(slug + ': ' + error.message));
       page.on('console',message=>{if(message.type()==='error')failures.push(slug + ': ' + message.text());});
@@ -37,6 +37,12 @@ const server = http.createServer(async (req,res) => {
       if(slug==='patentwall') {
         const changed=await page.evaluate(async()=>{const s=CardMotionEditor.getScheme();CardMotionEditor.seek(.2);const before=document.querySelector('#canvas').toDataURL();s.cards[0].opacity=.15;await CardMotionEditor.apply(s);CardMotionEditor.seek(.2);return before!==document.querySelector('#canvas').toDataURL();});
         assert.equal(changed,true,'flip cover responds to per-asset opacity');
+        assert.equal(new Set(preset.cards.map(card=>card.libraryId)).size,196,'every wall card uses a distinct asset');
+        await page.evaluate(s=>CardMotionEditor.apply(s),preset);
+      }
+      if(slug==='animalwave') {
+        const changed=await page.evaluate(async()=>{const s=CardMotionEditor.getScheme();CardMotionEditor.seek(2.8);const before=document.querySelector('#canvas').toDataURL();s.scene.captionMode='text';s.scene.many='我们有 {count} 位关注者';s.scene.countStart=1200;s.scene.countStep=10;s.cards[0].caption='小明';await CardMotionEditor.apply(s);CardMotionEditor.seek(2.8);return before!==document.querySelector('#canvas').toDataURL();});
+        assert.equal(changed,true,'editable follower count and caption render');
         await page.evaluate(s=>CardMotionEditor.apply(s),preset);
       }
       const phases = await page.evaluate(()=>CardMotion.phases(CardMotionEditor.getScheme()));

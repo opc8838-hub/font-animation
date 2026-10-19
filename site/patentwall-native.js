@@ -59,10 +59,9 @@ function track(keys, t, log=false) {
   return keys[keys.length-1][1];
 }
 
-// ───────── 逐字节奏 ─────────
-const rowStart = j => j * 0.05;
-const rowDur = r => 0.12 + 0.40 * (r.x1 - r.x0) / 860;
-const scanLen = name => Math.max(...window.PATENT_ROWS[name].rows.map((r, j) => rowStart(j) + rowDur(r)));
+// ───────── 参考视频特写停留节奏 ─────────
+const SCAN_LENGTHS={p1:1.0079069767441862,p2:1.0083720930232558,p3:1.0069767441860464,p4:1.0069767441860464,p5:1.0069767441860464,p6:1.0088372093023257};
+const scanLen=name=>SCAN_LENGTHS[name]||1.008;
 
 // ───────── 时间轴 ─────────
 // Logo 翻转成专利 → 左右专利慢慢展开 → 滑过两张推近特写 1 → 平移切 2–4 → 拉远，专利一张张上下进场成墙
@@ -104,7 +103,7 @@ const SPREAD_END = SPREAD_T + T.spread;
 const zoomK = [[0, ZK]];
 const cyK   = [[0, 0]];
 const sK    = [[0, 0]];
-const scanStart = [], SHOTS = [["Logo 翻转", 0, FLIP_END]];
+const scanStart = [], SHOTS = [["封面翻转", 0, FLIP_END]];
 let cur = FLIP_END;
 {
   // 第 1 张：展开 → 滑过两张 → 推近
@@ -130,7 +129,7 @@ const WALL_T = cur;
 const DUR = WALL_T + T.wall + T.wallHold;
 zoomK.push([WALL_T, ZC, "lin"], [WALL_T + T.wall, ZW, "wallZoom"], [DUR, 0.31, "calm"]);
 cyK.push([WALL_T, CY_C, "lin"], [WALL_T + T.wall, 0, "wall"]);
-SHOTS.push(["拉远·专利墙", WALL_T, DUR]);
+SHOTS.push(["拉远·作品墙", WALL_T, DUR]);
 
 // 翻转卡此刻的姿态
 function flipState(t) {
@@ -198,78 +197,33 @@ const WALL = [];
   }
 })();
 
-// ───────── 图片 ─────────
-const IMGS = {};
-function loadAll() {
-  const jobs = [];
-  for (let i = 1; i <= 6; i++) for (const suf of ["", "_blank"]) {
-    const key = `p${i}${suf}`, im = new Image();
-    im.src = `assets/${key}.jpg`;
-    IMGS[key] = im;
-    jobs.push(im.decode());
-  }
-  IMGS.logo = new Image();
-  IMGS.logo.src = "assets/logo.jpg";
-  jobs.push(IMGS.logo.decode());
-  return Promise.all(jobs);
-}
-
-// ───────── 画一张证书 ─────────
-const ctx = cv.getContext("2d");
-ctx.imageSmoothingQuality = "high";
-
-function drawCard(name, sx, sy, sw, sh, featured, t) {
-  const cards = state.cards.slice(1); if(!cards.length)return; const slot = (Number(name.slice(1))-1)%cards.length; const card=cards[slot], record=resources.get(card.libraryId);
-  if(!record)return; name=record.rowsKey||name;
-  sw *= card.scale;sh *= card.scale;
-  if(!record.rowsKey || card.caption || card.rotation || card.opacity !== 1 || record.animated || cards.length>6){ helpers.asset(ctx,card,resources,t,sx,sy,sw,sh,false);helpers.cardText(ctx,card,sx,sy,sw,sh,t,featured<0?1:clamp((t-scanStart[featured])/0.7),state);return; }
-  sx += card.x;sy += card.y;
-  const x = sx - sw/2, y = sy - sh/2;
-  if (x > W || y > H || x + sw < 0 || y + sh < 0) return;
-  // 阴影：白底上让证书浮起来一点
-  if (sh > 250) {
-    ctx.save();
-    ctx.shadowColor = "rgba(0,0,0,0.16)";
-    ctx.shadowBlur = Math.min(40, sh * 0.03);
-    ctx.shadowOffsetY = Math.min(16, sh * 0.012);
-    ctx.fillStyle = "#f3eee4";
-    ctx.fillRect(x, y, sw, sh);
-    ctx.restore();
-  } else {
-    ctx.fillStyle = "rgba(0,0,0,0.07)";
-    ctx.fillRect(x - 1, y - 1, sw + 2, sh + 3);
-  }
-  const t0 = featured >= 0 ? scanStart[featured] : -1;
-  if (featured < 0 || t >= t0 + scanLen(name)) { ctx.drawImage(IMGS[name], x, y, sw, sh); return; }
-  ctx.drawImage(IMGS[name + "_blank"], x, y, sw, sh);
-  if (t < t0) return;
-  const k = sw / IMG_W;
-  window.PATENT_ROWS[name].rows.forEach((r, j) => {
-    const p = clamp((t - t0 - rowStart(j)) / rowDur(r));
-    if (p <= 0) return;
-    // 按字出现：已出现的字整段画出，正在出现的那个字淡入
-    const g = r.glyphs, n = g.length, rh = r.y1 - r.y0;
-    const done = Math.floor(p * n), frac = p * n - done;
-    const base = ctx.globalAlpha;
-    const draw = (gx0, gx1, alpha) => {
-      ctx.globalAlpha = alpha * base;
-      ctx.drawImage(IMGS[name], gx0, r.y0, gx1 - gx0, rh, x + gx0 * k, y + r.y0 * k, (gx1 - gx0) * k, rh * k);
-      ctx.globalAlpha = base;
-    };
-    if (done > 0) draw(r.x0, Math.min(r.x1, done < n ? g[done][0] : r.x1), 1);
-    if (done < n && frac > 0) draw(g[done][0], g[done][1], frac);
-  });
+// ───────── 绘制可替换作品图 ─────────
+const ctx=cv.getContext('2d');
+ctx.imageSmoothingQuality='high';
+function drawCard(name,sx,sy,sw,sh,featured,t) {
+  if(!name)return;
+  const slot=Number(name.slice(1))-1,card=state.cards[slot+1];
+  if(!card||!resources.get(card.libraryId))return;
+  sw*=card.scale;sh*=card.scale;
+  if(sx+sw/2<0||sx-sw/2>W||sy+sh/2<0||sy-sh/2>H)return;
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,.16)';
+  ctx.shadowBlur=Math.min(40,sh*.03);
+  ctx.shadowOffsetY=Math.min(16,sh*.012);
+  helpers.asset(ctx,card,resources,t,sx,sy,sw,sh,false);
+  ctx.restore();
+  helpers.cardText(ctx,card,sx,sy,sw,sh,t,featured<0?1:clamp((t-scanStart[featured])/.7),state);
 }
 
 // ───────── Logo 翻转卡 ─────────
 // canvas 没有 3D，按竖条切开逐条做透视投影，效果等同 CSS perspective + rotateY
-const LOGO_CROP = { sx: 0, sy: (1672 - 941 * IMG_H / IMG_W) / 2, sw: 941, sh: 941 * IMG_H / IMG_W };
 function drawFlip(t) {
   const st = flipState(t);
     const th = st.rotY * Math.PI / 180, cos = Math.cos(th), sin = Math.sin(th);
   const D = FLIP.perspective * CW * ZK;
   const front = cos >= 0;
-  const active=front?state.cards[0]:state.cards.slice(1)[4%Math.max(1,state.cards.length-1)];
+  const featuredSlot=Math.min(14,Math.max(0,state.cards.length-2));
+  const active=front?state.cards[0]:state.cards[featuredSlot+1];
   if(!active)return;
   const w=CW*ZK*st.scale*active.scale,h=CH*ZK*st.scale*active.scale;
   const N = 96;
@@ -296,10 +250,10 @@ function drawFlip(t) {
     const left = Math.min(pa, pb), dw = Math.abs(pb - pa) + 0.6, dh = h * f;
     if (front) {
       const u0 = (xa + w / 2) / w;
-      const logo = helpers.image(state.cards[0],resources,t); if(logo){const original=state.cards[0]?.libraryId==="patentwall-logo";const crop=original?LOGO_CROP:{sx:0,sy:0,sw:logo.width,sh:logo.height};ctx.drawImage(logo,crop.sx+u0*crop.sw,crop.sy,crop.sw/N,crop.sh,left,-dh/2,dw,dh);}
+      const logo=helpers.image(state.cards[0],resources,t);if(logo)ctx.drawImage(logo,u0*logo.width,0,logo.width/N,logo.height,left,-dh/2,dw,dh);
     } else {
       const u0 = (w / 2 - xb) / w;   // 背面左右镜像，转到 180° 时正好是正的
-      const card=state.cards.slice(1)[4%Math.max(1,state.cards.length-1)],image=helpers.image(card,resources,t);if(image)ctx.drawImage(image,u0*image.width,0,image.width/N,image.height,left,-dh/2,dw,dh);
+      const card=state.cards[featuredSlot+1],image=helpers.image(card,resources,t);if(image)ctx.drawImage(image,u0*image.width,0,image.width/N,image.height,left,-dh/2,dw,dh);
     }
   }
   helpers.cardText(ctx,{...active,x:0,y:0,rotation:0,opacity:1},0,0,Math.abs(proj(w/2)-proj(-w/2)),h,t,1,state);
@@ -353,6 +307,19 @@ function render(t) {
 }
 
 
-const originalCarousel={...CAROUSEL},originalWall=WALL.map(c=>c.name);
-return { width:W,height:H,shots:SHOTS,duration:DUR,draw(t,s,r){state=s;resources=r;const count=Math.max(1,s.cards.length-1);for(const key of Object.keys(CAROUSEL))CAROUSEL[key]=count===6?originalCarousel[key]:"p"+(((Number(key)+1000)%count)+1);WALL.forEach((cell,i)=>cell.name=count===6?originalWall[i]:"p"+((i%count)+1));for(const a of r.values())if(a.rowsKey){IMGS[a.rowsKey]=a.image;IMGS[a.rowsKey+'_blank']=a.blankImage||a.image;} render(t);}};
+return { width:W,height:H,shots:SHOTS,duration:DUR,draw(t,s,r){
+  state=s;resources=r;const count=Math.max(0,s.cards.length-1);
+  for(const key of Object.keys(CAROUSEL)){const index=Number(key)+8;CAROUSEL[key]=count?"p"+((index%count)+1):null;}
+  WALL.forEach(cell=>{cell.name=null;});
+  if(count>=98){
+    WALL.forEach((cell,i)=>{if(i<count)cell.name="p"+(i+1);});
+    const center=WALL.findIndex(cell=>cell.c===0&&cell.r===0);
+    if(count>=15){const former=WALL[center].name;WALL[center].name="p15";WALL[14].name=former;}
+  }else if(count){
+    const center=WALL.find(cell=>cell.c===0&&cell.r===0);center.name="p"+Math.min(15,count);
+    const rest=WALL.filter(cell=>cell!==center).sort((a,b)=>Math.hypot(a.c,a.r)-Math.hypot(b.c,b.r));
+    let i=0;for(let n=1;n<=count&&i<rest.length;n++){if(n===Math.min(15,count))continue;rest[i++].name="p"+n;}
+  }
+  render(t);
+}};
 };

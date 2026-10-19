@@ -10,7 +10,7 @@
   },
   "runtime": {
     "kind": "iframe-bridge",
-    "entry": "animalwave.html?preview=1&embed=1",
+    "entry": "animalwave.html?preview=1&embed=1&v=20261019-archive3",
     "bridgeVersion": "1.0.0",
     "renderer": "canvas2d"
   },
@@ -154,10 +154,45 @@
       "path": "composition.scene.many",
       "scope": "global",
       "name": {
-        "zh": "递增句 · {n} 为数量",
+        "zh": "递增句（可用 {count}、{shown}、{n}、{name}）",
         "en": "Count caption"
       },
       "type": "string"
+    },
+    {
+      "path": "composition.scene.countStart",
+      "scope": "global",
+      "name": {
+        "zh": "已有数量",
+        "en": "Starting count"
+      },
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1000000000
+    },
+    {
+      "path": "composition.scene.countStep",
+      "scope": "global",
+      "name": {
+        "zh": "每个头像增加",
+        "en": "Increase per avatar"
+      },
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1000000
+    },
+    {
+      "path": "composition.scene.captionMode",
+      "scope": "global",
+      "name": {
+        "zh": "字幕形式",
+        "en": "Caption style"
+      },
+      "type": "string",
+      "options": [
+        "named",
+        "text"
+      ]
     },
     {
       "path": "composition.scene.brandA",

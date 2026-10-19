@@ -739,7 +739,10 @@
     "size": 1,
     "x": 0,
     "y": 0,
-    "direction": 1
+    "direction": 1,
+    "countStart": 0,
+    "countStep": 1,
+    "captionMode": "named"
   },
   "motion": {
     "speed": 1,

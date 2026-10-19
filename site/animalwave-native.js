@@ -5,8 +5,13 @@ let state, resources;
 let EARLY=18, drawTime=0, lastCount=0, captionGap=0;const cachedSprites=new WeakMap();
 
 // ───────── 文案（改这里） ─────────
-let TXT_FIRST = "is here";            // 第一句：Lion 🐾 is here
-const TXT_MANY = n => state.scene.many.replaceAll("{n}",n).replaceAll("{s}",n===1?"":"s");
+let TXT_FIRST = "is here";
+function captionText(template, shown, name) {
+  const extra = Math.max(0, shown - 1);
+  const count = Math.round(Number(state.scene.countStart || 0) + shown * Number(state.scene.countStep ?? 1));
+  return String(template).replaceAll('{count}', String(count)).replaceAll('{shown}', String(shown))
+    .replaceAll('{n}', String(extra)).replaceAll('{s}', extra === 1 ? '' : 's').replaceAll('{name}', name);
+}
 let BRAND_A, BRAND_B;
 let PURPLE, INK;
 
@@ -70,7 +75,7 @@ function makeSprite(src) {
   const g = c.getContext("2d"), r = SPR / 2, cx = PAD + r;
   g.save(); g.shadowColor = "rgba(20,20,40,0.16)"; g.shadowBlur = 18; g.shadowOffsetY = 5;
   g.beginPath(); g.arc(cx, cx, r, 0, Math.PI*2); g.fillStyle = "#fff"; g.fill(); g.restore();
-  g.save(); g.beginPath(); g.arc(cx, cx, r - 7, 0, Math.PI*2); g.clip(); g.drawImage(src, cx - r + 7, cx - r + 7, SPR - 14, SPR - 14); g.restore();
+  g.save(); g.beginPath(); g.arc(cx, cx, r - 7, 0, Math.PI*2); g.clip(); const iw=src.videoWidth||src.naturalWidth||src.width, ih=src.videoHeight||src.naturalHeight||src.height; const side=Math.min(iw,ih); g.drawImage(src,(iw-side)/2,(ih-side)/2,side,side,cx-r+7,cx-r+7,SPR-14,SPR-14); g.restore();
   g.beginPath(); g.arc(cx, cx, r - 7, 0, Math.PI*2); g.strokeStyle = "rgba(0,0,0,0.06)"; g.lineWidth = 1.5; g.stroke();
   return c;
 }
@@ -87,12 +92,14 @@ function badge(g, x, y, r) {          // 紫色圆 + 白爪印（代替原片蓝
   }
 }
 function captionWidth(g, size, name, rest) {
+  if (state.scene.captionMode === 'text') { g.font = `500 ${size}px ${FONT}`; return g.measureText(rest).width; }
   g.font = `700 ${size}px ${FONT}`; const a = g.measureText(name).width;
   g.font = `400 ${size}px ${FONT}`; const b = g.measureText(" " + rest).width;
   return a + captionGap * size / 128 + size * 0.86 + b;
 }
 function caption(g, x, y, size, name, rest, alpha = 1) {   // x = 左端，y = 字中线
   g.save(); g.globalAlpha = alpha; g.textBaseline = "middle"; g.fillStyle = INK;
+  if (state.scene.captionMode === "text") { g.font = `500 ${size}px ${FONT}`; g.fillText(rest,x,y); g.restore(); return; }
   g.font = `700 ${size}px ${FONT}`; g.fillText(name, x, y); let cx = x + g.measureText(name).width + captionGap * size / 128;
   badge(g, cx + size * 0.43, y + size * 0.02, size * 0.43); cx += size * 0.86;
   g.fillStyle = INK; g.font = `400 ${size}px ${FONT}`; g.fillText(" " + rest, cx, y);
@@ -127,7 +134,7 @@ function render(t) {
 
   // 字幕内容
   const newest = ORDER[(n - 1) % TOTAL];
-  const name = NAMES[newest], rest = n <= 1 ? TXT_FIRST : TXT_MANY(n - 1);
+  const name = NAMES[newest], rest = captionText(n <= 1 ? TXT_FIRST : state.scene.many, n, name);
   captionGap=state.scene.iconGap+Number(state.cards[newest]?.gap||0);FONT=STGFontLibrary.family(state.cards[newest]?.fontFamily||state.typography.fontFamily);
 
   // 一排的布局（镜头跟着内容宽度缩放）
