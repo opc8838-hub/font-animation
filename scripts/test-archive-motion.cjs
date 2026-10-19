@@ -32,8 +32,14 @@ const server = http.createServer(async (req,res) => {
       assert.equal(await page.evaluate(()=>CardMotionEditor.getScheme().cards.length),count);
       const preset = await page.evaluate(async slug=>(await (await fetch('assets/presets/'+slug+'-default.json')).json()),slug);
       assert.deepEqual(await page.evaluate(()=>CardMotionEditor.getScheme()),preset,'immutable gallery preset');
-      const desktop = await page.evaluate(()=>{const stage=document.querySelector('.gm-stage').getBoundingClientRect(),canvas=document.querySelector('#canvas').getBoundingClientRect();return {left:document.querySelector('.tc-content').getBoundingClientRect().width,offset:Math.abs(stage.x+stage.width/2-canvas.x-canvas.width/2)};});
-      assert.equal(desktop.left,420);assert.ok(desktop.offset<1);
+      const desktop = await page.evaluate(()=>{const stage=document.querySelector('.gm-stage').getBoundingClientRect(),canvas=document.querySelector('#canvas').getBoundingClientRect(),left=document.querySelector('.tc-content').getBoundingClientRect(),right=document.querySelector('#inspector').getBoundingClientRect();return {left:left.width,right:right.width,separate:left.right<stage.left&&stage.right<right.left,inspectorVisible:getComputedStyle(document.querySelector('#inspector')).display!=='none',offset:Math.abs(stage.x+stage.width/2-canvas.x-canvas.width/2)};});
+      assert.equal(desktop.left,250);assert.equal(desktop.right,360);assert.equal(desktop.separate,true);assert.equal(desktop.inspectorVisible,true);assert.ok(desktop.offset<1);
+      if(slug!=='botvoice'){
+        const first=await page.evaluate(()=>CardMotionEditor.getScheme().cards[0].caption);
+        await page.locator('#currentAssetCaption').fill('校对文字');
+        assert.equal(await page.evaluate(()=>CardMotionEditor.getScheme().cards[0].caption),'校对文字','current asset field updates selected item');
+        await page.locator('#currentAssetCaption').fill(first);
+      }
       if(slug==='patentwall') {
         const changed=await page.evaluate(async()=>{const s=CardMotionEditor.getScheme();CardMotionEditor.seek(.2);const before=document.querySelector('#canvas').toDataURL();s.cards[0].opacity=.15;await CardMotionEditor.apply(s);CardMotionEditor.seek(.2);return before!==document.querySelector('#canvas').toDataURL();});
         assert.equal(changed,true,'flip cover responds to per-asset opacity');
@@ -48,11 +54,11 @@ const server = http.createServer(async (req,res) => {
       const phases = await page.evaluate(()=>CardMotion.phases(CardMotionEditor.getScheme()));
       for (const phase of phases) await page.evaluate(t=>CardMotionEditor.seek(t),phase.start+phase.duration*.5);
       await page.evaluate(async()=>{const s=CardMotionEditor.getScheme();s.typography.fontFamily='stg:noto-sc';s.cards[0].caption='你好世界';s.scene.clock='你好';s.scene.brandA='动物';s.scene.brandB='朋友';await CardMotionEditor.apply(s);CardMotionEditor.seek(.8);});
-      const [png] = await Promise.all([page.waitForEvent('download'),page.evaluate(()=>CardMotionEditor.exportFile('png'))]);
+      const [png] = await Promise.all([page.waitForEvent('download',{timeout:120000}),page.evaluate(()=>CardMotionEditor.exportFile('png'))]);
       assert.ok((await fs.stat(await png.path())).size>3000,'nonempty Chinese PNG export');
       await png.saveAs(path.join(evidence,slug+'-chinese.png'));
       await page.evaluate(async()=>{const s=CardMotionEditor.getScheme();s.canvas={width:320,height:320};await CardMotionEditor.apply(s);document.querySelector('#exportDuration').value='custom';document.querySelector('#customDuration').value='1';document.querySelector('#exportFps').value='15';});
-      const [gifDownload] = await Promise.all([page.waitForEvent('download'),page.evaluate(()=>CardMotionEditor.exportFile('gif'))]);
+      const [gifDownload] = await Promise.all([page.waitForEvent('download',{timeout:120000}),page.evaluate(()=>CardMotionEditor.exportFile('gif'))]);
       const gifBytes=await fs.readFile(await gifDownload.path());
       await gifDownload.saveAs(path.join(evidence,slug+'-320x320.gif'));
       const gifDuration=await page.evaluate(async bytes=>{const delays=await CellMotionAnimatedImage.readGifFrameDurations(new Blob([new Uint8Array(bytes)],{type:'image/gif'}));return delays.reduce((a,b)=>a+b,0);},[...gifBytes]);

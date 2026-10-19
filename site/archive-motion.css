@@ -1,43 +1,73 @@
-/* The imported tools share CellMotion cards in a 420px independently scrolling inspector. */
-body.archive-editor.tc-workspace{grid-template-columns:420px minmax(0,1fr);grid-template-rows:72px minmax(0,1fr)}
-.archive-editor .tc-content{grid-column:1;grid-row:2;display:block;overflow:auto;padding:16px;}
-.archive-editor .tc-center{grid-column:2;grid-row:2;grid-template-rows:minmax(0,1fr) auto;}
-.archive-editor #inspector{display:none!important}
-.archive-editor .tc-canvas-toolbar{display:block;padding:0 0 16px;border:0;}
-.archive-editor .tc-preview-label{display:block;margin-bottom:8px;font-weight:600}
-.archive-editor .cm-size{width:100%;margin:0}.archive-editor .cm-size select{width:100%;max-width:100%}
-.archive-editor .tc-tabs{position:sticky;top:-16px;z-index:5;background:var(--tc-panel);margin:0 -4px 16px;}
-.archive-editor .tc-properties{padding:0;overflow:visible;}
-.archive-editor .tc-row-list{flex:none;max-height:180px;min-height:0;overflow:auto;margin-bottom:12px;}
-.archive-editor .tc-row-select{margin-bottom:6px;padding:8px}.archive-editor .tc-panel-heading{margin-bottom:8px;}
-.archive-editor .tc-timeline{grid-row:2;min-height:160px;}
-.archive-editor .tc-scheme{padding:16px;border:1px solid var(--tc-line);border-radius:14px;background:var(--tc-panel)}
-.archive-editor .gm-stage{grid-row:1}
-.archive-editor .me-asset-drawer{grid-column:1;grid-row:2;z-index:20;}
-.archive-editor:has(#libraryDrawer:not([hidden])) .tc-content{visibility:hidden;}
-.archive-editor.is-preview{display:block!important}.archive-editor.is-preview .tc-center{display:block}
-.archive-editor.is-preview .tc-timeline{display:none}.archive-editor.is-preview .gm-stage{height:100dvh;padding:0}
-@media(min-width:1500px){body.archive-editor:has(#libraryDrawer:not([hidden])){grid-template-columns:420px minmax(0,1fr) 340px}.archive-editor:has(#libraryDrawer:not([hidden])) .me-asset-drawer{grid-column:3}.archive-editor:has(#libraryDrawer:not([hidden])) .tc-content{visibility:visible}}
+/* Archive effects use the reviewed Type Cascade three-column editor. */
+body.archive-editor.tc-workspace{grid-template-columns:250px minmax(260px,1fr) 360px;grid-template-rows:64px minmax(0,1fr)}
+.archive-editor .tc-content{grid-column:1;grid-row:2;display:flex;flex-direction:column;min-height:0;overflow:hidden;padding:16px 14px 12px}
+.archive-editor .tc-panel-heading{align-items:flex-end;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.archive-editor .tc-panel-heading>div{min-width:0}
+.archive-editor .tc-panel-heading #openLibrary{min-height:28px;padding:4px 0;border:0;background:transparent!important;color:var(--tc-accent)!important;font-size:12px;white-space:nowrap}
+.archive-editor .tc-hint{flex:none;margin:0 4px 12px;font-size:12px}
+.archive-editor .tc-row-list{flex:1 1 auto;min-height:80px;max-height:none;overflow:auto;margin:0;padding-right:3px;scrollbar-gutter:stable}
+.archive-editor .tc-row-select{min-height:70px;margin:0 0 7px;padding:8px;grid-template-columns:42px minmax(0,1fr)}
+.archive-editor .tc-row-select img{width:40px;height:48px;grid-row:1/3;object-fit:contain;border-radius:5px}
+.archive-editor .tc-row-select strong{font-size:13px}
+.archive-editor .tc-row-select small{font-size:11px}
+.archive-editor .tc-scheme{flex:none;margin-top:14px;padding:12px 0 0;border:0;border-top:1px solid var(--tc-line);border-radius:0;background:transparent}
+.archive-editor .tc-scheme h2{margin-bottom:9px}
+.archive-editor .tc-scheme .me-scheme-actions{gap:6px}
+.archive-editor .tc-scheme button{min-height:34px;padding:5px 7px;font-size:12px}
+.archive-editor .tc-scheme .gm-status{font-size:11px;line-height:1.45;margin:7px 0 0}
+.archive-editor .tc-center{grid-column:2;grid-row:2;display:grid;grid-template-rows:auto minmax(220px,1fr) minmax(210px,0.54fr);min-width:0;min-height:0;gap:10px}
+.archive-editor .tc-canvas-toolbar{display:flex;align-items:center;gap:10px;padding:5px 12px;border:0}
+.archive-editor .tc-preview-label{font-size:12px;font-weight:600}
+.archive-editor .cm-size{min-width:200px;width:auto;margin:0}
+.archive-editor .cm-size select{width:100%;max-width:250px}
+.archive-editor .gm-stage{grid-row:2;height:100%;padding:24px}
+.archive-editor .tc-timeline{grid-row:3;min-height:0;padding:12px 18px;overflow:auto}
+body.archive-editor.me-motion-editor .me-stage-controls{position:static!important;left:auto!important;bottom:auto!important;top:auto!important;transform:none!important;width:max-content!important;margin:0 auto 10px!important;padding:4px!important}
+.archive-editor #inspector{grid-column:3;grid-row:2;display:flex!important;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
+.archive-editor #inspector[hidden]{display:none!important}
+.archive-editor .tc-tabs{position:static;flex:none;margin:0;padding:12px;border-bottom:1px solid var(--tc-line)}
+.archive-editor .tc-properties{flex:1;min-height:0;padding:16px;overflow-y:auto;scrollbar-gutter:stable}
+.archive-editor .tc-properties .gm-card{margin-bottom:12px}
+.archive-editor .cm-current-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:12px}
+.archive-editor .cm-current-heading small{color:var(--tc-muted);font-size:11px}
+.archive-editor .cm-current-heading h2{margin:0;font-size:17px}
+.archive-editor .cm-current-preview{display:flex;align-items:center;gap:10px;min-width:0;margin-bottom:12px}
+.archive-editor .cm-current-preview img{width:56px;height:56px;flex:none;object-fit:contain;border-radius:9px;background:var(--tc-input)}
+.archive-editor .cm-current-preview strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.archive-editor .cm-current-asset #editSelected{width:100%}
+.archive-editor .me-asset-drawer{grid-column:3;grid-row:2;z-index:20}
+.archive-editor.is-preview{display:block!important}
+.archive-editor.is-preview .tc-center{display:block}
+.archive-editor.is-preview .tc-timeline{display:none}
+.archive-editor.is-preview .gm-stage{height:100dvh;padding:0}
+@media(min-width:861px) and (max-width:1180px){body.archive-editor.tc-workspace{grid-template-columns:205px minmax(250px,1fr) 310px}.archive-editor .tc-content{padding:12px 9px}.archive-editor .tc-properties{padding:12px}.archive-editor .tc-center{grid-template-rows:auto minmax(200px,1fr) minmax(185px,.48fr)}}
 @media(max-width:860px){
- body.archive-editor.tc-workspace{display:flex;height:auto;min-height:100dvh;overflow:visible;padding:0;}
- .archive-editor .tc-header{position:relative;order:0;flex-wrap:wrap;min-height:64px;padding:10px 12px;gap:8px;}
- .archive-editor .tc-brand{flex:0 0 135px;width:135px;height:32px}
- .archive-editor .cm-title{display:none}.archive-editor .tc-header .tc-back{margin-left:auto}
- .archive-editor .tc-center{order:1;display:grid;grid-template-rows:minmax(230px,40dvh) auto;position:sticky;top:0;z-index:10;background:var(--tc-bg);width:100%;}
- .archive-editor .gm-stage{height:40dvh;min-height:230px;padding:12px 12px 60px;}
- .archive-editor .tc-timeline{min-height:0;padding:10px 12px;}.archive-editor .me-choreo-legend{display:none}
- .archive-editor .me-choreo-bar{height:44px;min-width:420px}.archive-editor .me-choreo-block{height:38px!important;min-height:38px!important;padding:4px 6px}
- .archive-editor .me-choreo-block small{display:none}.archive-editor .cm-time{margin-bottom:4px;}
- .archive-editor .tc-content{order:2;width:100%;overflow:visible;}
- .archive-editor .tc-tabs{position:static;}.archive-editor .tc-row-list{max-height:160px}
- .archive-editor .me-asset-drawer{order:2;position:relative;width:100%;height:55dvh;min-height:300px;}
- .archive-editor:has(#libraryDrawer:not([hidden])) .tc-content{display:none}
- .archive-editor.is-preview .tc-center{position:static;display:block}.archive-editor.is-preview .gm-stage{height:100dvh;}
+ body.archive-editor.tc-workspace{display:flex;flex-direction:column;width:100%;height:auto;min-height:100dvh;overflow:visible;padding:8px;gap:8px}
+ .archive-editor .tc-header{order:0;position:relative;flex-wrap:wrap;min-height:64px;padding:10px 12px;gap:8px}
+ .archive-editor .tc-brand{flex:0 0 110px;width:110px;height:32px}
+ .archive-editor .cm-title{display:none}
+ .archive-editor .tc-header .tc-back{margin-left:auto}
+ .archive-editor .tc-center{order:1;width:100%;flex:none;grid-template-rows:auto minmax(210px,38dvh) 130px;gap:8px}
+ .archive-editor .tc-canvas-toolbar{flex-wrap:wrap;padding:2px 8px}
+ .archive-editor .tc-preview-label{display:none}
+ .archive-editor .cm-size{min-width:0;width:100%;max-width:100%}
+ .archive-editor .cm-size select{width:100%;max-width:100%}
+ .archive-editor .gm-stage{height:38dvh;min-height:210px;padding:10px}
+ .archive-editor .tc-timeline{height:130px;min-height:130px;padding:6px 10px}
+ body.archive-editor.me-motion-editor .me-stage-controls{margin:0 auto 4px!important}
+ .archive-editor .me-stage-controls button{min-height:30px;padding:4px 9px}
+ .archive-editor .me-choreo-legend{display:none!important}
+ .archive-editor .me-choreo-bar{height:44px!important;min-height:44px!important;min-width:420px}
+ .archive-editor .me-choreo-block{height:38px!important;min-height:38px!important;padding:4px 6px}
+ .archive-editor .me-choreo-block small{display:none!important}
+ .archive-editor .cm-time{margin-bottom:4px}
+ .archive-editor .tc-content{order:2;width:100%;height:auto;max-height:none;overflow:visible;padding:14px}
+ .archive-editor .tc-row-list{flex:none;display:flex;flex-direction:row;max-height:100px;min-height:100px;overflow-x:auto;overflow-y:hidden;padding:0 0 5px}
+ .archive-editor .tc-row-select{width:150px;min-width:150px;min-height:76px;margin:0}
+ .archive-editor .tc-scheme{margin-top:10px}
+ .archive-editor #inspector{order:3;width:100%;min-height:350px;overflow:visible}
+ .archive-editor .tc-properties{max-height:none;overflow:visible}
+ .archive-editor .me-asset-drawer{order:3;position:relative;width:100%;height:55dvh;min-height:320px;flex:none}
+ .archive-editor.is-preview .tc-center{display:block}
+ .archive-editor.is-preview .gm-stage{height:100dvh}
 }
-
-@media(max-width:860px){.archive-editor .me-choreo-legend{display:none!important}.archive-editor .tc-timeline{height:112px!important;min-height:112px!important;padding:8px 12px!important}.archive-editor .me-choreo-bar{height:42px!important;min-height:42px!important}.archive-editor .me-choreo-block{height:38px!important;min-height:38px!important}.archive-editor .me-choreo-block small{display:none!important}.archive-editor .tc-center{grid-template-rows:40dvh 112px!important;gap:8px!important}.archive-editor .tc-content .tc-canvas-toolbar .cm-size select{max-width:100%!important}}
-.archive-editor .tc-content .cm-size select{width:100%!important;max-width:100%!important}
-
-.archive-editor select.tc-native-select{width:1px!important;max-width:1px!important}
-
-body.archive-editor .tc-content .cm-size select.tc-native-select{width:1px!important;max-width:1px!important;min-width:0!important}
