@@ -82,7 +82,7 @@ window.ArchiveMotionFactories.patentcount = (cv, helpers) => {
     const nq=E.out(progress(t,title.end-.1,title.end+.9));
     if(t>title.end-.1){
       g.globalAlpha=progress(t,title.end-.1,title.end+.05);
-      g.font='700 '+s.numberSize+'px '+font();
+      g.font='700 '+s.numberSize+'px '+(state.typography.fontFamily==='stg:noto-sc'?window.STGFontLibrary.family('stg:inter'):font());
       const countText=String(Math.round(s.countTo*nq)),numberX=Math.max(countX,titleX+title.width+24);
       g.fillText(countText,numberX,248);
       const pq=progress(t,title.end+.85,title.end+1.15);

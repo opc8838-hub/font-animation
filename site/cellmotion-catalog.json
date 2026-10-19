@@ -169,9 +169,9 @@
       "english": "Artwork Showcase 2",
       "description": "主卡拉远 · 弧墙铺展 · 数字显现",
       "category": "media",
-      "href": "patentcount.html?from=gallery&v=20261019-review2",
-      "poster": "final_patentcount.png?v=20261019-review2",
-      "video": "assets/previews/patentcount-card.mp4?v=20261019-review2",
+      "href": "patentcount.html?from=gallery&v=20261019-white3",
+      "poster": "final_patentcount.png?v=20261019-white3",
+      "video": "assets/previews/patentcount-card.mp4?v=20261019-white3",
       "webComponent": {
         "preview": "archive-motion-demo.html?effect=patentcount",
         "descriptor": "effects/patentcount.component.json"
