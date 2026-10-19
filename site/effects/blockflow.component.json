@@ -5,12 +5,12 @@
       "zh": "方块流动",
       "en": "Block Flow"
     },
-    "version": "1.0.0",
+    "version": "1.1.0",
     "category": "media-motion"
   },
   "runtime": {
     "kind": "iframe-bridge",
-    "entry": "blockflow.html?preview=1&embed=1&v=20261019-block1",
+    "entry": "blockflow.html?preview=1&embed=1&v=20261019-review2",
     "bridgeVersion": "1.0.0",
     "renderer": "canvas2d"
   },
@@ -34,15 +34,15 @@
   },
   "behavior": {
     "summary": {
-      "zh": "图标汇成蓝色方块，方块起伏流动后收拢；可继续添加方块并替换每个图标。",
+      "zh": "一块亮蓝方块展开为流动方块，再收拢归一；可添加方块并替换图标。",
       "en": "Icons become blue blocks, flow in a wave, and gather again; add blocks and replace their icons."
     },
     "phases": [
       {
         "id": "phase0",
         "name": {
-          "zh": "图标汇聚·变方块",
-          "en": "Icons to blocks"
+          "zh": "方块展开",
+          "en": "Block expands"
         },
         "colorToken": "phase.sky"
       },

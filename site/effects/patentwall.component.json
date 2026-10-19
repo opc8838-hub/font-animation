@@ -2,15 +2,15 @@
   "effect": {
     "id": "patentwall",
     "name": {
-      "zh": "专利墙",
-      "en": "Patent Wall"
+      "zh": "作品展示 1",
+      "en": "Artwork Showcase 1"
     },
-    "version": "1.0.0",
+    "version": "1.1.0",
     "category": "media-motion"
   },
   "runtime": {
     "kind": "iframe-bridge",
-    "entry": "patentwall.html?preview=1&embed=1&v=20261019-archive4",
+    "entry": "patentwall.html?preview=1&embed=1&v=20261019-review2",
     "bridgeVersion": "1.0.0",
     "renderer": "canvas2d"
   },

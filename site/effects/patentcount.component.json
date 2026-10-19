@@ -2,15 +2,15 @@
   "effect": {
     "id": "patentcount",
     "name": {
-      "zh": "专利数量",
-      "en": "Patent Count"
+      "zh": "作品展示 2",
+      "en": "Artwork Showcase 2"
     },
-    "version": "1.0.0",
+    "version": "1.1.0",
     "category": "media-motion"
   },
   "runtime": {
     "kind": "iframe-bridge",
-    "entry": "patentcount.html?preview=1&embed=1&v=20261019-count1",
+    "entry": "patentcount.html?preview=1&embed=1&v=20261019-review2",
     "bridgeVersion": "1.0.0",
     "renderer": "canvas2d"
   },
@@ -34,7 +34,7 @@
   },
   "behavior": {
     "summary": {
-      "zh": "主作品拉远，Mutedmen 作品汇成弧形墙，标题与专利数字逐步显现。",
+      "zh": "主作品拉远，Mutedmen 作品汇成弧形墙，自定义标题与图片数量逐步显现。",
       "en": "The hero pulls back into an arc wall of unique artworks while a title and editable count appear."
     },
     "phases": [
@@ -106,7 +106,7 @@
       "scope": "effect",
       "name": {
         "zh": "说明一",
-        "en": "Proof point one"
+        "en": "Lower caption"
       },
       "type": "string"
     },
@@ -115,7 +115,7 @@
       "scope": "effect",
       "name": {
         "zh": "说明一英文",
-        "en": "Proof point one English"
+        "en": "Lower caption English"
       },
       "type": "string"
     },
@@ -124,7 +124,7 @@
       "scope": "effect",
       "name": {
         "zh": "说明二",
-        "en": "Proof point two"
+        "en": "Lower caption"
       },
       "type": "string"
     },
@@ -133,7 +133,7 @@
       "scope": "effect",
       "name": {
         "zh": "说明二英文",
-        "en": "Proof point two English"
+        "en": "Lower caption English"
       },
       "type": "string"
     },
