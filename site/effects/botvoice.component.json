@@ -10,7 +10,7 @@
   },
   "runtime": {
     "kind": "iframe-bridge",
-    "entry": "botvoice.html?preview=1&embed=1&v=20261019-archive3",
+    "entry": "botvoice.html?preview=1&embed=1&v=20261019-archive4",
     "bridgeVersion": "1.0.0",
     "renderer": "canvas2d"
   },
