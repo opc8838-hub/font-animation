@@ -10,7 +10,7 @@
     return;
   }
   const effects = [
-    ["botvoice", "Bot 语音", "Bot Voice"], ["patentwall", "专利墙", "Patent Wall"], ["animalwave", "动物浪潮", "Animal Wave"],
+    ["botvoice", "Bot 语音", "Bot Voice"], ["patentwall", "专利墙", "Patent Wall"], ["patentcount", "专利数量", "Patent Count"], ["animalwave", "动物浪潮", "Animal Wave"],
     ["thermal-profile", "热感", "Thermal Profile"],
     ["video-compare", "视频对比", "Video Compare"],
     ["spotlight", "聚光", "Spotlight"],
