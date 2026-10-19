@@ -36,8 +36,8 @@
   },
   "behavior": {
     "summary": {
-      "zh": "卡牌保持原尺寸衔接，旋转放大时中途变白，登录内容渐入并轻柔归位。",
-      "en": "A size-matched card rotates and grows, turns white during the flip, and reveals its login face with a soft settle."
+      "zh": "卡牌保持原尺寸衔接，旋转放大时中途变黑，登录内容渐入并轻柔归位。",
+      "en": "A size-matched card rotates and grows, turns black during the flip, and reveals its login face with a soft settle."
     },
     "phases": [
       {
@@ -51,8 +51,8 @@
       {
         "id": "flip",
         "name": {
-          "zh": "旋转 · 变白",
-          "en": "Flip & turn white"
+          "zh": "旋转 · 变黑",
+          "en": "Flip & turn black"
         },
         "colorToken": "phase.violet"
       },
@@ -153,8 +153,8 @@
       "path": "composition.motion.faceSwitch",
       "scope": "effect",
       "name": {
-        "zh": "翻面变白时机",
-        "en": "White face switch"
+        "zh": "翻面变黑时机",
+        "en": "Black face switch"
       },
       "type": "number",
       "minimum": 0.1,

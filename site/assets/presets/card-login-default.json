@@ -8,7 +8,7 @@
   "typography": {
     "fontFamily": "stg:inter"
   },
-  "backgroundColor": "#0b0b0d",
+  "backgroundColor": "#ffffff",
   "customAssets": [],
   "cards": [
     {
@@ -46,9 +46,9 @@
     "password": "Password",
     "button": "Log in",
     "footer": "One workday. Every conversation.",
-    "frontColor": "#f8f8f6",
-    "backColor": "#090a0a",
-    "textColor": "#171819",
+    "frontColor": "#090a0a",
+    "backColor": "#ffffff",
+    "textColor": "#f8f8f6",
     "accent": "#6d4aff",
     "width": 440,
     "height": 590,

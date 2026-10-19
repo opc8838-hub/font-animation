@@ -8,12 +8,13 @@
   "typography": {
     "fontFamily": "stg:inter"
   },
-  "backgroundColor": "#0b0b0d",
+  "backgroundColor": "#ffffff",
   "customAssets": [],
   "cards": [
     {
       "id": "card-0",
       "libraryId": "cardbot-00",
+      "color": "#ffffff",
       "scale": 1,
       "opacity": 1,
       "x": 0,

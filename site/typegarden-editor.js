@@ -26,13 +26,13 @@
   const FILL = { grow: "#d7ff2f", bloom: "#ffd27d", wither: "#ffc4d6", still: "#9de7d7", air: "#8ec8ff", wing: "#d4b8ff" };
 
   const row = (id, text, extra = {}) => ({ id, text, fontFamily: "", textColor: "", icons: [], ...extra });
-  // Approved default (user scheme 2026-10-06): "halo你好" typed on Paper, Lora, with visiting butterflies and a light.
+  // Approved default: "halo你好" typed with Paper colors on white, Lora, with visiting butterflies and a light.
   // The original poster default ("in bloom", Breathe, Rose noir, seed 7) stays one click away in the motion and palette cards.
   const DEFAULT_SCHEME = Object.freeze({
     version: VERSION,
     canvas: { width: 1920, height: 1080, preset: "1920x1080" },
     typography: { fontFamily: "stg:lora", layoutScale: 100, letterSpacing: 0, positionX: 0, positionY: 0 },
-    garden: { preset: "typed", palette: 1, colors: paletteColors(1), density: 1, flowers: 100, textFront: false, butterflies: 3, lights: 1, flyOn: true, lightOn: true, recoil: 20, boil: true, seed: 7, speed: 0.75 },
+    garden: { preset: "typed", palette: -1, colors: { ...paletteColors(1), bg: "#FFFFFF" }, density: 1, flowers: 100, textFront: false, butterflies: 3, lights: 1, flyOn: true, lightOn: true, recoil: 20, boil: true, seed: 7, speed: 0.75 },
     background: { media: null, opacity: 100, zoom: 1, x: 0, y: 0, videoStart: 0, videoEnd: 0 },
     rows: [row("garden-row-1", "halo你好")]
   });
