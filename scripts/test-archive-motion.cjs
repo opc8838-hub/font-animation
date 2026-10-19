@@ -34,6 +34,15 @@ const server = http.createServer(async (req,res) => {
       assert.deepEqual(await page.evaluate(()=>CardMotionEditor.getScheme()),preset,'immutable gallery preset');
       const desktop = await page.evaluate(()=>{const stage=document.querySelector('.gm-stage').getBoundingClientRect(),canvas=document.querySelector('#canvas').getBoundingClientRect(),left=document.querySelector('.tc-content').getBoundingClientRect(),right=document.querySelector('#inspector').getBoundingClientRect();return {left:left.width,right:right.width,separate:left.right<stage.left&&stage.right<right.left,inspectorVisible:getComputedStyle(document.querySelector('#inspector')).display!=='none',offset:Math.abs(stage.x+stage.width/2-canvas.x-canvas.width/2)};});
       assert.equal(desktop.left,250);assert.equal(desktop.right,360);assert.equal(desktop.separate,true);assert.equal(desktop.inspectorVisible,true);assert.ok(desktop.offset<1);
+      if(slug==='animalwave'||slug==='patentwall'){
+        const portrait=await page.evaluate(slug=>{const c=document.createElement('canvas');c.width=1080;c.height=1920;const g=c.getContext('2d',{willReadFrequently:true});CardMotionEditor.draw(g,slug==='animalwave'?.6:.8,1080,1920);const data=g.getImageData(0,0,1080,1920).data;let left=1080,right=0,top=1920,bottom=0;for(let y=0;y<1920;y+=2)for(let x=0;x<1080;x+=2){const i=(y*1080+x)*4;if(data[i]+data[i+1]+data[i+2]<690){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);}}return{width:right-left,height:bottom-top};},slug);
+        assert.ok(portrait.width>(slug==='animalwave'?800:400),`${slug}: portrait subject must be readable`);
+        await page.evaluate(async()=>{const s=CardMotionEditor.getScheme();s.canvas={width:1080,height:1920};await CardMotionEditor.apply(s);});
+        const [portraitPng]=await Promise.all([page.waitForEvent('download',{timeout:120000}),page.evaluate(()=>CardMotionEditor.exportFile('png'))]);
+        const bytes=await fs.readFile(await portraitPng.path());
+        assert.deepEqual([bytes.readUInt32BE(16),bytes.readUInt32BE(20)],[1080,1920],'portrait PNG dimensions');
+        await page.evaluate(s=>CardMotionEditor.apply(s),preset);
+      }
       if(slug!=='botvoice'){
         const first=await page.evaluate(()=>CardMotionEditor.getScheme().cards[0].caption);
         await page.locator('#currentAssetCaption').fill('校对文字');

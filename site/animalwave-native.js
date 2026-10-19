@@ -124,7 +124,7 @@ const g = cv.getContext("2d");
 
 function render(t) {
   drawTime=t;
-  g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,W,H);
+  g.setTransform(cv.width/W,0,0,cv.height/H,0,0);g.clearRect(0,0,W,H);
   if (!SPRITES.length) return;
   const c = countC(t), n = arrivals(t);
   const split = E.inOut(seg(t, T_SPLIT, T_SPLIT + 0.32));
