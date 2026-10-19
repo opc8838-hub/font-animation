@@ -15,14 +15,14 @@
   const settle = p => bezier(p, .22, 1, .36, 1);
   function base(effect) {
     return { version: 1, effect, canvas: { width: 1920, height: 1080 }, typography: { fontFamily: 'stg:inter' },
-      backgroundColor: '#0b0b0d', customAssets: [], cards: [], motion: { speed: 1, loop: true } };
+      backgroundColor: '#ffffff', customAssets: [], cards: [], motion: { speed: 1, loop: true } };
   }
   function defaults(effect, library) {
     const s = base(effect);
     if (effect === 'card-login') {
       s.scene = { brand: 'CARDBOT WORKSPACE', title: 'Welcome back.', subtitle: 'Continue to your company workspace.',
         account: 'Account', password: 'Password', button: 'Log in', footer: 'One workday. Every conversation.',
-        frontColor: '#f8f8f6', backColor: '#090a0a', textColor: '#171819', accent: '#6d4aff',
+        frontColor: '#090a0a', backColor: '#ffffff', textColor: '#f8f8f6', accent: '#6d4aff',
         width: 440, height: 590, radius: 24, x: 0, y: 25 };
       s.motion = { ...s.motion, duration: 1.8, hold: 1.2, scaleX: .47, scaleY: .445, offsetY: -14,
         startY: -2, startZ: -5, perspective: 1500, direction: 1, faceSwitch: .32001,
@@ -32,7 +32,7 @@
       s.motion = { ...s.motion, rows: 3, gap: .08, ratio: 1.4, size: 1.11, derive: .8,
         repos: .9, ouvre: .6, tenue: .9, repli: 1, stagger: .08, angle: -12,
         mode: 'dos', modeRepli: 'synchrone', inclinaison: 18, pile: .82, rythme: 'fluide' };
-      s.cards = library.map((a, i) => ({ id: `card-${i}`, libraryId: a.libraryId, scale: 1, opacity: 1, x: 0, y: 0, rotation: 0 }));
+      s.cards = library.map((a, i) => ({ id: `card-${i}`, libraryId: a.libraryId, ...(i === 0 ? { color: '#ffffff' } : {}), scale: 1, opacity: 1, x: 0, y: 0, rotation: 0 }));
     }
     return s;
   }
@@ -41,7 +41,7 @@
     const m = s.motion, speed = m.speed;
     const list = s.effect === 'card-login'
       ? [['match', '同尺寸交接', 'Match footprint', m.duration / 18],
-         ['flip', '旋转 · 变白', 'Flip & turn white', m.duration * 15 / 18],
+         ['flip', '旋转 · 变黑', 'Flip & turn black', m.duration * 15 / 18],
          ['settle', '轻柔归位', 'Soft settle', m.duration * 2 / 18],
          ['hold', '登录停留', 'Login hold', m.hold]]
       : [['stack', '单卡叠放', 'Single-card stack', m.repos], ['spread', '展开分排', 'Spread into rows', m.ouvre],
@@ -88,7 +88,7 @@
     if (!f.front) {
       // Original handoff eyes; scale is applied to the whole face, never rebuilt mid-flip.
       c.translate(a.width / 2 + 18, a.height / 2 - 36); c.rotate(rad(-13));
-      round(c, -96, -66, 66, 132, 33, '#ffffff'); round(c, 33, -116, 66, 132, 33, '#ffffff');
+      round(c, -96, -66, 66, 132, 33, '#090a0a'); round(c, 33, -116, 66, 132, 33, '#090a0a');
     } else {
       c.globalAlpha = f.content; c.translate(0, 18 * (1 - f.content));
       const id = s.typography.fontFamily, k = Math.min(a.width / 440, a.height / 590), pad = 42 * k, inner = a.width - pad * 2;

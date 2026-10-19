@@ -16,7 +16,7 @@
   let busy = false, last = performance.now(), autosave, ready = false, history = [], future = [], definition;
   const fields = extension?.fields || (login ? [
     ['motion.duration','翻转时长','Flip duration',.6,4,.01,'s'], ['motion.hold','登录停留','Login hold',0,5,.1,'s'],
-    ['motion.faceSwitch','翻面变白时机','White face switch',.1,.6,.001,'%'],
+    ['motion.faceSwitch','翻面变黑时机','Black face switch',.1,.6,.001,'%'],
     ['motion.contentDelay','文字出现延迟','Content delay',0,3,.01,'s'], ['motion.contentDuration','文字渐入时长','Content reveal',.1,2,.01,'s'],
     ['motion.scaleX','起始卡片宽度','Starting width',.15,1,.005,'%'], ['motion.scaleY','起始卡片高度','Starting height',.15,1,.005,'%'],
     ['motion.startZ','起始倾角','Starting tilt',-30,30,1,'°'], ['motion.startY','起始旋转','Starting rotation',-25,25,1,'°'],
@@ -55,7 +55,7 @@
     </header>
     <aside class="tc-content" aria-label="Content & scheme">
       <div class="tc-panel-heading"><div><small>${extension?t('内容','CONTENT'):'CONTENT'}</small><h2>${extension?t(effect==='animalwave'?'头像素材':(effect==='patentwall'||effect==='patentcount')?'作品素材':effect==='blockflow'?'方块素材':'语音素材',effect==='animalwave'?'Avatar assets':(effect==='patentwall'||effect==='patentcount')?'Artwork assets':effect==='blockflow'?'Block assets':'Voice assets'):t(login?'登录转场':'卡牌素材',login?'Login transition':'Card collection')}</h2></div><span id="cardCount"></span></div>
-      <p class="tc-hint">${extension?t('选择素材，在右侧编辑。修改会自动保存。','Select an asset and edit it on the right. Changes are autosaved.'):login?t('尺寸不跳变，在翻面中变白。','Match the card. Turn white while flipping.'):t('叠放、分排、交错横移，再收回。','Stack, spread, drift, and gather.')}</p>
+      <p class="tc-hint">${extension?t('选择素材，在右侧编辑。修改会自动保存。','Select an asset and edit it on the right. Changes are autosaved.'):login?t('尺寸不跳变，在翻面中变黑。','Match the card. Turn black while flipping.'):t('叠放、分排、交错横移，再收回。','Stack, spread, drift, and gather.')}</p>
       <div class="tc-row-list" id="contentList"></div>
       ${login?'':`<button id="openLibrary">${extension?t(effect==='blockflow'?'＋ 添加方块':'＋ 添加素材',effect==='blockflow'?'＋ Add block':'＋ Add assets'):t('＋ 添加卡牌 / 素材','＋ Add cards / media')}</button>`}
       <section class="gm-card tc-scheme me-scheme-panel"><h2>${t('方案','Scheme')}</h2>
@@ -284,10 +284,17 @@
     if(state.backgroundMedia){await filmstrip();await prepareFrame(state,time);draw();}
   }
   function assetName(c) { return resources.get(c.libraryId)?.name || c.libraryId; }
+  function cardThumbnail(asset, card) {
+    if (asset?.kind !== 'cardbot' || !card.color) return asset?.dataUrl || asset?.src || asset?.url;
+    const canvas = document.createElement('canvas'); canvas.width = canvas.height = 316;
+    const ctx = canvas.getContext('2d'), bounds = asset.bounds || { width: 143.4, height: 200.5 };
+    ctx.translate(158, 158); M.drawAsset(ctx, asset, card, 0, bounds.width, bounds.height);
+    return canvas.toDataURL('image/png');
+  }
   function renderAssets() {
     $('cardCount').textContent = login ? '01' : String(state.cards.length);
     if (login) { $('contentList').innerHTML = `<button class="tc-row-select" aria-pressed="true"><span>01</span><strong>${esc(state.scene.title || tr('登录界面','Login face'))}</strong><small>${tr('文字 · 色彩 · 尺寸','Text · colors · dimensions')}</small></button>`; return; }
-    $('contentList').innerHTML = state.cards.map((c,i) => { const a = resources.get(c.libraryId); return `<button class="tc-row-select" data-card="${esc(c.id)}" draggable="true" aria-pressed="${c.id===selected}">${a?.src||a?.dataUrl?`<img src="${esc(a.src||a.dataUrl)}" alt="">`:`<span>${String(i+1).padStart(2,'0')}</span>`}<strong>${esc(assetName(c))}</strong><small>${extension?tr(effect==='animalwave'?'头像':(effect==='patentwall'||effect==='patentcount')?'作品':effect==='blockflow'?'方块':'语音素材',effect==='animalwave'?'Avatar':(effect==='patentwall'||effect==='patentcount')?'Artwork':effect==='blockflow'?'Block':'Voice asset')+' '+String(i+1).padStart(2,'0'):i===0?tr('主卡 · 收拢封面','Cover · stack face'):tr('卡牌','Card')+' '+String(i+1).padStart(2,'0')}</small></button>`; }).join('');
+    $('contentList').innerHTML = state.cards.map((c,i) => { const a = resources.get(c.libraryId), thumb = cardThumbnail(a,c); return `<button class="tc-row-select" data-card="${esc(c.id)}" draggable="true" aria-pressed="${c.id===selected}">${thumb?`<img src="${esc(thumb)}" alt="">`:`<span>${String(i+1).padStart(2,'0')}</span>`}<strong>${esc(assetName(c))}</strong><small>${extension?tr(effect==='animalwave'?'头像':(effect==='patentwall'||effect==='patentcount')?'作品':effect==='blockflow'?'方块':'语音素材',effect==='animalwave'?'Avatar':(effect==='patentwall'||effect==='patentcount')?'Artwork':effect==='blockflow'?'Block':'Voice asset')+' '+String(i+1).padStart(2,'0'):i===0?tr('主卡 · 收拢封面','Cover · stack face'):tr('卡牌','Card')+' '+String(i+1).padStart(2,'0')}</small></button>`; }).join('');
     $('selectedAssets').innerHTML = state.cards.map(c => `<div class="cm-asset-row"><span>${esc(assetName(c))}</span><button data-edit="${esc(c.id)}">${tr('编辑','Edit')}</button><button data-remove="${esc(c.id)}" aria-label="${tr('移除','Remove')}">×</button></div>`).join('');
     $('editSelected').disabled = !state.cards.length;
     if (extension) {
@@ -321,8 +328,8 @@
     selected = id; const card = state.cards.find(c=>c.id===id); if (!card) return;
     renderAssets(); seek(stable()); $('libraryDrawer').hidden = false; $('inspector').hidden = true; $('libraryBrowse').hidden = true;
     $('singleAssetEditor').hidden = false; $('insertCandidate').hidden = true; $('drawerTitle').textContent = tr('单独编辑','Edit one card');
-    const a = lookup(card.libraryId);
-    $('singleAssetEditor').innerHTML = `${a?.src||a?.dataUrl?`<img id="assetThumb" src="${esc(a.dataUrl||a.src||a.url)}" alt="">`:''}<h3>${esc(assetName(card))}</h3><p class="gm-help">${extension?tr('已暂停在当前素材的可见画面。','Paused on the selected asset.'):tr('已定位到卡牌展开后的完整画面。','Paused at the fully spread frame.')}</p>${[
+    const a = lookup(card.libraryId), thumb = cardThumbnail(a,card);
+    $('singleAssetEditor').innerHTML = `${thumb?`<img id="assetThumb" src="${esc(thumb)}" alt="">`:''}<h3>${esc(assetName(card))}</h3><p class="gm-help">${extension?tr('已暂停在当前素材的可见画面。','Paused on the selected asset.'):tr('已定位到卡牌展开后的完整画面。','Paused at the fully spread frame.')}</p>${[
       ['scale',extension?'图标大小':'卡牌大小',extension?'Asset size':'Card size',.2,2,.01,'%'],['opacity','不透明度','Opacity',0,1,.01,'%'],['rotation','旋转角度','Rotation',-180,180,1,'°'],...(extension? [['gap','图标与文字间距','Icon / text gap',0,160,1,'px']]:[]),['x','水平偏移','Horizontal offset',-800,800,1,'px'],['y','垂直偏移','Vertical offset',-500,500,1,'px']
     ].map(([key,zh,en,lo,hi,step,unit])=>`<label class="gm-field"><span>${t(zh,en)}<output data-card-value="${key}">${card[key]}${unit}</output></span><input data-card-key="${key}" type="range" min="${lo}" max="${hi}" step="${step}" value="${card[key]}"></label>`).join('')}
       ${a?.kind==='cardbot'?`<label class="gm-field"><span>${t('卡牌颜色','Card color')}</span><input data-card-key="color" type="color" value="${esc(card.color||a.color)}"></label>`:''}
@@ -456,7 +463,7 @@
     $('selectedAssets').onclick=e=>{const n=e.target.closest('[data-edit],[data-remove]');if(n?.dataset.edit)editCard(n.dataset.edit);else if(n)remove(n.dataset.remove);};
     $('libraryGroups').onclick=async e=>{const n=e.target.closest('[data-candidate],[data-insert]');if(n?.dataset.candidate){candidate=n.dataset.candidate;$('insertCandidate').disabled=false;document.querySelectorAll('[data-candidate]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.candidate===candidate)));}else if(n?.dataset.insert)try{await insert(n.dataset.insert);}catch(err){notify(err.message);}};
     $('insertCandidate').onclick=()=>insert(candidate).catch(err=>notify(err.message));$('uploadAssets').onchange=e=>{upload([...e.target.files]);e.target.value='';};
-    $('singleAssetEditor').oninput=e=>{const n=e.target;if(!n.dataset.cardKey||busy)return;const card=state.cards.find(c=>c.id===selected);if(!card)return;historyPush();card[n.dataset.cardKey]=['color','text','select-one'].includes(n.type)?n.value:Number(n.value);if(n.dataset.cardKey==='fontFamily')document.fonts.load('500 24px '+STGFontLibrary.family(n.value)).then(draw);const o=$('singleAssetEditor').querySelector(`[data-card-value="${n.dataset.cardKey}"]`);if(o)o.textContent=n.value;saveLocal();draw();};
+    $('singleAssetEditor').oninput=e=>{const n=e.target;if(!n.dataset.cardKey||busy)return;const card=state.cards.find(c=>c.id===selected);if(!card)return;historyPush();card[n.dataset.cardKey]=['color','text','select-one'].includes(n.type)?n.value:Number(n.value);if(n.dataset.cardKey==='fontFamily')document.fonts.load('500 24px '+STGFontLibrary.family(n.value)).then(draw);const o=$('singleAssetEditor').querySelector(`[data-card-value="${n.dataset.cardKey}"]`);if(o)o.textContent=n.value;if(n.dataset.cardKey==='color'){$('assetThumb').src=cardThumbnail(lookup(card.libraryId),card);renderAssets();}saveLocal();draw();};
     $('singleAssetEditor').addEventListener('click',e=>{const n=e.target.closest('[data-move]');if(n)reorder(selected,state.cards.findIndex(c=>c.id===selected)+Number(n.dataset.move));});
     let dragged;
     $('contentList').ondragstart=e=>{dragged=e.target.closest('[data-card]')?.dataset.card;};$('contentList').ondragover=e=>e.preventDefault();$('contentList').ondrop=e=>{e.preventDefault();const id=e.target.closest('[data-card]')?.dataset.card;if(dragged&&id)reorder(dragged,state.cards.findIndex(c=>c.id===id));};
