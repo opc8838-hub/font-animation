@@ -1,0 +1,10 @@
+{
+  "cards": [
+    {
+      "libraryId": "botvoice-cat",
+      "name": "屏幕里的猫",
+      "kind": "image",
+      "src": "assets/botvoice/cat.png"
+    }
+  ]
+}

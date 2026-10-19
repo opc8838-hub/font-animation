@@ -54,6 +54,8 @@
     const decoder = new ImageDecoder({ data: blob.stream(), type: type || blob.type || "image/gif" });
     try {
       await decoder.tracks.ready;
+      // A streaming GIF can report only the frames received so far.
+      await decoder.completed;
       const frameCount = decoder.tracks.selectedTrack?.frameCount || 1;
       if (Number.isFinite(maxFrames) && frameCount > maxFrames) {
         throw new Error(`animated image has ${frameCount} frames; limit is ${maxFrames}`);

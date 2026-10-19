@@ -17,6 +17,7 @@ for (const id of pendingRelease) {
   if (!knownIds.has(id)) throw new Error(`Unknown pending effect: ${id}`);
 }
 const videos = {
+  botvoice:"botvoice-card",patentwall:"patentwall-card",animalwave:"animalwave-card",
   "thermal-profile":"thermal-profile-card",
   typepour: "typepour-card",
   'card-login':'card-login-card', carddeck:'carddeck-card',
@@ -31,9 +32,10 @@ const videos = {
   pathwriter:'pathwriter-card', ribbonink:'ribbon-ink-card', scrapbin:'delete-card',
   colorrecompose:'color-recompose-card', impactbuild:'impactbuild-card', typegarden:'typegarden-card'
 };
-const media = new Set(['video-compare','curvedgallery','mediacascade','beforeafter','shutterafter','phoneframe','laptopframe','orbitgallery','moodboard']);
+const media = new Set(['botvoice','patentwall','animalwave','video-compare','curvedgallery','mediacascade','beforeafter','shutterafter','phoneframe','laptopframe','orbitgallery','moodboard']);
 // Newest releases first, shown on the homepage as 最近上新. Dates are the public release of each editor.
 const recent = [
+  ["botvoice","2026-10-19"], ["patentwall","2026-10-19"], ["animalwave","2026-10-19"],
   ["thermal-profile","2026-10-15"],
   ['video-compare','2026-10-14'],
   ["typepour","2026-10-14"],
@@ -49,8 +51,8 @@ const recent = [
 for (const [id] of recent) if (!knownIds.has(id)) throw new Error(`Unknown recent effect: ${id}`);
 const featured = ['prosvg','sproutshift','typecascade','dotresolve','glyphmorph','iconburst','pathwriter','letterpulse'];
 // Keep the existing published entry routes and approved preview revisions when rebuilding.
-const entryRoutes = { 'thermal-profile':'thermal-profile.html?from=gallery&v=20261015-release1', 'video-compare':'video-compare.html?v=20261015-vcompare12', index:'cylinder.html', 'card-login':'card-login.html?from=gallery&v=20261010-cards1', carddeck:'carddeck.html?from=gallery&v=20261010-cards1', spotlight:'spotlight.html?from=gallery&v=20261010-1', switchdrop:'switchdrop.html?from=gallery&v=20261012-round-hold1', curvedgallery:'curvedgallery.html?from=gallery&v=20261010-ai1', prosvg:'prosvg.html?from=gallery&v=20261005-1', citystack:'citystack.html?from=gallery&v=20261006-1', typegarden:'typegarden.html?from=gallery&v=20261006-1' };
-const previewRevisions = { 'video-compare':'20261015-vcompare12', 'card-login':'20261010-cards1',carddeck:'20261010-cards1',spotlight:'20261010-1',switchdrop:'20261012-round-hold1',curvedgallery:'20261009-4', iconburst:'20260926-5', zerogflip:'20261006' };
+const entryRoutes = { botvoice:'botvoice.html?from=gallery&v=20261019-archive3', patentwall:'patentwall.html?from=gallery&v=20261019-archive3', animalwave:'animalwave.html?from=gallery&v=20261019-archive3', 'thermal-profile':'thermal-profile.html?from=gallery&v=20261015-release1', 'video-compare':'video-compare.html?v=20261015-vcompare12', index:'cylinder.html', 'card-login':'card-login.html?from=gallery&v=20261010-cards1', carddeck:'carddeck.html?from=gallery&v=20261010-cards1', spotlight:'spotlight.html?from=gallery&v=20261010-1', switchdrop:'switchdrop.html?from=gallery&v=20261012-round-hold1', curvedgallery:'curvedgallery.html?from=gallery&v=20261010-ai1', prosvg:'prosvg.html?from=gallery&v=20261005-1', citystack:'citystack.html?from=gallery&v=20261006-1', typegarden:'typegarden.html?from=gallery&v=20261006-1' };
+const previewRevisions = { patentwall:'20261019-mutedmen1', 'video-compare':'20261015-vcompare12', 'card-login':'20261010-cards1',carddeck:'20261010-cards1',spotlight:'20261010-1',switchdrop:'20261012-round-hold1',curvedgallery:'20261009-4', iconburst:'20260926-5', zerogflip:'20261006' };
 const videoRevisions = { switchdrop:'20261012-round-hold1' };
 async function exists(path) { try { await access(new URL(path, site)); return true; } catch { return false; } }
 const effects = [];
@@ -67,6 +69,7 @@ for (const [id,name,english,group,description] of rows) {
     id,name,english,description,
     category:media.has(id)?'media':group,
     href:entryRoutes[id] || href,poster,video,
+    ...(['botvoice','patentwall','animalwave'].includes(id)?{webComponent:{preview:`archive-motion-demo.html?effect=${id}`,descriptor:`effects/${id}.component.json`}}:{}),
     ...(['thermal-profile','typepour','video-compare'].includes(id)?{webComponent:{preview:`typecascade-component-demo.html?effect=${id}`,descriptor:`effects/${id}.component.json`}}:{}),
     ...(['card-login','carddeck'].includes(id)?{webComponent:{preview:`cardmotion-component-demo.html?effect=${id}`,descriptor:`effects/${id}.component.json`}}:{}),
     status:pendingRelease.has(id)?'pending':'ready'

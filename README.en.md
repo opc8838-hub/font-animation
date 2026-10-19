@@ -6,6 +6,8 @@ Questions and pull requests: see the [bilingual contribution guide](CONTRIBUTING
 
 **Let creativity grow freely.**
 
+**2026-10-19 three archived motions released:** [Bot Voice](https://cellmotion.cn/botvoice.html), [Patent Wall](https://cellmotion.cn/patentwall.html), and [Animal Wave](https://cellmotion.cn/animalwave.html) now use the shared editor, timeline, exports, and live For AI components. Patent Wall uses 196 distinct Mutedmen artwork images; Animal Wave lets you replace avatars and names and write follower-count captions. [Integration and validation](docs/ARCHIVE_MOTION_EDITORS.md).
+
 **2026-10-15 Thermal Profile released**: [Open editor](https://cellmotion.cn/thermal-profile.html). CellMotion three-column editor, themes/languages, local silhouette extraction and repair, shared candidates, live For AI Manifest/player, PNG/GIF/60fps MP4 export, and homepage recent releases.
 
 **2026-10-14 Type Pour:** [Open the editor](https://cellmotion.cn/typepour.html). Fluid typography with a transparent glass, blue markers or pure type, synchronized procedural water audio, shared fonts/assets, image/GIF/video backgrounds and trimming. Includes the current three-column CellMotion UI, scheme history, responsive canvas, For AI live-state components, PNG/GIF/MP4 and WAV export. [Validation](docs/analyses/typepour.md).

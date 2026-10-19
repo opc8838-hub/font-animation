@@ -13,6 +13,18 @@
   ],
   "recent": [
     {
+      "id": "botvoice",
+      "date": "2026-10-19"
+    },
+    {
+      "id": "patentwall",
+      "date": "2026-10-19"
+    },
+    {
+      "id": "animalwave",
+      "date": "2026-10-19"
+    },
+    {
       "id": "thermal-profile",
       "date": "2026-10-15"
     },
@@ -98,6 +110,51 @@
     }
   ],
   "effects": [
+    {
+      "id": "botvoice",
+      "name": "Bot 语音",
+      "english": "Bot Voice",
+      "description": "手机唤醒 · 方块流动 · 语音展开",
+      "category": "media",
+      "href": "botvoice.html?from=gallery&v=20261019-archive3",
+      "poster": "final_botvoice.png",
+      "video": "assets/previews/botvoice-card.mp4",
+      "webComponent": {
+        "preview": "archive-motion-demo.html?effect=botvoice",
+        "descriptor": "effects/botvoice.component.json"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "patentwall",
+      "name": "专利墙",
+      "english": "Patent Wall",
+      "description": "封面翻转 · 作品特写 · 墙面铺展",
+      "category": "media",
+      "href": "patentwall.html?from=gallery&v=20261019-archive3",
+      "poster": "final_patentwall.png?v=20261019-mutedmen1",
+      "video": "assets/previews/patentwall-card.mp4?v=20261019-mutedmen1",
+      "webComponent": {
+        "preview": "archive-motion-demo.html?effect=patentwall",
+        "descriptor": "effects/patentwall.component.json"
+      },
+      "status": "ready"
+    },
+    {
+      "id": "animalwave",
+      "name": "动物浪潮",
+      "english": "Animal Wave",
+      "description": "头像递增 · 波浪队列 · 品牌收尾",
+      "category": "media",
+      "href": "animalwave.html?from=gallery&v=20261019-archive3",
+      "poster": "final_animalwave.png",
+      "video": "assets/previews/animalwave-card.mp4",
+      "webComponent": {
+        "preview": "archive-motion-demo.html?effect=animalwave",
+        "descriptor": "effects/animalwave.component.json"
+      },
+      "status": "ready"
+    },
     {
       "id": "thermal-profile",
       "name": "热感",

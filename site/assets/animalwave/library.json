@@ -1,0 +1,364 @@
+{
+  "cards": [
+    {
+      "libraryId": "animalwave-3",
+      "name": "Lion",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-03.png"
+    },
+    {
+      "libraryId": "animalwave-16",
+      "name": "Panda",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-16.png"
+    },
+    {
+      "libraryId": "animalwave-23",
+      "name": "Fox",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-23.png"
+    },
+    {
+      "libraryId": "animalwave-4",
+      "name": "Penguin",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-04.png"
+    },
+    {
+      "libraryId": "animalwave-11",
+      "name": "Tiger",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-11.png"
+    },
+    {
+      "libraryId": "animalwave-19",
+      "name": "Bunny",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-19.png"
+    },
+    {
+      "libraryId": "animalwave-9",
+      "name": "Puppy",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-09.png"
+    },
+    {
+      "libraryId": "animalwave-14",
+      "name": "Raccoon",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-14.png"
+    },
+    {
+      "libraryId": "animalwave-30",
+      "name": "Kitty",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-30.png"
+    },
+    {
+      "libraryId": "animalwave-2",
+      "name": "Koala",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-02.png"
+    },
+    {
+      "libraryId": "animalwave-39",
+      "name": "Monkey",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-39.png"
+    },
+    {
+      "libraryId": "animalwave-42",
+      "name": "Piggy",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-42.png"
+    },
+    {
+      "libraryId": "animalwave-48",
+      "name": "Dolphin",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-48.png"
+    },
+    {
+      "libraryId": "animalwave-20",
+      "name": "Shiba",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-20.png"
+    },
+    {
+      "libraryId": "animalwave-13",
+      "name": "Hamster",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-13.png"
+    },
+    {
+      "libraryId": "animalwave-26",
+      "name": "Squirrel",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-26.png"
+    },
+    {
+      "libraryId": "animalwave-37",
+      "name": "Lobster",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-37.png"
+    },
+    {
+      "libraryId": "animalwave-1",
+      "name": "Pufferfish",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-01.png"
+    },
+    {
+      "libraryId": "animalwave-5",
+      "name": "Whale",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-05.png"
+    },
+    {
+      "libraryId": "animalwave-6",
+      "name": "Hedgehog",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-06.png"
+    },
+    {
+      "libraryId": "animalwave-7",
+      "name": "Otter",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-07.png"
+    },
+    {
+      "libraryId": "animalwave-8",
+      "name": "Alpaca",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-08.png"
+    },
+    {
+      "libraryId": "animalwave-10",
+      "name": "Hammerhead",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-10.png"
+    },
+    {
+      "libraryId": "animalwave-12",
+      "name": "Husky",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-12.png"
+    },
+    {
+      "libraryId": "animalwave-15",
+      "name": "Turtle",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-15.png"
+    },
+    {
+      "libraryId": "animalwave-17",
+      "name": "Cow",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-17.png"
+    },
+    {
+      "libraryId": "animalwave-18",
+      "name": "Hedgehog",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-18.png"
+    },
+    {
+      "libraryId": "animalwave-21",
+      "name": "Deer",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-21.png"
+    },
+    {
+      "libraryId": "animalwave-22",
+      "name": "Owl",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-22.png"
+    },
+    {
+      "libraryId": "animalwave-24",
+      "name": "Beaver",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-24.png"
+    },
+    {
+      "libraryId": "animalwave-25",
+      "name": "Elephant",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-25.png"
+    },
+    {
+      "libraryId": "animalwave-27",
+      "name": "Crocodile",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-27.png"
+    },
+    {
+      "libraryId": "animalwave-29",
+      "name": "Owl",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-29.png"
+    },
+    {
+      "libraryId": "animalwave-31",
+      "name": "Sea Urchin",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-31.png"
+    },
+    {
+      "libraryId": "animalwave-32",
+      "name": "Walrus",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-32.png"
+    },
+    {
+      "libraryId": "animalwave-33",
+      "name": "Duck",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-33.png"
+    },
+    {
+      "libraryId": "animalwave-34",
+      "name": "Seahorse",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-34.png"
+    },
+    {
+      "libraryId": "animalwave-35",
+      "name": "Shark",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-35.png"
+    },
+    {
+      "libraryId": "animalwave-36",
+      "name": "Walrus",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-36.png"
+    },
+    {
+      "libraryId": "animalwave-38",
+      "name": "Lemur",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-38.png"
+    },
+    {
+      "libraryId": "animalwave-40",
+      "name": "Goat",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-40.png"
+    },
+    {
+      "libraryId": "animalwave-41",
+      "name": "Sea Otter",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-41.png"
+    },
+    {
+      "libraryId": "animalwave-43",
+      "name": "Whale",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-43.png"
+    },
+    {
+      "libraryId": "animalwave-44",
+      "name": "Squid",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-44.png"
+    },
+    {
+      "libraryId": "animalwave-45",
+      "name": "Seal",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-45.png"
+    },
+    {
+      "libraryId": "animalwave-46",
+      "name": "Donkey",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-46.png"
+    },
+    {
+      "libraryId": "animalwave-47",
+      "name": "Penguin",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-47.png"
+    },
+    {
+      "libraryId": "animalwave-49",
+      "name": "Beluga",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-49.png"
+    },
+    {
+      "libraryId": "animalwave-50",
+      "name": "Parrot",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-50.png"
+    },
+    {
+      "libraryId": "animalwave-51",
+      "name": "Swordfish",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-51.png"
+    },
+    {
+      "libraryId": "animalwave-52",
+      "name": "Manta Ray",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-52.png"
+    },
+    {
+      "libraryId": "animalwave-53",
+      "name": "Seal",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-53.png"
+    },
+    {
+      "libraryId": "animalwave-54",
+      "name": "Bat",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-54.png"
+    },
+    {
+      "libraryId": "animalwave-55",
+      "name": "Turtle",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-55.png"
+    },
+    {
+      "libraryId": "animalwave-56",
+      "name": "Eel",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-56.png"
+    },
+    {
+      "libraryId": "animalwave-57",
+      "name": "Orca",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-57.png"
+    },
+    {
+      "libraryId": "animalwave-58",
+      "name": "Crab",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-58.png"
+    },
+    {
+      "libraryId": "animalwave-59",
+      "name": "Octopus",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-59.png"
+    },
+    {
+      "libraryId": "animalwave-28",
+      "name": "Giraffe",
+      "kind": "image",
+      "src": "assets/animalwave/avatar-28.png"
+    },
+    {
+      "libraryId": "animalwave-brand",
+      "name": "品牌图标",
+      "kind": "image",
+      "src": "assets/animalwave/brand.png"
+    }
+  ]
+}
