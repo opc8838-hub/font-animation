@@ -219,7 +219,8 @@
     if (a.kind === 'cardbot') {
       c.save(); const bounds = a.bounds || { x: -71.7, y: -100, width: 143.4, height: 200.5 };
       c.scale(width / bounds.width, height / bounds.height); c.translate(-bounds.x - bounds.width / 2, -bounds.y - bounds.height / 2);
-      c.fillStyle = card.color || a.color; c.fill(path(a.body)); c.clip(path(a.body)); c.fillStyle = '#f9f9f9';
+      const bodyColor = card.color || a.color;
+      c.fillStyle = bodyColor; c.fill(path(a.body)); c.clip(path(a.body)); c.fillStyle = bodyColor.toLowerCase() === '#ffffff' ? '#090a0a' : '#f9f9f9';
       const clock = (t / a.duration + seed * .137) % 2, p = clock <= 1 ? clock : 2 - clock;
       for (const eye of a.eyes) { c.save(); c.transform(...matrixAt(eye.frames, p)); c.fill(path(eye.path)); c.restore(); }
       c.restore(); return;
