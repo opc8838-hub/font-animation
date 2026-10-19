@@ -54,8 +54,8 @@
       <button class="tc-export-shortcut" id="exportShortcut">${t('导出作品','Export')}</button>
     </header>
     <aside class="tc-content" aria-label="Content & scheme">
-      <div class="tc-panel-heading"><div><small>CONTENT</small><h2>${extension?t('素材与方案','Assets & scheme'):t(login?'登录转场':'卡牌素材',login?'Login transition':'Card collection')}</h2></div><span id="cardCount"></span></div>
-      <p class="tc-hint">${extension?t('选择素材，再单独编辑。修改会自动保存。','Select an asset to edit. Changes are autosaved.'):login?t('尺寸不跳变，在翻面中变白。','Match the card. Turn white while flipping.'):t('叠放、分排、交错横移，再收回。','Stack, spread, drift, and gather.')}</p>
+      <div class="tc-panel-heading"><div><small>${extension?t('内容','CONTENT'):'CONTENT'}</small><h2>${extension?t(effect==='animalwave'?'头像素材':effect==='patentwall'?'作品素材':'语音素材',effect==='animalwave'?'Avatar assets':effect==='patentwall'?'Artwork assets':'Voice assets'):t(login?'登录转场':'卡牌素材',login?'Login transition':'Card collection')}</h2></div><span id="cardCount"></span></div>
+      <p class="tc-hint">${extension?t('选择素材，在右侧编辑。修改会自动保存。','Select an asset and edit it on the right. Changes are autosaved.'):login?t('尺寸不跳变，在翻面中变白。','Match the card. Turn white while flipping.'):t('叠放、分排、交错横移，再收回。','Stack, spread, drift, and gather.')}</p>
       <div class="tc-row-list" id="contentList"></div>
       ${login?'':`<button id="openLibrary">${extension?t('＋ 添加素材','＋ Add assets'):t('＋ 添加卡牌 / 素材','＋ Add cards / media')}</button>`}
       <section class="gm-card tc-scheme me-scheme-panel"><h2>${t('方案','Scheme')}</h2>
@@ -77,8 +77,9 @@
       </section>
     </main>
     <aside class="gm-inspector" id="inspector" aria-label="Properties">
-      <nav class="tc-tabs"><button data-panel="content" aria-pressed="true">${t('当前内容','Content')}</button><button data-panel="motion" aria-pressed="false">${t('动效设置','Motion')}</button><button data-panel="export" aria-pressed="false">${t('导出','Export')}</button></nav>
+      <nav class="tc-tabs"><button data-panel="content" aria-pressed="true">${extension?t('当前素材','Current asset'):t('当前内容','Content')}</button><button data-panel="motion" aria-pressed="false">${t('动效设置','Motion')}</button><button data-panel="export" aria-pressed="false">${t('导出','Export')}</button></nav>
       <section class="tc-properties" data-panel="content" id="contentPanel">
+        ${extension?`<section class="gm-card cm-current-asset"><div class="cm-current-heading"><div><small>${t('当前编辑','NOW EDITING')}</small><h2 id="currentAssetIndex"></h2></div></div><div class="cm-current-preview"><img id="currentAssetThumb" alt=""><strong id="currentAssetName"></strong></div>${effect==='botvoice'?'':`<label class="gm-field"><span>${t(effect==='animalwave'?'自定义头像名称':'作品附加文字',effect==='animalwave'?'Custom avatar name':'Artwork caption')}</span><input id="currentAssetCaption" type="text" maxlength="300" autocomplete="off"></label>`}<button id="editSelected">${t('替换与精细编辑','Replace and fine-tune')}</button></section>`:''}
         ${extension?extension.content({input,range,select,t}):login?`<section class="gm-card"><h2>${t('登录内容','Login content')}</h2>
           ${input('scene.brand','品牌','Brand')}${input('scene.title','标题','Title')}${input('scene.subtitle','说明','Subtitle')}
           <label class="gm-field"><span>${t('字体','Font')}</span><select id="fontFamily" data-path="typography.fontFamily"></select></label>
@@ -286,9 +287,16 @@
   function renderAssets() {
     $('cardCount').textContent = login ? '01' : String(state.cards.length);
     if (login) { $('contentList').innerHTML = `<button class="tc-row-select" aria-pressed="true"><span>01</span><strong>${esc(state.scene.title || tr('登录界面','Login face'))}</strong><small>${tr('文字 · 色彩 · 尺寸','Text · colors · dimensions')}</small></button>`; return; }
-    $('contentList').innerHTML = state.cards.map((c,i) => { const a = resources.get(c.libraryId); return `<button class="tc-row-select" data-card="${esc(c.id)}" draggable="true" aria-pressed="${c.id===selected}">${a?.src||a?.dataUrl?`<img src="${esc(a.src||a.dataUrl)}" alt="">`:`<span>${String(i+1).padStart(2,'0')}</span>`}<strong>${esc(assetName(c))}</strong><small>${extension?tr('素材','Asset')+' '+String(i+1).padStart(2,'0'):i===0?tr('主卡 · 收拢封面','Cover · stack face'):tr('卡牌','Card')+' '+String(i+1).padStart(2,'0')}</small></button>`; }).join('');
+    $('contentList').innerHTML = state.cards.map((c,i) => { const a = resources.get(c.libraryId); return `<button class="tc-row-select" data-card="${esc(c.id)}" draggable="true" aria-pressed="${c.id===selected}">${a?.src||a?.dataUrl?`<img src="${esc(a.src||a.dataUrl)}" alt="">`:`<span>${String(i+1).padStart(2,'0')}</span>`}<strong>${esc(assetName(c))}</strong><small>${extension?tr(effect==='animalwave'?'头像':effect==='patentwall'?'作品':'语音素材',effect==='animalwave'?'Avatar':effect==='patentwall'?'Artwork':'Voice asset')+' '+String(i+1).padStart(2,'0'):i===0?tr('主卡 · 收拢封面','Cover · stack face'):tr('卡牌','Card')+' '+String(i+1).padStart(2,'0')}</small></button>`; }).join('');
     $('selectedAssets').innerHTML = state.cards.map(c => `<div class="cm-asset-row"><span>${esc(assetName(c))}</span><button data-edit="${esc(c.id)}">${tr('编辑','Edit')}</button><button data-remove="${esc(c.id)}" aria-label="${tr('移除','Remove')}">×</button></div>`).join('');
     $('editSelected').disabled = !state.cards.length;
+    if (extension) {
+      const card = state.cards.find(c => c.id === selected), index = state.cards.indexOf(card), asset = card && resources.get(card.libraryId), caption = $('currentAssetCaption');
+      $('currentAssetIndex').textContent = card ? tr(effect==='animalwave'?'头像 ':effect==='patentwall'?'作品 ':'语音素材 ',effect==='animalwave'?'Avatar ':effect==='patentwall'?'Artwork ':'Voice asset ') + String(index+1).padStart(2,'0') : tr('未选择素材','No asset selected');
+      $('currentAssetName').textContent = card ? assetName(card) : '';
+      $('currentAssetThumb').src = asset?.src || asset?.dataUrl || '';
+      if (caption) { caption.value = card?.caption || ''; caption.placeholder = effect==='animalwave'&&card ? assetName(card) : tr('可选','Optional'); caption.disabled = !card; }
+    }
   }
   function setAssetManager(open) { $('assetManager').classList.toggle('is-list-expanded',open); $('selectedAssets').hidden = !open; $('assetToggle').setAttribute('aria-expanded',String(open)); }
   function closeDrawer() { replacementTarget=null; $('libraryDrawer').hidden = true; $('inspector').hidden = false; }
@@ -442,7 +450,9 @@
   $('removeBackground').onclick=()=>{historyPush();state.backgroundMedia=null;syncControls();draw();saveLocal();};
   if(!login){
     $('openLibrary').onclick=libraryView;$('assetToggle').onclick=()=>setAssetManager($('selectedAssets').hidden);
-    $('editSelected').onclick=()=>editCard(selected);$('contentList').onclick=e=>{const n=e.target.closest('[data-card]');if(n){selected=n.dataset.card;renderAssets();setPanel('content');seek(stable());}};
+    $('editSelected').onclick=()=>editCard(selected);
+    if(extension&&$('currentAssetCaption'))$('currentAssetCaption').oninput=e=>{const card=state.cards.find(c=>c.id===selected);if(!card||busy)return;historyPush();card.caption=e.target.value;saveLocal();draw();};
+    $('contentList').onclick=e=>{const n=e.target.closest('[data-card]');if(n){selected=n.dataset.card;renderAssets();setPanel('content');seek(stable());}};
     $('selectedAssets').onclick=e=>{const n=e.target.closest('[data-edit],[data-remove]');if(n?.dataset.edit)editCard(n.dataset.edit);else if(n)remove(n.dataset.remove);};
     $('libraryGroups').onclick=async e=>{const n=e.target.closest('[data-candidate],[data-insert]');if(n?.dataset.candidate){candidate=n.dataset.candidate;$('insertCandidate').disabled=false;document.querySelectorAll('[data-candidate]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.candidate===candidate)));}else if(n?.dataset.insert)try{await insert(n.dataset.insert);}catch(err){notify(err.message);}};
     $('insertCandidate').onclick=()=>insert(candidate).catch(err=>notify(err.message));$('uploadAssets').onchange=e=>{upload([...e.target.files]);e.target.value='';};
