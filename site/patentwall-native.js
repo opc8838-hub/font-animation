@@ -207,11 +207,13 @@ function drawCard(name,sx,sy,sw,sh,featured,t) {
   sw*=card.scale;sh*=card.scale;
   if(sx+sw/2<0||sx-sw/2>W||sy+sh/2<0||sy-sh/2>H)return;
   ctx.save();
-  ctx.shadowColor='rgba(0,0,0,.16)';
-  ctx.shadowBlur=Math.min(40,sh*.03);
-  ctx.shadowOffsetY=Math.min(16,sh*.012);
-  helpers.asset(ctx,card,resources,t,sx,sy,sw,sh,false);
+  ctx.translate(sx+(card.x||0),sy+(card.y||0));
+  ctx.rotate((card.rotation||0)*Math.PI/180);
+  ctx.globalAlpha*=.12*(card.opacity??1);
+  ctx.fillStyle='#000';
+  ctx.fillRect(-sw/2+4,-sh/2+8,sw,sh);
   ctx.restore();
+  helpers.asset(ctx,card,resources,t,sx,sy,sw,sh,false);
   helpers.cardText(ctx,card,sx,sy,sw,sh,t,featured<0?1:clamp((t-scanStart[featured])/.7),state);
 }
 
@@ -262,6 +264,7 @@ function drawFlip(t) {
 
 // ───────── 一帧 ─────────
 function render(t) {
+  ctx.setTransform(cv.width/W,0,0,cv.height/H,0,0);
   if(!state.cards.length){ctx.clearRect(0,0,W,H);return;}
   const z = track(zoomK, t, true);
   const camY = track(cyK, t);

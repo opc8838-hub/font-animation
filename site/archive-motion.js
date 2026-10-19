@@ -28,7 +28,17 @@
  }
  function draw(g,t,w,h,s,r){const cw=g.canvas.width,ch=g.canvas.height;g.setTransform(cw/w,0,0,ch/h,0,0);g.globalAlpha=1;g.fillStyle=s.backgroundColor;g.fillRect(0,0,w,h);
   const bg=r.get(s.backgroundMedia?.libraryId);if(bg){const image=bg.video||helpers.image({libraryId:bg.libraryId},r,t);if(image){const iw=image.videoWidth||image.width,ih=image.videoHeight||image.height,k=Math.max(w/iw,h/ih);g.drawImage(image,(w-iw*k)/2,(h-ih*k)/2,iw*k,ih*k);}}
-  native.draw(sourceTime(s,t),s,r);const scale=Math.min(w/native.width,h/native.height)*s.scene.size;g.save();g.translate(w/2+s.scene.x*w/100,h/2+s.scene.y*h/100);g.scale(scale*s.scene.direction,scale);g.drawImage(nativeCanvas,-native.width/2,-native.height/2);g.restore();
+  if(effect!=='botvoice'){
+    const raster=Math.min(1,Math.max(.5,Math.max(cw/native.width,ch/native.height)));
+    const nw=Math.round(native.width*raster),nh=Math.round(native.height*raster);
+    if(nativeCanvas.width!==nw||nativeCanvas.height!==nh){nativeCanvas.width=nw;nativeCanvas.height=nh;}
+  }
+  const source=sourceTime(s,t);native.draw(source,s,r);
+  const portraitWeight=clamp((1.3-w/h)/(.7375));
+  const ease=x=>{const p=clamp(x);return p*p*(3-2*p);};
+  const portraitBoost=effect==='animalwave'?1+portraitWeight*.4:effect==='patentwall'?1+portraitWeight*(1.05-.55*ease((source-7)/7)):1;
+  const scale=Math.min(w/native.width,h/native.height)*s.scene.size*portraitBoost;
+  g.save();g.translate(w/2+s.scene.x*w/100,h/2+s.scene.y*h/100);g.scale(scale*s.scene.direction,scale);g.drawImage(nativeCanvas,-native.width/2,-native.height/2,native.width,native.height);g.restore();
  }
  const fields=native.shots.map(([zh,a,b],i)=>['motion.phase'+i,zh+'时长',({botvoice:['Press','Bot enters','Pullback','Flight','Blocks','Voice'],patentwall:['Flip','Spread & focus','Close-up 2','Close-up 3','Close-up 4','Wall'],animalwave:['Intro','Arrivals','Rush','Cruise','Brand']})[effect][i]+' duration',.15,20,.01,'s']);
  const number=(p,zh,en,a,b,step=.01)=>[p,zh,en,a,b,step,''];
