@@ -75,7 +75,7 @@ body.cm-editor { margin:0; box-sizing:border-box; font:14px/1.5 'STG Inter','STG
 .cm-dialog section { padding:10px 0; border-bottom:1px solid var(--tc-line); }
 .cm-dialog p { font-size:14px; line-height:1.7; }
 .cm-toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); padding:12px 18px; border:1px solid var(--tc-line); border-radius:14px; background:var(--tc-panel); color:var(--tc-text); z-index:100; box-shadow:0 8px 30px #0004; max-width:calc(100vw - 24px); }
-.cm-editor .me-asset-drawer { grid-column:3; grid-row:2; position:relative; width:auto; height:auto; min-height:0; display:flex; flex-direction:column; padding:16px; background:var(--tc-panel); border:1px solid var(--tc-line); border-radius:20px; overflow:hidden; }
+.cm-editor .me-asset-drawer { grid-column:3; grid-row:2; position:relative; inset:auto; width:auto; height:auto; min-height:0; display:flex; flex-direction:column; padding:16px; background:var(--tc-panel); border:1px solid var(--tc-line); border-radius:20px; overflow:hidden; }
 .cm-editor .me-asset-drawer header { display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .cm-editor .me-asset-library { overflow-y:auto; flex:1; margin:12px 0; display:block; }
 .cm-editor .cm-library-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -89,8 +89,15 @@ body.cm-editor { margin:0; box-sizing:border-box; font:14px/1.5 'STG Inter','STG
 .cm-editor .cm-asset-row { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:4px; align-items:center; }
 .cm-editor .cm-asset-row span { font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .cm-editor .cm-upload { width:100%; text-align:center; }
-.cm-editor #singleAssetEditor { overflow-y:auto; padding-top:12px; }
+.cm-editor #singleAssetEditor { flex:1; min-height:0; overflow-y:auto; padding:14px; background:var(--tc-input); color:var(--tc-text); border-color:var(--tc-line); }
 .cm-editor #assetThumb { display:block; height:100px; width:100%; object-fit:contain; margin-bottom:14px; }
+.cm-editor[data-cardmotion=carddeck] #assetThumb { float:left; width:60px; height:60px; margin:0 12px 12px 0; }
+.cm-editor[data-cardmotion=carddeck] #singleAssetEditor h3 { margin:0 0 2px; }
+.cm-editor[data-cardmotion=carddeck] #singleAssetEditor .gm-help { margin:0 0 16px; color:var(--tc-muted); }
+.cm-editor[data-cardmotion=carddeck] #singleAssetEditor .gm-field { clear:both; gap:4px; margin-bottom:10px; }
+.cm-editor[data-cardmotion=carddeck] #singleAssetEditor .gm-grid-2 { clear:both; margin-top:4px; }
+body.cm-editor.me-motion-editor[data-cardmotion=carddeck] #singleAssetEditor button { background:var(--tc-panel) !important; }
+.cm-editor[data-cardmotion=carddeck] #backToLibrary { width:100%; margin-top:8px; }
 .cm-editor.is-preview { display:block; padding:0; width:100vw; height:100dvh; overflow:hidden; }
 .cm-editor.is-preview>.tc-header,.cm-editor.is-preview>.tc-content,.cm-editor.is-preview>.gm-inspector,.cm-editor.is-preview>.me-asset-drawer,.cm-editor.is-preview .tc-canvas-toolbar,.cm-editor.is-preview .tc-timeline,.cm-editor.is-preview .me-stage-controls { display:none !important; }
 .cm-editor.is-preview .tc-center,.cm-editor.is-preview .gm-stage { width:100%; height:100%; display:flex; padding:0; border:0; border-radius:0; background:transparent; }
