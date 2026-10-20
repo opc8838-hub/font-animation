@@ -160,7 +160,7 @@
     g.restore();
   }
   window.CardMotion = {...ocean, defaults(id) {
-    const s = ocean.defaults(id); Object.assign(s.motion, {lead: .6, write: 3.2, hold: 1, dissolve: 10});
+    const s = ocean.defaults(id); Object.assign(s.motion, {lead: .6, write: 3.2, hold: 1, dissolve: 10, swim: 27});
     if (new URLSearchParams(location.search).get('ratio') === '4:5') s.canvas = {width: 1080, height: 1350};
     Object.assign(s.scene, {inkText: 'love from', inkSize: .84, inkColor: '#29262c'}); return s;
   }, phases, duration: s => phases(s).reduce((sum, p) => sum + p.duration, 0), draw};

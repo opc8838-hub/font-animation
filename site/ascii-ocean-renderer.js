@@ -14,7 +14,7 @@
   ];
   const variants = {
     'ascii-shark': {kind:'classic', tint:[.39,.43,.46], length:.44, depth:.61, path:1},
-    'ascii-hammerhead': {kind:'hammerhead', tint:[.36,.39,.46], length:.45, depth:.97, path:2},
+    'ascii-hammerhead': {kind:'hammerhead', tint:[.36,.39,.46], length:.54, depth:.97, path:2},
     'ascii-longtail': {kind:'longtail', tint:[.45,.43,.32], length:.39, depth:.88, path:0},
     'ascii-tiger': {kind:'tiger', tint:[.44,.41,.34], length:.40, depth:.94, path:3},
     'ascii-whale': {kind:'whale', tint:[.35,.43,.47], length:.53, depth:.94, path:4},
@@ -41,10 +41,13 @@
       if (s < .42) return .012 + .068 * Math.pow(1-(s-.12)/.30, .85);
       return .002 + .010 * Math.pow(Math.max(0,(1-s)/.58), .7);
     }
-    if (kind === 'hammerhead' && s < .32) return .030 + .071 * Math.pow(clamp((s-.07)/.25), .85);
+    if (kind === 'hammerhead') {
+      if (s < .28) return .030 + .066 * Math.pow(clamp((s-.07)/.21), .85);
+      return .006 + .090 * Math.pow(Math.max(0,(1-s)/.72), 1.4);
+    }
     const wide = kind === 'tiger' ? .112 : .096;
     if (s < .18) return wide * Math.pow(Math.sin(s/.18*Math.PI/2), kind === 'tiger' ? .55 : 1.05);
-    return .012 + (wide-.012) * Math.pow(Math.max(0,(1-s)/.82), 1.35);
+    return .006 + (wide-.006) * Math.pow(Math.max(0,(1-s)/.82), 1.35);
   }
   function spineFor(spec, card, index, u, w, h, state) {
     const size = Math.min(w, h), length = spec.length * size * state.scene.size * card.scale;
@@ -104,12 +107,13 @@
         fins.push([at(.20,sign*.10),at(.42,sign*(reach-.02)),at(.58,sign*reach),at(.57,sign*(reach-.05)),at(.36,sign*.10)]);
       } else {
         const compact=spec.kind==='longtail';
-        fins.push([at(compact?.14:.19,sign*.06),at(compact?.37:.56,sign*(compact?.17:.25)),at(compact?.30:.44,sign*.13),at(compact?.29:.40,sign*.065)]);
+        fins.push([at(compact?.14:.23,sign*.065),at(compact?.37:.52,sign*(compact?.17:.27)),at(compact?.30:.47,sign*.17),at(compact?.29:.37,sign*.065)]);
         if(!compact)fins.push([at(.59,sign*.024),at(.72,sign*.075),at(.67,sign*.017)]);
       }
       if(spec.kind!=='longtail') {
         const reach=spec.kind==='whale'?.18*(.9+.1*Math.cos(u*TAU*10)):.105;
-        fins.push([at(.89,0),at(.96,sign*reach),at(1,sign*reach*.83),at(.98,sign*.025),at(1,0)]);
+        if(spec.kind==='whale')fins.push([at(.89,0),at(.96,sign*reach),at(1,sign*reach*.83),at(.98,sign*.025),at(1,0)]);
+        else fins.push([at(.86,0),at(.98,sign*reach),at(1,sign*reach*.94),at(.95,sign*.028),at(.99,0)]);
       }
     }
     if(spec.kind==='hammerhead'){
@@ -138,8 +142,12 @@
         flag=1;const v=distance/(half||1),lit=(normalX*-.5+normalY*-.85)*across;
         const flow=(Math.sin(u*TAU*12-along*19+across*v*3)*.10+Math.cos(u*TAU*8+along*29)*.055)*(state.scene.shimmer??1);
         shade=clamp(.30+.46*v*v-.17*lit*v+flow,.04,.96);
-        if(spec.kind!=='manta'&&along>.30&&along<.45&&v<.25){flag=4;shade=.09+flow*.5;}
-        if(spec.kind==='tiger'&&along>.2&&along<.7&&Math.sin(along*100+v*2)>.78)shade*=.78;
+        if(spec.kind!=='manta'&&along>.30&&along<.45&&v<.32*(.45-along)/.15){flag=4;shade=.09+flow*.5;}
+        if(spec.kind==='tiger'&&along>.18&&along<.86){
+          const band=Math.sin(along*66+across*v*2.6+.7*Math.sin(along*23));
+          const marking=clamp((band-.10)/.65)*clamp((along-.18)*18)*clamp((.86-along)*14);
+          shade-=marking*(.16+.12*v);
+        }
         if(spec.kind==='whale'&&along>.25&&along<.70&&v>.56&&Math.sin(v*42+along*8)>.6)shade+=.08;
         if(along>.18&&along<.29&&v>.68&&Math.floor((along-.18)*55)%2===0)shade*=.8;
         if(tail){flag=5;shade=.17+.07*Math.sin(u*TAU*12-along*10);}
@@ -163,7 +171,7 @@
         if(edge){g.globalAlpha=card.opacity*spec.depth*.27;g.fillStyle=dark?'#b4bcc7':'#8e9491';const d=Math.max(1,cw*.26);g.fillRect(x+(cw-d)/2,y+(ch-d)/2,d,d);}
         continue;
       }
-      const grain=keys[i],tone=clamp(.5+(shades[i]-.5)*(state.scene.contrast??1.15)+(grain-.5)*.34+.045*Math.sin(u*TAU*14+grain*TAU)),opacity=card.opacity*spec.depth;
+      const grain=keys[i],tone=clamp(.5+(shades[i]-.5)*(state.scene.contrast??1.15)+(grain-.5)*(spec.kind==='tiger'?.24:.34)+.045*Math.sin(u*TAU*14+grain*TAU)),opacity=card.opacity*spec.depth;
       const roll=noise(Math.floor(grain*10007),Math.floor(u*64+grain*7));
       let color=tint.map(v=>Math.round(clamp((49+tone*192)*(v/.43),25,242)));
       if(dark)color=color.map(v=>255-v*.75);

@@ -102,7 +102,7 @@
   "motion": {
     "speed": 1,
     "loop": true,
-    "swim": 30,
+    "swim": 27,
     "lead": 0.6,
     "write": 3.2,
     "hold": 1,
