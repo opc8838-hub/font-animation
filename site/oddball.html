@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Oddball 墨写：可编辑中英文的墨迹书写动效。">
+  <title>墨写 · Oddball — CellMotion</title>
+  <link rel="icon" href="favicon.svg">
+  <link rel="stylesheet" href="shared-fonts.css?v=20261020-oddball1">
+  <link rel="stylesheet" href="typecascade-workspace.css">
+  <link rel="stylesheet" href="typecascade-polish.css">
+  <link rel="stylesheet" href="typepour-editor.css?v=20261020-ui1">
+  <link rel="stylesheet" href="oddball.css?v=20261020-1">
+</head>
+<body class="tc-workspace tp-editor ink-editor" data-editor-theme="dark" data-editor-language="zh">
+  <header class="tc-header">
+    <a class="tc-brand tp-brand" href="cellmotion.html" aria-label="CellMotion"><img src="assets/cellmotion/logo-dark-original.png" alt="CellMotion" class="tc-logo-dark"><img src="assets/cellmotion/logo-original-transparent.png?v=20260926-1" alt="" class="tc-logo-light" aria-hidden="true"></a>
+    <h1><span data-zh="墨写" data-en="Oddball Ink">墨写</span><span data-zh="Oddball · 逐字墨迹" data-en="Handwritten ink">Oddball · 逐字墨迹</span></h1>
+    <a class="tc-back" href="cellmotion-editors.html" data-zh="返回编辑器" data-en="Editors">返回编辑器</a>
+    <button id="language" type="button" aria-label="切换语言">EN</button>
+    <button id="theme" type="button" aria-label="切换主题">☼</button>
+    <button id="exportShortcut" class="tc-export-shortcut" type="button" data-zh="导出作品" data-en="Export">导出作品</button>
+  </header>
+  <aside class="tc-content">
+    <div class="tc-panel-heading"><div><small>01 / COMPOSITION</small><h2 data-zh="内容" data-en="Composition">内容</h2></div></div>
+    <div class="tc-row-list"><button class="tc-row-select" type="button" aria-pressed="true"><span class="tc-row-number">01</span><span class="tc-row-text" data-zh="墨迹文字" data-en="Ink lettering">墨迹文字</span><span class="tc-row-description">ODDBALL</span></button></div>
+    <p class="tc-hint" data-zh="输入任意中英文，墨迹会逐字写出。" data-en="Type Chinese or English to write it in ink.">输入任意中英文，墨迹会逐字写出。</p>
+    <section class="tc-scheme"><h2 data-zh="方案" data-en="Scheme">方案</h2><div class="gm-actions">
+      <button id="saveScheme" type="button" data-zh="保存方案" data-en="Save">保存方案</button>
+      <button id="importScheme" type="button" data-zh="导入方案" data-en="Import">导入方案</button>
+      <button id="resetScheme" type="button" data-zh="恢复默认" data-en="Restore">恢复默认</button>
+      <button id="clearScheme" type="button" data-zh="清理重做" data-en="Clear">清理重做</button>
+    </div><input id="schemeFile" type="file" accept="application/json,.json" hidden><p id="saveStatus" class="gm-help" role="status"></p></section>
+  </aside>
+  <main class="tc-center">
+    <div class="tc-canvas-toolbar"><label><span data-zh="画布尺寸" data-en="Canvas size">画布尺寸</span><select id="ratio"><option value="1080x1080">1:1</option><option value="1080x1350">4:5</option><option value="1080x1440">3:4</option><option value="1080x1620">2:3</option><option value="1080x1920">9:16</option><option value="1920x1080">16:9</option><option value="1440x1080">4:3</option><option value="1620x1080">3:2</option><option value="custom" data-zh="自定义" data-en="Custom">自定义</option></select></label><div id="customSize" hidden><input id="canvasWidth" type="number" min="320" max="4096" value="1080" aria-label="宽度"> × <input id="canvasHeight" type="number" min="320" max="4096" value="1080" aria-label="高度"></div><span id="dimensions">1080 × 1080</span></div>
+    <section class="gm-stage"><div class="tp-canvas-space"><canvas id="canvas" width="1080" height="1080" aria-label="墨写预览"></canvas></div><div class="ink-stage-controls me-stage-controls"><button id="replay" type="button" data-zh="重播" data-en="Replay">重播</button><button id="play" type="button" data-zh="暂停" data-en="Pause">暂停</button></div></section>
+    <section class="tc-timeline"><div class="tp-transport"><div class="tp-transport-meta"><output id="clock">0.00 / 5.90</output><label data-zh="速度" data-en="Speed">速度</label><select id="speed" aria-label="播放速度"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></div></div><div id="phaseTrack" class="tp-phases me-choreo-track"><div id="phaseSegments" class="me-choreo-scroll"></div><i id="playhead" class="me-choreo-playhead"></i><input id="seek" type="range" min="0" max="5.9" step="0.01" value="0" aria-label="时间轴"></div></section>
+  </main>
+  <aside class="gm-inspector"><nav class="tc-tabs"><button type="button" data-tab="content" aria-pressed="true" data-zh="当前内容" data-en="Content">当前内容</button><button type="button" data-tab="motion" aria-pressed="false" data-zh="动效设置" data-en="Motion">动效设置</button><button type="button" data-tab="export" aria-pressed="false" data-zh="导出" data-en="Export">导出</button></nav><div class="tc-properties">
+    <div data-pane="content"><section class="gm-card"><h2 data-zh="文字与颜色" data-en="Text and colors">文字与颜色</h2><label class="tp-field"><span data-zh="文字" data-en="Text">文字</span><textarea id="text" rows="5">Oddball
+中文墨迹</textarea></label><label class="tp-field"><span data-zh="字体" data-en="Font">字体</span><select id="font"><option value="stg:oddball">Oddball TM · 中文墨迹</option></select></label><label class="tp-field"><span data-zh="字号" data-en="Size">字号</span><input id="size" type="range" min="60" max="280" step="1" value="172"><output for="size"></output></label><label class="tp-field"><span data-zh="字距" data-en="Tracking">字距</span><input id="tracking" type="range" min="-20" max="40" step="1" value="0"><output for="tracking"></output></label><label class="tp-field"><span data-zh="行距" data-en="Line spacing">行距</span><input id="lineSpacing" type="range" min="0.9" max="1.8" step="0.05" value="1.22"><output for="lineSpacing"></output></label><label class="tp-field"><span data-zh="墨色" data-en="Ink color">墨色</span><input id="textColor" type="color" value="#29262c"></label><label class="tp-field"><span data-zh="纸色" data-en="Paper color">纸色</span><input id="backgroundColor" type="color" value="#eeeae1"></label></section></div>
+    <div data-pane="motion" hidden><section class="gm-card"><h2 data-zh="出字节奏" data-en="Motion timing">出字节奏</h2><label class="tp-field"><span data-zh="落笔 / 秒" data-en="Lead / sec">落笔 / 秒</span><input id="lead" type="range" min="0" max="2" step="0.1" value="0.4"><output for="lead"></output></label><label class="tp-field"><span data-zh="逐字写出 / 秒" data-en="Write / sec">逐字写出 / 秒</span><input id="write" type="range" min="0.8" max="12" step="0.1" value="3.2"><output for="write"></output></label><label class="tp-field"><span data-zh="停留 / 秒" data-en="Hold / sec">停留 / 秒</span><input id="hold" type="range" min="0.2" max="8" step="0.1" value="1.5"><output for="hold"></output></label><label class="tp-field"><span data-zh="淡出 / 秒" data-en="Fade / sec">淡出 / 秒</span><input id="fade" type="range" min="0.2" max="4" step="0.1" value="0.8"><output for="fade"></output></label><label class="tp-field"><span data-zh="飞墨密度" data-en="Ink speckles">飞墨密度</span><input id="speckles" type="range" min="0" max="100" step="1" value="32"><output for="speckles"></output></label></section></div>
+    <div data-pane="export" hidden><section class="gm-card"><h2 data-zh="导出作品" data-en="Export">导出作品</h2><p id="exportDimensions" class="gm-help">1080 × 1080</p><label class="tp-field"><span data-zh="输出比例" data-en="Output scale">输出比例</span><select id="exportScale"><option value="0.5">50%</option><option value="1" selected>100%</option></select></label><label class="tp-field"><span data-zh="帧率" data-en="Frame rate">帧率</span><select id="exportFps"><option>15</option><option>24</option><option selected>30</option><option>60</option></select></label><div class="gm-actions"><button id="png" type="button">PNG</button><button id="gif" type="button">GIF</button><button id="mp4" type="button">MP4</button></div><p id="status" class="gm-help" role="status"></p></section></div>
+  </div></aside>
+  <script src="shared-font-library.js?v=20261020-oddball1"></script>
+  <script src="js/continuation-gif.js"></script>
+  <script src="js/h264-mp4-encoder.web.js"></script>
+  <script src="oddball.js?v=20261020-1"></script>
+</body>
+</html>

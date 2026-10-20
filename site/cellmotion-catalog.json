@@ -239,6 +239,17 @@
       "status": "ready"
     },
     {
+      "id": "oddball",
+      "name": "墨写",
+      "english": "Oddball Ink",
+      "description": "逐字墨迹 · 中英文书写",
+      "category": "type",
+      "href": "oddball.html",
+      "poster": "final_oddball.png",
+      "video": null,
+      "status": "pending"
+    },
+    {
       "id": "card-login",
       "name": "翻牌登录",
       "english": "Card Login",
