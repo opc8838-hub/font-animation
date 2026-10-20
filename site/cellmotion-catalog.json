@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "ascii-sharks",
+      "date": "2026-10-20"
+    },
+    {
       "id": "blockflow",
       "date": "2026-10-19"
     },
@@ -118,6 +122,21 @@
     }
   ],
   "effects": [
+    {
+      "id": "ascii-sharks",
+      "name": "字符海洋",
+      "english": "ASCII Ocean",
+      "description": "鲨鲸与鳐 · 展翼巡游 · 字符明暗流动",
+      "category": "graphic",
+      "href": "ascii-sharks.html?from=gallery&v=20261020-ocean1",
+      "poster": "final_ascii-sharks.png",
+      "video": "assets/previews/ascii-sharks-card.mp4",
+      "webComponent": {
+        "preview": "archive-motion-demo.html?effect=ascii-sharks",
+        "descriptor": "effects/ascii-sharks.component.json"
+      },
+      "status": "ready"
+    },
     {
       "id": "botvoice",
       "name": "Bot 语音",

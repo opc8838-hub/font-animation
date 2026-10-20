@@ -1,0 +1,9 @@
+/* Keep the shared editor shell; marine artwork owns only its composition. */
+.ascii-editor .gm-stage{position:relative;padding-bottom:58px}
+body.ascii-editor.me-motion-editor .gm-stage .me-stage-controls{position:absolute!important;left:50%!important;bottom:10px!important;transform:translateX(-50%)!important;margin:0!important}
+.ascii-editor .tc-center{grid-template-rows:auto minmax(220px,1fr) minmax(160px,.35fr)}
+.ascii-editor .tc-row-select img{object-fit:contain;background:#fcfcfa}
+.ascii-editor .gm-composition-frame{overflow:hidden;background:#fcfcfa}
+.ascii-editor.is-preview .gm-stage{padding:0}
+.ascii-editor.is-preview .me-stage-controls{display:none!important}
+@media(max-width:860px){.ascii-editor .tc-center{grid-template-rows:auto minmax(210px,38dvh) 130px}.ascii-editor .gm-stage{padding-bottom:48px}}

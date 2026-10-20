@@ -1,0 +1,40 @@
+{
+  "cards": [
+    {
+      "libraryId": "ascii-shark",
+      "name": "鲨鱼 / Shark",
+      "kind": "image",
+      "src": "assets/ascii-ocean/ascii-shark.svg"
+    },
+    {
+      "libraryId": "ascii-hammerhead",
+      "name": "锤头鲨 / Hammerhead",
+      "kind": "image",
+      "src": "assets/ascii-ocean/ascii-hammerhead.svg"
+    },
+    {
+      "libraryId": "ascii-longtail",
+      "name": "长尾鲨 / Longtail",
+      "kind": "image",
+      "src": "assets/ascii-ocean/ascii-longtail.svg"
+    },
+    {
+      "libraryId": "ascii-tiger",
+      "name": "虎鲨 / Tiger shark",
+      "kind": "image",
+      "src": "assets/ascii-ocean/ascii-tiger.svg"
+    },
+    {
+      "libraryId": "ascii-whale",
+      "name": "鲸鱼 / Whale",
+      "kind": "image",
+      "src": "assets/ascii-ocean/ascii-whale.svg"
+    },
+    {
+      "libraryId": "ascii-manta",
+      "name": "魔鬼鱼 / Manta ray",
+      "kind": "image",
+      "src": "assets/ascii-ocean/ascii-manta.svg"
+    }
+  ]
+}

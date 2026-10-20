@@ -6,6 +6,8 @@
 
 **让创意，自由生长。**
 
+**2026-10-20 字符海洋上线**：[字符海洋 / ASCII Ocean](https://cellmotion.cn/ascii-sharks.html?from=gallery) 在白底细网格中合并四种鲨鱼、鲸鱼与魔鬼鱼，默认 16:9，使用原创弯曲骨架、灰色字符方格、流动明暗与鱼群；突出锤头鲨横向头部与魔鬼鱼长尾，保留方案、For AI 与 PNG / GIF / MP4 导出。画面不含对话框。见 [视频观察与运动契约](docs/analyses/ascii-sharks-video.md)。
+
 **2026-10-19 方块流动独立上新**：[方块流动](https://cellmotion.cn/blockflow.html) 直接沿用 Bot 语音的亮蓝方块节奏，首帧从单块展开，图标可变成方块；可新增、替换、删除和排序方块，调节颜色、起伏、速度、间距与圆角，并使用统一编辑器、For AI 和 PNG / GIF / MP4 导出。[动效分析](docs/analyses/blockflow.md)。
 
 **2026-10-19 作品展示 2**：[作品展示 2](https://cellmotion.cn/patentcount.html) 按第五段参考视频制作主卡拉远、作品弧墙和数字显现。沿用 Mutedmen 作品图片且默认不重复；标题、数量、说明、作品和纯白底色均可编辑，说明可清空，支持 9:16、时间轴与 PNG / GIF / MP4 导出。相位分析见 [docs/analyses/patentcount.md](docs/analyses/patentcount.md)。
