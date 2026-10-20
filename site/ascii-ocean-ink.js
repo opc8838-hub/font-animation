@@ -34,11 +34,19 @@
   }
   function layout(ctx, w, h, s) {
     const preset = STGFontLibrary.preset('stg:oddball');
-    let size = Math.min(w * .145, h * .31) * s.scene.inkSize;
+    const lines = s.scene.inkText.replace(/\r\n?/g, '\n').split('\n');
+    let size = Math.min(Math.min(w * .145, h * .31) * s.scene.inkSize, h * .68 / (1 + (lines.length - 1) * 1.2));
     const set = () => { ctx.font = `${preset.style} ${preset.weight} ${size}px ${STGFontLibrary.family('stg:oddball')}`; };
-    set(); if (ctx.measureText(s.scene.inkText).width > w * .74) { size *= w * .74 / ctx.measureText(s.scene.inkText).width; set(); }
-    const bounds = ctx.measureText(s.scene.inkText);
-    return {size, x: (w - bounds.width) / 2, y: h / 2 + (bounds.actualBoundingBoxAscent - bounds.actualBoundingBoxDescent) / 2};
+    set(); const width = Math.max(...lines.map(line => ctx.measureText(line).width));
+    if (width > w * .74) { size *= w * .74 / width; set(); }
+    const bounds = lines.map(line => ctx.measureText(line || 'Mg'));
+    const ascent = Math.max(...bounds.map(b => b.actualBoundingBoxAscent)), descent = Math.max(...bounds.map(b => b.actualBoundingBoxDescent));
+    const firstY = (h - (lines.length - 1) * size * 1.2 + ascent - descent) / 2, letters = [];
+    lines.forEach((line, row) => {
+      let x = (w - ctx.measureText(line).width) / 2;
+      for (const ch of line) { letters.push({ch, x, y: firstY + row * size * 1.2}); x += ctx.measureText(ch).width; }
+    });
+    return {size, letters};
   }
   // Same glyph mask and stroke coordinates as the existing Oddball Ink effect.
   function writeGlyph(ctx, ch, x, y, size, progress) {
@@ -66,11 +74,10 @@
   function lettering(w, h, s, progress) {
     const key = inkKey(w, h, s);
     if (progress === 1 && fullKey === key) return fullInk;
-    const ctx = clearLayer(ink, w, h), {size, x, y} = layout(ctx, w, h, s);
+    const ctx = clearLayer(ink, w, h), {size, letters} = layout(ctx, w, h, s);
     ctx.fillStyle = s.scene.inkColor; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
-    let pen = x;
-    [...s.scene.inkText].forEach((ch, index) => {
-      const p = clamp(progress * s.scene.inkText.length - index);
+    letters.forEach(({ch, x: pen, y}, index) => {
+      const p = clamp(progress * letters.length - index);
       if (p >= 1) ctx.fillText(ch, pen, y); else if (p > 0) writeGlyph(ctx, ch, pen, y, size, smooth(p));
       const strokes = window.ODDBALL_STROKES[ch] || [], points = strokes.flat();
       for (let j = 0; j < 8 && p > 0; j++) {
@@ -80,7 +87,7 @@
         ctx.globalAlpha = .18 + noise(n + 4) * .25; ctx.beginPath();
         ctx.arc(pen + point[0] * size / 256 + Math.cos(a) * d, y + point[1] * size / 256 + Math.sin(a) * d, size * (.003 + noise(n + 5) * .008), 0, Math.PI * 2); ctx.fill();
       }
-      ctx.globalAlpha = 1; pen += ctx.measureText(ch).width;
+      ctx.globalAlpha = 1;
     });
     if (progress === 1) { clearLayer(fullInk, w, h).drawImage(ink, 0, 0); fullKey = key; return fullInk; }
     return ink;
@@ -168,11 +175,11 @@
     fields: [...phaseInfo.map(([id, zh, en]) => ['motion.' + id, zh, en, id === 'lead' ? 0 : .1, id === 'hold' ? 5 : 10, .1, 's']), ...editor.fields],
     content(args) {
       const {input, range, t} = args;
-      return '<section class="gm-card"><h2>' + t('中央墨写', 'Center handwriting') + '</h2>' + input('scene.inkText', '手写文字', 'Handwritten text', 'text') + input('scene.inkColor', '墨水颜色', 'Ink color', 'color') + range(['scene.inkSize', '文字大小', 'Text size', .4, 1.6, .01, '']) + '</section>' + editor.content(args);
+      return '<section class="gm-card"><h2>' + t('中央墨写', 'Center handwriting') + '</h2><label class="gm-field"><span>' + t('手写文字（回车换行）', 'Handwritten text (Enter for a new line)') + '</span><textarea data-path="scene.inkText" rows="3" maxlength="60"></textarea></label>' + input('scene.inkColor', '墨水颜色', 'Ink color', 'color') + range(['scene.inkSize', '文字大小', 'Text size', .4, 1.6, .01, '']) + '</section>' + editor.content(args);
     },
     async prepare(...args) { await editor.prepare(...args); const font = STGFontLibrary.preset('stg:oddball'); await document.fonts.load(`${font.style} ${font.weight} 172px ${STGFontLibrary.family('stg:oddball')}`); },
     normalize(raw, s, def) {
-      editor.normalize(raw, s, def); s.scene.inkText = String(s.scene.inkText ?? 'love from').replace(/[^\x20-\x7e]/g, '').slice(0, 60);
+      editor.normalize(raw, s, def); s.scene.inkText = String(s.scene.inkText ?? 'love from').replace(/\r\n?/g, '\n').replace(/[^\x20-\x7e\n]/g, '').slice(0, 60);
       s.scene.inkSize = clamp(Number(s.scene.inkSize) || 1, .4, 1.6);
       if (!/^#[\da-f]{6}$/i.test(s.scene.inkColor)) s.scene.inkColor = def.scene.inkColor;
     },

@@ -383,7 +383,7 @@
     const chosen=$('exportDuration').value, duration=chosen==='cycle'?M.duration(snapshot):chosen==='custom'?M.clamp(Number($('customDuration').value)||3,.5,30):Number(chosen);
     if(format==='gif'&&w*h*Math.ceil(duration*fps)>240000000) { notify('GIF 画面较大，请降低画布尺寸或帧率，或改用 MP4。','Large GIF: reduce canvas size / FPS, or use MP4.');return; }
     busy=true; const wasPlaying=playing;playing=false;playbackUI();
-    const controls=[...document.querySelectorAll('button,input,select')].map(n=>[n,n.disabled]); controls.forEach(([n])=>n.disabled=true);
+    const controls=[...document.querySelectorAll('button,input,select,textarea')].map(n=>[n,n.disabled]); controls.forEach(([n])=>n.disabled=true);
     const out=document.createElement('canvas');out.width=w;out.height=h;const c=out.getContext('2d',{willReadFrequently:true});
     const render=t=>M.draw(c,t,w,h,snapshot,resources);let encoder;
     const report=p=>{$('exportProgress').value=p;$('exportStatus').textContent=tr('正在导出','Exporting')+` ${format.toUpperCase()} · ${w} × ${h} · ${Math.round(p*100)}%`;};
