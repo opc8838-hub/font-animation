@@ -17,6 +17,10 @@
       "date": "2026-10-20"
     },
     {
+      "id": "oddball",
+      "date": "2026-10-20"
+    },
+    {
       "id": "blockflow",
       "date": "2026-10-19"
     },
@@ -128,7 +132,7 @@
       "english": "ASCII Ocean",
       "description": "鲨鲸与鳐 · 展翼巡游 · 字符明暗流动",
       "category": "graphic",
-      "href": "ascii-sharks.html?from=gallery&v=20261020-ocean1",
+      "href": "ascii-sharks.html?from=gallery&v=20261020-ocean-release1",
       "poster": "final_ascii-sharks.png",
       "video": "assets/previews/ascii-sharks-card.mp4",
       "webComponent": {
@@ -264,9 +268,9 @@
       "description": "英文逐字水墨晕染",
       "category": "type",
       "href": "oddball.html",
-      "poster": "final_oddball.png?v=20261020-clean1",
+      "poster": "final_oddball.png?v=20261020-ink2",
       "video": null,
-      "status": "pending"
+      "status": "ready"
     },
     {
       "id": "card-login",
