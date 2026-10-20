@@ -26,6 +26,11 @@ body.cm-editor { margin:0; box-sizing:border-box; font:14px/1.5 'STG Inter','STG
 .cm-editor h2,.cm-editor h3 { font-size:15px; margin:0 0 14px; }
 .cm-editor .gm-card { padding:16px; margin:0 0 12px; }
 .cm-editor .me-scheme-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.cm-editor .cm-login-presets { margin-top:12px; padding-top:12px; border-top:1px solid var(--tc-line); }
+.cm-editor .cm-login-presets strong { display:block; margin-bottom:8px; font-size:12px; color:var(--tc-muted); }
+.cm-editor .cm-login-preset-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.cm-editor .cm-login-preset-actions button { min-width:0; padding:8px 4px; font-size:12px; }
+body.cm-editor.me-motion-editor .cm-login-preset-actions button[aria-pressed=true] { border-color:var(--tc-accent) !important; background:var(--tc-selected) !important; }
 .cm-editor .gm-status,.cm-editor .gm-help { font-size:13px; line-height:1.65; margin:10px 0 0; overflow-wrap:anywhere; }
 .cm-editor .gm-field { display:grid; gap:7px; margin:0 0 14px; min-width:0; }
 .cm-editor .gm-field>span { display:flex; align-items:center; justify-content:space-between; gap:8px; }

@@ -41,7 +41,7 @@
     const m = s.motion, speed = m.speed;
     const list = s.effect === 'card-login'
       ? [['match', '同尺寸交接', 'Match footprint', m.duration / 18],
-         ['flip', '旋转 · 变黑', 'Flip & turn black', m.duration * 15 / 18],
+         ['flip', '旋转 · 翻面', 'Flip face', m.duration * 15 / 18],
          ['settle', '轻柔归位', 'Soft settle', m.duration * 2 / 18],
          ['hold', '登录停留', 'Login hold', m.hold]]
       : [['stack', '单卡叠放', 'Single-card stack', m.repos], ['spread', '展开分排', 'Spread into rows', m.ouvre],
@@ -88,7 +88,8 @@
     if (!f.front) {
       // Original handoff eyes; scale is applied to the whole face, never rebuilt mid-flip.
       c.translate(a.width / 2 + 18, a.height / 2 - 36); c.rotate(rad(-13));
-      round(c, -96, -66, 66, 132, 33, '#090a0a'); round(c, 33, -116, 66, 132, 33, '#090a0a');
+      const rgb = parseInt(a.backColor.slice(1), 16), eyeColor = (((rgb >> 16) & 255) * .2126 + ((rgb >> 8) & 255) * .7152 + (rgb & 255) * .0722) < 128 ? '#ffffff' : '#090a0a';
+      round(c, -96, -66, 66, 132, 33, eyeColor); round(c, 33, -116, 66, 132, 33, eyeColor);
     } else {
       c.globalAlpha = f.content; c.translate(0, 18 * (1 - f.content));
       const id = s.typography.fontFamily, k = Math.min(a.width / 440, a.height / 590), pad = 42 * k, inner = a.width - pad * 2;

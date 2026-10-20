@@ -4,6 +4,10 @@
   const $ = id => document.getElementById(id), M = window.CardMotion, effect = document.body.dataset.cardmotion;
   const extension = window.CellMotionEditorExtension;
   const login = effect === 'card-login', params = new URLSearchParams(location.search), preview = params.has('preview');
+  const loginPresets = {
+    white: { backgroundColor:'#ffffff', backColor:'#ffffff', frontColor:'#090a0a', textColor:'#f8f8f6' },
+    black: { backgroundColor:'#0b0b0d', backColor:'#090a0a', frontColor:'#f8f8f6', textColor:'#171819' }
+  };
   const storageKey = `cellmotion-${effect}-v1`, resources = new Map(), clone = v => JSON.parse(JSON.stringify(v));
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
   let language = localStorage.getItem('cellmotion-language') === 'en' ? 'en' : 'zh';
@@ -16,7 +20,7 @@
   let busy = false, last = performance.now(), autosave, ready = false, history = [], future = [], definition;
   const fields = extension?.fields || (login ? [
     ['motion.duration','翻转时长','Flip duration',.6,4,.01,'s'], ['motion.hold','登录停留','Login hold',0,5,.1,'s'],
-    ['motion.faceSwitch','翻面变黑时机','Black face switch',.1,.6,.001,'%'],
+    ['motion.faceSwitch','翻面切换时机','Face switch',.1,.6,.001,'%'],
     ['motion.contentDelay','文字出现延迟','Content delay',0,3,.01,'s'], ['motion.contentDuration','文字渐入时长','Content reveal',.1,2,.01,'s'],
     ['motion.scaleX','起始卡片宽度','Starting width',.15,1,.005,'%'], ['motion.scaleY','起始卡片高度','Starting height',.15,1,.005,'%'],
     ['motion.startZ','起始倾角','Starting tilt',-30,30,1,'°'], ['motion.startY','起始旋转','Starting rotation',-25,25,1,'°'],
@@ -55,11 +59,12 @@
     </header>
     <aside class="tc-content" aria-label="Content & scheme">
       <div class="tc-panel-heading"><div><small>${extension?t('内容','CONTENT'):'CONTENT'}</small><h2>${extension?t(effect==='animalwave'?'头像素材':(effect==='patentwall'||effect==='patentcount')?'作品素材':effect==='blockflow'?'方块素材':'语音素材',effect==='animalwave'?'Avatar assets':(effect==='patentwall'||effect==='patentcount')?'Artwork assets':effect==='blockflow'?'Block assets':'Voice assets'):t(login?'登录转场':'卡牌素材',login?'Login transition':'Card collection')}</h2></div><span id="cardCount"></span></div>
-      <p class="tc-hint">${extension?t('选择素材，在右侧编辑。修改会自动保存。','Select an asset and edit it on the right. Changes are autosaved.'):login?t('尺寸不跳变，在翻面中变黑。','Match the card. Turn black while flipping.'):t('叠放、分排、交错横移，再收回。','Stack, spread, drift, and gather.')}</p>
+      <p class="tc-hint">${extension?t('选择素材，在右侧编辑。修改会自动保存。','Select an asset and edit it on the right. Changes are autosaved.'):login?t('翻转后显示登录页面。','Flip to reveal the login screen.'):t('叠放、分排、交错横移，再收回。','Stack, spread, drift, and gather.')}</p>
       <div class="tc-row-list" id="contentList"></div>
       ${login?'':`<button id="openLibrary">${extension?t(effect==='blockflow'?'＋ 添加方块':'＋ 添加素材',effect==='blockflow'?'＋ Add block':'＋ Add assets'):t('＋ 添加卡牌 / 素材','＋ Add cards / media')}</button>`}
       <section class="gm-card tc-scheme me-scheme-panel"><h2>${t('方案','Scheme')}</h2>
         <div class="me-scheme-actions"><button id="saveScheme">${t('保存方案','Save scheme')}</button><button id="importScheme">${t('导入方案','Import scheme')}</button><button id="restoreScheme">${t('恢复默认','Restore default')}</button><button id="clearScheme">${t('清理重做','Clear / rebuild')}</button></div>
+        ${login?`<div class="cm-login-presets" role="group" aria-labelledby="loginPresetTitle"><strong id="loginPresetTitle">${t('\u767b\u5f55\u914d\u8272','Login appearance')}</strong><div class="cm-login-preset-actions"><button type="button" data-login-preset="white" aria-pressed="false">${t('\u767d\u5e95\u7248','White version')}</button><button type="button" data-login-preset="black" aria-pressed="false">${t('\u9ed1\u5e95\u7248','Black version')}</button></div></div>`:''}
         <input id="schemeFile" type="file" accept="application/json,.json" hidden><p id="schemeStatus" class="gm-status" role="status">${t('自动保存于此浏览器。Ctrl / ⌘ Z 撤销。','Autosaved in this browser. Ctrl / ⌘ Z to undo.')}</p>
       </section>
     </aside>
@@ -183,6 +188,7 @@
   }
   function syncControls() {
     document.querySelectorAll('[data-path]').forEach(n => { const value = readPath(state,n.dataset.path); if (n.type === 'checkbox') n.checked = !!value; else n.value = value ?? ''; });
+    if(login)document.querySelectorAll('[data-login-preset]').forEach(n=>{const preset=loginPresets[n.dataset.loginPreset];n.setAttribute('aria-pressed',String(!state.backgroundMedia&&state.backgroundColor.toLowerCase()===preset.backgroundColor&&['backColor','frontColor','textColor'].every(key=>state.scene[key].toLowerCase()===preset[key])));});
     document.querySelectorAll('output[data-value]').forEach(n => { const value = Number(readPath(state,n.dataset.value)); n.textContent = n.dataset.unit === '%' ? `${Math.round(value * 1000) / 10}%` : `${Number(value.toFixed(3))}${n.dataset.unit}`; });
     const size = `${state.canvas.width}x${state.canvas.height}`;
     $('canvasPreset').value = !customCanvas && [...$('canvasPreset').options].some(o => o.value === size) ? size : 'custom';
@@ -436,6 +442,7 @@
   $('saveScheme').onclick=()=>{let cached=true;try{localStorage.setItem(storageKey,JSON.stringify(state));}catch{cached=false;}window.CellMotionAI.downloadJson(state,`${effect}-scheme.json`);if(cached)notify('方案已保存并下载。','Scheme saved and downloaded.');else notify('浏览器存储已满；方案已下载，请妥善保存。','Browser storage is full. Your scheme was downloaded; keep the file safe.');};
   $('importScheme').onclick=()=>$('schemeFile').click();$('schemeFile').onchange=async e=>{try{if(e.target.files[0])await apply(JSON.parse(await e.target.files[0].text()));notify('方案已导入。','Scheme imported.');}catch(err){notify(err.message);}e.target.value='';};
   $('restoreScheme').onclick=()=>apply(defaultState);$('clearScheme').onclick=()=>{const s=clone(defaultState);if(extension)for(const k of ['clock','first','many','brandA','brandB'])s.scene[k]='';if(login)for(const key of ['brand','title','subtitle','account','password','button','footer'])s.scene[key]='';else s.cards=[];s.customAssets=[];apply(s);};
+  if(login)document.querySelector('.cm-login-presets').onclick=e=>{const button=e.target.closest('[data-login-preset]');if(!button||busy)return;const preset=loginPresets[button.dataset.loginPreset];historyPush();state.backgroundColor=preset.backgroundColor;state.backgroundMedia=null;Object.assign(state.scene,{backColor:preset.backColor,frontColor:preset.frontColor,textColor:preset.textColor});syncControls();saveLocal();draw();};
   $('aiButton').onclick=()=>{const open=$('aiMenu').hidden;$('aiMenu').hidden=!open;$('aiButton').setAttribute('aria-expanded',String(open));};
   $('aiMenu').onclick=e=>{const n=e.target.closest('[data-ai]');if(n)aiAction(n.dataset.ai);};
   document.addEventListener('click',e=>{if(!e.target.closest('.cm-ai'))closeAI();});$('closeGuide').onclick=()=>$('parameterGuide').close();
