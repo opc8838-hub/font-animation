@@ -126,6 +126,10 @@ main { overflow: hidden; }
   object-fit: contain;
   background: #f5f5f5;
 }
+.effect-card:is([data-effect="card-login"], [data-effect="carddeck"], [data-effect="typegarden"]) .effect-preview,
+.effect-card:is([data-effect="card-login"], [data-effect="carddeck"], [data-effect="typegarden"]) video.effect-loop {
+  background: #fff;
+}
 .effect-card[data-effect="continuation"] video.effect-loop {
   object-fit: contain;
   object-position: center;

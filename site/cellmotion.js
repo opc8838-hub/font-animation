@@ -17,7 +17,7 @@ const play = async (video) => { try {
 let effects = [], featured = [], recent = [], activeCategory = 'all', limit = 12;
 let activeUsage = 'all';
 const ribbonSeed = [
-  {id:'typegarden',name:'字园',href:'typegarden.html?from=gallery&v=20261006-1',poster:'assets/cellmotion/poster-typegarden.jpg',video:'assets/previews/typegarden-card.mp4'},
+  {id:'typegarden',name:'字园',href:'typegarden.html?from=gallery&v=20261006-1',poster:'assets/cellmotion/poster-typegarden.jpg?v=20261020-white-covers1',video:'assets/previews/typegarden-card.mp4?v=20261020-white-covers1'},
   {id:'letterpulse',name:'字阶',href:'letterpulse.html',poster:'final_letterpulse.svg',video:'assets/previews/letterpulse-1920x1080.mp4'},
   {id:'iconburst',name:'图标爆发',href:'iconburst.html',poster:'assets/cellmotion/poster-iconburst.jpg?v=20260926-5',video:'assets/previews/iconburst-card.mp4?v=20260926-5'},
   {id:'typecascade',name:'字倾',href:'typecascade.html',poster:'assets/cellmotion/poster-typecascade.jpg',video:'assets/previews/typecascade-wide-card.mp4'},
@@ -280,7 +280,7 @@ document.addEventListener('visibilitychange',()=>{
 });
 async function loadCatalogData() {
   try {
-    const response=await fetch('cellmotion-catalog.json?v=20261019-white3');
+    const response=await fetch('cellmotion-catalog.json?v=20261020-white-covers1');
 
     if(!response.ok)throw new Error(`Catalog HTTP ${response.status}`);
     const catalog=await response.json();

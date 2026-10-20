@@ -245,8 +245,8 @@
       "description": "同尺寸衔接 · 丝滑旋转变白 · 登录显现",
       "category": "space",
       "href": "card-login.html?from=gallery&v=20261010-cards1",
-      "poster": "assets/cellmotion/poster-card-login.jpg?v=20261010-cards1",
-      "video": "assets/previews/card-login-card.mp4?v=20261010-cards1",
+      "poster": "assets/cellmotion/poster-card-login.jpg?v=20261020-white-covers1",
+      "video": "assets/previews/card-login-card.mp4?v=20261020-white-covers1",
       "webComponent": {
         "preview": "cardmotion-component-demo.html?effect=card-login",
         "descriptor": "effects/card-login.component.json"
@@ -260,8 +260,8 @@
       "description": "表情卡牌 · 展开交错 · 收拢归位",
       "category": "space",
       "href": "carddeck.html?from=gallery&v=20261010-cards1",
-      "poster": "assets/cellmotion/poster-carddeck.jpg?v=20261010-cards1",
-      "video": "assets/previews/carddeck-card.mp4?v=20261010-cards1",
+      "poster": "assets/cellmotion/poster-carddeck.jpg?v=20261020-white-covers1",
+      "video": "assets/previews/carddeck-card.mp4?v=20261020-white-covers1",
       "webComponent": {
         "preview": "cardmotion-component-demo.html?effect=carddeck",
         "descriptor": "effects/carddeck.component.json"
@@ -462,8 +462,8 @@
       "description": "打字即生长 · 花茎玫瑰从字母里长出",
       "category": "type",
       "href": "typegarden.html?from=gallery&v=20261006-1",
-      "poster": "assets/cellmotion/poster-typegarden.jpg",
-      "video": "assets/previews/typegarden-card.mp4",
+      "poster": "assets/cellmotion/poster-typegarden.jpg?v=20261020-white-covers1",
+      "video": "assets/previews/typegarden-card.mp4?v=20261020-white-covers1",
       "status": "ready"
     },
     {
