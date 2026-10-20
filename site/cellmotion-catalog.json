@@ -230,8 +230,8 @@
       "description": "字体如水 · 透明玻璃杯 · 同步倒水声",
       "category": "physics",
       "href": "typepour.html",
-      "poster": "assets/cellmotion/poster-typepour.jpg",
-      "video": "assets/previews/typepour-card.mp4",
+      "poster": "assets/cellmotion/poster-typepour.jpg?v=20261020-wide1",
+      "video": "assets/previews/typepour-card.mp4?v=20261020-wide1",
       "webComponent": {
         "preview": "typecascade-component-demo.html?effect=typepour",
         "descriptor": "effects/typepour.component.json"
