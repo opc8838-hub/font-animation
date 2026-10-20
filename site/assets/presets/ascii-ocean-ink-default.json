@@ -1,0 +1,111 @@
+{
+  "effect": "ascii-ocean-ink",
+  "version": 1,
+  "canvas": {
+    "width": 1920,
+    "height": 1080
+  },
+  "typography": {
+    "fontFamily": "stg:inter"
+  },
+  "backgroundColor": "#fcfcfa",
+  "customAssets": [],
+  "cards": [
+    {
+      "id": "card-0",
+      "libraryId": "ascii-longtail",
+      "scale": 1,
+      "opacity": 1,
+      "rotation": 0,
+      "x": 0,
+      "y": 0,
+      "gap": 30,
+      "caption": "",
+      "fontFamily": ""
+    },
+    {
+      "id": "card-1",
+      "libraryId": "ascii-shark",
+      "scale": 1,
+      "opacity": 1,
+      "rotation": 0,
+      "x": 0,
+      "y": 0,
+      "gap": 30,
+      "caption": "",
+      "fontFamily": ""
+    },
+    {
+      "id": "card-2",
+      "libraryId": "ascii-hammerhead",
+      "scale": 1,
+      "opacity": 1,
+      "rotation": 0,
+      "x": 0,
+      "y": 0,
+      "gap": 30,
+      "caption": "",
+      "fontFamily": ""
+    },
+    {
+      "id": "card-3",
+      "libraryId": "ascii-tiger",
+      "scale": 1,
+      "opacity": 1,
+      "rotation": 0,
+      "x": 0,
+      "y": 0,
+      "gap": 30,
+      "caption": "",
+      "fontFamily": ""
+    },
+    {
+      "id": "card-4",
+      "libraryId": "ascii-whale",
+      "scale": 0.9,
+      "opacity": 0.88,
+      "rotation": 0,
+      "x": 0,
+      "y": 0,
+      "gap": 30,
+      "caption": "",
+      "fontFamily": ""
+    },
+    {
+      "id": "card-5",
+      "libraryId": "ascii-manta",
+      "scale": 1,
+      "opacity": 1,
+      "rotation": 0,
+      "x": 0,
+      "y": 0,
+      "gap": 30,
+      "caption": "",
+      "fontFamily": ""
+    }
+  ],
+  "scene": {
+    "color": "#61666b",
+    "accent": "#808c87",
+    "size": 1,
+    "density": 1,
+    "fish": 260,
+    "dots": 0.35,
+    "amplitude": 1,
+    "contrast": 1.2,
+    "shimmer": 1.25,
+    "direction": 1,
+    "inkText": "lovefrom",
+    "inkSize": 1,
+    "inkColor": "#29262c"
+  },
+  "motion": {
+    "speed": 1,
+    "loop": true,
+    "swim": 30,
+    "lead": 0.6,
+    "write": 3.2,
+    "hold": 1,
+    "dissolve": 4.8
+  }
+}

@@ -1,0 +1,383 @@
+{
+  "effect": {
+    "id": "ascii-ocean-ink",
+    "name": {
+      "zh": "海洋墨写",
+      "en": "Ocean Ink"
+    },
+    "version": "1.0.0",
+    "category": "graphic"
+  },
+  "runtime": {
+    "kind": "iframe-bridge",
+    "entry": "ascii-ocean-ink.html?preview=1&embed=1",
+    "bridgeVersion": "1.0.0",
+    "renderer": "canvas2d"
+  },
+  "capabilities": {
+    "compositionModel": "media",
+    "timeline": true,
+    "responsiveCanvas": true,
+    "exports": [
+      "png",
+      "gif",
+      "mp4"
+    ],
+    "customImageAssets": true,
+    "backgrounds": [
+      "color",
+      "image",
+      "gif",
+      "video"
+    ],
+    "videoTrim": true
+  },
+  "behavior": {
+    "summary": {
+      "zh": "lovefrom 手写停留一秒后融墨入海",
+      "en": "Handwritten lovefrom holds for one second, then diffuses into the swimming ocean."
+    },
+    "phases": [
+      {
+        "id": "lead",
+        "name": {
+          "zh": "海洋开场",
+          "en": "Ocean opening"
+        },
+        "colorToken": "phase.sky"
+      },
+      {
+        "id": "write",
+        "name": {
+          "zh": "手写落墨",
+          "en": "Ink handwriting"
+        },
+        "colorToken": "phase.violet"
+      },
+      {
+        "id": "hold",
+        "name": {
+          "zh": "写完停留",
+          "en": "Written hold"
+        },
+        "colorToken": "phase.amber"
+      },
+      {
+        "id": "dissolve",
+        "name": {
+          "zh": "融墨入海",
+          "en": "Ink into water"
+        },
+        "colorToken": "phase.mint"
+      },
+      {
+        "id": "swim",
+        "name": {
+          "zh": "海洋巡游",
+          "en": "Ocean cruise"
+        },
+        "colorToken": "phase.sky"
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "path": "composition.motion.speed",
+      "scope": "effect",
+      "name": {
+        "zh": "整体速度",
+        "en": "Overall speed"
+      },
+      "type": "number",
+      "minimum": 0.25,
+      "maximum": 3
+    },
+    {
+      "path": "composition.motion.swim",
+      "scope": "effect",
+      "name": {
+        "zh": "巡游一轮",
+        "en": "Swim cycle"
+      },
+      "type": "number",
+      "minimum": 8,
+      "maximum": 60
+    },
+    {
+      "path": "composition.scene.size",
+      "scope": "effect",
+      "name": {
+        "zh": "主体大小",
+        "en": "Subject size"
+      },
+      "type": "number",
+      "minimum": 0.3,
+      "maximum": 1.4
+    },
+    {
+      "path": "composition.scene.density",
+      "scope": "effect",
+      "name": {
+        "zh": "字符密度",
+        "en": "Character density"
+      },
+      "type": "number",
+      "minimum": 0.6,
+      "maximum": 1.6
+    },
+    {
+      "path": "composition.scene.fish",
+      "scope": "effect",
+      "name": {
+        "zh": "小鱼数量",
+        "en": "Small fish"
+      },
+      "type": "number",
+      "minimum": 0,
+      "maximum": 420
+    },
+    {
+      "path": "composition.scene.dots",
+      "scope": "effect",
+      "name": {
+        "zh": "海水微粒",
+        "en": "Water particles"
+      },
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    {
+      "path": "composition.scene.amplitude",
+      "scope": "effect",
+      "name": {
+        "zh": "摆尾幅度",
+        "en": "Tail amplitude"
+      },
+      "type": "number",
+      "minimum": 0,
+      "maximum": 2
+    },
+    {
+      "path": "composition.scene.direction",
+      "scope": "effect",
+      "name": {
+        "zh": "巡游方向",
+        "en": "Swim direction"
+      },
+      "type": "number",
+      "minimum": -1,
+      "maximum": 1
+    },
+    {
+      "path": "composition.scene.contrast",
+      "scope": "effect",
+      "name": {
+        "zh": "方格明暗对比",
+        "en": "Tile contrast"
+      },
+      "type": "number",
+      "minimum": 0.4,
+      "maximum": 2
+    },
+    {
+      "path": "composition.scene.shimmer",
+      "scope": "effect",
+      "name": {
+        "zh": "明暗流动强度",
+        "en": "Flowing light"
+      },
+      "type": "number",
+      "minimum": 0,
+      "maximum": 2
+    },
+    {
+      "path": "composition.backgroundColor",
+      "scope": "effect",
+      "name": {
+        "zh": "backgroundColor",
+        "en": "backgroundColor"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.scene.color",
+      "scope": "effect",
+      "name": {
+        "zh": "scene.color",
+        "en": "scene.color"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.scene.accent",
+      "scope": "effect",
+      "name": {
+        "zh": "scene.accent",
+        "en": "scene.accent"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.typography.fontFamily",
+      "scope": "effect",
+      "name": {
+        "zh": "typography.fontFamily",
+        "en": "typography.fontFamily"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.cards[].caption",
+      "scope": "asset",
+      "name": {
+        "zh": "cards[].caption",
+        "en": "cards[].caption"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.cards[].fontFamily",
+      "scope": "asset",
+      "name": {
+        "zh": "cards[].fontFamily",
+        "en": "cards[].fontFamily"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.cards[].textColor",
+      "scope": "asset",
+      "name": {
+        "zh": "cards[].textColor",
+        "en": "cards[].textColor"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.cards[].scale",
+      "scope": "asset",
+      "name": {
+        "zh": "scale",
+        "en": "scale"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.cards[].opacity",
+      "scope": "asset",
+      "name": {
+        "zh": "opacity",
+        "en": "opacity"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.cards[].rotation",
+      "scope": "asset",
+      "name": {
+        "zh": "rotation",
+        "en": "rotation"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.cards[].x",
+      "scope": "asset",
+      "name": {
+        "zh": "x",
+        "en": "x"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.cards[].y",
+      "scope": "asset",
+      "name": {
+        "zh": "y",
+        "en": "y"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.cards[].gap",
+      "scope": "asset",
+      "name": {
+        "zh": "gap",
+        "en": "gap"
+      },
+      "type": "number"
+    },
+    {
+      "path": "composition.motion.lead",
+      "scope": "effect",
+      "name": {
+        "zh": "lead",
+        "en": "lead"
+      },
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10
+    },
+    {
+      "path": "composition.motion.write",
+      "scope": "effect",
+      "name": {
+        "zh": "write",
+        "en": "write"
+      },
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 10
+    },
+    {
+      "path": "composition.motion.hold",
+      "scope": "effect",
+      "name": {
+        "zh": "hold",
+        "en": "hold"
+      },
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 5
+    },
+    {
+      "path": "composition.motion.dissolve",
+      "scope": "effect",
+      "name": {
+        "zh": "dissolve",
+        "en": "dissolve"
+      },
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 10
+    },
+    {
+      "path": "composition.scene.inkText",
+      "scope": "effect",
+      "name": {
+        "zh": "inkText",
+        "en": "inkText"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.scene.inkColor",
+      "scope": "effect",
+      "name": {
+        "zh": "inkColor",
+        "en": "inkColor"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.scene.inkSize",
+      "scope": "effect",
+      "name": {
+        "zh": "inkSize",
+        "en": "inkSize"
+      },
+      "type": "number"
+    }
+  ]
+}
