@@ -4,7 +4,9 @@
   const ocean = window.CardMotion, editor = window.CellMotionEditorExtension;
   const clamp = ocean.clamp, smooth = x => { x = clamp(x); return x * x * (3 - 2 * x); };
   const noise = n => { const v = Math.sin(n * 12.9898) * 43758.5453; return v - Math.floor(v); };
-  const ink = document.createElement('canvas'), glyph = document.createElement('canvas'), mask = document.createElement('canvas'), cloud = document.createElement('canvas'), wet = document.createElement('canvas');
+  const ink = document.createElement('canvas'), fullInk = document.createElement('canvas'), glyph = document.createElement('canvas'), mask = document.createElement('canvas'), cloud = document.createElement('canvas'), wet = document.createElement('canvas');
+  const softCloud = document.createElement('canvas'), blend = document.createElement('canvas');
+  const inkBlur = Array.from({length: 6}, () => document.createElement('canvas'));
   const phaseInfo = [
     ['lead', '海洋开场', 'Ocean opening', '#8ec8ff'], ['write', '手写落墨', 'Ink handwriting', '#d4b8ff'],
     ['hold', '写完停留', 'Written hold', '#ffd27d'], ['dissolve', '融墨入海', 'Ink into water', '#9de7d7']
@@ -17,7 +19,12 @@
     result.push({id: 'swim', zh: '海洋巡游', en: 'Ocean cruise', color: '#8ec8ff', start, duration: Math.max(2, s.motion.swim / s.motion.speed - start)});
     return result;
   }
-  let cachedKey = '', particles = [];
+  let cachedKey = '', fullKey = '', particleAlpha = 1, particles = [];
+  const inkKey = (w, h, s) => [w, h, s.scene.inkText, s.scene.inkSize, s.scene.inkColor].join('|');
+  function clearLayer(canvas, w, h) {
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    const ctx = canvas.getContext('2d'); ctx.resetTransform(); ctx.globalAlpha = 1; ctx.clearRect(0, 0, w, h); return ctx;
+  }
   function inkCurrent(x, y, t) {
     // A shared curling current keeps nearby ink together as it stretches into wisps.
     return [
@@ -57,8 +64,9 @@
     ctx.drawImage(glyph, x - ox, y - oy);
   }
   function lettering(w, h, s, progress) {
-    ink.width = w; ink.height = h;
-    const ctx = ink.getContext('2d'), {size, x, y} = layout(ctx, w, h, s);
+    const key = inkKey(w, h, s);
+    if (progress === 1 && fullKey === key) return fullInk;
+    const ctx = clearLayer(ink, w, h), {size, x, y} = layout(ctx, w, h, s);
     ctx.fillStyle = s.scene.inkColor; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
     let pen = x;
     [...s.scene.inkText].forEach((ch, index) => {
@@ -74,13 +82,19 @@
       }
       ctx.globalAlpha = 1; pen += ctx.measureText(ch).width;
     });
+    if (progress === 1) { clearLayer(fullInk, w, h).drawImage(ink, 0, 0); fullKey = key; return fullInk; }
     return ink;
   }
-  function dissolve(ctx, w, h, s, p) {
-    const key = [w, h, s.scene.inkText, s.scene.inkSize, s.scene.inkColor].join('|');
+  function prepareInk(w, h, s) {
+    const key = inkKey(w, h, s);
     if (key !== cachedKey) {
-      lettering(w, h, s, 1); const data = ink.getContext('2d').getImageData(0, 0, w, h).data;
+      const image = lettering(w, h, s, 1), data = image.getContext('2d').getImageData(0, 0, w, h).data;
       particles = []; const step = Math.max(3, Math.round(w / 360));
+      particleAlpha = Math.pow(step * 384 / w, 2);
+      inkBlur.forEach((canvas, i) => {
+        const blur = clearLayer(canvas, w, h); blur.filter = `blur(${i / 5 * w * .007}px)`;
+        blur.drawImage(image, 0, 0); blur.filter = 'none';
+      });
       for (let y = 0; y < h; y += step) for (let x = 0; x < w; x += step) if (data[(y * w + x) * 4 + 3] > 80) {
         const path = new Float32Array(98); let px = x / w, py = y / h;
         path[0] = px; path[1] = py;
@@ -89,51 +103,65 @@
           const b = inkCurrent(px + a[0] * .08, py + a[1] * .08, t + .08);
           px += b[0] * .16; py += b[1] * .16; path[i * 2] = px; path[i * 2 + 1] = py;
         }
-        particles.push({path, seed: x * 31 + y * 17});
+        const seed = x * 31 + y * 17;
+        particles.push({path, jitterX: noise(seed) - .5, jitterY: noise(seed + 1) - .5, radius: .7 + noise(seed + 7) * .6});
       }
       cachedKey = key;
     }
+  }
+  function dissolve(ctx, w, h, s, p) {
     // Continuous ribbons stretch the wet lettering; plumes grow from its ink pixels.
     const band = Math.max(2, Math.round(w / 480));
     ctx.fillStyle = s.scene.inkColor;
     const vanish = 1 - smooth((p - .4) / .6), release = smooth(p);
-    wet.width = w; wet.height = h; const stream = wet.getContext('2d');
+    if (p < .62) {
+    const blurPosition = release * 5, lower = Math.floor(blurPosition), mix = blurPosition - lower;
+    const source = clearLayer(blend, w, h); source.globalCompositeOperation = 'lighter';
+    source.globalAlpha = 1 - mix; source.drawImage(inkBlur[lower], 0, 0);
+    source.globalAlpha = mix; source.drawImage(inkBlur[Math.min(5, lower + 1)], 0, 0);
+    source.globalCompositeOperation = 'source-over';
+    const stream = clearLayer(wet, w, h);
     for (let y = 0; y < h; y += band) {
       const spread = 1 + release * .28, dx = Math.sin(y * .016 + p * 3) * w * release * .025;
       const dy = (y - h / 2) * (1 + release * .28) + h / 2 + h * release * .025;
-      stream.drawImage(ink, 0, y, w, Math.min(band, h - y), w * (1 - spread) / 2 + dx, dy, w * spread, band * (1 + release * .28));
+      stream.drawImage(blend, 0, y, w, Math.min(band, h - y), w * (1 - spread) / 2 + dx, dy, w * spread, band * (1 + release * .28));
     }
-    ctx.globalAlpha = 1 - smooth(p / .62); ctx.filter = `blur(${release * w * .007}px)`;
-    ctx.drawImage(wet, 0, 0); ctx.filter = 'none';
-    cloud.width = Math.round(w / 4); cloud.height = Math.round(h / 4);
-    const mist = cloud.getContext('2d'); mist.scale(.25, .25); mist.fillStyle = s.scene.inkColor;
-    mist.globalAlpha = smooth(p / .18) * .26 * vanish / (1 + release * 1.6);
+    ctx.globalAlpha = 1 - smooth(p / .62); ctx.drawImage(wet, 0, 0);
+    }
+    const mist = clearLayer(cloud, Math.round(w / 4), Math.round(h / 4)); mist.scale(.25, .25); mist.fillStyle = s.scene.inkColor;
+    mist.globalAlpha = Math.min(1, smooth(p / .18) * .26 * vanish * particleAlpha / (1 + release * 1.6));
     mist.strokeStyle = s.scene.inkColor; mist.lineCap = mist.lineJoin = 'round';
     const travel = release * 47, index = Math.floor(travel), fraction = travel - index;
     for (const point of particles) {
-      const {path, seed} = point, i = index * 2;
-      const px = (path[i] + (path[i + 2] - path[i]) * fraction) * w + (noise(seed) - .5) * w * release * .007;
-      const py = (path[i + 1] + (path[i + 3] - path[i + 1]) * fraction) * h + (noise(seed + 1) - .5) * h * release * .01;
-      const r = w * (.0015 + release * .0015) * (.7 + noise(seed + 7) * .6);
+      const {path, jitterX, jitterY, radius} = point, i = index * 2;
+      const px = (path[i] + (path[i + 2] - path[i]) * fraction) * w + jitterX * w * release * .007;
+      const py = (path[i + 1] + (path[i + 3] - path[i + 1]) * fraction) * h + jitterY * h * release * .01;
+      const r = w * (.0015 + release * .0015) * radius;
       const tail = Math.max(0, index - 3) * 2;
       mist.lineWidth = r * 1.2; mist.beginPath(); mist.moveTo(path[tail] * w, path[tail + 1] * h); mist.lineTo(px, py); mist.stroke();
       mist.beginPath(); mist.arc(px, py, r, 0, Math.PI * 2); mist.fill();
     }
-    ctx.globalAlpha = 1; ctx.filter = `blur(${w * (.0007 + release * .002)}px)`;
-    ctx.drawImage(cloud, 0, 0, w, h); ctx.filter = 'none';
+    const soft = clearLayer(softCloud, cloud.width, cloud.height);
+    soft.filter = `blur(${w * (.0007 + release * .002) / 4}px)`; soft.drawImage(cloud, 0, 0); soft.filter = 'none';
+    ctx.globalAlpha = 1; ctx.drawImage(softCloud, 0, 0, w, h);
   }
   function draw(g, time, w, h, s, resources) {
-    AsciiOceanRenderer.render(g, time, w, h, s, resources, s.motion.swim / s.motion.speed);
+    const scale = Math.min(w / 1920, h / 1080), sizeScale = 1080 * scale / Math.min(w, h);
+    const iw = Math.min(1920, Math.max(640, Math.ceil(g.canvas.width / w * scale * 1920))), ih = Math.round(iw * 1080 / 1920);
+    prepareInk(iw, ih, s);
+    const scene = sizeScale === 1 ? s : {...s, scene: {...s.scene, size: s.scene.size * sizeScale}};
+    AsciiOceanRenderer.render(g, time, w, h, scene, resources, s.motion.swim / s.motion.speed);
     const t = time * s.motion.speed - s.motion.lead, end = s.motion.write + s.motion.hold;
     if (t <= 0 || t >= end + s.motion.dissolve) return;
-    g.save(); g.setTransform(g.canvas.width / 1920, 0, 0, g.canvas.height / (1920 * h / w), 0, 0);
-    const ih = Math.round(1920 * h / w);
-    if (t <= end) { cachedKey = ''; g.drawImage(lettering(1920, ih, s, clamp(t / s.motion.write)), 0, 0); }
-    else dissolve(g, 1920, ih, s, (t - end) / s.motion.dissolve);
+    g.save(); g.setTransform(g.canvas.width / w * scale * 1920 / iw, 0, 0, g.canvas.height / h * scale * 1080 / ih,
+      g.canvas.width / w * (w - 1920 * scale) / 2, g.canvas.height / h * (h - 1080 * scale) / 2);
+    if (t <= end) g.drawImage(lettering(iw, ih, s, clamp(t / s.motion.write)), 0, 0);
+    else dissolve(g, iw, ih, s, (t - end) / s.motion.dissolve);
     g.restore();
   }
   window.CardMotion = {...ocean, defaults(id) {
     const s = ocean.defaults(id); Object.assign(s.motion, {lead: .6, write: 3.2, hold: 1, dissolve: 10});
+    if (new URLSearchParams(location.search).get('ratio') === '4:5') s.canvas = {width: 1080, height: 1350};
     Object.assign(s.scene, {inkText: 'love from', inkSize: .84, inkColor: '#29262c'}); return s;
   }, phases, duration: s => phases(s).reduce((sum, p) => sum + p.duration, 0), draw};
   window.CellMotionEditorExtension = {...editor, title: ['海洋墨写', 'Ocean Ink'],
