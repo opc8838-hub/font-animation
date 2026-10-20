@@ -1,7 +1,7 @@
 (() => {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const defaults = Object.freeze({text:"Oddball\nInk in Motion",font:"stg:oddball",size:172,tracking:0,lineSpacing:1.22,textColor:"#29262c",backgroundColor:"#eeeae1",lead:0.4,write:3.2,hold:1.5,width:1080,height:1080});
+  const defaults = Object.freeze({text:"Oddball\nInk in Motion",font:"stg:oddball",size:172,tracking:0,lineSpacing:1.22,textColor:"#29262c",backgroundColor:"#eeeae1",lead:0.4,write:3.2,hold:1.5,speckles:32,width:1080,height:1080});
   const keys = Object.keys(defaults);
   const storageKey = "cellmotion-oddball-ink-v1";
   const state = {...defaults};
@@ -9,6 +9,7 @@
   let time = 0, playing = true, busy = false, lastFrame = performance.now(), saveTimer;
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const englishOnly = (value) => String(value).replace(/\r\n?/g,"\n").replace(/[^\x20-\x7e\n]/g,"");
+  const noise = (seed) => {const value=Math.sin(seed*12.9898)*43758.5453;return value-Math.floor(value);};
   const duration = () => state.lead + state.write + state.hold;
   const split = (value) => [...new Intl.Segmenter(undefined,{granularity:"grapheme"}).segment(value)].map(item=>item.segment);
   const lines = () => state.text.split(/\r?\n/).slice(0,20);
@@ -105,20 +106,44 @@
       const y=firstBaseline+row*stride;
       const lineProgress=clamp(visibleCount-offset,0,chars.length);
       if(lineProgress>0){
-        const complete=Math.floor(lineProgress),progress=lineProgress-complete;
-        const prefix=chars.slice(0,complete).join("");
-        const before=ctx.measureText(prefix).width;
-        if(complete>0)ctx.fillText(prefix,x,y);
-        if(progress>0&&complete<chars.length){
+        const active=Math.floor(lineProgress),wet=lineProgress-active;
+        const prefix=chars.slice(0,active).join("");
+        if(active>0)ctx.fillText(prefix,x,y);
+        if(wet>0&&active<chars.length){
+          const before=ctx.measureText(prefix).width;
+          const advance=Math.max(ctx.measureText(chars.slice(0,active+1).join("")).width-before,size*0.18);
           ctx.save();
-          ctx.globalAlpha=progress*0.65;
-          ctx.filter=`blur(${Math.max(1,size*0.13*(1-progress))}px)`;
-          ctx.fillText(chars[complete],x+before,y);
+          ctx.globalAlpha=0.18*Math.sin(Math.PI*wet);
+          ctx.filter=`blur(${Math.max(4,size*0.07)}px)`;
+          for(let spot=0;spot<6;spot++){
+            const seed=(row+1)*101+(active+1)*211+(spot+1)*307;
+            ctx.beginPath();
+            ctx.ellipse(x+before+advance*noise(seed),y-size*(0.15+noise(seed+37)*0.78),advance*0.2,size*0.13,noise(seed+73)*Math.PI,0,Math.PI*2);
+            ctx.fill();
+          }
+          ctx.restore();
+          ctx.save();
+          ctx.globalAlpha=wet*0.65;
+          ctx.filter=`blur(${Math.max(1,size*0.13*(1-wet))}px)`;
+          ctx.fillText(chars[active],x+before,y);
           ctx.filter="none";
-          ctx.globalAlpha=progress*progress;
-          ctx.fillText(chars[complete],x+before,y);
+          ctx.globalAlpha=wet*wet;
+          ctx.fillText(chars[active],x+before,y);
           ctx.restore();
         }
+      }
+      if(state.speckles>0){
+        const amount=Math.round(chars.length*state.speckles/38);
+        for(let i=0;i<amount;i++){
+          const seed=(row+1)*1039+i*827;
+          const location=((seed*16807)%2147483647)/2147483647;
+          if(location>lineProgress/Math.max(1,chars.length)) continue;
+          const vertical=(((seed*48271)%2147483647)/2147483647-0.5)*size*1.5;
+          const radius=(seed%4+1)*size/360;
+          ctx.globalAlpha=0.28+(seed%7)/20;
+          ctx.beginPath();ctx.arc(x+location*ctx.measureText(line).width,y+vertical,radius,0,Math.PI*2);ctx.fill();
+        }
+        ctx.globalAlpha=1;
       }
       offset+=chars.length;
     });
