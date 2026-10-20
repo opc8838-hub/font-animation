@@ -27,6 +27,8 @@ The following local fonts were added after reviewing the collections on Fontshar
 | Noto Serif SC Bold (GB2312 subset, WOFF2) | Type Garden · Chinese serif and CJK fallback for serif faces | google/fonts `ofl/notoserifsc`, instanced at wght 700 and subset to GB2312 + ASCII with fontTools | SIL OFL 1.1 |
 | ZCOOL XiaoWei (WOFF2) | Type Garden · Chinese display option | google/fonts `ofl/zcoolxiaowei`, recompressed to WOFF2 | SIL OFL 1.1 |
 | Ma Shan Zheng (WOFF2) | Type Garden · Chinese brush option | google/fonts `ofl/mashanzheng`, recompressed to WOFF2 | SIL OFL 1.1 |
+| CellMotion Ink CN (WOFF2) | Oddball editor option · redrawn Chinese ink companion | modified from google/fonts `ofl/zhimangxing` using `scripts/build-oddball-cn.py`; original copyright and OFL retained | SIL OFL 1.1 |
+| Oddball TM Regular (OTF) | Oddball editor option · Latin glyphs | user-supplied purchased font; publishing authorization confirmed by the user on 2026-10-20 | commercial license confirmed by user |
 
 Upstream repository: https://github.com/google/fonts
 
