@@ -1,7 +1,7 @@
 (() => {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const defaults = Object.freeze({text:"Oddball\nInk in Motion",font:"stg:oddball",size:172,tracking:0,lineSpacing:1.22,textColor:"#29262c",backgroundColor:"#eeeae1",lead:0.4,write:3.2,hold:1.5,fade:0.8,speckles:32,width:1080,height:1080});
+  const defaults = Object.freeze({text:"Oddball\nInk in Motion",font:"stg:oddball",size:172,tracking:0,lineSpacing:1.22,textColor:"#29262c",backgroundColor:"#eeeae1",lead:0.4,write:3.2,hold:1.5,width:1080,height:1080});
   const keys = Object.keys(defaults);
   const storageKey = "cellmotion-oddball-ink-v1";
   const state = {...defaults};
@@ -9,8 +9,7 @@
   let time = 0, playing = true, busy = false, lastFrame = performance.now(), saveTimer;
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const englishOnly = (value) => String(value).replace(/\r\n?/g,"\n").replace(/[^\x20-\x7e\n]/g,"");
-  const noise = (seed) => {const value=Math.sin(seed*12.9898)*43758.5453;return value-Math.floor(value);};
-  const duration = () => state.lead + state.write + state.hold + state.fade;
+  const duration = () => state.lead + state.write + state.hold;
   const split = (value) => [...new Intl.Segmenter(undefined,{granularity:"grapheme"}).segment(value)].map(item=>item.segment);
   const lines = () => state.text.split(/\r?\n/).slice(0,20);
 
@@ -45,8 +44,7 @@
     return [
       {key:"lead",zh:"落笔",en:"Lead",start:0,length:state.lead},
       {key:"write",zh:"逐字写出",en:"Write",start:state.lead,length:state.write},
-      {key:"hold",zh:"墨迹停留",en:"Hold",start:state.lead+state.write,length:state.hold},
-      {key:"fade",zh:"逐字擦除",en:"Erase",start:state.lead+state.write+state.hold,length:state.fade}
+      {key:"hold",zh:"结束画面",en:"End frame",start:state.lead+state.write,length:state.hold}
     ];
   }
   function buildTimeline() {
@@ -84,8 +82,7 @@
     const content=lines();
     const glyphCount=Math.max(1,content.reduce((sum,line)=>sum+split(line).length,0));
     const written=clamp((at-state.lead)/state.write,0,1);
-    const erased=clamp((at-state.lead-state.write-state.hold)/state.fade,0,1);
-    const visibleCount=glyphCount*written*(1-erased);
+    const visibleCount=glyphCount*written;
     if(visibleCount<=0) return;
     const preset=STGFontLibrary.preset("stg:oddball");
     const family=STGFontLibrary.family("stg:oddball");
@@ -108,63 +105,20 @@
       const y=firstBaseline+row*stride;
       const lineProgress=clamp(visibleCount-offset,0,chars.length);
       if(lineProgress>0){
-        const active=Math.floor(lineProgress),wet=lineProgress-active;
-        if(wet>0&&active<chars.length){
-          const before=ctx.measureText(chars.slice(0,active).join("")).width;
-          const advance=Math.max(ctx.measureText(chars.slice(0,active+1).join("")).width-before,size*0.18);
+        const complete=Math.floor(lineProgress),progress=lineProgress-complete;
+        const prefix=chars.slice(0,complete).join("");
+        const before=ctx.measureText(prefix).width;
+        if(complete>0)ctx.fillText(prefix,x,y);
+        if(progress>0&&complete<chars.length){
           ctx.save();
-          ctx.globalAlpha=0.18*Math.sin(Math.PI*wet);
-          ctx.filter=`blur(${Math.max(4,size*0.07)}px)`;
-          for(let spot=0;spot<6;spot++){
-            const seed=(row+1)*101+(active+1)*211+(spot+1)*307;
-            ctx.beginPath();
-            ctx.ellipse(x+before+advance*noise(seed),y-size*(0.15+noise(seed+37)*0.78),advance*0.2,size*0.13,noise(seed+73)*Math.PI,0,Math.PI*2);
-            ctx.fill();
-          }
+          ctx.globalAlpha=progress*0.65;
+          ctx.filter=`blur(${Math.max(1,size*0.13*(1-progress))}px)`;
+          ctx.fillText(chars[complete],x+before,y);
+          ctx.filter="none";
+          ctx.globalAlpha=progress*progress;
+          ctx.fillText(chars[complete],x+before,y);
           ctx.restore();
         }
-        ctx.save();
-        ctx.beginPath();
-        let prefix="",left=0;
-        chars.forEach((character,index)=>{
-          const next=prefix+character;
-          const right=ctx.measureText(next).width;
-          const progress=clamp(lineProgress-index,0,1);
-          if(progress>=1){
-            ctx.rect(x+left-size*0.04,y-size*1.18,right-left+size*0.08,size*1.55);
-          }else if(progress>0){
-            const advance=Math.max(right-left,size*0.18);
-            for(let spot=0;spot<15;spot++){
-              if(progress<(spot+0.15)/15)continue;
-              const seed=(row+1)*101+(index+1)*211+(spot+1)*307;
-              const cx=x+left+advance*(0.1+noise(seed)*0.8);
-              const cy=y-size*(0.12+noise(seed+37)*0.82);
-              ctx.ellipse(cx,cy,advance*(0.08+progress*0.24),size*(0.03+progress*0.14),noise(seed+73)*Math.PI,0,Math.PI*2);
-            }
-          }
-          prefix=next;left=right;
-        });
-        ctx.clip();
-        ctx.globalAlpha=0.2;
-        ctx.filter=`blur(${Math.max(2,size*0.025)}px)`;
-        ctx.fillText(line,x,y);
-        ctx.globalAlpha=1;
-        ctx.filter="none";
-        ctx.fillText(line,x,y);
-        ctx.restore();
-      }
-      if(state.speckles>0){
-        const amount=Math.round(chars.length*state.speckles/38);
-        for(let i=0;i<amount;i++){
-          const seed=(row+1)*1039+i*827;
-          const location=((seed*16807)%2147483647)/2147483647;
-          if(location>lineProgress/Math.max(1,chars.length)) continue;
-          const vertical=(((seed*48271)%2147483647)/2147483647-0.5)*size*1.5;
-          const radius=(seed%4+1)*size/360;
-          ctx.globalAlpha=0.28+(seed%7)/20;
-          ctx.beginPath();ctx.arc(x+location*ctx.measureText(line).width,y+vertical,radius,0,Math.PI*2);ctx.fill();
-        }
-        ctx.globalAlpha=1;
       }
       offset+=chars.length;
     });
@@ -214,7 +168,7 @@
           for(let i=0;i<count;i++){render(i/fps);encoder.addFrameRgba(context.getImageData(0,0,width,height).data);if(i%10===0){$("status").textContent=`MP4 ${Math.round(i/count*100)}%`;await new Promise(resolve=>setTimeout(resolve,0));}}
           encoder.finalize();download(new Blob([encoder.FS.readFile("oddball-ink.mp4")],{type:"video/mp4"}),"oddball-ink.mp4");
         }else{
-          const gif=new GIF({workers:2,quality:8,width,height,workerScript:"js/continuation-gif.worker.js"});
+          const gif=new GIF({workers:2,quality:8,repeat:-1,width,height,workerScript:"js/continuation-gif.worker.js"});
           for(let i=0;i<count;i++){render(i/fps);gif.addFrame(out,{copy:true,delay:Math.round(1000/fps)});if(i%8===0){$("status").textContent=`GIF ${Math.round(i/count*100)}%`;await new Promise(resolve=>setTimeout(resolve,0));}}
           const blob=await new Promise((resolve,reject)=>{gif.on("finished",resolve);gif.on("abort",()=>reject(new Error("GIF 编码中断")));gif.render();});
           download(blob,"oddball-ink.gif");
@@ -232,9 +186,10 @@
       if(key==="text"){
         const filtered=englishOnly(input.value);
         if(filtered!==input.value){input.value=filtered;state.text=filtered;$("saveStatus").textContent="此动效仅支持英文，已移除非英文字符";}
+        time=0;playing=true;lastFrame=performance.now();
         loadFont();
       }
-      if(["lead","write","hold","fade"].includes(key)){time=Math.min(time,duration());buildTimeline();}
+      if(["lead","write","hold"].includes(key)){time=Math.min(time,duration());buildTimeline();}
       syncControls();persist();
     });
   });
@@ -267,7 +222,7 @@
   $("clearScheme").addEventListener("click",()=>{apply({...defaults,text:""});$("saveStatus").textContent="文字已清空";});
   for(const format of ["png","gif","mp4"])$(format).addEventListener("click",()=>exportFrame(format));
   new ResizeObserver(fitCanvas).observe(canvas.parentElement);
-  function animate(now){if(playing&&!busy){time+=Math.min((now-lastFrame)/1000,0.1)*Number($("speed").value);if(time>=duration())time%=duration();tickControls();paint(canvas,time);}lastFrame=now;requestAnimationFrame(animate);}
+  function animate(now){if(playing&&!busy){time=Math.min(duration(),time+Math.max(0,Math.min((now-lastFrame)/1000,0.1))*Number($("speed").value));if(time>=duration())playing=false;tickControls();paint(canvas,time);}lastFrame=now;requestAnimationFrame(animate);}
   try{const saved=JSON.parse(localStorage.getItem(storageKey));apply(saved?.version===1?saved.state:defaults);}catch{apply(defaults);}
   requestAnimationFrame(animate);
 })();
