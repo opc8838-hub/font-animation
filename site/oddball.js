@@ -125,6 +125,34 @@
     ctx.drawImage(inkCanvas, penX - originX, baseline - originY);
   }
 
+  function scatterGlyph(ctx, character, penX, baseline, size, progress, row, index) {
+    const strokes = window.ODDBALL_STROKES?.[character];
+    if (!strokes?.length || state.speckles <= 0) return;
+    const total = strokes.reduce((sum, stroke) => sum + stroke.length, 0);
+    const count = Math.round(state.speckles * 0.35);
+    const scale = size / 256;
+    for (let i = 0; i < count; i++) {
+      const seed = (row + 1) * 1039 + (index + 1) * 827 + i * 211;
+      let pointIndex = Math.floor((i + noise(seed)) * total / count);
+      if (pointIndex >= total * progress) continue;
+      let point;
+      for (const stroke of strokes) {
+        if (pointIndex < stroke.length) { point = stroke[pointIndex]; break; }
+        pointIndex -= stroke.length;
+      }
+      if (!point) continue;
+      const angle = noise(seed + 17) * Math.PI * 2;
+      const distance = size * (0.04 + noise(seed + 31) * 0.09);
+      const radius = size * (0.004 + noise(seed + 53) * 0.017);
+      ctx.globalAlpha = 0.3 + noise(seed + 71) * 0.4;
+      ctx.beginPath();
+      ctx.arc(penX + point[0] * scale + Math.cos(angle) * distance,
+        baseline + point[1] * scale + Math.sin(angle) * distance, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
   function paint(target,at) {
     const ctx=target.getContext("2d");
     const width=target.width,height=target.height;
@@ -158,25 +186,15 @@
       const lineProgress=clamp(visibleCount-offset,0,chars.length);
       if(lineProgress>0){
         const active=Math.floor(lineProgress),wet=lineProgress-active;
+        const eased=wet*wet*(3-2*wet);
         let pen=x;
         chars.forEach((ch,index)=>{
           if(index<active) ctx.fillText(ch,pen,y);
-          else if(index===active&&wet>0) writeGlyph(ctx,ch,pen,y,size,wet);
+          else if(index===active&&wet>0) writeGlyph(ctx,ch,pen,y,size,eased);
+          if(index<active) scatterGlyph(ctx,ch,pen,y,size,1,row,index);
+          else if(index===active&&wet>0) scatterGlyph(ctx,ch,pen,y,size,eased,row,index);
           pen+=ctx.measureText(ch).width;
         });
-      }
-      if(state.speckles>0){
-        const amount=Math.round(chars.length*state.speckles/38);
-        for(let i=0;i<amount;i++){
-          const seed=(row+1)*1039+i*827;
-          const location=((seed*16807)%2147483647)/2147483647;
-          if(location>lineProgress/Math.max(1,chars.length)) continue;
-          const vertical=(((seed*48271)%2147483647)/2147483647-0.5)*size*1.5;
-          const radius=(seed%4+1)*size/360;
-          ctx.globalAlpha=0.28+(seed%7)/20;
-          ctx.beginPath();ctx.arc(x+location*lineWidth,y+vertical,radius,0,Math.PI*2);ctx.fill();
-        }
-        ctx.globalAlpha=1;
       }
       offset+=chars.length;
     });
