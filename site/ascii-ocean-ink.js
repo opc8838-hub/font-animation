@@ -161,7 +161,7 @@
     const t = time * s.motion.speed - s.motion.lead, end = s.motion.write + s.motion.hold;
     if (t <= 0 || t >= end + s.motion.dissolve) return;
     g.save(); g.setTransform(g.canvas.width / w * scale * 1920 / iw, 0, 0, g.canvas.height / h * scale * 1080 / ih,
-      g.canvas.width / w * (w - 1920 * scale) / 2, g.canvas.height / h * (h - 1080 * scale) / 2);
+      g.canvas.width / w * ((w - 1920 * scale) / 2 + w * (s.scene.inkX ?? 0) / 100), g.canvas.height / h * ((h - 1080 * scale) / 2 + h * (s.scene.inkY ?? 0) / 100));
     if (t <= end) g.drawImage(lettering(iw, ih, s, clamp(t / s.motion.write)), 0, 0);
     else dissolve(g, iw, ih, s, (t - end) / s.motion.dissolve);
     g.restore();
@@ -169,18 +169,19 @@
   window.CardMotion = {...ocean, defaults(id) {
     const s = ocean.defaults(id); s.backgroundColor = '#ffffff'; Object.assign(s.motion, {lead: .6, write: 3.2, hold: 1, dissolve: 10, swim: 27});
     if (new URLSearchParams(location.search).get('ratio') === '4:5') s.canvas = {width: 1080, height: 1350};
-    Object.assign(s.scene, {inkText: 'love from', inkSize: .84, inkColor: '#29262c'}); return s;
+    Object.assign(s.scene, {inkText: 'love from', inkSize: .84, inkColor: '#29262c', inkX: 0, inkY: 0}); return s;
   }, phases, duration: s => phases(s).reduce((sum, p) => sum + p.duration, 0), draw};
   window.CellMotionEditorExtension = {...editor, title: ['海洋墨写', 'Ocean Ink'],
     fields: [...phaseInfo.map(([id, zh, en]) => ['motion.' + id, zh, en, id === 'lead' ? 0 : .1, id === 'hold' ? 5 : 10, .1, 's']), ...editor.fields],
     content(args) {
       const {input, range, t} = args;
-      return '<section class="gm-card"><h2>' + t('中央墨写', 'Center handwriting') + '</h2><label class="gm-field"><span>' + t('手写文字（回车换行）', 'Handwritten text (Enter for a new line)') + '</span><textarea data-path="scene.inkText" rows="3" maxlength="60"></textarea></label>' + input('scene.inkColor', '墨水颜色', 'Ink color', 'color') + range(['scene.inkSize', '文字大小', 'Text size', .4, 1.6, .01, '']) + '</section>' + editor.content(args);
+      return '<section class="gm-card"><h2>' + t('中央墨写', 'Center handwriting') + '</h2><label class="gm-field"><span>' + t('手写文字（回车换行）', 'Handwritten text (Enter for a new line)') + '</span><textarea data-path="scene.inkText" rows="3" maxlength="60"></textarea></label>' + input('scene.inkColor', '墨水颜色', 'Ink color', 'color') + range(['scene.inkSize', '文字大小', 'Text size', .4, 1.6, .01, '']) + range(['scene.inkX', '左右位置', 'Horizontal position', -50, 50, 1, '%']) + range(['scene.inkY', '上下位置', 'Vertical position', -50, 50, 1, '%']) + '</section>' + editor.content(args);
     },
     async prepare(...args) { await editor.prepare(...args); const font = STGFontLibrary.preset('stg:oddball'); await document.fonts.load(`${font.style} ${font.weight} 172px ${STGFontLibrary.family('stg:oddball')}`); },
     normalize(raw, s, def) {
       editor.normalize(raw, s, def); s.scene.inkText = String(s.scene.inkText ?? 'love from').replace(/\r\n?/g, '\n').replace(/[^\x20-\x7e\n]/g, '').slice(0, 60);
       s.scene.inkSize = clamp(Number(s.scene.inkSize) || 1, .4, 1.6);
+      for (const key of ['inkX', 'inkY']) s.scene[key] = clamp(Number(s.scene[key]) || 0, -50, 50);
       if (!/^#[\da-f]{6}$/i.test(s.scene.inkColor)) s.scene.inkColor = def.scene.inkColor;
     },
     stable: s => (s.motion.lead + s.motion.write + s.motion.hold * .5) / s.motion.speed,
