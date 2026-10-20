@@ -166,7 +166,7 @@ function render() {
       : slug === "thermal-profile"
       ? `<video class="effect-loop" src="assets/previews/thermal-profile-card.mp4?v=20261014-1" poster="final_thermal-profile.png" autoplay muted loop playsinline preload="metadata" aria-label="热感动效预览"></video>`
       : slug === "typepour"
-      ? `<video class="effect-loop" src="assets/previews/typepour-card.mp4" poster="final_typepour.png" autoplay muted loop playsinline preload="metadata" aria-label="Type Pour"></video>`
+      ? `<video class="effect-loop" src="assets/previews/typepour-card.mp4?v=20261020-wide1" poster="final_typepour.png?v=20261020-wide1" autoplay muted loop playsinline preload="metadata" aria-label="Type Pour"></video>`
       : ["card-login","carddeck","typegarden"].includes(slug)
       ? `<video class="effect-loop" src="assets/previews/${slug}-card.mp4?v=20261020-white-covers1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动态效果预览"></video>`
       : slug === "switchdrop"
