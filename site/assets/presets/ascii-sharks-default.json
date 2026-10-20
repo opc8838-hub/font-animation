@@ -8,7 +8,7 @@
   "typography": {
     "fontFamily": "stg:inter"
   },
-  "backgroundColor": "#fcfcfa",
+  "backgroundColor": "#ffffff",
   "customAssets": [],
   "cards": [
     {
@@ -94,11 +94,21 @@
     "amplitude": 1,
     "contrast": 1.2,
     "shimmer": 1.25,
-    "direction": 1
+    "direction": 1,
+    "inkEnabled": true,
+    "inkText": "love from .",
+    "inkSize": 0.84,
+    "inkColor": "#29262c",
+    "inkX": 0,
+    "inkY": 0
   },
   "motion": {
     "speed": 1,
     "loop": true,
-    "swim": 30
+    "swim": 27,
+    "lead": 0.6,
+    "write": 3.2,
+    "hold": 1,
+    "dissolve": 10
   }
 }

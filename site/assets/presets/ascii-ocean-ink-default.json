@@ -95,11 +95,12 @@
     "contrast": 1.2,
     "shimmer": 1.25,
     "direction": 1,
-    "inkText": "love from",
+    "inkText": "love from .",
     "inkSize": 0.84,
     "inkColor": "#29262c",
     "inkX": 0,
-    "inkY": 0
+    "inkY": 0,
+    "inkEnabled": true
   },
   "motion": {
     "speed": 1,

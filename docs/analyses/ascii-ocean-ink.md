@@ -1,8 +1,8 @@
-# Temporary Ocean Ink composition
+# Ocean Ink composition
 
 User request: write `love from` in the center using the existing Oddball Ink font and handwriting, hold the completed word for exactly one second, then dissolve its ink into the continuously swimming ocean.
 
-The published ASCII Ocean renderer, creatures, colors, defaults and preview artifacts are frozen. A separate `ascii-ocean-ink.html` entry layers handwriting over that renderer, reusing the shared Oddball font and stroke data. No production release or gallery changes are part of this temporary preview.
+Originally a temporary preview. As of 2026-10-21, the user approved publishing it as an optional layer in the existing ASCII Ocean editor. Both `ascii-sharks.html` and the retained `ascii-ocean-ink.html` preview reuse the shared Oddball font, strokes and the same optimized renderer. The approved gallery now shows `love from .` handwriting and diffusion.
 
 | Seconds at default speed | Phase | Contract |
 | --- | --- | --- |

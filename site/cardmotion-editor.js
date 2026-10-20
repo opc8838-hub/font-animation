@@ -422,6 +422,7 @@
     const value=n.type==='checkbox'?n.checked:n.type==='range'||n.type==='number'?Number(n.value):path==='motion.direction'?Number(n.value):n.value;
     if(typeof value==='number'&&!Number.isFinite(value))return;
     putPath(state,path,value);
+    if(path==='scene.inkEnabled')timeline();
     if(path.startsWith('canvas.'))state.canvas[path.split('.')[1]]=Math.round(M.clamp(value||240,240,3840)/2)*2;
     if(path==='motion.rows')state.motion.rows=Math.round(value);
     if(path==='typography.fontFamily')await prepare(state);

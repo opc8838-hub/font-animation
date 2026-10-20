@@ -27,7 +27,7 @@ for slug, name, english in [('ascii-sharks', '字符海洋', 'ASCII Ocean')]:
 <link rel="icon" href="favicon.svg"><link rel="stylesheet" href="shared-fonts.css?v=20261020-oddball2"><link rel="stylesheet" href="me-motion-editor.css?v=20260909-timeline-color">
 <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-1"><link rel="stylesheet" href="typecascade-polish.css?v=20261006-garden1"><link rel="stylesheet" href="cardmotion-editor.css?v=20261010-1"><link rel="stylesheet" href="archive-motion.css?v=20261019-layout1"><link rel="stylesheet" href="ascii-ocean.css?v=20261020-ocean-release1"></head>
 <body class="tc-workspace me-motion-editor cm-editor" data-cardmotion="{slug}" data-editor-theme="dark"><div id="editorLoading" role="status">正在加载编辑器…</div>
-<script src="shared-font-library.js?v=20261020-oddball2"></script><script src="shared-icon-library.js?v=20261009-1"></script><script src="cellmotion-animated-image.js"></script><script src="js/continuation-gif.js"></script><script src="js/h264-mp4-encoder.web.js"></script><script src="cellmotion-ai-manifest.js?v=20261010-cards2"></script><script src="ascii-ocean-renderer.js?v=20261020-ocean-release1"></script><script src="ascii-ocean.js?v=20261020-ocean-release1"></script><script src="cellmotion-effect-bridge.js?v=20261010-ai1"></script><script src="cardmotion-editor.js?v=20261020-ocean-release1"></script><script src="typecascade-selects.js?v=20260909-1"></script></body></html>
+<script src="shared-font-library.js?v=20261020-oddball2"></script><script src="shared-icon-library.js?v=20261009-1"></script><script src="cellmotion-animated-image.js"></script><script src="js/continuation-gif.js"></script><script src="js/h264-mp4-encoder.web.js"></script><script src="cellmotion-ai-manifest.js?v=20261010-cards2"></script><script src="ascii-ocean-renderer.js?v=20261021-ocean-ink1"></script><script src="ascii-ocean.js?v=20261020-ocean-release1"></script><script src="oddball-strokes.js?v=20261020-ink2"></script><script src="ascii-ocean-ink.js?v=20261021-ocean-ink1"></script><script src="cellmotion-effect-bridge.js?v=20261010-ai1"></script><script src="cardmotion-editor.js?v=20261021-ocean-ink1"></script><script src="typecascade-selects.js?v=20260909-1"></script></body></html>
 '''
     (SITE / f'{slug}.html').write_text(html, encoding='utf-8')
     parameters = []
@@ -37,14 +37,25 @@ for slug, name, english in [('ascii-sharks', '字符海洋', 'ASCII Ocean')]:
         ('scene.contrast', '方格明暗对比', 'Tile contrast', .4, 2), ('scene.shimmer', '明暗流动强度', 'Flowing light', 0, 2),
     ]:
         parameters.append({'path': 'composition.' + path, 'scope': 'effect', 'name': {'zh': zh, 'en': en}, 'type': 'number', 'minimum': lo, 'maximum': hi})
-    for path in ['backgroundColor', 'scene.color', 'scene.accent', 'typography.fontFamily', 'cards[].caption', 'cards[].fontFamily', 'cards[].textColor']:
+    for path, zh, en, lo, hi in [
+        ('motion.lead', '海洋开场', 'Ocean opening', 0, 10), ('motion.write', '手写落墨', 'Ink handwriting', .1, 10),
+        ('motion.hold', '写完停留', 'Written hold', .1, 5), ('motion.dissolve', '融墨入海', 'Ink into water', .1, 10),
+        ('scene.inkSize', '文字大小', 'Text size', .4, 1.6), ('scene.inkX', '左右位置', 'Horizontal position', -50, 50), ('scene.inkY', '上下位置', 'Vertical position', -50, 50),
+    ]:
+        parameters.append({'path': 'composition.' + path, 'scope': 'effect', 'name': {'zh': zh, 'en': en}, 'type': 'number', 'minimum': lo, 'maximum': hi})
+    parameters.append({'path': 'composition.scene.inkEnabled', 'scope': 'effect', 'name': {'zh': '水墨文字', 'en': 'Ink handwriting'}, 'type': 'boolean'})
+    for path in ['backgroundColor', 'scene.color', 'scene.accent', 'scene.inkText', 'scene.inkColor', 'typography.fontFamily', 'cards[].caption', 'cards[].fontFamily', 'cards[].textColor']:
         parameters.append({'path': 'composition.' + path, 'scope': 'asset' if 'cards' in path else 'effect', 'name': {'zh': path, 'en': path}, 'type': 'string'})
     for path in ['scale', 'opacity', 'rotation', 'x', 'y', 'gap']:
         parameters.append({'path': 'composition.cards[].' + path, 'scope': 'asset', 'name': {'zh': path, 'en': path}, 'type': 'number'})
     definition = {'effect': {'id': slug, 'name': {'zh': name, 'en': english}, 'version': '1.0.0', 'category': 'graphic'},
-        'runtime': {'kind': 'iframe-bridge', 'entry': slug + '.html?preview=1&embed=1&v=20261020-ocean-release1', 'bridgeVersion': '1.0.0', 'renderer': 'canvas2d'},
+        'runtime': {'kind': 'iframe-bridge', 'entry': slug + '.html?preview=1&embed=1&v=20261021-ocean-ink1', 'bridgeVersion': '1.0.0', 'renderer': 'canvas2d'},
         'capabilities': {'compositionModel': 'media', 'timeline': True, 'responsiveCanvas': True, 'exports': ['png', 'gif', 'mp4'], 'customImageAssets': True, 'backgrounds': ['color', 'image', 'gif', 'video'], 'videoTrim': True},
         'behavior': {'summary': {'zh': name + '在白底细网格中独立巡游，身体随转向弯曲，灰色字符方格呈现明暗。', 'en': english + ' swim independently over a light grid, with articulated bodies and shaded character tiles.'}, 'phases': [{'id': 'swim', 'name': {'zh': '连续巡游', 'en': 'Continuous swim'}, 'colorToken': 'phase.sky'}]}, 'parameters': parameters}
+    definition['effect']['version'] = '1.1.0'
+    definition['behavior']['summary'] = {'zh': '字符海洋生物持续巡游，可选多行水墨手写，停留后缓慢融入海水。', 'en': 'Marine life cruises continuously with optional multiline handwriting that slowly disperses into the water.'}
+    definition['behavior']['phases'] = [{'id': phase, 'name': {'zh': zh, 'en': en}, 'colorToken': 'phase.' + color} for phase, zh, en, color in [
+        ('lead', '海洋开场', 'Ocean opening', 'sky'), ('write', '手写落墨', 'Ink handwriting', 'violet'), ('hold', '写完停留', 'Written hold', 'amber'), ('dissolve', '融墨入海', 'Ink into water', 'mint'), ('swim', '海洋巡游', 'Ocean cruise', 'sky')]]
     (SITE / f'effects/{slug}.component.json').write_text(json.dumps(definition, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
 # Preserve the draft whale URL as an alias for the combined ocean composition.

@@ -10,7 +10,7 @@
   },
   "runtime": {
     "kind": "iframe-bridge",
-    "entry": "ascii-ocean-ink.html?preview=1&embed=1&v=20261021-fluid2",
+    "entry": "ascii-ocean-ink.html?preview=1&embed=1&v=20261021-ocean-ink1",
     "bridgeVersion": "1.0.0",
     "renderer": "canvas2d"
   },
@@ -379,7 +379,36 @@
       },
       "type": "number"
     },
-    {"path":"composition.scene.inkX","scope":"effect","name":{"zh":"左右位置","en":"Horizontal position"},"type":"number","minimum":-50,"maximum":50},
-    {"path":"composition.scene.inkY","scope":"effect","name":{"zh":"上下位置","en":"Vertical position"},"type":"number","minimum":-50,"maximum":50}
+    {
+      "path": "composition.scene.inkX",
+      "scope": "effect",
+      "name": {
+        "zh": "左右位置",
+        "en": "Horizontal position"
+      },
+      "type": "number",
+      "minimum": -50,
+      "maximum": 50
+    },
+    {
+      "path": "composition.scene.inkY",
+      "scope": "effect",
+      "name": {
+        "zh": "上下位置",
+        "en": "Vertical position"
+      },
+      "type": "number",
+      "minimum": -50,
+      "maximum": 50
+    },
+    {
+      "path": "composition.scene.inkEnabled",
+      "scope": "effect",
+      "name": {
+        "zh": "水墨文字",
+        "en": "Ink handwriting"
+      },
+      "type": "boolean"
+    }
   ]
 }

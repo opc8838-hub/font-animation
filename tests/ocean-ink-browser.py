@@ -15,7 +15,7 @@ with sync_playwright() as p:
     page.goto('http://127.0.0.1:4183/ascii-ocean-ink.html?from=gallery')
     page.wait_for_function('Boolean(window.CardMotionEditor)')
     scheme = page.evaluate('CardMotionEditor.getScheme()')
-    assert scheme['scene']['inkText'] == 'love from' and scheme['scene']['inkSize'] == .84
+    assert scheme['scene']['inkText'] == 'love from .' and scheme['scene']['inkSize'] == .84
     assert scheme['motion']['hold'] == 1 and scheme['motion']['dissolve'] == 10
     (ROOT / 'site/assets/presets/ascii-ocean-ink-default.json').write_text(json.dumps(scheme, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print('Editor ready', flush=True)

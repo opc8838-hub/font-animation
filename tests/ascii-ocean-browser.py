@@ -19,6 +19,20 @@ with sync_playwright() as p:
         page.goto(f'{BASE}/{slug}.html?from=gallery')
         page.wait_for_function('Boolean(window.CardMotionEditor)')
         default = page.evaluate('CardMotionEditor.getScheme()')
+        assert default['scene']['inkEnabled'] and default['scene']['inkText'] == 'love from .'
+        ink_switch = page.locator('[data-path="scene.inkEnabled"]')
+        ink_switch.uncheck()
+        assert page.evaluate('CardMotion.phases(CardMotionEditor.getScheme()).length') == 1
+        assert page.locator('[data-phase="write"]').count() == 0
+        no_ink = page.evaluate('''() => {
+          const original=AsciiOceanRenderer.render,c=document.createElement('canvas');c.width=320;c.height=180;
+          AsciiOceanRenderer.render=()=>{};
+          try { CardMotionEditor.draw(c.getContext('2d'),7,320,180);return c.getContext('2d').getImageData(0,0,320,180).data.every(v=>v===0); }
+          finally {AsciiOceanRenderer.render=original;}
+        }''')
+        assert no_ink
+        ink_switch.check()
+        assert page.locator('[data-phase="write"]').count() == 1
         (ROOT / f'site/assets/presets/{slug}-default.json').write_text(json.dumps(default, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
         checks = page.evaluate('''() => {
           const s=CardMotionEditor.getScheme(), canvas=document.createElement('canvas');
@@ -36,7 +50,7 @@ with sync_playwright() as p:
         page.locator('#replayButton').click()
         page.wait_for_timeout(120)
         page.locator('#playButton').click()
-        for size in ['1080x1920', '1080x1080', '1920x1080']:
+        for size in ['1080x1920', '1080x1350', '1080x1080', '1920x1080']:
             page.select_option('#canvasPreset', size)
             dimensions = page.locator('#frame').bounding_box()
             w, h = map(int, size.split('x'))
@@ -63,6 +77,8 @@ with sync_playwright() as p:
         page.keyboard.press('Escape')
         page.keyboard.press('Escape')
         edited = page.evaluate('CardMotionEditor.getScheme()')
+        edited['scene'].update(inkText='love\nfrom .', inkX=8, inkY=-6, inkEnabled=False)
+        page.evaluate('s=>CardMotionEditor.apply(s)', edited)
         with page.expect_download() as dl:
             page.locator('#saveScheme').click()
         scheme = OUT / f'{slug}-scheme.json'
@@ -80,14 +96,14 @@ with sync_playwright() as p:
         page.goto(f'{BASE}/{slug}.html?from=gallery')
         page.wait_for_function('Boolean(window.CardMotionEditor)')
         assert page.evaluate('CardMotionEditor.getScheme()') == default
-        page.evaluate('CardMotionEditor.seek(3)')
+        page.evaluate('CardMotionEditor.seek(4.3)')
         page.screenshot(path=str(OUT / f'{slug}-desktop.png'))
         # Capture the same renderer at output resolution, including paused frames.
-        for t in [0, 3, 6, 9]:
+        for t in [0, 3, 4.3, 6, 9]:
             data = page.evaluate('''t=>{const c=document.createElement('canvas');c.width=1920;c.height=1080;CardMotionEditor.draw(c.getContext('2d'),t,1920,1080);return c.toDataURL().split(',')[1]}''', t)
             import base64
             (OUT / f'{slug}-{t:02}.png').write_bytes(base64.b64decode(data))
-        (ROOT / f'site/final_{slug}.png').write_bytes((OUT / f'{slug}-03.png').read_bytes())
+        (ROOT / f'site/final_{slug}.png').write_bytes((OUT / f'{slug}-4.3.png').read_bytes())
         # The configured AI component carries changed live state and plays through the same renderer.
         page.evaluate('s=>CardMotionEditor.apply(s)', edited)
         manifest = page.evaluate('CardMotionEditor.manifest()')
@@ -123,7 +139,7 @@ with sync_playwright() as p:
         # Lightweight full-cycle gallery movie, produced by the editor's actual export stack.
         page.evaluate('s=>CardMotionEditor.apply(s)', dict(default, canvas={'width': 960, 'height': 540}))
         page.select_option('#exportDuration', 'cycle')
-        page.select_option('#exportFps', '24')
+        page.select_option('#exportFps', '30')
         with page.expect_download(timeout=180000) as dl:
             page.locator('#exportMp4').click()
         dl.value.save_as(ROOT / f'site/assets/previews/{slug}-card.mp4')

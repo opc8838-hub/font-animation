@@ -1,4 +1,4 @@
-/* Temporary composition: the published ocean plus Oddball ink handwriting. */
+/* ASCII Ocean with optional Oddball ink handwriting. */
 (() => {
   'use strict';
   const ocean = window.CardMotion, editor = window.CellMotionEditorExtension;
@@ -12,6 +12,7 @@
     ['hold', '写完停留', 'Written hold', '#ffd27d'], ['dissolve', '融墨入海', 'Ink into water', '#9de7d7']
   ];
   function phases(s) {
+    if (s.scene.inkEnabled === false) return ocean.phases(s);
     let start = 0;
     const result = phaseInfo.map(([id, zh, en, color]) => {
       const duration = s.motion[id] / s.motion.speed, p = {id, zh, en, color, start, duration}; start += duration; return p;
@@ -165,9 +166,10 @@
   function draw(g, time, w, h, s, resources) {
     const scale = Math.min(w / 1920, h / 1080), sizeScale = 1080 * scale / Math.min(w, h);
     const iw = Math.min(1920, Math.max(640, Math.ceil(g.canvas.width / w * scale * 1920))), ih = Math.round(iw * 1080 / 1920);
-    prepareInk(iw, ih, s);
+    if (s.scene.inkEnabled !== false) prepareInk(iw, ih, s);
     const scene = sizeScale === 1 ? s : {...s, scene: {...s.scene, size: s.scene.size * sizeScale}};
     AsciiOceanRenderer.render(g, time, w, h, scene, resources, s.motion.swim / s.motion.speed);
+    if (s.scene.inkEnabled === false) return;
     const t = time * s.motion.speed - s.motion.lead, end = s.motion.write + s.motion.hold;
     if (t <= 0 || t >= end + s.motion.dissolve) return;
     g.save(); g.setTransform(g.canvas.width / w * scale * 1920 / iw, 0, 0, g.canvas.height / h * scale * 1080 / ih,
@@ -183,22 +185,23 @@
   window.CardMotion = {...ocean, defaults(id) {
     const s = ocean.defaults(id); s.backgroundColor = '#ffffff'; Object.assign(s.motion, {lead: .6, write: 3.2, hold: 1, dissolve: 10, swim: 27});
     if (new URLSearchParams(location.search).get('ratio') === '4:5') s.canvas = {width: 1080, height: 1350};
-    Object.assign(s.scene, {inkText: 'love from', inkSize: .84, inkColor: '#29262c', inkX: 0, inkY: 0}); return s;
+    Object.assign(s.scene, {inkEnabled: true, inkText: 'love from .', inkSize: .84, inkColor: '#29262c', inkX: 0, inkY: 0}); return s;
   }, phases, duration: s => phases(s).reduce((sum, p) => sum + p.duration, 0), draw};
-  window.CellMotionEditorExtension = {...editor, title: ['海洋墨写', 'Ocean Ink'],
+  window.CellMotionEditorExtension = {...editor, title: document.body.dataset.cardmotion === 'ascii-sharks' ? editor.title : ['海洋墨写', 'Ocean Ink'],
     fields: [...phaseInfo.map(([id, zh, en]) => ['motion.' + id, zh, en, id === 'lead' ? 0 : .1, id === 'hold' ? 5 : 10, .1, 's']), ...editor.fields],
     content(args) {
       const {input, range, t} = args;
-      return '<section class="gm-card"><h2>' + t('中央墨写', 'Center handwriting') + '</h2><label class="gm-field"><span>' + t('手写文字（回车换行）', 'Handwritten text (Enter for a new line)') + '</span><textarea data-path="scene.inkText" rows="3" maxlength="60"></textarea></label>' + input('scene.inkColor', '墨水颜色', 'Ink color', 'color') + range(['scene.inkSize', '文字大小', 'Text size', .4, 1.6, .01, '']) + range(['scene.inkX', '左右位置', 'Horizontal position', -50, 50, 1, '%']) + range(['scene.inkY', '上下位置', 'Vertical position', -50, 50, 1, '%']) + '</section>' + editor.content(args);
+      return '<section class="gm-card"><h2>' + t('中央墨写', 'Center handwriting') + '</h2><label class="cm-check"><input data-path="scene.inkEnabled" type="checkbox">' + t('水墨文字', 'Ink handwriting') + '</label><label class="gm-field"><span>' + t('手写文字（回车换行）', 'Handwritten text (Enter for a new line)') + '</span><textarea data-path="scene.inkText" rows="3" maxlength="60"></textarea></label>' + input('scene.inkColor', '墨水颜色', 'Ink color', 'color') + range(['scene.inkSize', '文字大小', 'Text size', .4, 1.6, .01, '']) + range(['scene.inkX', '左右位置', 'Horizontal position', -50, 50, 1, '%']) + range(['scene.inkY', '上下位置', 'Vertical position', -50, 50, 1, '%']) + '</section>' + editor.content(args);
     },
     async prepare(...args) { await editor.prepare(...args); const font = STGFontLibrary.preset('stg:oddball'); await document.fonts.load(`${font.style} ${font.weight} 172px ${STGFontLibrary.family('stg:oddball')}`); },
     normalize(raw, s, def) {
       editor.normalize(raw, s, def); s.scene.inkText = String(s.scene.inkText ?? 'love from').replace(/\r\n?/g, '\n').replace(/[^\x20-\x7e\n]/g, '').slice(0, 60);
+      s.scene.inkEnabled = s.scene.inkEnabled !== false;
       s.scene.inkSize = clamp(Number(s.scene.inkSize) || 1, .4, 1.6);
       for (const key of ['inkX', 'inkY']) s.scene[key] = clamp(Number(s.scene[key]) || 0, -50, 50);
       if (!/^#[\da-f]{6}$/i.test(s.scene.inkColor)) s.scene.inkColor = def.scene.inkColor;
     },
-    stable: s => (s.motion.lead + s.motion.write + s.motion.hold * .5) / s.motion.speed,
+    stable: s => s.scene.inkEnabled === false ? s.motion.swim * .18 / s.motion.speed : (s.motion.lead + s.motion.write + s.motion.hold * .5) / s.motion.speed,
     seekForPath(s, path) { const p = phases(s).find(p => 'motion.' + p.id === path); return p ? p.start + p.duration * .5 : this.stable(s); }
   };
 })();

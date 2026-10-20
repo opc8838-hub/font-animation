@@ -5,12 +5,12 @@
       "zh": "字符海洋",
       "en": "ASCII Ocean"
     },
-    "version": "1.0.0",
+    "version": "1.1.0",
     "category": "graphic"
   },
   "runtime": {
     "kind": "iframe-bridge",
-    "entry": "ascii-sharks.html?preview=1&embed=1&v=20261020-ocean-release1",
+    "entry": "ascii-sharks.html?preview=1&embed=1&v=20261021-ocean-ink1",
     "bridgeVersion": "1.0.0",
     "renderer": "canvas2d"
   },
@@ -34,15 +34,47 @@
   },
   "behavior": {
     "summary": {
-      "zh": "字符海洋在白底细网格中独立巡游，身体随转向弯曲，灰色字符方格呈现明暗。",
-      "en": "ASCII Ocean swim independently over a light grid, with articulated bodies and shaded character tiles."
+      "zh": "字符海洋生物持续巡游，可选多行水墨手写，停留后缓慢融入海水。",
+      "en": "Marine life cruises continuously with optional multiline handwriting that slowly disperses into the water."
     },
     "phases": [
       {
+        "id": "lead",
+        "name": {
+          "zh": "海洋开场",
+          "en": "Ocean opening"
+        },
+        "colorToken": "phase.sky"
+      },
+      {
+        "id": "write",
+        "name": {
+          "zh": "手写落墨",
+          "en": "Ink handwriting"
+        },
+        "colorToken": "phase.violet"
+      },
+      {
+        "id": "hold",
+        "name": {
+          "zh": "写完停留",
+          "en": "Written hold"
+        },
+        "colorToken": "phase.amber"
+      },
+      {
+        "id": "dissolve",
+        "name": {
+          "zh": "融墨入海",
+          "en": "Ink into water"
+        },
+        "colorToken": "phase.mint"
+      },
+      {
         "id": "swim",
         "name": {
-          "zh": "连续巡游",
-          "en": "Continuous swim"
+          "zh": "海洋巡游",
+          "en": "Ocean cruise"
         },
         "colorToken": "phase.sky"
       }
@@ -160,6 +192,92 @@
       "maximum": 2
     },
     {
+      "path": "composition.motion.lead",
+      "scope": "effect",
+      "name": {
+        "zh": "海洋开场",
+        "en": "Ocean opening"
+      },
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10
+    },
+    {
+      "path": "composition.motion.write",
+      "scope": "effect",
+      "name": {
+        "zh": "手写落墨",
+        "en": "Ink handwriting"
+      },
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 10
+    },
+    {
+      "path": "composition.motion.hold",
+      "scope": "effect",
+      "name": {
+        "zh": "写完停留",
+        "en": "Written hold"
+      },
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 5
+    },
+    {
+      "path": "composition.motion.dissolve",
+      "scope": "effect",
+      "name": {
+        "zh": "融墨入海",
+        "en": "Ink into water"
+      },
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 10
+    },
+    {
+      "path": "composition.scene.inkSize",
+      "scope": "effect",
+      "name": {
+        "zh": "文字大小",
+        "en": "Text size"
+      },
+      "type": "number",
+      "minimum": 0.4,
+      "maximum": 1.6
+    },
+    {
+      "path": "composition.scene.inkX",
+      "scope": "effect",
+      "name": {
+        "zh": "左右位置",
+        "en": "Horizontal position"
+      },
+      "type": "number",
+      "minimum": -50,
+      "maximum": 50
+    },
+    {
+      "path": "composition.scene.inkY",
+      "scope": "effect",
+      "name": {
+        "zh": "上下位置",
+        "en": "Vertical position"
+      },
+      "type": "number",
+      "minimum": -50,
+      "maximum": 50
+    },
+    {
+      "path": "composition.scene.inkEnabled",
+      "scope": "effect",
+      "name": {
+        "zh": "水墨文字",
+        "en": "Ink handwriting"
+      },
+      "type": "boolean"
+    },
+    {
       "path": "composition.backgroundColor",
       "scope": "effect",
       "name": {
@@ -183,6 +301,24 @@
       "name": {
         "zh": "scene.accent",
         "en": "scene.accent"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.scene.inkText",
+      "scope": "effect",
+      "name": {
+        "zh": "scene.inkText",
+        "en": "scene.inkText"
+      },
+      "type": "string"
+    },
+    {
+      "path": "composition.scene.inkColor",
+      "scope": "effect",
+      "name": {
+        "zh": "scene.inkColor",
+        "en": "scene.inkColor"
       },
       "type": "string"
     },
