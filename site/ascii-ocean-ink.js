@@ -95,15 +95,17 @@
   function prepareInk(w, h, s) {
     const key = inkKey(w, h, s);
     if (key !== cachedKey) {
-      const image = lettering(w, h, s, 1), data = image.getContext('2d').getImageData(0, 0, w, h).data;
-      particles = []; const step = Math.max(3, Math.round(w / 360));
-      particleAlpha = Math.pow(step * 384 / w, 2);
+      const sampleWidth = 640, sampleHeight = 360, step = 4;
+      const sample = lettering(sampleWidth, sampleHeight, s, 1), data = sample.getContext('2d').getImageData(0, 0, sampleWidth, sampleHeight).data;
+      const image = lettering(w, h, s, 1);
+      particles = []; particleAlpha = Math.pow(step * 384 / sampleWidth, 2);
       inkBlur.forEach((canvas, i) => {
-        const blur = clearLayer(canvas, w, h); blur.filter = `blur(${i / 5 * w * .007}px)`;
-        blur.drawImage(image, 0, 0); blur.filter = 'none';
+        const bw = Math.ceil(w / 2), bh = Math.ceil(h / 2);
+        const blur = clearLayer(canvas, bw, bh); blur.filter = `blur(${i / 5 * bw * .007}px)`;
+        blur.drawImage(image, 0, 0, bw, bh); blur.filter = 'none';
       });
-      for (let y = 0; y < h; y += step) for (let x = 0; x < w; x += step) if (data[(y * w + x) * 4 + 3] > 80) {
-        const path = new Float32Array(98); let px = x / w, py = y / h;
+      for (let y = 0; y < sampleHeight; y += step) for (let x = 0; x < sampleWidth; x += step) if (data[(y * sampleWidth + x) * 4 + 3] > 80) {
+        const path = new Float32Array(98); let px = x / sampleWidth, py = y / sampleHeight;
         path[0] = px; path[1] = py;
         for (let i = 1; i <= 48; i++) {
           const t = (i - 1) * .16, a = inkCurrent(px, py, t);
@@ -116,9 +118,9 @@
       cachedKey = key;
     }
   }
-  function dissolve(ctx, w, h, s, p) {
+  function dissolve(ctx, w, h, s, p, detailScale) {
     // Continuous ribbons stretch the wet lettering; plumes grow from its ink pixels.
-    const band = Math.max(2, Math.round(w / 480));
+    const band = Math.max(3, Math.round(w / 240));
     ctx.fillStyle = s.scene.inkColor;
     const vanish = 1 - smooth((p - .4) / .6), release = smooth(p);
     if (p < .62) {
@@ -129,13 +131,14 @@
     source.globalCompositeOperation = 'source-over';
     const stream = clearLayer(wet, w, h);
     for (let y = 0; y < h; y += band) {
-      const spread = 1 + release * .28, dx = Math.sin(y * .016 + p * 3) * w * release * .025;
+      const spread = 1 + release * .28, dx = Math.sin(y * detailScale * .016 + p * 3) * w * release * .025;
       const dy = (y - h / 2) * (1 + release * .28) + h / 2 + h * release * .025;
       stream.drawImage(blend, 0, y, w, Math.min(band, h - y), w * (1 - spread) / 2 + dx, dy, w * spread, band * (1 + release * .28));
     }
     ctx.globalAlpha = 1 - smooth(p / .62); ctx.drawImage(wet, 0, 0);
     }
-    const mist = clearLayer(cloud, Math.round(w / 4), Math.round(h / 4)); mist.scale(.25, .25); mist.fillStyle = s.scene.inkColor;
+    const mistScale = detailScale / 4;
+    const mist = clearLayer(cloud, Math.round(w * mistScale), Math.round(h * mistScale)); mist.scale(mistScale, mistScale); mist.fillStyle = s.scene.inkColor;
     mist.globalAlpha = Math.min(1, smooth(p / .18) * .26 * vanish * particleAlpha / (1 + release * 1.6));
     mist.strokeStyle = s.scene.inkColor; mist.lineCap = mist.lineJoin = 'round';
     const travel = release * 47, index = Math.floor(travel), fraction = travel - index;
@@ -149,7 +152,14 @@
       mist.beginPath(); mist.arc(px, py, r, 0, Math.PI * 2); mist.fill();
     }
     const soft = clearLayer(softCloud, cloud.width, cloud.height);
-    soft.filter = `blur(${w * (.0007 + release * .002) / 4}px)`; soft.drawImage(cloud, 0, 0); soft.filter = 'none';
+    // Small weighted copies soften the mist without a per-frame filter readback.
+    const blur = w * (.0007 + release * .002) * mistScale * Math.SQRT2;
+    soft.globalCompositeOperation = 'lighter';
+    for (let y = -1; y <= 1; y++) for (let x = -1; x <= 1; x++) {
+      soft.globalAlpha = (x === 0 ? .5 : .25) * (y === 0 ? .5 : .25);
+      soft.drawImage(cloud, x * blur, y * blur);
+    }
+    soft.globalAlpha = 1; soft.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1; ctx.drawImage(softCloud, 0, 0, w, h);
   }
   function draw(g, time, w, h, s, resources) {
@@ -163,7 +173,11 @@
     g.save(); g.setTransform(g.canvas.width / w * scale * 1920 / iw, 0, 0, g.canvas.height / h * scale * 1080 / ih,
       g.canvas.width / w * ((w - 1920 * scale) / 2 + w * (s.scene.inkX ?? 0) / 100), g.canvas.height / h * ((h - 1080 * scale) / 2 + h * (s.scene.inkY ?? 0) / 100));
     if (t <= end) g.drawImage(lettering(iw, ih, s, clamp(t / s.motion.write)), 0, 0);
-    else dissolve(g, iw, ih, s, (t - end) / s.motion.dissolve);
+    else {
+      const dw = inkBlur[0].width, dh = inkBlur[0].height;
+      g.scale(iw / dw, ih / dh);
+      dissolve(g, dw, dh, s, (t - end) / s.motion.dissolve, iw / dw);
+    }
     g.restore();
   }
   window.CardMotion = {...ocean, defaults(id) {

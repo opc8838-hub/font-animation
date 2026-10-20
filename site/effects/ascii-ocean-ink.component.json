@@ -10,7 +10,7 @@
   },
   "runtime": {
     "kind": "iframe-bridge",
-    "entry": "ascii-ocean-ink.html?preview=1&embed=1&v=20261021-position1",
+    "entry": "ascii-ocean-ink.html?preview=1&embed=1&v=20261021-fluid2",
     "bridgeVersion": "1.0.0",
     "renderer": "canvas2d"
   },
