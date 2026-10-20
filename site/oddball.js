@@ -6,6 +6,7 @@
   const storageKey = "cellmotion-oddball-ink-v1";
   const state = {...defaults};
   const canvas = $("canvas");
+  const inkCanvas = document.createElement("canvas");
   let time = 0, playing = true, busy = false, lastFrame = performance.now(), saveTimer;
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const englishOnly = (value) => String(value).replace(/\r\n?/g,"\n").replace(/[^\x20-\x7e\n]/g,"");
@@ -123,13 +124,27 @@
           }
           ctx.restore();
           ctx.save();
-          ctx.globalAlpha=wet*0.65;
+          ctx.globalAlpha=wet*0.18;
           ctx.filter=`blur(${Math.max(1,size*0.13*(1-wet))}px)`;
           ctx.fillText(chars[active],x+before,y);
-          ctx.filter="none";
-          ctx.globalAlpha=wet*wet;
-          ctx.fillText(chars[active],x+before,y);
           ctx.restore();
+          const padding=size*0.16;
+          inkCanvas.width=Math.ceil(advance+padding*2);
+          inkCanvas.height=Math.ceil(size*1.6);
+          const ink=inkCanvas.getContext("2d");
+          ink.font=ctx.font;
+          ink.letterSpacing=ctx.letterSpacing;
+          ink.textBaseline="alphabetic";
+          ink.fillStyle=state.textColor;
+          ink.fillText(chars[active],padding,size*1.2);
+          ink.globalCompositeOperation="destination-in";
+          const cutoff=padding+advance*wet,edge=size*0.08;
+          const mask=ink.createLinearGradient(cutoff-edge,0,cutoff+edge,0);
+          mask.addColorStop(0,"#000");
+          mask.addColorStop(1,"rgba(0,0,0,0)");
+          ink.fillStyle=mask;
+          ink.fillRect(0,0,inkCanvas.width,inkCanvas.height);
+          ctx.drawImage(inkCanvas,x+before-padding,y-size*1.2);
         }
       }
       if(state.speckles>0){
