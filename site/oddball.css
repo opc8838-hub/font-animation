@@ -4,5 +4,6 @@
 .ink-editor .tp-phases{height:72px}.ink-editor .tp-phase{border-radius:12px;align-items:flex-start}.ink-editor .tp-phase[aria-current="true"]{outline:2px solid #fff;outline-offset:-3px}
 .ink-editor .tp-phase[data-phase="lead"]{background:#d4b8ff}.ink-editor .tp-phase[data-phase="write"]{background:#8ec8ff}.ink-editor .tp-phase[data-phase="hold"]{background:#ffd27d}.ink-editor .tp-phase[data-phase="fade"]{background:#9de7d7}
 .ink-editor .tc-properties{overflow-y:auto}.ink-editor .tc-tabs button[aria-pressed="true"]{background:var(--tc-growth);color:var(--tc-growth-ink)}.ink-editor .tc-canvas-toolbar{flex-wrap:wrap}
+.ink-editor .ink-font-name{display:block;padding:12px;border:1px solid var(--tc-line);border-radius:10px;color:var(--tc-text);font:18px "STG Oddball",sans-serif}
 .ink-editor .tc-scheme .gm-actions{display:grid;grid-template-columns:1fr 1fr}.ink-editor #status{min-height:28px}
 @media(max-width:860px){.ink-editor .gm-stage{min-height:260px}.ink-editor .ink-stage-controls{bottom:14px}.ink-editor .tp-phase{font-size:10px!important}.ink-editor .tc-scheme .gm-actions{grid-template-columns:1fr 1fr}}

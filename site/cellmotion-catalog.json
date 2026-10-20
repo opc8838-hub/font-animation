@@ -242,10 +242,10 @@
       "id": "oddball",
       "name": "墨写",
       "english": "Oddball Ink",
-      "description": "逐字墨迹 · 中英文书写",
+      "description": "英文逐字水墨晕染",
       "category": "type",
       "href": "oddball.html",
-      "poster": "final_oddball.png",
+      "poster": "final_oddball.png?v=20261020-en1",
       "video": null,
       "status": "pending"
     },

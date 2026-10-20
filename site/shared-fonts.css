@@ -21,7 +21,6 @@
 @font-face{font-family:"STG Kepler";src:url("assets/KeplerStd-Medium.otf") format("opentype");font-weight:500;font-display:swap}
 @font-face{font-family:"STG Aguafina";src:url("assets/AguafinaScript-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
 @font-face{font-family:"STG Oddball";src:url("assets/fonts/OddballTM-Regular.otf") format("opentype");font-weight:400;font-display:swap;unicode-range:U+0000-02FF,U+2000-214F}
-@font-face{font-family:"STG Oddball";src:url("assets/fonts/CellMotionInkCN-Regular.woff2") format("woff2");font-weight:400;font-display:swap;unicode-range:U+2E80-9FFF,U+F900-FAFF,U+FF00-FFEF}
 @font-face{font-family:"STG Cairo";src:url("assets/Cairo-Bold.ttf") format("truetype");font-weight:700;font-display:swap}
 @font-face{font-family:"STG Fraunces";src:url("assets/fonts/Fraunces-Variable.ttf") format("truetype");font-weight:100 900;font-display:swap}
 @font-face{font-family:"STG Fenix";src:url("assets/fonts/Fenix-Regular.ttf") format("truetype");font-weight:400;font-display:swap}

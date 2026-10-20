@@ -28,7 +28,7 @@
     ["kepler", "Kepler", "STG Kepler", 500, "normal", "衬线与书写"],
     ["vollkorn", "Vollkorn Bold Italic", "STG Vollkorn", 700, "italic", "衬线与书写"],
     ["aguafina", "Aguafina Script", "STG Aguafina", 400, "normal", "衬线与书写"],
-    ["oddball", "Oddball TM · 中文墨迹", "STG Oddball", 400, "normal", "衬线与书写"],
+    ["oddball", "Oddball TM", "STG Oddball", 400, "normal", "衬线与书写"],
     ["tratto", "Tratto", "STG Tratto", 300, "italic", "衬线与书写"],
     ["bebas-neue", "Bebas Neue", "STG Bebas Neue", 400, "normal", "展示与窄体"],
     ["roboto-condensed", "Roboto Condensed", "STG Roboto Condensed", 700, "normal", "展示与窄体"],
@@ -152,7 +152,7 @@
 
   const styleLink = document.createElement("link");
   styleLink.rel = "stylesheet";
-  styleLink.href = "shared-fonts.css?v=20261020-oddball1";
+  styleLink.href = "shared-fonts.css?v=20261020-oddball2";
   styleLink.dataset.stgSharedFonts = "true";
   if (!document.querySelector("link[data-stg-shared-fonts]")) document.head.append(styleLink);
 
