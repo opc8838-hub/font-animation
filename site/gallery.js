@@ -90,7 +90,6 @@ const effects = [
 // The website hides them from 全部动效 and that category, and lists them under 待上新.
 // Remove a slug from this list when the effect is ready, then rebuild the catalog.
 const pendingRelease = [
-  "oddball",
   "coil",
   "liquidtype",
   "slotstories",

@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "oddball",
+      "date": "2026-10-20"
+    },
+    {
       "id": "blockflow",
       "date": "2026-10-19"
     },
@@ -247,7 +251,7 @@
       "href": "oddball.html",
       "poster": "final_oddball.png?v=20261020-ink2",
       "video": null,
-      "status": "pending"
+      "status": "ready"
     },
     {
       "id": "card-login",

@@ -35,6 +35,7 @@ const videos = {
 const media = new Set(['botvoice','patentwall','animalwave','video-compare','curvedgallery','mediacascade','beforeafter','shutterafter','phoneframe','laptopframe','orbitgallery','moodboard']);
 // Newest releases first, shown on the homepage as 最近上新. Dates are the public release of each editor.
 const recent = [
+  ["oddball","2026-10-20"],
   ["botvoice","2026-10-19"], ["patentwall","2026-10-19"], ["animalwave","2026-10-19"],
   ["thermal-profile","2026-10-15"],
   ['video-compare','2026-10-14'],
