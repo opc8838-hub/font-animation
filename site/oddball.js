@@ -44,7 +44,7 @@
       {key:"lead",zh:"落笔",en:"Lead",start:0,length:state.lead},
       {key:"write",zh:"逐字写出",en:"Write",start:state.lead,length:state.write},
       {key:"hold",zh:"墨迹停留",en:"Hold",start:state.lead+state.write,length:state.hold},
-      {key:"fade",zh:"淡出",en:"Fade",start:state.lead+state.write+state.hold,length:state.fade}
+      {key:"fade",zh:"逐字擦除",en:"Erase",start:state.lead+state.write+state.hold,length:state.fade}
     ];
   }
   function buildTimeline() {
@@ -81,9 +81,10 @@
     ctx.fillRect(0,0,width,height);
     const content=lines();
     const glyphCount=Math.max(1,content.reduce((sum,line)=>sum+split(line).length,0));
-    const progress=clamp((at-state.lead)/state.write,0,1);
-    const fade=1-clamp((at-state.lead-state.write-state.hold)/state.fade,0,1);
-    if(progress<=0||fade<=0) return;
+    const written=clamp((at-state.lead)/state.write,0,1);
+    const erased=clamp((at-state.lead-state.write-state.hold)/state.fade,0,1);
+    const visibleCount=glyphCount*written*(1-erased);
+    if(visibleCount<=0) return;
     const preset=STGFontLibrary.preset(state.font)||STGFontLibrary.preset("stg:oddball");
     const family=STGFontLibrary.family(state.font);
     let size=Math.min(state.size,width*0.29,height/(Math.max(content.length,1)*state.lineSpacing+0.7));
@@ -98,13 +99,12 @@
     const stride=size*state.lineSpacing;
     const firstBaseline=height/2-(content.length-1)*stride/2+size*0.32;
     ctx.fillStyle=state.textColor;
-    ctx.globalAlpha=fade;
     let offset=0;
     content.forEach((line,row)=>{
       const chars=split(line);
       const x=(width-ctx.measureText(line).width)/2;
       const y=firstBaseline+row*stride;
-      const lineProgress=clamp(progress*glyphCount-offset,0,chars.length);
+      const lineProgress=clamp(visibleCount-offset,0,chars.length);
       const whole=Math.floor(lineProgress),partial=lineProgress-whole;
       const prefix=chars.slice(0,whole).join("");
       const visible=ctx.measureText(prefix).width+(whole<chars.length?ctx.measureText(chars.slice(0,whole+1).join("")).width-ctx.measureText(prefix).width:0)*partial;
@@ -121,10 +121,10 @@
           if(location>lineProgress/Math.max(1,chars.length)) continue;
           const vertical=(((seed*48271)%2147483647)/2147483647-0.5)*size*1.5;
           const radius=(seed%4+1)*size/360;
-          ctx.globalAlpha=fade*(0.28+(seed%7)/20);
+          ctx.globalAlpha=0.28+(seed%7)/20;
           ctx.beginPath();ctx.arc(x+location*Math.max(visible,1),y+vertical,radius,0,Math.PI*2);ctx.fill();
         }
-        ctx.globalAlpha=fade;
+        ctx.globalAlpha=1;
       }
       offset+=chars.length;
     });
