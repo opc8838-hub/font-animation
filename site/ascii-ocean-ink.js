@@ -18,6 +18,13 @@
     return result;
   }
   let cachedKey = '', particles = [];
+  function inkCurrent(x, y, t) {
+    // A shared curling current keeps nearby ink together as it stretches into wisps.
+    return [
+      .046 * Math.sin(y * 9 + t * .24) + .024 * Math.sin(y * 19 - x * 5 - t * .19),
+      .012 + .037 * Math.sin(x * 11 - t * .21) + .018 * Math.sin(x * 23 + y * 4 + t * .17)
+    ];
+  }
   function layout(ctx, w, h, s) {
     const preset = STGFontLibrary.preset('stg:oddball');
     let size = Math.min(w * .145, h * .31) * s.scene.inkSize;
@@ -75,34 +82,44 @@
       lettering(w, h, s, 1); const data = ink.getContext('2d').getImageData(0, 0, w, h).data;
       particles = []; const step = Math.max(3, Math.round(w / 360));
       for (let y = 0; y < h; y += step) for (let x = 0; x < w; x += step) if (data[(y * w + x) * 4 + 3] > 80) {
-        particles.push({x, y, seed: x * 31 + y * 17});
+        const path = new Float32Array(98); let px = x / w, py = y / h;
+        path[0] = px; path[1] = py;
+        for (let i = 1; i <= 48; i++) {
+          const t = (i - 1) * .16, a = inkCurrent(px, py, t);
+          const b = inkCurrent(px + a[0] * .08, py + a[1] * .08, t + .08);
+          px += b[0] * .16; py += b[1] * .16; path[i * 2] = px; path[i * 2 + 1] = py;
+        }
+        particles.push({path, seed: x * 31 + y * 17});
       }
       cachedKey = key;
     }
     // Continuous ribbons stretch the wet lettering; plumes grow from its ink pixels.
     const band = Math.max(2, Math.round(w / 480));
     ctx.fillStyle = s.scene.inkColor;
-    const vanish = 1 - smooth((p - .48) / .52), release = smooth(p / .6);
+    const vanish = 1 - smooth((p - .4) / .6), release = smooth(p);
     wet.width = w; wet.height = h; const stream = wet.getContext('2d');
     for (let y = 0; y < h; y += band) {
-      const spread = 1 + release * .65, dx = Math.sin(y * .023 + p * 5) * w * release * .045;
-      const dy = (y - h / 2) * (1 + release * .4) + h / 2 - h * release * .025;
-      stream.drawImage(ink, 0, y, w, Math.min(band, h - y), w * (1 - spread) / 2 + dx, dy, w * spread, band * (1 + release * .4));
+      const spread = 1 + release * .28, dx = Math.sin(y * .016 + p * 3) * w * release * .025;
+      const dy = (y - h / 2) * (1 + release * .28) + h / 2 + h * release * .025;
+      stream.drawImage(ink, 0, y, w, Math.min(band, h - y), w * (1 - spread) / 2 + dx, dy, w * spread, band * (1 + release * .28));
     }
-    ctx.globalAlpha = 1 - smooth(p / .85); ctx.filter = `blur(${release * w * .004}px)`;
+    ctx.globalAlpha = 1 - smooth(p / .62); ctx.filter = `blur(${release * w * .007}px)`;
     ctx.drawImage(wet, 0, 0); ctx.filter = 'none';
     cloud.width = Math.round(w / 4); cloud.height = Math.round(h / 4);
     const mist = cloud.getContext('2d'); mist.scale(.25, .25); mist.fillStyle = s.scene.inkColor;
-    mist.globalAlpha = Math.sin(Math.PI * p) * .11 * vanish;
+    mist.globalAlpha = smooth(p / .18) * .26 * vanish / (1 + release * 1.6);
+    mist.strokeStyle = s.scene.inkColor; mist.lineCap = mist.lineJoin = 'round';
+    const travel = release * 47, index = Math.floor(travel), fraction = travel - index;
     for (const point of particles) {
-      const {x, y, seed} = point, a = noise(seed) * Math.PI * 2, drift = .4 + noise(seed + 5) * .6;
-      const distance = release * release;
-      const px = x + (x - w / 2) * distance * 1.1 + Math.cos(a) * w * distance * .15 + Math.sin(y * .025 + p * 6) * w * release * .055;
-      const py = y + (y - h / 2) * distance * 1.6 + Math.sin(a) * h * distance * .24 - h * distance * .06;
-      const r = w * (.0009 + release * (.002 + noise(seed + 7) * .006)) * drift;
-      mist.beginPath(); mist.ellipse(px, py, r * (1 + release), r, a, 0, Math.PI * 2); mist.fill();
+      const {path, seed} = point, i = index * 2;
+      const px = (path[i] + (path[i + 2] - path[i]) * fraction) * w + (noise(seed) - .5) * w * release * .007;
+      const py = (path[i + 1] + (path[i + 3] - path[i + 1]) * fraction) * h + (noise(seed + 1) - .5) * h * release * .01;
+      const r = w * (.0015 + release * .0015) * (.7 + noise(seed + 7) * .6);
+      const tail = Math.max(0, index - 3) * 2;
+      mist.lineWidth = r * 1.2; mist.beginPath(); mist.moveTo(path[tail] * w, path[tail + 1] * h); mist.lineTo(px, py); mist.stroke();
+      mist.beginPath(); mist.arc(px, py, r, 0, Math.PI * 2); mist.fill();
     }
-    ctx.globalAlpha = 1; ctx.filter = `blur(${w * (.001 + release * .005)}px)`;
+    ctx.globalAlpha = 1; ctx.filter = `blur(${w * (.0007 + release * .002)}px)`;
     ctx.drawImage(cloud, 0, 0, w, h); ctx.filter = 'none';
   }
   function draw(g, time, w, h, s, resources) {
@@ -116,8 +133,8 @@
     g.restore();
   }
   window.CardMotion = {...ocean, defaults(id) {
-    const s = ocean.defaults(id); Object.assign(s.motion, {lead: .6, write: 3.2, hold: 1, dissolve: 4.8});
-    Object.assign(s.scene, {inkText: 'lovefrom', inkSize: 1, inkColor: '#29262c'}); return s;
+    const s = ocean.defaults(id); Object.assign(s.motion, {lead: .6, write: 3.2, hold: 1, dissolve: 10});
+    Object.assign(s.scene, {inkText: 'love from', inkSize: .84, inkColor: '#29262c'}); return s;
   }, phases, duration: s => phases(s).reduce((sum, p) => sum + p.duration, 0), draw};
   window.CellMotionEditorExtension = {...editor, title: ['海洋墨写', 'Ocean Ink'],
     fields: [...phaseInfo.map(([id, zh, en]) => ['motion.' + id, zh, en, id === 'lead' ? 0 : .1, id === 'hold' ? 5 : 10, .1, 's']), ...editor.fields],
@@ -127,7 +144,7 @@
     },
     async prepare(...args) { await editor.prepare(...args); const font = STGFontLibrary.preset('stg:oddball'); await document.fonts.load(`${font.style} ${font.weight} 172px ${STGFontLibrary.family('stg:oddball')}`); },
     normalize(raw, s, def) {
-      editor.normalize(raw, s, def); s.scene.inkText = String(s.scene.inkText ?? 'lovefrom').replace(/[^\x20-\x7e]/g, '').slice(0, 60);
+      editor.normalize(raw, s, def); s.scene.inkText = String(s.scene.inkText ?? 'love from').replace(/[^\x20-\x7e]/g, '').slice(0, 60);
       s.scene.inkSize = clamp(Number(s.scene.inkSize) || 1, .4, 1.6);
       if (!/^#[\da-f]{6}$/i.test(s.scene.inkColor)) s.scene.inkColor = def.scene.inkColor;
     },

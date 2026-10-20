@@ -10,7 +10,7 @@
   },
   "runtime": {
     "kind": "iframe-bridge",
-    "entry": "ascii-ocean-ink.html?preview=1&embed=1",
+    "entry": "ascii-ocean-ink.html?preview=1&embed=1&v=20261020-slow2",
     "bridgeVersion": "1.0.0",
     "renderer": "canvas2d"
   },
@@ -34,8 +34,8 @@
   },
   "behavior": {
     "summary": {
-      "zh": "lovefrom 手写停留一秒后融墨入海",
-      "en": "Handwritten lovefrom holds for one second, then diffuses into the swimming ocean."
+      "zh": "love from 手写停留一秒后，墨丝在海水中缓慢扩散",
+      "en": "Smaller handwritten love from holds for one second, then slowly disperses into the ocean as curling ink filaments."
     },
     "phases": [
       {

@@ -95,8 +95,8 @@
     "contrast": 1.2,
     "shimmer": 1.25,
     "direction": 1,
-    "inkText": "lovefrom",
-    "inkSize": 1,
+    "inkText": "love from",
+    "inkSize": 0.84,
     "inkColor": "#29262c"
   },
   "motion": {
@@ -106,6 +106,6 @@
     "lead": 0.6,
     "write": 3.2,
     "hold": 1,
-    "dissolve": 4.8
+    "dissolve": 10
   }
 }
