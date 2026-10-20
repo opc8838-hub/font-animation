@@ -7,6 +7,7 @@
   const state = {...defaults};
   const canvas = $("canvas");
   const inkCanvas = document.createElement("canvas");
+  const maskCanvas = document.createElement("canvas");
   let time = 0, playing = true, busy = false, lastFrame = performance.now(), saveTimer;
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const englishOnly = (value) => String(value).replace(/\r\n?/g,"\n").replace(/[^\x20-\x7e\n]/g,"");
@@ -76,6 +77,54 @@
     }
   }
 
+  function writeGlyph(ctx, character, penX, baseline, size, progress) {
+    const strokes = window.ODDBALL_STROKES?.[character];
+    if (!strokes?.length) return;
+    const bounds = ctx.measureText(character);
+    const padding = Math.ceil(size * 0.16);
+    const originX = Math.ceil(bounds.actualBoundingBoxLeft + padding);
+    const originY = Math.ceil(bounds.actualBoundingBoxAscent + padding);
+    const width = Math.ceil(bounds.actualBoundingBoxLeft + bounds.actualBoundingBoxRight + padding * 2);
+    const height = Math.ceil(bounds.actualBoundingBoxAscent + bounds.actualBoundingBoxDescent + padding * 2);
+    inkCanvas.width = maskCanvas.width = Math.max(1, width);
+    inkCanvas.height = maskCanvas.height = Math.max(1, height);
+    const ink = inkCanvas.getContext("2d");
+    ink.font = ctx.font;
+    ink.letterSpacing = ctx.letterSpacing;
+    ink.textBaseline = "alphabetic";
+    ink.fillStyle = state.textColor;
+    ink.fillText(character, originX, originY);
+    const mask = maskCanvas.getContext("2d");
+    mask.fillStyle = mask.strokeStyle = "#000";
+    mask.lineCap = mask.lineJoin = "round";
+    const scale = size / 256;
+    let remaining = progress * strokes.reduce((sum, stroke) => sum + stroke.length, 0);
+    for (const stroke of strokes) {
+      for (let i = 0; i < stroke.length && remaining > 0; i++, remaining--) {
+        const fraction = Math.min(1, remaining);
+        const previous = stroke[Math.max(0, i - 1)];
+        const current = stroke[i];
+        const x = originX + (previous[0] + (current[0] - previous[0]) * fraction) * scale;
+        const y = originY + (previous[1] + (current[1] - previous[1]) * fraction) * scale;
+        const radius = (previous[2] + (current[2] - previous[2]) * fraction) * scale;
+        if (i > 0) {
+          mask.lineWidth = (previous[2] + radius / scale) * scale;
+          mask.beginPath();
+          mask.moveTo(originX + previous[0] * scale, originY + previous[1] * scale);
+          mask.lineTo(x, y);
+          mask.stroke();
+        }
+        mask.beginPath();
+        mask.arc(x, y, Math.max(0.5, radius), 0, Math.PI * 2);
+        mask.fill();
+      }
+      if (remaining <= 0) break;
+    }
+    ink.globalCompositeOperation = "destination-in";
+    ink.drawImage(maskCanvas, 0, 0);
+    ctx.drawImage(inkCanvas, penX - originX, baseline - originY);
+  }
+
   function paint(target,at) {
     const ctx=target.getContext("2d");
     const width=target.width,height=target.height;
@@ -94,7 +143,7 @@
     const setFont=()=>{ctx.font=`${preset.style} ${preset.weight} ${size}px ${family}`;ctx.letterSpacing=`${state.tracking*size/172}px`;};
     setFont();
     for(let attempt=0;attempt<12;attempt++){
-      if(content.every(line=>ctx.measureText(line).width<=width*0.83)) break;
+      if(content.every(line=>split(line).reduce((sum,ch)=>sum+ctx.measureText(ch).width,0)<=width*0.83)) break;
       size*=0.9;setFont();
     }
     const stride=size*state.lineSpacing;
@@ -103,49 +152,18 @@
     let offset=0;
     content.forEach((line,row)=>{
       const chars=split(line);
-      const x=(width-ctx.measureText(line).width)/2;
+      const lineWidth=chars.reduce((sum,ch)=>sum+ctx.measureText(ch).width,0);
+      const x=(width-lineWidth)/2;
       const y=firstBaseline+row*stride;
       const lineProgress=clamp(visibleCount-offset,0,chars.length);
       if(lineProgress>0){
         const active=Math.floor(lineProgress),wet=lineProgress-active;
-        const prefix=chars.slice(0,active).join("");
-        if(active>0)ctx.fillText(prefix,x,y);
-        if(wet>0&&active<chars.length){
-          const before=ctx.measureText(prefix).width;
-          const advance=Math.max(ctx.measureText(chars.slice(0,active+1).join("")).width-before,size*0.18);
-          ctx.save();
-          ctx.globalAlpha=0.18*Math.sin(Math.PI*wet);
-          ctx.filter=`blur(${Math.max(4,size*0.07)}px)`;
-          for(let spot=0;spot<6;spot++){
-            const seed=(row+1)*101+(active+1)*211+(spot+1)*307;
-            ctx.beginPath();
-            ctx.ellipse(x+before+advance*noise(seed),y-size*(0.15+noise(seed+37)*0.78),advance*0.2,size*0.13,noise(seed+73)*Math.PI,0,Math.PI*2);
-            ctx.fill();
-          }
-          ctx.restore();
-          ctx.save();
-          ctx.globalAlpha=wet*0.18;
-          ctx.filter=`blur(${Math.max(1,size*0.13*(1-wet))}px)`;
-          ctx.fillText(chars[active],x+before,y);
-          ctx.restore();
-          const padding=size*0.16;
-          inkCanvas.width=Math.ceil(advance+padding*2);
-          inkCanvas.height=Math.ceil(size*1.6);
-          const ink=inkCanvas.getContext("2d");
-          ink.font=ctx.font;
-          ink.letterSpacing=ctx.letterSpacing;
-          ink.textBaseline="alphabetic";
-          ink.fillStyle=state.textColor;
-          ink.fillText(chars[active],padding,size*1.2);
-          ink.globalCompositeOperation="destination-in";
-          const cutoff=padding+advance*wet,edge=size*0.08;
-          const mask=ink.createLinearGradient(cutoff-edge,0,cutoff+edge,0);
-          mask.addColorStop(0,"#000");
-          mask.addColorStop(1,"rgba(0,0,0,0)");
-          ink.fillStyle=mask;
-          ink.fillRect(0,0,inkCanvas.width,inkCanvas.height);
-          ctx.drawImage(inkCanvas,x+before-padding,y-size*1.2);
-        }
+        let pen=x;
+        chars.forEach((ch,index)=>{
+          if(index<active) ctx.fillText(ch,pen,y);
+          else if(index===active&&wet>0) writeGlyph(ctx,ch,pen,y,size,wet);
+          pen+=ctx.measureText(ch).width;
+        });
       }
       if(state.speckles>0){
         const amount=Math.round(chars.length*state.speckles/38);
@@ -156,7 +174,7 @@
           const vertical=(((seed*48271)%2147483647)/2147483647-0.5)*size*1.5;
           const radius=(seed%4+1)*size/360;
           ctx.globalAlpha=0.28+(seed%7)/20;
-          ctx.beginPath();ctx.arc(x+location*ctx.measureText(line).width,y+vertical,radius,0,Math.PI*2);ctx.fill();
+          ctx.beginPath();ctx.arc(x+location*lineWidth,y+vertical,radius,0,Math.PI*2);ctx.fill();
         }
         ctx.globalAlpha=1;
       }
