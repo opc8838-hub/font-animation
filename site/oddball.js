@@ -43,6 +43,10 @@
       button.style.setProperty("--paper-color",button.dataset.paper);
       button.setAttribute("aria-pressed",String(button.dataset.paper===state.backgroundColor));
     }
+    for(const button of document.querySelectorAll("[data-ink-color]")){
+      button.style.setProperty("--ink-color",button.dataset.inkColor);
+      button.setAttribute("aria-pressed",String(button.dataset.inkColor===state.textColor));
+    }
   }
   async function installVideo(info,blob){
     const url=URL.createObjectURL(blob);
@@ -372,7 +376,10 @@
   });
   for(const button of document.querySelectorAll("[data-paper]"))button.addEventListener("click",()=>{
     state.backgroundColor=button.dataset.paper;
-    state.textColor=button.dataset.ink;
+    syncControls();persist();
+  });
+  for(const button of document.querySelectorAll("[data-ink-color]"))button.addEventListener("click",()=>{
+    state.textColor=button.dataset.inkColor;
     syncControls();persist();
   });
   $("backgroundVideoFile").addEventListener("change",async()=>{
