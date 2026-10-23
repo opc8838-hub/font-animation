@@ -1,0 +1,452 @@
+{
+  "effect": {
+    "id": "fluedit",
+    "name": {
+      "zh": "流彩",
+      "en": "Fluedit"
+    },
+    "version": "1.0.0",
+    "category": "graphic"
+  },
+  "runtime": {
+    "kind": "iframe-bridge",
+    "entry": "fluedit/?v=20261023-standard1",
+    "bridgeVersion": "1.0.0",
+    "renderer": "webgl2-color-field"
+  },
+  "capabilities": {
+    "preview": true,
+    "liveEditorState": true,
+    "organicShapes": true,
+    "colorStops": true,
+    "localColorAreas": true,
+    "timeline": true,
+    "responsiveCanvas": true,
+    "exports": [
+      "png",
+      "gif",
+      "mp4"
+    ]
+  },
+  "behavior": {
+    "summary": {
+      "zh": "固定有机轮廓内的色谱连续流动，叠加可调的色谱偏移和色域呼吸。scene 是当前作品的完整状态，documents 保留其他已编辑形状。编辑区衬底不进入作品。",
+      "en": "Colors flow within a fixed organic silhouette with optional color shift and spread. The scene contains the complete current artwork; documents retain other edited shapes. The editor stage backdrop is presentation only."
+    },
+    "phases": [
+      {
+        "id": "flow",
+        "name": {
+          "zh": "色彩流动",
+          "en": "Color flow"
+        },
+        "colorToken": "phase.violet"
+      },
+      {
+        "id": "shift",
+        "name": {
+          "zh": "色谱偏移",
+          "en": "Color shift"
+        },
+        "colorToken": "phase.coral"
+      },
+      {
+        "id": "spread",
+        "name": {
+          "zh": "色域呼吸",
+          "en": "Color spread"
+        },
+        "colorToken": "phase.sky"
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "path": "canvas.width",
+      "scope": "global",
+      "name": {
+        "zh": "画布宽度",
+        "en": "Canvas width"
+      },
+      "type": "number"
+    },
+    {
+      "path": "canvas.height",
+      "scope": "global",
+      "name": {
+        "zh": "画布高度",
+        "en": "Canvas height"
+      },
+      "type": "number"
+    },
+    {
+      "path": "canvas.fps",
+      "scope": "global",
+      "name": {
+        "zh": "帧率",
+        "en": "Frame rate"
+      },
+      "type": "number"
+    },
+    {
+      "path": "settings.duration",
+      "scope": "global",
+      "name": {
+        "zh": "导出时长模式",
+        "en": "Duration mode"
+      },
+      "type": "enum"
+    },
+    {
+      "path": "settings.seconds",
+      "scope": "global",
+      "name": {
+        "zh": "自定义秒数",
+        "en": "Custom seconds"
+      },
+      "type": "number"
+    },
+    {
+      "path": "settings.scale",
+      "scope": "global",
+      "name": {
+        "zh": "输出比例",
+        "en": "Export scale"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.shape",
+      "scope": "effect",
+      "name": {
+        "zh": "有机形状",
+        "en": "Organic shape"
+      },
+      "type": "enum"
+    },
+    {
+      "path": "scene.background",
+      "scope": "effect",
+      "name": {
+        "zh": "作品背景",
+        "en": "Artwork background"
+      },
+      "type": "color"
+    },
+    {
+      "path": "scene.field.spread",
+      "scope": "effect",
+      "name": {
+        "zh": "色域范围",
+        "en": "Color spread"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.field.offset",
+      "scope": "effect",
+      "name": {
+        "zh": "色谱偏移",
+        "en": "Color offset"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.stops[].color",
+      "scope": "effect",
+      "name": {
+        "zh": "色标颜色",
+        "en": "Stop color"
+      },
+      "type": "color"
+    },
+    {
+      "path": "scene.stops[].position",
+      "scope": "effect",
+      "name": {
+        "zh": "色标位置",
+        "en": "Stop position"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.stops[].midpoint",
+      "scope": "effect",
+      "name": {
+        "zh": "混合中点",
+        "en": "Mix midpoint"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.stops[].blend",
+      "scope": "effect",
+      "name": {
+        "zh": "过渡宽度",
+        "en": "Transition width"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.depth",
+      "scope": "effect",
+      "name": {
+        "zh": "色彩深度",
+        "en": "Color depth"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.saturation",
+      "scope": "effect",
+      "name": {
+        "zh": "饱和度",
+        "en": "Saturation"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.contrast",
+      "scope": "effect",
+      "name": {
+        "zh": "对比度",
+        "en": "Contrast"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.brightness",
+      "scope": "effect",
+      "name": {
+        "zh": "亮度",
+        "en": "Brightness"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.softness",
+      "scope": "effect",
+      "name": {
+        "zh": "混合柔度",
+        "en": "Blend softness"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.grain",
+      "scope": "effect",
+      "name": {
+        "zh": "颗粒",
+        "en": "Grain"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.motion.enabled",
+      "scope": "effect",
+      "name": {
+        "zh": "启用色彩动画",
+        "en": "Animate colors"
+      },
+      "type": "boolean"
+    },
+    {
+      "path": "scene.motion.speed",
+      "scope": "effect",
+      "name": {
+        "zh": "流动速度",
+        "en": "Playback speed"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.motion.amount",
+      "scope": "effect",
+      "name": {
+        "zh": "流动幅度",
+        "en": "Flow amount"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.motion.scale",
+      "scope": "effect",
+      "name": {
+        "zh": "纹理细节",
+        "en": "Pattern detail"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.motion.shiftEnabled",
+      "scope": "effect",
+      "name": {
+        "zh": "启用色谱偏移",
+        "en": "Animate color shift"
+      },
+      "type": "boolean"
+    },
+    {
+      "path": "scene.motion.shiftAmount",
+      "scope": "effect",
+      "name": {
+        "zh": "偏移范围",
+        "en": "Shift range"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.motion.shiftSpeed",
+      "scope": "effect",
+      "name": {
+        "zh": "偏移速度",
+        "en": "Shift speed"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.motion.spreadEnabled",
+      "scope": "effect",
+      "name": {
+        "zh": "启用色域呼吸",
+        "en": "Animate color spread"
+      },
+      "type": "boolean"
+    },
+    {
+      "path": "scene.motion.spreadAmount",
+      "scope": "effect",
+      "name": {
+        "zh": "呼吸范围",
+        "en": "Spread range"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.motion.spreadSpeed",
+      "scope": "effect",
+      "name": {
+        "zh": "呼吸速度",
+        "en": "Spread speed"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.areas[].color",
+      "scope": "effect",
+      "name": {
+        "zh": "色区颜色",
+        "en": "Area color"
+      },
+      "type": "color"
+    },
+    {
+      "path": "scene.areas[].x",
+      "scope": "effect",
+      "name": {
+        "zh": "水平位置",
+        "en": "Horizontal position"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.areas[].y",
+      "scope": "effect",
+      "name": {
+        "zh": "垂直位置",
+        "en": "Vertical position"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.areas[].radius",
+      "scope": "effect",
+      "name": {
+        "zh": "色区大小",
+        "en": "Area size"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.areas[].strength",
+      "scope": "effect",
+      "name": {
+        "zh": "色彩强度",
+        "en": "Color strength"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.areas[].softness",
+      "scope": "effect",
+      "name": {
+        "zh": "边缘柔度",
+        "en": "Edge softness"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.areas[].stretch",
+      "scope": "effect",
+      "name": {
+        "zh": "拉伸",
+        "en": "Stretch"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.areas[].mirror",
+      "scope": "effect",
+      "name": {
+        "zh": "镜像",
+        "en": "Mirror"
+      },
+      "type": "boolean"
+    },
+    {
+      "path": "scene.areas[].visible",
+      "scope": "effect",
+      "name": {
+        "zh": "可见",
+        "en": "Visible"
+      },
+      "type": "boolean"
+    },
+    {
+      "path": "scene.areas[].rotation",
+      "scope": "effect",
+      "name": {
+        "zh": "旋转",
+        "en": "Rotation"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.areas[].bend",
+      "scope": "effect",
+      "name": {
+        "zh": "弯曲",
+        "en": "Bend"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.areas[].taper",
+      "scope": "effect",
+      "name": {
+        "zh": "收束",
+        "en": "Taper"
+      },
+      "type": "number"
+    },
+    {
+      "path": "scene.areas[].wing",
+      "scope": "effect",
+      "name": {
+        "zh": "作用范围",
+        "en": "Side"
+      },
+      "type": "enum"
+    }
+  ]
+}
