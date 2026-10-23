@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "fluedit",
+      "date": "2026-10-23"
+    },
+    {
       "id": "ascii-sharks",
       "date": "2026-10-20"
     },
@@ -126,6 +130,17 @@
     }
   ],
   "effects": [
+    {
+      "id": "fluedit",
+      "name": "流彩",
+      "english": "Fluedit",
+      "description": "有机形状 · 流动色谱 · 局部调色",
+      "category": "graphic",
+      "href": "fluedit/?from=gallery&v=20261023-cm1",
+      "poster": "fluedit/preview.png",
+      "video": null,
+      "status": "ready"
+    },
     {
       "id": "ascii-sharks",
       "name": "字符海洋",
