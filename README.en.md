@@ -1,5 +1,7 @@
 # CellMotion — Editable motion and video creation
 
+**2026-10-23 Glass Icon Reveal:** [Open editor](site/glass-icon-reveal.html). A logo glass reveal can flow into a separate text scene with its own font, size and color. The editor supports background and canvas controls, a live For AI component, saved projects, and PNG/GIF/MP4 export. The optical renderer adapts [Zanwei Guo's MIT project](https://github.com/zanwei/glass-icon-reveal); see the [license](site/glass-icon-reveal.LICENSE).
+
 **2026-10-23 Fluedit:** [Open editor](https://cellmotion.cn/fluedit/). All eight shapes support continuous color flow, with animated homepage and catalog previews. Organic shapes, animated gradients and local color editing use the CellMotion workspace, themes/languages, standard backdrop/canvas controls, project save/import, and PNG/GIF/MP4 exports. For AI previews the current artwork, copies prompts/configured code, downloads JSON and shows parameter definitions. [Integration and validation](docs/FLUEDIT_EDITOR.md).
 
 [简体中文](README.md) · [English](README.en.md)

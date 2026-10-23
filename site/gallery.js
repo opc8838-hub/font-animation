@@ -1,4 +1,5 @@
 const effects = [
+  ["glass-icon-reveal", "玻璃显标", "Glass Icon Reveal", "graphic", "水滴凝结 · 玻璃折射 · 标志显现"],
   ["fluedit", "流彩", "Fluedit", "graphic", "有机形状 · 流动色谱 · 局部调色"],
   ["ascii-sharks", "字符海洋", "ASCII Ocean", "graphic", "鲨鲸与鳐 · 可选水墨手写 · 字符巡游"],
   ["botvoice","Bot 语音","Bot Voice","graphic","手机唤醒 · 方块流动 · 语音展开"],
@@ -166,6 +167,8 @@ function render() {
     const detail = slug === "flash" ? "13 个独立子风格" : categoryName;
     const preview = slug === "fluedit"
       ? `<video class="effect-loop" src="assets/previews/fluedit-card.mp4?v=20261023-motion1" poster="fluedit/preview.png" autoplay muted loop playsinline preload="metadata" aria-label="流彩动态预览"></video>`
+      : slug === "glass-icon-reveal"
+      ? `<video class="effect-loop" src="assets/previews/glass-icon-reveal-card.mp4?v=20261023-glass2" poster="final_glass-icon-reveal.png?v=20261023-glass2" autoplay muted loop playsinline preload="metadata" aria-label="玻璃显标动效预览"></video>`
       : ["ascii-sharks"].includes(slug)
       ? `<video class="effect-loop" src="assets/previews/${slug}-card.mp4?v=20261021-ocean-ink1" poster="final_${slug}.png?v=20261021-ocean-ink1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动效预览"></video>`
       : ["botvoice","blockflow","patentwall","patentcount","animalwave"].includes(slug)

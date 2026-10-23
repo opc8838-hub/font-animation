@@ -1,0 +1,49 @@
+{
+  "effect": {
+    "id": "glass-icon-reveal",
+    "name": { "zh": "玻璃显标", "en": "Glass Icon Reveal" },
+    "version": "1.0.0",
+    "category": "graphic"
+  },
+  "runtime": {
+    "kind": "iframe-bridge",
+    "entry": "glass-icon-reveal.html?v=20261023-glass3",
+    "bridgeVersion": "1.0.0",
+    "renderer": "webgl2"
+  },
+  "capabilities": {
+    "compositionModel": "scene",
+    "sharedIcons": true,
+    "customImageAssets": true,
+    "animatedImageAssets": true,
+    "editableBrandText": true,
+    "responsiveCanvas": true,
+    "timeline": true,
+    "preview": true,
+    "exports": ["png", "gif", "mp4"]
+  },
+  "behavior": {
+    "summary": {
+      "zh": "Logo 在玻璃水滴中显现；启用第二段后，文字紧接着以相同玻璃动效播放。",
+      "en": "The logo appears through a glass droplet. An optional text scene follows with the same glass animation."
+    },
+    "phases": [
+      { "id": "logo", "name": { "zh": "Logo 显现", "en": "Logo reveal" }, "colorToken": "phase.sky" },
+      { "id": "text", "name": { "zh": "文字显现", "en": "Text reveal" }, "colorToken": "phase.violet" },
+      { "id": "hold", "name": { "zh": "循环停留", "en": "Loop hold" }, "colorToken": "phase.amber" }
+    ]
+  },
+  "parameters": [
+    { "path": "composition.canvas.width", "scope": "global", "type": "integer", "name": { "zh": "画布宽度", "en": "Canvas width" }, "unit": "px" },
+    { "path": "composition.canvas.height", "scope": "global", "type": "integer", "name": { "zh": "画布高度", "en": "Canvas height" }, "unit": "px" },
+    { "path": "composition.scene.P.background", "scope": "global", "type": "color", "name": { "zh": "背景颜色", "en": "Background" } },
+    { "path": "composition.scene.P.logo", "scope": "effect", "type": "string", "name": { "zh": "Logo 素材", "en": "Logo asset" } },
+    { "path": "composition.scene.P.logoScale", "scope": "effect", "type": "number", "name": { "zh": "Logo 大小", "en": "Logo size" } },
+    { "path": "composition.scene.P.present", "scope": "effect", "type": "number", "name": { "zh": "玻璃停留", "en": "Glass hold" }, "unit": "s" },
+    { "path": "composition.scene.textScene.enabled", "scope": "effect", "type": "boolean", "name": { "zh": "第二段文字", "en": "Text scene" } },
+    { "path": "composition.scene.textScene.text", "scope": "effect", "type": "string", "name": { "zh": "文字内容", "en": "Text content" } },
+    { "path": "composition.scene.textScene.font", "scope": "effect", "type": "string", "name": { "zh": "文字字体", "en": "Text font" } },
+    { "path": "composition.scene.textScene.scale", "scope": "effect", "type": "number", "name": { "zh": "文字大小", "en": "Text size" } },
+    { "path": "composition.scene.textScene.color", "scope": "effect", "type": "color", "name": { "zh": "文字颜色", "en": "Text color" } }
+  ]
+}

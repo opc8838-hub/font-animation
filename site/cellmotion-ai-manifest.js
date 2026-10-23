@@ -12,6 +12,7 @@
       scheme?.layout?.fontFamily,
       scheme?.settings?.font,
       scheme?.scene?.fontFamily,
+      ...(scheme?.effect === 'glass-icon-reveal' ? [scheme?.scene?.font, scheme?.scene?.textScene?.font] : []),
       ...rows.map((row) => row.fontFamily)
     ]).map((id) => ({ id, source: id.startsWith("stg:") ? "cellmotion-font-library" : "css-font-family" }));
     const images = Array.isArray(scheme?.assets) ? scheme.assets : [];
@@ -23,6 +24,7 @@
       .map((row) => ({ rowId: row.id, ...clone(row.backgroundMedia) }));
     if (scheme?.backgroundMedia) backgrounds.push({ owner: 'composition', ...clone(scheme.backgroundMedia) });
     const embedded = [...(Array.isArray(scheme?.customAssets) ? clone(scheme.customAssets) : []), ...images.map((asset, index) => ({ id: asset.id, name: asset.imageName, kind: asset.kind, source: `composition.assets[${index}]`, libraryId: asset.libraryId }))];
+    if (scheme?.effect === 'glass-icon-reveal' && scheme.scene?.assetUrl?.startsWith('data:')) embedded.push({ id: 'glass-logo', kind: 'image', source: 'composition.scene.assetUrl', embedded: true });
     if(scheme?.scene?.media){const media=scheme.scene.media;embedded.push({id:media.libraryId||'thermal-subject',name:media.imageName,kind:'image',source:'composition.scene.media',embedded:!!media.originalDataUrl?.startsWith('data:')});}
     if(scheme?.effect==='video-compare'&&scheme.logo)embedded.push({id:'footer-logo',kind:'image',name:scheme.logo.name,source:'composition.logo',embedded:true});
     const result = { fonts, icons, backgrounds, embedded };

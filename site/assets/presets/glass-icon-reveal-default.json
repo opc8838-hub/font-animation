@@ -1,0 +1,13 @@
+{
+  "effect": "glass-icon-reveal",
+  "version": 1,
+  "canvas": { "width": 1080, "height": 1080 },
+  "settings": { "font": "stg:inter" },
+  "scene": {
+    "P": {},
+    "width": 1080,
+    "height": 1080,
+    "font": "stg:inter",
+    "textScene": { "enabled": false, "text": "你好", "font": "stg:inter", "scale": 0.7, "color": "#0e1428" }
+  }
+}
