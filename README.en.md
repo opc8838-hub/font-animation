@@ -1,6 +1,6 @@
 # CellMotion — Editable motion and video creation
 
-**2026-10-23 Fluedit:** [Open editor](https://cellmotion.cn/fluedit/). Organic shapes, animated gradients and local color editing now use the CellMotion workspace, themes/languages, canvas sizes, project save/import, and PNG/GIF/MP4 exports. [Integration and validation](docs/FLUEDIT_EDITOR.md).
+**2026-10-23 Fluedit:** [Open editor](https://cellmotion.cn/fluedit/). Color flow plays by default, with animated homepage and catalog previews. Organic shapes, animated gradients and local color editing use the CellMotion workspace, themes/languages, canvas sizes, project save/import, and PNG/GIF/MP4 exports. [Integration and validation](docs/FLUEDIT_EDITOR.md).
 
 [简体中文](README.md) · [English](README.en.md)
 

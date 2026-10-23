@@ -136,9 +136,9 @@
       "english": "Fluedit",
       "description": "有机形状 · 流动色谱 · 局部调色",
       "category": "graphic",
-      "href": "fluedit/?from=gallery&v=20261023-cm1",
+      "href": "fluedit/?from=gallery&v=20261023-motion1",
       "poster": "fluedit/preview.png",
-      "video": null,
+      "video": "assets/previews/fluedit-card.mp4",
       "status": "ready"
     },
     {
