@@ -5,6 +5,7 @@
   const isStgEditor = document.body.classList.contains("stg-pro-workspace");
   if (!document.body.classList.contains("tc-workspace") && !isReferenceEditor && !isStgEditor) return;
   const slug = isReferenceEditor ? window.ReferenceMotionEffect?.slug : (document.body.dataset.morphPort || location.pathname.split("/").pop().replace(/\.html$/, ""));
+  const siteBase = new URL(document.body.dataset.siteBase || './', document.baseURI);
   if (!slug || slug === "typecascade") return;
   const header = document.querySelector(isReferenceEditor ? ".rm-header" : isStgEditor ? ".stg-workspace-header" : ".tc-header");
   const exportButton = header?.querySelector(isReferenceEditor ? ".rm-export-shortcut" : isStgEditor ? (".stg-standard-export-shortcut, .stg-workspace-top") : ".tc-export-shortcut");
@@ -12,7 +13,7 @@
 
   let language = (document.body.dataset.editorLanguage || localStorage.getItem(isReferenceEditor ? "cellmotion-lang" : "cellmotion-site-language") || "zh") === "en" ? "en" : "zh";
   let definitionPromise;
-  const authoredComponentDefinitions = new Set(["thermal-profile", "video-compare", "typepour", "prosvg", "typecascade", "sproutshift", "mistlift", "letterpulse", "iconburst", "glyphreveal", "curvedgallery", "glass-icon-reveal"]);
+  const authoredComponentDefinitions = new Set(["thermal-profile", "video-compare", "typepour", "prosvg", "typecascade", "sproutshift", "mistlift", "letterpulse", "iconburst", "glyphreveal", "curvedgallery", "fluedit", "glass-icon-reveal"]);
   const title = (isReferenceEditor ? document.querySelector(".rm-title strong") : document.querySelector(".tc-header h1")?.childNodes[0])?.textContent?.trim() || slug;
   const words = {
     zh: {
@@ -93,7 +94,7 @@
   }
   function definition() {
     definitionPromise ||= authoredComponentDefinitions.has(slug)
-      ? fetch(`effects/${slug}.component.json`).then(async (response) => response.ok ? response.json() : genericDefinition()).catch(() => genericDefinition())
+      ? fetch(new URL(`effects/${slug}.component.json`, siteBase)).then(async (response) => response.ok ? response.json() : genericDefinition()).catch(() => genericDefinition())
       : Promise.resolve(genericDefinition());
     return definitionPromise;
   }
@@ -118,7 +119,7 @@
       scheme = { version: 1, canvas: { width, height, fps: 30 }, typography: {}, rows, editorState: { entry: location.href, controls } };
       window.CellMotionEffectBridge = { getScheme: () => structuredClone(scheme) };
     } else throw new Error("Editor runtime bridge unavailable");
-    return window.CellMotionAI.createManifest({ definition: def, scheme, baseUrl: document.baseURI });
+    return window.CellMotionAI.createManifest({ definition: def, scheme, baseUrl: siteBase });
   }
   function closeMenu() {
     menu.hidden = true;
@@ -173,7 +174,7 @@
           window.removeEventListener("message", receiveReady);
         };
         window.addEventListener("message", receiveReady);
-        previewWindow.location.href = "typecascade-component-demo.html?live=1&effect="+encodeURIComponent(slug);
+        previewWindow.location.href = new URL("typecascade-component-demo.html?live=1&effect="+encodeURIComponent(slug), siteBase).href;
       }
       if (action === "prompt") await window.CellMotionAI.copyText(window.CellMotionAI.aiPrompt(current, language)).then(() => notify(words[language].copied));
       if (action === "code") await window.CellMotionAI.copyText(window.CellMotionAI.configuredCode(current)).then(() => notify(words[language].copied));

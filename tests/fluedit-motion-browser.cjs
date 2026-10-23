@@ -71,6 +71,13 @@ const output = path.resolve(process.argv[5] || path.join(__dirname, '../output/f
       const result = await state(target);
       assert.equal(result.motion.enabled, !edited);
       if (edited) assert.equal(result.stops[1].color, '#335577');
+      if (edited) {
+        await target.locator('#cmPlay').click();
+        const playing = await state(target);
+        assert.equal(playing.motion.shiftEnabled, true);
+        assert.equal(playing.motion.speed, 81);
+        assert.equal(playing.stops[1].color, '#335577');
+      }
       await context.close();
     };
     await migration(false);

@@ -108,7 +108,7 @@ fs.mkdirSync(output, { recursive: true });
     await gallery.goto(`${base}/gallery.html?legacy=1`, { waitUntil: 'domcontentloaded' });
     await gallery.waitForFunction(() => !!document.querySelector('a[href*="glass-icon-reveal.html"]'));
     assert.equal(await gallery.locator('video[src*="glass-icon-reveal-card.mp4"]').count(), 1);
-    await gallery.goto(`${base}/cellmotion-components.html`, { waitUntil: 'domcontentloaded' });
+    await gallery.goto(`${base}/cellmotion-components.html?q=glass-icon-reveal`, { waitUntil: 'domcontentloaded' });
     await gallery.waitForFunction(() => !!document.querySelector('a[href*="glass-icon-reveal.html"]'));
     assert.deepEqual(errors, []);
     console.log('Glass reveal browser, layout, Chinese text, PNG/GIF/MP4 exports: PASS');

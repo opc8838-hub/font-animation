@@ -36,3 +36,4 @@
 - 中文文字、正方形与竖屏：浏览器脚本检查。
 - PNG/GIF/MP4：浏览器真实下载并检查非空及 PNG 尺寸。
 - 画廊封面和 640 × 360、15 FPS、2.8 秒 H.264 预览：`scripts/build-glass-icon-reveal-preview.cjs` 生成。
+- 官网上新：保留既有预览文件，首页“最近上新”置顶玻璃显标，组件库和旧画廊均使用静音循环 MP4。`tests/glass-icon-reveal-release-browser.cjs` 检查实际播放像素变化、循环/静音/行内属性、编辑器入口与移动端宽度；本地首页和组件库平均采样通道差约 5–6/255。

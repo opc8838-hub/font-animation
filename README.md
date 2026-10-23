@@ -2,7 +2,7 @@
 
 **2026-10-23 玻璃显标 / Glass Icon Reveal**：[打开编辑器](site/glass-icon-reveal.html)。Logo 玻璃动效后可连续播放独立文字，支持字体、大小、颜色、背景和画幅调整，以及 For AI 实时组件、方案保存/导入和 PNG / GIF / MP4 导出。光学内核改编自 Zanwei Guo 的 [MIT 项目](https://github.com/zanwei/glass-icon-reveal)，许可见 [glass-icon-reveal.LICENSE](site/glass-icon-reveal.LICENSE)。
 
-**2026-10-23 流彩 / Fluedit**：[打开编辑器](https://cellmotion.cn/fluedit/)。默认色谱自动流动，首页与目录使用动态预览。有机形状、流动渐变与局部调色已接入 CellMotion 三栏工作台，支持明暗主题、中英切换、画幅、方案保存/导入和 PNG / GIF / MP4 导出。见[适配与验证说明](docs/FLUEDIT_EDITOR.md)。
+**2026-10-23 流彩 / Fluedit**：[打开编辑器](https://cellmotion.cn/fluedit/)。八种形状均支持连续色谱流动，首页与目录使用动态预览。有机形状、流动渐变与局部调色已接入 CellMotion 三栏工作台，支持明暗主题、中英切换、统一背景/画幅控件、方案保存/导入和 PNG / GIF / MP4 导出。“用于 AI”可预览当前作品、复制提示词/组件代码、下载 JSON 和查看参数。见[适配与验证说明](docs/FLUEDIT_EDITOR.md)。
 
 [简体中文](README.md) · [English](README.en.md)
 
