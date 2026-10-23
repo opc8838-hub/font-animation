@@ -168,7 +168,7 @@ function render() {
     const preview = slug === "fluedit"
       ? `<video class="effect-loop" src="assets/previews/fluedit-card.mp4?v=20261023-motion1" poster="fluedit/preview.png" autoplay muted loop playsinline preload="metadata" aria-label="流彩动态预览"></video>`
       : slug === "glass-icon-reveal"
-      ? `<video class="effect-loop" src="assets/previews/glass-icon-reveal-card.mp4?v=20261023-glass1" poster="final_glass-icon-reveal.png?v=20261023-glass1" autoplay muted loop playsinline preload="metadata" aria-label="玻璃显标动效预览"></video>`
+      ? `<video class="effect-loop" src="assets/previews/glass-icon-reveal-card.mp4?v=20261023-glass2" poster="final_glass-icon-reveal.png?v=20261023-glass2" autoplay muted loop playsinline preload="metadata" aria-label="玻璃显标动效预览"></video>`
       : ["ascii-sharks"].includes(slug)
       ? `<video class="effect-loop" src="assets/previews/${slug}-card.mp4?v=20261021-ocean-ink1" poster="final_${slug}.png?v=20261021-ocean-ink1" autoplay muted loop playsinline preload="metadata" aria-label="${zh}动效预览"></video>`
       : ["botvoice","blockflow","patentwall","patentcount","animalwave"].includes(slug)

@@ -226,7 +226,6 @@ uniform float uVivid;      // chroma lift of the dispersed light
 
 uniform float uDepth;
 uniform float uDisp;
-uniform float uDouble;
 uniform float uBevelW;
 uniform float uSpec;
 uniform float uIconPlate;
@@ -388,15 +387,9 @@ void main() {
     const float K = 2.6;
     float base1 = max(1.0 - pow(y1, K), 1e-4);
     float db = min(pow(y1, K - 1.0) * pow(base1, 1.0 / K - 1.0), 25.0);   // slope of the rim
-    // Second, lower step just inside the first one: its slope draws the faint inner line.
-    float s1 = bw * 0.62;
-    float w2 = bw * 0.22;
-    float t2 = clamp((s - s1) / w2, -1.0, 1.0);
-    float dh2 = uDouble * bw * 0.16;
-    float dd = dh2 * 0.5 * cos(t2 * 1.5707963) * 1.5707963 / w2 * step(abs(t2), 0.999);
     // Lens bulge across the whole face (the young bubble); shades the surface.
     vec2 gDome = -uDome * 2.0 * g * dg * step(g, 1.0);
-    vec2 grad = -(db + dd) * nOut + gDome;         // height gradient
+    vec2 grad = -db * nOut + gDome;                // height gradient
 
     vec3 back = mix(uBg, uPlateCol, uIconPlate);
     // Light bent this far also defocuses: blur grows with the refraction distance. On top of that, in
@@ -468,7 +461,7 @@ void main() {
     //  · the droplet, while round, glows in a broad band about a tenth of its radius wide, some 15
     //    levels above the backdrop, with a crisp bright line at the very edge;
     //  · the tile it spreads into keeps a quieter band, about 7 levels up, from just inside the edge
-    //    to a tenth of the tile in, with a bright inner lip about 0.15 of the tile in;
+    //    to a tenth of the tile in;
     //  · at the very edge a hairline catches a soft overhead light: bright along the top and right,
     //    turning to a thin dark silhouette line down the left and along the bottom.
     // The glow lifts only what is light behind it, so dark content drawn into the rim keeps its colour.
@@ -480,9 +473,8 @@ void main() {
     float dropBand = (1.0 - smoothstep(0.06 * sc, 0.13 * sc, s)) * smoothstep(0.0, 0.004 * sc, s);
     float glow = mix(0.32 * tileBand, 0.75 * dropBand, uDrop) * lightOnly;
     float edgeLine = gauss(s, 0.005 * sc, 0.0045 * sc);
-    float lip = gauss(s, 0.15 * sc, 0.007 * sc) * uDouble * (1.0 - uDrop);
     vec3 lightGlass = mix(trans, vec3(1.0), glow * glassAmt);
-    lightGlass += (0.075 * hw * edgeLine + 0.06 * (0.4 + 0.6 * hw) * lip) * lit;
+    lightGlass += 0.075 * hw * edgeLine * lit;
     lightGlass *= 1.0 - 0.05 * (1.0 - hw) * edgeLine * glassAmt * (1.0 - uDrop);
     lightGlass = mix(lightGlass, vec3(1.0), 0.55 * uDrop * glassAmt * edgeLine);
 
@@ -517,7 +509,7 @@ void main() {
  * ------------------------------------------------------------------ */
 const FRAME_KEYS = ['uPlateScale', 'uShapeN', 'uCornerN', 'uOptics', 'uPlateAlpha', 'uLogoHalf', 'uBold', 'uBlur', 'uFrost', 'uDome', 'uDrop', 'uPinch', 'uTilt', 'uBare',
   'uReach', 'uCornerPull', 'uStreak', 'uWiden', 'uSlab', 'uEtaSpread', 'uFocus', 'uFocusK', 'uFocusSplit', 'uRimLine', 'uCornerOn', 'uDissolve', 'uGlow', 'uFaceDisp', 'uVivid',
-  'uRim', 'uHalo', 'uShadow', 'uGhost', 'uRipR', 'uRipA', 'uDepth', 'uDisp', 'uDouble', 'uBevelW', 'uSpec', 'uIconPlate',
+  'uRim', 'uHalo', 'uShadow', 'uGhost', 'uRipR', 'uRipA', 'uDepth', 'uDisp', 'uBevelW', 'uSpec', 'uIconPlate',
   'uUseColor', 'uLightScene'];
 
 function createRenderer(canvas, opts = {}) {
@@ -601,7 +593,7 @@ function createRenderer(canvas, opts = {}) {
 const BASE = {
   logo: 'note', text: 'Aa', originalColors: false,
   tileSize: 256, logoScale: 0.7, finalScale: 0.69, iconPlate: false,
-  opticalDepth: 1.1, dispersion: 1.7, glow: 1.25, doubleBevel: 1, bevelWidth: 0.14, corner: 4.8, cornerPull: 2.1, cornerWidth: 2.2, cornerFocus: 0.58, edgeSmear: 2.85, stretch: 0, tilt: 0.35, bulge: 1, specular: 1,
+  opticalDepth: 1.1, dispersion: 1.7, glow: 1.25, bevelWidth: 0.14, corner: 4.8, cornerPull: 2.1, cornerWidth: 2.2, cornerFocus: 0.58, edgeSmear: 2.85, stretch: 0, tilt: 0.35, bulge: 1, specular: 1,
   halo: 0, shadow: 1, ripple: 1,
   bounce: 0, response: 0.34, startSize: 0.2, startZoom: 2.6, present: 1, drift: 0.12, swell: 0.5, focus: 1, hold: 0.8,
   background: '#e9e9eb', plateColor: '#ffffff', logoColor: '#0e1428',
@@ -729,7 +721,6 @@ function frameAt(T, P, outro = 0) {
     uDissolve: release,
     uDepth: P.opticalDepth,
     uDisp: P.dispersion,
-    uDouble: P.doubleBevel,
     uBevelW: bandW * (1 - release),
     uSpec: P.specular,
     uIconPlate: P.iconPlate ? 1 : 0,
