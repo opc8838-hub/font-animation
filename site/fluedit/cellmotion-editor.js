@@ -1,4 +1,4 @@
-import { localize } from './cellmotion-locale.js?v=20261023-cm1';
+import { localize } from './cellmotion-locale.js?v=20261023-motion1';
 
 export async function mountCellMotion(core) {
   const $ = selector => document.querySelector(selector);
@@ -255,12 +255,13 @@ export async function mountCellMotion(core) {
   };
   function restore() {
     core.applyLibrary({ butterfly: core.defaultState('butterfly') }, 'butterfly');
-    core.play(false); core.seek(0); settings = { ...defaults };
+    core.seek(0); core.play(!matchMedia('(prefers-reduced-motion: reduce)').matches); settings = { ...defaults };
     syncSettings(); sync(); persist();
   }
   $('#restoreScheme').onclick = restore;
   $('#clearScheme').onclick = () => {
     const state = core.defaultState(core.state().shape);
+    state.motion.enabled = false;
     state.stops = [{ id: 1, color: '#151515', position: 0, midpoint: .5, blend: 1 }, { id: 2, color: '#ffffff', position: 1, midpoint: .5, blend: 1 }];
     core.apply(state); core.play(false); core.seek(0); sync();
   };

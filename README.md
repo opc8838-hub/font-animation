@@ -1,6 +1,6 @@
 # CellMotion —— 可编辑动效与视频创作平台
 
-**2026-10-23 流彩 / Fluedit**：[打开编辑器](https://cellmotion.cn/fluedit/)。有机形状、流动渐变与局部调色已接入 CellMotion 三栏工作台，支持明暗主题、中英切换、画幅、方案保存/导入和 PNG / GIF / MP4 导出。见[适配与验证说明](docs/FLUEDIT_EDITOR.md)。
+**2026-10-23 流彩 / Fluedit**：[打开编辑器](https://cellmotion.cn/fluedit/)。默认色谱自动流动，首页与目录使用动态预览。有机形状、流动渐变与局部调色已接入 CellMotion 三栏工作台，支持明暗主题、中英切换、画幅、方案保存/导入和 PNG / GIF / MP4 导出。见[适配与验证说明](docs/FLUEDIT_EDITOR.md)。
 
 [简体中文](README.md) · [English](README.en.md)
 
