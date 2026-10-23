@@ -233,7 +233,10 @@ await mountCellMotion({
   setBackground(color) { if (!/^#[\da-f]{6}$/i.test(color)) return; r.background = color; $(); v(); },
   background: () => r.background ?? de(r.shape).background,
   playing: () => Ke(),
-  play(enabled) { V = !enabled; G = null; F(); H(); },
+  play(enabled) {
+    if (enabled && upgradeUntouchedMotion(r)) { M(); v(); }
+    V = !enabled; G = null; F(); H();
+  },
   time: () => (te.get(r.shape) ?? 0) / (.08 + r.motion.speed / 100 * .7),
   seek(seconds) { te.set(r.shape, seconds * (.08 + r.motion.speed / 100 * .7)); G = null; H(); },
   refresh: H,
@@ -258,9 +261,15 @@ await mountCellMotion({
 });
 
 
-// Upgrade only the previous untouched still default. Edited projects retain their settings.
+// Old playing defaults barely move without color shift. Preserve all artwork edits.
+// Edited still projects stay still until the user explicitly starts playback.
 function upgradeUntouchedMotion(state) {
   const legacyMotion = { ...ge(), enabled: false, speed: 35, amount: 35, shiftEnabled: false, shiftAmount: 25, shiftSpeed: 50 };
   const legacyDefault = { ...re(state.shape), motion: legacyMotion };
-  if (JSON.stringify(state) === JSON.stringify(legacyDefault)) state.motion = ge();
+  const legacyPlaying = JSON.stringify(state.motion) === JSON.stringify({ ...legacyMotion, enabled: true });
+  if (legacyPlaying || JSON.stringify(state) === JSON.stringify(legacyDefault)) {
+    state.motion = ge();
+    return true;
+  }
+  return false;
 }

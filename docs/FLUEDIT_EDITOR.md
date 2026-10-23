@@ -27,4 +27,4 @@ PNG 输出当前帧；GIF 和 H.264 MP4 从零开始按所选时长与帧率输�
 
 可重复执行的浏览器回归检查为 `tests/fluedit-browser.cjs`。先将 `site/` 作为静态目录启动本地服务，再执行 `node tests/fluedit-browser.cjs <包含 playwright 的 node_modules 目录> <浏览器可执行文件> [服务地址] [输出目录]`。测试产物包含方案、预览截图和三种实际导出文件。
 
-默认动画回归检查为 `tests/fluedit-motion-browser.cjs`，参数格式相同。它验证默认实际像素变化、暂停/重播、切换形状与色谱、旧默认升级、用户静态作品保留、减少动态效果和真实动画导出。`assets/previews/fluedit-card.mp4` 是同一渲染器输出的 768×432、30 FPS、292 帧基础周期，经 H.264 压缩为约 589 KB；用于首页、组件库与编辑器目录。
+默认动画回归检查为 `tests/fluedit-motion-browser.cjs`，参数格式相同。它验证默认实际像素变化、暂停/重播、切换形状与色谱、旧默认升级、用户静态作品保留、减少动态效果和真实动画导出。`tests/fluedit-legacy-motion-browser.cjs` 专门验证旧版已播放配置在保留自定义色值和背景时升级，并比较自动播放中的实际画布像素；时间前进本身不作为画面运动的证明。`assets/previews/fluedit-card.mp4` 是同一渲染器输出的 768×432、30 FPS、292 帧基础周期，经 H.264 压缩为约 589 KB；用于首页、组件库与编辑器目录。
