@@ -1,5 +1,7 @@
 # CellMotion — Editable motion and video creation
 
+**2026-10-23 Glass Icon Reveal:** [Open editor](site/glass-icon-reveal.html). A droplet grows into a refractive glass tile before releasing the mark. The CellMotion workspace supports built-in and shared icons, uploaded marks, Chinese text, themes, canvas sizes, saved projects, and PNG/GIF/MP4 export. The optical renderer adapts [Zanwei Guo's MIT project](https://github.com/zanwei/glass-icon-reveal); see the [license](site/glass-icon-reveal.LICENSE).
+
 **2026-10-23 Fluedit:** [Open editor](https://cellmotion.cn/fluedit/). Color flow plays by default, with animated homepage and catalog previews. Organic shapes, animated gradients and local color editing use the CellMotion workspace, themes/languages, canvas sizes, project save/import, and PNG/GIF/MP4 exports. [Integration and validation](docs/FLUEDIT_EDITOR.md).
 
 [简体中文](README.md) · [English](README.en.md)

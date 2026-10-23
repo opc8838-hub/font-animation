@@ -1,0 +1,109 @@
+html:has(.glass-editor), body.glass-editor { margin: 0; min-height: 100%; }
+body.glass-editor { box-sizing: border-box; }
+.glass-editor { --glass-purple: var(--tc-accent); }
+.glass-editor [hidden] { display: none !important; }
+.glass-editor .tc-header, .glass-editor .tc-content, .glass-editor .gm-inspector { min-width: 0; }
+.glass-editor .tc-header { gap: 12px; }
+.glass-editor .header-spacer { flex: 1; }
+.glass-editor .history-actions { display: flex; gap: 4px; }
+.glass-editor .history-actions button { width: 32px; height: 32px; border: 1px solid var(--tc-line); border-radius: 9px; background: var(--tc-surface); color: var(--tc-text); }
+.glass-editor .tc-header h1 { margin: 0; white-space: nowrap; }
+.glass-editor .tc-header h1 > span:first-child { color: var(--tc-text); margin: 0; font-size: 16px; font-weight: 650; }
+.glass-editor .tc-header h1 > span:last-child { margin-left: 8px; color: var(--tc-muted); font-size: 13px; }
+.glass-editor .tc-brand .tc-logo-light { opacity: 0; }
+.glass-editor[data-editor-theme="light"] .tc-brand .tc-logo-dark { opacity: 0; }
+.glass-editor[data-editor-theme="light"] .tc-brand .tc-logo-light { opacity: 1; }
+.glass-editor .header-button { width: 36px; height: 36px; border: 1px solid var(--tc-line); border-radius: 10px; color: var(--tc-text); background: var(--tc-surface); }
+.glass-editor .tc-content { overflow: hidden; padding: 20px 14px 14px; }
+.glass-editor .tc-panel-heading { padding: 0; margin-bottom: 10px; }
+.glass-editor .tc-panel-heading h2 { margin: 2px 0 0; font-size: 17px; color: var(--tc-text); }
+.glass-editor .tc-hint { margin: 0 0 14px; line-height: 1.6; color: var(--tc-muted); }
+.glass-editor .source-tabs { display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; padding: 4px; border-radius: 12px; background: var(--tc-input); }
+.glass-editor .source-tabs button { border: 0; border-radius: 9px; color: var(--tc-muted); background: transparent; min-height: 34px; font-size: 13px; }
+.glass-editor .source-tabs button[aria-selected="true"] { background: var(--tc-panel); color: var(--tc-accent); box-shadow: 0 2px 7px #0002; }
+.glass-editor .source-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 16px 1px 8px; scrollbar-width: thin; }
+.glass-editor .asset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.glass-editor .asset-choice { display: grid; gap: 8px; padding: 8px; border: 1px solid var(--tc-line); border-radius: 14px; background: var(--tc-surface); color: var(--tc-text); text-align: left; font-size: 12px; }
+.glass-editor .asset-choice[aria-pressed="true"] { border-color: var(--tc-accent); background: var(--tc-selected); }
+.glass-editor .asset-preview { display: grid; place-items: center; height: 68px; border-radius: 10px; background: #e9e9eb; color: #151a29; font: 700 30px/1 system-ui; }
+.glass-editor .library-selection { display: grid; gap: 8px; margin-bottom: 16px; padding: 10px; border-radius: 12px; background: var(--tc-surface); color: var(--tc-text); font-size: 12px; }
+.glass-editor .library-selection button { min-height: 34px; border: 0; border-radius: 9px; background: var(--tc-growth); color: var(--tc-growth-ink); font-weight: 650; }
+.glass-editor .library-group { margin-bottom: 18px; }
+.glass-editor .library-group h3 { margin: 0 0 8px; font-size: 12px; color: var(--tc-muted); }
+.glass-editor .library-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; }
+.glass-editor .library-grid button { display: grid; place-items: center; gap: 4px; min-width: 0; padding: 6px; border: 1px solid var(--tc-line); border-radius: 10px; background: var(--tc-surface); color: var(--tc-muted); }
+.glass-editor .library-grid button[aria-pressed="true"] { border-color: var(--tc-accent); color: var(--tc-text); background: var(--tc-selected); }
+.glass-editor .library-grid img { width: 48px; height: 48px; object-fit: contain; }
+.glass-editor .library-grid span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+.glass-editor .upload-drop { display: grid; place-items: center; gap: 8px; min-height: 140px; border: 1px dashed var(--tc-accent); border-radius: 14px; background: var(--tc-selected); color: var(--tc-text); text-align: center; cursor: pointer; }
+.glass-editor .upload-drop strong { font-size: 14px; }
+.glass-editor .upload-drop span { color: var(--tc-muted); font-size: 11px; }
+.glass-editor .tc-scheme { flex: none; margin-top: 8px; padding-top: 14px; border-top: 1px solid var(--tc-line); }
+.glass-editor .scheme-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.glass-editor .scheme-actions button { min-height: 37px; border: 1px solid var(--tc-line); border-radius: 10px; background: var(--tc-surface); color: var(--tc-text); font-size: 12px; }
+.glass-editor .small-status { color: var(--tc-muted); font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }
+.glass-editor .tc-center { border: 1px solid var(--tc-line); border-radius: 20px; overflow: hidden; background: var(--tc-panel); }
+.glass-editor .tc-canvas-toolbar { gap: 10px; padding: 12px 16px; background: var(--tc-panel); }
+.glass-editor .tc-canvas-toolbar label { display: flex; align-items: center; gap: 8px; color: var(--tc-muted); font-size: 12px; }
+.glass-editor .tc-canvas-toolbar select { min-width: 165px; max-width: 205px; border: 1px solid var(--tc-line); border-radius: 10px; background: var(--tc-input); color: var(--tc-text); padding: 8px; }
+.glass-editor .custom-size { display: flex; align-items: center; gap: 8px; }
+.glass-editor .custom-size input { width: 77px; min-height: 32px; border: 1px solid var(--tc-line); border-radius: 8px; padding: 4px 6px; color: var(--tc-text); background: var(--tc-input); }
+.glass-editor #canvasInfo { margin-left: auto; font-size: 12px; color: var(--tc-muted); }
+.glass-editor .gm-stage { display: grid; place-items: center; padding: 20px; background: var(--tc-canvas-surround); }
+.glass-editor .stage-frame { position: relative; flex: none; overflow: hidden; background: #e9e9eb; box-shadow: 0 8px 32px #0004; }
+.glass-editor .stage-frame canvas { display: block; width: 100%; height: 100%; }
+.glass-editor .render-error { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; background: var(--tc-panel); color: var(--tc-text); text-align: center; }
+.glass-editor .tc-timeline { padding: 12px 18px 10px; }
+.glass-editor .gm-stage-controls { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 auto 12px; width: min(100%,520px); }
+.glass-editor .gm-stage-controls button { flex: 1; max-width: 155px; min-height: 34px; border: 1px solid var(--tc-line); border-radius: 10px; background: var(--tc-surface); color: var(--tc-text); }
+.glass-editor #playButton { background: var(--tc-growth); color: var(--tc-growth-ink); border-color: var(--tc-growth); }
+.glass-editor #clock { min-width: 96px; color: var(--tc-muted); font: 11px ui-monospace, monospace; text-align: right; }
+.glass-editor #timeline { display: flex; position: relative; gap: 5px; height: 52px; }
+.glass-editor #timeline::after { content: ''; position: absolute; left: var(--playhead,0%); top: 0; bottom: 0; width: 2px; background: var(--tc-text); pointer-events: none; }
+.glass-editor #timeline .me-choreo-block { min-width: 0; border: 0; border-radius: 12px; padding: 7px 8px; background: var(--phase-color); color: #171320; text-align: left; overflow: hidden; }
+.glass-editor #timeline .me-choreo-block strong, .glass-editor #timeline .me-choreo-block small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.glass-editor #timeline .me-choreo-block strong { font-size: 12px; }
+.glass-editor #timeline .me-choreo-block small { font-size: 10px; }
+.glass-editor #scrubber { width: 100%; margin: 9px 0 1px; accent-color: var(--tc-accent); }
+.glass-editor .timeline-details { display: flex; gap: 12px; overflow-x: auto; color: var(--tc-muted); font-size: 11px; white-space: nowrap; }
+.glass-editor .timeline-details b { display: inline-block; width: 8px; height: 8px; margin-right: 4px; border-radius: 50%; background: var(--phase-color); }
+.glass-editor .gm-inspector { display: flex; flex-direction: column; overflow: hidden; }
+.glass-editor .tc-tabs { flex: none; }
+.glass-editor .tc-properties { min-height: 0; flex: 1; overflow-y: auto; scrollbar-width: thin; padding: 18px; }
+.glass-editor .panel-heading { margin: 0 0 20px; }
+.glass-editor .panel-heading small { font-size: 10px; letter-spacing: .13em; color: var(--tc-muted); }
+.glass-editor .panel-heading h2 { margin: 3px 0 0; font-size: 17px; color: var(--tc-text); }
+.glass-editor .field { display: grid; gap: 9px; margin-bottom: 16px; color: var(--tc-text); font-size: 14px; }
+.glass-editor .field > input:not([type="range"]):not([type="color"]), .glass-editor .field select { width: 100%; min-height: 38px; border: 1px solid var(--tc-line); border-radius: 10px; padding: 7px 10px; color: var(--tc-text); background: var(--tc-input); }
+.glass-editor .field input[type="color"] { width: 48px; height: 36px; border: 1px solid var(--tc-line); border-radius: 10px; padding: 2px; background: var(--tc-input); }
+.glass-editor .color-field { display: flex; align-items: center; justify-content: space-between; }
+.glass-editor .range-row { display: flex; align-items: center; gap: 10px; }
+.glass-editor .range-row input { flex: 1; min-width: 0; accent-color: var(--tc-accent); }
+.glass-editor .range-row output { min-width: 45px; color: var(--tc-muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+.glass-editor .check-field { display: flex; align-items: center; gap: 10px; margin: 0 0 18px; color: var(--tc-text); font-size: 14px; }
+.glass-editor .check-field input { accent-color: var(--tc-accent); }
+.glass-editor .control-group { padding: 15px; margin-bottom: 12px; border: 1px solid var(--tc-line); border-radius: 14px; background: var(--tc-surface); }
+.glass-editor .control-group h3 { margin: 0 0 15px; font-size: 14px; }
+.glass-editor .control-group .field:last-child { margin-bottom: 0; }
+.glass-editor .export-actions { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin: 20px 0; }
+.glass-editor .export-actions button { min-height: 42px; border: 1px solid var(--tc-line); border-radius: 10px; background: var(--tc-surface); color: var(--tc-text); font-weight: 650; }
+.glass-editor #exportPng { border-color: var(--tc-growth); background: var(--tc-growth); color: var(--tc-growth-ink); }
+.glass-editor #exportProgress { width: 100%; accent-color: var(--tc-accent); }
+.glass-editor, .glass-editor .tc-header, .glass-editor .tc-content, .glass-editor .gm-inspector { transition: background-color 240ms, color 240ms, border-color 240ms; }
+@media (max-width: 1050px) and (min-width: 861px) { body.glass-editor { grid-template-columns: 200px minmax(240px,1fr) 310px; } .glass-editor .tc-header h1 > span:last-child { display: none; } }
+@media (max-width: 860px) {
+  body.glass-editor { display: flex; flex-direction: column; height: auto; min-height: 100dvh; overflow: visible; padding: 8px; }
+  .glass-editor .tc-header { order: 0; flex-wrap: wrap; min-height: 58px; }
+  .glass-editor .tc-header h1 > span:last-child { display: none; }
+  .glass-editor .header-spacer { flex: 1; }
+  .glass-editor .tc-brand { flex-basis: 125px; width: 125px; }
+  .glass-editor .tc-back { display: none; }
+  .glass-editor .tc-center { order: 1; min-height: 0; }
+  .glass-editor .gm-stage { min-height: 280px; max-height: 58vh; }
+  .glass-editor .tc-content { order: 2; overflow: visible; }
+  .glass-editor .source-scroll { max-height: 300px; overflow-y: auto; }
+  .glass-editor .gm-inspector { order: 3; min-height: 0; overflow: visible; }
+  .glass-editor .tc-properties { overflow: visible; }
+  .glass-editor .tc-canvas-toolbar { flex-wrap: wrap; }
+  .glass-editor .tc-timeline { padding: 12px; }
+}

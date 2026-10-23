@@ -28,6 +28,28 @@ def main() -> int:
     js = js_path.read_text(encoding="utf-8")
     errors: list[str] = []
 
+    if 'data-editor-capabilities="single-icon"' in html:
+        source = html + '\n' + js
+        required = {
+            'three-column shell': ['tc-header', 'tc-content', 'tc-center', 'gm-inspector', 'tc-tabs', 'tc-properties'],
+            'icon selection': ['id="assetLibrary"', 'id="insertAsset"', 'selectedAsset', 'id="logoFile"', 'id="logoText"', 'id="logoFont"'],
+            'scheme': ['id="saveScheme"', 'id="importScheme"', 'id="restoreScheme"', 'id="clearScheme"'],
+            'canvas and playback': ['id="canvasPreset"', 'id="view"', 'id="playButton"', 'id="replayButton"'],
+            'colored choreography': ['me-choreo-track', 'me-choreo-block', 'me-choreo-playhead', 'dataset.seek', 'PHASES'],
+            'export': ['id="exportPng"', 'id="exportGif"', 'id="exportMp4"', 'createH264MP4Encoder'],
+            'persistence': ['readScheme', 'persist()', 'version: 1'],
+        }
+        for label, tokens in required.items():
+            for token in tokens:
+                if token not in source:
+                    errors.append(f'missing {label}: {token}')
+        if errors:
+            for error in errors:
+                fail(error)
+            return 1
+        print(f'PASS: {html_path.name} uses the CellMotion single-icon shell; browser checks remain required.')
+        return 0
+
     # A fixed comparison template owns two video slots, not an icon library.
     if 'data-editor-capabilities="fixed-video-pair"' in html:
         required = {

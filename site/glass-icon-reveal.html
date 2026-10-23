@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#19191c">
+  <meta name="description" content="玻璃显标 Glass Icon Reveal · CellMotion 水滴凝结、圆角玻璃折射与标志显现动效编辑器。">
+  <title>玻璃显标 Glass Icon Reveal | CellMotion</title>
+  <link rel="icon" href="assets/cellmotion/logo-web.webp" type="image/webp">
+  <link rel="stylesheet" href="typecascade-workspace.css?v=20261023-glass1">
+  <link rel="stylesheet" href="typecascade-polish.css?v=20261023-glass1">
+  <link rel="stylesheet" href="me-motion-editor.css?v=20261023-glass1">
+  <link rel="stylesheet" href="glass-icon-reveal.css?v=20261023-glass1">
+</head>
+<body class="tc-workspace glass-editor" data-editor-capabilities="single-icon" data-editor-theme="dark">
+  <header class="tc-header">
+    <a class="tc-brand" href="cellmotion.html" aria-label="CellMotion 首页">
+      <img class="tc-logo-dark" src="assets/cellmotion/logo-dark-original.png" alt="CellMotion">
+      <img class="tc-logo-light" src="assets/cellmotion/logo-original-transparent.png" alt="" aria-hidden="true">
+    </a>
+    <h1><span data-zh="玻璃显标" data-en="Glass Icon Reveal">玻璃显标</span><span>Glass Icon Reveal</span></h1>
+    <div class="history-actions"><button id="undoButton" type="button" aria-label="撤销" title="撤销" disabled>↶</button><button id="redoButton" type="button" aria-label="重做" title="重做" disabled>↷</button></div>
+    <div class="header-spacer"></div>
+    <button id="languageButton" class="header-button" type="button" aria-label="Switch language">EN</button>
+    <button id="themeButton" class="header-button" type="button" aria-label="切换明暗主题">☀</button>
+    <a class="tc-back" href="cellmotion-components.html" data-zh="动效库" data-en="Library">动效库</a>
+    <button id="openExport" class="tc-export-shortcut" type="button" data-zh="导出作品" data-en="Export">导出作品</button>
+  </header>
+
+  <aside class="tc-content" aria-label="内容与方案">
+    <div class="tc-panel-heading"><div><small>CONTENT</small><h2 data-zh="图标内容" data-en="Icon content">图标内容</h2></div></div>
+    <p class="tc-hint" data-zh="选择一个标志，水滴会在它上方凝结、铺展并释放。" data-en="Choose a mark. A droplet condenses, spreads and lets it go.">选择一个标志，水滴会在它上方凝结、铺展并释放。</p>
+    <div class="source-tabs" role="tablist" aria-label="素材来源">
+      <button type="button" data-source="builtin" aria-selected="true" data-zh="内置" data-en="Built-in">内置</button>
+      <button type="button" data-source="library" aria-selected="false" data-zh="图标库" data-en="Library">图标库</button>
+      <button type="button" data-source="upload" aria-selected="false" data-zh="上传" data-en="Upload">上传</button>
+    </div>
+    <div class="source-scroll">
+      <section id="builtinPanel" class="source-panel">
+        <div class="asset-grid">
+          <button type="button" data-preset="note" class="asset-choice" aria-pressed="true"><span class="asset-preview">♫</span><span data-zh="音符" data-en="Note">音符</span></button>
+          <button type="button" data-preset="spark" class="asset-choice" aria-pressed="false"><span class="asset-preview">✦</span><span data-zh="星芒" data-en="Spark">星芒</span></button>
+          <button type="button" data-preset="pinwheel" class="asset-choice" aria-pressed="false"><span class="asset-preview">✺</span><span data-zh="风车" data-en="Pinwheel">风车</span></button>
+          <button type="button" data-preset="text" class="asset-choice" aria-pressed="false"><span class="asset-preview">Aa</span><span data-zh="文字标志" data-en="Text">文字标志</span></button>
+        </div>
+      </section>
+      <section id="libraryPanel" class="source-panel" hidden>
+        <p class="tc-hint" data-zh="点击预览选中，使用“加入画布”确认。" data-en="Select a preview, then add it to the canvas.">点击预览选中，使用“加入画布”确认。</p>
+        <div id="librarySelection" class="library-selection"><span data-zh="未选图标" data-en="No icon selected">未选图标</span><button id="insertAsset" type="button" disabled data-zh="加入画布" data-en="Add">加入画布</button></div>
+        <div id="assetLibrary"></div>
+      </section>
+      <section id="uploadPanel" class="source-panel" hidden>
+        <label class="upload-drop" for="logoFile"><strong data-zh="上传你的标志" data-en="Upload your mark">上传你的标志</strong><span>SVG · PNG · JPG · WebP · GIF</span></label>
+        <input id="logoFile" type="file" accept="image/svg+xml,image/png,image/jpeg,image/webp,image/gif" hidden>
+        <p id="uploadName" class="tc-hint" data-zh="文件仅在浏览器本地处理。" data-en="Files stay in your browser.">文件仅在浏览器本地处理。</p>
+      </section>
+    </div>
+    <section class="tc-scheme">
+      <div class="tc-panel-heading"><div><small>PROJECT</small><h2 data-zh="方案" data-en="Project">方案</h2></div></div>
+      <div class="scheme-actions"><button id="saveScheme" type="button" data-zh="保存方案" data-en="Save">保存方案</button><button id="importScheme" type="button" data-zh="导入方案" data-en="Import">导入方案</button><button id="restoreScheme" type="button" data-zh="恢复默认" data-en="Restore default">恢复默认</button><button id="clearScheme" type="button" data-zh="清理重做" data-en="Clear">清理重做</button></div>
+      <input id="schemeFile" type="file" accept="application/json,.json" hidden>
+      <p id="schemeStatus" class="small-status" role="status" data-zh="修改自动保存在本机" data-en="Changes save automatically">修改自动保存在本机</p>
+    </section>
+  </aside>
+
+  <main class="tc-center" aria-label="画布和时间轴">
+    <section class="tc-canvas-toolbar">
+      <label><span data-zh="画布尺寸" data-en="Canvas size">画布尺寸</span><select id="canvasPreset">
+        <option value="1080x1080">1:1 · 1080 × 1080</option><option value="1080x1350">4:5 · 1080 × 1350</option><option value="1080x1440">3:4 · 1080 × 1440</option><option value="1080x1620">2:3 · 1080 × 1620</option><option value="1080x1920">9:16 · 1080 × 1920</option><option value="1920x1080">16:9 · 1920 × 1080</option><option value="1440x1080">4:3 · 1440 × 1080</option><option value="1620x1080">3:2 · 1620 × 1080</option><option value="custom" data-zh="自定义" data-en="Custom">自定义</option>
+      </select></label>
+      <div id="customSize" class="custom-size" hidden><label>W <input id="canvasWidth" type="number" min="128" max="3840" step="2"></label><label>H <input id="canvasHeight" type="number" min="128" max="3840" step="2"></label></div>
+      <span id="canvasInfo">1080 × 1080</span>
+    </section>
+    <div id="stageArea" class="gm-stage"><div id="stageFrame" class="stage-frame"><canvas id="view" aria-label="玻璃显标预览"></canvas><p id="renderError" class="render-error" hidden></p></div></div>
+    <section class="tc-timeline" aria-label="动效时间轴">
+      <div class="gm-stage-controls me-stage-controls"><button id="playButton" type="button" aria-label="暂停" data-zh="Ⅱ 暂停" data-en="Ⅱ Pause">Ⅱ 暂停</button><button id="replayButton" type="button" data-zh="↺ 重播" data-en="↺ Replay">↺ 重播</button><span id="clock">0.00 / 1.95 s</span></div>
+      <div id="timeline" class="me-choreo-track me-choreo-bar" role="list" aria-label="玻璃显标阶段"></div>
+      <input id="scrubber" class="me-choreo-playhead" type="range" min="0" max="1.95" step="0.001" value="0" aria-label="时间轴播放头">
+      <div id="timelineDetails" class="timeline-details"></div>
+    </section>
+  </main>
+
+  <aside class="gm-inspector" aria-label="编辑属性">
+    <nav class="tc-tabs" aria-label="属性分类"><button type="button" data-panel="content" aria-pressed="true" data-zh="当前图标" data-en="Icon">当前图标</button><button type="button" data-panel="motion" aria-pressed="false" data-zh="动效设置" data-en="Motion">动效设置</button><button type="button" data-panel="export" aria-pressed="false" data-zh="导出" data-en="Export">导出</button></nav>
+    <section class="tc-properties" data-panel="content">
+      <div class="panel-heading"><small>SELECTED ICON</small><h2 data-zh="标志与画面" data-en="Mark and canvas">标志与画面</h2></div>
+      <label id="textField" class="field" hidden><span data-zh="标志文字" data-en="Mark text">标志文字</span><input id="logoText" type="text" maxlength="12" value="Aa"></label>
+      <label id="fontField" class="field" hidden><span data-zh="字体" data-en="Font">字体</span><select id="logoFont"></select></label>
+      <label class="field"><span data-zh="图标大小" data-en="Icon size">图标大小</span><div class="range-row"><input id="tileSize" type="range" min="96" max="480" step="4"><output></output></div></label>
+      <label class="field"><span data-zh="标志比例" data-en="Mark scale">标志比例</span><div class="range-row"><input id="logoScale" type="range" min="0.3" max="1" step="0.01"><output></output></div></label>
+      <label class="field"><span data-zh="收尾大小" data-en="Final scale">收尾大小</span><div class="range-row"><input id="finalScale" type="range" min="0.3" max="1.5" step="0.01"><output></output></div></label>
+      <label class="field color-field"><span data-zh="背景颜色" data-en="Background">背景颜色</span><input id="background" type="color"></label>
+      <label class="field color-field"><span data-zh="标志颜色" data-en="Mark color">标志颜色</span><input id="logoColor" type="color"></label>
+      <label class="check-field"><input id="originalColors" type="checkbox"><span data-zh="保留素材原色" data-en="Keep original colors">保留素材原色</span></label>
+      <label class="check-field"><input id="iconPlate" type="checkbox"><span data-zh="显示图标底板" data-en="Show icon plate">显示图标底板</span></label>
+      <label id="plateColorField" class="field color-field" hidden><span data-zh="底板颜色" data-en="Plate color">底板颜色</span><input id="plateColor" type="color"></label>
+    </section>
+    <section class="tc-properties" data-panel="motion" hidden>
+      <div class="panel-heading"><small>MOTION</small><h2 data-zh="水滴与玻璃" data-en="Droplet and glass">水滴与玻璃</h2></div>
+      <div class="control-group"><h3 data-zh="水滴生成" data-en="Droplet">水滴生成</h3>
+        <label class="field"><span data-zh="水滴响应" data-en="Droplet response">水滴响应</span><div class="range-row"><input id="response" type="range" min="0.25" max="1.2" step="0.01"><output></output></div></label>
+        <label class="field"><span data-zh="弹性" data-en="Bounce">弹性</span><div class="range-row"><input id="bounce" type="range" min="0" max="0.6" step="0.01"><output></output></div></label>
+        <label class="field"><span data-zh="起始大小" data-en="Start size">起始大小</span><div class="range-row"><input id="startSize" type="range" min="0.05" max="1" step="0.01"><output></output></div></label>
+      </div>
+      <div class="control-group"><h3 data-zh="玻璃材质" data-en="Glass material">玻璃材质</h3>
+        <label class="field"><span data-zh="折射深度" data-en="Optical depth">折射深度</span><div class="range-row"><input id="opticalDepth" type="range" min="0" max="3" step="0.05"><output></output></div></label>
+        <label class="field"><span data-zh="色散" data-en="Dispersion">色散</span><div class="range-row"><input id="dispersion" type="range" min="0" max="3" step="0.05"><output></output></div></label>
+        <label class="field"><span data-zh="边缘色光" data-en="Color bleed">边缘色光</span><div class="range-row"><input id="glow" type="range" min="0" max="3" step="0.05"><output></output></div></label>
+        <label class="field"><span data-zh="高光" data-en="Rim light">高光</span><div class="range-row"><input id="specular" type="range" min="0" max="2" step="0.05"><output></output></div></label>
+        <label class="field"><span data-zh="阴影" data-en="Shadow">阴影</span><div class="range-row"><input id="shadow" type="range" min="0" max="2" step="0.05"><output></output></div></label>
+      </div>
+      <div class="control-group"><h3 data-zh="节奏" data-en="Timing">节奏</h3>
+        <label class="field"><span data-zh="玻璃停留" data-en="Glass hold">玻璃停留</span><div class="range-row"><input id="present" type="range" min="0.8" max="2.5" step="0.05"><output></output></div></label>
+        <label class="field"><span data-zh="循环间隔" data-en="Loop pause">循环间隔</span><div class="range-row"><input id="hold" type="range" min="0" max="3" step="0.1"><output></output></div></label>
+        <label class="field"><span data-zh="播放速度" data-en="Playback speed">播放速度</span><div class="range-row"><input id="speed" type="range" min="0.25" max="2" step="0.05"><output></output></div></label>
+        <label class="check-field"><input id="loop" type="checkbox" checked><span data-zh="循环播放" data-en="Loop playback">循环播放</span></label>
+      </div>
+    </section>
+    <section class="tc-properties" data-panel="export" hidden>
+      <div class="panel-heading"><small>EXPORT</small><h2 data-zh="导出作品" data-en="Export artwork">导出作品</h2></div>
+      <label class="field"><span data-zh="时长" data-en="Duration">时长</span><select id="exportDuration"><option value="cycle" data-zh="完整循环" data-en="Full cycle">完整循环</option><option value="3">3 秒</option><option value="5">5 秒</option><option value="custom" data-zh="自定义" data-en="Custom">自定义</option></select></label>
+      <label id="customDurationField" class="field" hidden><span data-zh="自定义秒数" data-en="Seconds">自定义秒数</span><input id="customDuration" type="number" min="0.5" max="30" step="0.5" value="4"></label>
+      <label class="field"><span data-zh="帧率" data-en="Frame rate">帧率</span><select id="exportFps"><option value="15">15 FPS</option><option value="24">24 FPS</option><option value="30" selected>30 FPS</option><option value="60">60 FPS</option></select></label>
+      <label class="field"><span data-zh="输出比例" data-en="Output scale">输出比例</span><select id="exportScale"><option value="1">100%</option><option value="0.5">50%</option><option value="0.25">25%</option></select></label>
+      <p id="exportInfo" class="small-status"></p>
+      <div class="export-actions"><button id="exportPng" type="button">PNG</button><button id="exportGif" type="button">GIF</button><button id="exportMp4" type="button">MP4</button></div>
+      <progress id="exportProgress" max="1" value="0" hidden></progress><p id="exportStatus" class="small-status" role="status" data-zh="PNG 为当前帧，动画按选定时长输出。" data-en="PNG saves this frame; animation uses the chosen duration.">PNG 为当前帧，动画按选定时长输出。</p>
+    </section>
+  </aside>
+  <script src="shared-font-library.js?v=20261023-glass1"></script>
+  <script src="shared-icon-library.js?v=20261023-glass1"></script>
+  <script src="cellmotion-animated-image.js?v=20261023-glass1"></script>
+  <script src="glass-icon-reveal-core.js?v=20261023-glass1"></script>
+  <script src="glass-icon-reveal.js?v=20261023-glass1"></script>
+</body>
+</html>

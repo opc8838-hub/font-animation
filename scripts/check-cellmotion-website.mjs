@@ -47,7 +47,8 @@ for(const effect of catalog.effects){
   }
   for(const field of ['href','poster','video'])if(effect[field]){
     const target=new URL(effect[field],site);target.search='';target.hash='';
-    assert((await stat(fileURLToPath(target))).isFile(),`${effect.id}: missing ${field}`);checked++;
+    const targetStat=await stat(fileURLToPath(target));
+    assert(targetStat.isFile()||(targetStat.isDirectory()&&(await stat(fileURLToPath(new URL('index.html',target)))).isFile()),`${effect.id}: missing ${field}`);checked++;
   }
 }
 console.log(`PASS: ${pages.length} pages, ${catalog.effects.length} catalog entries, ${checked} file references. Browser and export behavior are separate checks.`);

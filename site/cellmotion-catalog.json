@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "glass-icon-reveal",
+      "date": "2026-10-23"
+    },
+    {
       "id": "fluedit",
       "date": "2026-10-23"
     },
@@ -130,6 +134,17 @@
     }
   ],
   "effects": [
+    {
+      "id": "glass-icon-reveal",
+      "name": "玻璃显标",
+      "english": "Glass Icon Reveal",
+      "description": "水滴凝结 · 玻璃折射 · 标志显现",
+      "category": "graphic",
+      "href": "glass-icon-reveal.html",
+      "poster": "final_glass-icon-reveal.png",
+      "video": "assets/previews/glass-icon-reveal-card.mp4",
+      "status": "ready"
+    },
     {
       "id": "fluedit",
       "name": "流彩",

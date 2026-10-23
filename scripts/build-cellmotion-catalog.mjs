@@ -18,6 +18,7 @@ for (const id of pendingRelease) {
 }
 const videos = {
   fluedit:'fluedit-card',
+  'glass-icon-reveal':'glass-icon-reveal-card',
   'ascii-sharks':'ascii-sharks-card',
   blockflow:"blockflow-card",patentcount:"patentcount-card",botvoice:"botvoice-card",patentwall:"patentwall-card",animalwave:"animalwave-card",
   "thermal-profile":"thermal-profile-card",
@@ -37,6 +38,7 @@ const videos = {
 const media = new Set(['patentcount','botvoice','patentwall','animalwave','video-compare','curvedgallery','mediacascade','beforeafter','shutterafter','phoneframe','laptopframe','orbitgallery','moodboard']);
 // Newest releases first, shown on the homepage as 最近上新. Dates are the public release of each editor.
 const recent = [
+  ["glass-icon-reveal","2026-10-23"],
   ["fluedit","2026-10-23"],
   ["ascii-sharks","2026-10-20"], ["oddball","2026-10-20"], ["blockflow","2026-10-19"], ["patentcount","2026-10-19"],
   ["botvoice","2026-10-19"], ["patentwall","2026-10-19"], ["animalwave","2026-10-19"],
