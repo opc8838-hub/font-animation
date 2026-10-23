@@ -143,6 +143,10 @@
       "href": "glass-icon-reveal.html",
       "poster": "final_glass-icon-reveal.png?v=20261023-glass2",
       "video": "assets/previews/glass-icon-reveal-card.mp4?v=20261023-glass2",
+      "webComponent": {
+        "preview": "typecascade-component-demo.html?effect=glass-icon-reveal",
+        "descriptor": "effects/glass-icon-reveal.component.json"
+      },
       "status": "ready"
     },
     {

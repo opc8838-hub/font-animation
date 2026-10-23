@@ -77,7 +77,7 @@ for (const [id,name,english,group,description] of rows) {
     category:media.has(id)?'media':group,
     href:entryRoutes[id] || href,poster,video,
     ...(['blockflow','patentcount','botvoice','patentwall','animalwave','ascii-sharks'].includes(id)?{webComponent:{preview:`archive-motion-demo.html?effect=${id}`,descriptor:`effects/${id}.component.json`}}:{}),
-    ...(['thermal-profile','typepour','video-compare'].includes(id)?{webComponent:{preview:`typecascade-component-demo.html?effect=${id}`,descriptor:`effects/${id}.component.json`}}:{}),
+    ...(['thermal-profile','typepour','video-compare','glass-icon-reveal'].includes(id)?{webComponent:{preview:`typecascade-component-demo.html?effect=${id}`,descriptor:`effects/${id}.component.json`}}:{}),
     ...(['card-login','carddeck'].includes(id)?{webComponent:{preview:`cardmotion-component-demo.html?effect=${id}`,descriptor:`effects/${id}.component.json`}}:{}),
     status:pendingRelease.has(id)?'pending':'ready'
   });

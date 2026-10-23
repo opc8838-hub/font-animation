@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="typecascade-workspace.css?v=20261023-glass1">
   <link rel="stylesheet" href="typecascade-polish.css?v=20261023-glass1">
   <link rel="stylesheet" href="me-motion-editor.css?v=20261023-glass1">
-  <link rel="stylesheet" href="glass-icon-reveal.css?v=20261023-glass1">
+  <link rel="stylesheet" href="glass-icon-reveal.css?v=20261023-glass3">
 </head>
 <body class="tc-workspace glass-editor" data-editor-capabilities="single-icon" data-editor-theme="dark">
   <header class="tc-header">
@@ -20,6 +20,10 @@
     </a>
     <h1><span data-zh="玻璃显标" data-en="Glass Icon Reveal">玻璃显标</span><span>Glass Icon Reveal</span></h1>
     <div class="history-actions"><button id="undoButton" type="button" aria-label="撤销" title="撤销" disabled>↶</button><button id="redoButton" type="button" aria-label="重做" title="重做" disabled>↷</button></div>
+    <div class="glass-header-tools">
+      <label class="glass-header-color"><span data-zh="换背景" data-en="Background">换背景</span><input id="headerBackground" type="color" aria-label="画布背景颜色"></label>
+      <button id="openCanvasSize" type="button" data-zh="尺寸" data-en="Size">尺寸</button>
+    </div>
     <div class="header-spacer"></div>
     <button id="languageButton" class="header-button" type="button" aria-label="Switch language">EN</button>
     <button id="themeButton" class="header-button" type="button" aria-label="切换明暗主题">☀</button>
@@ -29,13 +33,23 @@
 
   <aside class="tc-content" aria-label="内容与方案">
     <div class="tc-panel-heading"><div><small>CONTENT</small><h2 data-zh="图标内容" data-en="Icon content">图标内容</h2></div></div>
-    <p class="tc-hint" data-zh="选择一个标志，水滴会在它上方凝结、铺展并释放。" data-en="Choose a mark. A droplet condenses, spreads and lets it go.">选择一个标志，水滴会在它上方凝结、铺展并释放。</p>
+    <p class="tc-hint" data-zh="先选 Logo，再按需新增第二段文字；两段连续播放。" data-en="Choose a logo, then optionally add a text scene. They play in sequence.">先选 Logo，再按需新增第二段文字；两段连续播放。</p>
     <div class="source-tabs" role="tablist" aria-label="素材来源">
       <button type="button" data-source="builtin" aria-selected="true" data-zh="内置" data-en="Built-in">内置</button>
       <button type="button" data-source="library" aria-selected="false" data-zh="图标库" data-en="Library">图标库</button>
       <button type="button" data-source="upload" aria-selected="false" data-zh="上传" data-en="Upload">上传</button>
     </div>
     <div class="source-scroll">
+      <section class="sequence-text-card">
+        <div class="sequence-text-head"><strong data-zh="第二段 · 文字" data-en="Second scene · Text">第二段 · 文字</strong><button id="toggleTextScene" type="button" aria-pressed="false" data-zh="新增文字" data-en="Add text">新增文字</button></div>
+        <div id="textSceneFields" hidden>
+          <label class="field"><span data-zh="播放文字" data-en="Text">播放文字</span><input id="sequenceText" type="text" value="你好"></label>
+          <label class="field"><span data-zh="字体" data-en="Font">字体</span><select id="sequenceFont"></select></label>
+          <label class="field"><span data-zh="文字大小" data-en="Text size">文字大小</span><div class="range-row"><input id="sequenceScale" type="range" min="0.2" max="1.4" step="0.01"><output></output></div></label>
+          <label class="field color-field"><span data-zh="文字颜色" data-en="Text color">文字颜色</span><input id="sequenceColor" type="color"></label>
+          <button id="pauseTextScene" type="button" data-zh="暂停修改" data-en="Pause to edit">暂停修改</button>
+        </div>
+      </section>
       <section id="builtinPanel" class="source-panel">
         <div class="asset-grid">
           <button type="button" data-preset="note" class="asset-choice" aria-pressed="true"><span class="asset-preview">♫</span><span data-zh="音符" data-en="Note">音符</span></button>
@@ -130,7 +144,10 @@
   <script src="shared-font-library.js?v=20261023-glass1"></script>
   <script src="shared-icon-library.js?v=20261023-glass1"></script>
   <script src="cellmotion-animated-image.js?v=20261023-glass1"></script>
+  <script src="cellmotion-effect-bridge.js?v=20261023-glass3"></script>
   <script src="glass-icon-reveal-core.js?v=20261023-glass2"></script>
-  <script src="glass-icon-reveal.js?v=20261023-glass1"></script>
+  <script src="glass-icon-reveal.js?v=20261023-glass3"></script>
+  <script src="cellmotion-ai-manifest.js?v=20261023-glass3"></script>
+  <script src="cellmotion-ai-menu.js?v=20261023-glass3"></script>
 </body>
 </html>

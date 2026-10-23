@@ -1,6 +1,6 @@
 # CellMotion —— 可编辑动效与视频创作平台
 
-**2026-10-23 玻璃显标 / Glass Icon Reveal**：[打开编辑器](site/glass-icon-reveal.html)。水滴凝结、玻璃铺展和标志显现已接入 CellMotion 三栏工作台，支持内置与共享图标、中文标志、上传素材、明暗主题、画幅、方案保存/导入及 PNG / GIF / MP4 导出。光学内核改编自 Zanwei Guo 的 [MIT 项目](https://github.com/zanwei/glass-icon-reveal)，许可见 [glass-icon-reveal.LICENSE](site/glass-icon-reveal.LICENSE)。
+**2026-10-23 玻璃显标 / Glass Icon Reveal**：[打开编辑器](site/glass-icon-reveal.html)。Logo 玻璃动效后可连续播放独立文字，支持字体、大小、颜色、背景和画幅调整，以及 For AI 实时组件、方案保存/导入和 PNG / GIF / MP4 导出。光学内核改编自 Zanwei Guo 的 [MIT 项目](https://github.com/zanwei/glass-icon-reveal)，许可见 [glass-icon-reveal.LICENSE](site/glass-icon-reveal.LICENSE)。
 
 **2026-10-23 流彩 / Fluedit**：[打开编辑器](https://cellmotion.cn/fluedit/)。默认色谱自动流动，首页与目录使用动态预览。有机形状、流动渐变与局部调色已接入 CellMotion 三栏工作台，支持明暗主题、中英切换、画幅、方案保存/导入和 PNG / GIF / MP4 导出。见[适配与验证说明](docs/FLUEDIT_EDITOR.md)。
 

@@ -12,7 +12,7 @@
 
   let language = (document.body.dataset.editorLanguage || localStorage.getItem(isReferenceEditor ? "cellmotion-lang" : "cellmotion-site-language") || "zh") === "en" ? "en" : "zh";
   let definitionPromise;
-  const authoredComponentDefinitions = new Set(["thermal-profile", "video-compare", "typepour", "prosvg", "typecascade", "sproutshift", "mistlift", "letterpulse", "iconburst", "glyphreveal", "curvedgallery"]);
+  const authoredComponentDefinitions = new Set(["thermal-profile", "video-compare", "typepour", "prosvg", "typecascade", "sproutshift", "mistlift", "letterpulse", "iconburst", "glyphreveal", "curvedgallery", "glass-icon-reveal"]);
   const title = (isReferenceEditor ? document.querySelector(".rm-title strong") : document.querySelector(".tc-header h1")?.childNodes[0])?.textContent?.trim() || slug;
   const words = {
     zh: {

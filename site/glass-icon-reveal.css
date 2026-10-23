@@ -7,6 +7,13 @@ body.glass-editor { box-sizing: border-box; }
 .glass-editor .header-spacer { flex: 1; }
 .glass-editor .history-actions { display: flex; gap: 4px; }
 .glass-editor .history-actions button { width: 32px; height: 32px; border: 1px solid var(--tc-line); border-radius: 9px; background: var(--tc-surface); color: var(--tc-text); }
+.glass-editor .glass-header-tools { position: relative; display: flex; gap: 7px; align-items: center; }
+.glass-editor .glass-header-tools > button, .glass-editor .glass-header-color { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 0 10px; border: 1px solid var(--tc-line); border-radius: 10px; background: var(--tc-surface); color: var(--tc-text); white-space: nowrap; font-size: 12px; }
+.glass-editor .glass-header-color input { width: 22px; height: 24px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.glass-editor .glass-size-menu { position: absolute; z-index: 80; top: calc(100% + 9px); left: 0; display: grid; gap: 3px; width: 210px; max-height: 50vh; overflow-y: auto; padding: 7px; border: 1px solid var(--tc-line); border-radius: 14px; background: var(--tc-panel); box-shadow: 0 16px 40px #0006; }
+.glass-editor .glass-size-menu[hidden] { display: none; }
+.glass-editor .glass-size-menu button { min-height: 34px; padding: 5px 9px; border: 0; border-radius: 8px; background: transparent; color: var(--tc-text); text-align: left; }
+.glass-editor .glass-size-menu button:hover { background: var(--tc-selected); }
 .glass-editor .tc-header h1 { margin: 0; white-space: nowrap; }
 .glass-editor .tc-header h1 > span:first-child { color: var(--tc-text); margin: 0; font-size: 16px; font-weight: 650; }
 .glass-editor .tc-header h1 > span:last-child { margin-left: 8px; color: var(--tc-muted); font-size: 13px; }
@@ -22,6 +29,11 @@ body.glass-editor { box-sizing: border-box; }
 .glass-editor .source-tabs button { border: 0; border-radius: 9px; color: var(--tc-muted); background: transparent; min-height: 34px; font-size: 13px; }
 .glass-editor .source-tabs button[aria-selected="true"] { background: var(--tc-panel); color: var(--tc-accent); box-shadow: 0 2px 7px #0002; }
 .glass-editor .source-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 16px 1px 8px; scrollbar-width: thin; }
+.glass-editor .sequence-text-card { margin-bottom: 18px; padding: 12px; border: 1px solid var(--tc-line); border-radius: 14px; background: var(--tc-surface); }
+.glass-editor .sequence-text-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--tc-text); font-size: 12px; }
+.glass-editor .sequence-text-head button, .glass-editor #pauseTextScene { min-height: 32px; padding: 4px 8px; border: 1px solid var(--tc-accent); border-radius: 9px; background: var(--tc-selected); color: var(--tc-text); font-size: 12px; }
+.glass-editor .sequence-text-card .field { margin: 12px 0 0; font-size: 12px; }
+.glass-editor .sequence-text-card #pauseTextScene { margin-top: 12px; }
 .glass-editor .asset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .glass-editor .asset-choice { display: grid; gap: 8px; padding: 8px; border: 1px solid var(--tc-line); border-radius: 14px; background: var(--tc-surface); color: var(--tc-text); text-align: left; font-size: 12px; }
 .glass-editor .asset-choice[aria-pressed="true"] { border-color: var(--tc-accent); background: var(--tc-selected); }
@@ -89,8 +101,13 @@ body.glass-editor { box-sizing: border-box; }
 .glass-editor .export-actions button { min-height: 42px; border: 1px solid var(--tc-line); border-radius: 10px; background: var(--tc-surface); color: var(--tc-text); font-weight: 650; }
 .glass-editor #exportPng { border-color: var(--tc-growth); background: var(--tc-growth); color: var(--tc-growth-ink); }
 .glass-editor #exportProgress { width: 100%; accent-color: var(--tc-accent); }
+body.glass-editor.is-preview { display: block; width: 100vw; height: 100dvh; padding: 0; overflow: hidden; }
+.glass-editor.is-preview .tc-header, .glass-editor.is-preview .tc-content, .glass-editor.is-preview .gm-inspector, .glass-editor.is-preview .tc-canvas-toolbar, .glass-editor.is-preview .tc-timeline { display: none; }
+.glass-editor.is-preview .tc-center, .glass-editor.is-preview .gm-stage { width: 100vw; height: 100dvh; min-height: 0; max-height: none; padding: 0; border: 0; border-radius: 0; }
+.glass-editor.is-preview .stage-frame { box-shadow: none; }
 .glass-editor, .glass-editor .tc-header, .glass-editor .tc-content, .glass-editor .gm-inspector { transition: background-color 240ms, color 240ms, border-color 240ms; }
 @media (max-width: 1050px) and (min-width: 861px) { body.glass-editor { grid-template-columns: 200px minmax(240px,1fr) 310px; } .glass-editor .tc-header h1 > span:last-child { display: none; } }
+@media (max-width: 1200px) { .glass-editor .tc-header { flex-wrap: wrap; } .glass-editor .glass-header-tools { order: 3; } }
 @media (max-width: 860px) {
   body.glass-editor { display: flex; flex-direction: column; height: auto; min-height: 100dvh; overflow: visible; padding: 8px; }
   .glass-editor .tc-header { order: 0; flex-wrap: wrap; min-height: 58px; }

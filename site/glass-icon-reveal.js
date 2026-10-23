@@ -5,22 +5,27 @@
   const Animated = window.CellMotionAnimatedImage;
   const Fonts = window.STGFontLibrary;
   const $ = id => document.getElementById(id);
+  const previewMode = new URLSearchParams(location.search).has('preview');
+  if (previewMode) document.body.classList.add('is-preview');
   const STORE = 'cellmotion:glass-icon-reveal:v1';
-  const DEFAULT = { P: { ...Core.LOOKS.light }, width: 1080, height: 1080, customSize: false, speed: 1, loop: true, font: 'stg:inter', assetId: '', assetUrl: '', assetType: '' };
+  const DEFAULT = { P: { ...Core.LOOKS.light }, width: 1080, height: 1080, customSize: false, speed: 1, loop: true, font: 'stg:inter', assetId: '', assetUrl: '', assetType: '', textScene: { enabled: false, text: '你好', font: 'stg:inter', scale: 0.7, color: '#0e1428' } };
   const SIZE_OPTIONS = ['1080x1080', '1080x1350', '1080x1440', '1080x1620', '1080x1920', '1920x1080', '1440x1080', '1620x1080'];
   const PHASES = [
     { zh: '水滴凝结', en: 'Droplet', color: '#8ec8ff' },
     { zh: '玻璃铺展', en: 'Glass spread', color: '#d4b8ff' },
-    { zh: '标志显现', en: 'Logo reveal', color: '#d7ff2f' },
+    { zh: 'Logo 显现', en: 'Logo reveal', color: '#d7ff2f' },
+    { zh: '文字凝结', en: 'Text droplet', color: '#ffbd9a' },
+    { zh: '文字铺展', en: 'Text spread', color: '#b3d7ff' },
+    { zh: '文字显现', en: 'Text reveal', color: '#e0bcff' },
     { zh: '循环停留', en: 'Loop hold', color: '#ffd27d' }
   ];
-  let state = restoreLocal();
+  let state = previewMode ? structuredClone(DEFAULT) : restoreLocal();
   const history = [JSON.stringify(state)];
   let historyIndex = 0, lastHistoryAt = 0, lastHistoryKind = '';
   let lang = localStorage.getItem('cellmotion-site-language') === 'en' ? 'en' : 'zh';
   let theme = (localStorage.getItem('cellmotion-site-theme') || localStorage.getItem('cellmotion-editor-theme')) === 'light' ? 'light' : 'dark';
   let time = 0, playing = !matchMedia('(prefers-reduced-motion: reduce)').matches, last = performance.now();
-  let logoData = null, animatedResource = null, dynamicAsset = null, logoVersion = 0, busy = false;
+  let logoData = null, textData = null, animatedResource = null, dynamicAsset = null, logoVersion = 0, textVersion = 0, busy = false;
   const dynamicCache = new Map();
   const preview = $('view');
   let renderer;
@@ -43,7 +48,15 @@
       if (typeof value === typeof P[key]) P[key] = value;
     });
     const dimension = (v, fallback) => Number.isFinite(v) ? Math.max(128, Math.min(3840, Math.round(v / 2) * 2)) : fallback;
-    return { P, width: dimension(raw.width, 1080), height: dimension(raw.height, 1080), customSize: raw.customSize === true, speed: Number.isFinite(raw.speed) ? Math.max(.25, Math.min(2, raw.speed)) : 1, loop: raw.loop !== false, font: typeof raw.font === 'string' ? raw.font : 'stg:inter', assetId: typeof raw.assetId === 'string' ? raw.assetId : '', assetUrl: typeof raw.assetUrl === 'string' ? raw.assetUrl : '', assetType: typeof raw.assetType === 'string' ? raw.assetType : '' };
+    const textScene = { ...DEFAULT.textScene };
+    if (raw.textScene && typeof raw.textScene === 'object') {
+      textScene.enabled = raw.textScene.enabled === true;
+      if (typeof raw.textScene.text === 'string') textScene.text = raw.textScene.text;
+      if (typeof raw.textScene.font === 'string') textScene.font = raw.textScene.font;
+      if (Number.isFinite(raw.textScene.scale)) textScene.scale = Math.max(.2, Math.min(1.4, raw.textScene.scale));
+      if (/^#[0-9a-f]{6}$/i.test(raw.textScene.color || '')) textScene.color = raw.textScene.color;
+    }
+    return { P, width: dimension(raw.width, 1080), height: dimension(raw.height, 1080), customSize: raw.customSize === true, speed: Number.isFinite(raw.speed) ? Math.max(.25, Math.min(2, raw.speed)) : 1, loop: raw.loop !== false, font: typeof raw.font === 'string' ? raw.font : 'stg:inter', assetId: typeof raw.assetId === 'string' ? raw.assetId : '', assetUrl: typeof raw.assetUrl === 'string' ? raw.assetUrl : '', assetType: typeof raw.assetType === 'string' ? raw.assetType : '', textScene };
   }
   function persist(record = true) {
     if (record) {
@@ -67,7 +80,7 @@
     const next = historyIndex + direction;
     if (next < 0 || next >= history.length) return;
     historyIndex = next; state = JSON.parse(history[next]);
-    playing = false; time = 0; syncControls(); syncHistoryButtons(); persist(false); await refreshLogo(); updatePlayButton();
+    playing = false; time = 0; syncControls(); syncHistoryButtons(); persist(false); await Promise.all([refreshLogo(), refreshText()]); updatePlayButton();
   }
   $('undoButton').onclick = () => stepHistory(-1);
   $('redoButton').onclick = () => stepHistory(1);
@@ -79,9 +92,12 @@
     document.querySelectorAll('[data-zh][data-en]').forEach(node => { node.textContent = node.dataset[lang]; });
     $('languageButton').textContent = lang === 'en' ? '中' : 'EN';
     $('themeButton').textContent = theme === 'dark' ? '☀' : '☾';
+    $('toggleTextScene').textContent = state.textScene.enabled ? label('移除文字', 'Remove text') : label('新增文字', 'Add text');
     $('undoButton').title = label('撤销', 'Undo'); $('undoButton').setAttribute('aria-label', $('undoButton').title);
     $('redoButton').title = label('重做', 'Redo'); $('redoButton').setAttribute('aria-label', $('redoButton').title);
     document.body.dataset.editorTheme = theme;
+    document.body.dataset.editorLanguage = lang;
+    document.dispatchEvent(new CustomEvent('tc-languagechange', { detail: { language: lang } }));
     updatePlayButton(); buildTimeline(); updateExportInfo();
   }
   $('languageButton').onclick = () => { lang = lang === 'zh' ? 'en' : 'zh'; localStorage.setItem('cellmotion-site-language', lang); localize(); };
@@ -114,6 +130,15 @@
     $('fontField').hidden = state.P.logo !== 'text';
     $('logoText').value = state.P.text;
     $('logoFont').value = state.font;
+    $('headerBackground').value = state.P.background;
+    $('toggleTextScene').setAttribute('aria-pressed', String(state.textScene.enabled));
+    $('toggleTextScene').textContent = state.textScene.enabled ? label('移除文字', 'Remove text') : label('新增文字', 'Add text');
+    $('textSceneFields').hidden = !state.textScene.enabled;
+    $('sequenceText').value = state.textScene.text;
+    $('sequenceFont').value = state.textScene.font;
+    $('sequenceScale').value = state.textScene.scale;
+    $('sequenceScale').nextElementSibling.textContent = `${Math.round(state.textScene.scale * 100)}%`;
+    $('sequenceColor').value = state.textScene.color;
     $('speed').value = state.speed; $('speed').nextElementSibling.textContent = `${state.speed.toFixed(2)}×`;
     $('loop').checked = state.loop;
     document.querySelectorAll('[data-preset]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.preset === state.P.logo)));
@@ -128,13 +153,22 @@
     state.P[key] = Number($(key).value); syncControls(); persist(); drawPreview();
   }));
   colorKeys.forEach(key => $(key).addEventListener('input', () => { state.P[key] = $(key).value; syncControls(); persist(); drawPreview(); }));
+  $('headerBackground').addEventListener('input', () => { state.P.background = $('headerBackground').value; syncControls(); persist(); drawPreview(); });
   boolKeys.forEach(key => $(key).addEventListener('change', () => { state.P[key] = $(key).checked; syncControls(); persist(); drawPreview(); }));
   $('speed').oninput = () => { state.speed = Number($('speed').value); syncControls(); persist(); };
   $('loop').onchange = () => { state.loop = $('loop').checked; persist(); };
   $('logoText').oninput = () => { state.P.text = $('logoText').value; persist(); queueLogo(); };
   $('logoFont').onchange = () => { state.font = $('logoFont').value; persist(); queueLogo(); };
+  $('toggleTextScene').onclick = async () => { state.textScene.enabled = !state.textScene.enabled; syncControls(); persist(); if (state.textScene.enabled) await refreshText(); else { textData = null; seek(Math.min(time, cycle())); } };
+  $('sequenceText').oninput = () => { state.textScene.text = $('sequenceText').value; persist(); queueText(); };
+  $('sequenceFont').onchange = () => { state.textScene.font = $('sequenceFont').value; persist(); queueText(); };
+  $('sequenceScale').oninput = () => { state.textScene.scale = Number($('sequenceScale').value); syncControls(); persist(); drawPreview(); };
+  $('sequenceColor').oninput = () => { state.textScene.color = $('sequenceColor').value; persist(); drawPreview(); };
+  $('pauseTextScene').onclick = () => seek(Core.endOf(state.P) + state.P.present * .9);
   let logoTimer;
   function queueLogo() { clearTimeout(logoTimer); logoTimer = setTimeout(refreshLogo, 150); }
+  let textTimer;
+  function queueText() { clearTimeout(textTimer); textTimer = setTimeout(refreshText, 150); }
   document.querySelectorAll('[data-preset]').forEach(button => button.onclick = async () => {
     state.P.logo = button.dataset.preset; state.P.originalColors = state.P.logo === 'pinwheel';
     state.assetId = ''; state.assetUrl = ''; state.assetType = '';
@@ -236,30 +270,55 @@
     } catch (error) { $('renderError').hidden = false; $('renderError').textContent = error.message; console.error(error); }
   }
 
-  function cycle() { return Core.endOf(state.P) + state.P.hold; }
+  async function refreshText() {
+    const version = ++textVersion;
+    if (!state.textScene.enabled || !state.textScene.text.trim()) { textData = null; drawPreview(); return; }
+    try {
+      const font = Fonts.preset(state.textScene.font);
+      if (font) await document.fonts.load(`${font.style} ${font.weight} 600px ${Fonts.family(state.textScene.font)}`, state.textScene.text);
+      if (version !== textVersion) return;
+      const data = await Core.makeLogo('text', { text: state.textScene.text, font: Fonts.family(state.textScene.font), style: font?.style, weight: font?.weight });
+      if (version !== textVersion) return;
+      textData = data; drawPreview();
+    } catch (error) { console.error(error); $('renderError').hidden = false; $('renderError').textContent = error.message; }
+  }
+
+  function cycle() { return Core.endOf(state.P) * (state.textScene.enabled ? 2 : 1) + state.P.hold; }
   function phases() {
     const end = Core.endOf(state.P), first = Math.min(state.P.present * .36, state.P.response * .8);
-    return [0, first, state.P.present, end, cycle()];
+    const beats = [
+      { start: 0, end: first, ...PHASES[0] },
+      { start: first, end: state.P.present, ...PHASES[1] },
+      { start: state.P.present, end, ...PHASES[2] }
+    ];
+    if (state.textScene.enabled) beats.push(
+      { start: end, end: end + first, ...PHASES[3] },
+      { start: end + first, end: end + state.P.present, ...PHASES[4] },
+      { start: end + state.P.present, end: end * 2, ...PHASES[5] }
+    );
+    beats.push({ start: end * (state.textScene.enabled ? 2 : 1), end: cycle(), ...PHASES[6] });
+    return beats;
   }
   function buildTimeline() {
-    const marks = phases(), total = cycle(), timeline = $('timeline'); timeline.replaceChildren();
-    PHASES.forEach((phase, index) => {
-      const length = marks[index + 1] - marks[index]; if (length < .01) return;
+    const beats = phases(), total = cycle(), timeline = $('timeline'); timeline.replaceChildren();
+    beats.forEach(phase => {
+      const length = phase.end - phase.start; if (length < .01) return;
       const button = document.createElement('button'); button.type = 'button'; button.className = 'me-choreo-block'; button.style.setProperty('--phase-color', phase.color);
-      button.style.flex = `${length} 1 0`; button.dataset.seek = marks[index]; button.setAttribute('role', 'listitem');
+      button.style.flex = `${length} 1 0`; button.dataset.seek = phase.start; button.setAttribute('role', 'listitem');
       button.innerHTML = `<strong>${label(phase.zh, phase.en)}</strong><small>${length.toFixed(2)} s</small>`;
-      button.setAttribute('aria-label', `${label(phase.zh, phase.en)} ${marks[index].toFixed(2)}–${marks[index + 1].toFixed(2)} s`);
-      button.onclick = () => seek(marks[index] + Math.min(.08, length / 3)); timeline.append(button);
+      button.setAttribute('aria-label', `${label(phase.zh, phase.en)} ${phase.start.toFixed(2)}–${phase.end.toFixed(2)} s`);
+      button.onclick = () => seek(phase.start + Math.min(.08, length / 3)); timeline.append(button);
     });
-    $('timelineDetails').replaceChildren(...PHASES.map((phase, i) => {
+    $('timelineDetails').replaceChildren(...beats.map(phase => {
       const span = document.createElement('span'); span.style.setProperty('--phase-color', phase.color);
-      span.innerHTML = `<b></b>${label(phase.zh, phase.en)} ${Math.max(0, marks[i + 1] - marks[i]).toFixed(2)}s`; return span;
+      span.innerHTML = `<b></b>${label(phase.zh, phase.en)} ${Math.max(0, phase.end - phase.start).toFixed(2)}s`; return span;
     }));
     $('scrubber').max = String(total);
   }
   function fitStage() {
     const rect = $('stageArea').getBoundingClientRect(); if (!rect.width || !rect.height) return;
-    const scale = Math.min((rect.width - 40) / state.width, (rect.height - 40) / state.height);
+    const margin = previewMode ? 0 : 40;
+    const scale = Math.min((rect.width - margin) / state.width, (rect.height - margin) / state.height);
     const width = Math.max(1, Math.round(state.width * scale)), height = Math.max(1, Math.round(state.height * scale));
     $('stageFrame').style.width = `${width}px`; $('stageFrame').style.height = `${height}px`;
     const dpr = Math.min(devicePixelRatio || 1, 2);
@@ -268,11 +327,18 @@
   }
   function drawFrame(at, target, canvas, width, height) {
     if (!target) return;
-    const data = dynamicLogoAt(at);
+    const logoEnd = Core.endOf(state.P);
+    const showText = state.textScene.enabled && at >= logoEnd;
+    const localTime = showText ? at - logoEnd : at;
+    const data = showText ? textData : dynamicLogoAt(localTime);
     if (!data) { const [r,g,b] = [1,3,5].map(i => parseInt(state.P.background.slice(i,i+2),16) / 255); target.gl.viewport(0,0,width,height); target.gl.clearColor(r,g,b,1); target.gl.clear(target.gl.COLOR_BUFFER_BIT); return; }
     if (target._logo !== data) { target.setLogo(data); target._logo = data; }
-    const end = Core.endOf(state.P), fade = at > end ? Math.min(1, (at - end) / Math.max(.1, state.P.hold)) : 0;
-    const frame = Core.frameAt(Math.min(at,end), state.P, fade);
+    const end = Core.endOf(state.P);
+    const fade = !showText && state.textScene.enabled
+      ? Math.max(0, Math.min(1, (localTime - end + .16) / .16))
+      : localTime > end ? Math.min(1, (localTime - end) / Math.max(.1, state.P.hold)) : 0;
+    const P = showText ? { ...state.P, logo: 'text', logoScale: state.textScene.scale, logoColor: state.textScene.color, originalColors: false } : state.P;
+    const frame = Core.frameAt(Math.min(localTime,end), P, fade);
     target.render(frame, width, height, Math.min(width,height) * state.P.tileSize / 480);
   }
   function drawPreview() { drawFrame(time, renderer, preview, preview.width, preview.height); }
@@ -315,6 +381,17 @@
     syncControls(); persist();
   };
   new ResizeObserver(fitStage).observe($('stageArea'));
+  const sizeMenu = document.createElement('div');
+  sizeMenu.className = 'glass-size-menu'; sizeMenu.hidden = true;
+  sizeMenu.replaceChildren(...[...$('canvasPreset').options].map(option => {
+    const button = document.createElement('button'); button.type = 'button'; button.textContent = option.textContent; button.dataset.size = option.value;
+    button.onclick = () => { $('canvasPreset').value = option.value; $('canvasPreset').dispatchEvent(new Event('change')); sizeMenu.hidden = true; if (option.value === 'custom') $('canvasWidth').focus(); };
+    return button;
+  }));
+  $('openCanvasSize').after(sizeMenu);
+  $('openCanvasSize').onclick = () => { sizeMenu.hidden = !sizeMenu.hidden; $('openCanvasSize').setAttribute('aria-expanded', String(!sizeMenu.hidden)); };
+  document.addEventListener('click', event => { if (!event.target.closest('.glass-header-tools')) sizeMenu.hidden = true; });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') sizeMenu.hidden = true; });
 
   function download(blob, filename) {
     const anchor = document.createElement('a'); anchor.href = URL.createObjectURL(blob); anchor.download = filename; anchor.click();
@@ -324,12 +401,12 @@
   $('importScheme').onclick = () => $('schemeFile').click();
   $('schemeFile').onchange = async event => {
     const file = event.target.files?.[0]; if (!file) return;
-    try { state = readScheme(JSON.parse(await file.text())); seek(0); syncControls(); persist(); await refreshLogo(); $('schemeStatus').textContent = label('方案已导入。', 'Project imported.'); }
+    try { state = readScheme(JSON.parse(await file.text())); seek(0); syncControls(); persist(); await Promise.all([refreshLogo(), refreshText()]); $('schemeStatus').textContent = label('方案已导入。', 'Project imported.'); }
     catch (error) { $('schemeStatus').textContent = `${label('导入失败', 'Import failed')}: ${error.message}`; }
     event.target.value = '';
   };
-  $('restoreScheme').onclick = async () => { state = structuredClone(DEFAULT); seek(0); syncControls(); persist(); await refreshLogo(); $('schemeStatus').textContent = label('已恢复默认方案。', 'Default restored.'); };
-  $('clearScheme').onclick = () => { state.P.logo = 'empty'; state.assetId = state.assetUrl = state.assetType = ''; logoData = null; if (animatedResource) Animated.dispose(animatedResource); animatedResource = null; dynamicAsset = null; dynamicCache.clear(); seek(0); syncControls(); persist(); $('schemeStatus').textContent = label('已清空图标，请重新选择。', 'Icon cleared. Choose a new one.'); };
+  $('restoreScheme').onclick = async () => { state = structuredClone(DEFAULT); seek(0); syncControls(); persist(); await Promise.all([refreshLogo(), refreshText()]); $('schemeStatus').textContent = label('已恢复默认方案。', 'Default restored.'); };
+  $('clearScheme').onclick = () => { state.P.logo = 'empty'; state.textScene.enabled = false; state.assetId = state.assetUrl = state.assetType = ''; logoData = textData = null; if (animatedResource) Animated.dispose(animatedResource); animatedResource = null; dynamicAsset = null; dynamicCache.clear(); seek(0); syncControls(); persist(); $('schemeStatus').textContent = label('已清空图标，请重新选择。', 'Icon cleared. Choose a new one.'); };
 
   $('exportDuration').onchange = () => { $('customDurationField').hidden = $('exportDuration').value !== 'custom'; updateExportInfo(); };
   $('customDuration').oninput = updateExportInfo; $('exportScale').onchange = updateExportInfo;
@@ -388,6 +465,22 @@
     finally { encoder?.delete(); exportRenderer?.dispose(); busy = false; playing = wasPlaying; last = performance.now(); updatePlayButton(); document.querySelectorAll('.export-actions button').forEach(button => button.disabled = false); }
   }
   $('exportPng').onclick = () => exportArtwork('png'); $('exportGif').onclick = () => exportArtwork('gif'); $('exportMp4').onclick = () => exportArtwork('mp4');
-  window.CellMotionGlassReveal = { state: () => structuredClone(state), seek, exportArtwork, get time() { return time; }, get ready() { return !!logoData; } };
-  buildLibrary(); Fonts.enhanceSelect($('logoFont')); syncControls(); localize(); refreshLogo(); requestAnimationFrame(tick);
+  function componentScheme() {
+    return { effect: 'glass-icon-reveal', version: 1, canvas: { width: state.width, height: state.height }, settings: { font: state.font }, scene: structuredClone(state), assets: state.assetId ? [{ libraryId: state.assetId, url: state.assetUrl, kind: state.assetType }] : [] };
+  }
+  async function applyComponentScheme(composition, presentation = {}) {
+    if (composition?.effect !== 'glass-icon-reveal' || !composition.scene) throw new Error('Invalid glass reveal composition');
+    state = readScheme({ version: 1, ...composition.scene });
+    time = 0; playing = presentation.autoplay !== false && !(presentation.reducedMotion === 'pause' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+    syncControls(); await Promise.all([refreshLogo(), refreshText()]); updateClock(); updatePlayButton(); drawPreview();
+  }
+  window.CellMotionGlassReveal = { state: () => structuredClone(state), seek, exportArtwork, componentScheme, get time() { return time; }, get ready() { return !!logoData && (!state.textScene.enabled || !!textData); } };
+  buildLibrary(); Fonts.enhanceSelect($('logoFont')); Fonts.enhanceSelect($('sequenceFont')); syncControls(); localize();
+  Promise.all([refreshLogo(), refreshText()]).then(() => window.CellMotionBridge?.register({
+    effectId: 'glass-icon-reveal', getScheme: componentScheme, applyScheme: applyComponentScheme,
+    play: () => { playing = true; last = performance.now(); updatePlayButton(); },
+    pause: () => { playing = false; updatePlayButton(); },
+    restart: replay, seek, durationMs: () => cycle() * 1000
+  }));
+  requestAnimationFrame(tick);
 })();

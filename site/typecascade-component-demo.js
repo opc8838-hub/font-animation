@@ -40,7 +40,7 @@
         return;
       }
       const requested = new URLSearchParams(location.search).get('effect');
-      const effect = ['thermal-profile','typepour','video-compare'].includes(requested) ? requested : 'typecascade';
+      const effect = ['thermal-profile','typepour','video-compare','glass-icon-reveal'].includes(requested) ? requested : 'typecascade';
       const [definitionResponse, presetResponse] = await Promise.all([
         fetch(`effects/${effect}.component.json`),
         fetch(`assets/presets/${effect}-default.json`)
