@@ -81,7 +81,7 @@
 
   function configuredCode(manifest) {
     const json = JSON.stringify(manifest, null, 2).replace(/<\//g, "<\\/");
-    const playerScript = new URL('cellmotion-player.js', manifest.runtime.entry); playerScript.searchParams.set('v', '20261015-vcompare12');
+    const playerScript = new URL('../cellmotion-player.js', manifest.$schema || new URL('schemas/cellmotion-component-v1.schema.json', manifest.runtime.entry)); playerScript.searchParams.set('v', '20261015-vcompare12');
     if (manifest.capabilities?.nativeEffectPage) {
       return `<iframe title="${manifest.effect.name?.en || manifest.effect.id}" src="${manifest.runtime.entry}" style="display:block;width:100%;aspect-ratio:${manifest.composition.canvas.width}/${manifest.composition.canvas.height};border:0"></iframe>\n<script type="application/json" id="cellmotion-editor-config">${json}</script>`;
     }

@@ -42,14 +42,14 @@ body.cm-fluedit { --panel: var(--tc-panel); --line: var(--tc-line); --accent: va
 .cm-status { font-size: 12px; color: var(--tc-muted); line-height: 1.65; margin: 12px 0 0; overflow-wrap: anywhere; }
 .cm-fluedit .cm-center { border: 1px solid var(--tc-line); border-radius: 20px; overflow: hidden; background: var(--tc-panel); grid-template-rows: auto minmax(0,1fr) auto; }
 .cm-fluedit .cm-canvas-toolbar { padding: 12px 16px; border-bottom: 1px solid var(--tc-line); flex-wrap: wrap; color: var(--tc-muted); }
-.cm-fluedit .cm-canvas-toolbar .gm-canvas-card { flex: 1; min-width: 100px; }
+.cm-fluedit .cm-canvas-toolbar .gm-canvas-card { flex: 0 1 250px; min-width: 100px; margin-left: auto; }
 .cm-fluedit .tc-preview-label { font-size: 12px; }
 .cm-fluedit .cm-background-label { display: flex; gap: 8px; align-items: center; font-size: 12px; }
 .cm-fluedit input[type="color"] { padding: 2px; width: 30px; height: 30px; border: 1px solid var(--tc-line); border-radius: 8px; background: var(--tc-input); }
 .cm-custom-size { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
 .cm-custom-size label { display: flex; align-items: center; gap: 4px; min-width: 0; }
 .cm-fluedit .cm-custom-size input { width: 76px; min-width: 0; height: 32px; padding: 4px 8px; }
-.cm-fluedit .preview { display: flex; align-items: center; justify-content: center; padding: 20px; min-height: 0; overflow: hidden; background: var(--tc-canvas-surround) !important; }
+.cm-fluedit .preview { display: flex; align-items: center; justify-content: center; padding: 20px; min-height: 0; overflow: hidden; background: var(--cm-stage-background, var(--tc-canvas-surround)) !important; }
 .cm-fluedit #stage { flex: none; max-width: 100%; max-height: 100%; border-radius: 3px; overflow: hidden; box-shadow: 0 4px 28px #0003; }
 .cm-fluedit #art-surface { min-width: 0; }
 .cm-fluedit .cm-inspector { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
@@ -166,3 +166,15 @@ body.cm-fluedit { --panel: var(--tc-panel); --line: var(--tc-line); --accent: va
 @media (max-width:380px) { .cm-fluedit .tc-header h1 { display: none; } .cm-fluedit .tc-header .tc-brand { flex-basis: 112px; width: 112px; } .cm-fluedit .tc-brand img { width: 222px; left: -55px; top: -50px; } }
 @media (max-width:860px) { html[lang="en"] .cm-fluedit .tc-scheme .gm-actions { grid-template-columns: 1fr 1fr; } }
 @media (prefers-reduced-motion:reduce) { .cm-fluedit *, .cm-fluedit *::before, .cm-fluedit *::after { transition-duration: 0s !important; scroll-behavior: auto !important; } }
+.cm-fluedit .cm-art-background { padding: 0 0 14px; }
+.cm-fluedit .cm-art-background label { justify-content: space-between; font-size: 14px; color: var(--tc-text); }
+.cm-fluedit .tc-header h1 { width: auto; }
+.cm-fluedit .tc-ai-actions { flex: 0 0 auto; }
+.cm-fluedit .cm-canvas-toolbar { overflow: visible; }
+.cm-fluedit .tc-backdrop-control { z-index: 10; }
+body.cm-preview { display: block; width: 100vw; height: 100dvh; min-height: 0; padding: 0; overflow: hidden; }
+body.cm-preview > :not(.cm-center) { display: none !important; }
+body.cm-preview .cm-center { display: block; width: 100%; height: 100%; border: 0; border-radius: 0; }
+.cm-preview .cm-canvas-toolbar, .cm-preview .cm-timeline, .cm-preview #art-guides { display: none !important; }
+.cm-preview .preview { width: 100%; height: 100%; padding: 0; background: transparent !important; }
+.cm-preview #stage { border-radius: 0; box-shadow: none; }

@@ -10,10 +10,11 @@ export async function mountCellMotion(core) {
   };
   const label = (zh, en) => `<span data-zh="${zh}" data-en="${en}">${zh}</span>`;
   const body = document.body;
+  const previewMode = new URLSearchParams(location.search).get('preview') === '1';
   const defaults = { width: 1920, height: 1080, duration: 'cycle', seconds: 6, fps: 30, scale: 1 };
   const storageKey = 'cellmotion-fluedit-workspace-v1';
   let settings = { ...defaults };
-  try { settings = validateSettings(JSON.parse(localStorage.getItem(storageKey)) || defaults); } catch { /* Use the approved default. */ }
+  try { if (!previewMode) settings = validateSettings(JSON.parse(localStorage.getItem(storageKey)) || defaults); } catch { /* Use the approved default. */ }
   let busy = false;
   let saveTimer;
   let exportRenderer;
@@ -95,13 +96,21 @@ export async function mountCellMotion(core) {
 
   const center = make('section', 'tc-center cm-center');
   const toolbar = make('section', 'tc-canvas-toolbar cm-canvas-toolbar', `
-    <span class="tc-preview-label">${label('画布', 'Canvas')}</span>
+    <div class="tc-backdrop-control">
+      <button class="tc-backdrop-toggle" id="tcBackdropToggle" type="button" aria-haspopup="true" aria-expanded="false" aria-pressed="false">▧ ${label('铺满背景', 'Stage fill')}</button>
+      <div class="tc-backdrop-popover" hidden>
+        <label>${label('跟随当前形状背景', 'Follow shape background')}<input id="tcBackdropEnabled" type="checkbox"></label>
+        <label>${label('独立画布背景', 'Independent stage color')}<input id="tcBackdropColor" type="color"></label>
+        <button id="tcBackdropReset" type="button">${label('恢复默认灰色', 'Reset neutral gray')}</button>
+      </div>
+    </div>
     <div class="gm-canvas-card"><select id="cmCanvasPreset" aria-label="画布尺寸">
       <option value="1080x1080">1:1 · 1080 × 1080</option><option value="1080x1350">4:5 · 1080 × 1350</option><option value="1080x1440">3:4 · 1080 × 1440</option><option value="1080x1620">2:3 · 1080 × 1620</option><option value="1080x1920">9:16 · 1080 × 1920</option><option value="1920x1080">16:9 · 1920 × 1080</option><option value="1440x1080">4:3 · 1440 × 1080</option><option value="1620x1080">3:2 · 1620 × 1080</option><option value="custom" data-zh="自定义" data-en="Custom">自定义</option>
     </select><div id="cmCustomSize" class="cm-custom-size" hidden><label>W <input id="cmWidth" type="number" min="320" max="3840" step="2"></label><span>×</span><label>H <input id="cmHeight" type="number" min="320" max="3840" step="2"></label></div></div>
-    <label class="cm-background-label">${label('背景', 'Background')}<input id="cmBackground" type="color" aria-label="背景颜色"></label>`);
+    `);
+  colorPanel.prepend(make('section', 'section cm-art-background', `<label class="cm-background-label">${label('作品背景', 'Artwork background')}<input id="cmBackground" type="color" aria-label="背景颜色"></label>`));
   const timeline = make('section', 'tc-timeline cm-timeline', `
-    <div class="cm-transport"><button id="cmReplay" type="button" aria-label="从头播放">↺</button><button id="cmPlay" type="button"></button><span id="cmTime" data-no-translate></span><span class="cm-timeline-title">${label('色彩时间轴', 'Color timeline')}</span></div>
+    <div class="cm-transport me-stage-controls"><button id="cmReplay" type="button" aria-label="从头播放">↺</button><button id="cmPlay" type="button"></button><span id="cmTime" data-no-translate></span><span class="cm-timeline-title">${label('色彩时间轴', 'Color timeline')}</span></div>
     <div id="cmTimeline" class="me-choreo-track" role="group" aria-label="色彩时间轴"></div>
     <input id="cmScrubber" class="me-choreo-playhead" type="range" min="0" max="1" step="0.001" value="0" aria-label="播放进度">
     <div class="cm-time-scale"><span>0 s</span><span id="cmDurationLabel"></span></div>`);
@@ -110,6 +119,9 @@ export async function mountCellMotion(core) {
   $('#app').remove();
   $('#fluedit-loading').remove();
   body.classList.add('tc-workspace', 'cm-fluedit', 'fluedit-ready');
+  body.classList.toggle('cm-preview', previewMode);
+  body.dataset.morphPort = 'fluedit';
+  body.dataset.siteBase = '../';
   body.dataset.editorStandard = 'true';
   body.dataset.editorTheme = localStorage.getItem('cellmotion-site-theme') || localStorage.getItem('cellmotion-editor-theme') || 'dark';
   // This adapter owns bilingual labels; shared preferences still own the site preference state.
@@ -133,6 +145,7 @@ export async function mountCellMotion(core) {
     return result;
   }
   function persist() {
+    if (previewMode) return;
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => localStorage.setItem(storageKey, JSON.stringify(settings)), 200);
   }
@@ -142,7 +155,8 @@ export async function mountCellMotion(core) {
   }
   function fitStage() {
     const rect = preview.getBoundingClientRect();
-    const width = Math.max(1, Math.min(rect.width - 40, (rect.height - 40) * settings.width / settings.height));
+    const inset = previewMode ? 0 : 40;
+    const width = Math.max(1, Math.min(rect.width - inset, (rect.height - inset) * settings.width / settings.height));
     stage.style.width = `${width}px`;
     stage.style.height = `${width * settings.height / settings.width}px`;
     core.refresh();
@@ -168,6 +182,8 @@ export async function mountCellMotion(core) {
   function sync() {
     shapes.open = true;
     $('#cmBackground').value = core.background();
+    stage.style.backgroundColor = core.background();
+    syncBackdrop();
     buildTimeline();
     translate();
   }
@@ -195,6 +211,33 @@ export async function mountCellMotion(core) {
     syncSettings(); persist();
   };
   $('#cmBackground').oninput = event => core.setBackground(event.target.value);
+  const backdrop = $('.tc-backdrop-popover');
+  let backdropFollow = localStorage.getItem('cellmotion-stage-backdrop-enabled') === 'true';
+  let backdropColor = localStorage.getItem('cellmotion-stage-backdrop-color') || '';
+  function syncBackdrop() {
+    const color = /^#[\da-f]{6}$/i.test(backdropColor) ? backdropColor : body.dataset.editorTheme === 'light' ? '#e7e7ec' : '#121214';
+    $('#tcBackdropEnabled').checked = backdropFollow;
+    $('#tcBackdropColor').value = color;
+    $('#tcBackdropToggle').setAttribute('aria-pressed', String(backdropFollow));
+    preview.style.setProperty('--cm-stage-background', backdropFollow ? core.background() : color);
+  }
+  function closeBackdrop() { backdrop.hidden = true; $('#tcBackdropToggle').setAttribute('aria-expanded', 'false'); }
+  $('#tcBackdropToggle').onclick = () => {
+    backdrop.hidden = !backdrop.hidden;
+    $('#tcBackdropToggle').setAttribute('aria-expanded', String(!backdrop.hidden));
+  };
+  $('#tcBackdropEnabled').onchange = event => {
+    backdropFollow = event.target.checked;
+    localStorage.setItem('cellmotion-stage-backdrop-enabled', String(backdropFollow)); syncBackdrop();
+  };
+  $('#tcBackdropColor').oninput = event => {
+    backdropColor = event.target.value;
+    localStorage.setItem('cellmotion-stage-backdrop-color', backdropColor); syncBackdrop();
+  };
+  $('#tcBackdropReset').onclick = () => { backdropColor = ''; localStorage.removeItem('cellmotion-stage-backdrop-color'); syncBackdrop(); };
+  document.addEventListener('click', event => { if (!event.target.closest('.tc-backdrop-control')) closeBackdrop(); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') closeBackdrop(); });
+  new MutationObserver(syncBackdrop).observe(body, { attributes: true, attributeFilter: ['data-editor-theme'] });
   for (const [id, key] of [['cmDuration', 'duration'], ['cmSeconds', 'seconds'], ['cmFps', 'fps'], ['cmExportScale', 'scale']]) $(`#${id}`).onchange = event => {
     if (!event.target.validity.valid || !event.target.value) { syncSettings(); return; }
     settings[key] = key === 'duration' ? event.target.value : Number(event.target.value);
@@ -354,12 +397,38 @@ export async function mountCellMotion(core) {
     requestAnimationFrame(() => { syncPending = false; sync(); });
   }
   for (const event of ['input', 'change', 'click', 'pointerup', 'keydown']) document.addEventListener(event, scheduleSync);
-  document.addEventListener('cellmotion:languagechange', () => { buildTimeline(); translate(); document.dispatchEvent(new Event('tc-languagechange')); });
+  document.addEventListener('cellmotion:languagechange', () => {
+    body.dataset.editorLanguage = document.documentElement.dataset.siteLanguage;
+    buildTimeline(); translate();
+    document.dispatchEvent(new CustomEvent('tc-languagechange', { detail: { language: body.dataset.editorLanguage } }));
+  });
   new ResizeObserver(fitStage).observe(preview);
-  if (new URLSearchParams(location.search).has('from')) restore();
+  if (!previewMode && new URLSearchParams(location.search).has('from')) restore();
   syncSettings(); sync(); updateClock();
-  await loadScript('../site-preferences.js?v=20260926-24');
-  await loadScript('../typecascade-selects.js?v=20261023-fluedit1');
+  function collectComponent() {
+    return { effect: 'fluedit', version: 1, canvas: { width: settings.width, height: settings.height, fps: settings.fps },
+      motion: core.state().motion, scene: core.state(), documents: core.library(), settings: { ...settings } };
+  }
+  await loadScript('../cellmotion-effect-bridge.js?v=20261023-fluedit-standard1');
+  window.CellMotionBridge.register({
+    effectId: 'fluedit', getScheme: collectComponent,
+    applyScheme(composition, presentation = {}) {
+      if (composition?.effect !== 'fluedit' || composition.version !== 1 || !composition.scene) throw new Error('Invalid Fluedit composition');
+      const nextSettings = validateSettings({ ...composition.settings, width: composition.canvas?.width, height: composition.canvas?.height, fps: composition.canvas?.fps });
+      const state = core.validate(composition.scene);
+      core.applyLibrary({ ...composition.documents, [state.shape]: state }, state.shape);
+      settings = nextSettings; core.seek(0); syncSettings(); sync();
+      core.play(presentation.autoplay !== false && !(presentation.reducedMotion === 'pause' && matchMedia('(prefers-reduced-motion: reduce)').matches));
+    },
+    play: () => core.play(true), pause: () => core.play(false), restart: () => { core.seek(0); core.play(true); },
+    seek: seconds => { core.play(false); core.seek(Math.max(0, seconds)); }, durationMs: () => duration() * 1000,
+  });
+  if (!previewMode) {
+    await loadScript('../site-preferences.js?v=20260926-24');
+    await loadScript('../typecascade-selects.js?v=20261023-fluedit1');
+    await loadScript('../cellmotion-ai-manifest.js?v=20261023-fluedit-standard1');
+    await loadScript('../cellmotion-ai-menu.js?v=20261023-fluedit-standard1');
+  }
   translate();
   window.CellMotionFluedit = { state: core.state, settings: () => ({ ...settings }), time: core.time, seek: seconds => { core.play(false); core.seek(seconds); }, exportArtwork };
 }

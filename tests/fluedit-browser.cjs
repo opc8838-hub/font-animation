@@ -66,6 +66,7 @@ fs.mkdirSync(output, { recursive: true });
   await select('cmCanvasPreset', 'custom');
   await page.locator('#cmWidth').fill('320'); await page.locator('#cmWidth').dispatchEvent('change');
   await page.locator('#cmHeight').fill('480'); await page.locator('#cmHeight').dispatchEvent('change');
+  await page.locator('[data-panel="color"]').first().click();
   await page.locator('#cmBackground').fill('#c5dded');
   await page.locator('#cmBackground').dispatchEvent('input');
   await page.locator('.tc-export-shortcut').click();
