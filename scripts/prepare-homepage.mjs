@@ -13,5 +13,9 @@ for (const [tag, href] of links) {
   if (/<\/style/i.test(css)) throw new Error('Unsafe style terminator in ' + href);
   html = html.replace(tag, '<style data-source="' + href + '">\n' + css + '\n</style>\n');
 }
+const media = JSON.parse(await readFile(path.join(siteRoot, 'assets/cellmotion/home-media.json'), 'utf8'));
+html = html.replace(/<script data-home-media>[\s\S]*?<\/script>\s*/, '');
+const mediaScript = '<script data-home-media>window.CellMotionMedia=' + JSON.stringify(media).replace(/</g, '\\u003c') + ';</script>\n';
+html = html.replace('</head>', mediaScript + '</head>');
 await writeFile(entry, html);
 console.log('Inlined ' + links.length + ' homepage stylesheets');

@@ -9,6 +9,21 @@ function inCategory(effect, category) {
 }
 const escapeHTML = (text) => String(text).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const mediaURL = (url) => `${url}${url.includes('?') ? '&' : '?'}v=20261010-spotlight1`;
+const posterURL = url => window.CellMotionMedia?.posters?.[url] || url;
+// Native lazy loading may fetch images several screens ahead; keep previews close to view.
+const posterObserver = new IntersectionObserver(entries => {
+  for (const entry of entries) {
+    const image = entry.target;
+    if (!image.isConnected) { posterObserver.unobserve(image); continue; }
+    if (!entry.isIntersecting) continue;
+    image.src = image.dataset.posterSrc;
+    delete image.dataset.posterSrc;
+    posterObserver.unobserve(image);
+  }
+}, { rootMargin: '160px 0px' });
+function observePosters(root) {
+  root.querySelectorAll('img[data-poster-src]').forEach(image => posterObserver.observe(image));
+}
 const play = async (video) => { try {
   if (!video.getAttribute('src') && video.dataset.src) video.src = mediaURL(video.dataset.src);
   if (!video.getAttribute('poster') && video.dataset.poster) video.poster = video.dataset.poster;
@@ -38,6 +53,7 @@ const hero = $('#hero-video'), featureVideo = $('#featured-video');
 let heroIntent=!reduced.matches, heroVisible=false;
 
 if (hero) {
+  if (matchMedia('(max-width: 760px)').matches && hero.dataset.mobileSrc) hero.dataset.src = hero.dataset.mobileSrc;
   if(reduced.matches)hero.pause();
   const sync=()=>{$('#hero-toggle').textContent=hero.paused?'▶':'Ⅱ';$('#hero-toggle').setAttribute('aria-label',hero.paused?'播放品牌视频':'暂停品牌视频');};
   hero.addEventListener('play',sync);hero.addEventListener('pause',sync);sync();
@@ -50,7 +66,7 @@ function initRibbon() {
   if(ribbon.dataset.ready==='true')return;
   ribbon.dataset.ready='true';
   const items=ribbonSeed.map(seed=>effects.find(effect=>effect.id===seed.id)||seed).filter(effect=>effect?.video && !isPending(effect));
-  $('#ribbon-track').innerHTML=items.map(effect=>`<a class="ribbon-card${effect.id==='iconburst'?' is-landscape':''}" href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器"><img src="${effect.poster}" loading="lazy" alt="${escapeHTML(effect.name)}动效"><video data-src="${effect.video}" muted loop playsinline preload="none" aria-hidden="true"></video><span class="ribbon-name">${escapeHTML(effect.name)} ↗</span></a>`).join('');
+  $('#ribbon-track').innerHTML=items.map(effect=>`<a class="ribbon-card${effect.id==='iconburst'?' is-landscape':''}" href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器"><img data-poster-src="${posterURL(effect.poster)}" decoding="async" loading="lazy" alt="${escapeHTML(effect.name)}动效"><video data-src="${effect.video}" muted loop playsinline preload="none" aria-hidden="true"></video><span class="ribbon-name">${escapeHTML(effect.name)} ↗</span></a>`).join('');
   const cards=[...ribbon.querySelectorAll('.ribbon-card')];
   let width=ribbon.clientWidth, cardWidth=0, cardSizes=[], offset=0, previous=0, raf=0, visible=false, hovered=false, focused=false, enabled=!reduced.matches;
   const videos=cards.map(card=>card.querySelector('video'));
@@ -94,6 +110,7 @@ function initRibbon() {
   new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;refresh();},{threshold:.1}).observe(ribbon);
   document.addEventListener('visibilitychange',refresh);
   size();refresh();
+  observePosters(ribbon);
 }
 
 function syncFeatureControls() {
@@ -108,7 +125,8 @@ function selectFeature(index, manual=false) {
   if(manual){autoRotate=false;featuredIntent=true;}
   featureVideo.pause();
   featureVideo.src=mediaURL(effect.video);
-  if(effect.poster)featureVideo.poster=effect.poster;else featureVideo.removeAttribute('poster');
+  featureVideo.removeAttribute('poster');
+  if(effect.poster)featureVideo.dataset.poster=posterURL(effect.poster);else delete featureVideo.dataset.poster;
   $('#featured-name').textContent=effect.name;
   $('#featured-en').textContent=effect.english.toUpperCase();
   $('#featured-description').textContent=effect.description;
@@ -173,7 +191,7 @@ const recentObserver=new IntersectionObserver(entries=>{
 },{threshold:.18});
 function recentCard(item,index) {
   const effect=item.effect, [, month, day]=item.date.split('-');
-  const image=effect.poster?`<img src="${effect.poster}" alt="${escapeHTML(effect.name)}动效封面" loading="lazy">`:`<span class="poster-fallback">${escapeHTML(effect.name)}</span>`;
+  const image=effect.poster?`<img data-poster-src="${posterURL(effect.poster)}" decoding="async" alt="${escapeHTML(effect.name)}动效封面" loading="lazy">`:`<span class="poster-fallback">${escapeHTML(effect.name)}</span>`;
   const video=effect.video?`<video data-src="${effect.video}" muted loop playsinline preload="none" aria-hidden="true"></video>`:'';
   return `<a class="recent-card${index===0?' is-newest':''}" href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器"><span class="recent-preview">${image}${video}<span class="recent-badge">${item.date===recent[0]?.date?'NEW · ':''}${month}.${day}</span></span><span class="recent-caption"><strong>${escapeHTML(effect.name)}</strong><span data-no-translate>${escapeHTML(effect.english)}</span></span></a>`;
 }
@@ -181,11 +199,12 @@ function initRecent() {
   const grid=$('#recent-grid');if(!grid)return;
   recentObserver.disconnect();
   grid.innerHTML=recent.map(recentCard).join('');
+  observePosters(grid);
   grid.querySelectorAll('.recent-preview').forEach(preview=>{if(preview.querySelector('video'))recentObserver.observe(preview);});
 }
 function catalogCard(effect) {
   const pending=isPending(effect);
-  const image=effect.poster?`<img src="${effect.poster}" alt="${escapeHTML(effect.name)}动效封面" loading="lazy">`:`<span class="poster-fallback">${escapeHTML(effect.name)}</span>`;
+  const image=effect.poster?`<img data-poster-src="${posterURL(effect.poster)}" decoding="async" alt="${escapeHTML(effect.name)}动效封面" loading="lazy">`:`<span class="poster-fallback">${escapeHTML(effect.name)}</span>`;
   const category=`<span class="card-category">${categoryNames[effect.category]||''}</span>`;
   if(pending){
     return `<article class="catalog-card is-pending" aria-disabled="true" aria-label="${escapeHTML(effect.name)}，待上新，未完成"><div class="catalog-preview">${image}${category}<span class="pending-cover">待上新，未完成</span></div><div class="card-caption"><div><h3>${escapeHTML(effect.name)}</h3><p>${escapeHTML(effect.english)}</p></div></div></article>`;
@@ -207,6 +226,7 @@ function renderCatalog() {
   if($('#load-more'))$('#load-more').hidden=matches.length<=limit;
   if($('#usage-note'))$('#usage-note').textContent=activeUsage==='web'?'已适配组件可从编辑器右上角 For AI 预览并复制配置代码；使用同一动效渲染器，不是嵌入 MP4。':activeUsage==='video'?'选择动效，进入工作台编辑，再使用该编辑器提供的导出功能。视频拼接器尚未开放。':'提供独立编辑器与导出。翻牌登录、卡牌剧场已支持 For AI 网页组件，其余组件逐步适配。';
   $('#catalog-grid').innerHTML=showing.map(catalogCard).join('');
+  observePosters($('#catalog-grid'));
   $('#catalog-grid').querySelectorAll('.catalog-preview').forEach(preview=>{
     const pending=preview.closest('.catalog-card')?.classList.contains('is-pending');
     if(pending)return;
