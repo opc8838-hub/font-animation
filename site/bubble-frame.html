@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="流体泡泡：满屏软体字、荧光配色与舞台光影。">
+  <title>流体泡泡 · Bubble Fluid — CellMotion</title>
+  <link rel="icon" href="favicon.svg">
+  <link rel="stylesheet" href="shared-fonts.css?v=20261020-oddball2">
+  <link rel="stylesheet" href="typecascade-workspace.css">
+  <link rel="stylesheet" href="typecascade-polish.css">
+  <link rel="stylesheet" href="typepour-editor.css?v=20261020-ui1">
+  <link rel="stylesheet" href="bubble-frame.css?v=20261026-release1">
+</head>
+<body class="tc-workspace tp-editor ink-editor" data-editor-capabilities="text-only" data-editor-theme="dark" data-editor-language="zh">
+  <header class="tc-header">
+    <a class="tc-brand tp-brand" href="cellmotion.html" aria-label="CellMotion"><img src="assets/cellmotion/logo-dark-original.png" alt="CellMotion" class="tc-logo-dark"><img src="assets/cellmotion/logo-original-transparent.png?v=20260926-1" alt="" class="tc-logo-light" aria-hidden="true"></a>
+    <h1><span data-zh="流体泡泡" data-en="Bubble Fluid">流体泡泡</span><span data-zh="Bubble Fluid" data-en="Elastic lettering">Bubble Fluid</span></h1>
+    <a class="tc-back" href="cellmotion-editors.html" data-zh="返回编辑器" data-en="Editors">返回编辑器</a>
+    <button id="language" type="button" aria-label="切换语言">EN</button>
+    <button id="theme" type="button" aria-label="切换主题">☼</button>
+    <button id="exportShortcut" class="tc-export-shortcut" type="button" data-zh="导出作品" data-en="Export">导出作品</button>
+  </header>
+  <aside class="tc-content">
+    <div class="tc-panel-heading"><div><small>01 / COMPOSITION</small><h2 data-zh="内容" data-en="Composition">内容</h2></div></div>
+    <div class="tc-row-list"><button class="tc-row-select" type="button" aria-pressed="true"><span class="tc-row-number">01</span><span class="tc-row-text" data-zh="泡泡文字" data-en="Bubble lettering">泡泡文字</span><span class="tc-row-description">BUBBLE FLUID</span></button></div>
+    <p class="tc-hint" data-zh="字母相互挤压、扭转，持续流动。荧光配色同步舞台光影。" data-en="Elastic letters flow, squeeze and turn. Neon colors tint the stage lighting.">字母相互挤压、扭转，持续流动。荧光配色同步舞台光影。</p>
+    <section class="tc-scheme"><h2 data-zh="方案" data-en="Scheme">方案</h2><div class="gm-actions">
+      <button id="saveScheme" type="button" data-zh="保存方案" data-en="Save">保存方案</button>
+      <button id="importScheme" type="button" data-zh="导入方案" data-en="Import">导入方案</button>
+      <button id="resetScheme" type="button" data-zh="恢复默认" data-en="Restore">恢复默认</button>
+      <button id="clearScheme" type="button" data-zh="清理重做" data-en="Clear">清理重做</button>
+    </div><input id="schemeFile" type="file" accept="application/json,.json" hidden><p id="saveStatus" class="gm-help" role="status"></p></section>
+  </aside>
+  <main class="tc-center">
+    <div class="tc-canvas-toolbar"><label><span data-zh="画布尺寸" data-en="Canvas size">画布尺寸</span><select id="ratio"><option value="1080x1080">1:1</option><option value="1080x1350">4:5</option><option value="1080x1440">3:4</option><option value="1080x1620">2:3</option><option value="1080x1920">9:16</option><option value="1920x1080">16:9</option><option value="1440x1080">4:3</option><option value="1620x1080">3:2</option><option value="custom" data-zh="自定义" data-en="Custom">自定义</option></select></label><div id="customSize" hidden><input id="canvasWidth" type="number" min="320" max="4096" value="1080" aria-label="宽度"> × <input id="canvasHeight" type="number" min="320" max="4096" value="1080" aria-label="高度"></div><span id="dimensions">1080 × 1080</span></div>
+    <section class="gm-stage"><div class="tp-canvas-space"><canvas id="canvas" width="1080" height="1080" aria-label="流体泡泡预览"></canvas></div><div class="ink-stage-controls me-stage-controls"><button id="replay" type="button" data-zh="重播" data-en="Replay">重播</button><button id="play" type="button" data-zh="暂停" data-en="Pause">暂停</button></div></section>
+    <section class="tc-timeline"><div class="tp-transport"><div class="tp-transport-meta"><output id="clock">0.00 / 5.10</output><label data-zh="速度" data-en="Speed">速度</label><select id="speed" aria-label="播放速度"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></div></div><div id="phaseTrack" class="tp-phases me-choreo-track"><div id="phaseSegments" class="me-choreo-scroll me-choreo-bar"></div><i id="playhead" class="me-choreo-playhead"></i><input id="seek" type="range" min="0" max="5.1" step="0.01" value="0" aria-label="时间轴"></div><div id="phaseLegend" class="me-choreo-legend"></div></section>
+  </main>
+  <aside class="gm-inspector"><nav class="tc-tabs"><button type="button" data-tab="content" aria-pressed="true" data-zh="当前内容" data-en="Content">当前内容</button><button type="button" data-tab="motion" aria-pressed="false" data-zh="动效设置" data-en="Motion">动效设置</button><button type="button" data-tab="export" aria-pressed="false" data-zh="导出" data-en="Export">导出</button></nav><div class="tc-properties">
+    <div data-pane="content"><section class="gm-card"><h2 data-zh="文字与颜色" data-en="Text and colors">文字与颜色</h2><label class="tp-field"><span data-zh="标题文字" data-en="Title">标题文字</span><textarea id="text" rows="5" >TOO MUCH
+TO WATCH</textarea></label><button id="pauseEdit" type="button" data-zh="暂停修改" data-en="Pause to edit">暂停修改</button><div class="tp-field"><span data-zh="字体" data-en="Font">字体</span><select id="letterStyle"><option value="bubble">Bubble · 泡泡字</option><option value="font">字体库</option></select></div><div class="tp-field"><span data-zh="字体库 / 非拉丁文字" data-en="Font library / non-Latin">字体库 / 非拉丁文字</span><select id="font"><option value="stg:archivo-black">Archivo Black</option></select></div><label class="tp-field"><span data-zh="字号" data-en="Size">字号</span><input id="size" type="range" min="70" max="172" step="1" value="172"><output for="size"></output></label><label class="tp-field"><span data-zh="字距" data-en="Tracking">字距</span><input id="tracking" type="range" min="-20" max="40" step="1" value="0"><output for="tracking"></output></label><label class="tp-field"><span data-zh="行距" data-en="Line spacing">行距</span><input id="lineSpacing" type="range" min="0.9" max="1.4" step="0.05" value="1"><output for="lineSpacing"></output></label><label class="tp-field"><span data-zh="字体颜色" data-en="Text color">字体颜色</span><input id="textColor" type="color" value="#ff54dc"></label><div class="ink-color-swatches" role="group" aria-label="文字与屏幕配色"><button type="button" data-ink-color="#ff54dc" data-stage-color="#861267" aria-label="荧光粉" title="荧光粉"></button><button type="button" data-ink-color="#f1ff38" data-stage-color="#797914" aria-label="荧光黄" title="荧光黄"></button><button type="button" data-ink-color="#17ff9f" data-stage-color="#076f45" aria-label="荧光绿" title="荧光绿"></button><button type="button" data-ink-color="#49edff" data-stage-color="#126d83" aria-label="电光青" title="电光青"></button><button type="button" data-ink-color="#ff9c28" data-stage-color="#994516" aria-label="荧光橙" title="荧光橙"></button><button type="button" data-ink-color="#bd80ff" data-stage-color="#6336a1" aria-label="电光紫" title="电光紫"></button></div><label class="tp-field"><span data-zh="屏幕底色" data-en="Screen color">屏幕底色</span><input id="backgroundColor" type="color" value="#861267"></label><div class="ink-paper-swatches" role="group" aria-label="背景颜色预设"><button type="button" data-paper="#eeeae1" aria-label="暖背景颜色" title="暖背景颜色"></button><button type="button" data-paper="#ffffff" aria-label="纯白" title="纯白"></button><button type="button" data-paper="#f2dcd3" aria-label="浅桃" title="浅桃"></button><button type="button" data-paper="#dbe7db" aria-label="浅绿" title="浅绿"></button><button type="button" data-paper="#24313d" aria-label="深蓝灰" title="深蓝灰"></button></div></section><section class="gm-card ink-background-card"><h2 data-zh="视频背景" data-en="Video background">视频背景</h2><label class="ink-video-upload"><span data-zh="上传 / 更换视频" data-en="Upload / replace video">上传 / 更换视频</span><input id="backgroundVideoFile" type="file" accept="video/mp4,video/webm,video/quicktime"></label><div id="backgroundVideoOptions" hidden><p id="backgroundVideoName" class="gm-help"></p><div class="ink-video-trim"><label class="tp-field"><span data-zh="开始 / 秒" data-en="Start / sec">开始 / 秒</span><input id="videoStart" type="number" min="0" step="0.1" value="0"></label><label class="tp-field"><span data-zh="结束 / 秒" data-en="End / sec">结束 / 秒</span><input id="videoEnd" type="number" min="0.1" step="0.1" value="0"></label></div><button id="removeBackgroundVideo" type="button" class="ink-video-remove" data-zh="移除视频" data-en="Remove video">移除视频</button></div><p id="backgroundVideoStatus" class="gm-help" role="status"></p></section></div>
+<div data-pane="motion" hidden><section class="gm-card"><h2 data-zh="流动节奏" data-en="Flow rhythm">流动节奏</h2><label class="tp-field"><span data-zh="舒展挤压 / 秒" data-en="Flow / sec">舒展挤压 / 秒</span><input id="lead" type="range" min="0.5" max="12" step="0.1" value="2"><output for="lead"></output></label><label class="tp-field"><span data-zh="柔软定形 / 秒" data-en="Settle / sec">柔软定形 / 秒</span><input id="write" type="range" min="0.5" max="12" step="0.1" value=".6"><output for="write"></output></label><label class="tp-field"><span data-zh="柔软回流 / 秒" data-en="Reflow / sec">柔软回流 / 秒</span><input id="restore" type="range" min="0.5" max="12" step="0.1" value="2.2"><output for="restore"></output></label><label class="tp-field"><span data-zh="形变幅度" data-en="Deformation">形变幅度</span><input id="flow" type="range" min="0" max="1.5" step="0.05" value="1"><output for="flow"></output></label><label class="tp-field"><span data-zh="转向幅度" data-en="Turning">转向幅度</span><input id="rotation" type="range" min="0" max="1" step="0.05" value="1"><output for="rotation"></output></label></section></div>
+    <div data-pane="export" hidden><section class="gm-card"><h2 data-zh="导出作品" data-en="Export">导出作品</h2><p id="exportDimensions" class="gm-help">1080 × 1080</p><label class="tp-field"><span data-zh="输出比例" data-en="Output scale">输出比例</span><select id="exportScale"><option value="0.5">50%</option><option value="1" selected>100%</option></select></label><label class="tp-field"><span data-zh="帧率" data-en="Frame rate">帧率</span><select id="exportFps"><option>15</option><option>24</option><option selected>30</option><option>60</option></select></label><label class="tp-field"><span data-zh="导出时长 / 秒（0 为完整周期）" data-en="Duration / sec (0 = full cycle)">导出时长 / 秒（0 为完整周期）</span><input id="exportDuration" type="number" min="0" max="120" step="0.1" value="0"></label><div class="gm-actions"><button id="png" type="button">PNG</button><button id="gif" type="button">GIF</button><button id="mp4" type="button">MP4</button></div><p id="status" class="gm-help" role="status"></p></section></div>
+  </div></aside>
+  <script src="shared-font-library.js?v=20261025-bubble"></script>
+  <script src="js/continuation-gif.js"></script>
+  <script src="js/h264-mp4-encoder.web.js"></script>
+  <script src="bubble-frame-glyphs.js?v=20261025-shorttext2"></script>
+  <script src="bubble-frame-scene.js?v=20261025-measured2"></script>
+  <script src="bubble-frame-fluid-lettering.js?v=20261025-packing6"></script>
+  <script src="bubble-frame-motion.js?v=20261025-continuous3"></script>
+  <script src="bubble-frame-poses.js?v=20261025-packing6"></script>
+  <script src="bubble-frame-clearance.js?v=20261025-spacing7"></script>
+  <script src="bubble-frame-fluid.js?v=20261025-spacing7"></script>
+  <script src="bubble-frame.js?v=20261026-release1"></script>
+  <script src="bubble-frame-editor.js?v=20261026-release1"></script>
+  <script src="typecascade-selects.js"></script>
+</body>
+</html>

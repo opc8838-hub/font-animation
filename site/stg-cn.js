@@ -10,6 +10,7 @@
     return;
   }
   const effects = [
+    ["bubble-frame", "流体泡泡", "Bubble Fluid"],
     ["ascii-sharks", "字符海洋", "ASCII Ocean"],
     ["botvoice", "Bot 语音", "Bot Voice"], ["blockflow", "方块流动", "Block Flow"], ["patentwall", "作品展示 1", "Artwork Showcase 1"], ["patentcount", "作品展示 2", "Artwork Showcase 2"], ["animalwave", "动物浪潮", "Animal Wave"],
     ["thermal-profile", "热感", "Thermal Profile"],
