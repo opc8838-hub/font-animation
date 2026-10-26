@@ -7,7 +7,7 @@
   },
   "runtime": {
     "kind": "iframe-bridge",
-    "entry": "glass-icon-reveal.html?v=20261023-glass3",
+    "entry": "glass-icon-reveal.html?v=20261026-dark1",
     "bridgeVersion": "1.0.0",
     "renderer": "webgl2"
   },
@@ -34,6 +34,7 @@
     ]
   },
   "parameters": [
+    { "path": "composition.scene.look", "scope": "global", "type": "string", "name": { "zh": "玻璃外观", "en": "Glass look" } },
     { "path": "composition.canvas.width", "scope": "global", "type": "integer", "name": { "zh": "画布宽度", "en": "Canvas width" }, "unit": "px" },
     { "path": "composition.canvas.height", "scope": "global", "type": "integer", "name": { "zh": "画布高度", "en": "Canvas height" }, "unit": "px" },
     { "path": "composition.scene.P.background", "scope": "global", "type": "color", "name": { "zh": "背景颜色", "en": "Background" } },

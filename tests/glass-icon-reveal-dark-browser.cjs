@@ -1,0 +1,84 @@
+// node tests/glass-icon-reveal-dark-browser.cjs <node_modules directory> <browser executable> [base URL]
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { chromium } = require(path.resolve(process.argv[2] || 'node_modules', 'playwright'));
+const base = (process.argv[4] || 'http://127.0.0.1:8768').replace(/\/$/, '');
+
+(async () => {
+  const browser = await chromium.launch({ headless: true, executablePath: process.argv[3] || undefined });
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, acceptDownloads: true });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  try {
+    await page.goto(`${base}/glass-icon-reveal.html`, { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => CellMotionGlassReveal.ready);
+    assert.equal(await page.evaluate(() => CellMotionGlassReveal.state().look), 'light');
+    await page.locator('[data-preset="x"]').click();
+    await page.locator('#toggleTextScene').click();
+    await page.locator('#sequenceText').fill('品牌');
+    await page.locator('.tc-tabs button[data-panel="motion"]').click();
+    await page.locator('[data-look="dark"]').click();
+    let state = await page.evaluate(() => CellMotionGlassReveal.state());
+    assert.equal(state.look, 'dark');
+    assert.equal(state.P.logo, 'x');
+    assert.equal(state.P.background, '#000000');
+    assert.equal(state.P.logoColor, '#ffffff');
+    assert.equal(state.P.plateColor, '#05070b');
+    assert.equal(state.P.iconPlate, true);
+    assert.equal(state.P.dispersion, .9);
+    assert.equal(state.textScene.text, '品牌');
+    assert.equal(state.textScene.color, '#ffffff');
+    assert.equal(await page.locator('[data-look="dark"]').getAttribute('aria-pressed'), 'true');
+    const darkFrame = await page.evaluate(() => { CellMotionGlassReveal.seek(.84); return document.querySelector('#view').toDataURL(); });
+    assert.ok(darkFrame.length > 10000);
+    const manifest = await page.evaluate(async () => {
+      const definition = await (await fetch('effects/glass-icon-reveal.component.json')).json();
+      const value = CellMotionAI.createManifest({ definition, scheme: CellMotionEffectBridge.getScheme(), baseUrl: document.baseURI });
+      const check = CellMotionAI.validate(value);
+      if (!check.valid) throw new Error(check.errors.join('; '));
+      return value;
+    });
+    assert.equal(manifest.composition.scene.look, 'dark');
+    assert.equal(manifest.composition.scene.textScene.color, '#ffffff');
+    const [download] = await Promise.all([page.waitForEvent('download'), page.locator('#saveScheme').click()]);
+    const schemeFile = path.resolve(__dirname, '../output/glass-dark-test-scheme.json');
+    await download.saveAs(schemeFile);
+    await page.locator('#restoreScheme').click();
+    assert.equal(await page.evaluate(() => CellMotionGlassReveal.state().look), 'light');
+    await page.locator('#schemeFile').setInputFiles(schemeFile);
+    await page.waitForFunction(() => CellMotionGlassReveal.state().look === 'dark' && CellMotionGlassReveal.ready);
+    assert.equal(await page.evaluate(() => CellMotionGlassReveal.state().P.logo), 'x');
+    await page.locator('#headerBackground').fill('#f0f0f0');
+    state = await page.evaluate(() => CellMotionGlassReveal.state());
+    assert.equal(state.look, 'light');
+    assert.equal(state.P.logoColor, '#0e1428');
+    assert.equal(state.textScene.color, '#0e1428');
+    await page.locator('#headerBackground').fill('#000000');
+    state = await page.evaluate(() => CellMotionGlassReveal.state());
+    assert.equal(state.look, 'dark');
+    assert.equal(state.P.logoColor, '#ffffff');
+    assert.equal(state.P.logo, 'x');
+    await page.locator('#logoScale').evaluate(input => { input.value = '.88'; input.dispatchEvent(new Event('input', { bubbles: true })); });
+    await page.locator('[data-look="light"]').click();
+    assert.equal(await page.evaluate(() => CellMotionGlassReveal.state().P.logoScale), .88);
+    await page.locator('[data-look="dark"]').click();
+    await page.locator('#themeButton').click();
+    assert.equal(await page.evaluate(() => CellMotionGlassReveal.state().look), 'dark');
+    await page.evaluate(() => {
+      const legacy = { type: 'cellmotion-glass-icon-reveal', version: 1, P: { ...GlassRevealCore.LOOKS.light, background: '#000000' }, textScene: { enabled: true, text: '旧方案', font: 'stg:inter', scale: .7, color: '#0e1428' } };
+      localStorage.setItem('cellmotion:glass-icon-reveal:v1', JSON.stringify(legacy));
+    });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => CellMotionGlassReveal.ready);
+    state = await page.evaluate(() => CellMotionGlassReveal.state());
+    assert.equal(state.look, 'dark');
+    assert.equal(state.P.logoColor, '#ffffff');
+    assert.equal(state.textScene.color, '#ffffff');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.locator('.tc-tabs button[data-panel="motion"]').click();
+    assert.equal(await page.locator('[data-look="dark"]').isVisible(), true);
+    assert.deepEqual(errors, []);
+    console.log('Dark glass preset, background switching, scheme, AI manifest, and mobile controls passed.');
+  } finally { await browser.close(); }
+})().catch(error => { console.error(error); process.exitCode = 1; });
