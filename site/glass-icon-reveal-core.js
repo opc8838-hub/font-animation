@@ -4,6 +4,10 @@
 (function () {
 'use strict';
 const PRESETS = {
+  x: {
+    label: 'X', color: false,
+    svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#fff" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>'
+  },
   note: {
     // offset: where the logo's centre sits (plate units, y up); lensShift: how far it sits from there
     // while the young droplet's ball lens is on, so the droplet first shows the corner of stem and beam.
@@ -598,7 +602,16 @@ const BASE = {
   bounce: 0, response: 0.34, startSize: 0.2, startZoom: 2.6, present: 1, drift: 0.12, swell: 0.5, focus: 1, hold: 0.8,
   background: '#e9e9eb', plateColor: '#ffffff', logoColor: '#0e1428',
 };
-const LOOKS = { light: { ...BASE } };
+const LOOKS = {
+  light: { ...BASE },
+  dark: {
+    ...BASE, logoScale: 0.72, finalScale: 1, iconPlate: true,
+    halo: 1, shadow: 0, ripple: 0.5, startZoom: 1.6, drift: 0.05,
+    opticalDepth: 0.75, bevelWidth: 0.22, dispersion: 0.9,
+    glow: 0.45, corner: 5, cornerPull: 1.4, edgeSmear: 1.2, tilt: 0, cornerWidth: 1.2, cornerFocus: 0.4,
+    background: '#000000', plateColor: '#05070b', logoColor: '#ffffff'
+  }
+};
 
 const TAIL = 0.95;    // from the glass letting go to everything at rest, seconds
 const endOf = P => P.present + TAIL;
