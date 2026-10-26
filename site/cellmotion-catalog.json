@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "bubble-frame",
+      "date": "2026-10-26"
+    },
+    {
       "id": "glass-icon-reveal",
       "date": "2026-10-23"
     },
@@ -134,6 +138,17 @@
     }
   ],
   "effects": [
+    {
+      "id": "bubble-frame",
+      "name": "流体泡泡",
+      "english": "Bubble Fluid",
+      "description": "软体字流动 · 荧光配色 · 舞台光影",
+      "category": "type",
+      "href": "bubble-frame.html?from=gallery&v=20261026-release1",
+      "poster": "final_bubble-frame.png",
+      "video": "assets/previews/bubble-frame-card.mp4",
+      "status": "ready"
+    },
     {
       "id": "glass-icon-reveal",
       "name": "玻璃显标",

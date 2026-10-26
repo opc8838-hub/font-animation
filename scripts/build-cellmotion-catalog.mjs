@@ -17,6 +17,7 @@ for (const id of pendingRelease) {
   if (!knownIds.has(id)) throw new Error(`Unknown pending effect: ${id}`);
 }
 const videos = {
+  'bubble-frame':'bubble-frame-card',
   fluedit:'fluedit-card',
   'glass-icon-reveal':'glass-icon-reveal-card',
   'ascii-sharks':'ascii-sharks-card',
@@ -38,6 +39,7 @@ const videos = {
 const media = new Set(['patentcount','botvoice','patentwall','animalwave','video-compare','curvedgallery','mediacascade','beforeafter','shutterafter','phoneframe','laptopframe','orbitgallery','moodboard']);
 // Newest releases first, shown on the homepage as 最近上新. Dates are the public release of each editor.
 const recent = [
+  ["bubble-frame","2026-10-26"],
   ["glass-icon-reveal","2026-10-23"],
   ["fluedit","2026-10-23"],
   ["ascii-sharks","2026-10-20"], ["oddball","2026-10-20"], ["blockflow","2026-10-19"], ["patentcount","2026-10-19"],
@@ -57,7 +59,7 @@ const recent = [
 for (const [id] of recent) if (!knownIds.has(id)) throw new Error(`Unknown recent effect: ${id}`);
 const featured = ['prosvg','sproutshift','typecascade','dotresolve','glyphmorph','iconburst','pathwriter','letterpulse'];
 // Keep the existing published entry routes and approved preview revisions when rebuilding.
-const entryRoutes = { fluedit:'fluedit/?from=gallery&v=20261023-motion1', blockflow:'blockflow.html?from=gallery&v=20261019-review2',patentcount:'patentcount.html?from=gallery&v=20261019-white3', 'ascii-sharks':'ascii-sharks.html?from=gallery&v=20261021-ocean-ink1', botvoice:'botvoice.html?from=gallery&v=20261019-archive4', patentwall:'patentwall.html?from=gallery&v=20261019-review2', animalwave:'animalwave.html?from=gallery&v=20261019-archive4', 'thermal-profile':'thermal-profile.html?from=gallery&v=20261015-release1', 'video-compare':'video-compare.html?v=20261015-vcompare12', index:'cylinder.html', 'card-login':'card-login.html?from=gallery&v=20261010-cards1', carddeck:'carddeck.html?from=gallery&v=20261010-cards1', spotlight:'spotlight.html?from=gallery&v=20261010-1', switchdrop:'switchdrop.html?from=gallery&v=20261012-round-hold1', curvedgallery:'curvedgallery.html?from=gallery&v=20261010-ai1', prosvg:'prosvg.html?from=gallery&v=20261005-1', citystack:'citystack.html?from=gallery&v=20261006-1', typegarden:'typegarden.html?from=gallery&v=20261006-1' };
+const entryRoutes = { 'bubble-frame':'bubble-frame.html?from=gallery&v=20261026-release1', fluedit:'fluedit/?from=gallery&v=20261023-motion1', blockflow:'blockflow.html?from=gallery&v=20261019-review2',patentcount:'patentcount.html?from=gallery&v=20261019-white3', 'ascii-sharks':'ascii-sharks.html?from=gallery&v=20261021-ocean-ink1', botvoice:'botvoice.html?from=gallery&v=20261019-archive4', patentwall:'patentwall.html?from=gallery&v=20261019-review2', animalwave:'animalwave.html?from=gallery&v=20261019-archive4', 'thermal-profile':'thermal-profile.html?from=gallery&v=20261015-release1', 'video-compare':'video-compare.html?v=20261015-vcompare12', index:'cylinder.html', 'card-login':'card-login.html?from=gallery&v=20261010-cards1', carddeck:'carddeck.html?from=gallery&v=20261010-cards1', spotlight:'spotlight.html?from=gallery&v=20261010-1', switchdrop:'switchdrop.html?from=gallery&v=20261012-round-hold1', curvedgallery:'curvedgallery.html?from=gallery&v=20261010-ai1', prosvg:'prosvg.html?from=gallery&v=20261005-1', citystack:'citystack.html?from=gallery&v=20261006-1', typegarden:'typegarden.html?from=gallery&v=20261006-1' };
 const previewRevisions = { 'glass-icon-reveal':'20261023-glass2', 'ascii-sharks':'20261021-ocean-ink1', oddball:'20261020-ink2',blockflow:'20261019-review2',patentcount:'20261019-white3', patentwall:'20261019-review2', 'video-compare':'20261015-vcompare12', 'card-login':'20261020-white-covers1',carddeck:'20261020-white-covers1',typegarden:'20261020-white-covers1',typepour:'20261020-wide1',spotlight:'20261010-1',switchdrop:'20261012-round-hold1',curvedgallery:'20261009-4', iconburst:'20260926-5', zerogflip:'20261006' };
 const videoRevisions = { switchdrop:'20261012-round-hold1' };
 async function exists(path) { try { await access(new URL(path, site)); return true; } catch { return false; } }
