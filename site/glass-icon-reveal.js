@@ -8,7 +8,13 @@
   const previewMode = new URLSearchParams(location.search).has('preview');
   if (previewMode) document.body.classList.add('is-preview');
   const STORE = 'cellmotion:glass-icon-reveal:v1';
-  const DEFAULT = { P: { ...Core.LOOKS.light }, width: 1080, height: 1080, customSize: false, speed: 1, loop: true, font: 'stg:inter', assetId: '', assetUrl: '', assetType: '', textScene: { enabled: false, text: '你好', font: 'stg:inter', scale: 0.7, color: '#0e1428' } };
+  const DEFAULT = { look: 'light', P: { ...Core.LOOKS.light }, width: 1080, height: 1080, customSize: false, speed: 1, loop: true, font: 'stg:inter', assetId: '', assetUrl: '', assetType: '', textScene: { enabled: false, text: '你好', font: 'stg:inter', scale: 0.7, color: '#0e1428' } };
+  const LOOK_FIELDS = ['logoScale', 'finalScale', 'iconPlate', 'halo', 'shadow', 'ripple', 'startZoom', 'drift', 'opticalDepth', 'bevelWidth', 'dispersion', 'glow', 'corner', 'cornerPull', 'edgeSmear', 'tilt', 'cornerWidth', 'cornerFocus', 'plateColor', 'logoColor'];
+  const lookForBackground = color => {
+    if (!/^#[0-9a-f]{6}$/i.test(color)) return 'light';
+    const channels = [1, 3, 5].map(index => parseInt(color.slice(index, index + 2), 16) / 255);
+    return channels[0] * .2126 + channels[1] * .7152 + channels[2] * .0722 > .5 ? 'light' : 'dark';
+  };
   const SIZE_OPTIONS = ['1080x1080', '1080x1350', '1080x1440', '1080x1620', '1080x1920', '1920x1080', '1440x1080', '1620x1080'];
   const PHASES = [
     { zh: '水滴凝结', en: 'Droplet', color: '#8ec8ff' },
@@ -47,6 +53,10 @@
       const value = raw.P[key];
       if (typeof value === typeof P[key]) P[key] = value;
     });
+    const look = raw.look === 'dark' || raw.look === 'light' ? raw.look : lookForBackground(P.background);
+    if (!raw.look && look === 'dark') LOOK_FIELDS.forEach(key => {
+      if (P[key] === Core.LOOKS.light[key]) P[key] = Core.LOOKS.dark[key];
+    });
     const dimension = (v, fallback) => Number.isFinite(v) ? Math.max(128, Math.min(3840, Math.round(v / 2) * 2)) : fallback;
     const textScene = { ...DEFAULT.textScene };
     if (raw.textScene && typeof raw.textScene === 'object') {
@@ -56,7 +66,8 @@
       if (Number.isFinite(raw.textScene.scale)) textScene.scale = Math.max(.2, Math.min(1.4, raw.textScene.scale));
       if (/^#[0-9a-f]{6}$/i.test(raw.textScene.color || '')) textScene.color = raw.textScene.color;
     }
-    return { P, width: dimension(raw.width, 1080), height: dimension(raw.height, 1080), customSize: raw.customSize === true, speed: Number.isFinite(raw.speed) ? Math.max(.25, Math.min(2, raw.speed)) : 1, loop: raw.loop !== false, font: typeof raw.font === 'string' ? raw.font : 'stg:inter', assetId: typeof raw.assetId === 'string' ? raw.assetId : '', assetUrl: typeof raw.assetUrl === 'string' ? raw.assetUrl : '', assetType: typeof raw.assetType === 'string' ? raw.assetType : '', textScene };
+    if (!raw.look && look === 'dark' && textScene.color === Core.LOOKS.light.logoColor) textScene.color = Core.LOOKS.dark.logoColor;
+    return { look, P, width: dimension(raw.width, 1080), height: dimension(raw.height, 1080), customSize: raw.customSize === true, speed: Number.isFinite(raw.speed) ? Math.max(.25, Math.min(2, raw.speed)) : 1, loop: raw.loop !== false, font: typeof raw.font === 'string' ? raw.font : 'stg:inter', assetId: typeof raw.assetId === 'string' ? raw.assetId : '', assetUrl: typeof raw.assetUrl === 'string' ? raw.assetUrl : '', assetType: typeof raw.assetType === 'string' ? raw.assetType : '', textScene };
   }
   function persist(record = true) {
     if (record) {
@@ -131,6 +142,7 @@
     $('logoText').value = state.P.text;
     $('logoFont').value = state.font;
     $('headerBackground').value = state.P.background;
+    document.querySelectorAll('[data-look]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.look === state.look)));
     $('toggleTextScene').setAttribute('aria-pressed', String(state.textScene.enabled));
     $('toggleTextScene').textContent = state.textScene.enabled ? label('移除文字', 'Remove text') : label('新增文字', 'Add text');
     $('textSceneFields').hidden = !state.textScene.enabled;
@@ -152,8 +164,27 @@
   valueKeys.forEach(key => $(key).addEventListener('input', () => {
     state.P[key] = Number($(key).value); syncControls(); persist(); drawPreview();
   }));
-  colorKeys.forEach(key => $(key).addEventListener('input', () => { state.P[key] = $(key).value; syncControls(); persist(); drawPreview(); }));
-  $('headerBackground').addEventListener('input', () => { state.P.background = $('headerBackground').value; syncControls(); persist(); drawPreview(); });
+  function applyLook(name, background = Core.LOOKS[name].background) {
+    const previous = Core.LOOKS[state.look];
+    LOOK_FIELDS.forEach(key => {
+      if (state.P[key] === previous[key]) state.P[key] = Core.LOOKS[name][key];
+    });
+    if (state.textScene.color === previous.logoColor) state.textScene.color = Core.LOOKS[name].logoColor;
+    state.P.background = background;
+    state.look = name;
+    syncControls(); persist(); drawPreview();
+  }
+  function setBackground(color) {
+    const nextLook = lookForBackground(color);
+    if (nextLook !== state.look) applyLook(nextLook, color);
+    else { state.P.background = color; syncControls(); persist(); drawPreview(); }
+  }
+  document.querySelectorAll('[data-look]').forEach(button => button.onclick = () => applyLook(button.dataset.look));
+  colorKeys.forEach(key => $(key).addEventListener('input', () => {
+    if (key === 'background') setBackground($(key).value);
+    else { state.P[key] = $(key).value; syncControls(); persist(); drawPreview(); }
+  }));
+  $('headerBackground').addEventListener('input', () => setBackground($('headerBackground').value));
   boolKeys.forEach(key => $(key).addEventListener('change', () => { state.P[key] = $(key).checked; syncControls(); persist(); drawPreview(); }));
   $('speed').oninput = () => { state.speed = Number($('speed').value); syncControls(); persist(); };
   $('loop').onchange = () => { state.loop = $('loop').checked; persist(); };

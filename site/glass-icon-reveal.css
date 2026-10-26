@@ -96,6 +96,9 @@ body.glass-editor { box-sizing: border-box; }
 .glass-editor .check-field input { accent-color: var(--tc-accent); }
 .glass-editor .control-group { padding: 15px; margin-bottom: 12px; border: 1px solid var(--tc-line); border-radius: 14px; background: var(--tc-surface); }
 .glass-editor .control-group h3 { margin: 0 0 15px; font-size: 14px; }
+.glass-editor .glass-look-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 16px; padding: 4px; border-radius: 10px; background: var(--tc-input); }
+.glass-editor .glass-look-choices button { min-height: 34px; border: 0; border-radius: 8px; background: transparent; color: var(--tc-muted); font-size: 12px; cursor: pointer; }
+.glass-editor .glass-look-choices button[aria-pressed="true"] { background: var(--tc-panel); color: var(--tc-text); box-shadow: 0 2px 7px #0002; }
 .glass-editor .control-group .field:last-child { margin-bottom: 0; }
 .glass-editor .export-actions { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin: 20px 0; }
 .glass-editor .export-actions button { min-height: 42px; border: 1px solid var(--tc-line); border-radius: 10px; background: var(--tc-surface); color: var(--tc-text); font-weight: 650; }
