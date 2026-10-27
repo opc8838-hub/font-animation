@@ -22,6 +22,8 @@
     const rgb=[1,3,5].map(i=>parseInt(color.slice(i,i+2),16)/255),maximum=Math.max(...rgb),minimum=Math.min(...rgb),delta=maximum-minimum;
     let hue=delta?(maximum===rgb[0]?(rgb[1]-rgb[2])/delta:maximum===rgb[1]?2+(rgb[2]-rgb[0])/delta:4+(rgb[0]-rgb[1])/delta):0;
     hue=(hue/6+1)%1;
+    const perceived=rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722;
+    const compensation=Math.max(1,Math.min(1.14,Math.sqrt(.72/Math.max(.22,perceived))));
     for(let i=0;i<pixels.length;i+=4){
       const r=pixels[i]/255,g=pixels[i+1]/255,b=pixels[i+2]/255;
       const max=Math.max(r,g,b),min=Math.min(r,g,b),chroma=max-min;
@@ -30,7 +32,9 @@
       const sourceHue=(g===max?2+(b-r)/chroma:4+(r-g)/chroma)/6;
       const h=((sourceHue+hue-.43+1)%1)*6,s=(chroma/max)*(maximum?delta/maximum:0),c=max*s,x=c*(1-Math.abs(h%2-1)),m=max-c;
       const result=h<1?[c,x,0]:h<2?[x,c,0]:h<3?[0,c,x]:h<4?[0,x,c]:h<5?[x,0,c]:[c,0,x];
-      for(let k=0;k<3;k++)pixels[i+k]=Math.round((result[k]+m)*255);
+      // Lift dimmer hues in the midtones, retaining deep shadows and highlight detail.
+      const lift=1+(compensation-1)*4*max*(1-max);
+      for(let k=0;k<3;k++)pixels[i+k]=Math.round((result[k]+m)*255*lift);
     }
     ctx.putImageData(image,0,0);cachedColor=color;return tinted;
   }

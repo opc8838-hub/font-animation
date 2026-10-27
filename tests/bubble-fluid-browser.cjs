@@ -38,7 +38,7 @@ const {chromium}=require(path.resolve(process.argv[2]||'node_modules','playwrigh
    await capture('color-'+state.textColor.slice(1),0);
   }
   await page.locator('#textColor').fill('#ff3377');await page.locator('#textColor').dispatchEvent('input');
-  assert.notEqual((await page.evaluate(()=>CellMotionBubbleFrame.state())).backgroundColor,'#861267','Custom foreground colors also pair the screen color');
+  assert.notEqual((await page.evaluate(()=>CellMotionBubbleFrame.state())).backgroundColor,'#963079','Custom foreground colors also pair the screen color');
   await page.getByRole('button',{name:'荧光粉',exact:true}).click();
   for(const [name,text] of [['custom','SOFT\nMOTION'],['single','R'],['source-short','TOO MUCH'],['chinese','流动字体\n荧光舞台']]){
    await page.locator('#text').fill(text);await page.locator('#pauseEdit').click();await page.evaluate(()=>document.fonts.ready);
@@ -72,7 +72,7 @@ const {chromium}=require(path.resolve(process.argv[2]||'node_modules','playwrigh
   const migration=await browser.newPage();
   await migration.addInitScript(()=>localStorage.setItem('cellmotion-bubble-frame-fluid-v1',JSON.stringify({version:1,state:{text:'KEEP MY TEXT',textColor:'#f1ff38',backgroundColor:'#252b12'}})));
   await migration.goto('http://127.0.0.1:8772/bubble-frame.html');await migration.waitForFunction(()=>window.CellMotionBubbleFrame);
-  const migrated=await migration.evaluate(()=>CellMotionBubbleFrame.state());assert.equal(migrated.text,'KEEP MY TEXT');assert.equal(migrated.backgroundColor,'#797914');await migration.close();
+  const migrated=await migration.evaluate(()=>CellMotionBubbleFrame.state());assert.equal(migrated.text,'KEEP MY TEXT');assert.equal(migrated.backgroundColor,'#89882b');await migration.close();
   assert.deepEqual(errors,[]);fs.writeFileSync(path.join(output,'verification.json'),JSON.stringify({errors,...continuity},null,2));
   console.log(JSON.stringify({ok:true,errors,...continuity}));
  }finally{await browser.close();}
