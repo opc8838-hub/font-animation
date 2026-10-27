@@ -1,6 +1,5 @@
 {
   "posters": {
-    "final_bubble-frame.png": "assets/cellmotion/thumbnails/bubble-frame-bb4f826737.webp",
     "fluedit/preview.png": "assets/cellmotion/thumbnails/fluedit-a5fdaf4fe1.webp",
     "assets/cellmotion/poster-ascii-sharks.jpg?v=20261021-ocean-ink1": "assets/cellmotion/thumbnails/ascii-sharks-df64c91a4d.webp",
     "final_blockflow.png?v=20261019-review2": "assets/cellmotion/thumbnails/blockflow-5d2055febd.webp",
@@ -20,6 +19,7 @@
     "final_layers.png": "assets/cellmotion/thumbnails/layers-2e55f2e4c6.webp",
     "final_pow.png": "assets/cellmotion/thumbnails/pow-f850c80643.webp",
     "final_prism.png": "assets/cellmotion/thumbnails/prism-ec72843273.webp",
-    "final_shine.png": "assets/cellmotion/thumbnails/shine-18e43e40ad.webp"
+    "final_shine.png": "assets/cellmotion/thumbnails/shine-18e43e40ad.webp",
+    "final_bubble-frame.png?v=20261027-hd1": "assets/cellmotion/thumbnails/bubble-frame-360b839bfc.webp"
   }
 }
