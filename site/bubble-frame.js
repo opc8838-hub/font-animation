@@ -1,10 +1,11 @@
 (() => {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const defaults = Object.freeze({text:"TOO MUCH\nTO WATCH",font:"stg:archivo-black",letterStyle:"bubble",size:172,tracking:0,lineSpacing:1,textColor:"#ff54dc",backgroundColor:"#861267",lead:2,write:.6,restore:2.2,flow:1,rotation:1,width:1920,height:1080});
+  const defaults = Object.freeze({text:"TOO MUCH\nTO WATCH",font:"stg:archivo-black",letterStyle:"bubble",size:172,tracking:0,lineSpacing:1,textColor:"#ff54dc",backgroundColor:"#963079",lead:2,write:.6,restore:2.2,flow:1,rotation:1,width:1920,height:1080});
   const keys = Object.keys(defaults);
   const storageKey = "cellmotion-bubble-frame-fluid-v2";
-  const paletteBackgrounds={'#ff54dc':'#861267','#f1ff38':'#797914','#17ff9f':'#076f45','#49edff':'#126d83','#ff9c28':'#994516','#bd80ff':'#6336a1'};
+  const paletteBackgrounds={'#ff54dc':'#963079','#f1ff38':'#89882b','#17ff9f':'#076f45','#49edff':'#126d83','#ff9c28':'#a7562c','#bd80ff':'#744bb0'};
+  const previousBackgrounds={'#ff54dc':'#861267','#f1ff38':'#797914','#ff9c28':'#994516','#bd80ff':'#6336a1'};
   function pairedBackground(color){
     if(paletteBackgrounds[color])return paletteBackgrounds[color];
     const rgb=[1,3,5].map(i=>parseInt(color.slice(i,i+2),16)),max=Math.max(...rgb)||1;
@@ -375,6 +376,7 @@
   try{
     let saved=JSON.parse(localStorage.getItem(storageKey));
     if(new URLSearchParams(location.search).get('from')==='gallery'){apply(defaults);requestAnimationFrame(animate);return;}
+    if(saved?.state&&previousBackgrounds[saved.state.textColor]===saved.state.backgroundColor)saved={...saved,state:{...saved.state,backgroundColor:pairedBackground(saved.state.textColor)}};
     if(!saved){
       const legacy=JSON.parse(localStorage.getItem('cellmotion-bubble-frame-fluid-v1'));
       if(legacy?.version===1)saved={...legacy,state:{...legacy.state,backgroundColor:pairedBackground(legacy.state.textColor||defaults.textColor),lead:defaults.lead,write:defaults.write,restore:defaults.restore,flow:1}};
