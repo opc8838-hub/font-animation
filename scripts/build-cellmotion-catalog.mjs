@@ -17,6 +17,7 @@ for (const id of pendingRelease) {
   if (!knownIds.has(id)) throw new Error(`Unknown pending effect: ${id}`);
 }
 const videos = {
+  'metallic-text':'metallic-text-card',
   'bubble-frame':'bubble-frame-card',
   fluedit:'fluedit-card',
   'glass-icon-reveal':'glass-icon-reveal-card',
@@ -39,6 +40,7 @@ const videos = {
 const media = new Set(['patentcount','botvoice','patentwall','animalwave','video-compare','curvedgallery','mediacascade','beforeafter','shutterafter','phoneframe','laptopframe','orbitgallery','moodboard']);
 // Newest releases first, shown on the homepage as 最近上新. Dates are the public release of each editor.
 const recent = [
+  ["metallic-text","2026-10-27"],
   ["bubble-frame","2026-10-26"],
   ["glass-icon-reveal","2026-10-23"],
   ["fluedit","2026-10-23"],
@@ -79,7 +81,7 @@ for (const [id,name,english,group,description] of rows) {
     category:media.has(id)?'media':group,
     href:entryRoutes[id] || href,poster,video,
     ...(['blockflow','patentcount','botvoice','patentwall','animalwave','ascii-sharks'].includes(id)?{webComponent:{preview:`archive-motion-demo.html?effect=${id}`,descriptor:`effects/${id}.component.json`}}:{}),
-    ...(['thermal-profile','typepour','video-compare','glass-icon-reveal'].includes(id)?{webComponent:{preview:`typecascade-component-demo.html?effect=${id}`,descriptor:`effects/${id}.component.json`}}:{}),
+    ...(['thermal-profile','typepour','video-compare','glass-icon-reveal','metallic-text'].includes(id)?{webComponent:{preview:`typecascade-component-demo.html?effect=${id}`,descriptor:`effects/${id}.component.json`}}:{}),
     ...(['card-login','carddeck'].includes(id)?{webComponent:{preview:`cardmotion-component-demo.html?effect=${id}`,descriptor:`effects/${id}.component.json`}}:{}),
     status:pendingRelease.has(id)?'pending':'ready'
   });

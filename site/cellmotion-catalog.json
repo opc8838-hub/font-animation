@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "metallic-text",
+      "date": "2026-10-27"
+    },
+    {
       "id": "bubble-frame",
       "date": "2026-10-26"
     },
@@ -138,6 +142,21 @@
     }
   ],
   "effects": [
+    {
+      "id": "metallic-text",
+      "name": "金属流光",
+      "english": "Metallic Text",
+      "description": "宽扁银字 · 冷暖反光 · 金属流光",
+      "category": "type",
+      "href": "metallic-text.html",
+      "poster": "final_metallic-text.png",
+      "video": "assets/previews/metallic-text-card.mp4",
+      "webComponent": {
+        "preview": "typecascade-component-demo.html?effect=metallic-text",
+        "descriptor": "effects/metallic-text.component.json"
+      },
+      "status": "ready"
+    },
     {
       "id": "bubble-frame",
       "name": "流体泡泡",

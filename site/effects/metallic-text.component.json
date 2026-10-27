@@ -1,0 +1,35 @@
+{
+  "effect": { "id": "metallic-text", "name": { "zh": "金属流光", "en": "Metallic Text" }, "version": "1.0.0", "category": "type" },
+  "runtime": { "kind": "iframe-bridge", "entry": "metallic-text.html?v=20261027-metal1", "bridgeVersion": "1.0.0", "renderer": "webgl2" },
+  "capabilities": { "compositionModel": "scene", "editableText": true, "sharedFonts": true, "responsiveCanvas": true, "timeline": true, "preview": true, "exports": ["png", "gif", "mp4"] },
+  "behavior": {
+    "summary": { "zh": "居中的宽扁金属文字，银灰字面内流动冷暖反光。文字、共享字体、字形、材质、反光方向与各阶段时长均来自当前方案。", "en": "Centered, wide metallic lettering with cool and warm reflections moving across a silver surface. Text, shared font, lettering geometry, material, sweep direction and phase durations come from the live composition." },
+    "phases": [
+      { "id": "intro", "name": { "zh": "银字浮现", "en": "Silver reveal" }, "colorToken": "phase.violet" },
+      { "id": "sweep", "name": { "zh": "流光经过", "en": "Light sweep" }, "colorToken": "phase.sky" },
+      { "id": "hold", "name": { "zh": "亮面停留", "en": "Lit hold" }, "colorToken": "phase.amber" }
+    ]
+  },
+  "parameters": [
+    { "path": "composition.canvas.width", "scope": "global", "type": "integer", "name": { "zh": "画布宽度", "en": "Canvas width" }, "unit": "px", "min": 128, "max": 3840 },
+    { "path": "composition.canvas.height", "scope": "global", "type": "integer", "name": { "zh": "画布高度", "en": "Canvas height" }, "unit": "px", "min": 128, "max": 3840 },
+    { "path": "composition.scene.text", "scope": "effect", "type": "string", "name": { "zh": "文字内容", "en": "Text" } },
+    { "path": "composition.scene.font", "scope": "effect", "type": "string", "name": { "zh": "共享字体", "en": "Shared font" } },
+    { "path": "composition.scene.fontSize", "scope": "effect", "type": "number", "name": { "zh": "文字大小", "en": "Text size" }, "min": 0.18, "max": 1.2 },
+    { "path": "composition.scene.fontHeight", "scope": "effect", "type": "number", "name": { "zh": "字形高度", "en": "Letter height" }, "min": 0.5, "max": 1.4 },
+    { "path": "composition.scene.extraBold", "scope": "effect", "type": "number", "name": { "zh": "额外加粗", "en": "Extra weight" }, "min": 0, "max": 0.04 },
+    { "path": "composition.scene.tracking", "scope": "effect", "type": "number", "name": { "zh": "字距", "en": "Letter spacing" }, "min": -0.08, "max": 0.2 },
+    { "path": "composition.scene.background", "scope": "effect", "type": "color", "name": { "zh": "背景颜色", "en": "Background" } },
+    { "path": "composition.scene.metalTint", "scope": "effect", "type": "color", "name": { "zh": "金属底色", "en": "Metal tint" } },
+    { "path": "composition.scene.coolTint", "scope": "effect", "type": "color", "name": { "zh": "冷色反光", "en": "Cool reflection" } },
+    { "path": "composition.scene.warmTint", "scope": "effect", "type": "color", "name": { "zh": "暖色反光", "en": "Warm reflection" } },
+    { "path": "composition.scene.bevel", "scope": "effect", "type": "number", "name": { "zh": "金属边缘", "en": "Metal edge" }, "min": 0, "max": 0.2 },
+    { "path": "composition.scene.shine", "scope": "effect", "type": "number", "name": { "zh": "反光强度", "en": "Reflection strength" }, "min": 0, "max": 1.5 },
+    { "path": "composition.scene.lightWidth", "scope": "effect", "type": "number", "name": { "zh": "光带宽度", "en": "Band width" }, "min": 0.08, "max": 0.6 },
+    { "path": "composition.scene.direction", "scope": "effect", "type": "enum", "name": { "zh": "流动方向", "en": "Direction" }, "values": ["forward", "reverse"] },
+    { "path": "composition.scene.intro", "scope": "effect", "type": "number", "name": { "zh": "文字进入", "en": "Text entrance" }, "unit": "s", "min": 0.1, "max": 2 },
+    { "path": "composition.scene.sweep", "scope": "effect", "type": "number", "name": { "zh": "流光经过", "en": "Reflection sweep" }, "unit": "s", "min": 0.5, "max": 10 },
+    { "path": "composition.scene.hold", "scope": "effect", "type": "number", "name": { "zh": "亮面停留", "en": "Lit hold" }, "unit": "s", "min": 0, "max": 4 },
+    { "path": "composition.scene.speed", "scope": "effect", "type": "number", "name": { "zh": "播放速度", "en": "Playback speed" }, "min": 0.25, "max": 2 }
+  ]
+}

@@ -9,6 +9,8 @@
 @font-face{font-family:"STG Oi";src:url("continuation_fonts/Oi-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
 @font-face{font-family:"STG Barriecito";src:url("continuation_fonts/Barriecito-Regular.ttf") format("truetype");font-weight:400;font-display:swap}
 @font-face{font-family:"STG Archivo Black";src:url("assets/ArchivoBlack-Regular.ttf") format("truetype");font-weight:900;font-display:swap}
+@font-face{font-family:"STG Librestile";src:url("assets/fonts/librestile/librestileextbold.woff2") format("woff2");font-weight:700;font-display:swap}
+@font-face{font-family:"STG CellMotion Square";src:url("assets/fonts/librestile/cellmotion-square.woff2") format("woff2");font-weight:700;font-display:swap}
 @font-face{font-family:"STG Roboto Condensed";src:url("assets/RobotoCondensed-Bold.ttf") format("truetype");font-weight:700;font-display:swap}
 @font-face{font-family:"STG Roboto";src:url("assets/Roboto-Thin.ttf") format("truetype");font-weight:100;font-display:swap}
 @font-face{font-family:"STG Roboto";src:url("assets/Roboto-BlackItalic.ttf") format("truetype");font-weight:900;font-style:italic;font-display:swap}

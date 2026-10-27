@@ -92,6 +92,12 @@
 
   function aiPrompt(manifest, language = "zh") {
     const payload = JSON.stringify(manifest, null, 2);
+    if (manifest.effect?.id === 'metallic-text') {
+      const intro = language === 'en'
+        ? 'Integrate the existing CellMotion Metallic Text renderer using cellmotion-player.js and this complete live-state Manifest. Preserve the canvas aspect ratio, text, shared font, letter height/weight/spacing, metal and reflection colors, bevel, sweep direction and deterministic timing. Use the player play, pause, restart, seek and update methods for control.'
+        : '接入现有 CellMotion 金属流光渲染器：加载 cellmotion-player.js，把完整实时 Manifest 交给 <cellmotion-player>。保留画布比例、文字、共享字体、字形高度与粗细、字距、金属与反光颜色、边缘、流动方向和确定性时间轴。通过播放器的 play、pause、restart、seek 和 update 方法控制。';
+      return intro + '\n\n' + payload;
+    }
     if (manifest.capabilities?.compositionModel === 'scene' || manifest.capabilities?.compositionModel === 'cards') {
       if (language === 'en') return `Integrate this existing CellMotion component; do not redraw its choreography. Load cellmotion-player.js, pass this complete live-state Manifest to <cellmotion-player>, and preserve canvas aspect ratio, scene/cards ownership, fonts, colors, motion parameters, uploaded assets and video trims. This is a visual animation, not authentication. For Card Login's interactive HTML form, use the original kit at ${new URL('assets/cardbot-login-handoff.zip', manifest.runtime.entry).href}. Restrict accepted and target postMessage origins in production.\n\n${payload}`;
       return `接入现有 CellMotion 组件，不要重写动效。加载 cellmotion-player.js，把完整实时 Manifest 交给 <cellmotion-player>；保留画布比例、scene/cards 的内容归属、字体、颜色、动作参数、上传素材与视频裁切。这是视觉动效，不负责账号认证；翻牌登录如需可输入表单，请复用原始源码包 ${new URL('assets/cardbot-login-handoff.zip', manifest.runtime.entry).href}。生产接入须限制 postMessage 的发送与接收域名。\n\n${payload}`;
