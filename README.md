@@ -1,6 +1,6 @@
 # CellMotion —— 可编辑动效与视频创作平台
 
-**2026-10-26 流体泡泡 / Bubble Fluid**：[打开编辑器](site/bubble-frame.html?from=gallery)。弧形舞台中的饱满字母交错转动，荧光粉、黄、绿、青、橙、紫六组配色同步屏幕与实拍场景光影。采用平滑完整字形、原片占位与转向，并为相邻字母预留转动空间。编辑器按 CellMotion 三栏规范提供圆角下拉菜单、字体与背景折叠设置、视频胶片裁切、三色时间轴、明暗／中英偏好、方案及 PNG / GIF / MP4 导出。首页最近上新和编辑器目录均已收录。场景使用固定机位实拍底景，开场与循环回流为适配编排。详见[分析与验证](docs/analyses/bubble-fluid.md)。
+**2026-10-26 流体泡泡 / Bubble Fluid**：[打开编辑器](site/bubble-frame.html?from=gallery)。弧形舞台中的饱满字母交错转动，荧光粉、黄、绿、青、橙、紫六组配色同步屏幕与高清场景光影。采用平滑完整字形、原片占位与转向，并为相邻字母预留转动空间。编辑器按 CellMotion 三栏规范提供圆角下拉菜单、字体与背景折叠设置、视频胶片裁切、三色时间轴、明暗／中英偏好、方案及 PNG / GIF / MP4 导出。首页最近上新和编辑器目录均已收录。场景以固定机位原片为依据进行高清重建，开场与循环回流为适配编排。详见[分析与验证](docs/analyses/bubble-fluid.md)。
 
 **2026-10-23 玻璃显标 / Glass Icon Reveal**：[打开编辑器](site/glass-icon-reveal.html)。Logo 玻璃动效后可连续播放独立文字，支持字体、大小、颜色、背景和画幅调整，以及 For AI 实时组件、方案保存/导入和 PNG / GIF / MP4 导出。光学内核改编自 Zanwei Guo 的 [MIT 项目](https://github.com/zanwei/glass-icon-reveal)，许可见 [glass-icon-reveal.LICENSE](site/glass-icon-reveal.LICENSE)。
 
