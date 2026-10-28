@@ -13,6 +13,8 @@
     ["poppins", "Poppins", "STG Poppins", 400, "normal", "常用拉丁"],
     ["work-sans", "Work Sans", "STG Work Sans", 400, "normal", "常用拉丁"],
     ["archivo-black", "Archivo Black", "STG Archivo Black", 900, "normal", "常用拉丁"],
+    ["librestile", "Librestile Extended Bold", "STG Librestile", 700, "normal", "展示与窄体"],
+    ["cellmotion-square", "CellMotion Square", "STG CellMotion Square", 700, "normal", "展示与窄体"],
     ["league-spartan", "League Spartan", "STG League Spartan", 600, "normal", "常用拉丁"],
     ["lora", "Lora", "STG Lora", 500, "normal", "衬线与书写"],
     ["fraunces", "Fraunces", "STG Fraunces", 500, "normal", "衬线与书写"],
@@ -152,7 +154,7 @@
 
   const styleLink = document.createElement("link");
   styleLink.rel = "stylesheet";
-  styleLink.href = "shared-fonts.css?v=20261020-oddball2";
+  styleLink.href = "shared-fonts.css?v=20261027-metal1";
   styleLink.dataset.stgSharedFonts = "true";
   if (!document.querySelector("link[data-stg-shared-fonts]")) document.head.append(styleLink);
 

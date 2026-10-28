@@ -1,0 +1,12 @@
+{
+  "effect": "metallic-text",
+  "version": 1,
+  "canvas": { "width": 1920, "height": 1080 },
+  "settings": { "font": "stg:cellmotion-square" },
+  "scene": {
+    "text": "OK", "font": "stg:cellmotion-square", "fontSize": 0.8, "fontHeight": 0.8,
+    "extraBold": 0.015, "tracking": 0.015, "background": "#020403", "metalTint": "#c1c8cb",
+    "coolTint": "#8bc4ff", "warmTint": "#ffdbad", "bevel": 0.07, "shine": 1,
+    "lightWidth": 0.28, "direction": "forward", "intro": 0.45, "sweep": 3.6, "hold": 0.6, "speed": 1
+  }
+}
