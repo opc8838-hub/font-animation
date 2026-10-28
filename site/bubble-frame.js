@@ -239,7 +239,7 @@
     BubbleFrameScene.render(target,screenCanvas,state.textColor);
   }
 
-  async function loadFont(){await Promise.all([BubbleFrameScene.ready,document.fonts.load(`40px ${STGFontLibrary.family('stg:inter')}`),document.fonts.load(`172px ${STGFontLibrary.family(state.font)}`,state.text||"Bubble")]);paint(canvas,time);}
+  async function loadFont(){await Promise.all([BubbleFrameScene.ready,STGFontLibrary.load('stg:inter','CellMotion'),STGFontLibrary.load(state.font,state.text||"Bubble")]);paint(canvas,time);}
   function persist(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>localStorage.setItem(storageKey,JSON.stringify({version:1,state,media:backgroundMedia})),250);}
   async function apply(candidate,media=null,videoData=null){
     for(const key of keys){

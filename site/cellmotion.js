@@ -66,7 +66,7 @@ function initRibbon() {
   if(ribbon.dataset.ready==='true')return;
   ribbon.dataset.ready='true';
   const items=ribbonSeed.map(seed=>effects.find(effect=>effect.id===seed.id)||seed).filter(effect=>effect?.video && !isPending(effect));
-  $('#ribbon-track').innerHTML=items.map(effect=>`<a class="ribbon-card${effect.id==='iconburst'?' is-landscape':''}" href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器"><img data-poster-src="${posterURL(effect.poster)}" decoding="async" loading="lazy" alt="${escapeHTML(effect.name)}动效"><video data-src="${effect.video}" muted loop playsinline preload="none" aria-hidden="true"></video><span class="ribbon-name">${escapeHTML(effect.name)} ↗</span></a>`).join('');
+  $('#ribbon-track').innerHTML=items.map(effect=>`<a class="ribbon-card${effect.id==='iconburst'?' is-landscape':''}" href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器"><span class="ribbon-placeholder" aria-hidden="true">${escapeHTML(effect.name)}</span><img data-poster-src="${posterURL(effect.poster)}" decoding="async" loading="lazy" alt="${escapeHTML(effect.name)}动效"><video data-src="${effect.video}" muted loop playsinline preload="none" aria-hidden="true"></video><span class="ribbon-name">${escapeHTML(effect.name)} ↗</span></a>`).join('');
   const cards=[...ribbon.querySelectorAll('.ribbon-card')];
   let width=ribbon.clientWidth, cardWidth=0, cardSizes=[], offset=0, previous=0, raf=0, visible=false, hovered=false, focused=false, enabled=!reduced.matches;
   const videos=cards.map(card=>card.querySelector('video'));
@@ -84,17 +84,21 @@ function initRibbon() {
     previous=time;
     const gap=18,total=cardSizes.reduce((sum,size)=>sum+size.width+gap,0);let cursor=0;
     const centers=cardSizes.map(size=>{const center=cursor+size.width/2;cursor+=size.width+gap;return center;});
+    const candidates = centers.map((center, i) => ({ i, x: ((center-offset+total/2)%total+total)%total-total/2 }))
+      .filter(item => Math.abs(item.x)<width*.5 && videos[item.i].previousElementSibling?.naturalWidth>0)
+      .sort((a,b)=>Math.abs(a.x)-Math.abs(b.x));
+    const allowed = new Set(candidates.slice(0, navigator.connection?.saveData ? 1 : 2).map(item=>item.i));
     cards.forEach((card,i)=>{
       const size=cardSizes[i];
       const x=((centers[i]-offset+total/2)%total+total)%total-total/2;
       const n=x/(width*.5), visibleCard=Math.abs(x)<width*.5+size.width*.6;
       card.style.visibility=visibleCard?'visible':'hidden';
       card.style.transform=`translateX(${x-size.width/2}px) translateY(${-Math.min(1.8,n*n)*17}px) perspective(1050px) rotateY(${-n*19}deg) scaleY(${1+Math.min(1.8,n*n)*.23})`;
-      const video=videos[i], shouldPlay=visibleCard&&active;
+      const video=videos[i], shouldPlay=visibleCard&&active&&allowed.has(i);
       if(shouldPlay&&video.dataset.active!=='true'){
         video.dataset.active='true';if(!video.getAttribute('src'))video.src=mediaURL(video.dataset.src);
         play(video).then(()=>{if(video.dataset.active!=='true')video.pause();});
-      }else if(!shouldPlay){video.dataset.active='false';video.pause();card.classList.remove('is-playing');}
+      }else if(!shouldPlay){video.dataset.active='false';video.pause();card.classList.remove('is-playing');if((!visibleCard||!visible||(active&&!allowed.has(i)))&&video.hasAttribute('src')){video.removeAttribute('src');video.load();}}
     });
     if(active)raf=requestAnimationFrame(update);
   }
@@ -152,6 +156,14 @@ function initFeatured() {
   new IntersectionObserver(([entry])=>{featureVisible=entry.isIntersecting;if(featureVisible&&featuredIntent&&!document.hidden)play(featureVideo);else featureVideo.pause();},{threshold:.2}).observe(featureVideo);
 }
 
+const activePreviews = new Set();
+function refillPreviews() {
+  if (document.hidden || reduced.matches) return;
+  for (const preview of document.querySelectorAll('.catalog-preview[data-visible="true"],.recent-preview[data-visible="true"]')) {
+    if (activePreviews.size >= 2) break;
+    if (!activePreviews.has(preview) && preview.dataset.userPaused !== 'true' && preview.dataset.previewFailed !== 'true') startCard(preview);
+  }
+}
 function syncCard(preview,playing) {
   preview.classList.toggle('playing',playing);
   const button=preview.querySelector('.card-play');
@@ -159,6 +171,7 @@ function syncCard(preview,playing) {
 }
 function stopCard(preview,{remember=false}={}) {
   if(!preview)return;
+  activePreviews.delete(preview);
   preview.dataset.playRequest=String(Number(preview.dataset.playRequest||0)+1);
   if(remember)preview.dataset.userPaused='true';
   preview.querySelector('video')?.pause();syncCard(preview,false);
@@ -168,26 +181,30 @@ function stopAllCards() {
 }
 async function startCard(preview,{manual=false}={}) {
   const video=preview?.querySelector('video');if(!video)return;
-  if(manual)delete preview.dataset.userPaused;
+  if(manual){delete preview.dataset.userPaused;delete preview.dataset.previewFailed;}
+  if(!manual&&!activePreviews.has(preview)&&activePreviews.size>=2)return;
   if(!manual&&(reduced.matches||preview.dataset.userPaused==='true'||preview.dataset.visible!=='true'||document.hidden))return;
+  activePreviews.add(preview);
   const request=String(Number(preview.dataset.playRequest||0)+1);preview.dataset.playRequest=request;
   if(!video.getAttribute('src'))video.src=mediaURL(video.dataset.src);
   const success=await play(video);
   if(preview.dataset.playRequest!==request||(!manual&&preview.dataset.visible!=='true')){video.pause();return;}
-  if(success)syncCard(preview,true);else stopCard(preview);
+  if(success)syncCard(preview,true);else{preview.dataset.previewFailed='true';stopCard(preview);}
 }
 const cardsObserver=new IntersectionObserver(entries=>{
   for(const entry of entries){
     const preview=entry.target;preview.dataset.visible=String(entry.isIntersecting);
-    if(entry.isIntersecting)startCard(preview);else stopCard(preview);
+    if(!entry.isIntersecting)stopCard(preview);
   }
+  refillPreviews();
 },{threshold:.18});
 // 最近上新: a dense grid so many recent previews are visible at once. Videos load and play only on screen.
 const recentObserver=new IntersectionObserver(entries=>{
   for(const entry of entries){
     const preview=entry.target;preview.dataset.visible=String(entry.isIntersecting);
-    if(entry.isIntersecting)startCard(preview);else stopCard(preview);
+    if(!entry.isIntersecting)stopCard(preview);
   }
+  refillPreviews();
 },{threshold:.18});
 function recentCard(item,index) {
   const effect=item.effect, [, month, day]=item.date.split('-');

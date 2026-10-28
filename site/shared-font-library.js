@@ -106,6 +106,17 @@
     const font = byId.get(idFor(value));
     return font ? `"${font.family}",${fallbackStack}` : fallback;
   }
+  // FontFaceSet.load on the entire fallback stack downloads every matching CJK face.
+  async function load(value, text = ' ') {
+    const font = byId.get(idFor(value));
+    if (!font) return [];
+    const targets = [font];
+    if (/\p{Script=Han}/u.test(text) && !font.id.startsWith('noto-sc')) targets.push(byId.get('noto-sc'));
+    if (/[\u3040-\u30FF]/.test(text) && !font.id.startsWith('noto-jp')) targets.push(byId.get('noto-jp-thin'));
+    if (/[\uAC00-\uD7AF]/.test(text) && !font.id.startsWith('noto-kr')) targets.push(byId.get('noto-kr-black'));
+    return Promise.all(targets.map(item => document.fonts.load(item.style + ' ' + item.weight + ' 40px "' + item.family + '"', text)));
+  }
+
   function shouldEnhance(select) {
     const id = select.id || "";
     if (!/font/i.test(id) || /weight|size|style|scale|tracking/i.test(id)) return false;
@@ -152,11 +163,11 @@
 
   const styleLink = document.createElement("link");
   styleLink.rel = "stylesheet";
-  styleLink.href = "shared-fonts.css?v=20261020-oddball2";
+  styleLink.href = "shared-fonts.css?v=20261028-ready1";
   styleLink.dataset.stgSharedFonts = "true";
   if (!document.querySelector("link[data-stg-shared-fonts]")) document.head.append(styleLink);
 
-  window.STGFontLibrary = { fonts, aliases, idFor, preset, family, enhanceSelect, enhanceAll, fallbackStack };
+  window.STGFontLibrary = { fonts, aliases, idFor, preset, family, load, enhanceSelect, enhanceAll, fallbackStack };
   enhanceAll();
   new MutationObserver((mutations) => mutations.forEach((mutation) => mutation.addedNodes.forEach((node) => {
     if (node.nodeType === Node.ELEMENT_NODE) enhanceAll(node);
