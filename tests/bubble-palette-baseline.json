@@ -1,0 +1,44 @@
+{
+  "ff54dc": {
+    "background": "#861267",
+    "backgroundLightness": 0.4242587926031182,
+    "floorBrightness": 0.30135340085470086,
+    "ceilingBrightness": 0.005227384945324284,
+    "pixelsSHA256": "02b80a06a17df1af12de9ba3c761c4c0ffe640dacecab950522668d78c46f361"
+  },
+  "f1ff38": {
+    "background": "#797914",
+    "backgroundLightness": 0.5583435000970576,
+    "floorBrightness": 0.4723258036576169,
+    "ceilingBrightness": 0.005825356052036198,
+    "pixelsSHA256": "8c82df986ed6e3119a4901e88e222feb872dd6125bcf33657a919dd3deb3c737"
+  },
+  "17ff9f": {
+    "background": "#076f45",
+    "backgroundLightness": 0.47824152923355057,
+    "floorBrightness": 0.4269863154977375,
+    "ceilingBrightness": 0.005643448812217194,
+    "pixelsSHA256": "fa22e66f76f344b69ba0c9351a269522c4e5fe9b77435a691f2f9ddeaca8db7f"
+  },
+  "49edff": {
+    "background": "#126d83",
+    "backgroundLightness": 0.49587721916626926,
+    "floorBrightness": 0.38424177310206137,
+    "ceilingBrightness": 0.005614377356711915,
+    "pixelsSHA256": "ac64501014e3ceeaa14ae77e0ebc73fc23bb342d69c89e292dcab8d7a5f82cbe"
+  },
+  "ff9c28": {
+    "background": "#994516",
+    "backgroundLightness": 0.4925644796448618,
+    "floorBrightness": 0.423422868049271,
+    "ceilingBrightness": 0.005499680618401205,
+    "pixelsSHA256": "b88e68b82df396e8fd4d9ca82fabee5944fa7ec3e340e3e3d4866d5c7985b488"
+  },
+  "bd80ff": {
+    "background": "#6336a1",
+    "backgroundLightness": 0.4470293449415938,
+    "floorBrightness": 0.34859667134238315,
+    "ceilingBrightness": 0.005418655260180995,
+    "pixelsSHA256": "7e6af853cd29cb461990fe18baa5a5ad6b29bd108ceaf04caa2b77f4b988672d"
+  }
+}
