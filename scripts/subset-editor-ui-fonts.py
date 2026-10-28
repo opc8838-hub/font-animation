@@ -10,7 +10,7 @@ def compress(data, **options):
 woff2.brotli.compress=compress
 site=Path(__file__).resolve().parents[1]/'site'
 chars=set(range(0x20,0x300))
-for file in site.glob('*.html'):
+for file in list(site.glob('*.html')) + list(site.glob('*.js')):
     chars.update(ord(c) for c in file.read_text(encoding='utf8'))
 for name in ['shared-font-library.js','stg-cn.js','row-font-editor.js','me-motion-editor.js','morphports-reviewed.js','typecascade-workspace.js','typecascade-polish.js','typecascade-selects.js','typecascade-locale.js']:
     file=site/name

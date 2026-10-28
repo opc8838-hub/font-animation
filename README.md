@@ -1,5 +1,7 @@
 # CellMotion —— 可编辑动效与视频创作平台
 
+**2026-10-28 金属流光 / Metallic Text**：[打开编辑器](site/metallic-text.html?from=gallery)。宽扁银色文字内流动冷暖反光，支持共享字体、字形高度与加粗、字距、金属与反光配色、方向、阶段时长和画幅调整。对齐字芽的字体与背景折叠设置，支持图片/GIF/视频背景、取景缩放、视频胶片裁切、舞台背景、构图、精确数值及撤销/重做。31 项 For AI 参数保留媒体原始数据、取景和视频裁切；使用统一方案与 PNG / GIF / H.264 MP4 导出。默认字形基于 [Librestile](https://github.com/ocelothe/Librestile)，其 OFL 许可随字体保存在 `site/assets/fonts/librestile/OFL.txt`。运动依据与验证见[分析](docs/analyses/metallic-text.md)。
+
 **2026-10-26 流体泡泡 / Bubble Fluid**：[打开编辑器](site/bubble-frame.html?from=gallery)。弧形舞台中的饱满字母交错转动，荧光粉、黄、绿、青、橙、紫六组配色同步屏幕与高清场景光影。采用平滑完整字形、原片占位与转向，并为相邻字母预留转动空间。编辑器按 CellMotion 三栏规范提供圆角下拉菜单、字体与背景折叠设置、视频胶片裁切、三色时间轴、明暗／中英偏好、方案及 PNG / GIF / MP4 导出。首页最近上新和编辑器目录均已收录。场景以固定机位原片为依据进行高清重建，开场与循环回流为适配编排。详见[分析与验证](docs/analyses/bubble-fluid.md)。
 
 **2026-10-23 玻璃显标 / Glass Icon Reveal**：[打开编辑器](site/glass-icon-reveal.html)。Logo 玻璃动效后可连续播放独立文字，支持字体、大小、颜色、背景和画幅调整，以及 For AI 实时组件、方案保存/导入和 PNG / GIF / MP4 导出。光学内核改编自 Zanwei Guo 的 [MIT 项目](https://github.com/zanwei/glass-icon-reveal)，许可见 [glass-icon-reveal.LICENSE](site/glass-icon-reveal.LICENSE)。
@@ -34,7 +36,7 @@ CellMotion 是一个自由、灵活的动态设计系统。字体、图标、图
 
 **2026-10-12 降临 / Switch Drop 更新**：标题紫色标点改为圆点；结束停留默认 6 秒，可自定义为 2–30 秒，参数可自动保存及导出。已保存[默认方案](site/assets/presets/switchdrop-default.json)，重制官网动态封面，并加入「最近上新」；首页该标题移除末尾句号。
 
-目前收录 84 个动效及视频模板，支持中文与多语种字体、字图混排、图片 / GIF / 视频背景、响应式画布，以及浏览器内的预览与导出。官网的「全部动效」和各内容分类只展示已完成的 52 个。另外 32 个尚未完成：原分类保留，只出现在「待上新」，封面写着「待上新，未完成」，暂时不能点进编辑器。名单和恢复方式见 [docs/PENDING_RELEASE.md](docs/PENDING_RELEASE.md)。
+目前收录 89 个动效及视频模板，支持中文与多语种字体、字图混排、图片 / GIF / 视频背景、响应式画布，以及浏览器内的预览与导出。官网的「全部动效」和各内容分类只展示已完成的 57 个。另外 32 个尚未完成：原分类保留，只出现在「待上新」，封面写着「待上新，未完成」，暂时不能点进编辑器。名单和恢复方式见 [docs/PENDING_RELEASE.md](docs/PENDING_RELEASE.md)。
 
 
 **2026-10-10 两款 CardBot 独立编辑器**：[翻牌登录 / Card Login](https://opc8838-hub.github.io/font-animation/card-login.html?from=gallery) 保留同尺寸衔接、旋转中变白及登录渐入，文字、字体、颜色和动作参数可编辑；[卡牌剧场 / Card Deck](https://opc8838-hub.github.io/font-animation/carddeck.html?from=gallery) 保留表情卡牌的展开、交错横移与收拢，支持共享图库、自有素材和逐卡调整。两款均采用 CellMotion 三栏工作台，支持手机/平板、主流及自定义画幅、方案管理、PNG/GIF/H.264 MP4 与实时配置的 For AI 组件。登录编辑器是视觉动效，不提供账号认证；真正可输入的原始 HTML/CSS 表单转场另附源码包。详见 [使用与集成说明](docs/CARDBOT_EDITORS.md)、[动效保真与验证](docs/analyses/cardmotion-preservation.md) 和 [来源许可](docs/licenses/CARDBOT_MOTION.md)。

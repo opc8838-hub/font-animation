@@ -23,13 +23,16 @@
       .filter((row) => row.backgroundMedia)
       .map((row) => ({ rowId: row.id, ...clone(row.backgroundMedia) }));
     if (scheme?.backgroundMedia) backgrounds.push({ owner: 'composition', ...clone(scheme.backgroundMedia) });
+    if (scheme?.scene?.backgroundMedia) backgrounds.push({ owner: 'scene', source: 'composition.scene.backgroundMedia', ...clone(scheme.scene.backgroundMedia) });
     const embedded = [...(Array.isArray(scheme?.customAssets) ? clone(scheme.customAssets) : []), ...images.map((asset, index) => ({ id: asset.id, name: asset.imageName, kind: asset.kind, source: `composition.assets[${index}]`, libraryId: asset.libraryId }))];
     if (scheme?.effect === 'glass-icon-reveal' && scheme.scene?.assetUrl?.startsWith('data:')) embedded.push({ id: 'glass-logo', kind: 'image', source: 'composition.scene.assetUrl', embedded: true });
     if(scheme?.scene?.media){const media=scheme.scene.media;embedded.push({id:media.libraryId||'thermal-subject',name:media.imageName,kind:'image',source:'composition.scene.media',embedded:!!media.originalDataUrl?.startsWith('data:')});}
     if(scheme?.effect==='video-compare'&&scheme.logo)embedded.push({id:'footer-logo',kind:'image',name:scheme.logo.name,source:'composition.logo',embedded:true});
+    if (scheme?.scene?.backgroundMedia) { const media = scheme.scene.backgroundMedia; embedded.push({ id: 'scene-background', kind: /^video\//.test(media.fileType) ? 'video' : /gif/i.test(media.fileType) ? 'gif' : 'image', name: media.name, source: 'composition.scene.backgroundMedia', embedded: media.url?.startsWith('data:') === true }); }
     const result = { fonts, icons, backgrounds, embedded };
     if (cards.length) result.cards = cards.map(card => ({ id: card.id, libraryId: card.libraryId }));
     if(rows.some(row=>row.media?.kind==='video'))result.videos=rows.flatMap((row,index)=>row.media?.kind==='video'?[{rowId:row.id,source:`composition.rows[${index}].media`,kind:'video',name:row.media.name,fileType:row.media.fileType,trimStart:row.media.trimStart,trimEnd:row.media.trimEnd,fit:row.media.fit,audioEnabled:row.audioEnabled}]:[]);
+    if (/^video\//.test(scheme?.scene?.backgroundMedia?.fileType || '')) { const media = scheme.scene.backgroundMedia; (result.videos ||= []).push({ owner: 'scene', source: 'composition.scene.backgroundMedia', kind: 'video', name: media.name, fileType: media.fileType, trimStart: media.videoStart, trimEnd: media.videoEnd, cropX: media.cropX, cropY: media.cropY, cropZoom: media.cropZoom }); }
     return result;
   }
 
@@ -92,6 +95,12 @@
 
   function aiPrompt(manifest, language = "zh") {
     const payload = JSON.stringify(manifest, null, 2);
+    if (manifest.effect?.id === 'metallic-text') {
+      const intro = language === 'en'
+        ? 'Integrate the existing CellMotion Metallic Text renderer using cellmotion-player.js and this complete live-state Manifest. Preserve the canvas aspect ratio, text, shared font, letter height/weight/spacing, alignment/position, metal/reflection colors, embedded image/GIF/video background, crop and video trim, bevel, sweep direction and deterministic timing. Stage fill is an editor preference. Use the player play, pause, restart, seek and update methods for control.'
+        : '接入现有 CellMotion 金属流光渲染器：加载 cellmotion-player.js，把完整实时 Manifest 交给 <cellmotion-player>。保留画布比例、文字、共享字体、字形高度与粗细、字距、对齐与位置、金属与反光颜色、嵌入的图片/GIF/视频背景、取景和视频裁切、边缘、流动方向和确定性时间轴。铺满背景仅为编辑器偏好。通过播放器的 play、pause、restart、seek 和 update 方法控制。';
+      return intro + '\n\n' + payload;
+    }
     if (manifest.capabilities?.compositionModel === 'scene' || manifest.capabilities?.compositionModel === 'cards') {
       if (language === 'en') return `Integrate this existing CellMotion component; do not redraw its choreography. Load cellmotion-player.js, pass this complete live-state Manifest to <cellmotion-player>, and preserve canvas aspect ratio, scene/cards ownership, fonts, colors, motion parameters, uploaded assets and video trims. This is a visual animation, not authentication. For Card Login's interactive HTML form, use the original kit at ${new URL('assets/cardbot-login-handoff.zip', manifest.runtime.entry).href}. Restrict accepted and target postMessage origins in production.\n\n${payload}`;
       return `接入现有 CellMotion 组件，不要重写动效。加载 cellmotion-player.js，把完整实时 Manifest 交给 <cellmotion-player>；保留画布比例、scene/cards 的内容归属、字体、颜色、动作参数、上传素材与视频裁切。这是视觉动效，不负责账号认证；翻牌登录如需可输入表单，请复用原始源码包 ${new URL('assets/cardbot-login-handoff.zip', manifest.runtime.entry).href}。生产接入须限制 postMessage 的发送与接收域名。\n\n${payload}`;

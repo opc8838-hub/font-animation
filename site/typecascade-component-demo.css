@@ -92,6 +92,8 @@ main { width: min(1040px, calc(100% - 24px)); margin: 0 auto; padding: 30px 0 56
 .demo-code-head button { border-color: var(--demo-line); color: var(--demo-text); }
 pre { min-height: 420px; max-height: 66vh; margin: 0; padding: 18px; overflow: auto; border: 1px solid var(--demo-line); border-radius: 14px; background: var(--demo-input); color: var(--demo-text); font: 12px/1.65 ui-monospace, SFMono-Regular, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
 .demo-status { min-height: 20px; margin: 0; padding: 0 18px 16px; color: var(--demo-muted); font-size: 12px; }
+body.metallic-component-demo { background: var(--demo-bg); color: var(--demo-text); }
+body.metallic-component-demo .demo-card-head h2 { color: var(--demo-text); }
 @media (max-width: 680px) {
   body { padding: 6px; }
   .demo-header { min-height: 58px; padding: 8px; gap: 8px; }

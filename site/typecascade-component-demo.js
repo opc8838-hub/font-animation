@@ -15,6 +15,7 @@
   }
 
   function applyManifest(manifest, sourceLabel = "默认方案") {
+    document.body.classList.toggle('metallic-component-demo', manifest.effect?.id === 'metallic-text');
     const validation = window.CellMotionAI.validate(manifest);
     if (!validation.valid) throw new Error(validation.errors.join("；"));
     player.manifest = manifest;
@@ -40,7 +41,7 @@
         return;
       }
       const requested = new URLSearchParams(location.search).get('effect');
-      const effect = ['thermal-profile','typepour','video-compare','glass-icon-reveal'].includes(requested) ? requested : 'typecascade';
+      const effect = ['thermal-profile','typepour','video-compare','glass-icon-reveal','metallic-text'].includes(requested) ? requested : 'typecascade';
       const [definitionResponse, presetResponse] = await Promise.all([
         fetch(`effects/${effect}.component.json`),
         fetch(`assets/presets/${effect}-default.json`)

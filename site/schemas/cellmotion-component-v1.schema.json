@@ -31,6 +31,10 @@
         { "required": ["canvas", "motion", "cards"] },
         { "required": ["canvas", "motion", "scene"] },
         {
+          "required": ["effect", "version", "canvas", "scene"],
+          "properties": { "effect": { "const": "metallic-text" }, "version": { "const": 1 }, "scene": { "type": "object", "required": ["text", "font", "intro", "sweep", "hold", "speed"] } }
+        },
+        {
           "required": ["effect", "version", "settings", "assets"],
           "properties": {
             "effect": { "const": "curvedgallery" },
