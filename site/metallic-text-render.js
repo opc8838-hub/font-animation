@@ -4,7 +4,7 @@
   const smooth = value => { const x = clamp(value, 0, 1); return x * x * (3 - 2 * x); };
   const mask = document.createElement('canvas');
   const surface = document.createElement('canvas');
-  const gl = surface.getContext('webgl2', { alpha: false, antialias: false, preserveDrawingBuffer: true });
+  const gl = surface.getContext('webgl2', { alpha: true, premultipliedAlpha: false, antialias: false, preserveDrawingBuffer: true });
   if (!gl) throw new Error('WebGL 2 is required for Metallic Text.');
   let maskKey = '', bounds;
 
@@ -17,7 +17,7 @@
   uniform vec2 resolution;
   uniform vec4 bounds;
   uniform vec3 background, metal, cool, warm;
-  uniform float progress, entrance, shine, bandWidth, bevel;
+  uniform float progress, entrance, shine, bandWidth, bevel, transparentBackground;
   out vec4 color;
   float distanceAt(vec2 uv) {
     vec2 packed = texture(lettering, uv).rg;
@@ -29,7 +29,7 @@
     vec2 p = (pixel - resolution * .5) / mix(.965, 1., entrance) + resolution * .5;
     vec2 uv = p / resolution;
     float alpha = texture(lettering, uv).b * entrance;
-    if (alpha < .002) { color = vec4(background, 1.); return; }
+    if (alpha < .002) { color = transparentBackground > .5 ? vec4(0.) : vec4(background, 1.); return; }
     vec2 texel = 2.5 / resolution;
     float distance = distanceAt(uv);
     vec2 gradient = vec2(distanceAt(uv + vec2(texel.x, 0.)) - distanceAt(uv - vec2(texel.x, 0.)),
@@ -58,7 +58,7 @@
     result += vec3(.32) * bell(distance - .65, .65);
     result += vec3(.12) * pow(max(0., -normal.y), 4.);
     result = clamp(result, 0., 1.);
-    color = vec4(mix(background, result, alpha), 1.);
+    color = transparentBackground > .5 ? vec4(result, alpha) : vec4(mix(background, result, alpha), 1.);
   }`;
 
   function compile(type, source) {
@@ -78,7 +78,7 @@
   const texture = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  const uniforms = Object.fromEntries(['lettering', 'resolution', 'bounds', 'background', 'metal', 'cool', 'warm', 'progress', 'entrance', 'shine', 'bandWidth', 'bevel'].map(name => [name, gl.getUniformLocation(program, name)]));
+  const uniforms = Object.fromEntries(['lettering', 'resolution', 'bounds', 'background', 'metal', 'cool', 'warm', 'progress', 'entrance', 'shine', 'bandWidth', 'bevel', 'transparentBackground'].map(name => [name, gl.getUniformLocation(program, name)]));
 
   function contourDistances(pixels, width, height) {
     const distances = new Float32Array(width * height);
@@ -125,7 +125,7 @@
 
   // Cache contour distances on content/size changes. Frames only shade the texture.
   function buildMask(scene, width, height) {
-    const key = [width, height, scene.text, scene.font, scene.fontSize, scene.tracking, scene.fontHeight, scene.extraBold].join('|');
+    const key = [width, height, scene.text, scene.font, scene.fontSize, scene.tracking, scene.fontHeight, scene.extraBold, scene.positionX, scene.positionY, scene.alignment].join('|');
     if (key === maskKey) return;
     maskKey = key; mask.width = surface.width = width; mask.height = surface.height = height;
     const ctx = mask.getContext('2d', { willReadFrequently: true });
@@ -141,7 +141,8 @@
     const descent = Math.max(0, ...metrics.map(metric => metric.actualBoundingBoxDescent));
     const actualHeight = (ascent + descent) * scene.fontHeight;
     const scale = Math.min(1, width * .82 / Math.max(1, advances), height * .55 / actualHeight);
-    const left = (width - advances * scale) / 2, top = (height - actualHeight * scale) / 2;
+    const alignedLeft = scene.alignment === 'left' ? width * .09 : scene.alignment === 'right' ? width * .91 - advances * scale : (width - advances * scale) / 2;
+    const left = alignedLeft + width * (scene.positionX || 0) / 100, top = (height - actualHeight * scale) / 2 + height * (scene.positionY || 0) / 100;
     bounds = [left, top, Math.max(1, advances * scale), actualHeight * scale];
     ctx.save(); ctx.translate(left, top + ascent * scale * scene.fontHeight); ctx.scale(scale, scale * scene.fontHeight); ctx.fillStyle = '#fff';
     ctx.strokeStyle = '#fff'; ctx.lineWidth = size * scene.extraBold * 2; ctx.lineJoin = 'round';
@@ -158,7 +159,7 @@
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
   }
   const rgb = hex => [1, 3, 5].map(at => parseInt(hex.slice(at, at + 2), 16) / 255);
-  function draw(ctx, state, time, width, height) {
+  function draw(ctx, state, time, width, height, transparent = false) {
     const scene = state.scene;
     buildMask(scene, width, height);
     gl.viewport(0, 0, width, height); gl.useProgram(program);
@@ -169,6 +170,7 @@
     gl.uniform1f(uniforms.progress, scene.direction === 'reverse' ? 1 - progress : progress);
     gl.uniform1f(uniforms.entrance, smooth(time / scene.intro)); gl.uniform1f(uniforms.shine, scene.shine);
     gl.uniform1f(uniforms.bandWidth, scene.lightWidth); gl.uniform1f(uniforms.bevel, scene.bevel);
+    gl.uniform1f(uniforms.transparentBackground, transparent ? 1 : 0);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     ctx.drawImage(surface, 0, 0, width, height);
   }

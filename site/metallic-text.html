@@ -1,22 +1,25 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
+  <script src="cellmotion-secure-context.js?v=20261015-release1"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#17171a">
   <meta name="description" content="金属流光 Metallic Text · CellMotion 可编辑金属字与移动反光动效。">
   <title>金属流光 Metallic Text | CellMotion</title>
   <link rel="icon" href="assets/cellmotion/logo-web.webp" type="image/webp">
-  <link rel="stylesheet" href="typecascade-workspace.css?v=20261027-metal1">
-  <link rel="stylesheet" href="typecascade-polish.css?v=20261027-metal1">
-  <link rel="stylesheet" href="me-motion-editor.css?v=20261027-metal1">
-  <link rel="stylesheet" href="metallic-text.css?v=20261027-metal1">
+  <link rel="stylesheet" href="shared-fonts.css?v=20261028-metal2" data-stg-shared-fonts>
+  <link rel="stylesheet" href="typecascade-workspace.css?v=20261028-metal2">
+  <link rel="stylesheet" href="typecascade-polish.css?v=20261028-metal2">
+  <link rel="stylesheet" href="me-motion-editor.css?v=20261028-metal2">
+  <link rel="stylesheet" href="metallic-text.css?v=20261028-metal2">
 </head>
 <body class="tc-workspace metallic-editor" data-editor-capabilities="text-only" data-editor-theme="dark">
   <header class="tc-header">
     <a class="tc-brand" href="cellmotion.html" aria-label="CellMotion 首页"><img class="logo-dark" src="assets/cellmotion/logo-dark-original.png" alt="CellMotion"><img class="logo-light" src="assets/cellmotion/logo-original-transparent.png" alt="" aria-hidden="true"></a>
     <h1><span data-zh="金属流光" data-en="Metallic Text">金属流光</span><span>Metallic Text</span></h1>
     <div class="header-spacer"></div>
+    <button id="openBackground" class="header-button" type="button" aria-label="更换背景"><span data-zh="换背景" data-en="Background">换背景</span></button>
     <button id="languageButton" class="header-button" type="button" aria-label="Switch language">EN</button>
     <button id="themeButton" class="header-button" type="button" aria-label="切换明暗主题">☀</button>
     <a class="tc-back" href="cellmotion-components.html" data-zh="动效库" data-en="Library">动效库</a>
@@ -26,15 +29,9 @@
   <aside class="tc-content" aria-label="内容与方案">
     <div class="tc-panel-heading"><div><small>CONTENT</small><h2 data-zh="文字内容" data-en="Text content">文字内容</h2></div></div>
     <div class="content-scroll">
-      <section class="metal-card">
-        <label class="field"><span data-zh="播放文字" data-en="Text">播放文字</span><input id="text" type="text" autocomplete="off" value="OK"></label>
-        <label class="field"><span data-zh="字体" data-en="Font">字体</span><select id="font"></select></label>
-        <label class="field"><span data-zh="字距" data-en="Letter spacing">字距</span><div class="range-row"><input id="tracking" type="range" min="-0.08" max="0.20" step="0.005"><output></output></div></label>
-        <label class="field color-field"><span data-zh="金属底色" data-en="Metal tint">金属底色</span><input id="textColor" type="color"></label>
-        <label class="field color-field"><span data-zh="背景颜色" data-en="Background">背景颜色</span><input id="backgroundColor" type="color"></label>
-        <button id="pauseForEdit" class="soft-button" type="button" data-zh="暂停修改" data-en="Pause to edit">暂停修改</button>
-      </section>
-      <p class="tc-hint" data-zh="文字固定居中；银色反光在字面流动。" data-en="The text stays centered as reflections travel across its surface.">文字固定居中；银色反光在字面流动。</p>
+      <button id="selectText" class="tc-row-select" type="button" aria-pressed="true"><span class="tc-row-number">01</span><strong id="contentTitle" class="tc-row-text">OK</strong><span class="tc-row-description" data-zh="金属文字 · 当前编辑" data-en="Metal lettering · Selected">金属文字 · 当前编辑</span></button>
+      <div class="metal-history"><button id="undoButton" type="button" aria-label="撤销" disabled>↶ <span data-zh="撤销" data-en="Undo">撤销</span></button><button id="redoButton" type="button" aria-label="重做" disabled>↷ <span data-zh="重做" data-en="Redo">重做</span></button></div>
+      <p class="tc-hint" data-zh="选择文字，在右侧调整内容、背景与构图。" data-en="Select the text to edit its content, background and layout.">选择文字，在右侧调整内容、背景与构图。</p>
     </div>
     <section class="tc-scheme">
       <div class="tc-panel-heading"><div><small>PROJECT</small><h2 data-zh="方案" data-en="Project">方案</h2></div></div>
@@ -46,7 +43,8 @@
 
   <main class="tc-center" aria-label="画布和时间轴">
     <section class="tc-canvas-toolbar">
-      <label><span data-zh="画布尺寸" data-en="Canvas size">画布尺寸</span><select id="canvasPreset"><option value="1080x1080">1:1 · 1080 × 1080</option><option value="1080x1350">4:5 · 1080 × 1350</option><option value="1080x1920">9:16 · 1080 × 1920</option><option value="1920x1080">16:9 · 1920 × 1080</option><option value="custom" data-zh="自定义" data-en="Custom">自定义</option></select></label>
+      <div class="tc-backdrop-control"><button id="tcBackdropToggle" class="tc-backdrop-toggle" type="button" aria-expanded="false" aria-pressed="false">▧ <span data-zh="铺满背景" data-en="Stage fill">铺满背景</span></button><div id="backdropPopover" class="tc-backdrop-popover" hidden><label><span data-zh="跟随当前页背景" data-en="Follow composition background">跟随当前页背景</span><input id="tcBackdropEnabled" type="checkbox"></label><label><span data-zh="独立画布背景" data-en="Independent stage color">独立画布背景</span><input id="tcBackdropColor" type="color"></label><button id="tcBackdropReset" type="button" data-zh="恢复默认灰色" data-en="Reset neutral gray">恢复默认灰色</button></div></div>
+      <label><span data-zh="画布尺寸" data-en="Canvas size">画布尺寸</span><select id="canvasPreset"><option value="1080x1080">1:1 · 1080 × 1080</option><option value="1080x1350">4:5 · 1080 × 1350</option><option value="1080x1440">3:4 · 1080 × 1440</option><option value="1080x1620">2:3 · 1080 × 1620</option><option value="1080x1920">9:16 · 1080 × 1920</option><option value="1920x1080">16:9 · 1920 × 1080</option><option value="1440x1080">4:3 · 1440 × 1080</option><option value="1620x1080">3:2 · 1620 × 1080</option><option value="custom" data-zh="自定义" data-en="Custom">自定义</option></select></label>
       <div id="customSize" class="custom-size" hidden><label>W <input id="canvasWidth" type="number" min="128" max="3840" step="2"></label><label>H <input id="canvasHeight" type="number" min="128" max="3840" step="2"></label></div>
       <span id="canvasInfo">1080 × 1080</span>
     </section>
@@ -63,9 +61,38 @@
     <nav class="tc-tabs" aria-label="属性分类"><button type="button" data-panel="content" aria-pressed="true" data-zh="当前文字" data-en="Text">当前文字</button><button type="button" data-panel="motion" aria-pressed="false" data-zh="动效设置" data-en="Motion">动效设置</button><button type="button" data-panel="export" aria-pressed="false" data-zh="导出" data-en="Export">导出</button></nav>
     <section class="tc-properties" data-panel="content">
       <div class="panel-heading"><small>LETTERING</small><h2 data-zh="金属字面" data-en="Metal surface">金属字面</h2></div>
+      <label class="field"><span data-zh="播放文字" data-en="Text">播放文字</span><input id="text" type="text" autocomplete="off" value="OK"></label>
+      <details id="fontSettings" class="metal-disclosure"><summary><span data-zh="字体与字形" data-en="Font and lettering">字体与字形</span><span id="fontSummary"></span></summary><div class="disclosure-body">
+      <label class="field"><span data-zh="字体" data-en="Font">字体</span><select id="font"></select></label>
       <label class="field"><span data-zh="文字大小" data-en="Text size">文字大小</span><div class="range-row"><input id="fontSize" type="range" min="0.18" max="1.2" step="0.01"><output></output></div></label>
       <label class="field"><span data-zh="字形高度" data-en="Letter height">字形高度</span><div class="range-row"><input id="fontHeight" type="range" min="0.5" max="1.4" step="0.01"><output></output></div></label>
       <label class="field"><span data-zh="额外加粗" data-en="Extra weight">额外加粗</span><div class="range-row"><input id="extraBold" type="range" min="0" max="0.04" step="0.001"><output></output></div></label>
+      <label class="field"><span data-zh="字距" data-en="Letter spacing">字距</span><div class="range-row"><input id="tracking" type="range" min="-0.08" max="0.20" step="0.005"><output></output></div></label>
+      </div></details>
+      <label class="field color-field"><span data-zh="金属底色" data-en="Metal tint">金属底色</span><input id="textColor" type="color"></label>
+      <div class="metal-row-toolbar"><button id="pauseForEdit" class="soft-button" type="button" data-zh="暂停修改" data-en="Pause to edit">暂停修改</button><span data-zh="单场景" data-en="Single scene">单场景</span></div>
+      <details id="backgroundSettings" class="metal-disclosure"><summary><span data-zh="背景 · 图片 / GIF / 视频" data-en="Background · Image / GIF / Video">背景 · 图片 / GIF / 视频</span><i id="backgroundSwatch" class="background-swatch" aria-label="当前背景颜色"></i></summary><div class="disclosure-body">
+        <label class="field color-field"><span data-zh="背景颜色" data-en="Background color">背景颜色</span><input id="backgroundColor" type="color"></label>
+        <label class="background-upload"><span data-zh="上传 / 更换背景" data-en="Upload / replace background">上传 / 更换背景</span><input id="backgroundFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime"></label>
+        <p id="backgroundStatus" class="small-status" role="status"></p>
+        <div id="backgroundMediaControls" hidden>
+          <div class="background-media-head"><strong id="backgroundName"></strong><button id="removeBackground" type="button" data-zh="移除素材" data-en="Remove media">移除素材</button></div>
+          <canvas id="backgroundCrop" width="480" height="270" aria-label="拖动画面裁剪背景" tabindex="0"></canvas>
+          <p class="small-status" data-zh="拖动预览调整取景，方向键可微调。" data-en="Drag to reframe; arrow keys make precise adjustments.">拖动预览调整取景，方向键可微调。</p>
+          <label class="field"><span data-zh="画面缩放" data-en="Background zoom">画面缩放</span><div class="range-row"><input id="cropZoom" type="range" min="1" max="4" step="0.01"><output></output></div></label>
+          <button id="resetCrop" class="soft-button" type="button" data-zh="居中并恢复原始缩放" data-en="Center and reset zoom">居中并恢复原始缩放</button>
+          <div id="backgroundVideoControls" hidden>
+            <div id="videoTimeline" class="background-filmstrip"><canvas id="videoFilmstrip" width="720" height="96" aria-label="视频胶片预览"></canvas><div id="videoSelection" class="video-selection"><button id="videoStartHandle" type="button" role="slider" aria-label="视频开始位置" aria-valuemin="0"></button><button id="videoEndHandle" type="button" role="slider" aria-label="视频结束位置" aria-valuemin="0"></button></div></div>
+            <p id="videoDuration" class="small-status"></p>
+            <div class="video-trim-fields"><label class="field"><span data-zh="开始秒数" data-en="Start seconds">开始秒数</span><input id="videoStart" type="number" min="0" step="0.01"></label><label class="field"><span data-zh="结束秒数" data-en="End seconds">结束秒数</span><input id="videoEnd" type="number" min="0.05" step="0.01"></label></div>
+          </div>
+        </div>
+      </div></details>
+      <details class="metal-disclosure"><summary><span data-zh="构图与位置" data-en="Layout and position">构图与位置</span></summary><div class="disclosure-body">
+        <label class="field"><span data-zh="水平位置" data-en="Horizontal position">水平位置</span><div class="range-row"><input id="positionX" type="range" min="-40" max="40" step="0.5"><output></output></div></label>
+        <label class="field"><span data-zh="垂直位置" data-en="Vertical position">垂直位置</span><div class="range-row"><input id="positionY" type="range" min="-40" max="40" step="0.5"><output></output></div></label>
+        <label class="field"><span data-zh="对齐" data-en="Alignment">对齐</span><select id="alignment"><option value="left" data-zh="左对齐" data-en="Left">左对齐</option><option value="center" data-zh="居中" data-en="Center">居中</option><option value="right" data-zh="右对齐" data-en="Right">右对齐</option></select></label>
+      </div></details>
       <label class="field color-field"><span data-zh="冷色反光" data-en="Cool reflection">冷色反光</span><input id="coolTint" type="color"></label>
       <label class="field color-field"><span data-zh="暖色反光" data-en="Warm reflection">暖色反光</span><input id="warmTint" type="color"></label>
       <label class="field"><span data-zh="金属边缘" data-en="Metal edge">金属边缘</span><div class="range-row"><input id="bevel" type="range" min="0" max="0.2" step="0.005"><output></output></div></label>
@@ -95,12 +122,14 @@
       <progress id="exportProgress" max="1" value="0" hidden></progress><p id="exportStatus" class="small-status" role="status" data-zh="PNG 保存当前帧，动画按选定时长输出。" data-en="PNG saves this frame; animation uses the chosen duration.">PNG 保存当前帧，动画按选定时长输出。</p>
     </section>
   </aside>
-  <script src="shared-font-library.js?v=20261027-metal1"></script>
-  <script src="cellmotion-effect-bridge.js?v=20261027-metal1"></script>
-  <script src="metallic-text-render.js?v=20261027-metal1"></script>
-  <script src="metallic-text.js?v=20261027-metal1"></script>
-  <script src="cellmotion-ai-manifest.js?v=20261027-metal1"></script>
-  <script src="cellmotion-ai-menu.js?v=20261027-metal1"></script>
-  <script src="typecascade-selects.js?v=20261027-metal1"></script>
+  <script src="shared-font-library.js?v=20261028-metal2"></script>
+  <script src="cellmotion-effect-bridge.js?v=20261028-metal2"></script>
+  <script src="cellmotion-animated-image.js?v=20261028-metal2"></script>
+  <script src="cellmotion-background-media.js?v=20261028-metal2"></script>
+  <script src="metallic-text-render.js?v=20261028-metal2"></script>
+  <script src="metallic-text.js?v=20261028-metal2"></script>
+  <script src="cellmotion-ai-manifest.js?v=20261028-metal2"></script>
+  <script src="cellmotion-ai-menu.js?v=20261028-metal2"></script>
+  <script src="typecascade-selects.js?v=20261028-metal2"></script>
 </body>
 </html>

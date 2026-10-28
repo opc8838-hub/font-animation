@@ -1,7 +1,7 @@
 {
   "effect": { "id": "metallic-text", "name": { "zh": "金属流光", "en": "Metallic Text" }, "version": "1.0.0", "category": "type" },
-  "runtime": { "kind": "iframe-bridge", "entry": "metallic-text.html?v=20261027-metal1", "bridgeVersion": "1.0.0", "renderer": "webgl2" },
-  "capabilities": { "compositionModel": "scene", "editableText": true, "sharedFonts": true, "responsiveCanvas": true, "timeline": true, "preview": true, "exports": ["png", "gif", "mp4"] },
+  "runtime": { "kind": "iframe-bridge", "entry": "metallic-text.html?v=20261028-metal2", "bridgeVersion": "1.0.0", "renderer": "webgl2" },
+  "capabilities": { "compositionModel": "scene", "editableText": true, "sharedFonts": true, "backgroundMedia": true, "animatedImageBackgrounds": true, "trimmedVideoBackgrounds": true, "responsiveCanvas": true, "timeline": true, "preview": true, "exports": ["png", "gif", "mp4"] },
   "behavior": {
     "summary": { "zh": "居中的宽扁金属文字，银灰字面内流动冷暖反光。文字、共享字体、字形、材质、反光方向与各阶段时长均来自当前方案。", "en": "Centered, wide metallic lettering with cool and warm reflections moving across a silver surface. Text, shared font, lettering geometry, material, sweep direction and phase durations come from the live composition." },
     "phases": [
@@ -30,6 +30,17 @@
     { "path": "composition.scene.intro", "scope": "effect", "type": "number", "name": { "zh": "文字进入", "en": "Text entrance" }, "unit": "s", "min": 0.1, "max": 2 },
     { "path": "composition.scene.sweep", "scope": "effect", "type": "number", "name": { "zh": "流光经过", "en": "Reflection sweep" }, "unit": "s", "min": 0.5, "max": 10 },
     { "path": "composition.scene.hold", "scope": "effect", "type": "number", "name": { "zh": "亮面停留", "en": "Lit hold" }, "unit": "s", "min": 0, "max": 4 },
-    { "path": "composition.scene.speed", "scope": "effect", "type": "number", "name": { "zh": "播放速度", "en": "Playback speed" }, "min": 0.25, "max": 2 }
+    { "path": "composition.scene.speed", "scope": "effect", "type": "number", "name": { "zh": "播放速度", "en": "Playback speed" }, "min": 0.25, "max": 2 },
+    { "path": "composition.scene.positionX", "scope": "effect", "type": "number", "name": { "zh": "水平位置", "en": "Horizontal position" }, "unit": "%", "min": -40, "max": 40, "default": 0 },
+    { "path": "composition.scene.positionY", "scope": "effect", "type": "number", "name": { "zh": "垂直位置", "en": "Vertical position" }, "unit": "%", "min": -40, "max": 40, "default": 0 },
+    { "path": "composition.scene.alignment", "scope": "effect", "type": "enum", "name": { "zh": "对齐", "en": "Alignment" }, "values": ["left", "center", "right"], "default": "center" },
+    { "path": "composition.scene.backgroundMedia.url", "scope": "asset", "type": "string", "name": { "zh": "背景素材", "en": "Background source" } },
+    { "path": "composition.scene.backgroundMedia.name", "scope": "asset", "type": "string", "name": { "zh": "素材名称", "en": "Source name" } },
+    { "path": "composition.scene.backgroundMedia.fileType", "scope": "asset", "type": "string", "name": { "zh": "素材格式", "en": "Source MIME type" } },
+    { "path": "composition.scene.backgroundMedia.videoStart", "scope": "asset", "type": "number", "name": { "zh": "视频开始", "en": "Video start" }, "unit": "s" },
+    { "path": "composition.scene.backgroundMedia.videoEnd", "scope": "asset", "type": "number", "name": { "zh": "视频结束", "en": "Video end" }, "unit": "s" },
+    { "path": "composition.scene.backgroundMedia.cropX", "scope": "asset", "type": "number", "name": { "zh": "取景水平位置", "en": "Crop horizontal position" }, "min": 0, "max": 1 },
+    { "path": "composition.scene.backgroundMedia.cropY", "scope": "asset", "type": "number", "name": { "zh": "取景垂直位置", "en": "Crop vertical position" }, "min": 0, "max": 1 },
+    { "path": "composition.scene.backgroundMedia.cropZoom", "scope": "asset", "type": "number", "name": { "zh": "背景缩放", "en": "Background zoom" }, "min": 1, "max": 4 }
   ]
 }

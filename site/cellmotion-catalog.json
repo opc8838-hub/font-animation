@@ -14,7 +14,7 @@
   "recent": [
     {
       "id": "metallic-text",
-      "date": "2026-10-27"
+      "date": "2026-10-28"
     },
     {
       "id": "bubble-frame",
@@ -148,9 +148,9 @@
       "english": "Metallic Text",
       "description": "宽扁银字 · 冷暖反光 · 金属流光",
       "category": "type",
-      "href": "metallic-text.html",
-      "poster": "final_metallic-text.png",
-      "video": "assets/previews/metallic-text-card.mp4",
+      "href": "metallic-text.html?from=gallery&v=20261028-metal2",
+      "poster": "final_metallic-text.png?v=20261028-metal2",
+      "video": "assets/previews/metallic-text-card.mp4?v=20261028-metal2",
       "webComponent": {
         "preview": "typecascade-component-demo.html?effect=metallic-text",
         "descriptor": "effects/metallic-text.component.json"

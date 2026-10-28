@@ -19,7 +19,9 @@ const browserPath = process.argv[3] || undefined;
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   const scheme = () => page.evaluate(() => CellMotionMetallicText.getScheme());
+  async function showText() { await page.locator('#selectText').click(); await page.locator('#fontSettings').evaluate(details => { details.open = true; }); }
   async function download(button, name) {
+    if (button.startsWith('#export')) await page.locator('#openExport').click();
     const pending = page.waitForEvent('download', { timeout: 180000 });
     await page.locator(button).click();
     const file = path.join(output, name); await (await pending).saveAs(file);
@@ -37,7 +39,7 @@ const browserPath = process.argv[3] || undefined;
     });
     for (const frame of frames) fs.writeFileSync(path.join(output, `phase-${frame.at}.png`), Buffer.from(frame.png, 'base64'));
     assert.notEqual(frames[1].png, frames[3].png, 'Reflection changes pixels while lettering stays in place');
-    await page.locator('#text').fill('金属流光'); await page.locator('#text').dispatchEvent('change');
+    await showText(); await page.locator('#text').fill('金属流光'); await page.locator('#text').dispatchEvent('change');
     await page.locator('#font').selectOption('stg:noto-sc-black', { force: true });
     await page.evaluate(() => {
       for (const [id, value] of Object.entries({ textColor: '#edc9a4', backgroundColor: '#102131', coolTint: '#64cfff', shine: '1.25', sweep: '2.8' })) {
@@ -75,6 +77,7 @@ const browserPath = process.argv[3] || undefined;
     await page.locator('#openExport').click();
     const samples = [['cellmotion-square', 'METAL'], ['noto-sc-black', '金属流光'], ['noto-jp-black', '金属の光'], ['noto-kr-black', '금속빛']];
     for (const [font, text] of samples) {
+      await showText();
       await page.locator('#text').fill(text); await page.locator('#text').dispatchEvent('change');
       await page.locator('#font').selectOption(`stg:${font}`, { force: true });
       await page.evaluate(() => CellMotionMetallicText.seek(1.8));
@@ -87,17 +90,17 @@ const browserPath = process.argv[3] || undefined;
     const scroll = await page.locator('.tc-properties[data-panel="motion"]').evaluate(element => { element.scrollTop = element.scrollHeight; return { bottom: element.scrollTop + element.clientHeight, height: element.scrollHeight }; });
     assert.ok(scroll.bottom >= scroll.height - 2, 'Inspector reaches its final control');
 
-    await page.locator('#text').fill('你好 AI'); await page.locator('#text').dispatchEvent('change');
+    await showText(); await page.locator('#text').fill('你好 AI'); await page.locator('#text').dispatchEvent('change');
     await page.locator('#font').selectOption('stg:noto-sc-black', { force: true });
     await page.locator('.tc-ai-trigger').click();
     const manifestFile = await download('[data-ai-action="json"]', 'live-manifest.json');
     const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
     assert.deepEqual(manifest.composition, await scheme());
     assert.ok(manifest.assets.fonts.some(font => font.id === 'stg:noto-sc-black'));
-    assert.equal(manifest.parameterDefinitions.length, 20);
+    assert.equal(manifest.parameterDefinitions.length, 31);
     assert.equal(await page.evaluate(value => CellMotionAI.validate(value).valid, manifest), true);
     await page.locator('.tc-ai-trigger').click(); await page.locator('[data-ai-action="params"]').click();
-    assert.equal(await page.locator('.tc-ai-params code').count(), 20); await page.keyboard.press('Escape');
+    assert.equal(await page.locator('.tc-ai-params code').count(), 31); await page.keyboard.press('Escape');
     await page.locator('.tc-ai-trigger').click();
     const popupPending = context.waitForEvent('page'); await page.locator('[data-ai-action="preview"]').click();
     const demo = await popupPending; await demo.waitForLoadState('domcontentloaded');
