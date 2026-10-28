@@ -51,3 +51,10 @@ The animation is an independent reconstruction from the public recording. Libres
 - Real video-background export: 320 × 320, H.264, 15 FPS, 33 frames / 2.20 s. FFmpeg frames confirm the selected green/blue interval and the return to the trimmed start. The animated-background GIF was also exported and inspected.
 - The approved preset, poster and gallery MP4 bytes are unchanged. The default 960 × 540 frame at 2.10 s has zero pixel difference from the approved poster. Optional layout/background fields migrate without changing the immutable default JSON.
 - Font CSS is loaded before editor initialization to prevent a cold-load fallback font from being cached into the metal mask. Fonts with italic style retain that style during loading.
+
+## 2026-10-28: AVATR spacing correction
+
+- The reported AVATR frame exposed loose diagonal pairs beside a tight TR pair. The renderer drew isolated graphemes, and Chromium ignored the source font's legacy `kern` table even with normal kerning enabled. Native AV measured the same as isolated A + V despite the source's -351/1000 em adjustment.
+- The square-font build preserves all 2,039 source kerning pairs in a browser-readable GPOS feature. The renderer now shapes the complete text with native kerning and Canvas letter spacing, retaining the editable tracking value and the single preview/export/player renderer. No glyph contours, material animation, default scheme or gallery media were replaced.
+- `tests/metallic-spacing-browser.cjs` first failed on the missing AV kerning. It now checks AVATR at two tracking values, Inter AVATAR and Chinese against native text silhouettes, allowing one pixel for Canvas/shader edge rasterization. The AV adjustment at 216 px is -75.816 px; Latin silhouette differences beyond the edge tolerance are zero.
+- The background/export/player regression suite passes. The approved default frame differs by at most one channel value in nine channel samples out of 2,073,600 (mean 0.00000434), while the approved preset, poster and MP4 bytes remain unchanged.

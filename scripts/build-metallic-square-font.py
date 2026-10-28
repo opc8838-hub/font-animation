@@ -8,8 +8,14 @@ import sys
 
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont
+from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 
 font = TTFont(sys.argv[1])
+# Browsers ignore this source's legacy kern table; preserve its pairs in GPOS.
+pairs = font['kern'].kernTables[0].kernTable
+addOpenTypeFeaturesFromString(font, 'languagesystem DFLT dflt; languagesystem latn dflt; feature kern {\n'
+                             + '\n'.join(f'pos {left} {right} {value};' for (left, right), value in pairs.items())
+                             + '\n} kern;')
 
 
 def rectangle(pen, left, bottom, right, top, radius, reverse=False):
