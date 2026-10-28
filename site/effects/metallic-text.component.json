@@ -1,6 +1,6 @@
 {
   "effect": { "id": "metallic-text", "name": { "zh": "金属流光", "en": "Metallic Text" }, "version": "1.0.0", "category": "type" },
-  "runtime": { "kind": "iframe-bridge", "entry": "metallic-text.html?v=20261028-metal2", "bridgeVersion": "1.0.0", "renderer": "webgl2" },
+  "runtime": { "kind": "iframe-bridge", "entry": "metallic-text.html?v=20261028-spacing1", "bridgeVersion": "1.0.0", "renderer": "webgl2" },
   "capabilities": { "compositionModel": "scene", "editableText": true, "sharedFonts": true, "backgroundMedia": true, "animatedImageBackgrounds": true, "trimmedVideoBackgrounds": true, "responsiveCanvas": true, "timeline": true, "preview": true, "exports": ["png", "gif", "mp4"] },
   "behavior": {
     "summary": { "zh": "居中的宽扁金属文字，银灰字面内流动冷暖反光。文字、共享字体、字形、材质、反光方向与各阶段时长均来自当前方案。", "en": "Centered, wide metallic lettering with cool and warm reflections moving across a silver surface. Text, shared font, lettering geometry, material, sweep direction and phase durations come from the live composition." },

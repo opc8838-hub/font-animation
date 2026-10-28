@@ -132,13 +132,14 @@
     const font = window.STGFontLibrary.preset(scene.font);
     const size = height * scene.fontSize;
     ctx.font = `${font.style} ${font.weight} ${size}px ${window.STGFontLibrary.family(scene.font)}`;
+    ctx.fontKerning = 'normal';
     ctx.textBaseline = 'alphabetic';
-    const glyphs = [...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(scene.text)].map(part => part.segment);
-    const metrics = glyphs.map(glyph => ctx.measureText(glyph));
     const gap = size * scene.tracking;
-    const advances = metrics.reduce((sum, metric) => sum + metric.width, 0) + gap * Math.max(0, glyphs.length - 1);
-    const ascent = Math.max(1, ...metrics.map(metric => metric.actualBoundingBoxAscent));
-    const descent = Math.max(0, ...metrics.map(metric => metric.actualBoundingBoxDescent));
+    ctx.letterSpacing = `${gap}px`;
+    const metrics = ctx.measureText(scene.text);
+    const advances = metrics.width - (scene.text ? gap : 0);
+    const ascent = Math.max(1, metrics.actualBoundingBoxAscent);
+    const descent = Math.max(0, metrics.actualBoundingBoxDescent);
     const actualHeight = (ascent + descent) * scene.fontHeight;
     const scale = Math.min(1, width * .82 / Math.max(1, advances), height * .55 / actualHeight);
     const alignedLeft = scene.alignment === 'left' ? width * .09 : scene.alignment === 'right' ? width * .91 - advances * scale : (width - advances * scale) / 2;
@@ -146,8 +147,9 @@
     bounds = [left, top, Math.max(1, advances * scale), actualHeight * scale];
     ctx.save(); ctx.translate(left, top + ascent * scale * scene.fontHeight); ctx.scale(scale, scale * scene.fontHeight); ctx.fillStyle = '#fff';
     ctx.strokeStyle = '#fff'; ctx.lineWidth = size * scene.extraBold * 2; ctx.lineJoin = 'round';
-    let x = 0;
-    glyphs.forEach((glyph, index) => { ctx.fillText(glyph, x, 0); if (scene.extraBold > 0) ctx.strokeText(glyph, x, 0); x += metrics[index].width + gap; }); ctx.restore();
+    ctx.fillText(scene.text, 0, 0);
+    if (scene.extraBold > 0) ctx.strokeText(scene.text, 0, 0);
+    ctx.restore();
     const pixels = ctx.getImageData(0, 0, width, height).data;
     const distances = contourDistances(pixels, width, height);
     for (let i = 0; i < distances.length; i++) {
