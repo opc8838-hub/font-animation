@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "dither-ascii",
+      "date": "2026-10-28"
+    },
+    {
       "id": "metallic-text",
       "date": "2026-10-28"
     },
@@ -142,6 +146,21 @@
     }
   ],
   "effects": [
+    {
+      "id": "dither-ascii",
+      "name": "网格显影",
+      "english": "Dither / ASCII",
+      "description": "Bayer 抖动 · ASCII 字符画 · 可调遮罩与采样",
+      "category": "graphic",
+      "href": "dither-ascii.html?from=gallery&v=20261028-1",
+      "poster": "final_dither-ascii.png",
+      "video": null,
+      "webComponent": {
+        "preview": "archive-motion-demo.html?effect=dither-ascii",
+        "descriptor": "effects/dither-ascii.component.json"
+      },
+      "status": "ready"
+    },
     {
       "id": "metallic-text",
       "name": "金属流光",

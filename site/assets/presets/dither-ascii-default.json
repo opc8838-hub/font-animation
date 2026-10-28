@@ -1,0 +1,49 @@
+{
+  "effect": "dither-ascii",
+  "version": 1,
+  "canvas": {
+    "width": 1440,
+    "height": 1080
+  },
+  "typography": {
+    "fontFamily": "stg:ibm-plex-mono"
+  },
+  "backgroundColor": "#dce8e7",
+  "customAssets": [],
+  "cards": [
+    {
+      "id": "source-1",
+      "libraryId": "dither-ascii-demo",
+      "scale": 1,
+      "opacity": 1,
+      "rotation": 0,
+      "x": 0,
+      "y": 0,
+      "gap": 24,
+      "caption": ""
+    }
+  ],
+  "scene": {
+    "mode": "ascii",
+    "tone": "duotone",
+    "mask": "none",
+    "sampleArea": "dark",
+    "strength": 1,
+    "cellSize": 37,
+    "spacing": 1,
+    "levels": 3,
+    "foreground": "#a8b889",
+    "background": "#f3f4ea",
+    "maskSize": 90,
+    "feather": 0,
+    "invert": false
+  },
+  "motion": {
+    "speed": 1,
+    "loop": true,
+    "source": 0.55,
+    "reveal": 1.25,
+    "hold": 2.4,
+    "reset": 0.55
+  }
+}

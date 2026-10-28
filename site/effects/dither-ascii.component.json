@@ -1,0 +1,25 @@
+{
+  "effect": {"id":"dither-ascii","name":{"zh":"网格显影","en":"Dither / ASCII"},"version":"1.0.0","category":"graphic"},
+  "runtime": {"kind":"iframe-bridge","entry":"dither-ascii.html?preview=1&embed=1&v=20261028-1","bridgeVersion":"1.0.0","renderer":"canvas2d"},
+  "capabilities": {"compositionModel":"cards","timeline":true,"responsiveCanvas":true,"exports":["png","gif","mp4"],"customImageAssets":true,"backgrounds":["color","image","gif","video"],"videoTrim":true},
+  "behavior": {"summary":{"zh":"把图像转换为可调的 Bayer 抖动或 ASCII 字符画，并用遮罩显影。","en":"Transform an image into adjustable Bayer dither or ASCII art with a reveal mask."},"phases":[
+    {"id":"source","name":{"zh":"原图呈现","en":"Source"},"colorToken":"phase.sky"},
+    {"id":"reveal","name":{"zh":"网格显影","en":"Grid reveal"},"colorToken":"phase.violet"},
+    {"id":"hold","name":{"zh":"效果展示","en":"Result hold"},"colorToken":"phase.lime"},
+    {"id":"reset","name":{"zh":"回到原图","en":"Return"},"colorToken":"phase.coral"}
+  ]},
+  "parameters": [
+    {"path":"composition.scene.mode","scope":"effect","name":{"zh":"效果模式","en":"Effect mode"},"type":"string","enum":["dither","ascii"]},
+    {"path":"composition.scene.tone","scope":"effect","name":{"zh":"色调","en":"Tone"},"type":"string","enum":["original","mono","duotone"]},
+    {"path":"composition.scene.mask","scope":"effect","name":{"zh":"遮罩","en":"Mask"},"type":"string","enum":["wipe","circle","none"]},
+    {"path":"composition.scene.sampleArea","scope":"effect","name":{"zh":"采样区域","en":"Sample region"},"type":"string","enum":["all","dark","light"]},
+    {"path":"composition.scene.strength","scope":"effect","name":{"zh":"采样强度","en":"Sampling strength"},"type":"number","minimum":0.4,"maximum":2.8},
+    {"path":"composition.scene.cellSize","scope":"effect","name":{"zh":"方格大小","en":"Cell size"},"type":"number","minimum":6,"maximum":42},
+    {"path":"composition.scene.spacing","scope":"effect","name":{"zh":"方格间距","en":"Grid spacing"},"type":"number","minimum":0.6,"maximum":2.2},
+    {"path":"composition.scene.levels","scope":"effect","name":{"zh":"色阶","en":"Color levels"},"type":"integer","minimum":2,"maximum":6},
+    {"path":"composition.scene.foreground","scope":"effect","name":{"zh":"前景色","en":"Foreground"},"type":"string"},
+    {"path":"composition.scene.background","scope":"effect","name":{"zh":"底色","en":"Background"},"type":"string"},
+    {"path":"composition.motion.reveal","scope":"effect","name":{"zh":"显影时间","en":"Reveal duration"},"type":"number","minimum":0.1,"maximum":5},
+    {"path":"composition.motion.hold","scope":"effect","name":{"zh":"效果停留","en":"Result hold"},"type":"number","minimum":0,"maximum":8}
+  ]
+}

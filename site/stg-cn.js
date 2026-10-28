@@ -10,6 +10,7 @@
     return;
   }
   const effects = [
+    ["dither-ascii", "网格显影", "Dither / ASCII"],
     ["metallic-text", "金属流光", "Metallic Text"],
     ["bubble-frame", "流体泡泡", "Bubble Fluid"],
     ["ascii-sharks", "字符海洋", "ASCII Ocean"],
