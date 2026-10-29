@@ -1,5 +1,5 @@
 const effects = [
-  ["dither-ascii", "网格显影", "Dither / ASCII", "graphic", "Bayer 抖动 · ASCII 字符画 · 可调遮罩与采样"],
+  ["dither-ascii", "网格显影", "Dither / ASCII", "graphic", "蝴蝶振翅 · Bayer 抖动 · ASCII 字符画"],
   ["metallic-text", "金属流光", "Metallic Text", "type", "宽扁银字 · 冷暖反光 · 金属流光"],
   ["bubble-frame", "流体泡泡", "Bubble Fluid", "type", "软体字流动 · 荧光配色 · 舞台光影"],
   ["glass-icon-reveal", "玻璃显标", "Glass Icon Reveal", "graphic", "水滴凝结 · 玻璃折射 · 标志显现"],

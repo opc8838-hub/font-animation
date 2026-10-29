@@ -5,6 +5,9 @@
   const chars = ' .,:;i1tfLCG08@';
   const source = document.createElement('canvas');
   const sample = source.getContext('2d', {willReadFrequently:true});
+  const butterfly = document.createElement('canvas');
+  butterfly.width = 900; butterfly.height = 1200;
+  const butterflyContext = butterfly.getContext('2d');
   const phases = state => {
     let start = 0;
     return [
@@ -36,6 +39,35 @@
     ctx.translate(w/2+(card.x||0)*w/1080, h/2+(card.y||0)*h/1080);
     ctx.rotate((card.rotation||0)*Math.PI/180);
     ctx.drawImage(image,-dw/2,-dh/2,dw,dh);
+    ctx.restore();
+  }
+  function drawButterfly(ctx,time) {
+    ctx.save();ctx.setTransform(900,0,0,1200,0,0);
+    ctx.fillStyle='#f3f4ea';ctx.fillRect(0,0,1,1);
+    const flutter=(1+Math.cos(time*Math.PI*2/2.3))*.5;
+    ctx.translate(.52,.51);ctx.rotate(-.08);
+    function wing(side,fold) {
+      ctx.save();ctx.scale(side*fold,1);
+      const upper=ctx.createLinearGradient(-.46,-.48,-.02,.15);
+      upper.addColorStop(0,'#c7d4a6');upper.addColorStop(.6,'#a8bd8e');upper.addColorStop(1,'#819b83');
+      ctx.fillStyle=upper;ctx.beginPath();ctx.moveTo(0,-.02);
+      ctx.bezierCurveTo(-.12,-.18,-.31,-.46,-.46,-.49);
+      ctx.bezierCurveTo(-.52,-.45,-.51,-.16,-.44,.03);
+      ctx.bezierCurveTo(-.36,.21,-.15,.11,0,.03);ctx.fill();
+      ctx.fillStyle='#a9bd94';ctx.beginPath();ctx.moveTo(-.02,.01);
+      ctx.bezierCurveTo(-.15,.10,-.36,.15,-.43,.29);
+      ctx.bezierCurveTo(-.48,.42,-.33,.43,-.23,.36);
+      ctx.bezierCurveTo(-.09,.28,-.02,.12,0,.04);ctx.fill();
+      ctx.strokeStyle='#e4ebd5';ctx.lineWidth=.005;ctx.globalAlpha=.75;
+      for(const [x,y] of [[-.46,-.46],[-.49,-.31],[-.48,-.15],[-.43,.02],[-.35,.20],[-.40,.34],[-.24,.35]]) {
+        ctx.beginPath();ctx.moveTo(-.015,.015);ctx.quadraticCurveTo(x*.6,y*.7,x,y);ctx.stroke();
+      }
+      ctx.restore();
+    }
+    wing(1,.35+.65*flutter);wing(-1,.26+.74*flutter);
+    ctx.fillStyle='#718977';ctx.beginPath();ctx.ellipse(0,.06,.016,.145,.1,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#718977';ctx.lineWidth=.004;
+    for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(0,-.05);ctx.quadraticCurveTo(side*.035,-.20,side*.10,-.26);ctx.stroke();}
     ctx.restore();
   }
   function revealAt(state, time) {
@@ -96,6 +128,7 @@
     if (source.width!==sw || source.height!==sh) {source.width=sw;source.height=sh;}
     sample.fillStyle=scene.background;sample.fillRect(0,0,sw,sh);
     for (const card of cards) {
+      if(card.libraryId==='dither-ascii-demo') {drawButterfly(butterflyContext,Math.max(0,time)%duration(state));cover(sample,butterfly,sw,sh,card);continue;}
       const asset = resources.get(card.libraryId);
       const image = asset?.animated ? window.CellMotionAnimatedImage.frameAt(asset.animated,time)?.image || asset.image : asset?.image;
       if (image?.width) cover(sample,image,sw,sh,card);
