@@ -1,0 +1,10 @@
+body.dither-editor .tc-content .tc-row-select img {object-fit:cover;border-radius:8px}
+body.dither-editor .cm-current-preview img {object-fit:cover}
+body.dither-editor .gm-stage canvas {image-rendering:auto}
+body.dither-editor .gm-card h2 {letter-spacing:-.02em}
+body.archive-editor.dither-editor .gm-stage {position:relative}
+body.archive-editor.dither-editor.me-motion-editor .me-stage-controls {position:absolute!important;left:50%!important;top:auto!important;bottom:14px!important;transform:translateX(-50%)!important;margin:0!important;z-index:2}
+.dither-color-label {margin:14px 0 8px;font-size:12px;font-weight:700}
+.dither-swatches {display:flex;gap:10px;align-items:center;margin-bottom:16px}
+.dither-swatches button {width:30px;height:30px;border:2px solid transparent;border-radius:50%;background:var(--swatch);cursor:pointer;box-shadow:0 0 0 1px #0004}
+.dither-swatches button[aria-pressed="true"] {border-color:#fff;box-shadow:0 0 0 2px var(--swatch)}
