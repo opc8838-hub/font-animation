@@ -150,10 +150,10 @@
       "id": "dither-ascii",
       "name": "网格显影",
       "english": "Dither / ASCII",
-      "description": "Bayer 抖动 · ASCII 字符画 · 可调遮罩与采样",
+      "description": "蝴蝶振翅 · Bayer 抖动 · ASCII 字符画",
       "category": "graphic",
-      "href": "dither-ascii.html?from=gallery&v=20261028-1",
-      "poster": "final_dither-ascii.png",
+      "href": "dither-ascii.html?from=gallery&v=20261029-butterfly1",
+      "poster": "final_dither-ascii.png?v=20261029-butterfly1",
       "video": null,
       "webComponent": {
         "preview": "archive-motion-demo.html?effect=dither-ascii",

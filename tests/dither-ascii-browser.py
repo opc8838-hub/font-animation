@@ -42,9 +42,10 @@ try:
         result = page.evaluate("""() => {
           const s=CardMotionEditor.getScheme(),c=document.createElement('canvas');c.width=240;c.height=300;
           const g=c.getContext('2d'),render=(t)=>{CardMotionEditor.draw(g,t,240,300);return c.toDataURL()};
-          return {source:render(0),dither:render(2),repeat:render(2),end:render(CardMotion.duration(s))};
+          return {source:render(0),flutter:render(.25),dither:render(2),repeat:render(2),end:render(CardMotion.duration(s))};
         }""")
         assert result["source"] != result["dither"]
+        assert result["source"] != result["flutter"]
         assert result["dither"] == result["repeat"]
         assert result["source"] == result["end"]
         poster = page.evaluate("""() => {const c=document.createElement('canvas');c.width=960;c.height=720;CardMotionEditor.draw(c.getContext('2d'),2.3,960,720);return c.toDataURL('image/png').split(',')[1]}""")
