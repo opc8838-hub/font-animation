@@ -6,7 +6,7 @@
   const source = document.createElement('canvas');
   const sample = source.getContext('2d', {willReadFrequently:true});
   const butterfly = document.createElement('canvas');
-  butterfly.width = 900; butterfly.height = 1200;
+  butterfly.width = 900; butterfly.height = 900;
   const butterflyContext = butterfly.getContext('2d');
   const phases = state => {
     let start = 0;
@@ -42,7 +42,7 @@
     ctx.restore();
   }
   function drawButterfly(ctx,time) {
-    ctx.save();ctx.setTransform(900,0,0,1200,0,0);
+    ctx.save();ctx.setTransform(900,0,0,900,0,0);
     ctx.fillStyle='#f3f4ea';ctx.fillRect(0,0,1,1);
     const flutter=(1+Math.cos(time*Math.PI*2/2.3))*.5;
     ctx.translate(.52,.51);ctx.rotate(-.08);
@@ -92,25 +92,6 @@
     ctx.textAlign='left';ctx.fillStyle='#263222';ctx.font=`500 ${h*.033}px Georgia,serif`;ctx.fillText('Your browser,',panel.x+h*.03,panel.y+panel.h-h*.105);
     ctx.font=`italic 500 ${h*.041}px Georgia,serif`;ctx.fillText('at command.',panel.x+h*.03,panel.y+panel.h-h*.045);
   }
-  function loginCard(ctx,x,y,w,h) {
-    const r=Math.min(w,h)*.045, left=w*.49, px=x+left+w*.12, formW=w*.32;
-    ctx.save();ctx.fillStyle='#ffffff';ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();
-    ctx.fillStyle='#171a23';ctx.font=`600 ${h*.037}px Georgia,serif`;ctx.fillText('Welcome back',px,y+h*.29);
-    ctx.fillStyle='#56afe0';ctx.beginPath();ctx.roundRect(px+formW*.59,y+h*.255,h*.036,h*.036,h*.006);ctx.fill();
-    ctx.fillStyle='#7c8390';ctx.font=`400 ${h*.019}px Arial,sans-serif`;ctx.fillText('Sync your bookmarks and wallpapers',px,y+h*.34);
-    const label=(text,yy)=>{ctx.fillStyle='#343840';ctx.font=`600 ${h*.019}px Arial,sans-serif`;ctx.fillText(text,px,yy);};
-    const field=(text,yy)=>{ctx.fillStyle='#ffffff';ctx.strokeStyle='#e3e5e6';ctx.lineWidth=Math.max(1,h*.002);ctx.beginPath();ctx.roundRect(px,yy,formW,h*.056,h*.006);ctx.fill();ctx.stroke();ctx.fillStyle='#a5aab1';ctx.font=`400 ${h*.019}px Arial,sans-serif`;ctx.fillText(text,px+h*.014,yy+h*.036);};
-    label('Email',y+h*.405);field('Enter your email',y+h*.421);
-    label('Password',y+h*.525);field('••••••••',y+h*.541);
-    const buttonY=y+h*.632;const gradient=ctx.createLinearGradient(0,buttonY,0,buttonY+h*.058);gradient.addColorStop(0,'#424b60');gradient.addColorStop(1,'#242b39');ctx.fillStyle=gradient;ctx.beginPath();ctx.roundRect(px,buttonY,formW,h*.058,h*.006);ctx.fill();
-    ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.font=`600 ${h*.018}px Arial,sans-serif`;ctx.fillText('Sign in',px+formW/2,buttonY+h*.038);ctx.textAlign='left';
-    ctx.fillStyle='#b8bdc1';ctx.font=`400 ${h*.018}px Arial,sans-serif`;ctx.textAlign='center';ctx.fillText('or',px+formW/2,y+h*.724);ctx.textAlign='left';
-    ctx.strokeStyle='#e6e8e8';ctx.beginPath();ctx.roundRect(px,y+h*.754,formW,h*.057,h*.006);ctx.stroke();
-    ctx.fillStyle='#4285f4';ctx.font=`700 ${h*.021}px Arial,sans-serif`;ctx.textAlign='center';ctx.fillText('G',px+formW*.32,y+h*.792);
-    ctx.fillStyle='#40464e';ctx.font=`600 ${h*.018}px Arial,sans-serif`;ctx.fillText('Continue with Google',px+formW*.55,y+h*.792);
-    ctx.fillStyle='#6c727c';ctx.font=`400 ${h*.016}px Arial,sans-serif`;ctx.textAlign='center';ctx.fillText('New to Lumno?  Create an account',px+formW/2,y+h*.86);
-    ctx.restore();
-  }
   function draw(ctx, time, width, height, state, resources) {
     const w = width, h = height, scene = state.scene;
     ctx.save();ctx.setTransform(ctx.canvas.width/w,0,0,ctx.canvas.height/h,0,0);
@@ -120,9 +101,9 @@
     const background=resources.get(state.backgroundMedia?.libraryId);
     const backgroundImage=background?.video || (background?.animated ? window.CellMotionAnimatedImage.frameAt(background.animated,time)?.image : background?.image);
     if(backgroundImage?.width || backgroundImage?.videoWidth)cover(ctx,backgroundImage,w,h,{scale:1,opacity:1});
-    const cardWidth=Math.min(w*.89,h*1.25);const card={x:(w-cardWidth)/2,y:(h-cardWidth/1.6)/2,w:cardWidth,h:cardWidth/1.6};
-    const panel={x:card.x+card.w*.021,y:card.y+card.h*.035,w:card.w*.47,h:card.h*.93};
-    ctx.save();ctx.shadowColor='#47504b50';ctx.shadowBlur=h*.035;ctx.shadowOffsetY=h*.015;loginCard(ctx,card.x,card.y,card.w,card.h);ctx.restore();
+    const cardSize=Math.min(w*.89,h*.9);const card={x:(w-cardSize)/2,y:(h-cardSize)/2,w:cardSize,h:cardSize};
+    const panel={x:card.x+card.w*.025,y:card.y+card.h*.025,w:card.w*.95,h:card.h*.95};
+    ctx.save();ctx.shadowColor='#47504b50';ctx.shadowBlur=h*.035;ctx.shadowOffsetY=h*.015;ctx.fillStyle='#ffffff';ctx.beginPath();ctx.roundRect(card.x,card.y,card.w,card.h,h*.04);ctx.fill();ctx.restore();
     const cards = state.cards || [];
     const sw = Math.max(1,Math.round(Math.min(panel.w,720))), sh = Math.max(1,Math.round(panel.h*sw/panel.w));
     if (source.width!==sw || source.height!==sh) {source.width=sw;source.height=sh;}

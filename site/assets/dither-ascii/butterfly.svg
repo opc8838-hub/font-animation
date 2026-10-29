@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900">
  <defs><linearGradient id="wing" x2=".8" y2="1"><stop stop-color="#c7d4a6"/><stop offset=".6" stop-color="#a8bd8e"/><stop offset="1" stop-color="#819b83"/></linearGradient></defs>
- <rect width="900" height="1200" fill="#f3f4ea"/>
- <g transform="translate(468 612) rotate(-5)">
+ <rect width="900" height="900" fill="#f3f4ea"/>
+ <g transform="translate(450 450) scale(.76) rotate(-5)">
   <g id="half"><path d="M0-24C-108-216-279-552-414-588-468-540-459-192-396 36-324 252-135 132 0 36Z" fill="url(#wing)"/><path d="M-18 12C-135 120-324 180-387 348-432 504-297 516-207 432-81 336-18 144 0 48Z" fill="#a9bd94"/><g fill="none" stroke="#e4ebd5" stroke-width="5" opacity=".8"><path d="M-12 18Q-222-348-414-588M-12 18Q-252-228-441-372M-12 18Q-288-96-432-180M-12 18Q-240 120-396 36M-12 18Q-210 252-387 348M-12 18Q-90 348-207 432"/></g></g>
   <use href="#half" transform="scale(-1 1)"/>
   <ellipse cy="72" rx="15" ry="174" fill="#718977"/>
