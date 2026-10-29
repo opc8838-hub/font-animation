@@ -57,6 +57,8 @@ try:
         (OUT / "dither.png").write_bytes(base64.b64decode(dither))
         ink = Image.open(OUT / "dither.png").crop((70, 110, 470, 500))
         assert sum(pixel[0] < 210 and pixel[1] < 215 and pixel[2] < 190 for pixel in ink.get_flattened_data()) > 500
+        right_wing = Image.open(OUT / "dither.png").crop((500, 90, 780, 520))
+        assert sum(pixel[0] < 210 and pixel[1] < 215 and pixel[2] < 190 for pixel in right_wing.get_flattened_data()) > 500
         page.locator('[data-swatch="#8bb0e9"]').click()
         assert page.evaluate("CardMotionEditor.getScheme().scene.foreground") == "#8bb0e9"
         assert page.locator('[data-swatch="#8bb0e9"]').get_attribute("aria-pressed") == "true"

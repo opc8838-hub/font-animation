@@ -1,6 +1,6 @@
 {
-  "effect": {"id":"dither-ascii","name":{"zh":"网格显影","en":"Dither / ASCII"},"version":"1.0.1","category":"graphic"},
-  "runtime": {"kind":"iframe-bridge","entry":"dither-ascii.html?preview=1&embed=1&v=20261029-butterfly1","bridgeVersion":"1.0.0","renderer":"canvas2d"},
+  "effect": {"id":"dither-ascii","name":{"zh":"网格显影","en":"Dither / ASCII"},"version":"1.0.2","category":"graphic"},
+  "runtime": {"kind":"iframe-bridge","entry":"dither-ascii.html?preview=1&embed=1&v=20261029-fullcard1","bridgeVersion":"1.0.0","renderer":"canvas2d"},
   "capabilities": {"compositionModel":"cards","timeline":true,"responsiveCanvas":true,"exports":["png","gif","mp4"],"customImageAssets":true,"backgrounds":["color","image","gif","video"],"videoTrim":true},
   "behavior": {"summary":{"zh":"把图像转换为可调的 Bayer 抖动或 ASCII 字符画，并用遮罩显影。","en":"Transform an image into adjustable Bayer dither or ASCII art with a reveal mask."},"phases":[
     {"id":"source","name":{"zh":"原图呈现","en":"Source"},"colorToken":"phase.sky"},
