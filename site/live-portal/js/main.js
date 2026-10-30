@@ -1001,6 +1001,6 @@ Promise.all(DEFS.concat(WANT_INTRO ? EXTRA_DEFS : []).map(makeCard)).then(cs => 
     setTilt(x, y) { S.mouse.moved = true; S.mouse.x = (x + 1) / 2; S.mouse.y = (y + 1) / 2; S.mouse.t = time; S.tilt.set(x, y); S.tiltT.set(x, y); },
   };
   window.__cam = camera; window.__V3 = THREE.Vector3;
-  document.title = 'jd portal';
+  document.title = 'Live Portal · CellMotion';
   window.__portal.perf = () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, tex: renderer.info.memory.textures });
 }).catch(e => console.error('init failed', e));

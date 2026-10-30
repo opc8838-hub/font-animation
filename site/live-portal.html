@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="立体世界卡片 / Live Portal：实况照片、陀螺仪立体卡片与源码复刻指南。">
+  <meta name="theme-color" content="#EEEDF0">
+  <title>立体世界卡片 / Live Portal · CellMotion</title>
+  <link rel="icon" href="assets/cellmotion/logo-web.webp?v=20261028-ready1">
+  <link rel="stylesheet" href="cellmotion.css?v=20260907-2">
+  <link rel="stylesheet" href="cellmotion-hero.css?v=20260909-1">
+  <link rel="stylesheet" href="cellmotion-type.css?v=20260907-5">
+  <link rel="stylesheet" href="cellmotion-layout.css?v=20260925-actions3">
+  <link rel="stylesheet" href="site-preferences.css?v=20260926-18">
+  <link rel="stylesheet" href="live-portal-showcase.css?v=20261030">
+  <script defer src="site-preferences.js?v=20260926-18"></script>
+  <script defer src="live-portal-showcase.js?v=20261030"></script>
+</head>
+<body class="portal-showcase">
+  <a class="skip-link" href="#main">跳到内容 / Skip to content</a>
+  <header class="header wrap">
+    <a class="brand original-brand" href="cellmotion.html" aria-label="CellMotion"><img class="logo-source" src="assets/cellmotion/logo-web.webp?v=20261028-ready1" alt="CellMotion"></a>
+    <nav aria-label="CellMotion"><a href="cellmotion-components.html">组件库</a><a href="cellmotion.html">返回首页</a></nav>
+    <div class="header-actions"><button id="portal-theme" class="site-preference-button" type="button" aria-label="切换主题 / Toggle theme" data-no-translate>◐</button></div>
+  </header>
+  <main id="main" class="wrap portal-main" data-no-translate>
+    <div class="portal-heading">
+      <h1><span class="portal-zh">立体世界卡片 / </span>Live Portal</h1>
+      <p><span class="portal-zh">把 iPhone 实况照片变成可以倾斜、可以走进去的立体卡片 · </span>Turn Live Photos into tiltable 3D cards you can step into.</p>
+    </div>
+    <video id="portal-demo" class="portal-demo" src="live-portal/previews/live-portal-demo.mp4" poster="live-portal/previews/live-portal-poster.png" autoplay muted loop playsinline controls aria-label="Live Portal demo"></video>
+    <section class="portal-variants" aria-label="Live Portal variants">
+      <article class="portal-card">
+        <h2><span class="portal-zh">方案 A · </span>Front row</h2>
+        <p><span class="portal-zh">七张卡转回正面，台阶式停留 2 秒<br></span>Seven cards turn to the front and hold in a stepped row for 2 seconds.</p>
+        <a class="button dark" href="live-portal/index.html?scheme=a"><span class="portal-zh">实时体验 </span>Open live ↗</a>
+        <figure class="portal-qr"><img src="live-portal/previews/qr-scheme-a.png" alt="方案 A / Scheme A QR code" width="180" height="180"><figcaption><span class="portal-zh">手机 / iPad 扫码，倾斜设备看立体 · </span>Scan on phone or iPad and tilt</figcaption></figure>
+      </article>
+      <article class="portal-card">
+        <h2><span class="portal-zh">方案 B · </span>Angled fan</h2>
+        <p><span class="portal-zh">七张卡斜向停留<br></span>Seven cards hold in an angled fan.</p>
+        <a class="button dark" href="live-portal/index.html?scheme=b"><span class="portal-zh">实时体验 </span>Open live ↗</a>
+        <figure class="portal-qr"><img src="live-portal/previews/qr-scheme-b.png" alt="方案 B / Scheme B QR code" width="180" height="180"><figcaption><span class="portal-zh">手机 / iPad 扫码，倾斜设备看立体 · </span>Scan on phone or iPad and tilt</figcaption></figure>
+      </article>
+    </section>
+    <section class="portal-section" aria-labelledby="portal-ai-title">
+      <h2 id="portal-ai-title"><span class="portal-zh">用于 AI / </span>For AI</h2>
+      <div class="portal-handoff">
+        <button id="portal-copy" class="button dark" type="button"><span class="portal-zh">复制 AI 提示词 </span>Copy AI prompt</button>
+        <a class="button outline" href="effects/live-portal.component.json" download><span class="portal-zh">下载组件 JSON </span>Download component JSON</a>
+        <a class="button outline" href="https://github.com/opc8838-hub/font-animation/blob/main/site/live-portal/RECIPE.md"><span class="portal-zh">复刻指南 </span>Recipe ↗</a>
+        <a class="button outline" href="https://github.com/opc8838-hub/font-animation/tree/main/site/live-portal"><span class="portal-zh">源代码 </span>Source ↗</a>
+        <a class="button outline" href="live-portal/live-portal-source.zip" download><span class="portal-zh">下载源码 </span>Download source (.zip)</a>
+      </div>
+    </section>
+    <section class="portal-section" aria-labelledby="portal-built-title">
+      <h2 id="portal-built-title"><span class="portal-zh">怎么做的 / </span>How it's built</h2>
+      <ol class="portal-recipe">
+        <li><p class="portal-zh"><strong>素材始终完整。</strong>每张卡播放原始实况照片。不抠人物、不拆图层：人物与场景始终来自同一帧。</p><p><strong>Footage, never cut apart.</strong> Each card plays the original Live Photo. No cut-out people, no layers: the person and the scene always come from the same frame.</p></li>
+        <li><p class="portal-zh"><strong>逐帧深度。</strong>Depth Anything V2（Small）为每帧估计深度图，统一归一化并做时间平滑。RGB 与深度上下叠入同一视频（上方 RGB、下方深度），保证始终同步。</p><p><strong>Depth per frame.</strong> Depth Anything V2 (Small) estimates a depth map for every frame, globally normalised and temporally smoothed. RGB and depth are stacked into one video (top = RGB, bottom = depth), so they can never drift out of sync.</p></li>
+        <li><p class="portal-zh"><strong>空间照片着色器。</strong>片元着色器按 <code>tilt × (depth − subjectDepth) × k</code> 偏移像素。主体保持稳定，背景移动，形成没有撕裂感的真实纵深。</p><p><strong>Spatial-photo shader.</strong> The fragment shader offsets each pixel by <code>tilt × (depth − subjectDepth) × k</code>. The subject stays put and the background moves, which reads as real depth with no tearing.</p></li>
+        <li><p class="portal-zh"><strong>画框之外的世界。</strong>图像模型将场景扩展至约 260°。接缝匹配低频色彩与清晰度，AI 像素不能比原片更锐利。逐帧跟踪手持相机运动（仿射变换与增益），让静态扩展随视频一起移动。</p><p><strong>The world beyond the frame.</strong> Each scene is outpainted to about 260° with an image model. Seams are matched in low-frequency colour and in sharpness: AI pixels may not be sharper than the original. Hand-held camera motion is tracked per frame (affine + gain) so the static extension moves with the video.</p></li>
+        <li><p class="portal-zh"><strong>无跳变循环。</strong>循环接点先对齐背景，再用 DIS 光流合成 4 帧。不同地点的镜头以 0.4 秒高斯虚焦转场衔接，在最模糊处硬切，避免同时出现两个人。慢动作先稳定，再用 <code>minterpolate</code> 补帧。</p><p><strong>Loops that don't jump.</strong> Loop points are background-registered, then 4 frames are synthesised with DIS optical flow. Shots in different places are joined with a 0.4 s Gaussian focus-pull: hard-switch at maximum blur, so you never see two people at once. Slow motion is stabilise first, then <code>minterpolate</code>.</p></li>
+        <li><p class="portal-zh"><strong>弱显卡上的 60 fps。</strong>不用 MSAA，圆角在着色器中以 SDF 抗锯齿；开场使用 360 px 小视频。视频纹理仅在新帧到达时上传（<code>requestVideoFrameCallback</code>）。开场前完成预热。扩展跟踪读取已呈现帧的 <code>mediaTime</code>，而非 <code>currentTime</code>。</p><p><strong>60 fps on a weak GPU.</strong> No MSAA (rounded corners are SDF anti-aliased in the shader). Small 360 px videos during the intro. Video textures upload only on new frames (<code>requestVideoFrameCallback</code>). Everything is warmed up before the intro starts. Ext tracking uses the presented frame's <code>mediaTime</code>, not <code>currentTime</code>.</p></li>
+        <li><p class="portal-zh"><strong>手机。</strong>iPhone Duo 使用 Apple 公开产品查看器的 glTF 渲染。双手围绕绿幕生成，再贴回真实渲染，仅保留拇指。页面按视口自身布局绘制到渲染目标，使收尾第一帧与首页逐像素一致。</p><p><strong>The phone.</strong> The iPhone Duo is rendered from Apple's public product-viewer glTF. The hands are generated around a green screen; the real render is pasted back on top and only the thumbs are kept. The page is rendered into a render target with the viewport's own layout, so frame 1 of the outro is pixel-identical to the home page.</p></li>
+      </ol>
+    </section>
+    <footer class="portal-credits">Intro rhythm inspired by Apple's iMac film; iPhone Duo model rendered from Apple's public product viewer. Not affiliated with Apple.</footer>
+  </main>
+  <div id="portal-toast" class="portal-toast" role="status" data-no-translate hidden></div>
+</body>
+</html>

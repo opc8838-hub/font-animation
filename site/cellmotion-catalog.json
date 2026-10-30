@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "live-portal",
+      "date": "2026-10-30"
+    },
+    {
       "id": "dither-ascii",
       "date": "2026-10-28"
     },
@@ -146,6 +150,21 @@
     }
   ],
   "effects": [
+    {
+      "id": "live-portal",
+      "name": "立体世界卡片",
+      "english": "Live Portal",
+      "description": "实况照片 · 陀螺仪立体 · 点开走进画面",
+      "category": "graphic",
+      "href": "live-portal.html?from=gallery&v=20261030",
+      "poster": "live-portal/previews/live-portal-poster.png?v=20261030",
+      "video": "live-portal/previews/live-portal-card.mp4?v=20261030",
+      "webComponent": {
+        "preview": "live-portal/index.html?scheme=a",
+        "descriptor": "effects/live-portal.component.json"
+      },
+      "status": "ready"
+    },
     {
       "id": "dither-ascii",
       "name": "网格显影",

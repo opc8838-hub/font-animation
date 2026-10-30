@@ -1,0 +1,19 @@
+{
+  "effect": {"id":"live-portal","name":{"zh":"立体世界卡片","en":"Live Portal"},"version":"1.0.0","category":"graphic"},
+  "runtime": {"kind":"standalone-page","entry":"live-portal/index.html","renderer":"webgl","variants":{"a":"live-portal/index.html?scheme=a","b":"live-portal/index.html?scheme=b"}},
+  "capabilities": {"editableText":false,"timeline":false,"exports":[],"preview":true,"responsiveCanvas":true,"deviceOrientation":true},
+  "behavior": {"summary":{"zh":"把 iPhone 实况照片变成可倾斜、可走进去的立体卡片：七张卡转回正面停留，收拢成三张主页卡片，陀螺仪或鼠标驱动逐像素深度视差，点开全屏并延伸画框之外的世界，最后拉远成手持 iPhone。这是独立页面，不是编辑器效果，没有保存、导出或文字编辑。","en":"Turns iPhone Live Photos into tiltable 3D cards you can step into: seven cards turn to the front and hold, collapse to three home cards, gyroscope or mouse drives per-pixel depth parallax, a card opens full screen into the world beyond the frame, and the view pulls back to a hand-held iPhone. A standalone page, not an editor effect: no save, export or text editing."},
+   "phases":[
+    {"id":"emerge","name":{"zh":"卡片浮现","en":"Emerge"},"start":0,"end":1.4,"unit":"s","colorToken":"phase.violet"},
+    {"id":"turn","name":{"zh":"转回正面","en":"Turn to front"},"start":1.6,"end":2.75,"unit":"s","colorToken":"phase.sky"},
+    {"id":"hold","name":{"zh":"台阶停留","en":"Hold"},"start":2.75,"end":4.87,"unit":"s","colorToken":"phase.amber"},
+    {"id":"collapse","name":{"zh":"收拢","en":"Collapse"},"start":4.87,"end":5.52,"unit":"s","colorToken":"phase.coral"},
+    {"id":"home","name":{"zh":"主页倾斜","en":"Home (tilt)"},"interactive":true,"colorToken":"phase.lime"},
+    {"id":"open","name":{"zh":"点开全屏","en":"Open"},"duration":0.9,"unit":"s","interactive":true,"colorToken":"phase.sky"},
+    {"id":"outro","name":{"zh":"拉远收尾","en":"Outro"},"duration":3.4,"unit":"s","interactive":true,"colorToken":"phase.violet"}
+  ]},
+  "parameters": [
+    {"path":"url.scheme","scope":"url","name":{"zh":"方案","en":"Scheme"},"type":"string","enum":["a","b"],"default":"a"},
+    {"path":"url.intro","scope":"url","name":{"zh":"开场动画（0 为跳过）","en":"Intro (0 skips)"},"type":"string","enum":["1","0"],"default":"1"}
+  ]
+}

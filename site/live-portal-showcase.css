@@ -1,0 +1,28 @@
+/* Page geometry uses the existing CellMotion website tokens and controls. */
+.portal-showcase .portal-main{max-width:1100px}
+.portal-heading{padding:58px 0 30px}
+.portal-heading h1{font-size:clamp(28px,4vw,46px);letter-spacing:-1.6px;margin:0 0 18px;line-height:1.2}
+.portal-heading p{max-width:850px;color:var(--site-muted);line-height:1.8;font-size:16px}
+.portal-demo{width:100%;max-width:1100px;border-radius:var(--radius);background:#eeedf0}
+.portal-variants{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-top:28px}
+.portal-card{padding:30px;border:1px solid var(--site-border);border-radius:var(--radius);background:var(--site-surface)}
+.portal-card h2{margin:0 0 14px;font-size:23px;letter-spacing:-.5px}
+.portal-card>p{min-height:58px;color:var(--site-muted);line-height:1.7;font-size:14px;margin-bottom:22px}
+.portal-showcase .button{gap:5px;flex-wrap:wrap;line-height:1.5}
+.portal-qr{margin:28px 0 0;display:none}
+.portal-qr img{border-radius:10px;background:#fff}
+.portal-qr figcaption{font-size:12px;color:var(--site-muted);line-height:1.7;margin-top:12px;max-width:350px}
+.portal-section{padding-top:52px}
+.portal-section>h2{font-size:27px;letter-spacing:-.6px;margin:0 0 22px}
+.portal-handoff{display:flex;flex-wrap:wrap;gap:12px}
+.portal-recipe{padding-left:25px;margin:0}
+.portal-recipe li{padding:0 0 22px 9px;margin-bottom:22px;border-bottom:1px solid var(--site-border)}
+.portal-recipe p{line-height:1.85;font-size:14px;margin:0 0 10px}
+.portal-recipe p:last-child{color:var(--site-muted)}
+.portal-recipe code{overflow-wrap:anywhere}
+.portal-credits{padding:16px 0 42px;font-size:12px;color:var(--site-muted);line-height:1.8}
+.portal-toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:10000;padding:14px 22px;border:1px solid var(--site-border);border-radius:12px;background:var(--site-surface);color:var(--site-ink);white-space:nowrap}
+html[data-site-language=en] .portal-zh{display:none}
+@media(min-width:900px){.portal-qr{display:block}}
+@media(max-width:760px){.portal-variants{grid-template-columns:1fr;gap:16px}.portal-card{padding:24px}.portal-heading{padding-top:36px}.portal-heading p{font-size:14px}.portal-section{padding-top:36px}.portal-handoff{flex-direction:column;align-items:stretch}.portal-showcase .header-actions{margin-right:0}.portal-card>p{min-height:0}}
+html[data-site-theme=dark] .portal-showcase .button.dark{background:#f2f2f4;color:#16161a;border-color:#f2f2f4}

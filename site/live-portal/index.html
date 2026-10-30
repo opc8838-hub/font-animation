@@ -2,7 +2,8 @@
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<title>jd portal</title>
+<meta name="theme-color" content="#EEEDF0">
+<title>Live Portal · CellMotion</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="css/style.css">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
@@ -12,5 +13,7 @@
 <div id="load">加载中</div>
 <button id="skip" aria-label="skip">跳过</button>
 <button id="motion">开启动感</button>
+<a id="cm-link" href="../live-portal.html" style="position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:calc(14px + env(safe-area-inset-right,0px));z-index:30;font:12px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1d1d1f;opacity:.5;text-decoration:none;visibility:hidden">&larr; CellMotion</a>
 <script type="module" src="js/main.js"></script>
+<script>(function(){var l=document.getElementById('cm-link');setInterval(function(){var on=window.__portal&&window.__portal.I&&window.__portal.I.on;l.style.visibility=(window.__portal&&!on)?'visible':'hidden'},200)})()</script>
 </body></html>
