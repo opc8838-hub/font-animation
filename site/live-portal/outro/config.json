@@ -1,0 +1,21 @@
+{
+ "photo": "photo.png",
+ "canvas": [
+  4400,
+  2750
+ ],
+ "screen": {
+  "x": 1034,
+  "y": 722,
+  "w": 2326,
+  "h": 1627
+ },
+ "corner_radius": 135,
+ "crease": false,
+ "bottom_shift": 140,
+ "bg": [
+  220,
+  223,
+  227
+ ]
+}
