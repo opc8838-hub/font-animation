@@ -10,6 +10,7 @@
     return;
   }
   const effects = [
+    ["letter-slices", "字形切片", "Letter Slices"],
     ["live-portal", "立体世界卡片", "Live Portal"],
     ["dither-ascii", "网格显影", "Dither / ASCII"],
     ["metallic-text", "金属流光", "Metallic Text"],
