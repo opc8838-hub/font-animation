@@ -2,6 +2,8 @@
 
 **2026-10-30 立体世界卡片 / Live Portal**：[打开演示与源码页](site/live-portal.html?from=gallery)。把 iPhone 实况照片变成可倾斜、可走进去的立体卡片，手机 / iPad 支持真实陀螺仪，提供方案 A / B 实时体验、「用于 AI」提示词、复刻指南与源码 zip。这是独立展示页，不是编辑器效果，不含保存与导出。
 
+**2026-11-01 字形切片 / Letter Slices**：[打开编辑器](site/letter-slices.html?from=gallery)。根据[原帖视频](https://x.com/abduzeedo/status/2115976186711134655)制作白底黑字的竖向切片残影动效。默认字母为 `a`，支持更换单个字母或中日韩字符、字体、切片数量、展开幅度与节奏，并支持 PNG / GIF / MP4 导出。拆解见[分析](docs/analyses/letter-slices.md)。
+
 **2026-10-28 网格显影 / Dither / ASCII**：[打开编辑器](site/dither-ascii.html?from=gallery)。根据[原帖视频](https://x.com/Kubai087/status/2115091203465290087)制作振翅蝴蝶网格与橙蓝背景；成品画面让蝴蝶占满居中的卡片。支持 ASCII / Bayer 4×4 Dither、遮罩、色调、采样强度、大小、间距、素材上传、方案保存及 PNG / GIF / H.264 MP4 导出。视频拆解与实现取舍见[分析](docs/analyses/dither-ascii.md)。
 
 **2026-10-28 金属流光 / Metallic Text**：[打开编辑器](site/metallic-text.html?from=gallery)。宽扁银色文字内流动冷暖反光，支持共享字体、字形高度与加粗、字距、金属与反光配色、方向、阶段时长和画幅调整。对齐字芽的字体与背景折叠设置，支持图片/GIF/视频背景、取景缩放、视频胶片裁切、舞台背景、构图、精确数值及撤销/重做。31 项 For AI 参数保留媒体原始数据、取景和视频裁切；使用统一方案与 PNG / GIF / H.264 MP4 导出。默认字形基于 [Librestile](https://github.com/ocelothe/Librestile)，其 OFL 许可随字体保存在 `site/assets/fonts/librestile/OFL.txt`。运动依据与验证见[分析](docs/analyses/metallic-text.md)。

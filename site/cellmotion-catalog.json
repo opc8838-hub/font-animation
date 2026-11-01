@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "letter-slices",
+      "date": "2026-11-01"
+    },
+    {
       "id": "live-portal",
       "date": "2026-10-30"
     },
@@ -150,6 +154,17 @@
     }
   ],
   "effects": [
+    {
+      "id": "letter-slices",
+      "name": "字形切片",
+      "english": "Letter Slices",
+      "description": "单字竖切 · 密集残影 · 收拢复原",
+      "category": "type",
+      "href": "letter-slices.html?from=gallery&v=20261101-1",
+      "poster": "final_letter-slices.png?v=20261101-1",
+      "video": "assets/previews/letter-slices-card.mp4?v=20261101-1",
+      "status": "ready"
+    },
     {
       "id": "live-portal",
       "name": "立体世界卡片",

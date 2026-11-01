@@ -317,7 +317,7 @@ document.addEventListener('visibilitychange',()=>{
 });
 async function loadCatalogData() {
   try {
-    const response=await fetch('cellmotion-catalog.json?v=20261029-fullcard1');
+    const response=await fetch('cellmotion-catalog.json?v=20261101-letter-slices1');
 
     if(!response.ok)throw new Error(`Catalog HTTP ${response.status}`);
     const catalog=await response.json();
