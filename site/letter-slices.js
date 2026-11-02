@@ -1,10 +1,14 @@
-import './letter-slices-render.js?v=20261102-webgl1';
+import './letter-slices-render.js?v=20261102-refraction1';
 
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
   const Core = window.LetterSlicesRenderer;
   const Fonts = window.STGFontLibrary;
+  const interText = new FontFace('CellMotion Letter Inter', 'url(continuation_fonts/Inter-Variable.ttf)', {
+    weight: '700', variationSettings: '"opsz" 14, "wght" 700'
+  });
+  document.fonts.add(interText);
   const Media = window.CellMotionBackgroundMedia;
   const background = Media.create();
   const STORE = 'cellmotion-letter-slices-v1';
@@ -13,10 +17,10 @@ import './letter-slices-render.js?v=20261102-webgl1';
   const DEFAULT = {
     effect: 'letter-slices', version: 1,
     canvas: { width: 1080, height: 1080 },
-    settings: { font: 'stg:montserrat' },
-    scene: { text: 'a', font: 'stg:montserrat', fontSize: .55, fontHeight: 1, extraBold: .008,
-      background: '#ffffff', textColor: '#252727', slices: 26, spread: .22, fringe: 2,
-      direction: 'forward', intro: .4, sweep: 1.1, hold: .95, return: 1.05, settle: .6, speed: 1 }
+    settings: { font: 'stg:inter' },
+    scene: { text: 'a', font: 'stg:inter', fontSize: .56, fontHeight: 1, extraBold: 0, positionX: -1,
+      background: '#ffffff', textColor: '#252727', slices: 44, spread: .22, fringe: 2,
+      direction: 'forward', intro: .3, sweep: 1.35, hold: .8, return: 1.05, settle: .6, speed: 1 }
   };
   const PHASES = [
     { key: 'intro', zh: '完整字母', en: 'Whole letter', color: '#8ec8ff' },
@@ -85,7 +89,9 @@ import './letter-slices-render.js?v=20261102-webgl1';
   async function loadFont() {
     const request = ++fontRequest;
     const preset = Fonts.preset(state.scene.font);
-    await document.fonts.load(`${preset?.style || 'normal'} ${preset?.weight || 900} 120px "${preset?.family || 'sans-serif'}"`, state.scene.text || 'a');
+    if (state.scene.font === 'stg:inter') await interText.load();
+    const weight = state.scene.font === 'stg:inter' ? 700 : preset?.weight || 900;
+    await document.fonts.load(`${preset?.style || 'normal'} ${weight} 120px "${preset?.family || 'sans-serif'}"`, state.scene.text || 'a');
     if (request === fontRequest) { Core.invalidate(); drawPreview(); }
   }
   function localize() {
