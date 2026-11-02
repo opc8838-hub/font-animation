@@ -1,0 +1,80 @@
+html,body{margin:0}
+body.glasswalkers-editor{--gw-bg:#101011;--gw-panel:#19191b;--gw-card:#222225;--gw-field:#2b2b30;--gw-line:#343438;--gw-text:#eeeef1;--gw-muted:#a5a4ae;background:var(--gw-bg);color:var(--gw-text)}
+body.glasswalkers-editor[data-editor-theme="light"]{--gw-bg:#f1f0f3;--gw-panel:#f9f9fb;--gw-card:#fff;--gw-field:#f0eef3;--gw-line:#dddbe3;--gw-text:#25232a;--gw-muted:#66636f}
+.glasswalkers-editor .tc-header,.glasswalkers-editor .tc-content,.glasswalkers-editor .gm-inspector,.glasswalkers-editor .tc-timeline{background:var(--gw-panel);color:var(--gw-text);border-color:var(--gw-line)}
+.glasswalkers-editor .tc-header{gap:14px}
+.glasswalkers-editor .tc-header h1{margin:0;font-size:17px;white-space:nowrap}
+.glasswalkers-editor .tc-header h1 span{font-weight:400;color:var(--gw-muted)}
+.glasswalkers-editor .tc-back{margin-left:auto}
+.glasswalkers-editor .gw-header-button{height:36px;min-width:38px;background:var(--gw-field);color:var(--gw-text);border:1px solid var(--gw-line);border-radius:10px}
+.glasswalkers-editor .tc-export-shortcut{margin-left:0}
+.glasswalkers-editor .tc-content{min-width:0}
+.glasswalkers-editor .tc-row-select{color:var(--gw-text);background:var(--gw-card);border-color:var(--gw-line)}
+.glasswalkers-editor .tc-row-select[aria-pressed="true"]{background:color-mix(in srgb,var(--gw-card) 75%,#d4b8ff);border-color:#9d80e7}
+.glasswalkers-editor .tc-row-description,.glasswalkers-editor .tc-hint,.glasswalkers-editor .gm-help,.glasswalkers-editor .gm-status{color:var(--gw-muted)}
+.glasswalkers-editor .tc-scheme{margin-top:auto}
+.glasswalkers-editor .gm-card{border-color:var(--gw-line);background:var(--gw-card);border-radius:14px}
+.glasswalkers-editor .gm-card-title{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.glasswalkers-editor .gm-card-title h2{margin:0;font-size:15px;font-weight:600}
+.glasswalkers-editor .gm-card p{font-size:12px;line-height:1.6}
+.glasswalkers-editor .gm-inspector{display:flex;flex-direction:column;min-width:0}
+.glasswalkers-editor .gm-canvas-card{margin:14px 14px 0!important;flex:none;padding:14px!important}
+.glasswalkers-editor .tc-tabs{margin-top:8px}
+.glasswalkers-editor .tc-tabs button{color:var(--gw-muted)}
+.glasswalkers-editor .tc-tabs button[aria-pressed="true"]{color:var(--gw-text);background:color-mix(in srgb,var(--gw-field) 60%,#d4b8ff)}
+.glasswalkers-editor .tc-properties{overflow-y:auto;flex:1}
+.glasswalkers-editor .tc-properties[hidden],.glasswalkers-editor [hidden]{display:none!important}
+.glasswalkers-editor .gm-field{display:grid;gap:7px;margin-bottom:14px;font-size:13px;color:var(--gw-text)}
+.glasswalkers-editor .gm-field:last-child{margin-bottom:0}
+.glasswalkers-editor .gm-field input[type="range"]{width:100%;accent-color:#a68bff}
+.glasswalkers-editor .gm-field output{justify-self:end;color:var(--gw-muted);font-size:12px}
+.glasswalkers-editor .gm-field select,.glasswalkers-editor .gm-field input[type="number"]{width:100%;min-width:0;background:var(--gw-field);border:1px solid var(--gw-line);color:var(--gw-text);border-radius:10px;padding:9px 10px}
+.glasswalkers-editor .gm-field input[type="color"]{width:100%;height:38px;background:var(--gw-field);border:1px solid var(--gw-line);border-radius:10px;padding:4px}
+.glasswalkers-editor .gw-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.glasswalkers-editor .gm-check{display:flex;align-items:center;gap:8px;color:var(--gw-text);font-size:13px}
+.glasswalkers-editor .gm-check input{accent-color:#a68bff}
+.glasswalkers-editor .gm-actions{display:grid;gap:8px}
+.glasswalkers-editor .gm-actions-4{grid-template-columns:1fr 1fr}
+.glasswalkers-editor .gm-actions-3{grid-template-columns:repeat(3,1fr)}
+.glasswalkers-editor .gm-actions button{min-height:38px;padding:7px 9px;color:var(--gw-text);background:var(--gw-field);border:1px solid var(--gw-line);border-radius:10px;cursor:pointer}
+.glasswalkers-editor .gm-actions button:hover{border-color:#a68bff}
+.glasswalkers-editor .gm-actions button:disabled{opacity:.45;cursor:wait}
+.glasswalkers-editor .gm-status{min-height:1.5em;margin:10px 0 0}
+.glasswalkers-editor .tc-canvas-toolbar{color:var(--gw-muted);border-color:var(--gw-line)}
+.glasswalkers-editor #canvasDimensions{margin-left:auto;font-size:12px}
+.glasswalkers-editor .gm-stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:18px;min-height:0;background:var(--gw-bg)}
+.glasswalkers-editor .gm-composition-frame{width:min(100%,960px);height:auto;aspect-ratio:16/9;overflow:hidden;border-radius:9px;box-shadow:0 12px 34px #0003;flex:none;background:#f8f8f8}
+.glasswalkers-editor #glassCanvas{display:block;width:100%;height:100%}
+.glasswalkers-editor .gm-stage-controls.me-stage-controls{display:flex!important;gap:8px;margin:0 auto!important}
+.glasswalkers-editor .gm-stage-controls button{min-width:100px;padding:8px 13px;border:1px solid var(--gw-line);border-radius:10px;background:var(--gw-field);color:var(--gw-text);cursor:pointer}
+.glasswalkers-editor .tc-timeline{padding:14px 20px!important}
+.glasswalkers-editor .gw-timeline-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.glasswalkers-editor .gw-timeline-head h2{margin:0;font-size:14px;font-weight:600}
+.glasswalkers-editor .gw-timeline-head output{font-size:11px;color:var(--gw-muted)}
+.glasswalkers-editor .me-choreo-track{max-height:none!important;min-height:52px!important;background:var(--gw-field);border-radius:13px;padding:4px}
+.glasswalkers-editor .me-choreo-scroll{overflow:visible!important;width:100%;max-width:none!important}
+.glasswalkers-editor #timeline{position:relative;display:flex;gap:4px;width:100%;height:46px;min-width:0;align-items:stretch}
+.glasswalkers-editor .me-choreo-block{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;min-width:0;padding:5px 9px;border:0;border-radius:12px;color:#252231;text-align:left;cursor:pointer;overflow:hidden}
+.glasswalkers-editor .me-choreo-block strong{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.glasswalkers-editor .me-choreo-block small{font-size:9px;opacity:.7}
+.glasswalkers-editor .me-choreo-block.is-people{background:var(--me-phase-sky,#8ec8ff)}
+.glasswalkers-editor .me-choreo-block.is-animal{background:var(--me-phase-mint,#9de7d7)}
+.glasswalkers-editor .me-choreo-block.is-crossing{background:var(--me-phase-violet,#d4b8ff)}
+.glasswalkers-editor #playhead{position:absolute;z-index:4;left:0;top:-3px;bottom:-3px;width:2px;background:#fff;box-shadow:0 0 0 1px #302d38;pointer-events:none}
+.glasswalkers-editor #scrubber{display:block;width:100%;margin:8px 0 4px;accent-color:#a68bff}
+.glasswalkers-editor .me-choreo-legend{display:flex!important;gap:16px;color:var(--gw-muted);font-size:11px}
+@media(max-width:860px){
+  .glasswalkers-editor .tc-header h1{font-size:14px;max-width:110px;overflow:hidden;text-overflow:ellipsis}
+  .glasswalkers-editor .tc-header h1 span{display:none}
+  .glasswalkers-editor .tc-back{display:none}
+  .glasswalkers-editor .gw-header-button{min-width:32px;height:32px}
+  .glasswalkers-editor .tc-export-shortcut{padding:7px 9px}
+  .glasswalkers-editor .gm-stage{min-height:260px;padding:14px}
+  .glasswalkers-editor .gm-composition-frame{max-height:calc(44dvh - 75px)}
+  .glasswalkers-editor .tc-content{padding:14px 12px}
+  .glasswalkers-editor .tc-row-list{flex:0 0 auto}
+  .glasswalkers-editor .tc-scheme{margin-top:12px}
+  .glasswalkers-editor .gm-inspector{height:auto;overflow:visible}
+  .glasswalkers-editor .tc-properties{overflow:visible}
+}
+@media(max-width:430px){.glasswalkers-editor .tc-brand{flex:0 0 118px;width:118px}.glasswalkers-editor .tc-brand img{width:260px;left:-72px;top:-62px}.glasswalkers-editor .tc-header{gap:6px}.glasswalkers-editor .tc-header h1{display:none}.glasswalkers-editor .tc-export-shortcut{font-size:11px;padding:6px 7px}}

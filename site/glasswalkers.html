@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <link rel="icon" href="favicon.svg">
+  <title>玻璃漫步 Glass Walkers | CellMotion</title>
+  <link rel="stylesheet" href="me-motion-editor.css?v=20260909-timeline-color">
+  <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-coloriso">
+  <link rel="stylesheet" href="glasswalkers.css?v=20261102-1">
+</head>
+<body class="tc-workspace glasswalkers-editor" data-editor-theme="dark">
+  <header class="tc-header">
+    <a class="tc-brand" href="./" aria-label="CellMotion 首页"><img src="assets/cellmotion/logo-original-transparent.png?v=20260926-1" alt="CellMotion"></a>
+    <h1 data-zh="玻璃漫步" data-en="Glass Walkers">玻璃漫步 <span>Glass Walkers</span></h1>
+    <a class="tc-back" href="cellmotion-components.html" data-zh="动效库 ↗" data-en="Library ↗">动效库 ↗</a>
+    <button id="themeToggle" type="button" class="gw-header-button" aria-label="切换主题">☼</button>
+    <button id="languageToggle" type="button" class="gw-header-button" aria-label="Switch to English">EN</button>
+    <button id="exportShortcut" type="button" class="tc-export-shortcut" data-zh="导出作品" data-en="Export">导出作品</button>
+  </header>
+
+  <aside class="tc-content" aria-label="场景元素">
+    <div class="tc-panel-heading"><div><small data-zh="场景" data-en="SCENE">场景</small><h2 data-zh="行走的角色" data-en="Moving figures">行走的角色</h2></div></div>
+    <p class="tc-hint" data-zh="选择角色，在右侧调整数量与形态。" data-en="Select a figure to edit its count and form.">选择角色，在右侧调整数量与形态。</p>
+    <div class="tc-row-list" role="group" aria-label="选择角色">
+      <button class="tc-row-select" type="button" data-figure="people" aria-pressed="true"><span class="tc-row-number">01</span><strong class="tc-row-text" data-zh="行人" data-en="People">行人</strong><small class="tc-row-description" id="peopleSummary">5 人 · 交错穿行</small></button>
+      <button class="tc-row-select" type="button" data-figure="animals" aria-pressed="false"><span class="tc-row-number">02</span><strong class="tc-row-text" data-zh="动物" data-en="Animals">动物</strong><small class="tc-row-description" id="animalSummary">1 只 · 猫影经过</small></button>
+    </div>
+    <section class="gm-card tc-scheme" aria-labelledby="schemeTitle">
+      <div class="gm-card-title"><h2 id="schemeTitle" data-zh="方案" data-en="Scheme">方案</h2></div>
+      <div class="gm-actions gm-actions-4 me-scheme-actions">
+        <button id="saveScheme" type="button" data-zh="保存方案" data-en="Save">保存方案</button>
+        <button id="importScheme" type="button" data-zh="导入方案" data-en="Import">导入方案</button>
+        <button id="resetScheme" type="button" data-zh="恢复默认" data-en="Restore">恢复默认</button>
+        <button id="clearScheme" type="button" data-zh="清理重做" data-en="Clear">清理重做</button>
+      </div>
+      <input id="schemeFile" type="file" accept="application/json,.json" hidden>
+      <p id="schemeStatus" class="gm-status" role="status"></p>
+    </section>
+  </aside>
+
+  <section class="tc-center" aria-label="画布与播放">
+    <div class="tc-canvas-toolbar"><span class="tc-preview-label" data-zh="画布预览" data-en="Canvas preview">画布预览</span><span id="canvasDimensions">1920 × 1080</span></div>
+    <main class="gm-stage" aria-label="玻璃漫步预览">
+      <div id="compositionFrame" class="gm-composition-frame"><canvas id="glassCanvas" width="960" height="540" aria-label="行人与动物在磨砂玻璃上行走"></canvas></div>
+      <div class="gm-stage-controls me-stage-controls" aria-label="预览控制">
+        <button id="replay" type="button" data-zh="↺ 重播" data-en="↺ Replay">↺ 重播</button>
+        <button id="pause" type="button" aria-pressed="false" data-zh="Ⅱ 暂停" data-en="Ⅱ Pause">Ⅱ 暂停</button>
+      </div>
+    </main>
+    <section class="tc-timeline" aria-labelledby="timelineTitle">
+      <div class="gw-timeline-head"><h2 id="timelineTitle" data-zh="行走时间轴" data-en="Walking timeline">行走时间轴</h2><output id="timeReadout">0.00 / 12.00 s</output></div>
+      <div class="me-choreo-track"><div class="me-choreo-scroll"><div id="timeline" class="me-choreo-bar" role="list"><i id="playhead" class="me-choreo-playhead" aria-hidden="true"></i></div></div></div>
+      <input id="scrubber" type="range" min="0" max="12" step="0.01" value="0" aria-label="时间轴播放头">
+      <div class="me-choreo-legend"><span data-zh="人影交错穿行" data-en="People crossing">人影交错穿行</span><span data-zh="动物短暂经过" data-en="Animal passage">动物短暂经过</span></div>
+    </section>
+  </section>
+
+  <aside class="gm-inspector" aria-label="动效属性">
+    <section class="gm-card gm-canvas-card" aria-labelledby="sizeTitle">
+      <div class="gm-card-title"><h2 id="sizeTitle" data-zh="画布尺寸" data-en="Canvas size">画布尺寸</h2></div>
+      <label class="gm-field gm-field-wide"><span data-zh="预设" data-en="Preset">预设</span><select id="canvasPreset">
+        <option value="1080x1080">1:1 · 1080 × 1080</option><option value="1080x1350">4:5 · 1080 × 1350</option>
+        <option value="1080x1440">3:4 · 1080 × 1440</option><option value="1080x1620">2:3 · 1080 × 1620</option>
+        <option value="1080x1920">9:16 · 1080 × 1920</option><option value="1920x1080" selected>16:9 · 1920 × 1080</option>
+        <option value="1440x1080">4:3 · 1440 × 1080</option><option value="1620x1080">3:2 · 1620 × 1080</option>
+        <option value="custom" data-zh="自定义" data-en="Custom">自定义</option>
+      </select></label>
+      <div id="customSize" class="gw-grid" hidden><label class="gm-field"><span data-zh="宽" data-en="Width">宽</span><input id="canvasWidth" type="number" min="320" max="3840" value="1920"></label><label class="gm-field"><span data-zh="高" data-en="Height">高</span><input id="canvasHeight" type="number" min="320" max="3840" value="1080"></label></div>
+    </section>
+    <nav class="tc-tabs" aria-label="属性分类"><button type="button" data-panel="figure" aria-pressed="true" data-zh="当前角色" data-en="Figure">当前角色</button><button type="button" data-panel="motion" aria-pressed="false" data-zh="动效设置" data-en="Motion">动效设置</button><button type="button" data-panel="export" aria-pressed="false" data-zh="导出" data-en="Export">导出</button></nav>
+    <section class="tc-properties" data-panel="figure">
+      <div class="gm-card" id="peoplePanel"><div class="gm-card-title"><h2 data-zh="行人" data-en="People">行人</h2></div><p class="gm-help" data-zh="独立步伐，从不同边缘进入与离开。" data-en="Independent steps enter and leave from different edges.">独立步伐，从不同边缘进入与离开。</p><label class="gm-field"><span data-zh="人数" data-en="Count">人数</span><input id="peopleCount" type="range" min="0" max="8" step="1"><output for="peopleCount"></output></label></div>
+      <div class="gm-card" id="animalPanel" hidden><div class="gm-card-title"><h2 data-zh="动物" data-en="Animals">动物</h2></div><label class="gm-field"><span data-zh="数量" data-en="Count">数量</span><input id="animalCount" type="range" min="0" max="4" step="1"><output for="animalCount"></output></label><label class="gm-field"><span data-zh="形态" data-en="Form">形态</span><select id="animalKind"><option value="cat" data-zh="猫" data-en="Cat">猫</option><option value="dog" data-zh="狗" data-en="Dog">狗</option></select></label></div>
+    </section>
+    <section class="tc-properties" data-panel="motion" hidden>
+      <div class="gm-card"><div class="gm-card-title"><h2 data-zh="穿行方式" data-en="Paths">穿行方式</h2></div>
+        <label class="gm-field"><span data-zh="方向" data-en="Direction">方向</span><select id="direction"><option value="mixed" data-zh="交错" data-en="Mixed">交错</option><option value="horizontal" data-zh="左右" data-en="Horizontal">左右</option><option value="vertical" data-zh="上下" data-en="Vertical">上下</option></select></label>
+        <label class="gm-field"><span data-zh="整体速度" data-en="Speed">整体速度</span><input id="speed" type="range" min="0.5" max="2" step="0.05"><output for="speed"></output></label>
+        <label class="gm-field"><span data-zh="角色大小" data-en="Figure size">角色大小</span><input id="figureSize" type="range" min="60" max="160" step="1"><output for="figureSize"></output></label>
+      </div>
+      <div class="gm-card"><div class="gm-card-title"><h2 data-zh="玻璃质感" data-en="Glass texture">玻璃质感</h2></div>
+        <label class="gm-field"><span data-zh="柔化" data-en="Softness">柔化</span><input id="softness" type="range" min="0" max="100" step="1"><output for="softness"></output></label>
+        <label class="gm-field"><span data-zh="网点" data-en="Halftone">网点</span><input id="halftone" type="range" min="0" max="100" step="1"><output for="halftone"></output></label>
+        <div class="gw-grid"><label class="gm-field"><span data-zh="背景" data-en="Background">背景</span><input id="background" type="color"></label><label class="gm-field"><span data-zh="影子" data-en="Shadow">影子</span><input id="shadow" type="color"></label></div>
+        <label class="gm-check"><input id="markers" type="checkbox"><span data-zh="显示跟随标记" data-en="Show tracking marks">显示跟随标记</span></label>
+      </div>
+    </section>
+    <section class="tc-properties" data-panel="export" hidden>
+      <div class="gm-card"><div class="gm-card-title"><h2 data-zh="导出" data-en="Export">导出</h2></div>
+        <div class="gw-grid"><label class="gm-field"><span data-zh="时长" data-en="Duration">时长</span><select id="exportDuration"><option value="cycle" data-zh="完整循环" data-en="Full cycle">完整循环</option><option value="3">3 s</option><option value="5">5 s</option><option value="10">10 s</option><option value="custom" data-zh="自定义" data-en="Custom">自定义</option></select></label><label class="gm-field"><span data-zh="帧率" data-en="FPS">帧率</span><select id="exportFps"><option value="15">15 fps</option><option value="24">24 fps</option><option value="30" selected>30 fps</option><option value="60">60 fps</option></select></label></div>
+        <label id="customDurationRow" class="gm-field" hidden><span data-zh="秒数" data-en="Seconds">秒数</span><input id="customDuration" type="number" min="0.5" max="30" step="0.1" value="5"></label>
+        <div class="gm-actions gm-actions-3"><button id="exportPng" type="button">PNG</button><button id="exportGif" type="button">GIF</button><button id="exportMp4" type="button">MP4</button></div>
+        <p id="exportStatus" class="gm-status" role="status" data-zh="画布与导出共用一条时间线。" data-en="Preview and export share one timeline.">画布与导出共用一条时间线。</p>
+      </div>
+    </section>
+  </aside>
+  <script src="js/continuation-gif.js?v=20260824-1"></script>
+  <script src="js/h264-mp4-encoder.web.js?v=20260909-1"></script>
+  <script src="glasswalkers.js?v=20261102-1"></script>
+</body>
+</html>

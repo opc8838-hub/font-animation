@@ -1,5 +1,7 @@
 # CellMotion —— 可编辑动效与视频创作平台
 
+**2026-11-03 玻璃漫步 / Glass Walkers**：[打开独立编辑器](site/glasswalkers.html?from=gallery)。行人和猫或狗的影子在磨砂玻璃上交错穿行，画面没有中央卡片；可调整角色数量、方向、速度、阴影、网点和画幅，支持方案保存及 PNG / GIF / MP4 导出。参考观察与实现取舍见[动效分析](docs/analyses/glasswalkers.md)。
+
 **2026-10-30 立体世界卡片 / Live Portal**：[打开演示与源码页](site/live-portal.html?from=gallery)。把 iPhone 实况照片变成可倾斜、可走进去的立体卡片，手机 / iPad 支持真实陀螺仪，提供方案 A / B 实时体验、「用于 AI」提示词、复刻指南与源码 zip。这是独立展示页，不是编辑器效果，不含保存与导出。
 
 **2026-11-01 字形切片 / Letter Slices**：[打开编辑器](site/letter-slices.html?from=gallery)。根据[原帖视频](https://x.com/abduzeedo/status/2115976186711134655)制作白底黑字的 Three.js / WebGL 立体切片动效，片体具有深度、遮挡和蓝色侧缘。默认字母为 `a`，支持更换单个字母或中日韩字符、字体、切片数量、展开幅度与节奏，并支持 PNG / GIF / MP4 导出。拆解见[分析](docs/analyses/letter-slices.md)。
@@ -42,7 +44,7 @@ CellMotion 是一个自由、灵活的动态设计系统。字体、图标、图
 
 **2026-10-12 降临 / Switch Drop 更新**：标题紫色标点改为圆点；结束停留默认 6 秒，可自定义为 2–30 秒，参数可自动保存及导出。已保存[默认方案](site/assets/presets/switchdrop-default.json)，重制官网动态封面，并加入「最近上新」；首页该标题移除末尾句号。
 
-目前收录 89 个动效及视频模板，支持中文与多语种字体、字图混排、图片 / GIF / 视频背景、响应式画布，以及浏览器内的预览与导出。官网的「全部动效」和各内容分类只展示已完成的 57 个。另外 32 个尚未完成：原分类保留，只出现在「待上新」，封面写着「待上新，未完成」，暂时不能点进编辑器。名单和恢复方式见 [docs/PENDING_RELEASE.md](docs/PENDING_RELEASE.md)。
+目前收录 93 个动效及视频模板，支持中文与多语种字体、字图混排、图片 / GIF / 视频背景、响应式画布，以及浏览器内的预览与导出。官网的「全部动效」和各内容分类只展示已完成的 61 个。另外 32 个尚未完成：原分类保留，只出现在「待上新」，封面写着「待上新，未完成」，暂时不能点进编辑器。名单和恢复方式见 [docs/PENDING_RELEASE.md](docs/PENDING_RELEASE.md)。
 
 
 **2026-10-10 两款 CardBot 独立编辑器**：[翻牌登录 / Card Login](https://opc8838-hub.github.io/font-animation/card-login.html?from=gallery) 保留同尺寸衔接、旋转中变白及登录渐入，文字、字体、颜色和动作参数可编辑；[卡牌剧场 / Card Deck](https://opc8838-hub.github.io/font-animation/carddeck.html?from=gallery) 保留表情卡牌的展开、交错横移与收拢，支持共享图库、自有素材和逐卡调整。两款均采用 CellMotion 三栏工作台，支持手机/平板、主流及自定义画幅、方案管理、PNG/GIF/H.264 MP4 与实时配置的 For AI 组件。登录编辑器是视觉动效，不提供账号认证；真正可输入的原始 HTML/CSS 表单转场另附源码包。详见 [使用与集成说明](docs/CARDBOT_EDITORS.md)、[动效保真与验证](docs/analyses/cardmotion-preservation.md) 和 [来源许可](docs/licenses/CARDBOT_MOTION.md)。
