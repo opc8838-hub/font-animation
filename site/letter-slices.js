@@ -1,3 +1,5 @@
+import './letter-slices-render.js?v=20261102-webgl1';
+
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);

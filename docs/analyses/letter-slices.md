@@ -1,5 +1,11 @@
 # 字形切片 / Letter Slices
 
+## 2026-11-02 WebGL correction
+
+The previous Canvas composite was rejected because its striped surface had no geometric depth. The source video's 1.8–2.15 s frames show separated blade tips, visible side walls, mutual occlusion, a mostly charcoal front and narrow blue/cyan edge lighting. The static letter and 4.088 s rhythm remain the observable anchors. The exact source mesh, font and shader are unavailable.
+
+The current implementation uses the repository's vendored Three.js module. It samples the current font glyph into vertical contour runs, builds actual front/back/side/top faces, and projects the slice groups with an orthographic 3D camera. Group count increases during expansion; thin side faces receive blue and warm edge colors while a dark central body preserves the letter. The 3D renderer draws to the same Canvas used by live preview and PNG/GIF/MP4 export. This is a geometric approximation of the visible motion, not a claim about the original author's software.
+
 ## 2026-11-02 correction
 
 The earlier explanation below described horizontal sampling displacement. Frame by frame review of the source video at 0.55, 1.8 and 2.15 seconds disproved that model. The peak has repeated dark letter planes with white gaps, a solid central body and narrow blue/cyan and amber edge light. Its outer shape remains readable as `a`. A simple striped glyph looked flat; fully compressed copies made a rectangular block.
