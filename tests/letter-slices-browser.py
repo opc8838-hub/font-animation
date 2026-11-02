@@ -38,8 +38,14 @@ try:
         for time, name in [(0.1, "start"), (.55, "early"), (.85, "middle"), (1.3, "near-peak"), (1.8, "echo"), (2.8, "return"), (3.9, "end")]:
             page.evaluate("t => CellMotionLetterSlices.seek(t)", time)
             page.locator("#view").screenshot(path=str(OUT / f"{name}.png"))
+        assert page.evaluate("LetterSlicesRenderer.backend === 'three-webgl' && LetterSlicesRenderer.webglActive")
         poster = page.evaluate("""() => { const canvas=document.createElement('canvas'); canvas.width=1080; canvas.height=1080; CellMotionLetterSlices.render(canvas,1.8); return canvas.toDataURL('image/png').split(',')[1]; }""")
         (OUT / "poster.png").write_bytes(base64.b64decode(poster))
+        page.evaluate("""() => { const field=document.querySelector('#direction'); field.value='reverse'; field.dispatchEvent(new Event('change')); }""")
+        page.evaluate("CellMotionLetterSlices.seek(1.8)")
+        page.locator("#view").screenshot(path=str(OUT / "reverse.png"))
+        assert (OUT / "reverse.png").read_bytes() != (OUT / "echo.png").read_bytes()
+        page.evaluate("""() => { const field=document.querySelector('#direction'); field.value='forward'; field.dispatchEvent(new Event('change')); }""")
         page.locator("#text").fill("B")
         assert page.evaluate("CellMotionLetterSlices.getScheme().scene.text") == "B"
         page.evaluate("CellMotionLetterSlices.seek(1.8)")
