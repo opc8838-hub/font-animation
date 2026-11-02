@@ -13,7 +13,7 @@
     canvas: { width: 1080, height: 1080 },
     settings: { font: 'stg:montserrat' },
     scene: { text: 'a', font: 'stg:montserrat', fontSize: .55, fontHeight: 1, extraBold: .008,
-      background: '#ffffff', textColor: '#252727', slices: 36, spread: .22, fringe: 2,
+      background: '#ffffff', textColor: '#252727', slices: 26, spread: .22, fringe: 2,
       direction: 'forward', intro: .4, sweep: 1.1, hold: .95, return: 1.05, settle: .6, speed: 1 }
   };
   const PHASES = [
