@@ -35,7 +35,7 @@ try:
         page.screenshot(path=str(OUT / "desktop-editor.png"))
         assert page.locator("#text").input_value() == "a"
         assert page.locator(".me-choreo-block").count() == 5
-        for time, name in [(0.1, "start"), (1.8, "echo"), (3.9, "end")]:
+        for time, name in [(0.1, "start"), (.55, "early"), (.85, "middle"), (1.3, "near-peak"), (1.8, "echo"), (2.8, "return"), (3.9, "end")]:
             page.evaluate("t => CellMotionLetterSlices.seek(t)", time)
             page.locator("#view").screenshot(path=str(OUT / f"{name}.png"))
         poster = page.evaluate("""() => { const canvas=document.createElement('canvas'); canvas.width=1080; canvas.height=1080; CellMotionLetterSlices.render(canvas,1.8); return canvas.toDataURL('image/png').split(',')[1]; }""")

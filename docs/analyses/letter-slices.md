@@ -1,5 +1,13 @@
 # 字形切片 / Letter Slices
 
+## 2026-11-02 correction
+
+The earlier explanation below described horizontal sampling displacement. Frame by frame review of the source video at 0.55, 1.8 and 2.15 seconds disproved that model. The peak has repeated dark letter planes with white gaps, a solid central body and narrow blue/cyan and amber edge light. Its outer shape remains readable as `a`. A simple striped glyph looked flat; fully compressed copies made a rectangular block.
+
+The revised renderer repeats horizontally compressed copies of the selected glyph, clips them to a widened glyph silhouette, and retains a dark central body. Blue, cyan and amber copies are offset by a few pixels behind each dark face, with a weak blurred blue halo. The number of visible planes grows during expansion and shrinks during return. A full glyph fades over the early and late transitions so the shape does not break apart before the planes have spread.
+
+This remains an approximation: the post does not provide its source font, 3D geometry, material settings or motion curves. The default uses the shared Montserrat preset, while the same rendering and export path supports other text and font choices.
+
 来源：[Fabio - abduzeedo 的 X 视频](https://x.com/abduzeedo/status/2115976186711134655)，2026-10-30 发布。保存原视频于本地工作输出，未提交仓库。原片为 1080×1080、4.088 秒、240 帧、约 58.7 FPS，无音轨。用 Watch 浏览全片，用 FFmpeg 以 8 FPS 抽取接触表，并核对 0.1 秒与 1.65 秒的全尺寸帧。
 
 ## 可见证据
