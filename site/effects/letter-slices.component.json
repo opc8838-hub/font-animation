@@ -1,0 +1,440 @@
+{
+  "effect": {
+    "id": "letter-slices",
+    "name": {
+      "zh": "字形切片",
+      "en": "Letter Slices"
+    },
+    "version": "1.0.0",
+    "category": "type"
+  },
+  "runtime": {
+    "kind": "iframe-bridge",
+    "entry": "letter-slices.html?v=20261103-layout-ai1",
+    "bridgeVersion": "1.0.0",
+    "renderer": "webgl"
+  },
+  "capabilities": {
+    "compositionModel": "scene",
+    "editableText": true,
+    "multilineText": true,
+    "automaticWordWrap": true,
+    "sharedFonts": true,
+    "backgroundMedia": true,
+    "animatedImageBackgrounds": true,
+    "trimmedVideoBackgrounds": true,
+    "responsiveCanvas": true,
+    "timeline": true,
+    "preview": true,
+    "exports": [
+      "png",
+      "gif",
+      "mp4"
+    ]
+  },
+  "behavior": {
+    "summary": {
+      "zh": "字母、单词或短句经曲面玻璃折射展开，再收拢为完整文字。排版按画布比例自动缩放与换行，可调字距行距；文字、背景、视频裁切和五段节奏均读取当前方案。",
+      "en": "Letters, words or short phrases expand through curved glass refraction and return to readable text. Layout automatically fits and wraps to the canvas ratio with editable letter and line spacing; text, backgrounds, video trim and all five phases use the live composition."
+    },
+    "phases": [
+      {
+        "id": "intro",
+        "name": {
+          "zh": "完整文字",
+          "en": "Whole text"
+        },
+        "colorToken": "phase.sky"
+      },
+      {
+        "id": "sweep",
+        "name": {
+          "zh": "折射展开",
+          "en": "Refraction expansion"
+        },
+        "colorToken": "phase.violet"
+      },
+      {
+        "id": "hold",
+        "name": {
+          "zh": "折射停留",
+          "en": "Refraction hold"
+        },
+        "colorToken": "phase.amber"
+      },
+      {
+        "id": "return",
+        "name": {
+          "zh": "折射收拢",
+          "en": "Refraction return"
+        },
+        "colorToken": "phase.mint"
+      },
+      {
+        "id": "settle",
+        "name": {
+          "zh": "收尾文字",
+          "en": "Final text"
+        },
+        "colorToken": "phase.coral"
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "path": "composition.canvas.width",
+      "scope": "global",
+      "type": "integer",
+      "name": {
+        "zh": "画布宽度",
+        "en": "Canvas width"
+      },
+      "unit": "px",
+      "min": 128,
+      "max": 3840
+    },
+    {
+      "path": "composition.canvas.height",
+      "scope": "global",
+      "type": "integer",
+      "name": {
+        "zh": "画布高度",
+        "en": "Canvas height"
+      },
+      "unit": "px",
+      "min": 128,
+      "max": 3840
+    },
+    {
+      "path": "composition.scene.text",
+      "scope": "effect",
+      "type": "string",
+      "name": {
+        "zh": "完整文字与换行",
+        "en": "Complete text and line breaks"
+      }
+    },
+    {
+      "path": "composition.scene.font",
+      "scope": "effect",
+      "type": "string",
+      "name": {
+        "zh": "共享字体",
+        "en": "Shared font"
+      }
+    },
+    {
+      "path": "composition.scene.fontSize",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "文字大小",
+        "en": "Text size"
+      },
+      "min": 0.18,
+      "max": 1.2
+    },
+    {
+      "path": "composition.scene.fontHeight",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "字形高度",
+        "en": "Letter height"
+      },
+      "min": 0.5,
+      "max": 1.4
+    },
+    {
+      "path": "composition.scene.extraBold",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "额外加粗",
+        "en": "Extra weight"
+      },
+      "min": 0,
+      "max": 0.04
+    },
+    {
+      "path": "composition.scene.tracking",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "字距",
+        "en": "Letter spacing"
+      },
+      "min": -0.04,
+      "max": 0.15,
+      "default": 0
+    },
+    {
+      "path": "composition.scene.lineHeight",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "行距",
+        "en": "Line spacing"
+      },
+      "min": 1,
+      "max": 2,
+      "default": 1.22
+    },
+    {
+      "path": "composition.scene.background",
+      "scope": "effect",
+      "type": "color",
+      "name": {
+        "zh": "背景颜色",
+        "en": "Background color"
+      }
+    },
+    {
+      "path": "composition.scene.textColor",
+      "scope": "effect",
+      "type": "color",
+      "name": {
+        "zh": "文字颜色",
+        "en": "Text color"
+      }
+    },
+    {
+      "path": "composition.scene.slices",
+      "scope": "effect",
+      "type": "integer",
+      "name": {
+        "zh": "折射密度",
+        "en": "Refraction density"
+      },
+      "min": 12,
+      "max": 96
+    },
+    {
+      "path": "composition.scene.spread",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "展开幅度",
+        "en": "Spread"
+      },
+      "min": 0.05,
+      "max": 0.45
+    },
+    {
+      "path": "composition.scene.fringe",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "色散边缘",
+        "en": "Spectral edges"
+      },
+      "min": 0,
+      "max": 8
+    },
+    {
+      "path": "composition.scene.direction",
+      "scope": "effect",
+      "type": "enum",
+      "name": {
+        "zh": "流动方向",
+        "en": "Direction"
+      },
+      "values": [
+        "forward",
+        "reverse"
+      ]
+    },
+    {
+      "path": "composition.scene.intro",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "完整文字停留",
+        "en": "Whole text hold"
+      },
+      "unit": "s",
+      "min": 0,
+      "max": 2
+    },
+    {
+      "path": "composition.scene.sweep",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "折射展开时长",
+        "en": "Refraction expansion"
+      },
+      "unit": "s",
+      "min": 0.2,
+      "max": 3
+    },
+    {
+      "path": "composition.scene.hold",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "折射停留",
+        "en": "Refraction hold"
+      },
+      "unit": "s",
+      "min": 0,
+      "max": 4
+    },
+    {
+      "path": "composition.scene.return",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "折射收拢时长",
+        "en": "Refraction return"
+      },
+      "unit": "s",
+      "min": 0.2,
+      "max": 3
+    },
+    {
+      "path": "composition.scene.settle",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "收尾停留",
+        "en": "Final text hold"
+      },
+      "unit": "s",
+      "min": 0,
+      "max": 2
+    },
+    {
+      "path": "composition.scene.speed",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "播放速度",
+        "en": "Playback speed"
+      },
+      "min": 0.25,
+      "max": 2
+    },
+    {
+      "path": "composition.scene.positionX",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "水平位置",
+        "en": "Horizontal position"
+      },
+      "unit": "%",
+      "min": -40,
+      "max": 40,
+      "default": -1
+    },
+    {
+      "path": "composition.scene.positionY",
+      "scope": "effect",
+      "type": "number",
+      "name": {
+        "zh": "垂直位置",
+        "en": "Vertical position"
+      },
+      "unit": "%",
+      "min": -40,
+      "max": 40,
+      "default": 0
+    },
+    {
+      "path": "composition.scene.alignment",
+      "scope": "effect",
+      "type": "enum",
+      "name": {
+        "zh": "对齐",
+        "en": "Alignment"
+      },
+      "values": [
+        "left",
+        "center",
+        "right"
+      ],
+      "default": "center"
+    },
+    {
+      "path": "composition.scene.backgroundMedia.url",
+      "scope": "asset",
+      "type": "string",
+      "name": {
+        "zh": "背景素材",
+        "en": "Background source"
+      }
+    },
+    {
+      "path": "composition.scene.backgroundMedia.name",
+      "scope": "asset",
+      "type": "string",
+      "name": {
+        "zh": "素材名称",
+        "en": "Source name"
+      }
+    },
+    {
+      "path": "composition.scene.backgroundMedia.fileType",
+      "scope": "asset",
+      "type": "string",
+      "name": {
+        "zh": "素材格式",
+        "en": "Source MIME type"
+      }
+    },
+    {
+      "path": "composition.scene.backgroundMedia.videoStart",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "视频开始",
+        "en": "Video start"
+      },
+      "unit": "s"
+    },
+    {
+      "path": "composition.scene.backgroundMedia.videoEnd",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "视频结束",
+        "en": "Video end"
+      },
+      "unit": "s"
+    },
+    {
+      "path": "composition.scene.backgroundMedia.cropX",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "取景水平位置",
+        "en": "Crop horizontal position"
+      },
+      "min": 0,
+      "max": 1
+    },
+    {
+      "path": "composition.scene.backgroundMedia.cropY",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "取景垂直位置",
+        "en": "Crop vertical position"
+      },
+      "min": 0,
+      "max": 1
+    },
+    {
+      "path": "composition.scene.backgroundMedia.cropZoom",
+      "scope": "asset",
+      "type": "number",
+      "name": {
+        "zh": "背景缩放",
+        "en": "Background zoom"
+      },
+      "min": 1,
+      "max": 4
+    }
+  ]
+}

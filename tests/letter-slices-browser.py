@@ -17,9 +17,16 @@ OUT.mkdir(parents=True, exist_ok=True)
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
         pass
+    def handle(self):
+        try:
+            super().handle()
+        except (ConnectionAbortedError, ConnectionResetError):
+            pass
 
+class TestServer(ThreadingHTTPServer):
+    request_queue_size = 128
 
-server = ThreadingHTTPServer(("127.0.0.1", 0), partial(QuietHandler, directory=str(ROOT / "site")))
+server = TestServer(("127.0.0.1", 0), partial(QuietHandler, directory=str(ROOT / "site")))
 Thread(target=server.serve_forever, daemon=True).start()
 
 try:
@@ -107,7 +114,11 @@ try:
         page.set_viewport_size({"width": 390, "height": 844})
         page.wait_for_timeout(250)
         page.screenshot(path=str(OUT / "mobile-editor.png"))
-        assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 2")
+        assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 2"), page.evaluate("""()=>({
+          width:innerWidth,scroll:document.documentElement.scrollWidth,body:document.body.className,
+          header:getComputedStyle(document.querySelector('.tc-header')).display,
+          sheets:[...document.styleSheets].map(s=>s.href)
+        })""")
         page.set_viewport_size({"width": 1440, "height": 900})
         page.evaluate("""() => {
           for (const [id, value] of [['canvasPreset','1080x1080'],['exportDuration','cycle'],['exportFps','24'],['exportScale','0.5']]) {
@@ -116,7 +127,7 @@ try:
         }""")
         with page.expect_download(timeout=180000) as download:
             page.locator("#exportMp4").click()
-        download.value.save_as(ROOT / "site" / "assets" / "previews" / "letter-slices-card.mp4")
+        download.value.save_as(OUT / "default-preview.mp4")
         final = page.evaluate("""() => { const canvas=document.createElement('canvas'); canvas.width=1080; canvas.height=1080; CellMotionLetterSlices.render(canvas,1.8); return canvas.toDataURL('image/png').split(',')[1]; }""")
         (OUT / "after-import.png").write_bytes(base64.b64decode(final))
         assert final == poster
@@ -128,7 +139,10 @@ try:
         assert page.locator('[data-effect="letter-slices"] video.effect-loop').count() == 1
         page.goto(f"http://127.0.0.1:{server.server_port}/cellmotion-components.html")
         page.locator("#search").fill("字形切片")
-        page.wait_for_function("document.querySelectorAll('#catalog-grid a[href*=\"letter-slices.html\"]').length > 0")
+        try:
+            page.wait_for_function("document.querySelectorAll('#catalog-grid a[href*=\"letter-slices.html\"]').length > 0")
+        except Exception:
+            raise AssertionError({"errors": errors, "body": page.locator("body").inner_text()[:1500]})
         assert not errors, errors
         browser.close()
 finally:

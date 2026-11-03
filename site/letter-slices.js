@@ -1,4 +1,4 @@
-import './letter-slices-render.js?v=20261102-refraction1';
+import './letter-slices-render.js?v=20261103-layout-ai1';
 
 (() => {
   'use strict';
@@ -18,19 +18,19 @@ import './letter-slices-render.js?v=20261102-refraction1';
     effect: 'letter-slices', version: 1,
     canvas: { width: 1080, height: 1080 },
     settings: { font: 'stg:inter' },
-    scene: { text: 'a', font: 'stg:inter', fontSize: .56, fontHeight: 1, extraBold: 0, positionX: -1,
+    scene: { text: 'a', font: 'stg:inter', fontSize: .56, fontHeight: 1, extraBold: 0, tracking: 0, lineHeight: 1.22, positionX: -1, positionY: 0, alignment: 'center',
       background: '#ffffff', textColor: '#252727', slices: 44, spread: .22, fringe: 2,
       direction: 'forward', intro: .3, sweep: 1.35, hold: .8, return: 1.05, settle: .6, speed: 1 }
   };
   const PHASES = [
-    { key: 'intro', zh: '完整字母', en: 'Whole letter', color: '#8ec8ff' },
-    { key: 'sweep', zh: '切片展开', en: 'Slice expansion', color: '#d4b8ff' },
-    { key: 'hold', zh: '残影停留', en: 'Echo hold', color: '#ffd27d' },
-    { key: 'return', zh: '切片收拢', en: 'Slice return', color: '#9de7d7' },
-    { key: 'settle', zh: '收尾字母', en: 'Final letter', color: '#ffc4d6' }
+    { key: 'intro', zh: '完整文字', en: 'Whole text', color: '#8ec8ff' },
+    { key: 'sweep', zh: '折射展开', en: 'Refraction expansion', color: '#d4b8ff' },
+    { key: 'hold', zh: '折射停留', en: 'Refraction hold', color: '#ffd27d' },
+    { key: 'return', zh: '折射收拢', en: 'Refraction return', color: '#9de7d7' },
+    { key: 'settle', zh: '收尾文字', en: 'Final text', color: '#ffc4d6' }
   ];
-  const numericKeys = ['fontSize', 'fontHeight', 'extraBold', 'slices', 'spread', 'fringe', 'intro', 'sweep', 'hold', 'return', 'settle', 'speed', 'positionX', 'positionY'];
-  const optionalDefaults = { positionX: 0, positionY: 0, alignment: 'center' };
+  const numericKeys = ['fontSize', 'fontHeight', 'extraBold', 'tracking', 'lineHeight', 'slices', 'spread', 'fringe', 'intro', 'sweep', 'hold', 'return', 'settle', 'speed', 'positionX', 'positionY'];
+  const optionalDefaults = { positionX: 0, positionY: 0, alignment: 'center', tracking: 0, lineHeight: 1.22 };
   const colorFields = { background: 'backgroundColor', textColor: 'textColor' };
   const colorKeys = Object.keys(colorFields);
   const dimension = value => Math.max(128, Math.min(3840, Math.round(Number(value) / 2) * 2 || 1080));
@@ -61,7 +61,7 @@ import './letter-slices-render.js?v=20261102-refraction1';
       if (Number.isFinite(raw.scene[key])) next.scene[key] = Math.max(Number(input.min), Math.min(Number(input.max), raw.scene[key]));
     }
     for (const key of colorKeys) if (/^#[0-9a-f]{6}$/i.test(raw.scene[key] || '')) next.scene[key] = raw.scene[key];
-    if (typeof raw.scene.text === 'string') next.scene.text = [...new Intl.Segmenter().segment(raw.scene.text)][0]?.segment || '';
+    if (typeof raw.scene.text === 'string') next.scene.text = raw.scene.text.replace(/\r\n?/g, '\n');
     if (Fonts.idFor(raw.scene.font)) next.scene.font = `stg:${Fonts.idFor(raw.scene.font)}`;
     next.scene.direction = raw.scene.direction === 'reverse' ? 'reverse' : 'forward';
     if ('alignment' in raw.scene) next.scene.alignment = ['left', 'center', 'right'].includes(raw.scene.alignment) ? raw.scene.alignment : 'center';
@@ -109,6 +109,7 @@ import './letter-slices-render.js?v=20261102-refraction1';
     });
     $('backgroundCrop').setAttribute('aria-label', label('拖动画面裁剪背景', 'Drag to reframe the background'));
     $('videoStartHandle').setAttribute('aria-label', label('视频开始位置', 'Video trim start')); $('videoEndHandle').setAttribute('aria-label', label('视频结束位置', 'Video trim end'));
+    document.querySelector('.background-colors').setAttribute('aria-label', label('纯色背景', 'Solid backgrounds'));
     document.dispatchEvent(new CustomEvent('tc-languagechange', { detail: { language } }));
     buildTimeline(); updateClock(); updateExportInfo(); syncBackdrop();
   }
@@ -120,7 +121,7 @@ import './letter-slices-render.js?v=20261102-refraction1';
     numericKeys.forEach(key => {
       const input = $(key), value = state.scene[key] ?? optionalDefaults[key];
       input.value = value;
-      input.nextElementSibling.textContent = ['intro', 'sweep', 'hold', 'return', 'settle'].includes(key) ? `${value.toFixed(2)} s` : key === 'speed' ? `${value.toFixed(2)}×` : ['fontSize', 'fontHeight', 'extraBold', 'spread'].includes(key) ? `${Number((value * 100).toFixed(1))}%` : value.toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
+      input.nextElementSibling.textContent = ['intro', 'sweep', 'hold', 'return', 'settle'].includes(key) ? `${value.toFixed(2)} s` : ['speed', 'lineHeight'].includes(key) ? `${value.toFixed(2)}×` : ['fontSize', 'fontHeight', 'extraBold', 'spread', 'tracking'].includes(key) ? `${Number((value * 100).toFixed(1))}%` : value.toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
       if ($(key + 'Exact')) $(key + 'Exact').value = Number((value * Number(input.dataset.displayFactor || 1)).toFixed(3));
     });
     colorKeys.forEach(key => { $(colorFields[key]).value = state.scene[key]; });
@@ -220,7 +221,7 @@ import './letter-slices-render.js?v=20261102-refraction1';
   colorKeys.forEach(key => $(colorFields[key]).addEventListener('input', () => { state.scene[key] = $(colorFields[key]).value; persist(); syncBackdrop(); syncBackgroundControls(); drawPreview(); }));
   colorKeys.forEach(key => $(colorFields[key]).addEventListener('change', record));
   let composing = false;
-  const updateLetter = () => { state.scene.text = [...new Intl.Segmenter().segment($('text').value)][0]?.segment || ''; $('text').value = state.scene.text; $('contentTitle').textContent = state.scene.text || label('空白字母', 'Empty letter'); persist(); drawPreview(); loadFont(); };
+  const updateLetter = () => { state.scene.text = $('text').value; $('contentTitle').textContent = state.scene.text || label('空白文字', 'Empty text'); persist(); drawPreview(); loadFont(); };
   $('text').addEventListener('compositionstart', () => { composing = true; });
   $('text').addEventListener('compositionend', () => { composing = false; updateLetter(); });
   $('text').addEventListener('input', () => { if (!composing) updateLetter(); });
@@ -238,7 +239,7 @@ import './letter-slices-render.js?v=20261102-refraction1';
   }));
   $('playButton').onclick = () => { playing = !playing; if (time >= cycle()) time = 0; last = performance.now(); updateClock(); };
   $('replayButton').onclick = replay;
-  $('pauseForEdit').onclick = () => seek((state.scene.intro + state.scene.sweep + state.scene.hold * .5) / state.scene.speed);
+  $('pauseForEdit').onclick = () => seek(state.scene.intro * .5 / state.scene.speed);
   $('scrubber').addEventListener('input', () => seek($('scrubber').value));
   $('languageButton').onclick = () => { language = language === 'zh' ? 'en' : 'zh'; localStorage.setItem('cellmotion-site-language', language); localize(); };
   $('themeButton').onclick = () => { theme = theme === 'dark' ? 'light' : 'dark'; localStorage.setItem('cellmotion-editor-theme', theme); localStorage.setItem('cellmotion-site-theme', theme); localize(); };
@@ -304,6 +305,7 @@ import './letter-slices-render.js?v=20261102-refraction1';
   }
   function syncBackgroundControls() {
     const media = state.scene.backgroundMedia;
+    document.querySelectorAll('[data-background-color]').forEach(button => button.setAttribute('aria-pressed', String(!media && button.dataset.backgroundColor === state.scene.background)));
     $('backgroundSwatch').style.backgroundColor = state.scene.background;
     $('backgroundSwatch').setAttribute('aria-label', label('当前背景颜色 ', 'Current background color ') + state.scene.background);
     $('backgroundMediaControls').hidden = !media; $('backgroundVideoControls').hidden = !Media.isVideo(media);
@@ -330,6 +332,12 @@ import './letter-slices-render.js?v=20261102-refraction1';
     }).catch(error => { $('backgroundStatus').textContent = error.message; });
   }
   $('backgroundSettings').addEventListener('toggle', drawCropPreview);
+  document.querySelectorAll('[data-background-color]').forEach(button => button.onclick = async () => {
+    playing = false; requestedTime = null; await previewPromise;
+    state.scene.background = button.dataset.backgroundColor;
+    state.scene.backgroundMedia = null;
+    await loadBackground(); syncControls(); syncBackdrop(); record(); await drawPreview();
+  });
   $('backgroundFile').onchange = async () => {
     const file = $('backgroundFile').files[0]; if (!file) return;
     $('backgroundStatus').textContent = label('正在读取背景…', 'Loading background…');
@@ -379,8 +387,8 @@ import './letter-slices-render.js?v=20261102-refraction1';
     handle.onkeydown = event => { if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return; event.preventDefault(); const bounds = Media.clip(state.scene.backgroundMedia, background.duration); setTrim(edge, bounds[edge] + (event.key === 'ArrowRight' ? 1 : -1) * (event.shiftKey ? 1 : .1)); };
   });
   [...numericKeys, 'cropZoom'].forEach(key => {
-    const range = $(key), factor = ['fontSize', 'fontHeight', 'extraBold', 'spread'].includes(key) ? 100 : 1;
-    const unit = ['intro', 'sweep', 'hold', 'return', 'settle'].includes(key) ? 's' : ['speed', 'cropZoom'].includes(key) ? '×' : ['slices', 'fringe'].includes(key) ? '' : '%';
+    const range = $(key), factor = ['fontSize', 'fontHeight', 'extraBold', 'spread', 'tracking'].includes(key) ? 100 : 1;
+    const unit = ['intro', 'sweep', 'hold', 'return', 'settle'].includes(key) ? 's' : ['speed', 'cropZoom', 'lineHeight'].includes(key) ? '×' : ['slices', 'fringe'].includes(key) ? '' : '%';
     range.dataset.displayFactor = factor;
     const box = document.createElement('span'); box.className = 'metal-exact-box';
     const exact = document.createElement('input'); exact.type = 'number'; exact.id = key + 'Exact'; exact.min = Number(range.min) * factor; exact.max = Number(range.max) * factor; exact.step = Number(range.step) * factor;
@@ -441,9 +449,10 @@ import './letter-slices-render.js?v=20261102-refraction1';
   syncControls(); localize();
   new ResizeObserver(fitStage).observe($('stageArea'));
   document.fonts.addEventListener('loadingdone', () => { Core.invalidate(); drawPreview(); });
-  Promise.all([loadFont(), loadBackground()]).then(() => {
-    window.CellMotionBridge.register({ effectId: 'letter-slices', getScheme: () => structuredClone(state), applyScheme,
-      play: () => { playing = true; last = performance.now(); updateClock(); }, pause: () => { playing = false; updateClock(); }, restart: replay, seek, durationMs: () => cycle() * 1000 });
-  });
+  const adapter = { effectId: 'letter-slices', getScheme: () => structuredClone(state), applyScheme,
+    play: () => { playing = true; last = performance.now(); updateClock(); }, pause: () => { playing = false; updateClock(); },
+    restart: replay, seek, durationMs: () => cycle() * 1000 };
+  adapter.readyPromise = Promise.all([loadFont(), loadBackground()]).then(() => window.CellMotionBridge.register(adapter));
+  window.CellMotionEffectBridge = adapter;
   requestAnimationFrame(tick);
 })();

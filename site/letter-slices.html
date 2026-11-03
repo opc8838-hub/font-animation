@@ -5,14 +5,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#17171a">
-  <meta name="description" content="字形切片 Letter Slices · 可更换字母、调节切片残影，并导出 PNG、GIF 和 MP4。">
+  <meta name="description" content="字形切片 Letter Slices · 字母、单词与短句的玻璃折射动效，支持自适配画布、多色与视频背景，以及 PNG、GIF、MP4 和 AI 组件。">
   <title>字形切片 Letter Slices | CellMotion</title>
   <link rel="icon" href="assets/cellmotion/logo-web.webp" type="image/webp">
   <link rel="stylesheet" href="shared-fonts.css?v=20261028-spacing1" data-stg-shared-fonts>
   <link rel="stylesheet" href="typecascade-workspace.css?v=20261028-metal2">
   <link rel="stylesheet" href="typecascade-polish.css?v=20261028-metal2">
   <link rel="stylesheet" href="me-motion-editor.css?v=20261028-metal2">
-  <link rel="stylesheet" href="letter-slices.css?v=20261102-refraction1">
+  <link rel="stylesheet" href="letter-slices.css?v=20261103-layout-ai1">
 </head>
 <body class="tc-workspace metallic-editor" data-editor-capabilities="text-only" data-editor-theme="dark">
   <header class="tc-header">
@@ -29,7 +29,7 @@
   <aside class="tc-content" aria-label="内容与方案">
     <div class="tc-panel-heading"><div><small>CONTENT</small><h2 data-zh="文字内容" data-en="Text content">文字内容</h2></div></div>
     <div class="content-scroll">
-      <button id="selectText" class="tc-row-select" type="button" aria-pressed="true"><span class="tc-row-number">01</span><strong id="contentTitle" class="tc-row-text">a</strong><span class="tc-row-description" data-zh="单字切片 · 当前编辑" data-en="Letter slices · Selected">单字切片 · 当前编辑</span></button>
+      <button id="selectText" class="tc-row-select" type="button" aria-pressed="true"><span class="tc-row-number">01</span><strong id="contentTitle" class="tc-row-text">a</strong><span class="tc-row-description" data-zh="文字折射 · 当前编辑" data-en="Text refraction · Selected">文字折射 · 当前编辑</span></button>
       <div class="metal-history"><button id="undoButton" type="button" aria-label="撤销" disabled>↶ <span data-zh="撤销" data-en="Undo">撤销</span></button><button id="redoButton" type="button" aria-label="重做" disabled>↷ <span data-zh="重做" data-en="Redo">重做</span></button></div>
       <p class="tc-hint" data-zh="选择文字，在右侧调整内容、背景与构图。" data-en="Select the text to edit its content, background and layout.">选择文字，在右侧调整内容、背景与构图。</p>
     </div>
@@ -44,7 +44,7 @@
   <main class="tc-center" aria-label="画布和时间轴">
     <section class="tc-canvas-toolbar">
       <div class="tc-backdrop-control"><button id="tcBackdropToggle" class="tc-backdrop-toggle" type="button" aria-expanded="false" aria-pressed="false">▧ <span data-zh="铺满背景" data-en="Stage fill">铺满背景</span></button><div id="backdropPopover" class="tc-backdrop-popover" hidden><label><span data-zh="跟随当前页背景" data-en="Follow composition background">跟随当前页背景</span><input id="tcBackdropEnabled" type="checkbox"></label><label><span data-zh="独立画布背景" data-en="Independent stage color">独立画布背景</span><input id="tcBackdropColor" type="color"></label><button id="tcBackdropReset" type="button" data-zh="恢复默认灰色" data-en="Reset neutral gray">恢复默认灰色</button></div></div>
-      <label><span data-zh="画布尺寸" data-en="Canvas size">画布尺寸</span><select id="canvasPreset"><option value="1080x1080">1:1 · 1080 × 1080</option><option value="1080x1350">4:5 · 1080 × 1350</option><option value="1080x1440">3:4 · 1080 × 1440</option><option value="1080x1620">2:3 · 1080 × 1620</option><option value="1080x1920">9:16 · 1080 × 1920</option><option value="1920x1080">16:9 · 1920 × 1080</option><option value="1440x1080">4:3 · 1440 × 1080</option><option value="1620x1080">3:2 · 1620 × 1080</option><option value="custom" data-zh="自定义" data-en="Custom">自定义</option></select></label>
+      <label><span data-zh="画布尺寸" data-en="Canvas size">画布尺寸</span><select id="canvasPreset"><option value="1080x1080">1:1 · 1080 × 1080</option><option value="1080x1350">4:5 · 1080 × 1350</option><option value="1080x1440">3:4 · 1080 × 1440</option><option value="1080x1620">2:3 · 1080 × 1620</option><option value="1080x1920">9:16 · 1080 × 1920</option><option value="1600x800">10:5 · 1600 × 800</option><option value="1920x1080">16:9 · 1920 × 1080</option><option value="1440x1080">4:3 · 1440 × 1080</option><option value="1620x1080">3:2 · 1620 × 1080</option><option value="custom" data-zh="自定义" data-en="Custom">自定义</option></select></label>
       <div id="customSize" class="custom-size" hidden><label>W <input id="canvasWidth" type="number" min="128" max="3840" step="2"></label><label>H <input id="canvasHeight" type="number" min="128" max="3840" step="2"></label></div>
       <span id="canvasInfo">1080 × 1080</span>
     </section>
@@ -60,19 +60,29 @@
   <aside class="metal-inspector" aria-label="编辑属性">
     <nav class="tc-tabs" aria-label="属性分类"><button type="button" data-panel="content" aria-pressed="true" data-zh="当前文字" data-en="Text">当前文字</button><button type="button" data-panel="motion" aria-pressed="false" data-zh="动效设置" data-en="Motion">动效设置</button><button type="button" data-panel="export" aria-pressed="false" data-zh="导出" data-en="Export">导出</button></nav>
     <section class="tc-properties" data-panel="content">
-       <div class="panel-heading"><small>LETTER</small><h2 data-zh="字母与底色" data-en="Letter and canvas">字母与底色</h2></div>
-       <label class="field"><span data-zh="播放字母" data-en="Letter">播放字母</span><input id="text" type="text" autocomplete="off" value="a" aria-describedby="letterHint"></label>
-       <p id="letterHint" class="small-status" data-zh="输入一个字母或字符，动效会沿用同一切片节奏。" data-en="Enter one letter or character; the same slice rhythm applies.">输入一个字母或字符，动效会沿用同一切片节奏。</p>
+       <div class="panel-heading"><small>TEXT</small><h2 data-zh="文字与底色" data-en="Text and canvas">文字与底色</h2></div>
+       <label class="field"><span data-zh="文字内容" data-en="Text">文字内容</span><textarea id="text" rows="2" autocomplete="off" aria-describedby="letterHint">a</textarea></label>
+       <p id="letterHint" class="small-status" data-zh="支持字母、单词与短句；回车换行，文字会按画布比例自动适配。" data-en="Letters, words and short phrases fit the canvas automatically. Press Enter for a new line.">支持字母、单词与短句；回车换行，文字会按画布比例自动适配。</p>
       <details id="fontSettings" class="metal-disclosure"><summary><span data-zh="字体与字形" data-en="Font and lettering">字体与字形</span><span id="fontSummary"></span></summary><div class="disclosure-body">
       <label class="field"><span data-zh="字体" data-en="Font">字体</span><select id="font"></select></label>
       <label class="field"><span data-zh="文字大小" data-en="Text size">文字大小</span><div class="range-row"><input id="fontSize" type="range" min="0.18" max="1.2" step="0.01"><output></output></div></label>
       <label class="field"><span data-zh="字形高度" data-en="Letter height">字形高度</span><div class="range-row"><input id="fontHeight" type="range" min="0.5" max="1.4" step="0.01"><output></output></div></label>
       <label class="field"><span data-zh="额外加粗" data-en="Extra weight">额外加粗</span><div class="range-row"><input id="extraBold" type="range" min="0" max="0.04" step="0.001"><output></output></div></label>
+      <label class="field"><span data-zh="字距" data-en="Letter spacing">字距</span><div class="range-row"><input id="tracking" type="range" min="-0.04" max="0.15" step="0.005"><output></output></div></label>
+      <label class="field"><span data-zh="行距" data-en="Line spacing">行距</span><div class="range-row"><input id="lineHeight" type="range" min="1" max="2" step="0.01"><output></output></div></label>
       </div></details>
-       <label class="field color-field"><span data-zh="字母颜色" data-en="Letter color">字母颜色</span><input id="textColor" type="color"></label>
+       <label class="field color-field"><span data-zh="文字颜色" data-en="Text color">文字颜色</span><input id="textColor" type="color"></label>
       <div class="metal-row-toolbar"><button id="pauseForEdit" class="soft-button" type="button" data-zh="暂停修改" data-en="Pause to edit">暂停修改</button><span data-zh="单场景" data-en="Single scene">单场景</span></div>
       <details id="backgroundSettings" class="metal-disclosure"><summary><span data-zh="背景 · 图片 / GIF / 视频" data-en="Background · Image / GIF / Video">背景 · 图片 / GIF / 视频</span><i id="backgroundSwatch" class="background-swatch" aria-label="当前背景颜色"></i></summary><div class="disclosure-body">
         <label class="field color-field"><span data-zh="背景颜色" data-en="Background color">背景颜色</span><input id="backgroundColor" type="color"></label>
+        <div class="background-colors" role="group" aria-label="纯色背景">
+          <button type="button" data-background-color="#ffffff" style="--swatch:#ffffff"><i></i><span data-zh="纯白" data-en="White">纯白</span></button>
+          <button type="button" data-background-color="#111116" style="--swatch:#111116"><i></i><span data-zh="深黑" data-en="Black">深黑</span></button>
+          <button type="button" data-background-color="#dceaff" style="--swatch:#dceaff"><i></i><span data-zh="雾蓝" data-en="Blue">雾蓝</span></button>
+          <button type="button" data-background-color="#d8f2e7" style="--swatch:#d8f2e7"><i></i><span data-zh="薄荷" data-en="Mint">薄荷</span></button>
+          <button type="button" data-background-color="#fff0cf" style="--swatch:#fff0cf"><i></i><span data-zh="奶油" data-en="Cream">奶油</span></button>
+          <button type="button" data-background-color="#e9dfff" style="--swatch:#e9dfff"><i></i><span data-zh="淡紫" data-en="Lilac">淡紫</span></button>
+        </div>
         <label class="background-upload"><span data-zh="上传 / 更换背景" data-en="Upload / replace background">上传 / 更换背景</span><input id="backgroundFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime"></label>
         <p id="backgroundStatus" class="small-status" role="status"></p>
         <div id="backgroundMediaControls" hidden>
@@ -126,7 +136,9 @@
   <script src="cellmotion-effect-bridge.js?v=20261028-metal2"></script>
   <script src="cellmotion-animated-image.js?v=20261028-metal2"></script>
   <script src="cellmotion-background-media.js?v=20261028-metal2"></script>
-   <script type="module" src="letter-slices.js?v=20261102-refraction1"></script>
+   <script type="module" src="letter-slices.js?v=20261103-layout-ai1"></script>
+  <script src="cellmotion-ai-manifest.js?v=20261103-layout-ai1"></script>
+  <script src="cellmotion-ai-menu.js?v=20261103-layout-ai1"></script>
   <script src="typecascade-selects.js?v=20261028-metal2"></script>
 </body>
 </html>
