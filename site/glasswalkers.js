@@ -3,12 +3,14 @@
   const $ = id => document.getElementById(id);
   const canvas = $('glassCanvas');
   if (!canvas) return;
+  const previewMode = new URLSearchParams(location.search).has('preview');
+  document.body.classList.toggle('is-preview', previewMode);
   canvas.getContext('2d', { alpha: false });
   const renderer = new window.GlassWalkersRenderer();
   const defaults = Object.freeze({
     version: 1, width: 1920, height: 1080, peopleCount: 6, animalCount: 1,
     animalKind: 'cat', direction: 'mixed', speed: 1, figureSize: 100,
-    softness: 70, halftone: 75, background: '#f8f8f8', shadow: '#0a0a0e', markers: true, trackingMode: 'person'
+    softness: 70, halftone: 75, background: '#f8f8f8', shadow: '#0a0a0e', markers: true, trackingMode: 'feet'
   });
   const storageKey = 'cellmotion-glasswalkers-v1';
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -37,13 +39,15 @@
   }
   const galleryEntry = new URLSearchParams(location.search).has('from');
   let saved = null;
-  try { saved = JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch (_) {}
-  let state = normalize(galleryEntry ? defaults : saved || defaults);
-  if (new URLSearchParams(location.search).get('tracking') === 'feet') state = { ...state, markers: true, trackingMode: 'feet' };
+  try { if (!previewMode) saved = JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch (_) {}
+  let state = normalize(previewMode || galleryEntry ? defaults : saved || defaults);
+  if (!previewMode && new URLSearchParams(location.search).get('tracking') === 'feet') state = { ...state, markers: true, trackingMode: 'feet' };
   let language = localStorage.getItem('cellmotion-site-language') === 'en' ? 'en' : 'zh';
   let theme = localStorage.getItem('cellmotion-site-theme') === 'light' ? 'light' : 'dark';
   let selectedFigure = 'people', panel = 'figure', playing = !matchMedia('(prefers-reduced-motion: reduce)').matches;
   let time = 0, started = performance.now(), raf = 0, autosave = 0, exporting = false;
+  const history = [];
+  let historyIndex = -1;
   const frame = $('compositionFrame');
   const stage = document.querySelector('.gm-stage');
   const controls = ['peopleCount', 'animalCount', 'animalKind', 'direction', 'speed', 'figureSize', 'softness', 'halftone', 'background', 'shadow', 'markers', 'trackingMode'];
@@ -54,9 +58,16 @@
   };
   function say(zh, en) { return language === 'en' ? en : zh; }
   function status(id, zh, en) { $(id).textContent = say(zh, en); }
+  function remember() {
+    const snapshot = JSON.stringify(state);
+    if (history[historyIndex] === snapshot) return;
+    history.splice(historyIndex + 1);
+    history.push(snapshot); historyIndex = history.length - 1;
+  }
   function saveSoon() {
+    if (previewMode) return;
     clearTimeout(autosave);
-    autosave = setTimeout(() => { try { localStorage.setItem(storageKey, JSON.stringify(state)); } catch (_) {} }, 250);
+    autosave = setTimeout(() => { remember(); try { localStorage.setItem(storageKey, JSON.stringify(state)); } catch (_) {} }, 250);
   }
   function download(blob, filename) {
     const url = URL.createObjectURL(blob), link = document.createElement('a');
@@ -74,9 +85,9 @@
   function dimensions() { return [state.width, state.height]; }
   function fit() {
     const [width, height] = dimensions();
-    const spaceWidth = Math.max(180, stage.clientWidth - 36);
-    const spaceHeight = Math.max(160, stage.clientHeight - 95);
-    const displayWidth = Math.min(spaceWidth, spaceHeight * width / height, 1100);
+    const spaceWidth = Math.max(1, stage.clientWidth - (previewMode ? 0 : 36));
+    const spaceHeight = Math.max(1, stage.clientHeight - (previewMode ? 0 : 95));
+    const displayWidth = Math.min(spaceWidth, spaceHeight * width / height, previewMode ? Infinity : 1100);
     const displayHeight = displayWidth * height / width;
     frame.style.width = displayWidth + 'px';
     frame.style.height = displayHeight + 'px';
@@ -151,6 +162,7 @@
   }
   function syncLanguage() {
     document.documentElement.lang = language === 'en' ? 'en' : 'zh-CN';
+    document.body.dataset.editorLanguage = language;
     document.querySelectorAll('[data-zh][data-en]').forEach(item => { item.textContent = item.dataset[language]; });
     $('languageToggle').textContent = language === 'en' ? '中' : 'EN';
     $('peopleSummary').textContent = language === 'en' ? state.peopleCount + ' people · crossing' : state.peopleCount + ' 人 · 交错穿行';
@@ -160,6 +172,7 @@
     $('trackingToggle').textContent = tracking ? say('脚步追踪：开', 'Foot tracking: On') : say('脚步追踪：关', 'Foot tracking: Off');
     updateTimeline();
     syncPlayback();
+    document.dispatchEvent(new CustomEvent('tc-languagechange', { detail: { language } }));
   }
   function syncForm() {
     for (const id of controls) {
@@ -177,6 +190,7 @@
     $('canvasHeight').value = String(state.height);
     syncLanguage();
     fit();
+    document.dispatchEvent(new CustomEvent('tc-controls-synced'));
   }
   function apply(next) {
     state = normalize(next);
@@ -184,6 +198,22 @@
     syncForm();
     start();
     saveSoon();
+  }
+  function getComponentScheme() {
+    const { version, width, height, speed, ...scene } = state;
+    return { effect: 'glasswalkers', version, canvas: { width, height }, motion: { speed }, scene: { ...scene } };
+  }
+  function seek(seconds) {
+    playing = false;
+    time = number(seconds, 0, 0, cycle());
+    start(); redraw();
+  }
+  function applyComponentScheme(composition, presentation = {}) {
+    if (composition?.effect !== 'glasswalkers' || composition.version !== 1 || !composition.canvas || !composition.scene || !composition.motion) throw new Error('Invalid Glass Walkers composition');
+    state = normalize({ ...composition.scene, ...composition.canvas, speed: composition.motion.speed });
+    time = 0;
+    playing = presentation.autoplay !== false && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    syncForm(); start(); redraw();
   }
   function exportCanvas() {
     const output = document.createElement('canvas');
@@ -307,6 +337,7 @@
     document.body.dataset.editorTheme = theme;
     document.documentElement.style.colorScheme = theme;
     localStorage.setItem('cellmotion-site-theme', theme);
+    localStorage.setItem('cellmotion-editor-theme', theme);
   });
   $('languageToggle').addEventListener('click', () => {
     language = language === 'zh' ? 'en' : 'zh';
@@ -332,8 +363,23 @@
     if (document.hidden) { cancelAnimationFrame(raf); raf = 0; }
     else if (playing) start();
   });
+  document.addEventListener('keydown', event => {
+    if (previewMode || !(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'z' || /INPUT|TEXTAREA|SELECT/.test(event.target.tagName)) return;
+    event.preventDefault(); clearTimeout(autosave); remember();
+    const next = historyIndex + (event.shiftKey ? 1 : -1);
+    if (next < 0 || next >= history.length) return;
+    historyIndex = next; state = normalize(JSON.parse(history[next])); time = Math.min(time, cycle());
+    syncForm(); start(); redraw();
+    try { localStorage.setItem(storageKey, JSON.stringify(state)); } catch (_) {}
+  });
   new ResizeObserver(fit).observe(stage);
   document.body.dataset.editorTheme = theme;
   document.documentElement.style.colorScheme = theme;
   syncForm(); selectFigure('people'); updateTimeline(); redraw(); start();
+  if (!previewMode) remember();
+  window.CellMotionGlassWalkers = { getScheme: () => ({ ...state }), getComponentScheme, applyComponentScheme, seek, render, get time() { return time; }, get playing() { return playing; } };
+  window.CellMotionBridge.register({ effectId: 'glasswalkers', getScheme: getComponentScheme, applyScheme: applyComponentScheme,
+    durationMs: () => cycle() * 1000, seek,
+    play: () => { playing = true; start(); }, pause: () => { playing = false; start(); },
+    restart: () => { time = 0; playing = true; start(); redraw(); } });
 })();

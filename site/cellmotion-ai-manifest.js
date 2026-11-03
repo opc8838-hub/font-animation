@@ -95,6 +95,12 @@
 
   function aiPrompt(manifest, language = "zh") {
     const payload = JSON.stringify(manifest, null, 2);
+    if (manifest.effect?.id === 'glasswalkers') {
+      const intro = language === 'en'
+        ? 'Integrate the existing CellMotion Glass Walkers WebGL renderer using cellmotion-player.js and this complete live-state Manifest. Preserve canvas dimensions, people and animal counts, footwear variety, articulated knee/foot-contact timing, travel direction, speed, figure scale, frosted-glass colors and grain, and the selected code-tracking mode. All figures are procedural; no media assets or text rows are required. Use play, pause, restart, seek and update on the shared player. Do not redraw the gait or replace it with sliding silhouettes.'
+        : '接入现有 CellMotion 玻璃漫步 WebGL 渲染器，加载 cellmotion-player.js，并将完整实时 Manifest 交给 <cellmotion-player>。保留画布尺寸、行人与动物数量、鞋型差异、膝关节与脚掌接地时序、行走方向、速度、角色大小、磨砂玻璃配色与字符纹理、所选代码追踪模式。角色由程序生成，无需文字行或媒体素材。使用共享播放器的 play、pause、restart、seek、update 控制，不要重画步态或改成平移人影。';
+      return intro + '\n\n' + payload;
+    }
     if (manifest.effect?.id === 'letter-slices') {
       const intro = language === 'en'
         ? 'Integrate the existing CellMotion Letter Slices WebGL renderer using cellmotion-player.js and this complete live-state Manifest. Preserve the complete text, manual line breaks, shared font, canvas ratio, automatic word wrapping, letter and line spacing, glyph size/weight/position, colors, curved glass refraction, spectral edges, direction, all five phase durations, speed, and embedded image/GIF/video background with crop and trim. Pass composition updates to the player; use play, pause, restart and seek for playback. Stage fill, editor language and theme are presentation preferences.'

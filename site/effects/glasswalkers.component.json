@@ -1,0 +1,231 @@
+{
+  "effect": {
+    "id": "glasswalkers",
+    "name": {
+      "zh": "玻璃漫步",
+      "en": "Glass Walkers"
+    },
+    "version": "1.0.0",
+    "category": "graphic"
+  },
+  "runtime": {
+    "kind": "iframe-bridge",
+    "entry": "glasswalkers.html?v=20261103-release-ai1",
+    "bridgeVersion": "1.0.0",
+    "renderer": "webgl2"
+  },
+  "capabilities": {
+    "compositionModel": "scene",
+    "proceduralFigures": true,
+    "editableText": false,
+    "sharedFonts": false,
+    "backgroundMedia": false,
+    "responsiveCanvas": true,
+    "timeline": true,
+    "preview": true,
+    "exports": [
+      "png",
+      "gif",
+      "mp4"
+    ]
+  },
+  "behavior": {
+    "summary": {
+      "zh": "行人、平底鞋与高跟鞋、猫或狗从不同边缘交错穿过磨砂玻璃。脚掌承重固定、摆腿屈膝并在落地前伸开；可选择四角跟踪框或带字符解析的逐脚追踪。组件使用编辑器的实时人数、动物、方向、速度、配色和画幅。",
+      "en": "People with flat shoes and high heels, cats or dogs cross frosted glass. Planted feet stay fixed; swing knees flex and extend before landing. Choose figure brackets or per-foot code tracking. The component uses the live counts, animals, direction, speed, colors and canvas."
+    },
+    "duration": {
+      "baseSeconds": 12,
+      "speedPath": "composition.motion.speed"
+    },
+    "phases": [
+      {
+        "id": "people",
+        "name": {
+          "zh": "行人穿行",
+          "en": "People crossing"
+        },
+        "colorToken": "phase.sky"
+      },
+      {
+        "id": "animal",
+        "name": {
+          "zh": "人流与动物",
+          "en": "People and animals"
+        },
+        "colorToken": "phase.mint"
+      },
+      {
+        "id": "crossing",
+        "name": {
+          "zh": "继续穿行",
+          "en": "Ongoing crossings"
+        },
+        "colorToken": "phase.violet"
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "path": "composition.canvas.width",
+      "scope": "global",
+      "name": {
+        "zh": "画布宽度",
+        "en": "Canvas width"
+      },
+      "type": "integer",
+      "min": 320,
+      "max": 3840,
+      "unit": "px"
+    },
+    {
+      "path": "composition.canvas.height",
+      "scope": "global",
+      "name": {
+        "zh": "画布高度",
+        "en": "Canvas height"
+      },
+      "type": "integer",
+      "min": 320,
+      "max": 3840,
+      "unit": "px"
+    },
+    {
+      "path": "composition.motion.speed",
+      "scope": "effect",
+      "name": {
+        "zh": "整体速度",
+        "en": "Speed"
+      },
+      "type": "number",
+      "min": 0.5,
+      "max": 2,
+      "unit": "×"
+    },
+    {
+      "path": "composition.scene.peopleCount",
+      "scope": "effect",
+      "name": {
+        "zh": "人数",
+        "en": "People count"
+      },
+      "type": "integer",
+      "min": 0,
+      "max": 8
+    },
+    {
+      "path": "composition.scene.animalCount",
+      "scope": "effect",
+      "name": {
+        "zh": "动物数量",
+        "en": "Animal count"
+      },
+      "type": "integer",
+      "min": 0,
+      "max": 4
+    },
+    {
+      "path": "composition.scene.animalKind",
+      "scope": "effect",
+      "name": {
+        "zh": "动物形态",
+        "en": "Animal type"
+      },
+      "type": "enum",
+      "values": [
+        "cat",
+        "dog"
+      ]
+    },
+    {
+      "path": "composition.scene.direction",
+      "scope": "effect",
+      "name": {
+        "zh": "行走方向",
+        "en": "Travel direction"
+      },
+      "type": "enum",
+      "values": [
+        "mixed",
+        "horizontal",
+        "vertical"
+      ]
+    },
+    {
+      "path": "composition.scene.figureSize",
+      "scope": "effect",
+      "name": {
+        "zh": "角色大小",
+        "en": "Figure size"
+      },
+      "type": "number",
+      "min": 60,
+      "max": 160,
+      "unit": "%"
+    },
+    {
+      "path": "composition.scene.softness",
+      "scope": "effect",
+      "name": {
+        "zh": "玻璃柔化",
+        "en": "Glass softness"
+      },
+      "type": "number",
+      "min": 0,
+      "max": 100,
+      "unit": "%"
+    },
+    {
+      "path": "composition.scene.halftone",
+      "scope": "effect",
+      "name": {
+        "zh": "网点与字符纹理",
+        "en": "Dot and glyph grain"
+      },
+      "type": "number",
+      "min": 0,
+      "max": 100,
+      "unit": "%"
+    },
+    {
+      "path": "composition.scene.background",
+      "scope": "effect",
+      "name": {
+        "zh": "背景颜色",
+        "en": "Background color"
+      },
+      "type": "color"
+    },
+    {
+      "path": "composition.scene.shadow",
+      "scope": "effect",
+      "name": {
+        "zh": "阴影颜色",
+        "en": "Shadow color"
+      },
+      "type": "color"
+    },
+    {
+      "path": "composition.scene.markers",
+      "scope": "effect",
+      "name": {
+        "zh": "显示跟踪框",
+        "en": "Show tracking frames"
+      },
+      "type": "boolean"
+    },
+    {
+      "path": "composition.scene.trackingMode",
+      "scope": "effect",
+      "name": {
+        "zh": "跟踪模式",
+        "en": "Tracking mode"
+      },
+      "type": "enum",
+      "values": [
+        "person",
+        "feet"
+      ]
+    }
+  ]
+}

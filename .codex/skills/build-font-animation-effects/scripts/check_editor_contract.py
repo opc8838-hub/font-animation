@@ -28,6 +28,28 @@ def main() -> int:
     js = js_path.read_text(encoding="utf-8")
     errors: list[str] = []
 
+    # Procedural scenes have generated figures, without text rows or an asset library.
+    if 'data-editor-capabilities="procedural-scene"' in html:
+        source = html + '\n' + js
+        required = {
+            'CellMotion shell': ['tc-content', 'tc-center', 'gm-inspector', 'tc-tabs', 'tc-properties', 'typecascade-polish.css', 'typecascade-selects.js'],
+            'scheme': ['id="saveScheme"', 'id="importScheme"', 'id="resetScheme"', 'id="clearScheme"', 'localStorage', 'normalize'],
+            'canvas and playback': ['id="canvasPreset"', 'id="canvasWidth"', 'id="canvasHeight"', '<canvas', 'me-stage-controls', 'id="pause"', 'id="replay"'],
+            'choreography': ['me-choreo-track', 'me-choreo-block', 'me-choreo-playhead', 'dataset.seek'],
+            'export': ['id="exportPng"', 'id="exportGif"', 'id="exportMp4"', 'createH264MP4Encoder'],
+            'AI': ['cellmotion-ai-menu.js', 'cellmotion-effect-bridge.js', 'CellMotionBridge.register', 'getComponentScheme', 'applyComponentScheme', 'durationMs', 'previewMode'],
+        }
+        for label, tokens in required.items():
+            for token in tokens:
+                if token not in source:
+                    errors.append(f'missing {label}: {token}')
+        for error in errors:
+            fail(error)
+        if errors:
+            return 1
+        print(f'PASS: {html_path.name} uses the CellMotion procedural-scene shell; browser checks remain required.')
+        return 0
+
     if 'data-editor-capabilities="single-icon"' in html:
         source = html + '\n' + js
         required = {

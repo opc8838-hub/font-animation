@@ -1,18 +1,21 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
+  <script src="cellmotion-secure-context.js?v=20261015-release1"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="color-scheme" content="dark light">
+  <meta name="description" content="玻璃漫步 Glass Walkers · 行人、高跟鞋与猫狗在磨砂玻璃上交错穿行，支持代码追踪、PNG/GIF/MP4 导出及实时 For AI 组件。">
   <link rel="icon" href="favicon.svg">
   <title>玻璃漫步 Glass Walkers | CellMotion</title>
   <link rel="stylesheet" href="me-motion-editor.css?v=20260909-timeline-color">
   <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-coloriso">
-  <link rel="stylesheet" href="glasswalkers.css?v=20261103-knee5">
+  <link rel="stylesheet" href="typecascade-polish.css?v=20261028-metal2">
+  <link rel="stylesheet" href="glasswalkers.css?v=20261103-release-ai1">
 </head>
-<body class="tc-workspace glasswalkers-editor" data-editor-theme="dark">
+<body class="tc-workspace glasswalkers-editor" data-editor-capabilities="procedural-scene" data-editor-theme="dark">
   <header class="tc-header">
-    <a class="tc-brand" href="./" aria-label="CellMotion 首页"><img src="assets/cellmotion/logo-original-transparent.png?v=20260926-1" alt="CellMotion"></a>
+    <a class="tc-brand" href="./" aria-label="CellMotion 首页"><img class="tc-logo-dark" src="assets/cellmotion/logo-dark-original.png" alt="CellMotion"><img class="tc-logo-light" src="assets/cellmotion/logo-original-transparent.png?v=20260926-1" alt="" aria-hidden="true"></a>
     <h1 data-zh="玻璃漫步" data-en="Glass Walkers">玻璃漫步 <span>Glass Walkers</span></h1>
     <a class="tc-back" href="cellmotion-components.html" data-zh="动效库 ↗" data-en="Library ↗">动效库 ↗</a>
     <button id="themeToggle" type="button" class="gw-header-button" aria-label="切换主题">☼</button>
@@ -101,7 +104,11 @@
   </aside>
   <script src="js/continuation-gif.js?v=20260824-1"></script>
   <script src="js/h264-mp4-encoder.web.js?v=20260909-1"></script>
+  <script src="cellmotion-ai-manifest.js?v=20261103-glasswalkers-ai1"></script>
+  <script src="cellmotion-effect-bridge.js?v=20261028-metal2"></script>
   <script src="glasswalkers-renderer.js?v=20261103-knee5"></script>
-  <script src="glasswalkers.js?v=20261103-knee5"></script>
+  <script src="glasswalkers.js?v=20261103-release-ai1"></script>
+  <script src="typecascade-selects.js?v=20260910-select1"></script>
+  <script src="cellmotion-ai-menu.js?v=20261103-glasswalkers-ai1"></script>
 </body>
 </html>

@@ -1,0 +1,24 @@
+{
+  "effect": "glasswalkers",
+  "version": 1,
+  "canvas": {
+    "width": 1920,
+    "height": 1080
+  },
+  "motion": {
+    "speed": 1
+  },
+  "scene": {
+    "peopleCount": 6,
+    "animalCount": 1,
+    "animalKind": "cat",
+    "direction": "mixed",
+    "figureSize": 100,
+    "softness": 70,
+    "halftone": 75,
+    "background": "#f8f8f8",
+    "shadow": "#0a0a0e",
+    "markers": true,
+    "trackingMode": "feet"
+  }
+}

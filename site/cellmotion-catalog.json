@@ -162,11 +162,15 @@
       "id": "glasswalkers",
       "name": "玻璃漫步",
       "english": "Glass Walkers",
-      "description": "磨砂玻璃 · 行人猫影 · 交错穿行",
+      "description": "磨砂玻璃 · 自然步态 · 代码追踪",
       "category": "graphic",
-      "href": "glasswalkers.html?from=gallery&tracking=feet&v=20261103-knee5",
+      "href": "glasswalkers.html?from=gallery&tracking=feet&v=20261103-release-ai1",
       "poster": "final_glasswalkers.png?v=20261103-knee5",
       "video": "assets/previews/glasswalkers-card.mp4?v=20261103-knee5",
+      "webComponent": {
+        "preview": "typecascade-component-demo.html?effect=glasswalkers",
+        "descriptor": "effects/glasswalkers.component.json"
+      },
       "status": "ready"
     },
     {
