@@ -160,3 +160,46 @@ The stage recoloring previously retained the same maximum RGB channel across hue
 `tests/bubble-palette-balance.cjs` first failed on the old palette, then passed the updated screen-lightness, floor-gain, dark-ceiling and highlight-clipping bounds. Its frozen baseline is `tests/bubble-palette-baseline.json`. Green/cyan frames retain identical pixel hashes on the tested Chrome. Pink/violet reflections increase, floor clipping remains zero in the sampled region, and ceiling brightness changes by at most 2.2%. Existing generated v2 preset backgrounds migrate to the new pair; differing custom backgrounds and user text remain intact. The older v1 migration follows the updated presets as well.
 
 Six-palette browser checks and exact loop endpoints pass. Native-resolution PNG, square GIF and full MP4 exports are regenerated and inspected. The poster, optimized homepage thumbnail and preview video follow the new default pink. Before/after frames and measurement results are in `output/bubble-color-balance`; cache version is `20261028-color1`.
+
+## Upright packed flow trial — 2026-11-03
+
+The user approved trying ordered, upright flow instead of independent source-video turns, then clarified that the letters should still pack the screen. This is an intentional alternative choreography for review, not a claim of closer reference-video fidelity. The photographic stage, colors, outline masters, editor shell and published gallery artifacts remain frozen.
+
+Motion contract: each text row is a moving group in normalized LED coordinates. Reading order and word gaps remain stable. A broad travelling stretch reallocates widths between neighbouring glyphs while conserving the row's total width. Whole glyphs stay upright with at most about three degrees of sway at maximum strength. Vertical travel stays inside the owning row. No local contour deformation, inter-row swaps, visibility cuts or exit animation are introduced.
+
+| Default interval | Behaviour |
+| --- | --- |
+| 0–0.24 s | Readable packed pose |
+| 0.24–2.0 s | Smooth travelling stretch across each row |
+| 2.0–2.6 s | Readable held pose |
+| 2.6–4.8 s | Continuous return to the initial packed pose |
+
+Quintic easing gives zero endpoint velocity and acceleration. The old fourteen-letter special layout and donor rotation tracks are removed from the active rendering path. The same rule now handles one, two and more rows. Default outer margin is 1.2%; small glyph gaps and compact word spaces preserve separation. Rows of three or more glyphs expand toward the available width with a bounded stretch; one or two glyphs retain a centered, more natural width. The existing size and spacing controls still apply. The rotation control now describes gentle sway.
+
+`tests/bubble-upright-flow.cjs` samples 241 times per composition at maximum flow strength, checking upright landmarks, glyph separation, row separation, dense screen coverage, frame displacement and loop/hold continuity. Cases include VISION, the default two lines, a replacement fourteen-letter phrase, a single letter, mixed narrow/wide letters and three alphabet rows. The tested multi-letter bounding extents cover at least 96.7% of LED width and 93.3% of height; these are extents, not filled-pixel occupancy. Default two-line separation remains at least 11.8 pixels on the 1440 × 768 LED canvas. Loop endpoints are identical. Chinese snapshots render without browser errors.
+
+The real editor produces a 640 × 360 H.264 file (144 frames, 4.8 seconds), a PNG and a 320 × 320 GIF. The existing GIF encoder quantizes 15 fps delays to 70 ms, so its 72-frame export is 5.04 seconds. Evidence is in ignored `output/bubble-upright/`. This trial is served locally on port 8784; published gallery assets are not regenerated before visual review. Existing source-packing fidelity assertions describe the previous choreography and are not acceptance criteria for this alternative.
+
+### O contours, screen seam and lowercase — 2026-11-03
+
+The O master retained small raster tracing irregularities, especially around its counter. Its outer and inner contours now use sampled analytic ellipses, shared with lowercase o and historical O variants. The other uppercase masters are preserved. The glyph generator remains the reproducible source of the data.
+
+The upper-right pale fringe was the neutral edge in the photographic plate showing beyond the overlay. Extending the screen's right edge by 1.3 logical pixels covers it. Each projection strip now spans both neighbouring vertical extents before clipping, removing uncovered triangles along the curved top. The source image, tint and furniture are unchanged.
+
+All 26 lowercase letters have distinct hand-defined stroke masters rather than passing through `toUpperCase()`. Lowercase contours are smoothed during generation, not deformed at runtime. The e/g/s openings use thinner strokes to preserve their counters and terminals. Row metrics retain x-height, ascenders and descenders in mixed text; an all-x-height row can still occupy its available height. These are stylistic extrapolations, not a recovered original lowercase font.
+
+The upright-flow regression now includes the complete lowercase alphabet, mixed-case phrases and OoOo, plus explicit checks for x-height/descenders and ellipse roundness. At maximum flow strength all nine compositions preserve separation and exactly matching loop endpoints. Pink/green/yellow upper-right seam samples have maximum neutral-channel values of 48/7/43, with no bright neutral fringe. Mixed-case PNG, GIF and MP4 exports use the same renderer. Browser errors: none. Cache version: `20261103-detail2`; delivery remains the local trial.
+
+### Stroke separation and slimmer stems — 2026-11-04
+
+The user identified crowded E/F/G strokes and an overly heavy lowercase i, then requested slimmer uppercase I/L. An A–Z contact sheet also revealed tight B/P/R counters and S terminals. E/F middle arms are slightly shorter; BEFGPRS use 24-unit strokes with smoothed outlines to preserve openings. B has an explicit middle connector so its two counters stay separate. Other uppercase outlines are retained except I/L: I now has a straight rounded stem, and I/L use 26-unit strokes.
+
+Packed layout width weights change from .4 to .28 for i, .4 to .29 for I, and .8 to .64 for L. This keeps narrower strokes from being stretched back to their previous cell widths. Lowercase i also uses a 19-unit stroke. Total row width, gap conservation, timing, stage and palette remain unchanged.
+
+Regression checks now require open E/F/G/S gaps, distinct B/P/R counters above 300 normalized square units, and slimmer I/i/L widths relative to H. The complete alphabet and maximum-flow continuity cases remain covered by `tests/bubble-upright-flow.cjs`. Contact sheets and the FEG/ILi mixed composition are in `output/bubble-upright/`. Local trial cache version: `20261104-letter3`.
+
+### Approved release — 2026-11-04
+
+The user approved the corrected five-group video and requested tonight's editor changes on the public site. The approved recording uses the actual warm-background preset `#eeeae1`, pale peach `#f2dcd3`, and the editor's nine-grapheme automatic wrapping. Its five steady frames compare byte-for-byte with the editor renderer. Recording-specific transitions and text sequences remain delivery artifacts; the editor's default text and paired pink preset stay intact.
+
+The homepage poster, thumbnail and 4.8-second default MP4 are regenerated through the updated renderer. Editor entry, preview URLs and catalog/homepage caches use `20261104-bubble-release1`; Bubble Fluid returns to the top of the recent updates list. Tests permit an isolated local base URL. Legacy source-interlocking assertions are replaced with ordered-row checks, and palette tests freeze stage lighting rather than typography pixels. Six-palette browser, loop continuity, migration, editor interaction, mobile layout and real video export checks pass without browser errors. Website validation reports 93 effects and 329 valid local references.

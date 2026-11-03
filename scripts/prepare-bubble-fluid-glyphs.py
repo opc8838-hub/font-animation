@@ -9,9 +9,9 @@ from fontTools.svgLib.path import parse_path
 root=Path(__file__).resolve().parents[1]
 source=(root/'site/bubble-frame-glyphs.js').read_text(encoding='utf-8')
 clean={}
-for match in re.finditer(r"^\s*(?:([A-Z])|'([0-9])'):\[(.*?)\],?$",source,re.M):
-    name=match[1] or match[2];mask=np.zeros((440,440),np.uint8)
-    thickness=round((25 if name=='R' else 28 if name in 'MW' else 34 if name in 'COU' else 32)*4)
+for match in re.finditer(r"^\s*(?:([A-Za-z])|'([0-9])'):\[(.*?)\],?$",source,re.M):
+    name=match[1] or match[2];extent=560 if name.islower() else 440;mask=np.zeros((extent,extent),np.uint8)
+    thickness=round((19 if name in 'egsi' else 23 if name.islower() else 24 if name in 'BEFGPRS' else 26 if name in 'IL' else 28 if name in 'MW' else 34 if name in 'COU' else 32)*4)
     for path in ast.literal_eval('['+match[3]+']'):
         pen=RecordingPen();parse_path(path,pen);points=[];start=None;current=None
         for op,args in pen.value:
@@ -34,8 +34,17 @@ for match in re.finditer(r"^\s*(?:([A-Z])|'([0-9])'):\[(.*?)\],?$",source,re.M):
         distances=np.r_[0,np.cumsum(length)];closed=np.vstack([p,p[0]])
         t=np.linspace(0,distances[-1],128,endpoint=False)
         p=np.c_[np.interp(t,distances,closed[:,0]),np.interp(t,distances,closed[:,1])]
+        if name.islower() or name in 'BEFGPRSIL':
+            spectrum=np.fft.rfft(p,axis=0)
+            spectrum*=np.exp(-(np.arange(len(spectrum))/12)**4)[:,None]
+            p=np.fft.irfft(spectrum,n=128,axis=0)
         result.append(np.round((p-[x,y])/[w,h]*100,3).tolist())
     clean[name]=result
+# Analytic rings avoid the raster contour's tiny flats and notches on O/o.
+theta=np.linspace(0,2*np.pi,128,endpoint=False)
+ring=[np.round(np.c_[50+rx*np.cos(theta),50+ry*np.sin(theta)],3).tolist() for rx,ry in [(50,50),(17,20)]]
+clean['O']=ring
+clean['o']=ring
 reference=(root/'site/bubble-frame-lettering.js').read_text(encoding='utf-8')
 measured=json.loads(re.search(r'window.BubbleFrameOutlines=(.*?);',reference).group(1))
 # The original display letters have asymmetric inflated strokes. Use their
