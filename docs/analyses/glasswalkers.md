@@ -4,6 +4,9 @@
 
 ### Optional footstep tracking
 
+- Visual correction requested after the first tracker was judged too faint and missing the reference's code-like appearance. The 9.50 s still shows monospaced names and white glyphs through grey body shadows; source inspection confirms labels resolving from symbol noise and brackets tightening during acquisition. Adapt those channels to each foot: resolve `STEP_01.L/R` from deterministic symbols, tighten corner brackets on landing, blink the crosshair during acquisition, and strengthen/enlarge glyph grain in the enabled footstep mode. Keep gait and non-tracking material unchanged. Per-step reacquisition and the scanning line are deliberate emphasis for this adaptation, not claimed as a literal recording of the original overlay.
+- Checked the revised overlay at its real editor display size and 18 dense frames (15 fps) decoded from the new 1280 × 720 / 30 fps / 360-frame export. Save/import/reset, mobile controls, PNG/GIF/MP4 and console checks passed. Existing figure-mode pixels and disabled-mode output match the prior renderer; enabled code tracking repeats exactly across 12-second boundaries at 0.5×, 1× and 2× speed.
+
 - The recording at 9.50 s shows colored corner brackets and a small label near a person's feet. The source implementation centers its default bracket on the pair of feet; it is not evidence of a separate box on each foot.
 - Requested adaptation: add a selectable footstep mode with one stable L/R identifier per shoe. Frame the current projected shoe geometry, including high heels; dim the frame as that shoe lifts. Use the same below-glass projection and export time as the shadow. Keep the existing figure mode and off switch, including compatibility with older saved schemes.
 - Human gait, animals, glass rendering, default scheme appearance and existing gallery media remain unchanged. Animals retain their existing figure markers.

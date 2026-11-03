@@ -58,7 +58,7 @@
     uniform sampler2D shadow;
     uniform sampler2D grain;
     uniform vec3 paper,ink;
-    uniform float pitch,grainScale,textureAmount;
+    uniform float pitch,grainScale,textureAmount,codeStyle;
     out vec4 frag;
     void main() {
       float density=pow(clamp(texture(shadow,uv).r,0.,1.),.85);
@@ -66,9 +66,9 @@
       vec2 screen=vec2(xy.x+xy.y,xy.y-xy.x)*.70710678;
       float threshold=.5+.16*(cos(screen.x*6.2831853/pitch)+cos(screen.y*6.2831853/pitch));
       float dots=smoothstep(threshold-.18,threshold+.18,density);
-      density=mix(density,dots,textureAmount*.4);
+      density=mix(density,dots,textureAmount*mix(.4,.18,codeStyle));
       float letters=texture(grain,xy/grainScale).a;
-      density*=1.-letters*textureAmount*1.06*(1.-smoothstep(.55,.95,density));
+      density*=1.-letters*textureAmount*mix(1.06,1.55,codeStyle)*(1.-smoothstep(.55,.95,density));
       frag=vec4(mix(paper,ink,clamp(density*.94,0.,1.)),1.);
     }
   `;
@@ -223,7 +223,7 @@
           cap(fp(.175), fp(slim ? .249 : .225), slim ? .039 : .044, slim ? .009 : .031);
           cap(fp(.05, .025), fp(.19, .025), slim ? .03 : .038, slim ? .034 : .042);
         }
-        footprints.push({ parts: parts.slice(shoeStart), side: side < 0 ? 'L' : 'R' });
+        footprints.push({ parts: parts.slice(shoeStart), side: side < 0 ? 'L' : 'R', phase: p, period });
         legs.push({ side, p, ankle: fp(.045, heels ? .15 : .075) });
         feet.push(fp(.11));
       }
@@ -360,21 +360,25 @@
       gl.uniform3fv(this.uniform(comp, 'paper'), color(state.background));
       gl.uniform3fv(this.uniform(comp, 'ink'), color(state.shadow));
       gl.uniform1f(this.uniform(comp, 'pitch'), Math.max(1.5, 4 * visualScale));
-      gl.uniform1f(this.uniform(comp, 'grainScale'), 128 * Math.max(.4, visualScale));
+      const codeStyle = state.markers && state.trackingMode === 'feet';
+      gl.uniform1f(this.uniform(comp, 'codeStyle'), codeStyle ? 1 : 0);
+      gl.uniform1f(this.uniform(comp, 'grainScale'), (codeStyle ? 192 : 128) * Math.max(.4, visualScale));
       gl.uniform1f(this.uniform(comp, 'textureAmount'), state.halftone / 100);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       const ctx = target.getContext('2d');
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(this.canvas, 0, 0);
       if (state.markers) {
         if (state.trackingMode === 'feet') {
-          this.drawFootMarkers(ctx, actors, project, width / sw, visualScale);
+          this.drawFootMarkers(ctx, actors, project, width / sw, visualScale, time);
           this.drawMarkers(ctx, actors.filter(actor => actor.kind !== 'person'), metres, visualScale);
         } else this.drawMarkers(ctx, actors, metres, visualScale);
       }
     }
-    drawFootMarkers(ctx, actors, project, ratio, scale) {
-      const colors = ['#8067c9', '#2d73b3', '#299d83', '#bb872a', '#2590a0'];
-      ctx.save(); ctx.font = `${9 * scale}px monospace`; ctx.lineWidth = scale;
+    drawFootMarkers(ctx, actors, project, ratio, scale, seconds) {
+      const colors = ['#7950cf', '#2869bb', '#198a65', '#bb7613', '#138ea3'];
+      const symbols = '<>{}[]/\\_+=*#0123456789ABCDEF';
+      ctx.save(); ctx.font = `bold ${16 * scale}px "Courier New",monospace`;
+      ctx.textBaseline = 'alphabetic';
       for (const actor of actors) for (const foot of actor.footprints || []) {
         let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity, height = Infinity;
         for (const part of foot.parts) for (const [point, radius] of [[part.a, part.ra], [part.b, part.rb]]) {
@@ -383,20 +387,39 @@
           top = Math.min(top, y - r); bottom = Math.max(bottom, y + r);
           height = Math.min(height, point[2]);
         }
-        const pad = 5 * scale, arm = 8 * scale;
+        const lock = foot.phase < .62 ? smooth(foot.phase * foot.period / .22) : 1 - smooth((foot.phase - .62) / .38);
+        const pad = (8 + (1 - lock) * 13) * scale, arm = 13 * scale;
         left -= pad; right += pad; top -= pad; bottom += pad;
         if (right < 0 || left > ctx.canvas.width || bottom < 0 || top > ctx.canvas.height) continue;
-        ctx.strokeStyle = ctx.fillStyle = colors[actor.index % colors.length];
-        ctx.globalAlpha = .3 + .58 * (1 - smooth((height - .015) / .12));
+        const tint = colors[actor.index % colors.length];
+        const contact = 1 - smooth((height - .015) / .12);
+        ctx.strokeStyle = tint; ctx.lineWidth = 1.6 * scale;
+        ctx.globalAlpha = .65 + .3 * contact;
         ctx.beginPath();
         for (const [x, y, dx, dy] of [[left, top, 1, 1], [right, top, -1, 1], [left, bottom, 1, -1], [right, bottom, -1, -1]]) {
           ctx.moveTo(x + dx * arm, y); ctx.lineTo(x, y); ctx.lineTo(x, y + dy * arm);
         }
         ctx.stroke();
-        ctx.fillText(String(actor.index + 1).padStart(2, '0') + ' ' + foot.side, left, top - 4 * scale);
+        const label = 'STEP_' + String(actor.index + 1).padStart(2, '0') + '.' + foot.side;
+        const resolved = Math.floor(lock * label.length);
+        const tick = Math.floor(seconds * 14), seed = actor.index * 113 + (foot.side === 'L' ? 7 : 53);
+        const text = [...label].map((char, i) => i < resolved ? char : symbols[Math.floor(noise(seed + i * 17 + tick * 29) * symbols.length)]).join('');
+        const textY = foot.side === 'L' ? top - 8 * scale : bottom + 20 * scale;
+        ctx.globalAlpha = .38; ctx.lineWidth = 4 * scale; ctx.strokeStyle = tint;
+        ctx.strokeText(text, left, textY);
+        ctx.globalAlpha = .95; ctx.fillStyle = '#292933';
+        ctx.fillText(text, left, textY);
         const x = (left + right) / 2, y = (top + bottom) / 2;
-        ctx.fillRect(x - 2 * scale, y, 4 * scale, .6 * scale);
-        ctx.fillRect(x, y - 2 * scale, .6 * scale, 4 * scale);
+        ctx.fillStyle = tint;
+        if (lock > .95 || Math.floor(seconds * 12) % 2 === 0) {
+          ctx.fillRect(x - 4 * scale, y, 8 * scale, scale);
+          ctx.fillRect(x, y - 4 * scale, scale, 8 * scale);
+        }
+        // A landing scan settles onto the contact, using the same seekable clock.
+        if (foot.phase < .62 && lock < 1) {
+          ctx.globalAlpha = .45 * (1 - lock);
+          ctx.fillRect(left, mix(top, bottom, lock), right - left, scale);
+        }
       }
       ctx.restore();
     }
