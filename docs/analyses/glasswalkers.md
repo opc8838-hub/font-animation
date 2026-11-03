@@ -1,6 +1,24 @@
 # 玻璃漫步 / Glass Walkers
 
-## Source and scope
+## Primary reference: user recording, 2026-11-03
+
+- Desktop file `20261103-135050.mp4`: H.264, 43.866667 s, 1316 frames at 30 fps. Encoded 888 × 1280 with 90° rotation metadata; displayed 1280 × 888. Safari controls are outside the effect.
+- Reviewed 44 chronological overview frames, full-resolution stills, and all 42 consecutive crop frames from 9.00–10.37 s. Recordings and extracted images remain outside the repository.
+- The earlier Canvas oval implementation was rejected. Its geometry and shading are not an approved baseline.
+
+| User clip time | Visible evidence | Required behavior | Confidence |
+| --- | --- | --- | --- |
+| 0–2 s | Tablet controls and browser opening. | Exclude device UI. | high |
+| 2–8 s | One shoe can be sharp while its partner is a broad soft patch. | Give each foot an independent height and contact state. | high |
+| 9.00–9.37 s | The lower-left shoe stays near the same glass position while the body advances. | Keep a planted foot fixed in world coordinates. | high |
+| 9.37–10.37 s | The partner advances; trailing contact shortens, lifts and disperses. | Continuous heel roll, hinged forefoot, toe-off and swing. | high |
+| 12–32 s | Staggered crossings, empty areas, faint upper bodies converging toward the upper page. | Independent arrivals and a camera below the glass. | high |
+| 33–35 s | Browser reload and loading state. | Exclude reload transitions. | high |
+| 36–43 s | Continuous independent crossings resume. | No synchronized global stop. | high |
+
+The shoe is approximately 80–100 px long in this 1280 px recording. Ankles, knees, hips, torso and arms have different heights; higher geometry projects toward the camera's vanishing point and loses contrast. A lifted shoe softens through increased distance from the glass, rather than merely fading a fixed silhouette. The dot screen and pale glyph grain stay in the glass coordinate system.
+
+## Earlier reference
 
 - Reference: https://nusretuzman.com/ (viewed 2026-11-02).
 - Browser recording for analysis: 18.8 s, 1440 × 900, VP8 at 25 fps. All 395 frames from 3.00–18.76 s were decoded; 0.20 s overview sheets and a 25-frame, 0.04 s close-up of one stride were reviewed. Recording and extracted frames remain outside the repository.
@@ -32,11 +50,15 @@ The site's source describes occasional cats and optional dogs, but this short re
 
 ## Uncertainties and adaptation
 
-- The reference uses volumetric WebGL shadows; this effect uses original Canvas geometry, projected leg segments, gradients and a fine dot screen. The gait separates a planted-foot interval from the lifted-foot interval. Exact body anatomy and cat cadence are approximations.
+- The new shared renderer builds 3D tapered capsules from an analytic gait, solves knees between hip and ankle, projects them through a below-glass camera and combines Gaussian coverage in WebGL 2. A second pass adds tone, a dot screen and glyph grain. Preview and export use this same renderer.
+- Paths and arrivals are deterministic inside a 12-second export cycle. The source site uses a continuing crowd simulation, so the specific arrangement of people in the recording is not replayed frame for frame. The full cat gait and arrival interval remain uncertain from the supplied clip.
 - The reference has no global phase boundaries. The editor's timeline marks overlapping people crossings and the animal passage inside a 12-second repeatable export window.
 
 ## Verification
 
+- `node scripts/check-glasswalkers-motion.mjs` samples actual geometry 720 times: both feet keep a fixed contact for 0.47 s, swing feet lift, and stance/swing boundaries do not teleport. The earlier flat-ellipse renderer has been removed.
+- The revised renderer was exported through the editor as a 1280 × 720 H.264 video: 12 s, 30 fps, 360 decoded frames. The PNG at 9.00 s and the corresponding decoded MP4 frame differ by a mean absolute 0.887 per RGB channel on a 0–255 scale. Reviewed the new gallery loop at 0.5 s intervals and the HD frame beside the user's reference; this is a motion/material comparison, not an exact replay of crowd positions.
+- Rechecked gallery, homepage and library links, mobile scheme controls, and actual PNG/GIF/MP4 exports without browser errors. The website check passes for 93 catalog entries and 325 file references.
 - Reviewed the reference at normal speed, 0.20 s intervals, and a 25-frame stride strip at the original 25 fps; reviewed the generated 12 s loop at 1 s intervals and paused editor frames.
 - Tested the editor at 1440 × 900 and 390 × 844, including a portrait canvas, scheme save/import/reset/clear, language/theme switching, and browser errors.
 - Generated PNG, GIF and H.264 MP4 at 320 × 320 with 15 fps; decoded both motion formats and confirmed eight frames. Generated the gallery loop at 640 × 360 and 15 fps.

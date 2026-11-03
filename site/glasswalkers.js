@@ -3,25 +3,18 @@
   const $ = id => document.getElementById(id);
   const canvas = $('glassCanvas');
   if (!canvas) return;
-  const ctx = canvas.getContext('2d', { alpha: false });
+  canvas.getContext('2d', { alpha: false });
+  const renderer = new window.GlassWalkersRenderer();
   const defaults = Object.freeze({
-    version: 1, width: 1920, height: 1080, peopleCount: 5, animalCount: 1,
+    version: 1, width: 1920, height: 1080, peopleCount: 6, animalCount: 1,
     animalKind: 'cat', direction: 'mixed', speed: 1, figureSize: 100,
-    softness: 70, halftone: 75, background: '#f8f8f8', shadow: '#24242a', markers: true
+    softness: 70, halftone: 75, background: '#f8f8f8', shadow: '#0a0a0e', markers: true
   });
   const storageKey = 'cellmotion-glasswalkers-v1';
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const number = (value, fallback, min, max) => clamp(Number.isFinite(Number(value)) ? Number(value) : fallback, min, max);
   const hex = value => /^#[0-9a-f]{6}$/i.test(value || '') ? value : null;
   const cycle = () => 12 / state.speed;
-  const hash = value => {
-    const n = Math.sin(value * 127.1 + 78.233) * 43758.5453;
-    return n - Math.floor(n);
-  };
-  const rgba = (color, alpha) => {
-    const n = parseInt(color.slice(1), 16);
-    return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + alpha + ')';
-  };
   function normalize(input) {
     const source = input && typeof input === 'object' ? input : defaults;
     return {
@@ -54,8 +47,8 @@
   const controls = ['peopleCount', 'animalCount', 'animalKind', 'direction', 'speed', 'figureSize', 'softness', 'halftone', 'background', 'shadow', 'markers'];
   const labels = {
     people: ['行人穿行', 'People crossing'],
-    animal: ['动物经过', 'Animal passage'],
-    crossing: ['人影交错', 'Crossing paths']
+    animal: ['人流与动物', 'People and animals'],
+    crossing: ['继续穿行', 'Ongoing crossings']
   };
   function say(zh, en) { return language === 'en' ? en : zh; }
   function status(id, zh, en) { $(id).textContent = say(zh, en); }
@@ -68,179 +61,8 @@
     link.href = url; link.download = filename; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 30000);
   }
-  function oval(context, x, y, rx, ry, alpha) {
-    context.save();
-    context.translate(x, y);
-    context.scale(rx, ry);
-    const gradient = context.createRadialGradient(0, 0, .04, 0, 0, 1);
-    gradient.addColorStop(0, rgba(state.shadow, alpha));
-    gradient.addColorStop(.48, rgba(state.shadow, alpha * .65));
-    gradient.addColorStop(1, rgba(state.shadow, 0));
-    context.fillStyle = gradient;
-    context.beginPath();
-    context.arc(0, 0, 1, 0, Math.PI * 2);
-    context.fill();
-    context.restore();
-  }
-  function sole(context, x, y, length, breadth, angle, lift = 0) {
-    context.save();
-    context.translate(x, y);
-    context.rotate(angle);
-    oval(context, 0, 0, length * .72 + lift * 9, breadth * .9 + lift * 5, .28 * (1 - lift * .5));
-    context.fillStyle = rgba(state.shadow, .93 - lift * .48);
-    context.beginPath();
-    context.moveTo(-length * .48, -breadth * .18);
-    context.bezierCurveTo(-length * .52, -breadth * .48, -length * .25, -breadth * .43, -length * .05, -breadth * .42);
-    context.bezierCurveTo(length * .17, -breadth * .52, length * .42, -breadth * .57, length * .57, -breadth * .31);
-    context.bezierCurveTo(length * .75, 0, length * .59, breadth * .4, length * .36, breadth * .48);
-    context.bezierCurveTo(length * .13, breadth * .53, -length * .05, breadth * .38, -length * .28, breadth * .38);
-    context.bezierCurveTo(-length * .47, breadth * .41, -length * .56, breadth * .11, -length * .48, -breadth * .18);
-    context.fill();
-    context.restore();
-  }
-  function dots(context, x, y, rx, ry) {
-    if (!state.halftone) return;
-    const step = 5.8 - state.halftone * .014;
-    context.save();
-    context.fillStyle = state.shadow;
-    for (let yy = y - ry; yy <= y + ry; yy += step) {
-      for (let xx = x - rx; xx <= x + rx; xx += step) {
-        const u = (xx - x) / rx, v = (yy - y) / ry;
-        const weight = Math.max(0, 1 - u * u - v * v);
-        if (weight > .06) {
-          context.globalAlpha = weight * state.halftone / 400;
-          context.beginPath();
-          context.arc(xx + (Math.round(yy / step) % 2) * step * .5, yy, .7 + weight * .45, 0, Math.PI * 2);
-          context.fill();
-        }
-      }
-    }
-    context.restore();
-  }
-  function softSegment(context, x1, y1, x2, y2, radius, alpha) {
-    const angle = Math.atan2(y2 - y1, x2 - x1);
-    context.save();
-    context.translate((x1 + x2) / 2, (y1 + y2) / 2);
-    context.rotate(angle);
-    oval(context, 0, 0, Math.hypot(x2 - x1, y2 - y1) * .6 + radius, radius, alpha);
-    context.restore();
-  }
-  function person(context, seconds, actor, width, height, index) {
-    const f = [Math.cos(actor.angle), Math.sin(actor.angle)];
-    const n = [-f[1], f[0]];
-    const eyeX = (width * .5 - actor.x) * .18 / actor.size;
-    const eyeY = (-height * .3 - actor.y) * .18 / actor.size;
-    const softness = .78 + state.softness / 280;
-    const phase = (seconds / cycle() * 10 + index * .37) % 1;
-    const feet = [];
-    oval(context, eyeX * 1.22, eyeY * 1.22, 73 * softness, 66 * softness, .18);
-    softSegment(context, eyeX * .53, eyeY * .53, eyeX * 1.22, eyeY * 1.22, 39 * softness, .29);
-    oval(context, eyeX * .62, eyeY * .62, 51 * softness, 42 * softness, .31);
-    dots(context, eyeX * .95, eyeY * .95, 75 * softness, 87 * softness);
-    for (let side = -1; side <= 1; side += 2) {
-      const step = (phase + (side === 1 ? .5 : 0)) % 1;
-      const stance = step < .62;
-      const along = stance ? 58 - 116 * step / .62 : -58 + 116 * (step - .62) / .38;
-      const lift = stance ? 0 : Math.sin((step - .62) / .38 * Math.PI);
-      const fx = f[0] * along + n[0] * side * 16;
-      const fy = f[1] * along + n[1] * side * 16;
-      const kneeX = fx * .45 + eyeX * .46 + n[0] * side * 7;
-      const kneeY = fy * .45 + eyeY * .46 + n[1] * side * 7;
-      softSegment(context, eyeX * .58 + n[0] * side * 13, eyeY * .58 + n[1] * side * 13, kneeX, kneeY, 22 * softness, .39);
-      softSegment(context, kneeX, kneeY, fx, fy, (19 + lift * 8) * softness, .52 - lift * .12);
-      dots(context, (kneeX + fx) * .5, (kneeY + fy) * .5, 25 * softness, 35 * softness);
-      feet.push({ x: fx, y: fy, angle: actor.angle + side * .11, lift });
-    }
-    feet.forEach(foot => sole(context, foot.x, foot.y, 76, 35, foot.angle, foot.lift));
-  }
-  function animal(context, seconds, actor, width, height, index) {
-    const dog = state.animalKind === 'dog';
-    const size = dog ? 1.36 : 1.12;
-    const f = [Math.cos(actor.angle), Math.sin(actor.angle)];
-    const n = [-f[1], f[0]];
-    const eyeX = (width * .5 - actor.x) * .045 / actor.size;
-    const eyeY = (-height * .3 - actor.y) * .045 / actor.size;
-    context.scale(size, size);
-    const softness = .8 + state.softness / 300;
-    const phase = seconds / cycle() * (dog ? 26 : 34) + index * .6;
-    softSegment(context, -f[0] * 35 + eyeX, -f[1] * 35 + eyeY, f[0] * 28 + eyeX, f[1] * 28 + eyeY, 20 * softness, .5);
-    oval(context, f[0] * 40 + eyeX, f[1] * 40 + eyeY, 21 * softness, 19 * softness, .3);
-    dots(context, eyeX, eyeY, 52 * softness, 32 * softness);
-    context.save();
-    context.strokeStyle = rgba(state.shadow, .22);
-    context.lineWidth = dog ? 7 : 5;
-    context.lineCap = 'round';
-    context.beginPath();
-    context.moveTo(-f[0] * 42 + eyeX, -f[1] * 42 + eyeY);
-    context.quadraticCurveTo(-f[0] * 80 + n[0] * 12 + eyeX, -f[1] * 80 + n[1] * 12 + eyeY, -f[0] * 78 + n[0] * (25 + Math.sin(phase) * 6) + eyeX, -f[1] * 78 + n[1] * (25 + Math.sin(phase) * 6) + eyeY);
-    context.stroke();
-    context.restore();
-    for (let i = 0; i < 4; i++) {
-      const along = i < 2 ? 25 : -28;
-      const side = i % 2 ? 1 : -1;
-      const step = Math.sin(phase * Math.PI * 2 + i * Math.PI / 2);
-      const x = f[0] * (along + step * 12) + n[0] * side * 13;
-      const y = f[1] * (along + step * 12) + n[1] * side * 13;
-      softSegment(context, x, y, x + eyeX * .7, y + eyeY * .7, 8 * softness, .25);
-      sole(context, x, y, dog ? 22 : 16, dog ? 11 : 8, actor.angle, Math.max(0, step) * .65);
-    }
-    oval(context, f[0] * 48 + n[0] * 8 + eyeX, f[1] * 48 + n[1] * 8 + eyeY, 7, 8, .2);
-    oval(context, f[0] * 48 - n[0] * 8 + eyeX, f[1] * 48 - n[1] * 8 + eyeY, 7, 8, .2);
-  }
-  function pose(index, kind, progress, width, height, count) {
-    const horizontal = state.direction === 'horizontal' || (state.direction === 'mixed' && index % 3 !== 2);
-    const reverse = index % 2 === 1;
-    const lane = .13 + .74 * hash(index + (kind === 'animal' ? 31 : 7));
-    const travel = reverse ? 1 - progress : progress;
-    const drift = Math.sin(progress * Math.PI * 2 + index * 2) * .035;
-    const x = (horizontal ? -.2 + travel * 1.4 : lane + drift) * width;
-    const y = (horizontal ? lane + drift : -.25 + travel * 1.5) * height;
-    const angle = horizontal ? (reverse ? Math.PI : 0) : (reverse ? -Math.PI / 2 : Math.PI / 2);
-    const size = Math.min(width / 1440, height / 900) * state.figureSize / 100 * (.88 + hash(index + count + 4) * .3);
-    return { x, y, angle, size };
-  }
-  function mark(context, kind, index) {
-    context.strokeStyle = kind === 'animal' ? 'rgba(85,150,160,.55)' : 'rgba(139,115,210,.5)';
-    context.fillStyle = context.strokeStyle;
-    context.lineWidth = 1;
-    const left = kind === 'animal' ? -48 : -18, top = kind === 'animal' ? -29 : -43;
-    const wide = kind === 'animal' ? 96 : 110, high = kind === 'animal' ? 58 : 86;
-    for (const [x, y, sx, sy] of [[left, top, 1, 1], [left + wide, top, -1, 1], [left, top + high, 1, -1], [left + wide, top + high, -1, -1]]) {
-      context.beginPath();
-      context.moveTo(x + sx * 12, y); context.lineTo(x, y); context.lineTo(x, y + sy * 12); context.stroke();
-    }
-    context.font = '8px ui-monospace,monospace';
-    context.fillText((kind === 'animal' ? 'CAT' : 'MOVE') + ' / ' + String(index + 1).padStart(2, '0'), left + 2, top - 5);
-  }
-  function render(target, seconds, width, height) {
-    const context = target.getContext('2d', { alpha: false, willReadFrequently: target !== canvas });
-    context.setTransform(target.width / width, 0, 0, target.height / height, 0, 0);
-    context.fillStyle = state.background;
-    context.fillRect(0, 0, width, height);
-    const u = ((seconds / cycle()) % 1 + 1) % 1;
-    for (let i = 0; i < state.peopleCount; i++) {
-      const p = (u + (i + .34) / Math.max(1, state.peopleCount)) % 1;
-      const actor = pose(i, 'person', p, width, height, state.peopleCount);
-      context.save();
-      context.translate(actor.x, actor.y);
-      context.scale(actor.size, actor.size);
-      person(context, seconds, actor, width, height, i);
-      if (state.markers && i % 2 === 0) mark(context, 'person', i);
-      context.restore();
-    }
-    if (u >= .23 && u <= .76) {
-      for (let i = 0; i < state.animalCount; i++) {
-        const p = (u - .23) / .53 * .9 + i / Math.max(1, state.animalCount) * .28;
-        if (p > 1) continue;
-        const actor = pose(i + 12, 'animal', p, width, height, state.animalCount);
-        context.save();
-        context.translate(actor.x, actor.y);
-        context.scale(actor.size, actor.size);
-        animal(context, seconds, actor, width, height, i);
-        if (state.markers) mark(context, 'animal', i);
-        context.restore();
-      }
-    }
+  function render(target, seconds, scene = state) {
+    renderer.draw(target, scene, seconds);
     if (target === canvas) {
       canvas.dataset.time = seconds.toFixed(3);
       canvas.dataset.people = String(state.peopleCount);
@@ -261,7 +83,7 @@
     canvas.width = Math.max(2, Math.round(width * previewScale));
     canvas.height = Math.max(2, Math.round(height * previewScale));
     $('canvasDimensions').textContent = width + ' × ' + height;
-    render(canvas, time, width, height);
+    render(canvas, time);
   }
   function updateTimeline() {
     const total = cycle(), u = time / total;
@@ -270,9 +92,9 @@
     $('timeReadout').textContent = time.toFixed(2) + ' / ' + total.toFixed(2) + ' s';
     $('playhead').style.left = (u * 100) + '%';
     const beats = [
-      ['people', 0, .23, '0–' + (total * .23).toFixed(1) + 's'],
-      ['animal', .23, .53, (total * .53).toFixed(1) + 's'],
-      ['crossing', .76, .24, (total * .24).toFixed(1) + 's']
+      ['people', 0, 1 / 6, '0–' + (total / 6).toFixed(1) + 's'],
+      ['animal', 1 / 6, 7 / 12, (total * 7 / 12).toFixed(1) + 's'],
+      ['crossing', .75, .25, (total * .25).toFixed(1) + 's']
     ];
     const bar = $('timeline');
     bar.querySelectorAll('button').forEach(button => button.remove());
@@ -292,7 +114,7 @@
     }
   }
   function redraw() {
-    render(canvas, time, state.width, state.height);
+    render(canvas, time);
     $('scrubber').value = String(time);
     $('timeReadout').textContent = time.toFixed(2) + ' / ' + cycle().toFixed(2) + ' s';
     $('playhead').style.left = (time / cycle() * 100) + '%';
@@ -300,7 +122,7 @@
   function tick(now) {
     if (!playing) { raf = 0; return; }
     time = ((now - started) / 1000) % cycle();
-    redraw();
+    if (!exporting) redraw();
     raf = requestAnimationFrame(tick);
   }
   function syncPlayback() {
@@ -374,7 +196,7 @@
   async function yieldFrame() { await new Promise(resolve => setTimeout(resolve, 0)); }
   $('exportPng').addEventListener('click', () => {
     const output = exportCanvas();
-    render(output, time, state.width, state.height);
+    render(output, time);
     output.toBlob(blob => {
       if (blob) download(blob, 'glass-walkers-' + state.width + 'x' + state.height + '.png');
       status('exportStatus', blob ? 'PNG 已生成' : 'PNG 生成失败', blob ? 'PNG ready' : 'PNG failed');
@@ -383,13 +205,13 @@
   $('exportGif').addEventListener('click', async () => {
     if (exporting) return;
     if (!window.GIF) { status('exportStatus', 'GIF 编码器未加载', 'GIF encoder unavailable'); return; }
-    const output = exportCanvas(), fps = Number($('exportFps').value), length = exportLength();
+    const output = exportCanvas(), fps = Number($('exportFps').value), length = exportLength(), scene = { ...state };
     const frames = Math.ceil(fps * length);
     busy(true, '正在准备 GIF…', 'Preparing GIF…');
     try {
       const gif = new GIF({ workers: 2, quality: 10, width: output.width, height: output.height, workerScript: 'js/continuation-gif.worker.js' });
       for (let i = 0; i < frames; i++) {
-        render(output, i / fps, state.width, state.height);
+        render(output, i / fps, scene);
         gif.addFrame(output, { copy: true, delay: 1000 / fps });
         if (i % 4 === 0) { status('exportStatus', '准备 GIF ' + (i + 1) + '/' + frames, 'Preparing GIF ' + (i + 1) + '/' + frames); await yieldFrame(); }
       }
@@ -402,7 +224,7 @@
   $('exportMp4').addEventListener('click', async () => {
     if (exporting) return;
     if (!window.HME?.createH264MP4Encoder) { status('exportStatus', 'MP4 编码器未加载', 'MP4 encoder unavailable'); return; }
-    const output = exportCanvas(), fps = Number($('exportFps').value), frames = Math.ceil(exportLength() * fps);
+    const output = exportCanvas(), fps = Number($('exportFps').value), frames = Math.ceil(exportLength() * fps), scene = { ...state };
     const context = output.getContext('2d', { willReadFrequently: true });
     let encoder;
     busy(true, '正在生成 MP4…', 'Rendering MP4…');
@@ -414,7 +236,7 @@
       encoder.groupOfPictures = fps;
       encoder.initialize();
       for (let i = 0; i < frames; i++) {
-        render(output, i / fps, state.width, state.height);
+        render(output, i / fps, scene);
         encoder.addFrameRgba(context.getImageData(0, 0, output.width, output.height).data);
         if (i % 2 === 0) {
           const progress = Math.round((i + 1) / frames * 100);
