@@ -2,6 +2,14 @@
 
 ## Primary reference: user recording, 2026-11-03
 
+### Follow-up: shoe variety and upright walking
+
+- User supplied a cropped still of the current preview and rejected its crouched, wide-reaching posture. The still establishes the silhouette problem, not a new measured cadence.
+- Change only human anatomy, gait and footwear: two high-heel walkers (slim heel and block heel), two narrow flat shoes, and two everyday shoes in the default six-person scene. High heels must show a small heel contact separated from the pointed forefoot by an elevated arch.
+- Keep the existing paths, arrivals, animals, glass material, below-glass camera, markers and editor/export clock. Grounded shoes remain fixed; forefoot contact continues through heel lift; each moving leg and opposite arm belong to the same gait.
+- Replace forward torso lean, deep support-knee bend and excessive swing lift with an upright torso, shorter spatial strides, narrower foot angles and restrained opposing arms. Verify joint lengths, planted contact, transition continuity and dense rendered frames for all shoe profiles.
+- Verification: four footwear profiles sampled at 120 Hz retain equal leg lengths, an extended support leg and continuous joints. Grounded intervals are 0.35–0.42 s. Inspected isolated profile frames and 36 consecutive frames from the real HD export, plus a 2 fps overview of the complete 12 s loop. Re-exported 1280 × 720 / 30 fps / 360-frame MP4, gallery video, PNG and GIF; browser checks include portrait framing and mobile scheme controls, with no page errors.
+
 - Desktop file `20261103-135050.mp4`: H.264, 43.866667 s, 1316 frames at 30 fps. Encoded 888 × 1280 with 90° rotation metadata; displayed 1280 × 888. Safari controls are outside the effect.
 - Reviewed 44 chronological overview frames, full-resolution stills, and all 42 consecutive crop frames from 9.00–10.37 s. Recordings and extracted images remain outside the repository.
 - The earlier Canvas oval implementation was rejected. Its geometry and shading are not an approved baseline.
@@ -56,8 +64,8 @@ The site's source describes occasional cats and optional dogs, but this short re
 
 ## Verification
 
-- `node scripts/check-glasswalkers-motion.mjs` samples actual geometry 720 times: both feet keep a fixed contact for 0.47 s, swing feet lift, and stance/swing boundaries do not teleport. The earlier flat-ellipse renderer has been removed.
-- The revised renderer was exported through the editor as a 1280 × 720 H.264 video: 12 s, 30 fps, 360 decoded frames. The PNG at 9.00 s and the corresponding decoded MP4 frame differ by a mean absolute 0.887 per RGB channel on a 0–255 scale. Reviewed the new gallery loop at 0.5 s intervals and the HD frame beside the user's reference; this is a motion/material comparison, not an exact replay of crowd positions.
+- `node scripts/check-glasswalkers-motion.mjs` samples each shoe profile over six seconds: both feet keep fixed contact, swing feet lift, joint lengths stay constant, the torso remains upright and stance/swing boundaries do not teleport. The earlier flat-ellipse renderer has been removed.
+- The first volumetric revision was exported through the editor as a 1280 × 720 H.264 video: 12 s, 30 fps, 360 decoded frames. Its PNG at 9.00 s and corresponding decoded MP4 frame differed by a mean absolute 0.887 per RGB channel on a 0–255 scale. Reviewed the gallery loop at 0.5 s intervals and the HD frame beside the user's reference; this is a motion/material comparison, not an exact replay of crowd positions. The subsequent footwear revision is verified above.
 - Rechecked gallery, homepage and library links, mobile scheme controls, and actual PNG/GIF/MP4 exports without browser errors. The website check passes for 93 catalog entries and 325 file references.
 - Reviewed the reference at normal speed, 0.20 s intervals, and a 25-frame stride strip at the original 25 fps; reviewed the generated 12 s loop at 1 s intervals and paused editor frames.
 - Tested the editor at 1440 × 900 and 390 × 844, including a portrait canvas, scheme save/import/reset/clear, language/theme switching, and browser errors.

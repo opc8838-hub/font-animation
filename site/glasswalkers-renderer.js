@@ -170,15 +170,16 @@
     human(route, age, index) {
       const parts = [], feet = [], root = route.at(age), forward = route.directionAt(age), sideward = [-forward[1], forward[0], 0];
       const cap = (a, b, ra, rb = ra) => parts.push({ a, b, ra, rb });
+      const heels = index % 3 === 1, slim = index % 3 !== 0;
       const stature = .94 + noise(index + 12) * .1;
-      const period = 1.39 + noise(index + 41) * .13;
+      const velocity = Math.hypot(...sub(route.at(.01), route.at(-.01))) / .02;
+      const period = (heels ? .88 : 1.02) * stature / velocity;
       const phase = age / period + noise(index + 7);
-      const pelvis = add(root, [0, 0, (.89 + .025 * Math.sin(phase * TAU) ** 2) * stature]);
-      const hips = [];
+      const legs = [], hips = [];
       for (const side of [-1, 1]) {
         const p = mod(phase + (side === 1 ? .5 : 0), 1);
         const strike = age - p * period;
-        const footAt = t => add(add(route.at(t), route.directionAt(t), .26 * stature), [-route.directionAt(t)[1], route.directionAt(t)[0], 0], side * .076);
+        const footAt = t => add(add(route.at(t), route.directionAt(t), (heels ? .15 : .19) * stature), [-route.directionAt(t)[1], route.directionAt(t)[0], 0], side * (slim ? .05 : .065));
         const old = footAt(strike), next = footAt(strike + period);
         const plantedDirection = route.directionAt(strike);
         let heel, pitch, hinge, heading = plantedDirection;
@@ -190,12 +191,12 @@
         } else {
           const u = (p - .62) / .38;
           heel = interpolate(add(old, plantedDirection, .029), next, smooth(u));
-          heel[2] = .095 * (1 - u) + .115 * Math.sin(Math.PI * u);
+          heel[2] = .17 * Math.sin(.59) * (1 - u) + .055 * Math.sin(Math.PI * u);
           pitch = mix(.59, -.14, smooth(u));
           hinge = 1 - smooth(u / .18);
           heading = unit(interpolate(plantedDirection, route.directionAt(strike + period), smooth(u)));
         }
-        const yaw = Math.atan2(heading[1], heading[0]) + side * .11;
+        const yaw = Math.atan2(heading[1], heading[0]) + side * (heels ? .025 : .045);
         const footDirection = [Math.cos(yaw), Math.sin(yaw), 0];
         const fp = (x, z = 0) => {
           const point = add(heel, footDirection, x * Math.cos(pitch));
@@ -208,30 +209,51 @@
           }
           return point;
         };
-        cap(fp(.035), fp(.1), .037, .04);
-        cap(fp(.1), fp(.175), .04, .05);
-        cap(fp(.175), fp(.225), .05, .038);
-        cap(fp(.05, .025), fp(.19, .025), .044, .048);
-        const ankle = fp(.055, .075);
-        const hip = add(pelvis, sideward, side * .085);
-        hips.push(hip);
-        const axis = sub(ankle, hip), distance = Math.min(.89 * stature, Math.hypot(...axis));
-        const axisUnit = unit(axis);
-        const bend = unit(add(forward, axisUnit, -dot(forward, axisUnit)));
-        const knee = add(add(hip, axisUnit, distance * .5), bend, Math.sqrt(Math.max(.001, (.45 * stature) ** 2 - (distance * .5) ** 2)));
-        cap(ankle, knee, .075, .083);
-        cap(knee, hip, .083, .098);
+        if (heels) {
+          // The heel tip and forefoot touch the glass; the arch stays above it.
+          cap(fp(.018), fp(.018, .085), index % 2 ? .011 : .018, .021);
+          cap(fp(.018, .085), fp(.065, .075), .026, .025);
+          cap(fp(.065, .075), fp(.15, .024), .021, .03);
+          cap(fp(.155, .006), fp(.195, .006), .036, .029);
+          cap(fp(.195, .006), fp(.259, .006), .029, .005);
+        } else {
+          cap(fp(.035), fp(.1), slim ? .027 : .033, slim ? .029 : .036);
+          cap(fp(.1), fp(.175), slim ? .029 : .036, slim ? .039 : .044);
+          cap(fp(.175), fp(slim ? .249 : .225), slim ? .039 : .044, slim ? .009 : .031);
+          cap(fp(.05, .025), fp(.19, .025), slim ? .03 : .038, slim ? .034 : .042);
+        }
+        legs.push({ side, p, ankle: fp(.045, heels ? .15 : .075) });
         feet.push(fp(.11));
       }
-      cap(hips[0], hips[1], .105);
-      const chest = add(add(pelvis, forward, .12), [0, 0, .43 * stature]);
-      cap(add(pelvis, [0, 0, .07]), chest, .12, .14);
+      // Support the pelvis on the planted leg instead of keeping both knees crouched.
+      const reach = .93 * stature, bone = .47 * stature;
+      const support = legs.map(leg => {
+        const hipXY = add(root, sideward, leg.side * .075);
+        const horizontal = Math.hypot(hipXY[0] - leg.ankle[0], hipXY[1] - leg.ankle[1]);
+        const weight = leg.p < .62 ? Math.sin(leg.p / .62 * Math.PI) ** 2 : 0;
+        return { weight, height: (heels ? .15 : .075) + Math.sqrt(Math.max(.01, reach ** 2 - horizontal ** 2)), limit: leg.ankle[2] + Math.sqrt(Math.max(.01, (bone * 1.997) ** 2 - horizontal ** 2)) };
+      });
+      const supportHeight = support.reduce((v, s) => v + s.height * s.weight, 0) / support.reduce((v, s) => v + s.weight, 0);
+      const pelvis = add(root, [0, 0, Math.min(supportHeight, ...support.map(s => s.limit))]);
+      for (const { side, ankle } of legs) {
+        const hip = add(pelvis, sideward, side * .075);
+        hips.push(hip);
+        const axis = sub(ankle, hip), distance = Math.hypot(...axis);
+        const axisUnit = unit(axis);
+        const bend = unit(add(forward, axisUnit, -dot(forward, axisUnit)));
+        const knee = add(add(hip, axisUnit, distance * .5), bend, Math.sqrt(Math.max(0, bone ** 2 - (distance * .5) ** 2)));
+        cap(ankle, knee, slim ? .048 : .058, slim ? .06 : .072);
+        cap(knee, hip, slim ? .06 : .072, slim ? .079 : .089);
+      }
+      cap(hips[0], hips[1], slim ? .09 : .1);
+      const chest = add(add(pelvis, forward, .025), [0, 0, .43 * stature]);
+      cap(add(pelvis, [0, 0, .07]), chest, slim ? .095 : .11, slim ? .115 : .135);
       cap(add(chest, [0, 0, .07]), add(chest, [0, 0, .23]), .058, .09);
-      for (const side of [-1, 1]) {
-        const shoulder = add(chest, sideward, side * .18);
-        const swing = Math.sin(phase * TAU + (side > 0 ? Math.PI : 0)) * .19;
-        const elbow = add(add(shoulder, forward, swing), [0, 0, -.26]);
-        const hand = add(add(elbow, forward, swing * .55 + .09), [0, 0, -.25]);
+      for (const { side, ankle } of legs) {
+        const shoulder = add(chest, sideward, side * (slim ? .145 : .165));
+        const swing = clamp(-dot(sub(ankle, root), forward) * .4, -.13, .13);
+        const elbow = add(add(shoulder, forward, swing * .5), [0, 0, -.26]);
+        const hand = add(add(elbow, forward, swing * .5), [0, 0, -.24]);
         cap(shoulder, elbow, .045, .039); cap(elbow, hand, .039, .031);
       }
       return { parts, label: interpolate(feet[0], feet[1], .5), kind: 'person', index };
