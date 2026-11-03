@@ -38,7 +38,7 @@
     }
     ctx.putImageData(image,0,0);cachedColor=color;return tinted;
   }
-  function edges(u){return {x:102.5+387*u,top:Math.max(6.5,104-15*u-51*u*u-36.5*u*u*u),bottom:229+5*u+8*u*u+40*u*u*u};}
+  function edges(u){return {x:102.5+388.3*u,top:Math.max(6.5,104-15*u-51*u*u-36.5*u*u*u),bottom:229+5*u+8*u*u+40*u*u*u};}
   function render(target,screen,color='#17ff9f'){
     const ctx=target.getContext('2d'),scale=Math.min(target.width/W,target.height/H);
     ctx.fillStyle='#000';ctx.fillRect(0,0,target.width,target.height);
@@ -54,7 +54,8 @@
     const strips=512;
     for(let i=0;i<strips;i++){
       const u=i/strips,next=(i+1)/strips,e=edges(u),n=edges(next);
-      ctx.drawImage(screen,u*screen.width,0,screen.width/strips+.4,screen.height,e.x,e.top,n.x-e.x+.3,e.bottom-e.top);
+      const top=Math.min(e.top,n.top),bottom=Math.max(e.bottom,n.bottom);
+      ctx.drawImage(screen,u*screen.width,0,screen.width/strips+.4,screen.height,e.x,top,n.x-e.x+.3,bottom-top);
     }
     ctx.restore();
     // Foreground chair backs occlude the very bottom of the LED surface.

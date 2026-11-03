@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "bubble-frame",
+      "date": "2026-11-04"
+    },
+    {
       "id": "glasswalkers",
       "date": "2026-11-03"
     },
@@ -31,10 +35,6 @@
     {
       "id": "metallic-text",
       "date": "2026-10-28"
-    },
-    {
-      "id": "bubble-frame",
-      "date": "2026-10-26"
     },
     {
       "id": "glass-icon-reveal",
@@ -239,9 +239,9 @@
       "english": "Bubble Fluid",
       "description": "软体字流动 · 荧光配色 · 舞台光影",
       "category": "type",
-      "href": "bubble-frame.html?from=gallery&v=20261028-color1",
-      "poster": "final_bubble-frame.png?v=20261028-color1",
-      "video": "assets/previews/bubble-frame-card.mp4?v=20261028-color1",
+      "href": "bubble-frame.html?from=gallery&v=20261104-bubble-release1",
+      "poster": "final_bubble-frame.png?v=20261104-bubble-release1",
+      "video": "assets/previews/bubble-frame-card.mp4?v=20261104-bubble-release1",
       "status": "ready"
     },
     {

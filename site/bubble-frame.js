@@ -207,28 +207,31 @@
   function layoutGlyphs() {
     const rows=lines().filter(line=>line.trim());
     const items=[];
-    const margin=.025, gap=.007+state.tracking/8000;
+    const margin=.012, gap=Math.max(.003,.006+state.tracking/8000);
     const rowHeight=(1-2*margin)/Math.max(1,rows.length);
     rows.forEach((line,row)=>{
       const chars=split(line);
-      const height=rowHeight*.9/state.lineSpacing;
-      const widths=chars.map(ch=>height*320/600*(/\s/.test(ch)?.35:/[Ii!.,:|]/.test(ch)?.4:/[MWmw]/.test(ch)?1.02:/[ftjr]/i.test(ch)?.62:.8));
+      const height=rowHeight*.97/Math.max(1,state.lineSpacing);
+      const widths=chars.map(ch=>height*320/600*(/\s/.test(ch)?.16:ch==='i'?.28:ch==='I'?.29:ch==='L'?.64:/[!.,:|]/.test(ch)?.4:/[MWmw]/.test(ch)?1.02:/[ftjr]/i.test(ch)?.62:.8));
       const natural=widths.reduce((sum,w)=>sum+w,0)+gap*Math.max(0,chars.length-1);
-      const fit=Math.min(1,(1-2*margin)/natural);
+      const fit=Math.min(chars.filter(ch=>!/\s/.test(ch)).length>=3?2.4:1,(1-2*margin)/natural);
       const h=height;
+      const metrics=chars.map(ch=>state.letterStyle==='bubble'&&/[a-z]/.test(ch)?{top:/[bdfhijklt]/.test(ch)?0:.27,bottom:/[gjpqy]/.test(ch)?1.22:1}:{top:0,bottom:1});
+      const visible=metrics.filter((m,i)=>!/\s/.test(chars[i]));
+      const rowTop=Math.min(...visible.map(m=>m.top)),rowBottom=Math.max(...visible.map(m=>m.bottom));
+      const unit=h/(rowBottom-rowTop);
       let x=(1-natural*fit)/2;
       chars.forEach((ch,index)=>{
         const w=widths[index]*fit;
         if(!/\s/.test(ch)){
-          const wobble=Math.sin(index*2.4+row)*.035;
-          items.push({ch,x,y:margin+row*rowHeight+(rowHeight-h)/2+h*wobble,w,h,row});
+          const arch=Math.sin((index+.5)/chars.length*Math.PI);
+          const metric=metrics[index],cellHeight=(metric.bottom-metric.top)*unit;
+          const glyphHeight=cellHeight*(.97+.03*arch);
+          items.push({ch,x,y:margin+row*rowHeight+(rowHeight-h)/2+(metric.top-rowTop)*unit+(cellHeight-glyphHeight)/2,w,h:glyphHeight,row});
         }
         x+=w+gap*fit;
       });
     });
-    if(rows.length===2&&items.length===14&&items.filter(g=>g.row===0).length===7){
-      items.forEach((g,i)=>{const box=BubbleFrameReferenceSlots[i];Object.assign(g,{x:box.x,y:box.y,w:box.w,h:box.h,variant:g.ch.toUpperCase()===box.ch?box.variant:undefined,reference:true});});
-    }
     return items;
   }
   function paint(target,at,exportVideo=null) {

@@ -1,4 +1,5 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const baseURL=process.env.BUBBLE_BASE_URL||'http://127.0.0.1:8772';
 const {chromium}=require(path.resolve(process.argv[2]||'node_modules','playwright'));
 (async()=>{
  const browser=await chromium.launch({headless:true,executablePath:process.argv[3]||undefined});
@@ -9,7 +10,7 @@ const {chromium}=require(path.resolve(process.argv[2]||'node_modules','playwrigh
    window.sceneReadbacks=[];const read=CanvasRenderingContext2D.prototype.getImageData;
    CanvasRenderingContext2D.prototype.getImageData=function(x,y,w,h,...rest){if(w>1000&&h>600)window.sceneReadbacks.push([w,h]);return read.call(this,x,y,w,h,...rest);};
   });
-  await page.goto('http://127.0.0.1:8772/bubble-frame.html?from=gallery');await page.waitForFunction(()=>window.CellMotionBubbleFrame);await page.evaluate(()=>BubbleFrameScene.ready);
+  await page.goto(baseURL+'/bubble-frame.html?from=gallery',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.CellMotionBubbleFrame);await page.evaluate(()=>BubbleFrameScene.ready);
   const result=await page.evaluate(async()=>{
    const plate=new Image();plate.src='assets/bubble-frame/stage-hd.webp';await plate.decode();
    CellMotionBubbleFrame.seek(.7);const c=document.createElement('canvas');c.width=3840;c.height=2160;CellMotionBubbleFrame.render(c,.7);

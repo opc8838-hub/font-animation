@@ -10,7 +10,7 @@
 
 **2026-10-28 金属流光 / Metallic Text**：[打开编辑器](site/metallic-text.html?from=gallery)。宽扁银色文字内流动冷暖反光，支持共享字体、字形高度与加粗、字距、金属与反光配色、方向、阶段时长和画幅调整。对齐字芽的字体与背景折叠设置，支持图片/GIF/视频背景、取景缩放、视频胶片裁切、舞台背景、构图、精确数值及撤销/重做。31 项 For AI 参数保留媒体原始数据、取景和视频裁切；使用统一方案与 PNG / GIF / H.264 MP4 导出。默认字形基于 [Librestile](https://github.com/ocelothe/Librestile)，其 OFL 许可随字体保存在 `site/assets/fonts/librestile/OFL.txt`。运动依据与验证见[分析](docs/analyses/metallic-text.md)。
 
-**2026-10-26 流体泡泡 / Bubble Fluid**：[打开编辑器](site/bubble-frame.html?from=gallery)。弧形舞台中的饱满字母交错转动，荧光粉、黄、绿、青、橙、紫六组配色同步屏幕与高清场景光影。采用平滑完整字形、原片占位与转向，并为相邻字母预留转动空间。编辑器按 CellMotion 三栏规范提供圆角下拉菜单、字体与背景折叠设置、视频胶片裁切、三色时间轴、明暗／中英偏好、方案及 PNG / GIF / MP4 导出。首页最近上新和编辑器目录均已收录。场景以固定机位原片为依据进行高清重建，开场与循环回流为适配编排。详见[分析与验证](docs/analyses/bubble-fluid.md)。
+**2026-11-04 流体泡泡 / Bubble Fluid 更新**：[打开编辑器](site/bubble-frame.html?from=gallery&v=20261104-bubble-release1)。字母保持正向，以邻字接续伸缩的方式挤满弧形屏幕，单行和多行均保持阅读顺序。支持真正的大小写混排，细修 O 的圆弧、E/F/G 等字母的笔画间隙及 I/L/i 的粗细，并修复屏幕右上角白边。六组荧光配色同步高清场景光影，另有暖白、浅桃等屏幕底色。CellMotion 三栏编辑器保留字体、背景视频裁切、三色时间轴、明暗／中英偏好、方案及 PNG / GIF / MP4 导出。首页封面和循环预览已同步更新。详见[分析与验证](docs/analyses/bubble-fluid.md)。
 
 **2026-10-23 玻璃显标 / Glass Icon Reveal**：[打开编辑器](site/glass-icon-reveal.html)。Logo 玻璃动效后可连续播放独立文字，支持字体、大小、颜色、背景和画幅调整，以及 For AI 实时组件、方案保存/导入和 PNG / GIF / MP4 导出。光学内核改编自 Zanwei Guo 的 [MIT 项目](https://github.com/zanwei/glass-icon-reveal)，许可见 [glass-icon-reveal.LICENSE](site/glass-icon-reveal.LICENSE)。
 

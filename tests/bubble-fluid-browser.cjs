@@ -1,4 +1,5 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const baseURL=process.env.BUBBLE_BASE_URL||'http://127.0.0.1:8772';
 const {chromium}=require(path.resolve(process.argv[2]||'node_modules','playwright'));
 (async()=>{
  const browser=await chromium.launch({headless:true,executablePath:process.argv[3]||undefined});
@@ -6,7 +7,7 @@ const {chromium}=require(path.resolve(process.argv[2]||'node_modules','playwrigh
  page.on('pageerror',e=>errors.push(e.message));page.on('requestfailed',r=>errors.push(r.url()));
  const output=path.resolve(__dirname,'../output/bubble-fluid');fs.mkdirSync(output,{recursive:true});
  try{
-  await page.goto('http://127.0.0.1:8772/bubble-frame.html');await page.waitForFunction(()=>window.CellMotionBubbleFrame);
+  await page.goto(baseURL+'/bubble-frame.html',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.CellMotionBubbleFrame);
   await page.evaluate(()=>BubbleFrameScene.ready);await page.locator('#resetScheme').click();
   assert.equal(await page.locator('#captionLeft,#captionRight,#footer,#thickness,#hold,#endHold').count(),0);
   assert.equal(await page.locator('.me-choreo-block').count(),3);
@@ -57,10 +58,13 @@ const {chromium}=require(path.resolve(process.argv[2]||'node_modules','playwrigh
   assert.ok(single.x>.25&&single.x+single.w<.75,'One letter stays centered instead of filling the LED width');
   assert.ok(single.w*600/(single.h*320)<1.15,'One letter retains a readable physical aspect ratio');
   assert.ok(shortText.short[0].x>.1&&shortText.short.at(-1).x+shortText.short.at(-1).w<.9,'Short rows stay centered');
-  assert.ok(shortText.reference.every(g=>g.reference),'Default retains the asymmetric source packing');
-  assert.ok(shortText.reference[0].h>.8&&shortText.reference[1].w<.1,'Tall T spans rows beside a tucked small O');
-  assert.ok(shortText.sameCount.every(g=>g.reference),'Replacement phrases with matching counts inherit the same packing');
-  assert.ok(await page.evaluate(()=>[...'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'].every(ch=>BubbleFrameFluidOutlines[ch])),'All Latin letters and digits use upright rounded masters');
+  for(const composition of [shortText.reference,shortText.sameCount]){
+   assert.ok(composition.every(g=>!g.reference),'Every phrase uses the same ordered row layout');
+   const top=composition.slice(0,7),bottom=composition.slice(7);
+   assert.ok(Math.max(...top.map(g=>g.y+g.h))<Math.min(...bottom.map(g=>g.y)),'Two rows retain a clear reading boundary');
+   assert.ok(top[0].x<.02&&top.at(-1).x+top.at(-1).w>.98,'Rows stay packed across the screen');
+  }
+  assert.ok(await page.evaluate(()=>[...'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'].every(ch=>BubbleFrameFluidOutlines[ch])),'Both cases and digits use upright rounded masters');
   const landmarks=await page.evaluate(()=>{
    const c=document.createElement('canvas');c.width=c.height=100;const ctx=c.getContext('2d',{willReadFrequently:true});
    const filled=(ch,x,y)=>{ctx.clearRect(0,0,100,100);ctx.beginPath();for(const p of BubbleFrameFluidOutlines[ch]){ctx.moveTo(...p[0]);p.slice(1).forEach(q=>ctx.lineTo(...q));ctx.closePath();}ctx.fill('evenodd');return ctx.getImageData(x,y,1,1).data[3]>128;};
@@ -71,7 +75,7 @@ const {chromium}=require(path.resolve(process.argv[2]||'node_modules','playwrigh
   await page.screenshot({path:path.join(output,'editor.png')});
   const migration=await browser.newPage();
   await migration.addInitScript(()=>localStorage.setItem('cellmotion-bubble-frame-fluid-v1',JSON.stringify({version:1,state:{text:'KEEP MY TEXT',textColor:'#f1ff38',backgroundColor:'#252b12'}})));
-  await migration.goto('http://127.0.0.1:8772/bubble-frame.html');await migration.waitForFunction(()=>window.CellMotionBubbleFrame);
+  await migration.goto(baseURL+'/bubble-frame.html',{waitUntil:'domcontentloaded'});await migration.waitForFunction(()=>window.CellMotionBubbleFrame);
   const migrated=await migration.evaluate(()=>CellMotionBubbleFrame.state());assert.equal(migrated.text,'KEEP MY TEXT');assert.equal(migrated.backgroundColor,'#89882b');await migration.close();
   assert.deepEqual(errors,[]);fs.writeFileSync(path.join(output,'verification.json'),JSON.stringify({errors,...continuity},null,2));
   console.log(JSON.stringify({ok:true,errors,...continuity}));

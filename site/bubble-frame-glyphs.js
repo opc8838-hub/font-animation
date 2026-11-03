@@ -1,16 +1,16 @@
-/* Rounded display alphabet, drawn for Bubble Frame. Lowercase uses small caps.
+/* Rounded display alphabet, drawn for Bubble Frame, with distinct lowercase.
  * The unseen letters are style extrapolations, not the original typeface. */
 (() => {
   const paths = {
     A:['M18 84 Q25 8 49 16 Q73 8 82 84','M27 62 Q50 56 74 62'],
-    B:['M22 84 L22 17 Q82 7 79 36 Q77 48 48 49 Q85 45 82 69 Q78 91 22 84'],
+    B:['M22 84 L22 17 Q82 7 79 36 Q77 48 48 49 Q85 45 82 69 Q78 91 22 84','M24 49 L51 49'],
     C:['M81 23 C10 -10 3 111 80 78'],
     D:['M22 84 L22 17 C100 1 100 100 22 84'],
-    E:['M80 18 L24 18 L24 82 L80 82','M26 49 L69 48'],
-    F:['M24 84 L24 18 L82 18','M26 48 L68 48'],
+    E:['M80 18 L24 18 L24 82 L80 82','M26 49 L64 49'],
+    F:['M24 84 L24 18 L82 18','M26 49 L64 49'],
     G:['M80 23 C9 -9 5 108 81 80 L81 53 L60 53'],
     H:['M20 17 L20 83','M80 17 L80 83','M21 49 Q50 44 79 51'],
-    I:['M50 17 Q46 50 50 83'],
+    I:['M50 17 L50 83'],
     J:['M79 17 L79 65 Q78 102 23 77'],
     K:['M21 17 L21 84','M79 17 L28 53 L80 83'],
     L:['M23 17 L23 82 Q50 85 81 82'],
@@ -28,6 +28,32 @@
     X:['M20 17 L80 83','M80 17 L20 83'],
     Y:['M18 17 Q30 41 50 50 Q70 41 82 17','M50 50 L50 83'],
     Z:['M20 18 L80 18 L20 82 L80 82'],
+    a:['M72 46 C24 14 9 95 53 80 Q72 75 72 48 L73 83'],
+    b:['M23 15 L23 82','M25 48 C85 13 94 103 25 79'],
+    c:['M76 44 C21 15 12 99 77 78'],
+    d:['M77 15 L77 82','M75 48 C15 13 6 103 75 79'],
+    e:['M22 59 L78 59 C80 17 14 23 21 63 C24 90 50 98 73 86'],
+    f:['M42 84 L42 33 Q41 8 72 17','M24 43 L69 43'],
+    g:['M77 42 L77 94 Q76 121 30 105','M74 47 C17 15 10 92 52 79 Q72 75 74 58'],
+    h:['M23 15 L23 83','M24 55 C26 31 77 27 77 59 L77 83'],
+    i:['M50 18 L50 18.5','M50 48 L50 84'],
+    j:['M61 18 L61 18.5','M61 48 L61 87 Q60 109 32 100'],
+    k:['M25 15 L25 84','M76 42 L29 66 L78 84'],
+    l:['M45 15 L45 72 Q45 84 62 83'],
+    m:['M14 83 L14 43','M15 55 Q35 26 49 52 L49 83','M49 55 Q72 25 86 50 L86 83'],
+    n:['M23 83 L23 43','M24 55 C27 29 77 28 77 57 L77 83'],
+    o:['M50 40 C10 37 10 87 50 83 C90 87 90 37 50 40 Z'],
+    p:['M23 43 L23 102','M25 48 C85 13 94 103 25 79'],
+    q:['M77 43 L77 102','M75 48 C15 13 6 103 75 79'],
+    r:['M27 83 L27 43','M28 57 Q44 32 73 44'],
+    s:['M75 42 C39 20 10 53 48 61 C90 68 77 101 23 84'],
+    t:['M47 20 L47 68 Q46 90 75 80','M25 43 L73 43'],
+    u:['M23 42 L23 66 Q23 90 51 82 Q75 77 76 56','M76 42 L76 83'],
+    v:['M20 42 Q30 68 50 84 Q70 68 80 42'],
+    w:['M15 42 L28 83 Q40 69 50 50 Q60 69 72 83 L85 42'],
+    x:['M24 42 L77 83','M76 42 L23 83'],
+    y:['M22 42 Q29 71 50 81','M78 42 Q68 81 43 103'],
+    z:['M23 43 L77 43 L23 83 L78 83'],
     '0':['M50 17 C8 10 6 89 50 83 C94 89 92 10 50 17 Z'],
     '1':['M29 30 L51 17 L51 83'],
     '2':['M22 27 Q48 -1 77 24 Q91 43 21 82 L81 82'],
@@ -47,10 +73,10 @@
   };
   const cache = new Map(Object.entries(paths).map(([ch, value]) => [ch, value.map(d => new Path2D(d))]));
   window.BubbleFrameGlyphs={
-    has:ch=>cache.has(ch.toUpperCase()),
+    has:ch=>cache.has(ch),
     draw(ctx,ch){
-      const strokes=cache.get(ch.toUpperCase());if(!strokes)return false;
-      ctx.lineCap=ctx.lineJoin='round';ctx.lineWidth=/R/i.test(ch)?25:/[MW]/i.test(ch)?30:/[COU]/i.test(ch)?36:33;
+      const strokes=cache.get(ch);if(!strokes)return false;
+      ctx.lineCap=ctx.lineJoin='round';ctx.lineWidth=/[egsi]/.test(ch)?19:/[a-z]/.test(ch)?23:/[BEFGPRS]/.test(ch)?24:/[IL]/.test(ch)?26:/[MW]/.test(ch)?30:/[COU]/.test(ch)?36:33;
       for(const stroke of strokes)ctx.stroke(stroke);
       return true;
     }
