@@ -3,6 +3,8 @@ import * as THREE from './live-portal/vendor/three.module.js';
 const clamp = value => Math.min(1, Math.max(0, value));
 const ease = value => { const x = clamp(value); return x * x * (3 - 2 * x); };
 const glyph = document.createElement('canvas');
+const segmenter = new Intl.Segmenter();
+const multipleText = text => [...segmenter.segment(text)].length > 1;
 let cacheKey = '';
 let renderer;
 let material;
@@ -66,20 +68,84 @@ void main() {
   gl_FragColor = vec4(clamp(color, 0.0, 1.0), alpha);
 }`;
 
+function drawTextLayout(ctx, scene, width, height, nominal) {
+  const graphemes = text => [...segmenter.segment(text)].map(item => item.segment);
+  const tracking = (scene.tracking || 0) * nominal;
+  const measure = text => ctx.measureText(text).width + Math.max(0, graphemes(text).length - 1) * tracking;
+  const metrics = ctx.measureText(scene.text.replace(/\n/g, '') || 'Hg');
+  const ascent = Math.max(1, metrics.actualBoundingBoxAscent);
+  const descent = Math.max(0, metrics.actualBoundingBoxDescent);
+  const bodyHeight = (ascent + descent) * scene.fontHeight;
+  const availableWidth = width * Math.max(.5, .84 - scene.spread * .52);
+  const phrase = /\s|[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(scene.text);
+  const targetHeight = Math.min(height * scene.fontSize, Math.min(width, height) * (phrase ? .23 : .34) * scene.fontSize / .56);
+  const preferredScale = targetHeight / bodyHeight;
+  const paragraphs = scene.text.split('\n');
+  const oneLineHeight = availableWidth / Math.max(1, ...paragraphs.map(measure)) * bodyHeight;
+  const keepWideLine = width / height >= 1.5 && oneLineHeight >= Math.min(width, height) * .11;
+  const lineLimit = keepWideLine ? Infinity : availableWidth / preferredScale;
+  const lines = [];
+  for (const paragraph of paragraphs) {
+    const tokens = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(paragraph)
+      ? graphemes(paragraph) : paragraph.match(/\S+\s*/gu) || [''];
+    let line = '';
+    for (const token of tokens) {
+      if (line && measure((line + token).trimEnd()) > lineLimit) {
+        lines.push(line.trimEnd()); line = token.trimStart();
+      } else line += token;
+    }
+    lines.push(line.trimEnd());
+  }
+  const lineStep = bodyHeight * (scene.lineHeight || 1.22);
+  const blockHeight = bodyHeight + (lines.length - 1) * lineStep;
+  const scale = Math.min(preferredScale, availableWidth / Math.max(1, ...lines.map(measure)), height * .76 / blockHeight);
+  const top = (height - blockHeight * scale) / 2 + height * (scene.positionY || 0) / 100;
+  lines.forEach((line, index) => {
+    const lineWidth = measure(line) * scale;
+    const left = scene.alignment === 'left' ? (width - availableWidth) / 2
+      : scene.alignment === 'right' ? (width + availableWidth) / 2 - lineWidth : (width - lineWidth) / 2;
+    ctx.save();
+    ctx.translate(left + width * (scene.positionX || 0) / 100,
+      top + (ascent * scene.fontHeight + index * lineStep) * scale);
+    ctx.scale(scale, scale * scene.fontHeight);
+    const paint = (text, x) => {
+      ctx.fillText(text, x, 0);
+      if (scene.extraBold) ctx.strokeText(text, x, 0);
+    };
+    if (!tracking) paint(line, 0);
+    else {
+      let prefix = '';
+      graphemes(line).forEach((character, position) => {
+        paint(character, ctx.measureText(prefix).width + position * tracking);
+        prefix += character;
+      });
+    }
+    ctx.restore();
+  });
+}
+
 function buildGlyph(scene, width, height) {
   const key = [width, height, scene.text, scene.font, scene.fontSize, scene.fontHeight,
-    scene.extraBold, scene.positionX, scene.positionY, scene.alignment, scene.textColor].join('|');
+    scene.extraBold, scene.positionX, scene.positionY, scene.alignment, scene.textColor,
+    scene.tracking, scene.lineHeight, scene.spread].join('|');
   if (key === cacheKey) return;
   cacheKey = key;
   const resized = glyph.width !== width || glyph.height !== height;
   glyph.width = width; glyph.height = height;
   const ctx = glyph.getContext('2d');
   const preset = window.STGFontLibrary.preset(scene.font);
-  const nominal = height * .9;
+  const multiple = multipleText(scene.text);
+  const nominal = (multiple ? 1080 : height) * .9;
   const weight = scene.font === 'stg:inter' ? 700 : preset.weight;
   const family = scene.font === 'stg:inter' ? '"CellMotion Letter Inter"' : window.STGFontLibrary.family(scene.font);
   ctx.font = `${preset.style} ${weight} ${nominal}px ${family}`;
   ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = scene.textColor;
+  ctx.strokeStyle = scene.textColor;
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = nominal * scene.extraBold * 2;
+  if (multiple) drawTextLayout(ctx, scene, width, height, nominal);
+  else {
   const metrics = ctx.measureText(scene.text || ' ');
   const ascent = Math.max(1, metrics.actualBoundingBoxAscent);
   const descent = Math.max(0, metrics.actualBoundingBoxDescent);
@@ -99,6 +165,7 @@ function buildGlyph(scene, width, height) {
   ctx.fillText(scene.text, 0, 0);
   if (scene.extraBold) ctx.strokeText(scene.text, 0, 0);
   ctx.restore();
+  }
   if (texture && resized) {
     texture.dispose();
     texture = glyphTexture();
@@ -155,7 +222,7 @@ function draw(ctx, state, time, width, height) {
   uniforms.uInk.value.set((rgb >> 16 & 255) / 255, (rgb >> 8 & 255) / 255, (rgb & 255) / 255);
   uniforms.uAmount.value = amount;
   uniforms.uCount.value = scene.slices;
-  uniforms.uSpread.value = scene.spread;
+  uniforms.uSpread.value = scene.spread * (multipleText(scene.text) ? Math.min(1, height / width) : 1);
   uniforms.uDispersion.value = scene.fringe;
   uniforms.uDirection.value = scene.direction === 'reverse' ? -1 : 1;
   renderer.render(world, camera);

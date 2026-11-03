@@ -59,3 +59,31 @@ The author's source shader and optical parameters are unavailable. The glass
 field is a reconstruction from visible evidence; engine initialization and export
 success do not by themselves establish visual fidelity. Matching dense frames,
 phase boundaries and letter contours remains the relevant comparison.
+
+## 2026-11-03 release, responsive text and AI component
+
+- Text is preserved as a complete string, including word spaces, CJK graphemes
+  and explicit line breaks. Wide 10:5 and 16:9 canvases keep readable phrases on
+  one line; narrower canvases wrap words and scale the block within the frame.
+  Letter spacing and line spacing are saved scene parameters.
+- The single-letter default image and approved gallery video are frozen.
+  A browser assertion compares the default render to the approved poster pixels.
+- The background card retains the shared image/GIF/video source, crop and trim
+  model used by Sprout Shift. Explicit solid-color choices include pure white;
+  choosing one removes the active media and updates the color swatch.
+- The existing three-column Type Cascade shell, four scheme actions, rounded
+  controls, five semantic phase colors, internal inspector scrolling, and
+  synchronized pause/replay/seek remain in use. Pause to edit seeks to the
+  complete readable opening. The header fits both languages at 320 px.
+- The authored descriptor has 32 parameter paths. Its default preset and the
+  live editor use the same scheme. The five-action AI menu reads the live state
+  after font/media readiness; the shared player embeds the authoritative WebGL
+  renderer. The schema accepts this scene model without adding artificial rows.
+- tests/letter-slices-ai-browser.py verifies responsive word layouts, manual
+  breaks, spacing, Chinese text, solid colors, embedded image/GIF/video assets,
+  actual wide PNG/GIF/MP4 exports, complete live Manifest/schema validation,
+  desktop/mobile UI, both languages/themes, real demo controls, exact
+  editor/player GIF and video pixels, live aspect-ratio updates, invalid bridge
+  source/version rejection, and copied code on a different origin.
+- tests/letter-slices-browser.py verifies the existing editor and export path.
+  Its generated preview is now a test artifact, preserving the published card.

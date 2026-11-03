@@ -95,6 +95,12 @@
 
   function aiPrompt(manifest, language = "zh") {
     const payload = JSON.stringify(manifest, null, 2);
+    if (manifest.effect?.id === 'letter-slices') {
+      const intro = language === 'en'
+        ? 'Integrate the existing CellMotion Letter Slices WebGL renderer using cellmotion-player.js and this complete live-state Manifest. Preserve the complete text, manual line breaks, shared font, canvas ratio, automatic word wrapping, letter and line spacing, glyph size/weight/position, colors, curved glass refraction, spectral edges, direction, all five phase durations, speed, and embedded image/GIF/video background with crop and trim. Pass composition updates to the player; use play, pause, restart and seek for playback. Stage fill, editor language and theme are presentation preferences.'
+        : '接入现有 CellMotion 字形切片 WebGL 渲染器：加载 cellmotion-player.js，把完整实时 Manifest 交给 <cellmotion-player>。保留完整文字、手动换行、共享字体、画布比例、自动换行、字距行距、字形大小与粗细、位置、颜色、曲面玻璃折射、色散边缘、方向、五个阶段时长、速度，以及嵌入的图片/GIF/视频背景和取景裁切。通过播放器 update 更新方案，用 play、pause、restart、seek 控制播放。铺满背景、中英文与明暗主题属于展示偏好。';
+      return intro + '\n\n' + payload;
+    }
     if (manifest.effect?.id === 'metallic-text') {
       const intro = language === 'en'
         ? 'Integrate the existing CellMotion Metallic Text renderer using cellmotion-player.js and this complete live-state Manifest. Preserve the canvas aspect ratio, text, shared font, letter height/weight/spacing, alignment/position, metal/reflection colors, embedded image/GIF/video background, crop and video trim, bevel, sweep direction and deterministic timing. Stage fill is an editor preference. Use the player play, pause, restart, seek and update methods for control.'
