@@ -2,6 +2,14 @@
 
 ## Primary reference: user recording, 2026-11-03
 
+### Horizontal posture correction
+
+- User still rejects the sideways walkers as stooped. The existing test proves a world-space upright trunk, but does not establish that the projected silhouette reads upright.
+- Hypothesis: horizontal perspective convergence displaces the head/shoulders toward the camera's centre while upper-body attenuation erases the shoulder/head silhouette. Compare identical poses on both sides of the viewport, walking in both directions, before changing additional gait channels.
+- Scope: human horizontal upper-body projection and visibility. Keep planted foot geometry, cadence, high heels, vertical walkers, animals, paths, glass grain and code tracker timing fixed. Verify the projected trunk and compare dense side-view frames and real export.
+- Alignment/attenuation alone still left a visually compressed upper trunk in the matched frames. The final lateral projection keeps the trunk over the projected hips, expands the above-hip vertical silhouette by 35%, and reduces upper-body blur by 25% so the shoulder/head do not dissolve into one bent-looking patch. This is a deliberate silhouette correction to the below-glass projection, rather than a claim that the physical camera changed.
+- Verified actual uploaded shadow geometry across both horizontal directions, three viewport positions and four phases: maximum normalized shoulder/hip horizontal displacement falls from 0.01764 to 0.00482. Vertical-person and animal-only frames remain pixel-identical to the previous renderer. All footwear contact/continuity tests pass. Reviewed matched side-view frames and 18 dense frames decoded from the real 1280 × 720 / 30 fps / 360-frame export. PNG/GIF/MP4, mobile entry/toggle and browser-console checks pass; the effect's gallery assets and cache revisions were refreshed.
+
 ### Optional footstep tracking
 
 - Visual correction requested after the first tracker was judged too faint and missing the reference's code-like appearance. The 9.50 s still shows monospaced names and white glyphs through grey body shadows; source inspection confirms labels resolving from symbol noise and brackets tightening during acquisition. Adapt those channels to each foot: resolve `STEP_01.L/R` from deterministic symbols, tighten corner brackets on landing, blink the crosshair during acquisition, and strengthen/enlarge glyph grain in the enabled footstep mode. Keep gait and non-tracking material unchanged. Per-step reacquisition and the scanning line are deliberate emphasis for this adaptation, not claimed as a literal recording of the original overlay.

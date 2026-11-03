@@ -258,7 +258,8 @@
         const hand = add(add(elbow, forward, swing * .5), [0, 0, -.24]);
         cap(shoulder, elbow, .045, .039); cap(elbow, hand, .039, .031);
       }
-      return { parts, footprints, label: interpolate(feet[0], feet[1], .5), kind: 'person', index };
+      const upright = Math.abs(forward[0]) > .75 ? { root, pelvis } : null;
+      return { parts, footprints, upright, label: interpolate(feet[0], feet[1], .5), kind: 'person', index };
     }
     animal(route, age, index, dog) {
       const parts = [], root = route.at(age), f = route.directionAt(age), n = [-f[1], f[0], 0];
@@ -314,13 +315,24 @@
       const gl = this.gl, pr = this.shadowProgram, sw = this.shadowWidth, sh = this.shadowHeight;
       const px = sw / worldWidth;
       const scattering = Math.tan((6 + state.softness * .1) * Math.PI / 180);
-      const project = (point, radius) => {
+      const project = (point, radius, actor) => {
         const z = Math.max(0, point[2]), perspective = depth / (depth + z);
-        const x = eye[0] + (point[0] - eye[0]) * perspective, y = eye[1] + (point[1] - eye[1]) * perspective;
+        let x = eye[0] + (point[0] - eye[0]) * perspective;
+        let y = eye[1] + (point[1] - eye[1]) * perspective, upperBody = 0;
+        if (actor?.upright) {
+          // Keep a lateral trunk above its projected hips rather than tipping it toward the camera centre.
+          const { root, pelvis } = actor.upright;
+          const hipX = eye[0] + (root[0] - eye[0]) * depth / (depth + pelvis[2]);
+          const hipY = eye[1] + (root[1] - eye[1]) * depth / (depth + pelvis[2]);
+          const uprightX = hipX + (point[0] - root[0]) * perspective;
+          upperBody = smooth((z - pelvis[2]) / .2);
+          x = mix(x, uprightX, upperBody);
+          y = mix(y, hipY + (y - hipY) * 1.35, upperBody);
+        }
         const oblique = Math.min(1.6, (1 + ((x - eye[0]) ** 2 + (y - eye[1]) ** 2) / depth ** 2) ** .6);
-        return [x * px, y * px, radius * perspective * px, (.012 + z * scattering * perspective * .5) * px * oblique];
+        return [x * px, y * px, radius * perspective * px, (.012 + z * scattering * perspective * .5) * px * oblique * mix(1, .75, upperBody)];
       };
-      const fade = z => (1 - .2 * smooth(z / .05)) * (1 - .88 * smooth((z - .85) / .5));
+      const fade = (z, actor) => (1 - .2 * smooth(z / .05)) * (actor.upright ? 1 - .75 * smooth((z - .95) / .7) : 1 - .88 * smooth((z - .85) / .5));
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
       gl.viewport(0, 0, sw, sh); gl.disable(gl.SCISSOR_TEST);
       gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
@@ -330,9 +342,9 @@
       for (const actor of actors) {
         let minX = sw, minY = sh, maxX = 0, maxY = 0;
         actor.parts.slice(0, MAX_PARTS).forEach((part, i) => {
-          const a = project(part.a, part.ra), b = project(part.b, part.rb);
+          const a = project(part.a, part.ra, actor), b = project(part.b, part.rb, actor);
           this.starts.set(a, i * 4); this.ends.set(b, i * 4);
-          this.attenuation.set([fade(part.a[2]), fade(part.b[2])], i * 2);
+          this.attenuation.set([fade(part.a[2], actor), fade(part.b[2], actor)], i * 2);
           for (const p of [a, b]) {
             const padding = p[2] + p[3] * 3;
             minX = Math.min(minX, p[0] - padding); maxX = Math.max(maxX, p[0] + padding);
