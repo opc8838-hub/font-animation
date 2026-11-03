@@ -1,6 +1,6 @@
 # CellMotion —— 可编辑动效与视频创作平台
 
-**2026-11-03 玻璃漫步 / Glass Walkers**：[打开独立编辑器](site/glasswalkers.html?from=gallery)。穿平底鞋、尖头鞋和高跟鞋的行人与猫或狗的影子在磨砂玻璃上交错穿行，画面没有中央卡片；可调整角色数量、方向、速度、阴影、网点和画幅，支持方案保存及 PNG / GIF / MP4 导出。参考观察与实现取舍见[动效分析](docs/analyses/glasswalkers.md)。
+**2026-11-03 玻璃漫步 / Glass Walkers**：[打开独立编辑器](site/glasswalkers.html?from=gallery)。穿平底鞋、尖头鞋和高跟鞋的行人与猫或狗的影子在磨砂玻璃上交错穿行，画面没有中央卡片；可调整角色数量、方向、速度、阴影、网点和画幅，支持方案保存及 PNG / GIF / MP4 导出。新增[脚步追踪模式](site/glasswalkers.html?from=gallery&tracking=feet)，左右脚各自带彩色四角框。参考观察与实现取舍见[动效分析](docs/analyses/glasswalkers.md)。
 
 **2026-10-30 立体世界卡片 / Live Portal**：[打开演示与源码页](site/live-portal.html?from=gallery)。把 iPhone 实况照片变成可倾斜、可走进去的立体卡片，手机 / iPad 支持真实陀螺仪，提供方案 A / B 实时体验、「用于 AI」提示词、复刻指南与源码 zip。这是独立展示页，不是编辑器效果，不含保存与导出。
 

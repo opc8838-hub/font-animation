@@ -317,7 +317,7 @@ document.addEventListener('visibilitychange',()=>{
 });
 async function loadCatalogData() {
   try {
-    const response=await fetch('cellmotion-catalog.json?v=20261103-glasswalkers3');
+    const response=await fetch('cellmotion-catalog.json?v=20261103-glasswalkers4');
 
     if(!response.ok)throw new Error(`Catalog HTTP ${response.status}`);
     const catalog=await response.json();

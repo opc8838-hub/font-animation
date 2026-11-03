@@ -2,6 +2,14 @@
 
 ## Primary reference: user recording, 2026-11-03
 
+### Optional footstep tracking
+
+- The recording at 9.50 s shows colored corner brackets and a small label near a person's feet. The source implementation centers its default bracket on the pair of feet; it is not evidence of a separate box on each foot.
+- Requested adaptation: add a selectable footstep mode with one stable L/R identifier per shoe. Frame the current projected shoe geometry, including high heels; dim the frame as that shoe lifts. Use the same below-glass projection and export time as the shadow. Keep the existing figure mode and off switch, including compatibility with older saved schemes.
+- Human gait, animals, glass rendering, default scheme appearance and existing gallery media remain unchanged. Animals retain their existing figure markers.
+- Verified old-versus-new renderer equality in figure mode at the same dimensions and time, deterministic repeated footstep frames and identical output for both modes when markers are off. Browser checks passed for mode selection, off/disabled state, save/reload/import/reset/clear, the direct preview link, English/light theme and mobile layout. Exported PNG, one-second GIF and a complete 12-second 1280 × 720 / 30 fps MP4 with no page errors.
+- The general editor contract checker still reports its 12 asset/text-panel requirements for this procedural effect, which has no text rows or uploaded assets. This checker is not a passing validation; mode-specific browser checks and website checks are separate.
+
 ### Follow-up: shoe variety and upright walking
 
 - User supplied a cropped still of the current preview and rejected its crouched, wide-reaching posture. The still establishes the silhouette problem, not a new measured cadence.

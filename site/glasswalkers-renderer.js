@@ -168,7 +168,7 @@
       return { duration, at, directionAt };
     }
     human(route, age, index) {
-      const parts = [], feet = [], root = route.at(age), forward = route.directionAt(age), sideward = [-forward[1], forward[0], 0];
+      const parts = [], feet = [], footprints = [], root = route.at(age), forward = route.directionAt(age), sideward = [-forward[1], forward[0], 0];
       const cap = (a, b, ra, rb = ra) => parts.push({ a, b, ra, rb });
       const heels = index % 3 === 1, slim = index % 3 !== 0;
       const stature = .94 + noise(index + 12) * .1;
@@ -209,6 +209,7 @@
           }
           return point;
         };
+        const shoeStart = parts.length;
         if (heels) {
           // The heel tip and forefoot touch the glass; the arch stays above it.
           cap(fp(.018), fp(.018, .085), index % 2 ? .011 : .018, .021);
@@ -222,6 +223,7 @@
           cap(fp(.175), fp(slim ? .249 : .225), slim ? .039 : .044, slim ? .009 : .031);
           cap(fp(.05, .025), fp(.19, .025), slim ? .03 : .038, slim ? .034 : .042);
         }
+        footprints.push({ parts: parts.slice(shoeStart), side: side < 0 ? 'L' : 'R' });
         legs.push({ side, p, ankle: fp(.045, heels ? .15 : .075) });
         feet.push(fp(.11));
       }
@@ -256,7 +258,7 @@
         const hand = add(add(elbow, forward, swing * .5), [0, 0, -.24]);
         cap(shoulder, elbow, .045, .039); cap(elbow, hand, .039, .031);
       }
-      return { parts, label: interpolate(feet[0], feet[1], .5), kind: 'person', index };
+      return { parts, footprints, label: interpolate(feet[0], feet[1], .5), kind: 'person', index };
     }
     animal(route, age, index, dog) {
       const parts = [], root = route.at(age), f = route.directionAt(age), n = [-f[1], f[0], 0];
@@ -363,7 +365,40 @@
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       const ctx = target.getContext('2d');
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(this.canvas, 0, 0);
-      if (state.markers) this.drawMarkers(ctx, actors, metres, visualScale);
+      if (state.markers) {
+        if (state.trackingMode === 'feet') {
+          this.drawFootMarkers(ctx, actors, project, width / sw, visualScale);
+          this.drawMarkers(ctx, actors.filter(actor => actor.kind !== 'person'), metres, visualScale);
+        } else this.drawMarkers(ctx, actors, metres, visualScale);
+      }
+    }
+    drawFootMarkers(ctx, actors, project, ratio, scale) {
+      const colors = ['#8067c9', '#2d73b3', '#299d83', '#bb872a', '#2590a0'];
+      ctx.save(); ctx.font = `${9 * scale}px monospace`; ctx.lineWidth = scale;
+      for (const actor of actors) for (const foot of actor.footprints || []) {
+        let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity, height = Infinity;
+        for (const part of foot.parts) for (const [point, radius] of [[part.a, part.ra], [part.b, part.rb]]) {
+          const [x, y, r] = project(point, radius).map(v => v * ratio);
+          left = Math.min(left, x - r); right = Math.max(right, x + r);
+          top = Math.min(top, y - r); bottom = Math.max(bottom, y + r);
+          height = Math.min(height, point[2]);
+        }
+        const pad = 5 * scale, arm = 8 * scale;
+        left -= pad; right += pad; top -= pad; bottom += pad;
+        if (right < 0 || left > ctx.canvas.width || bottom < 0 || top > ctx.canvas.height) continue;
+        ctx.strokeStyle = ctx.fillStyle = colors[actor.index % colors.length];
+        ctx.globalAlpha = .3 + .58 * (1 - smooth((height - .015) / .12));
+        ctx.beginPath();
+        for (const [x, y, dx, dy] of [[left, top, 1, 1], [right, top, -1, 1], [left, bottom, 1, -1], [right, bottom, -1, -1]]) {
+          ctx.moveTo(x + dx * arm, y); ctx.lineTo(x, y); ctx.lineTo(x, y + dy * arm);
+        }
+        ctx.stroke();
+        ctx.fillText(String(actor.index + 1).padStart(2, '0') + ' ' + foot.side, left, top - 4 * scale);
+        const x = (left + right) / 2, y = (top + bottom) / 2;
+        ctx.fillRect(x - 2 * scale, y, 4 * scale, .6 * scale);
+        ctx.fillRect(x, y - 2 * scale, .6 * scale, 4 * scale);
+      }
+      ctx.restore();
     }
     drawMarkers(ctx, actors, metres, scale) {
       const colors = ['#8067c9', '#2d73b3', '#299d83', '#bb872a', '#2590a0'];

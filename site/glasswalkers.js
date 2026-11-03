@@ -8,7 +8,7 @@
   const defaults = Object.freeze({
     version: 1, width: 1920, height: 1080, peopleCount: 6, animalCount: 1,
     animalKind: 'cat', direction: 'mixed', speed: 1, figureSize: 100,
-    softness: 70, halftone: 75, background: '#f8f8f8', shadow: '#0a0a0e', markers: true
+    softness: 70, halftone: 75, background: '#f8f8f8', shadow: '#0a0a0e', markers: true, trackingMode: 'person'
   });
   const storageKey = 'cellmotion-glasswalkers-v1';
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -31,20 +31,22 @@
       halftone: number(source.halftone, defaults.halftone, 0, 100),
       background: hex(source.background) || defaults.background,
       shadow: hex(source.shadow) || defaults.shadow,
-      markers: source.markers !== false
+      markers: source.markers !== false,
+      trackingMode: source.trackingMode === 'feet' ? 'feet' : 'person'
     };
   }
   const galleryEntry = new URLSearchParams(location.search).has('from');
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch (_) {}
   let state = normalize(galleryEntry ? defaults : saved || defaults);
+  if (new URLSearchParams(location.search).get('tracking') === 'feet') state = { ...state, markers: true, trackingMode: 'feet' };
   let language = localStorage.getItem('cellmotion-site-language') === 'en' ? 'en' : 'zh';
   let theme = localStorage.getItem('cellmotion-site-theme') === 'light' ? 'light' : 'dark';
   let selectedFigure = 'people', panel = 'figure', playing = !matchMedia('(prefers-reduced-motion: reduce)').matches;
   let time = 0, started = performance.now(), raf = 0, autosave = 0, exporting = false;
   const frame = $('compositionFrame');
   const stage = document.querySelector('.gm-stage');
-  const controls = ['peopleCount', 'animalCount', 'animalKind', 'direction', 'speed', 'figureSize', 'softness', 'halftone', 'background', 'shadow', 'markers'];
+  const controls = ['peopleCount', 'animalCount', 'animalKind', 'direction', 'speed', 'figureSize', 'softness', 'halftone', 'background', 'shadow', 'markers', 'trackingMode'];
   const labels = {
     people: ['行人穿行', 'People crossing'],
     animal: ['人流与动物', 'People and animals'],
@@ -164,6 +166,7 @@
       const output = document.querySelector('output[for="' + id + '"]');
       if (output) output.textContent = id === 'speed' ? state[id].toFixed(2) + '×' : String(state[id]) + (['figureSize', 'softness', 'halftone'].includes(id) ? '%' : '');
     }
+    $('trackingMode').disabled = !state.markers;
     const preset = state.width + 'x' + state.height;
     $('canvasPreset').value = [...$('canvasPreset').options].some(option => option.value === preset) ? preset : 'custom';
     $('customSize').hidden = $('canvasPreset').value !== 'custom';
