@@ -9,6 +9,7 @@
 - Human gait, animals, glass rendering, default scheme appearance and existing gallery media remain unchanged. Animals retain their existing figure markers.
 - Verified old-versus-new renderer equality in figure mode at the same dimensions and time, deterministic repeated footstep frames and identical output for both modes when markers are off. Browser checks passed for mode selection, off/disabled state, save/reload/import/reset/clear, the direct preview link, English/light theme and mobile layout. Exported PNG, one-second GIF and a complete 12-second 1280 × 720 / 30 fps MP4 with no page errors.
 - The general editor contract checker still reports its 12 asset/text-panel requirements for this procedural effect, which has no text rows or uploaded assets. This checker is not a passing validation; mode-specific browser checks and website checks are separate.
+- Entry follow-up: the user could not find the new mode. All local gallery/home/library links now explicitly select footstep tracking, and a visible stage toggle reports its on/off state and stays synchronized with the inspector. Verified entry with both clean storage and an old saved scheme with markers disabled, pixel restoration after toggling, and 320/390 px layouts. The default Reset scheme and gallery media remain unchanged. These changes are local; an HTTP check of `https://cellmotion.cn/glasswalkers.html` returned 404 on 2026-11-03, so no online release is claimed.
 
 ### Follow-up: shoe variety and upright walking
 

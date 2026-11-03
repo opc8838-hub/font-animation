@@ -155,6 +155,9 @@
     $('languageToggle').textContent = language === 'en' ? '中' : 'EN';
     $('peopleSummary').textContent = language === 'en' ? state.peopleCount + ' people · crossing' : state.peopleCount + ' 人 · 交错穿行';
     $('animalSummary').textContent = language === 'en' ? state.animalCount + ' · ' + state.animalKind : state.animalCount + ' 只 · ' + (state.animalKind === 'dog' ? '狗' : '猫') + '影经过';
+    const tracking = state.markers && state.trackingMode === 'feet';
+    $('trackingToggle').setAttribute('aria-pressed', String(tracking));
+    $('trackingToggle').textContent = tracking ? say('脚步追踪：开', 'Foot tracking: On') : say('脚步追踪：关', 'Foot tracking: Off');
     updateTimeline();
     syncPlayback();
   }
@@ -284,6 +287,12 @@
   $('exportDuration').addEventListener('change', () => { $('customDurationRow').hidden = $('exportDuration').value !== 'custom'; });
   $('replay').addEventListener('click', () => { time = 0; playing = true; start(); redraw(); });
   $('pause').addEventListener('click', () => { playing = !playing; start(); });
+  $('trackingToggle').addEventListener('click', () => {
+    const tracking = state.markers && state.trackingMode === 'feet';
+    state.trackingMode = tracking ? 'person' : 'feet';
+    state.markers = true;
+    syncForm(); saveSoon();
+  });
   $('scrubber').addEventListener('input', event => { playing = false; time = clamp(Number(event.target.value), 0, cycle()); start(); redraw(); });
   $('timeline').addEventListener('click', event => {
     const button = event.target.closest('[data-seek]');
