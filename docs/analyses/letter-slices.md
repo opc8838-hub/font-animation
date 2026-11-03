@@ -1,40 +1,89 @@
 # 字形切片 / Letter Slices
 
-## 2026-11-02 WebGL correction
+## Source and corrected rendering model
 
-The previous Canvas composite was rejected because its striped surface had no geometric depth. The source video's 1.8–2.15 s frames show separated blade tips, visible side walls, mutual occlusion, a mostly charcoal front and narrow blue/cyan edge lighting. The static letter and 4.088 s rhythm remain the observable anchors. The exact source mesh, font and shader are unavailable.
+Reference: https://x.com/abduzeedo/status/2115976186711134655.
+The original recording is 1080 × 1080, 4.088 s and 240 frames.
+The user also supplied the desktop file 微信视频2026-11-02_151456_633.mp4:
+592 × 1280, 13.433 s, containing repeated playback of the same effect in X.
+Both files remain in local working storage. They are not repository assets.
 
-The current implementation uses the repository's vendored Three.js module. It samples the current font glyph into vertical contour runs, builds actual front/back/side/top faces, and projects the slice groups with an orthographic 3D camera. Group count increases during expansion; thin side faces receive blue and warm edge colors while a dark central body preserves the letter. The 3D renderer draws to the same Canvas used by live preview and PNG/GIF/MP4 export. This is a geometric approximation of the visible motion, not a claim about the original author's software.
+The user rejected both the flat Canvas stripes and the extruded Three.js blade
+mesh. Their silhouettes and material response did not match the optical warping
+in the recording. Merely switching to a 3D engine was insufficient.
 
-## 2026-11-02 correction
+## Visible evidence
 
-The earlier explanation below described horizontal sampling displacement. Frame by frame review of the source video at 0.55, 1.8 and 2.15 seconds disproved that model. The peak has repeated dark letter planes with white gaps, a solid central body and narrow blue/cyan and amber edge light. Its outer shape remains readable as `a`. A simple striped glyph looked flat; fully compressed copies made a rectangular block.
+| Original time | Observation | Reconstruction |
+| --- | --- | --- |
+| 0–0.3 s | Complete charcoal lowercase a on white | Undistorted glyph |
+| 0.3–0.9 s | A few broad regions bend the letter; blue/cyan and amber collect at their edges | Low frequency glass refraction builds continuously |
+| 0.9–1.65 s | Broad regions subdivide into many narrower repetitions | Increase cylindrical lens frequency and optical depth together |
+| 1.65–2.45 s | Curved, pointed contours repeat along the outer edge and counter; central dark regions merge | Refract the continuous letter image rather than adding solid blade geometry |
+| 2.45–3.5 s | Repetitions broaden, their number falls, the original letter returns | Reverse the same continuous optical field |
+| 3.5–4.088 s | Complete letter holds | Undistorted glyph |
 
-The revised renderer repeats horizontally compressed copies of the selected glyph, clips them to a widened glyph silhouette, and retains a dark central body. Blue, cyan and amber copies are offset by a few pixels behind each dark face, with a weak blurred blue halo. The number of visible planes grows during expansion and shrinks during return. A full glyph fades over the early and late transitions so the shape does not break apart before the planes have spread.
+The desktop recording confirms the curved edge and color split around 2, 3,
+4, 7, 11 and 12 s. Watch supplied chronological frames; FFmpeg supplied dense
+sampling and matching reference/export sheets.
 
-This remains an approximation: the post does not provide its source font, 3D geometry, material settings or motion curves. The default uses the shared Montserrat preset, while the same rendering and export path supports other text and font choices.
+## Renderer
 
-来源：[Fabio - abduzeedo 的 X 视频](https://x.com/abduzeedo/status/2115976186711134655)，2026-10-30 发布。保存原视频于本地工作输出，未提交仓库。原片为 1080×1080、4.088 秒、240 帧、约 58.7 FPS，无音轨。用 Watch 浏览全片，用 FFmpeg 以 8 FPS 抽取接触表，并核对 0.1 秒与 1.65 秒的全尺寸帧。
+One full-screen Three.js shader uses the selected font's alpha texture. A periodic
+convex normal field and GLSL refract calculate lateral sampling travel through a
+glass array. Lens density and travel grow with one timeline progress value.
+Separate spectral samples produce cyan/blue and amber edges. White reflections
+stay weak so the broad letter face remains charcoal. Preview, seeking and real
+PNG/GIF/MP4 exports share this deterministic renderer.
 
-## 可见证据
+The existing Glass Icon Reveal core was inspected for its refraction, spectral
+sampling and rim-light treatment. Its droplet/tile geometry is not part of this
+effect and is not applied to the letter.
 
-| 时间 | 观察 | 实现解释 | 把握 |
-| --- | --- | --- | --- |
-| 0–0.3s | 白底中央为完整深灰色小写 `a` | 字形静态停留 | 高 |
-| 0.3–0.8s | 字形先出现数层错位，边缘有微弱蓝、橙色 | 切片位移从零加速，叠加色边 | 高 |
-| 0.8–1.5s | 字形分裂为越来越密的纵向竖片，内孔也出现重复轮廓 | 水平方向的周期性采样位移 | 高 |
-| 1.5–2.5s | 竖片形成尖锐锯齿边缘，整体仍读得出 `a`，变化很小 | 展开峰值短暂停留 | 高 |
-| 2.5–3.5s | 竖片逐步合并，重复轮廓消失 | 同一位移场反向收拢 | 高 |
-| 3.5–4.088s | 完整字形重新出现 | 收尾停留，进入循环 | 高 |
+## Typography
 
-## 动作约束
+Normalized static glyph masks were compared against the source. The local Inter
+variable font at weight 700 and optical size 14 gave approximately 99.4% binary
+intersection over union after fitting the bounds. The browser's automatic optical
+size selected a visibly different terminal, so this effect registers a fixed
+optical-size face from the existing shared font file. No font asset is duplicated.
+Other font choices and Latin/Chinese/Japanese/Korean text remain editable.
 
-- 背景固定白色；主体为单个深灰字形，光学中心在方形画布中央。
-- 切片只改变字形的水平取样位置，不改变字母身份；蓝、橙错位贴近切片边缘。
-- 展开和收拢使用同一条位移函数，峰值附近短暂停留。
-- 换字母、中文、日文或韩文字符时，沿用同一切片运动；字体从共享字库选择。
-- 预览、逐帧定位与 PNG/GIF/MP4 导出调用同一个确定性 Canvas 绘制函数。
+## Verification and uncertainties
 
-## 取舍与未确定项
+Browser checks cover real WebGL creation, both directions, multiple glyphs,
+desktop/mobile fit, saved schemes, and actual PNG/GIF/MP4 downloads. The gallery
+video is exported with the same default font as the editor.
 
-原视频未公开逐帧工程参数或字体文件，推文只提到使用外部工具制作。默认使用共享字库中的 Montserrat 近似字形；条纹来自周期性横向采样，微小色边以蓝橙两层模拟。原片底部的创作者网址属于作品署名，不作为可替换文字动效的一部分写进导出画面。
+The author's source shader and optical parameters are unavailable. The glass
+field is a reconstruction from visible evidence; engine initialization and export
+success do not by themselves establish visual fidelity. Matching dense frames,
+phase boundaries and letter contours remains the relevant comparison.
+
+## 2026-11-03 release, responsive text and AI component
+
+- Text is preserved as a complete string, including word spaces, CJK graphemes
+  and explicit line breaks. Wide 10:5 and 16:9 canvases keep readable phrases on
+  one line; narrower canvases wrap words and scale the block within the frame.
+  Letter spacing and line spacing are saved scene parameters.
+- The single-letter default image and approved gallery video are frozen.
+  A browser assertion compares the default render to the approved poster pixels.
+- The background card retains the shared image/GIF/video source, crop and trim
+  model used by Sprout Shift. Explicit solid-color choices include pure white;
+  choosing one removes the active media and updates the color swatch.
+- The existing three-column Type Cascade shell, four scheme actions, rounded
+  controls, five semantic phase colors, internal inspector scrolling, and
+  synchronized pause/replay/seek remain in use. Pause to edit seeks to the
+  complete readable opening. The header fits both languages at 320 px.
+- The authored descriptor has 32 parameter paths. Its default preset and the
+  live editor use the same scheme. The five-action AI menu reads the live state
+  after font/media readiness; the shared player embeds the authoritative WebGL
+  renderer. The schema accepts this scene model without adding artificial rows.
+- tests/letter-slices-ai-browser.py verifies responsive word layouts, manual
+  breaks, spacing, Chinese text, solid colors, embedded image/GIF/video assets,
+  actual wide PNG/GIF/MP4 exports, complete live Manifest/schema validation,
+  desktop/mobile UI, both languages/themes, real demo controls, exact
+  editor/player GIF and video pixels, live aspect-ratio updates, invalid bridge
+  source/version rejection, and copied code on a different origin.
+- tests/letter-slices-browser.py verifies the existing editor and export path.
+  Its generated preview is now a test artifact, preserving the published card.

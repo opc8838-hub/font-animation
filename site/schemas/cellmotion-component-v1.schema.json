@@ -35,6 +35,18 @@
           "properties": { "effect": { "const": "metallic-text" }, "version": { "const": 1 }, "scene": { "type": "object", "required": ["text", "font", "intro", "sweep", "hold", "speed"] } }
         },
         {
+          "required": ["effect", "version", "canvas", "scene"],
+          "properties": {
+            "effect": { "const": "letter-slices" },
+            "version": { "const": 1 },
+            "canvas": { "type": "object", "required": ["width", "height"], "properties": {
+              "width": { "type": "integer", "minimum": 128, "maximum": 3840, "multipleOf": 2 },
+              "height": { "type": "integer", "minimum": 128, "maximum": 3840, "multipleOf": 2 }
+            } },
+            "scene": { "type": "object", "required": ["text", "font", "intro", "sweep", "hold", "return", "settle", "speed"], "properties": { "text": { "type": "string" } } }
+          }
+        },
+        {
           "required": ["effect", "version", "settings", "assets"],
           "properties": {
             "effect": { "const": "curvedgallery" },

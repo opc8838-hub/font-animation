@@ -1,0 +1,35 @@
+{
+  "effect": "letter-slices",
+  "version": 1,
+  "canvas": {
+    "width": 1080,
+    "height": 1080
+  },
+  "settings": {
+    "font": "stg:inter"
+  },
+  "scene": {
+    "text": "a",
+    "font": "stg:inter",
+    "fontSize": 0.56,
+    "fontHeight": 1,
+    "extraBold": 0,
+    "positionX": -1,
+    "background": "#ffffff",
+    "textColor": "#252727",
+    "slices": 44,
+    "spread": 0.22,
+    "fringe": 2,
+    "direction": "forward",
+    "intro": 0.3,
+    "sweep": 1.35,
+    "hold": 0.8,
+    "return": 1.05,
+    "settle": 0.6,
+    "speed": 1,
+    "tracking": 0,
+    "lineHeight": 1.22,
+    "positionY": 0,
+    "alignment": "center"
+  }
+}

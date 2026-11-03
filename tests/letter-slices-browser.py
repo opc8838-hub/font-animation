@@ -5,7 +5,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from threading import Thread
 
-from PIL import Image
+from PIL import Image, ImageChops, ImageStat
 from playwright.sync_api import sync_playwright
 
 
@@ -17,9 +17,16 @@ OUT.mkdir(parents=True, exist_ok=True)
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self, *args):
         pass
+    def handle(self):
+        try:
+            super().handle()
+        except (ConnectionAbortedError, ConnectionResetError):
+            pass
 
+class TestServer(ThreadingHTTPServer):
+    request_queue_size = 128
 
-server = ThreadingHTTPServer(("127.0.0.1", 0), partial(QuietHandler, directory=str(ROOT / "site")))
+server = TestServer(("127.0.0.1", 0), partial(QuietHandler, directory=str(ROOT / "site")))
 Thread(target=server.serve_forever, daemon=True).start()
 
 try:
@@ -31,6 +38,8 @@ try:
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto(f"http://127.0.0.1:{server.server_port}/letter-slices.html?from=gallery")
         page.wait_for_function("Boolean(window.CellMotionLetterSlices)")
+        page.wait_for_function("""document.fonts.check('700 120px "CellMotion Letter Inter"')""")
+        page.evaluate("async () => { await document.fonts.ready; LetterSlicesRenderer.invalidate(); }")
         page.locator("#playButton").click()
         page.screenshot(path=str(OUT / "desktop-editor.png"))
         assert page.locator("#text").input_value() == "a"
@@ -41,6 +50,11 @@ try:
         assert page.evaluate("LetterSlicesRenderer.backend === 'three-webgl' && LetterSlicesRenderer.webglActive")
         poster = page.evaluate("""() => { const canvas=document.createElement('canvas'); canvas.width=1080; canvas.height=1080; CellMotionLetterSlices.render(canvas,1.8); return canvas.toDataURL('image/png').split(',')[1]; }""")
         (OUT / "poster.png").write_bytes(base64.b64decode(poster))
+        small = page.evaluate("""() => { const canvas=document.createElement('canvas'); canvas.width=540; canvas.height=540; CellMotionLetterSlices.render(canvas,1.8); return canvas.toDataURL('image/png').split(',')[1]; }""")
+        (OUT / "half-size.png").write_bytes(base64.b64decode(small))
+        large = Image.open(OUT / "poster.png").convert("RGB").resize((540, 540))
+        small_image = Image.open(OUT / "half-size.png").convert("RGB")
+        assert max(ImageStat.Stat(ImageChops.difference(large, small_image)).mean) < 3
         page.evaluate("""() => { const field=document.querySelector('#direction'); field.value='reverse'; field.dispatchEvent(new Event('change')); }""")
         page.evaluate("CellMotionLetterSlices.seek(1.8)")
         page.locator("#view").screenshot(path=str(OUT / "reverse.png"))
@@ -68,7 +82,7 @@ try:
         download.value.save_as(OUT / "Korean-export.png")
         assert Image.open(OUT / "Korean-export.png").convert("L").getextrema()[0] < 100
         page.locator("#text").fill("a")
-        page.evaluate("""() => { const field=document.querySelector('#font'); field.value='stg:montserrat'; field.dispatchEvent(new Event('change')); }""")
+        page.evaluate("""() => { const field=document.querySelector('#font'); field.value='stg:inter'; field.dispatchEvent(new Event('change')); }""")
         page.select_option("#canvasPreset", "custom")
         page.locator("#canvasWidth").fill("256")
         page.locator("#canvasWidth").dispatch_event("change")
@@ -100,7 +114,11 @@ try:
         page.set_viewport_size({"width": 390, "height": 844})
         page.wait_for_timeout(250)
         page.screenshot(path=str(OUT / "mobile-editor.png"))
-        assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 2")
+        assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 2"), page.evaluate("""()=>({
+          width:innerWidth,scroll:document.documentElement.scrollWidth,body:document.body.className,
+          header:getComputedStyle(document.querySelector('.tc-header')).display,
+          sheets:[...document.styleSheets].map(s=>s.href)
+        })""")
         page.set_viewport_size({"width": 1440, "height": 900})
         page.evaluate("""() => {
           for (const [id, value] of [['canvasPreset','1080x1080'],['exportDuration','cycle'],['exportFps','24'],['exportScale','0.5']]) {
@@ -109,7 +127,10 @@ try:
         }""")
         with page.expect_download(timeout=180000) as download:
             page.locator("#exportMp4").click()
-        download.value.save_as(ROOT / "site" / "assets" / "previews" / "letter-slices-card.mp4")
+        download.value.save_as(OUT / "default-preview.mp4")
+        final = page.evaluate("""() => { const canvas=document.createElement('canvas'); canvas.width=1080; canvas.height=1080; CellMotionLetterSlices.render(canvas,1.8); return canvas.toDataURL('image/png').split(',')[1]; }""")
+        (OUT / "after-import.png").write_bytes(base64.b64decode(final))
+        assert final == poster
         assert not errors, (errors, page.evaluate("[typeof CellMotionBridge, [...document.scripts].map(s => s.src)]"))
         page.goto(f"http://127.0.0.1:{server.server_port}/gallery.html?legacy=1")
         page.wait_for_timeout(500)
@@ -118,7 +139,10 @@ try:
         assert page.locator('[data-effect="letter-slices"] video.effect-loop').count() == 1
         page.goto(f"http://127.0.0.1:{server.server_port}/cellmotion-components.html")
         page.locator("#search").fill("字形切片")
-        page.wait_for_function("document.querySelectorAll('#catalog-grid a[href*=\"letter-slices.html\"]').length > 0")
+        try:
+            page.wait_for_function("document.querySelectorAll('#catalog-grid a[href*=\"letter-slices.html\"]').length > 0")
+        except Exception:
+            raise AssertionError({"errors": errors, "body": page.locator("body").inner_text()[:1500]})
         assert not errors, errors
         browser.close()
 finally:

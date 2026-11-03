@@ -19,8 +19,14 @@ body.metallic-editor { margin: 0; grid-template-columns: 250px minmax(250px, 1fr
 .metallic-editor .metal-card, .metallic-editor .control-group { border: 1px solid var(--tc-line); border-radius: 14px; background: var(--tc-surface); padding: 13px; margin-bottom: 16px; }
 .metallic-editor .field { display: grid; gap: 9px; margin: 0 0 18px; color: var(--tc-text); }
 .metallic-editor .field:last-child { margin-bottom: 0; }
-.metallic-editor input:not([type="range"]):not([type="color"]), .metallic-editor select { width: 100%; min-width: 0; color: var(--tc-text); background: var(--tc-input); border: 1px solid var(--tc-line); border-radius: 10px; }
+.metallic-editor input:not([type="range"]):not([type="color"]), .metallic-editor select, .metallic-editor textarea { width: 100%; min-width: 0; color: var(--tc-text); background: var(--tc-input); border: 1px solid var(--tc-line); border-radius: 10px; }
 .metallic-editor #text { min-height: 46px; font-size: 20px; }
+.metallic-editor textarea#text { min-height: 78px; padding: 10px; resize: vertical; font: inherit; font-size: 17px; line-height: 1.4; }
+.metallic-editor .background-colors { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 5px; margin: 0 0 18px; }
+.metallic-editor .background-colors button { display: grid; justify-items: center; gap: 5px; padding: 6px 2px; border: 1px solid var(--tc-line); border-radius: 10px; background: var(--tc-input); color: var(--tc-text); font-size: 10px; }
+.metallic-editor .background-colors i { width: 19px; height: 19px; border: 1px solid #8886; border-radius: 6px; background: var(--swatch); }
+.metallic-editor .background-colors button[aria-pressed="true"] { border-color: var(--tc-accent); box-shadow: inset 0 0 0 1px var(--tc-accent); }
+.metallic-editor .background-colors button:focus-visible { outline: 2px solid var(--tc-accent); outline-offset: 2px; }
 .metallic-editor .range-row { display: grid; grid-template-columns: minmax(0, 1fr) 88px; align-items: center; gap: 10px; }
 .metallic-editor .range-row input { width: 100%; min-width: 0; }
 .metallic-editor output { text-align: right; color: var(--tc-muted); font-size: 12px; }

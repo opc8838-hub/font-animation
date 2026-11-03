@@ -4,7 +4,7 @@
 
 **2026-10-30 立体世界卡片 / Live Portal**：[打开演示与源码页](site/live-portal.html?from=gallery)。把 iPhone 实况照片变成可倾斜、可走进去的立体卡片，手机 / iPad 支持真实陀螺仪，提供方案 A / B 实时体验、「用于 AI」提示词、复刻指南与源码 zip。这是独立展示页，不是编辑器效果，不含保存与导出。
 
-**2026-11-01 字形切片 / Letter Slices**：[打开编辑器](site/letter-slices.html?from=gallery)。根据[原帖视频](https://x.com/abduzeedo/status/2115976186711134655)制作白底黑字的 Three.js / WebGL 立体切片动效，片体具有深度、遮挡和蓝色侧缘。默认字母为 `a`，支持更换单个字母或中日韩字符、字体、切片数量、展开幅度与节奏，并支持 PNG / GIF / MP4 导出。拆解见[分析](docs/analyses/letter-slices.md)。
+**2026-11-03 字形切片 / Letter Slices**：[打开编辑器](site/letter-slices.html?from=gallery&v=20261103-layout-ai1) · [AI 组件演示](site/typecascade-component-demo.html?effect=letter-slices)。根据[原帖视频](https://x.com/abduzeedo/status/2115976186711134655)制作 WebGL 玻璃折射动效，通过曲面折射和蓝橙色散形成重复文字轮廓。支持字母、单词、中日韩文字与手动换行，按 10:5、16:9、竖屏等画布比例自动适配，提供字距、行距、纯白与多色背景、图片/GIF/裁切视频、方案保存及 PNG/GIF/MP4 导出。「用于 AI」包含实时预览、提示词、配置代码、组件 JSON 和 32 项参数说明。拆解与校验见[分析](docs/analyses/letter-slices.md)。
 
 **2026-10-28 网格显影 / Dither / ASCII**：[打开编辑器](site/dither-ascii.html?from=gallery)。根据[原帖视频](https://x.com/Kubai087/status/2115091203465290087)制作振翅蝴蝶网格与橙蓝背景；成品画面让蝴蝶占满居中的卡片。支持 ASCII / Bayer 4×4 Dither、遮罩、色调、采样强度、大小、间距、素材上传、方案保存及 PNG / GIF / H.264 MP4 导出。视频拆解与实现取舍见[分析](docs/analyses/dither-ascii.md)。
 

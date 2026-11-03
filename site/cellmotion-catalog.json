@@ -18,7 +18,7 @@
     },
     {
       "id": "letter-slices",
-      "date": "2026-11-01"
+      "date": "2026-11-03"
     },
     {
       "id": "live-portal",
@@ -173,11 +173,15 @@
       "id": "letter-slices",
       "name": "字形切片",
       "english": "Letter Slices",
-      "description": "单字竖切 · 密集残影 · 收拢复原",
+      "description": "玻璃折射 · 多文字排版 · 蓝橙色散",
       "category": "type",
-      "href": "letter-slices.html?from=gallery&v=20261102-webgl1",
-      "poster": "final_letter-slices.png?v=20261102-webgl1",
-      "video": "assets/previews/letter-slices-card.mp4?v=20261102-webgl1",
+      "href": "letter-slices.html?from=gallery&v=20261103-layout-ai1",
+      "poster": "final_letter-slices.png?v=20261102-refraction1",
+      "video": "assets/previews/letter-slices-card.mp4?v=20261102-refraction1",
+      "webComponent": {
+        "preview": "typecascade-component-demo.html?effect=letter-slices",
+        "descriptor": "effects/letter-slices.component.json"
+      },
       "status": "ready"
     },
     {
