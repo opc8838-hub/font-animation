@@ -13,8 +13,9 @@ const route = {
   }
 };
 const distance = (a, b) => Math.hypot(...a.map((v, i) => v - b[i]));
-for (const index of [0, 1, 2, 4]) {
+for (const index of [0, 1, 2, 3, 4, 5, 6, 7]) {
   let previous, previousParts, still = [0, 0], longest = [0, 0], maxJump = 0, lifted = false;
+  let swingPeak = { angle: 0, phase: 0 }, landingMax = 0, stanceMax = 0, loadingPeak = 0;
   const shoeParts = index % 3 === 1 ? 5 : 4;
   for (let frame = 0; frame <= 720; frame++) {
     const human = renderer.human(route, frame / 120, index);
@@ -24,6 +25,14 @@ for (const index of [0, 1, 2, 4]) {
     const lengths = legs.map(part => distance(part.a, part.b));
     assert(Math.max(...lengths) - Math.min(...lengths) < 1e-8, 'Leg bones must retain equal lengths instead of stretching at toe-off');
     const reach = [0, 2].map(i => distance(legs[i].a, legs[i + 1].b) / (lengths[i] + lengths[i + 1]));
+    for (let foot = 0; foot < 2; foot++) {
+      const phase = human.footprints[foot].phase;
+      const flexion = 2 * Math.acos(Math.min(1, reach[foot])) * 180 / Math.PI;
+      if (phase >= .2 && phase <= .38) stanceMax = Math.max(stanceMax, flexion);
+      if (phase >= .05 && phase <= .15) loadingPeak = Math.max(loadingPeak, flexion);
+      if (phase >= .97 || phase <= .025) landingMax = Math.max(landingMax, flexion);
+      if (phase >= .62 && flexion > swingPeak.angle) swingPeak = { angle: flexion, phase };
+    }
     assert(Math.max(...reach) > .93, 'At least one supporting leg must extend instead of both knees crouching');
     if (previousParts) human.parts.forEach((part, i) => {
       for (const end of ['a', 'b']) assert(distance(part[end], previousParts[i][end]) < .045, 'Body and shoe joints must move continuously');
@@ -49,7 +58,11 @@ for (const index of [0, 1, 2, 4]) {
   assert(longest.every(frames => frames >= 30), 'Each foot must stay planted for at least 0.25 seconds');
   assert(lifted, 'Swinging feet must leave the glass');
   assert(maxJump < .045, `Foot teleport at stance/swing boundary: ${maxJump} m`);
-  console.log(`PASS profile ${index}: planted intervals ${longest.map(n => (n / 120).toFixed(2)).join('/')} s; largest 120 fps foot displacement ${maxJump.toFixed(4)} m.`);
+  assert(stanceMax < 10, `Support knee remains bent at midstance: ${stanceMax.toFixed(1)} degrees`);
+  assert(loadingPeak > 10 && loadingPeak < 23, `Loading knee must absorb contact without staying crouched: ${loadingPeak.toFixed(1)} degrees`);
+  assert(landingMax < 18, `Leading knee must extend before landing: ${landingMax.toFixed(1)} degrees`);
+  assert(swingPeak.phase < .82, `Swing knee flexion peaks too late: ${(swingPeak.phase * 100).toFixed(1)}%`);
+  console.log(`PASS profile ${index}: midstance ${stanceMax.toFixed(1)}°, landing ${landingMax.toFixed(1)}°, swing peak at ${(swingPeak.phase * 100).toFixed(1)}%; planted ${longest.map(n => (n / 120).toFixed(2)).join('/')} s; largest foot displacement ${maxJump.toFixed(4)} m.`);
 }
 for (const dog of [false, true]) {
   const pet = renderer.animal(route, 3, 0, dog);

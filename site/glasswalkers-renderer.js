@@ -190,9 +190,10 @@
           hinge = p > .41 ? 1 : 0;
         } else {
           const u = (p - .62) / .38;
-          heel = interpolate(add(old, plantedDirection, .029), next, smooth(u));
-          heel[2] = .17 * Math.sin(.59) * (1 - u) + .055 * Math.sin(Math.PI * u);
-          pitch = mix(.59, -.14, smooth(u));
+          const recovery = u / (.65 + .35 * u);
+          heel = interpolate(add(old, plantedDirection, .029), next, smooth(recovery));
+          heel[2] = .17 * Math.sin(.59) * (1 - smooth(u / .65)) + .065 * Math.sin(Math.PI * recovery);
+          pitch = mix(.59, -.14, smooth(u / .7));
           hinge = 1 - smooth(u / .18);
           heading = unit(interpolate(plantedDirection, route.directionAt(strike + period), smooth(u)));
         }
@@ -228,12 +229,13 @@
         feet.push(fp(.11));
       }
       // Support the pelvis on the planted leg instead of keeping both knees crouched.
-      const reach = .93 * stature, bone = .47 * stature;
+      const reach = .9386 * stature, bone = .47 * stature;
       const support = legs.map(leg => {
         const hipXY = add(root, sideward, leg.side * .075);
         const horizontal = Math.hypot(hipXY[0] - leg.ankle[0], hipXY[1] - leg.ankle[1]);
         const weight = leg.p < .62 ? Math.sin(leg.p / .62 * Math.PI) ** 2 : 0;
-        return { weight, height: (heels ? .15 : .075) + Math.sqrt(Math.max(.01, reach ** 2 - horizontal ** 2)), limit: leg.ankle[2] + Math.sqrt(Math.max(.01, (bone * 1.997) ** 2 - horizontal ** 2)) };
+        const loading = .0085 * stature * Math.sin(Math.PI * clamp(leg.p / .2, 0, 1)) ** 2;
+        return { weight, height: leg.ankle[2] + Math.sqrt(Math.max(.01, reach ** 2 - horizontal ** 2)) - loading, limit: leg.ankle[2] + Math.sqrt(Math.max(.01, (bone * 1.997) ** 2 - horizontal ** 2)) };
       });
       const supportHeight = support.reduce((v, s) => v + s.height * s.weight, 0) / support.reduce((v, s) => v + s.weight, 0);
       const pelvis = add(root, [0, 0, Math.min(supportHeight, ...support.map(s => s.limit))]);

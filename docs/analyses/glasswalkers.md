@@ -2,6 +2,15 @@
 
 ## Primary reference: user recording, 2026-11-03
 
+### Knee and stride correction after posture-only rejection
+
+- User explicitly rejected the legs/knees after the upper-body projection revision. Do not treat an upright trunk, leg-length continuity or an old-looking screenshot as proof of an accepted gait.
+- Measured failure: flat-shoe midstance knee flexion remains approximately 17.6°, initial contact approximately 32°, and swing flexion peaks near 85% of the stride. The support-height estimate used a fixed flat-foot ankle height even while the trailing heel rolled upward; the swing recovered too late and the incoming knee never fully extended.
+- Change the human lower-body channel: compute support height from the actual ankle position, extend the weight-bearing knee, recover the swing foot earlier, and lower/extend it before landing. Keep shoes, paths, animals, code effects and current upper-body appearance fixed. Add phase-specific knee checks before accepting the result.
+- Phase-order reference: [University of Oklahoma knee movement](https://ouhsc.edu/bserdac/dthompso/web/gait/knmatics/kngait.htm) describes stance extension and knee flexion during preswing/initial swing. This informs the ordering; the renderer remains an artistic reconstruction rather than motion-capture data.
+- The new phase test first failed on the existing 17.6° midstance bend. After correction, all eight configurations and both legs pass: midstance approximately 6.3°, contact approximately 6.3° for flat shoes and 10.6–11.3° for heels, flexion peak at 74.9–75.6% of the stride. A short loading-response dip gives approximately 15.8° flexion in the flat-shoe example rather than a rigid locked knee. The original fixed ankle-height estimate has been replaced, and swing recovery/extension is earlier.
+- Reviewed matched actual-render frames and a side-view diagram derived from the same bone endpoints across eight phases. Generated the real 12 s / 1280 × 720 / 30 fps export, gallery loop and PNG/GIF/MP4 square checks without browser errors. Mobile, tracking switch, existing-scheme entry, contact pinning, bone lengths and joint continuity also pass. The test numbers establish the changed motion; they do not substitute for the user's assessment of the frosted-glass silhouette.
+
 ### Horizontal posture correction
 
 - User still rejects the sideways walkers as stooped. The existing test proves a world-space upright trunk, but does not establish that the projected silhouette reads upright.
