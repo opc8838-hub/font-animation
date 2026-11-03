@@ -10,6 +10,7 @@
     return;
   }
   const effects = [
+    ["glasswalkers", "玻璃漫步", "Glass Walkers"],
     ["letter-slices", "字形切片", "Letter Slices"],
     ["live-portal", "立体世界卡片", "Live Portal"],
     ["dither-ascii", "网格显影", "Dither / ASCII"],

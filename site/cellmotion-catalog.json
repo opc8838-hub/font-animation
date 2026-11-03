@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "glasswalkers",
+      "date": "2026-11-03"
+    },
+    {
       "id": "letter-slices",
       "date": "2026-11-03"
     },
@@ -154,6 +158,21 @@
     }
   ],
   "effects": [
+    {
+      "id": "glasswalkers",
+      "name": "玻璃漫步",
+      "english": "Glass Walkers",
+      "description": "磨砂玻璃 · 自然步态 · 代码追踪",
+      "category": "graphic",
+      "href": "glasswalkers.html?from=gallery&tracking=feet&v=20261103-release-ai1",
+      "poster": "final_glasswalkers.png?v=20261103-knee5",
+      "video": "assets/previews/glasswalkers-card.mp4?v=20261103-knee5",
+      "webComponent": {
+        "preview": "typecascade-component-demo.html?effect=glasswalkers",
+        "descriptor": "effects/glasswalkers.component.json"
+      },
+      "status": "ready"
+    },
     {
       "id": "letter-slices",
       "name": "字形切片",
