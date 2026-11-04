@@ -15,12 +15,12 @@
     scene: { text: 'OK', font: 'stg:cellmotion-square', fontSize: .8, fontHeight: .8, extraBold: .015, tracking: .015, background: '#020403', metalTint: '#c1c8cb', coolTint: '#8bc4ff', warmTint: '#ffdbad', bevel: .07, shine: 1, lightWidth: .28, direction: 'forward', intro: .45, sweep: 3.6, hold: .6, speed: 1 }
   };
   const PHASES = [
-    { key: 'intro', zh: '银字浮现', en: 'Silver reveal', color: '#d4b8ff' },
+    { key: 'writeDuration', zh: '镭射写入', en: 'Laser writing', color: '#d4b8ff' },
     { key: 'sweep', zh: '流光经过', en: 'Light sweep', color: '#8ec8ff' },
     { key: 'hold', zh: '亮面停留', en: 'Lit hold', color: '#ffd27d' }
   ];
-  const numericKeys = ['fontSize', 'fontHeight', 'extraBold', 'tracking', 'bevel', 'shine', 'lightWidth', 'intro', 'sweep', 'hold', 'speed', 'positionX', 'positionY'];
-  const optionalDefaults = { positionX: 0, positionY: 0, alignment: 'center' };
+  const numericKeys = ['fontSize', 'fontHeight', 'extraBold', 'tracking', 'lineHeight', 'bevel', 'shine', 'lightWidth', 'writeDuration', 'sweep', 'hold', 'speed', 'positionX', 'positionY'];
+  const optionalDefaults = { positionX: 0, positionY: 0, alignment: 'center', lineHeight: 1.35, writeDuration: 2.4 };
   const colorFields = { background: 'backgroundColor', metalTint: 'textColor', coolTint: 'coolTint', warmTint: 'warmTint' };
   const colorKeys = Object.keys(colorFields);
   const dimension = value => Math.max(128, Math.min(3840, Math.round(Number(value) / 2) * 2 || 1080));
@@ -32,15 +32,17 @@
   }
   const history = [JSON.stringify(state)];
   let historyIndex = 0;
-  let time = matchMedia('(prefers-reduced-motion: reduce)').matches ? state.scene.intro : 0;
+  let time = matchMedia('(prefers-reduced-motion: reduce)').matches ? Core.revealDuration(state.scene) / state.scene.speed : 0;
   let playing = !matchMedia('(prefers-reduced-motion: reduce)').matches;
   let last = performance.now(), busy = false, fontRequest = 0;
-  let previewPromise = null, requestedTime = null, mediaVersion = 0;
+  let previewPromise = null, requestedTime = null, mediaVersion = 0, ready = false;
   let followBackground = localStorage.getItem('cellmotion-stage-backdrop-enabled') === 'true';
   let stageColor = localStorage.getItem('cellmotion-stage-backdrop-color') || '';
   const canvas = $('view');
   const label = (zh, en) => language === 'en' ? en : zh;
   const cycle = () => Core.duration(state.scene) / state.scene.speed;
+  const phaseDuration = key => key === 'writeDuration' ? Core.revealDuration(state.scene) : state.scene[key];
+  const readableTime = () => (Core.revealDuration(state.scene) + state.scene.sweep * .45) / state.scene.speed;
 
   function readScheme(raw) {
     if (raw?.effect !== 'metallic-text' || raw.version !== 1 || !raw.scene || !raw.canvas) throw new Error('Invalid Metallic Text project');
@@ -54,6 +56,7 @@
     if (typeof raw.scene.text === 'string') next.scene.text = raw.scene.text;
     if (Fonts.idFor(raw.scene.font)) next.scene.font = `stg:${Fonts.idFor(raw.scene.font)}`;
     next.scene.direction = raw.scene.direction === 'reverse' ? 'reverse' : 'forward';
+    if ('revealMode' in raw.scene) next.scene.revealMode = raw.scene.revealMode === 'laser' ? 'laser' : 'none';
     if ('alignment' in raw.scene) next.scene.alignment = ['left', 'center', 'right'].includes(raw.scene.alignment) ? raw.scene.alignment : 'center';
     if ('backgroundMedia' in raw.scene) next.scene.backgroundMedia = Media.normalize(raw.scene.backgroundMedia);
     next.settings.font = next.scene.font;
@@ -108,7 +111,7 @@
     numericKeys.forEach(key => {
       const input = $(key), value = state.scene[key] ?? optionalDefaults[key];
       input.value = value;
-      input.nextElementSibling.textContent = ['intro', 'sweep', 'hold'].includes(key) ? `${value.toFixed(2)} s` : key === 'speed' ? `${value.toFixed(2)}×` : ['fontSize', 'fontHeight', 'extraBold', 'lightWidth', 'tracking'].includes(key) ? `${Number((value * 100).toFixed(1))}%` : value.toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
+      input.nextElementSibling.textContent = ['writeDuration', 'sweep', 'hold'].includes(key) ? `${value.toFixed(2)} s` : ['speed', 'lineHeight'].includes(key) ? `${value.toFixed(2)}×` : ['fontSize', 'fontHeight', 'extraBold', 'lightWidth', 'tracking'].includes(key) ? `${Number((value * 100).toFixed(1))}%` : value.toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
       if ($(key + 'Exact')) $(key + 'Exact').value = Number((value * Number(input.dataset.displayFactor || 1)).toFixed(3));
     });
     colorKeys.forEach(key => { $(colorFields[key]).value = state.scene[key]; });
@@ -118,6 +121,8 @@
     $('fontSummary').textContent = Fonts.preset(state.scene.font)?.label || '';
     $('alignment').value = state.scene.alignment || 'center';
     $('direction').value = state.scene.direction;
+    $('revealMode').value = state.scene.revealMode || 'none';
+    $('writeDurationField').hidden = state.scene.revealMode !== 'laser';
     const sizeValue = `${state.canvas.width}x${state.canvas.height}`;
     $('canvasPreset').value = [...$('canvasPreset').options].some(option => option.value === sizeValue) ? sizeValue : 'custom';
     $('customSize').hidden = $('canvasPreset').value !== 'custom';
@@ -132,7 +137,7 @@
     let at = 0;
     $('timeline').replaceChildren(); $('timelineDetails').replaceChildren();
     PHASES.forEach(phase => {
-      const duration = state.scene[phase.key] / state.scene.speed;
+      const duration = phaseDuration(phase.key) / state.scene.speed;
       if (duration <= 0) return;
       const start = at; at += duration;
       const name = label(phase.zh, phase.en);
@@ -160,8 +165,9 @@
     frame.style.width = `${state.canvas.width * scale}px`;
     frame.style.height = `${state.canvas.height * scale}px`;
     const dpr = Math.min(2, devicePixelRatio || 1);
-    canvas.width = Math.max(2, Math.round(state.canvas.width * scale * dpr));
-    canvas.height = Math.max(2, Math.round(state.canvas.height * scale * dpr));
+    const w = Math.max(2, Math.round(state.canvas.width * scale * dpr)), h = Math.max(2, Math.round(state.canvas.height * scale * dpr));
+    if (canvas.width !== w) canvas.width = w;
+    if (canvas.height !== h) canvas.height = h;
     drawPreview();
   }
   function render(target, at, width = target.width, height = target.height) {
@@ -172,6 +178,7 @@
   }
   async function prepareFrame(at) { await background.prepare(at * state.scene.speed, state.scene.backgroundMedia); }
   function drawPreview() {
+    if (!ready) return Promise.resolve();
     if (busy) return previewPromise || Promise.resolve();
     requestedTime = time;
     if (previewPromise) return previewPromise;
@@ -181,7 +188,7 @@
         await prepareFrame(at); render(canvas, at); drawCropPreview();
       }
     })().catch(error => { playing = false; $('backgroundStatus').textContent = error.message; updateClock(); })
-      .finally(() => { previewPromise = null; });
+      .finally(() => { previewPromise = null; if (requestedTime !== null && !busy) return drawPreview(); });
     return previewPromise;
   }
   function updateClock() {
@@ -196,12 +203,12 @@
   function seek(seconds) { playing = false; time = Math.max(0, Math.min(cycle(), Number(seconds) || 0)); updateClock(); return drawPreview(); }
   function replay() { time = 0; playing = true; last = performance.now(); updateClock(); drawPreview(); }
   function tick(now) {
-    if (playing && !busy) { time = (time + Math.min(.1, (now - last) / 1000)) % cycle(); drawPreview(); updateClock(); }
+    if (ready && playing && !busy) { time = (time + Math.min(.1, (now - last) / 1000)) % cycle(); drawPreview(); updateClock(); }
     last = now; requestAnimationFrame(tick);
   }
   numericKeys.forEach(key => $(key).addEventListener('input', () => {
     state.scene[key] = Number($(key).value); syncControls(); persist();
-    if (['intro', 'sweep', 'hold'].includes(key)) { const index = PHASES.findIndex(phase => phase.key === key); const start = PHASES.slice(0, index).reduce((sum, phase) => sum + state.scene[phase.key], 0); seek((start + state.scene[key] * .5) / state.scene.speed); }
+    if (['writeDuration', 'sweep', 'hold'].includes(key)) { const index = PHASES.findIndex(phase => phase.key === key); const start = PHASES.slice(0, index).reduce((sum, phase) => sum + phaseDuration(phase.key), 0); seek((start + phaseDuration(key) * .5) / state.scene.speed); }
     else drawPreview();
   }));
   numericKeys.forEach(key => $(key).addEventListener('change', record));
@@ -212,6 +219,7 @@
   $('font').addEventListener('change', () => { state.scene.font = $('font').value; $('fontSummary').textContent = Fonts.preset(state.scene.font)?.label || ''; record(); loadFont(); });
   $('alignment').addEventListener('change', () => { state.scene.alignment = $('alignment').value; record(); drawPreview(); });
   $('direction').addEventListener('change', () => { state.scene.direction = $('direction').value; record(); drawPreview(); });
+  $('revealMode').addEventListener('change', () => { state.scene.revealMode = $('revealMode').value; syncControls(); record(); if (matchMedia('(prefers-reduced-motion: reduce)').matches) seek(readableTime()); else replay(); });
   $('canvasPreset').addEventListener('change', () => {
     const value = $('canvasPreset').value;
     if (value !== 'custom') [state.canvas.width, state.canvas.height] = value.split('x').map(Number);
@@ -222,7 +230,7 @@
   }));
   $('playButton').onclick = () => { playing = !playing; if (time >= cycle()) time = 0; last = performance.now(); updateClock(); };
   $('replayButton').onclick = replay;
-  $('pauseForEdit').onclick = () => seek((state.scene.intro + state.scene.sweep * .45) / state.scene.speed);
+  $('pauseForEdit').onclick = () => seek(readableTime());
   $('scrubber').addEventListener('input', () => seek($('scrubber').value));
   $('languageButton').onclick = () => { language = language === 'zh' ? 'en' : 'zh'; localStorage.setItem('cellmotion-site-language', language); localize(); };
   $('themeButton').onclick = () => { theme = theme === 'dark' ? 'light' : 'dark'; localStorage.setItem('cellmotion-editor-theme', theme); localStorage.setItem('cellmotion-site-theme', theme); localize(); };
@@ -239,14 +247,14 @@
     playing = false; requestedTime = null; await previewPromise;
     state = readScheme(raw);
     const reduceMotion = presentation.reducedMotion === 'pause' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    time = reduceMotion ? state.scene.intro / state.scene.speed : 0;
+    time = reduceMotion ? Core.revealDuration(state.scene) / state.scene.speed : 0;
     await loadBackground(); syncControls(); await loadFont();
     playing = presentation.autoplay !== false && !reduceMotion; last = performance.now(); updateClock(); await drawPreview();
   }
   $('saveScheme').onclick = () => { persist(); download(new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' }), 'metallic-text-project.json'); $('schemeStatus').textContent = label('方案已保存并下载', 'Project saved and downloaded'); };
   $('importScheme').onclick = () => $('schemeFile').click();
   $('schemeFile').onchange = async () => {
-    try { const file = $('schemeFile').files[0]; if (!file) return; await applyScheme(JSON.parse(await file.text()), { autoplay: false }); await seek((state.scene.intro + state.scene.sweep * .45) / state.scene.speed); record(); $('schemeStatus').textContent = label('方案已导入', 'Project imported'); }
+    try { const file = $('schemeFile').files[0]; if (!file) return; await applyScheme(JSON.parse(await file.text()), { autoplay: false }); await seek(readableTime()); record(); $('schemeStatus').textContent = label('方案已导入', 'Project imported'); }
     catch (error) { $('schemeStatus').textContent = `${label('导入失败', 'Import failed')}: ${error.message}`; }
     finally { $('schemeFile').value = ''; }
   };
@@ -321,7 +329,7 @@
       const url = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
       const media = Media.normalize({ url, name: file.name, fileType: file.type || (/\.(mp4|webm|mov)$/i.test(file.name) ? 'video/mp4' : /\.gif$/i.test(file.name) ? 'image/gif' : 'image/png') });
       playing = false; requestedTime = null; await previewPromise; await background.setMedia(media);
-      state.scene.backgroundMedia = media; time = (state.scene.intro + state.scene.sweep * .45) / state.scene.speed; await loadBackground(); record();
+      state.scene.backgroundMedia = media; time = readableTime(); await loadBackground(); record();
       $('backgroundStatus').textContent = label('背景已更新', 'Background updated'); await drawPreview(); updateClock();
     } catch (error) { $('backgroundStatus').textContent = `${label('背景加载失败', 'Background failed')}: ${error.message}`; }
     finally { $('backgroundFile').value = ''; }
@@ -364,7 +372,7 @@
   });
   [...numericKeys, 'cropZoom'].forEach(key => {
     const range = $(key), factor = ['fontSize', 'fontHeight', 'extraBold', 'tracking', 'bevel', 'lightWidth'].includes(key) ? 100 : 1;
-    const unit = ['intro', 'sweep', 'hold'].includes(key) ? 's' : ['speed', 'cropZoom'].includes(key) ? '×' : '%';
+    const unit = ['writeDuration', 'sweep', 'hold'].includes(key) ? 's' : ['speed', 'cropZoom', 'lineHeight'].includes(key) ? '×' : '%';
     range.dataset.displayFactor = factor;
     const box = document.createElement('span'); box.className = 'metal-exact-box';
     const exact = document.createElement('input'); exact.type = 'number'; exact.id = key + 'Exact'; exact.min = Number(range.min) * factor; exact.max = Number(range.max) * factor; exact.step = Number(range.step) * factor;
@@ -425,7 +433,8 @@
   syncControls(); localize();
   new ResizeObserver(fitStage).observe($('stageArea'));
   document.fonts.addEventListener('loadingdone', () => { Core.invalidate(); drawPreview(); });
-  Promise.all([loadFont(), loadBackground()]).then(() => {
+  Promise.all([loadFont(), loadBackground()]).then(async () => {
+    ready = true; last = performance.now(); await drawPreview();
     window.CellMotionBridge.register({ effectId: 'metallic-text', getScheme: () => structuredClone(state), applyScheme,
       play: () => { playing = true; last = performance.now(); updateClock(); }, pause: () => { playing = false; updateClock(); }, restart: replay, seek, durationMs: () => cycle() * 1000 });
   });

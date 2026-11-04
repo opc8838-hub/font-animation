@@ -97,10 +97,10 @@ const browserPath = process.argv[3] || undefined;
     const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
     assert.deepEqual(manifest.composition, await scheme());
     assert.ok(manifest.assets.fonts.some(font => font.id === 'stg:noto-sc-black'));
-    assert.equal(manifest.parameterDefinitions.length, 31);
+    assert.equal(manifest.parameterDefinitions.length, 33);
     assert.equal(await page.evaluate(value => CellMotionAI.validate(value).valid, manifest), true);
     await page.locator('.tc-ai-trigger').click(); await page.locator('[data-ai-action="params"]').click();
-    assert.equal(await page.locator('.tc-ai-params code').count(), 31); await page.keyboard.press('Escape');
+    assert.equal(await page.locator('.tc-ai-params code').count(), 33); await page.keyboard.press('Escape');
     await page.locator('.tc-ai-trigger').click();
     const popupPending = context.waitForEvent('page'); await page.locator('[data-ai-action="preview"]').click();
     const demo = await popupPending; await demo.waitForLoadState('domcontentloaded');
@@ -127,7 +127,7 @@ const browserPath = process.argv[3] || undefined;
     const update = structuredClone(manifest.composition); update.scene.text = '更新成功'; update.scene.sweep = 1.2;
     await demo.evaluate(composition => document.getElementById('demoPlayer').update(composition), update);
     await demo.waitForFunction(() => document.getElementById('demoPlayer').iframe.contentWindow.CellMotionMetallicText.getScheme().scene.text === '更新成功');
-    assert.ok(Math.abs(await demo.evaluate(() => document.getElementById('demoPlayer').duration) - (update.scene.intro + update.scene.sweep + update.scene.hold) / update.scene.speed) < .01);
+    assert.ok(Math.abs(await demo.evaluate(() => document.getElementById('demoPlayer').duration) - (update.scene.sweep + update.scene.hold) / update.scene.speed) < .01);
     await childFrame.evaluate(() => window.dispatchEvent(new MessageEvent('message', { source: parent, origin: 'https://invalid.example', data: { type: 'cellmotion:update', bridgeVersion: '1.0.0', composition: {} } })));
     assert.equal((await child()).scene.text, '更新成功', 'Invalid origins cannot configure the renderer');
     await demo.screenshot({ path: path.join(output, 'live-ai-player.png'), fullPage: true });
@@ -158,7 +158,8 @@ const browserPath = process.argv[3] || undefined;
     await reduced.goto(`${base}/typecascade-component-demo.html?effect=metallic-text`);
     await reduced.waitForFunction(() => document.getElementById('demoPlayer')?._ready);
     const reducedFrame = reduced.frames().find(item => item.url().includes('metallic-text.html'));
-    await reducedFrame.waitForFunction(() => window.CellMotionEffectBridge && CellMotionMetallicText.time > 0 && !CellMotionMetallicText.playing);
+    await reducedFrame.waitForFunction(() => window.CellMotionEffectBridge && !CellMotionMetallicText.playing);
+    assert.equal(await reducedFrame.evaluate(() => CellMotionMetallicText.time), 0, 'Immediate mode is readable without an opening phase');
     await reduced.close();
     await page.setViewportSize({ width: 1440, height: 900 });
     for (const [url, selector] of [
@@ -168,7 +169,9 @@ const browserPath = process.argv[3] || undefined;
       ['/gallery.html', '.card-caption a[href*="metallic-text.html"]'],
       ['/gallery.html?legacy=1', '.effect-link[href*="metallic-text.html"]']
     ]) {
-      await page.goto(base + url); await page.locator(selector).first().waitFor();
+      await page.goto(base + url);
+      if (selector.startsWith('.card-caption') && await page.locator('#search').count()) await page.locator('#search').fill('Metallic');
+      await page.locator(selector).first().waitFor();
       assert.ok(await page.locator(selector).count(), `Published directory entry ${url}`);
     }
     assert.deepEqual(errors, [], 'Clean browser console');

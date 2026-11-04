@@ -224,9 +224,9 @@
       "english": "Metallic Text",
       "description": "宽扁银字 · 冷暖反光 · 金属流光",
       "category": "type",
-      "href": "metallic-text.html?from=gallery&v=20261028-spacing1",
-      "poster": "final_metallic-text.png?v=20261028-metal2",
-      "video": "assets/previews/metallic-text-card.mp4?v=20261028-metal2",
+      "href": "metallic-text.html?from=gallery&v=20261104-laser1",
+      "poster": "final_metallic-text.png?v=20261104-laser1",
+      "video": "assets/previews/metallic-text-card.mp4?v=20261104-laser1",
       "webComponent": {
         "preview": "typecascade-component-demo.html?effect=metallic-text",
         "descriptor": "effects/metallic-text.component.json"

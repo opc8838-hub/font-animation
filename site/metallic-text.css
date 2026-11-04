@@ -20,7 +20,7 @@ body.metallic-editor { margin: 0; grid-template-columns: 250px minmax(250px, 1fr
 .metallic-editor .field { display: grid; gap: 9px; margin: 0 0 18px; color: var(--tc-text); }
 .metallic-editor .field:last-child { margin-bottom: 0; }
 .metallic-editor input:not([type="range"]):not([type="color"]), .metallic-editor select { width: 100%; min-width: 0; color: var(--tc-text); background: var(--tc-input); border: 1px solid var(--tc-line); border-radius: 10px; }
-.metallic-editor #text { min-height: 46px; font-size: 20px; }
+.metallic-editor #text { width: 100%; min-height: 94px; max-height: 240px; padding: 12px; resize: vertical; font: inherit; font-size: 17px; line-height: 1.5; color: var(--tc-text); background: var(--tc-input); border: 1px solid var(--tc-line); border-radius: 10px; }
 .metallic-editor .range-row { display: grid; grid-template-columns: minmax(0, 1fr) 88px; align-items: center; gap: 10px; }
 .metallic-editor .range-row input { width: 100%; min-width: 0; }
 .metallic-editor output { text-align: right; color: var(--tc-muted); font-size: 12px; }
