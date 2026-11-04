@@ -33,7 +33,7 @@
     vec2 order = texture(writing, uv).rg;
     float writtenAt = (order.r * 65280. + order.g * 255.) / 65535.;
     float head = (writeProgress - writtenAt) * max(1., glyphCount);
-    float reveal = laser > .5 ? smoothstep(0., .025, head) : 1.;
+    float reveal = laser > .5 ? smoothstep(0., .012, head) : 1.;
     if (writeProgress >= 1.) reveal = 1.;
     float alpha = texture(lettering, uv).b * reveal;
     if (alpha < .002) { color = transparentBackground > .5 ? vec4(0.) : vec4(background, 1.); return; }
@@ -66,7 +66,7 @@
     result += vec3(.32) * bell(distance - .65, .65);
     result += vec3(.12) * pow(max(0., -normal.y), 4.);
     // A narrow cold laser head leaves a brief luminous edge behind each letter.
-    float writingLight = laser * (1. - step(1., writeProgress)) * bell(head - .025, .065);
+    float writingLight = laser * (1. - step(1., writeProgress)) * bell(head - .012, .022);
     result += (vec3(.65, .85, 1.) + cool * .6) * writingLight * 1.5;
     result = clamp(result, 0., 1.);
     color = transparentBackground > .5 ? vec4(result, alpha) : vec4(mix(background, result, alpha), 1.);
@@ -138,9 +138,131 @@
     return distances;
   }
 
+  // Recover a stroke centreline from the actual shaped mask, including custom fonts.
+  // This runs only when layout changes; playback samples the resulting time field.
+  function strokeTimes(source, left, top, width, height) {
+    const scale = Math.min(1, 160 / height, 256 / width);
+    const w = Math.max(5, Math.ceil(width * scale) + 4), h = Math.max(5, Math.ceil(height * scale) + 4);
+    const tile = document.createElement('canvas'); tile.width = w; tile.height = h;
+    const ctx = tile.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(source, left, top, width, height, 2, 2, w - 4, h - 4);
+    const pixels = ctx.getImageData(0, 0, w, h).data;
+    const skeleton = new Uint8Array(w * h);
+    for (let i = 0; i < skeleton.length; i++) skeleton[i] = pixels[i * 4 + 3] > 127 ? 1 : 0;
+    const offsets = [-w, 1 - w, 1, 1 + w, w, w - 1, -1, -1 - w];
+    const ring = new Uint8Array(8), removed = [];
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (let pass = 0; pass < 2; pass++) {
+        removed.length = 0;
+        for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+          const i = y * w + x; if (!skeleton[i]) continue;
+          let count = 0, transitions = 0;
+          for (let k = 0; k < 8; k++) { ring[k] = skeleton[i + offsets[k]]; count += ring[k]; }
+          if (count < 2 || count > 6) continue;
+          for (let k = 0; k < 8; k++) if (!ring[k] && ring[(k + 1) % 8]) transitions++;
+          if (transitions !== 1) continue;
+          if (pass === 0 ? ring[0] * ring[2] * ring[4] || ring[2] * ring[4] * ring[6] : ring[0] * ring[2] * ring[6] || ring[0] * ring[4] * ring[6]) continue;
+          removed.push(i);
+        }
+        if (removed.length) changed = true;
+        for (const i of removed) skeleton[i] = 0;
+      }
+    }
+    function neighbors(i) {
+      const result = [];
+      for (let k = 0; k < 8; k++) {
+        if (!skeleton[i + offsets[k]]) continue;
+        // Do not cut diagonally across a connected right-angle corner.
+        if (k % 2 && (skeleton[i + offsets[k - 1]] || skeleton[i + offsets[(k + 1) % 8]])) continue;
+        result.push(i + offsets[k]);
+      }
+      return result;
+    }
+    // Flat caps produce short medial-axis spurs; remove those, not real branches.
+    const radii = contourDistances(pixels, w, h);
+    for (let i = 0; i < skeleton.length; i++) if (skeleton[i] && neighbors(i).length === 1) {
+      const branch = [i]; let previous = i, next = neighbors(i)[0], length = 0;
+      while (next !== undefined) {
+        length += Math.hypot(next % w - previous % w, Math.floor(next / w) - Math.floor(previous / w));
+        const adjacent = neighbors(next);
+        if (adjacent.length !== 2) {
+          if (adjacent.length > 2 && length < Math.max(3, radii[next] * 1.6)) for (const p of branch) skeleton[p] = 0;
+          break;
+        }
+        branch.push(next); const following = adjacent.find(p => p !== previous); previous = next; next = following;
+      }
+    }
+    const nodes = [];
+    for (let i = 0; i < skeleton.length; i++) if (skeleton[i]) nodes.push(i);
+    const times = new Float32Array(w * h), visited = new Uint8Array(w * h);
+    const endpoints = nodes.filter(i => neighbors(i).length <= 1);
+    const firstY = nodes.reduce((y, i) => Math.min(y, Math.floor(i / w)), h);
+    const upper = i => Math.floor(i / w) <= firstY + h * .18;
+    const starts = endpoints.filter(upper);
+    const first = (starts.length ? starts : nodes.filter(upper)).sort((a, b) => a % w - b % w || a - b)[0];
+    let current = first, dx = 0, dy = 1, length = 0, remaining = nodes.length;
+    while (remaining) {
+      visited[current] = 1; remaining--; times[current] = length;
+      const candidates = neighbors(current).filter(i => !visited[i]);
+      let next;
+      if (candidates.length) {
+        let best = -Infinity;
+        for (const i of candidates) {
+          const nx = i % w - current % w, ny = Math.floor(i / w) - Math.floor(current / w);
+          const score = (nx * dx + ny * dy) / Math.hypot(nx, ny);
+          if (score > best) { best = score; next = i; }
+        }
+      } else if (remaining) {
+        let best = Infinity;
+        for (const i of nodes) if (!visited[i]) {
+          const distance = Math.hypot(i % w - current % w, Math.floor(i / w) - Math.floor(current / w));
+          if (distance < best) { best = distance; next = i; }
+        }
+      }
+      if (next !== undefined) {
+        dx = next % w - current % w; dy = Math.floor(next / w) - Math.floor(current / w);
+        const distance = Math.hypot(dx, dy); dx /= distance; dy /= distance;
+        length += candidates.length ? distance : 2; current = next;
+      }
+    }
+    // Extend centreline times across the width of each stroke. Nearest-seed passes
+    // keep the advancing front perpendicular to curved and diagonal pen paths.
+    const nearest = new Int32Array(w * h).fill(-1);
+    for (const i of nodes) nearest[i] = i;
+    for (let pass = 0; pass < 4; pass++) {
+      const forward = pass % 2 === 0, adjacent = forward ? [-1, -w, -w - 1, -w + 1] : [1, w, w + 1, w - 1];
+      for (let step = 0; step < nearest.length; step++) {
+        const i = forward ? step : nearest.length - 1 - step, x = i % w, y = Math.floor(i / w);
+        let seed = nearest[i], best = seed < 0 ? Infinity : (seed % w - x) ** 2 + (Math.floor(seed / w) - y) ** 2;
+        for (const offset of adjacent) {
+          const j = i + offset; if (j < 0 || j >= nearest.length || Math.abs(j % w - x) > 1) continue;
+          const candidate = nearest[j]; if (candidate < 0) continue;
+          const distance = (candidate % w - x) ** 2 + (Math.floor(candidate / w) - y) ** 2;
+          if (distance < best) { best = distance; seed = candidate; }
+        }
+        nearest[i] = seed;
+      }
+    }
+    const field = new Float32Array(w * h);
+    for (let i = 0; i < field.length; i++) field[i] = nearest[i] < 0 ? 0 : times[nearest[i]] / Math.max(1, length);
+    // A moving round pen covers joins before their later branches are traversed.
+    // Without this overlap, nearest-branch ownership leaves holes in a written stem.
+    for (const i of nodes) {
+      const x = i % w, y = Math.floor(i / w), radius = Math.max(1, radii[i] * 1.15), at = times[i] / Math.max(1, length);
+      for (let py = Math.max(0, Math.floor(y - radius)); py <= Math.min(h - 1, Math.ceil(y + radius)); py++) {
+        for (let px = Math.max(0, Math.floor(x - radius)); px <= Math.min(w - 1, Math.ceil(x + radius)); px++) {
+          if ((px - x) ** 2 + (py - y) ** 2 <= radius * radius) field[py * w + px] = Math.min(field[py * w + px], at);
+        }
+      }
+    }
+    return { field, width: w, height: h };
+  }
+
   // Cache contour distances on content/size changes. Frames only shade the texture.
   function buildMask(scene, width, height) {
-    const key = [width, height, scene.text, scene.font, scene.fontSize, scene.tracking, scene.fontHeight, scene.extraBold, scene.positionX, scene.positionY, scene.alignment, scene.lineHeight].join('|');
+    const key = [width, height, scene.text, scene.font, scene.fontSize, scene.tracking, scene.fontHeight, scene.extraBold, scene.positionX, scene.positionY, scene.alignment, scene.lineHeight, scene.revealMode].join('|');
     if (key === maskKey) return;
     maskKey = key; mask.width = surface.width = width; mask.height = surface.height = height;
     const ctx = mask.getContext('2d', { willReadFrequently: true });
@@ -153,7 +275,8 @@
     ctx.letterSpacing = `${gap}px`;
     const lines = scene.text.replace(/\r\n?/g, '\n').split('\n');
     const metrics = lines.map(line => ctx.measureText(line));
-    const widths = metrics.map((metric, i) => Math.max(0, metric.width - (lines[i] ? gap : 0)));
+    const multiline = lines.length > 1;
+    const widths = metrics.map((metric, i) => Math.max(0, multiline ? metric.actualBoundingBoxLeft + metric.actualBoundingBoxRight : metric.width - (lines[i] ? gap : 0)));
     const advances = Math.max(1, ...widths);
     const ascent = Math.max(1, ...metrics.map(metric => metric.actualBoundingBoxAscent));
     const descent = Math.max(0, ...metrics.map(metric => metric.actualBoundingBoxDescent));
@@ -170,22 +293,53 @@
     ctx.fillStyle = '#fff';
     ctx.strokeStyle = '#fff'; ctx.lineWidth = size * scene.extraBold * 2; ctx.lineJoin = 'round';
     lines.forEach((line, row) => {
-      ctx.save(); ctx.translate(lefts[row], top + row * lineStep + ascent * scale * scene.fontHeight); ctx.scale(scale, scale * scene.fontHeight);
+      const origin = lefts[row] + (multiline ? metrics[row].actualBoundingBoxLeft * scale : 0);
+      ctx.save(); ctx.translate(origin, top + row * lineStep + ascent * scale * scene.fontHeight); ctx.scale(scale, scale * scene.fontHeight);
       ctx.fillText(line, 0, 0); if (scene.extraBold > 0) ctx.strokeText(line, 0, 0); ctx.restore();
       let prefix = '';
       const rowCells = [];
       for (const { segment } of new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(line)) {
-        const start = ctx.measureText(prefix).width;
         prefix += segment;
         const end = ctx.measureText(prefix).width;
         if (!segment.trim()) continue;
-        rowCells.push({ start: lefts[row] + start * scale, end: lefts[row] + (end - gap) * scale, index: glyphCount++ });
+        const metric = ctx.measureText(segment), start = end - metric.width;
+        rowCells.push({ segment, metric, origin: origin + start * scale, start: origin + start * scale, end: origin + (end - gap) * scale, index: glyphCount++ });
       }
       cells.push(rowCells);
     });
     const pixels = ctx.getImageData(0, 0, width, height).data;
     const distances = contourDistances(pixels, width, height);
     const writing = new Uint8Array(pixels.length);
+    if (scene.revealMode === 'laser') cells.forEach((rowCells, row) => {
+      rowCells.forEach(cell => {
+        const padding = size * scene.extraBold + 2 / scale, baseline = top + row * lineStep + ascent * scale * scene.fontHeight;
+        cell.left = Math.floor(cell.origin - (cell.metric.actualBoundingBoxLeft + padding) * scale);
+        cell.right = Math.ceil(cell.origin + (cell.metric.actualBoundingBoxRight + padding) * scale);
+        cell.top = Math.floor(baseline - (cell.metric.actualBoundingBoxAscent + padding) * scale * scene.fontHeight);
+        cell.bottom = Math.ceil(baseline + (cell.metric.actualBoundingBoxDescent + padding) * scale * scene.fontHeight);
+        const glyph = document.createElement('canvas'); glyph.width = Math.max(1, cell.right - cell.left); glyph.height = Math.max(1, cell.bottom - cell.top);
+        const ink = glyph.getContext('2d', { willReadFrequently: true });
+        ink.font = ctx.font; ink.fontKerning = 'normal'; ink.letterSpacing = ctx.letterSpacing;
+        ink.fillStyle = ink.strokeStyle = '#fff'; ink.lineWidth = ctx.lineWidth; ink.lineJoin = 'round';
+        ink.translate(cell.origin - cell.left, baseline - cell.top); ink.scale(scale, scale * scene.fontHeight);
+        ink.fillText(cell.segment, 0, 0); if (scene.extraBold > 0) ink.strokeText(cell.segment, 0, 0);
+        cell.stroke = strokeTimes(glyph, 0, 0, glyph.width, glyph.height);
+        const alpha = ink.getImageData(0, 0, glyph.width, glyph.height).data;
+        for (let y = Math.max(0, cell.top); y < Math.min(height, cell.bottom); y++) for (let x = Math.max(0, cell.left); x < Math.min(width, cell.right); x++) {
+          if (!alpha[((y - cell.top) * glyph.width + x - cell.left) * 4 + 3]) continue;
+          const i = (y * width + x) * 4, order = writingOrder(cell, x, y);
+          if (!writing[i + 3] || order < (writing[i] << 8 | writing[i + 1])) { writing[i] = order >> 8; writing[i + 1] = order & 255; writing[i + 3] = 255; }
+        }
+      });
+    });
+    function writingOrder(cell, x, y) {
+      const stroke = cell.stroke;
+      const sx = clamp(1.5 + (x + .5 - cell.left) / Math.max(1, cell.right - cell.left) * (stroke.width - 4), 0, stroke.width - 1.001);
+      const sy = clamp(1.5 + (y + .5 - cell.top) / Math.max(1, cell.bottom - cell.top) * (stroke.height - 4), 0, stroke.height - 1.001);
+      const ix = Math.floor(sx), iy = Math.floor(sy), fx = sx - ix, fy = sy - iy, at = iy * stroke.width + ix;
+      const within = (stroke.field[at] * (1 - fx) + stroke.field[at + 1] * fx) * (1 - fy) + (stroke.field[at + stroke.width] * (1 - fx) + stroke.field[at + stroke.width + 1] * fx) * fy;
+      return Math.round((cell.index + .025 + within * .90) / Math.max(1, glyphCount) * 65535);
+    }
     for (let y = 0; y < height; y++) {
       const row = clamp(Math.floor((y + .5 - top + (lineStep - bounds[3]) * .5) / lineStep), 0, lines.length - 1), rowCells = cells[row];
       let cellIndex = 0;
@@ -193,9 +347,10 @@
         if (!rowCells.length) continue;
         while (cellIndex < rowCells.length - 1 && x + .5 > (rowCells[cellIndex].end + rowCells[cellIndex + 1].start) / 2) cellIndex++;
         const cell = rowCells[cellIndex];
-        const within = clamp((x + .5 - cell.start) / Math.max(1, cell.end - cell.start), 0, 1);
-        const order = Math.round((cell.index + .025 + within * .90) / Math.max(1, glyphCount) * 65535);
-        const i = (y * width + x) * 4; writing[i] = order >> 8; writing[i + 1] = order & 255; writing[i + 3] = 255;
+        const i = (y * width + x) * 4;
+        if (!cell.stroke || writing[i + 3] || !pixels[i + 3]) continue;
+        const order = writingOrder(cell, x, y);
+        writing[i] = order >> 8; writing[i + 1] = order & 255; writing[i + 3] = 255;
       }
     }
     for (let i = 0; i < distances.length; i++) {

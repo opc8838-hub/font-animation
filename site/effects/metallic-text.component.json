@@ -1,9 +1,9 @@
 {
-  "effect": { "id": "metallic-text", "name": { "zh": "金属流光", "en": "Metallic Text" }, "version": "1.1.0", "category": "type" },
-  "runtime": { "kind": "iframe-bridge", "entry": "metallic-text.html?v=20261104-laser1", "bridgeVersion": "1.0.0", "renderer": "webgl2" },
+  "effect": { "id": "metallic-text", "name": { "zh": "金属流光", "en": "Metallic Text" }, "version": "1.2.0", "category": "type" },
+  "runtime": { "kind": "iframe-bridge", "entry": "metallic-text.html?v=20261104-strokes1", "bridgeVersion": "1.0.0", "renderer": "webgl2" },
   "capabilities": { "compositionModel": "scene", "editableText": true, "sharedFonts": true, "backgroundMedia": true, "animatedImageBackgrounds": true, "trimmedVideoBackgrounds": true, "responsiveCanvas": true, "timeline": true, "preview": true, "exports": ["png", "gif", "mp4"] },
   "behavior": {
-    "summary": { "zh": "支持回车换行、行距和对齐的金属文字。默认直接呈现，可选逐字镭射写入；按从左到右、从上到下顺序写出，再进入冷暖流光。写入总时长包含全部可见字符，空格和换行不占写入时长。", "en": "Multiline metallic lettering with editable line spacing and alignment. Text is immediately visible by default; optional laser writing reveals letters left to right, top to bottom before the reflection sweep. Writing duration covers all visible graphemes; spaces and line breaks consume no writing time." },
+    "summary": { "zh": "支持回车换行、行距和按可见字形对齐的金属文字，行首行尾空格不影响多行对齐。默认直接呈现，可选沿笔画镭射：每个字母沿字形中轴逐步写出，字母按从左到右、从上到下顺序接续，再进入冷暖流光。写入总时长包含全部可见字符，空格和换行不占写入时长。", "en": "Multiline metallic lettering aligned by visible glyph bounds, ignoring surrounding whitespace. Text is immediately visible by default; optional laser writing follows the centreline strokes of each glyph, with letters sequenced left to right, top to bottom before the reflection sweep. Writing duration covers all visible graphemes; spaces and line breaks consume no writing time." },
     "phases": [
       { "id": "writeDuration", "name": { "zh": "镭射写入（可选）", "en": "Laser writing (optional)" }, "colorToken": "phase.violet" },
       { "id": "sweep", "name": { "zh": "流光经过", "en": "Light sweep" }, "colorToken": "phase.sky" },
