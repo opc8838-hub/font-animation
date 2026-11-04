@@ -56,7 +56,7 @@
     if (typeof raw.scene.text === 'string') next.scene.text = raw.scene.text;
     if (Fonts.idFor(raw.scene.font)) next.scene.font = `stg:${Fonts.idFor(raw.scene.font)}`;
     next.scene.direction = raw.scene.direction === 'reverse' ? 'reverse' : 'forward';
-    if ('revealMode' in raw.scene) next.scene.revealMode = raw.scene.revealMode === 'laser' ? 'laser' : 'none';
+    if ('revealMode' in raw.scene) next.scene.revealMode = ['scan', 'laser'].includes(raw.scene.revealMode) ? raw.scene.revealMode : 'none';
     if ('alignment' in raw.scene) next.scene.alignment = ['left', 'center', 'right'].includes(raw.scene.alignment) ? raw.scene.alignment : 'center';
     if ('backgroundMedia' in raw.scene) next.scene.backgroundMedia = Media.normalize(raw.scene.backgroundMedia);
     next.settings.font = next.scene.font;
@@ -122,7 +122,7 @@
     $('alignment').value = state.scene.alignment || 'center';
     $('direction').value = state.scene.direction;
     $('revealMode').value = state.scene.revealMode || 'none';
-    $('writeDurationField').hidden = state.scene.revealMode !== 'laser';
+    $('writeDurationField').hidden = Core.revealDuration(state.scene) === 0;
     const sizeValue = `${state.canvas.width}x${state.canvas.height}`;
     $('canvasPreset').value = [...$('canvasPreset').options].some(option => option.value === sizeValue) ? sizeValue : 'custom';
     $('customSize').hidden = $('canvasPreset').value !== 'custom';

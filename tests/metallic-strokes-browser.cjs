@@ -32,7 +32,9 @@ const output = path.resolve(__dirname, '../output/metallic-strokes'); fs.mkdirSy
         for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++)if(data[(y*800+x)*4+3]>127){const nx=(x-left)/(right-left),ny=(y-top)/(bottom-top);if(nx<.3&&ny<.4)regions.upperLeft++;if(nx<.3&&ny>.8)regions.lowerLeft++;if(nx>.7&&ny<.4)regions.upperRight++;if(nx>.7&&ny>.8)regions.lowerRight++;}
         frames.push({ at, regions, png: c.toDataURL() });
       }
-      s.scene.text = '2'; await CellMotionMetallicText.applyScheme(s, { autoplay: false });
+      s.scene.revealMode = 'scan'; const scan = render(.3); let scanLowerLeft = 0;
+      for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++)if((x-left)/(right-left)<.3&&(y-top)/(bottom-top)>.8&&scan[(y*800+x)*4+3]>127)scanLowerLeft++;
+      s.scene.revealMode = 'laser'; s.scene.text = '2'; await CellMotionMetallicText.applyScheme(s, { autoplay: false });
       const digitFull = render(2.4); let digitTop=600,digitBottom=0;
       for(let y=0;y<600;y++)for(let x=0;x<800;x++)if(digitFull[(y*800+x)*4+3]>127){digitTop=Math.min(digitTop,y);digitBottom=Math.max(digitBottom,y);}
       const digit = render(.9); let digitUpper=0,digitLower=0;
@@ -53,7 +55,7 @@ const output = path.resolve(__dirname, '../output/metallic-strokes'); fs.mkdirSy
         const samples=[0,.3,1.2,2.4].map(at=>count(render(at)));
         s.scene.revealMode='none';const complete=count(render(0));languages.push({font,samples,complete});
       }
-      return { layouts, frames, digitUpper, digitLower, firstInk, leaked, languages };
+      return { layouts, frames, scanLowerLeft, digitUpper, digitLower, firstInk, leaked, languages };
     });
     for(const frame of result.frames){fs.writeFileSync(path.join(output, `u-${frame.at}.png`),Buffer.from(frame.png.split(',')[1],'base64'));delete frame.png;}
     fs.writeFileSync(path.join(output, 'verification.json'), JSON.stringify(result, null, 2));
@@ -62,6 +64,7 @@ const output = path.resolve(__dirname, '../output/metallic-strokes'); fs.mkdirSy
     const early=result.frames.find(f=>f.at===.3).regions;
     assert.ok(early.upperLeft>100,'U starts at the upper-left stroke');
     assert.equal(early.lowerLeft,0,'Laser must travel down the U stem, not reveal its entire height with a horizontal wipe');
+    assert.ok(result.scanLowerLeft>100,'The separate scan option preserves the previous horizontal per-letter reveal');
     const middle=result.frames.find(f=>f.at===1.2).regions;
     assert.ok(middle.lowerLeft>100,'Laser rounds the bottom of U');
     assert.equal(middle.upperRight,0,'Upper-right stem waits for the laser to climb from the bottom');

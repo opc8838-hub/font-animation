@@ -7,7 +7,7 @@
   const gl = surface.getContext('webgl2', { alpha: true, premultipliedAlpha: false, antialias: false, preserveDrawingBuffer: true });
   if (!gl) throw new Error('WebGL 2 is required for Metallic Text.');
   let maskKey = '', bounds, lineStep = 1, lineCount = 1, glyphCount = 0;
-  const revealDuration = scene => scene.revealMode === 'laser' ? (scene.writeDuration ?? 2.4) : 0;
+  const revealDuration = scene => ['scan', 'laser'].includes(scene.revealMode) ? (scene.writeDuration ?? 2.4) : 0;
 
   const vertex = `#version 300 es
   in vec2 position;
@@ -19,7 +19,7 @@
   uniform vec2 resolution;
   uniform vec4 bounds;
   uniform vec3 background, metal, cool, warm;
-  uniform float progress, writeProgress, laser, glyphCount, lineStep, lineCount, shine, bandWidth, bevel, transparentBackground;
+  uniform float progress, writeProgress, laser, scanWriting, glyphCount, lineStep, lineCount, shine, bandWidth, bevel, transparentBackground;
   out vec4 color;
   float distanceAt(vec2 uv) {
     vec2 packed = texture(lettering, uv).rg;
@@ -33,7 +33,8 @@
     vec2 order = texture(writing, uv).rg;
     float writtenAt = (order.r * 65280. + order.g * 255.) / 65535.;
     float head = (writeProgress - writtenAt) * max(1., glyphCount);
-    float reveal = laser > .5 ? smoothstep(0., .012, head) : 1.;
+    float revealEdge = scanWriting > .5 ? .025 : .012;
+    float reveal = laser > .5 ? smoothstep(0., revealEdge, head) : 1.;
     if (writeProgress >= 1.) reveal = 1.;
     float alpha = texture(lettering, uv).b * reveal;
     if (alpha < .002) { color = transparentBackground > .5 ? vec4(0.) : vec4(background, 1.); return; }
@@ -66,7 +67,7 @@
     result += vec3(.32) * bell(distance - .65, .65);
     result += vec3(.12) * pow(max(0., -normal.y), 4.);
     // A narrow cold laser head leaves a brief luminous edge behind each letter.
-    float writingLight = laser * (1. - step(1., writeProgress)) * bell(head - .012, .022);
+    float writingLight = laser * (1. - step(1., writeProgress)) * bell(head - revealEdge, scanWriting > .5 ? .065 : .022);
     result += (vec3(.65, .85, 1.) + cool * .6) * writingLight * 1.5;
     result = clamp(result, 0., 1.);
     color = transparentBackground > .5 ? vec4(result, alpha) : vec4(mix(background, result, alpha), 1.);
@@ -92,7 +93,7 @@
   const writingTexture = gl.createTexture(); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, writingTexture);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  const uniforms = Object.fromEntries(['lettering', 'writing', 'resolution', 'bounds', 'background', 'metal', 'cool', 'warm', 'progress', 'writeProgress', 'laser', 'glyphCount', 'lineStep', 'lineCount', 'shine', 'bandWidth', 'bevel', 'transparentBackground'].map(name => [name, gl.getUniformLocation(program, name)]));
+  const uniforms = Object.fromEntries(['lettering', 'writing', 'resolution', 'bounds', 'background', 'metal', 'cool', 'warm', 'progress', 'writeProgress', 'laser', 'scanWriting', 'glyphCount', 'lineStep', 'lineCount', 'shine', 'bandWidth', 'bevel', 'transparentBackground'].map(name => [name, gl.getUniformLocation(program, name)]));
   gl.uniform1i(uniforms.lettering, 0); gl.uniform1i(uniforms.writing, 1);
 
   function contourDistances(pixels, width, height) {
@@ -299,10 +300,11 @@
       let prefix = '';
       const rowCells = [];
       for (const { segment } of new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(line)) {
+        const scanStart = ctx.measureText(prefix).width;
         prefix += segment;
         const end = ctx.measureText(prefix).width;
         if (!segment.trim()) continue;
-        const metric = ctx.measureText(segment), start = end - metric.width;
+        const metric = ctx.measureText(segment), start = scene.revealMode === 'scan' ? scanStart : end - metric.width;
         rowCells.push({ segment, metric, origin: origin + start * scale, start: origin + start * scale, end: origin + (end - gap) * scale, index: glyphCount++ });
       }
       cells.push(rowCells);
@@ -348,8 +350,13 @@
         while (cellIndex < rowCells.length - 1 && x + .5 > (rowCells[cellIndex].end + rowCells[cellIndex + 1].start) / 2) cellIndex++;
         const cell = rowCells[cellIndex];
         const i = (y * width + x) * 4;
-        if (!cell.stroke || writing[i + 3] || !pixels[i + 3]) continue;
-        const order = writingOrder(cell, x, y);
+        if (writing[i + 3] || !pixels[i + 3]) continue;
+        let order;
+        if (scene.revealMode === 'scan') {
+          const within = clamp((x + .5 - cell.start) / Math.max(1, cell.end - cell.start), 0, 1);
+          order = Math.round((cell.index + .025 + within * .90) / Math.max(1, glyphCount) * 65535);
+        } else if (cell.stroke) order = writingOrder(cell, x, y);
+        else continue;
         writing[i] = order >> 8; writing[i + 1] = order & 255; writing[i + 3] = 255;
       }
     }
@@ -376,6 +383,7 @@
     gl.uniform1f(uniforms.progress, scene.direction === 'reverse' ? 1 - progress : progress);
     gl.uniform1f(uniforms.writeProgress, intro ? clamp(time / intro, 0, 1) : 1);
     gl.uniform1f(uniforms.laser, intro ? 1 : 0); gl.uniform1f(uniforms.glyphCount, glyphCount);
+    gl.uniform1f(uniforms.scanWriting, scene.revealMode === 'scan' ? 1 : 0);
     gl.uniform1f(uniforms.lineStep, lineStep); gl.uniform1f(uniforms.lineCount, lineCount);
     gl.uniform1f(uniforms.shine, scene.shine);
     gl.uniform1f(uniforms.bandWidth, scene.lightWidth); gl.uniform1f(uniforms.bevel, scene.bevel);

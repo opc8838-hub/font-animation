@@ -1,7 +1,8 @@
 const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
 const { chromium } = require(path.resolve(process.argv[2] || 'node_modules', 'playwright'));
 const base = process.argv[4] || 'http://127.0.0.1:8789';
-const output = path.resolve(__dirname, '../output/metallic-laser'); fs.mkdirSync(output, { recursive: true });
+const mode = process.argv[5] || 'laser';
+const output = path.resolve(__dirname, `../output/metallic-${mode}`); fs.mkdirSync(output, { recursive: true });
 (async () => {
   const browser = await chromium.launch({ headless: true, executablePath: process.argv[3] || undefined });
   try {
@@ -10,7 +11,8 @@ const output = path.resolve(__dirname, '../output/metallic-laser'); fs.mkdirSync
     context.on('page', p => p.on('pageerror', e => errors.push(e.message)));
     page.on('pageerror', e => errors.push(e.message));
     await page.goto(`${base}/metallic-text.html?from=gallery`); await page.waitForFunction(() => window.CellMotionEffectBridge);
-    const report = await page.evaluate(async () => {
+    assert.deepEqual(await page.locator('#revealMode option').evaluateAll(options => options.map(option => option.value)), ['none', 'scan', 'laser']);
+    const report = await page.evaluate(async mode => {
       const original = CellMotionMetallicText.getScheme();
       const sample = (state, at) => {
         const c = document.createElement('canvas'); c.width = 640; c.height = 360;
@@ -22,12 +24,12 @@ const output = path.resolve(__dirname, '../output/metallic-laser'); fs.mkdirSync
         return { ink, bands, halves, png: c.toDataURL() };
       };
       const first = sample(original, 0), opening = sample(original, .1), full = sample(original, 1);
-      const state = structuredClone(original); Object.assign(state.scene, { text: 'AVATR\nLASER', lineHeight: 1.4, revealMode: 'laser', writeDuration: 2.4 });
+      const state = structuredClone(original); Object.assign(state.scene, { text: 'AVATR\nLASER', lineHeight: 1.4, revealMode: mode, writeDuration: 2.4 });
       await CellMotionMetallicText.applyScheme(state, { autoplay: false });
       const frames = [0, .3, .9, 1.2, 1.8, 2.4].map(at => ({ at, ...sample(state, at) }));
       const noLaser = structuredClone(state); noLaser.scene.revealMode = 'none';
       return { first, opening, full, frames, complete: sample(noLaser, 0), duration: MetallicTextRenderer.duration(state.scene) };
-    });
+    }, mode);
     for (const frame of report.frames) fs.writeFileSync(path.join(output, `laser-${frame.at}.png`), Buffer.from(frame.png.split(',')[1], 'base64'));
     assert.ok(report.first.ink > 1000, 'Default opening must show stable text at time zero, without a fade/flash');
     assert.equal(report.first.ink, report.opening.ink); assert.equal(report.first.ink, report.full.ink);
@@ -41,7 +43,11 @@ const output = path.resolve(__dirname, '../output/metallic-laser'); fs.mkdirSync
     assert.equal(await page.locator('#text').evaluate(el => el.tagName), 'TEXTAREA');
     await page.locator('#text').fill('AVATR\nLASER'); await page.locator('#text').dispatchEvent('change');
     await page.locator('[data-panel="motion"]').first().click();
-    await page.locator('#revealMode').selectOption('laser', { force: true });
+    await page.locator('#revealMode').selectOption('none', { force: true });
+    assert.ok(await page.locator('#writeDurationField').isHidden());
+    assert.equal(await page.locator('#timeline button').count(), 2);
+    await page.locator('#revealMode').selectOption(mode, { force: true });
+    assert.ok(await page.locator('#writeDurationField').isVisible());
     await page.locator('#writeDurationExact').fill('2.4'); await page.locator('#writeDurationExact').dispatchEvent('change');
     assert.equal(await page.locator('#timeline button').count(), 3);
     await page.locator('#selectText').click(); await page.locator('#fontSettings').evaluate(el => { el.open = true; });
@@ -69,7 +75,8 @@ const output = path.resolve(__dirname, '../output/metallic-laser'); fs.mkdirSync
     const manifestFile = path.join(output, 'live-manifest.json'); await (await manifestDownload).saveAs(manifestFile);
     const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
     assert.equal(manifest.composition.scene.text, 'AVATR\nLASER');
-    assert.equal(manifest.composition.scene.revealMode, 'laser');
+    assert.equal(manifest.composition.scene.revealMode, mode);
+    assert.deepEqual(manifest.parameterDefinitions.find(p => p.path === 'composition.scene.revealMode').values, ['none', 'scan', 'laser']);
     for (const key of ['lineHeight', 'writeDuration', 'revealMode']) assert.ok(manifest.parameterDefinitions.some(p => p.path === `composition.scene.${key}`));
     await page.locator('.tc-ai-trigger').click(); const opened = context.waitForEvent('page'); await page.locator('[data-ai-action="preview"]').click();
     const demo = await opened; await demo.waitForFunction(() => document.getElementById('demoPlayer')?._ready);
@@ -96,6 +103,6 @@ const output = path.resolve(__dirname, '../output/metallic-laser'); fs.mkdirSync
     assert.deepEqual(await quiet.evaluate(() => ({ playing: CellMotionMetallicText.playing, time: CellMotionMetallicText.time })), { playing: false, time: 2.4 });
     await reduced.close();
     assert.deepEqual(errors, []);
-    console.log('PASS: stable opening, multiline/CJK layout, laser order, autosave, AI frame parity, PNG/GIF/MP4, mobile and reduced motion');
+    console.log(`PASS (${mode}): stable opening, multiline/CJK layout, reveal order, autosave, AI frame parity, PNG/GIF/MP4, mobile and reduced motion`);
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
