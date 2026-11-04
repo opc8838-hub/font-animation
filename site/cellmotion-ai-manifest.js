@@ -109,8 +109,8 @@
     }
     if (manifest.effect?.id === 'metallic-text') {
       const intro = language === 'en'
-        ? 'Integrate the existing CellMotion Metallic Text renderer using cellmotion-player.js and this complete live-state Manifest. Preserve the canvas aspect ratio, text with manual line breaks, shared font, letter height/weight/spacing, line spacing, alignment/position, immediate or per-letter laser reveal, total writing duration, metal/reflection colors, embedded image/GIF/video background, crop and video trim, bevel, sweep direction and deterministic timing. Stage fill is an editor preference. Use the player play, pause, restart, seek and update methods for control.'
-        : '接入现有 CellMotion 金属流光渲染器：加载 cellmotion-player.js，把完整实时 Manifest 交给 <cellmotion-player>。保留画布比例、文字及手动换行、共享字体、字形高度与粗细、字距行距、对齐与位置、直接呈现或逐字镭射模式、写入总时长、金属与反光颜色、嵌入的图片/GIF/视频背景、取景和视频裁切、边缘、流动方向和确定性时间轴。铺满背景仅为编辑器偏好。通过播放器的 play、pause、restart、seek 和 update 方法控制。';
+        ? 'Integrate the existing CellMotion Metallic Text renderer using cellmotion-player.js and this complete live-state Manifest. Preserve the canvas aspect ratio, text with manual line breaks, shared font, letter height/weight/spacing, line spacing, alignment/position, immediate or per-letter stroke-following laser reveal, total writing duration, metal/reflection colors, embedded image/GIF/video background, crop and video trim, bevel, sweep direction and deterministic timing. Stage fill is an editor preference. Use the player play, pause, restart, seek and update methods for control.'
+        : '接入现有 CellMotion 金属流光渲染器：加载 cellmotion-player.js，把完整实时 Manifest 交给 <cellmotion-player>。保留画布比例、文字及手动换行、共享字体、字形高度与粗细、字距行距、对齐与位置、直接呈现或逐字沿笔画镭射模式、写入总时长、金属与反光颜色、嵌入的图片/GIF/视频背景、取景和视频裁切、边缘、流动方向和确定性时间轴。铺满背景仅为编辑器偏好。通过播放器的 play、pause、restart、seek 和 update 方法控制。';
       return intro + '\n\n' + payload;
     }
     if (manifest.capabilities?.compositionModel === 'scene' || manifest.capabilities?.compositionModel === 'cards') {
