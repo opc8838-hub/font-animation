@@ -49,6 +49,8 @@ const output = path.resolve(__dirname, `../output/metallic-${mode}`); fs.mkdirSy
     await page.locator('#revealMode').selectOption(mode, { force: true });
     assert.ok(await page.locator('#writeDurationField').isVisible());
     await page.locator('#writeDurationExact').fill('2.4'); await page.locator('#writeDurationExact').dispatchEvent('change');
+    await page.locator('#lightAmplitudeExact').fill('36'); await page.locator('#lightAmplitudeExact').dispatchEvent('change');
+    await page.locator('#lightSpeedExact').fill('1.5'); await page.locator('#lightSpeedExact').dispatchEvent('change');
     assert.equal(await page.locator('#timeline button').count(), 3);
     await page.locator('#selectText').click(); await page.locator('#fontSettings').evaluate(el => { el.open = true; });
     await page.locator('#lineHeightExact').fill('1.4'); await page.locator('#lineHeightExact').dispatchEvent('change');
@@ -77,7 +79,8 @@ const output = path.resolve(__dirname, `../output/metallic-${mode}`); fs.mkdirSy
     assert.equal(manifest.composition.scene.text, 'AVATR\nLASER');
     assert.equal(manifest.composition.scene.revealMode, mode);
     assert.deepEqual(manifest.parameterDefinitions.find(p => p.path === 'composition.scene.revealMode').values, ['none', 'scan', 'laser']);
-    for (const key of ['lineHeight', 'writeDuration', 'revealMode']) assert.ok(manifest.parameterDefinitions.some(p => p.path === `composition.scene.${key}`));
+    assert.equal(manifest.composition.scene.lightAmplitude,.36);assert.equal(manifest.composition.scene.lightSpeed,1.5);
+    for (const key of ['lineHeight', 'writeDuration', 'revealMode', 'lightAmplitude', 'lightSpeed']) assert.ok(manifest.parameterDefinitions.some(p => p.path === `composition.scene.${key}`));
     await page.locator('.tc-ai-trigger').click(); const opened = context.waitForEvent('page'); await page.locator('[data-ai-action="preview"]').click();
     const demo = await opened; await demo.waitForFunction(() => document.getElementById('demoPlayer')?._ready);
     await demo.locator('[data-player-action="pause"]').click();

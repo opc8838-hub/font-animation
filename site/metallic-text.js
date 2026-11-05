@@ -16,11 +16,11 @@
   };
   const PHASES = [
     { key: 'writeDuration', zh: '镭射写入', en: 'Laser writing', color: '#d4b8ff' },
-    { key: 'sweep', zh: '流光经过', en: 'Light sweep', color: '#8ec8ff' },
-    { key: 'hold', zh: '亮面停留', en: 'Lit hold', color: '#ffd27d' }
+    { key: 'sweep', zh: '持续流光', en: 'Continuous light', color: '#8ec8ff' },
+    { key: 'hold', zh: '文字停留', en: 'Text hold', color: '#ffd27d' }
   ];
-  const numericKeys = ['fontSize', 'fontHeight', 'extraBold', 'tracking', 'lineHeight', 'bevel', 'shine', 'lightWidth', 'writeDuration', 'sweep', 'hold', 'speed', 'positionX', 'positionY'];
-  const optionalDefaults = { positionX: 0, positionY: 0, alignment: 'center', lineHeight: 1.35, writeDuration: 2.4 };
+  const numericKeys = ['fontSize', 'fontHeight', 'extraBold', 'tracking', 'lineHeight', 'bevel', 'shine', 'lightWidth', 'lightAmplitude', 'lightSpeed', 'writeDuration', 'sweep', 'hold', 'speed', 'positionX', 'positionY'];
+  const optionalDefaults = { positionX: 0, positionY: 0, alignment: 'center', lineHeight: 1.35, lightAmplitude: .28, lightSpeed: 1, writeDuration: 2.4 };
   const colorFields = { background: 'backgroundColor', metalTint: 'textColor', coolTint: 'coolTint', warmTint: 'warmTint' };
   const colorKeys = Object.keys(colorFields);
   const dimension = value => Math.max(128, Math.min(3840, Math.round(Number(value) / 2) * 2 || 1080));
@@ -41,7 +41,7 @@
   const canvas = $('view');
   const label = (zh, en) => language === 'en' ? en : zh;
   const cycle = () => Core.duration(state.scene) / state.scene.speed;
-  const phaseDuration = key => key === 'writeDuration' ? Core.revealDuration(state.scene) : state.scene[key];
+  const phaseDuration = key => key === 'writeDuration' ? Core.revealDuration(state.scene) : key === 'sweep' ? Core.duration(state.scene) : state.scene[key];
   const phaseStart = key => key === 'hold' ? Core.motionDuration(state.scene) : 0;
   const readableTime = () => Math.max(Core.revealDuration(state.scene), state.scene.sweep * .45) / state.scene.speed;
 
@@ -52,6 +52,7 @@
     for (const key of numericKeys) {
       const input = $(key);
       if (Number.isFinite(raw.scene[key])) next.scene[key] = Math.max(Number(input.min), Math.min(Number(input.max), raw.scene[key]));
+      if (key === 'lightSpeed' && Number.isFinite(next.scene[key])) next.scene[key] = Math.round(next.scene[key] * 2) / 2;
     }
     for (const key of colorKeys) if (/^#[0-9a-f]{6}$/i.test(raw.scene[key] || '')) next.scene[key] = raw.scene[key];
     if (typeof raw.scene.text === 'string') next.scene.text = raw.scene.text;
@@ -112,7 +113,7 @@
     numericKeys.forEach(key => {
       const input = $(key), value = state.scene[key] ?? optionalDefaults[key];
       input.value = value;
-      input.nextElementSibling.textContent = ['writeDuration', 'sweep', 'hold'].includes(key) ? `${value.toFixed(2)} s` : ['speed', 'lineHeight'].includes(key) ? `${value.toFixed(2)}×` : ['fontSize', 'fontHeight', 'extraBold', 'lightWidth', 'tracking'].includes(key) ? `${Number((value * 100).toFixed(1))}%` : value.toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
+      input.nextElementSibling.textContent = ['writeDuration', 'sweep', 'hold'].includes(key) ? `${value.toFixed(2)} s` : ['speed', 'lightSpeed', 'lineHeight'].includes(key) ? `${value.toFixed(2)}×` : ['fontSize', 'fontHeight', 'extraBold', 'lightWidth', 'lightAmplitude', 'tracking'].includes(key) ? `${Number((value * 100).toFixed(1))}%` : value.toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
       if ($(key + 'Exact')) $(key + 'Exact').value = Number((value * Number(input.dataset.displayFactor || 1)).toFixed(3));
     });
     colorKeys.forEach(key => { $(colorFields[key]).value = state.scene[key]; });
@@ -136,7 +137,7 @@
   }
   function buildTimeline() {
     $('timeline').replaceChildren(); $('timelineDetails').replaceChildren();
-    $('timeline').classList.toggle('has-writing', Core.revealDuration(state.scene) > 0);
+    $('timeline').classList.toggle('has-overlap', Core.revealDuration(state.scene) > 0 || state.scene.hold > 0);
     PHASES.forEach(phase => {
       const duration = phaseDuration(phase.key) / state.scene.speed;
       if (duration <= 0) return;
@@ -373,8 +374,8 @@
     handle.onkeydown = event => { if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return; event.preventDefault(); const bounds = Media.clip(state.scene.backgroundMedia, background.duration); setTrim(edge, bounds[edge] + (event.key === 'ArrowRight' ? 1 : -1) * (event.shiftKey ? 1 : .1)); };
   });
   [...numericKeys, 'cropZoom'].forEach(key => {
-    const range = $(key), factor = ['fontSize', 'fontHeight', 'extraBold', 'tracking', 'bevel', 'lightWidth'].includes(key) ? 100 : 1;
-    const unit = ['writeDuration', 'sweep', 'hold'].includes(key) ? 's' : ['speed', 'cropZoom', 'lineHeight'].includes(key) ? '×' : '%';
+    const range = $(key), factor = ['fontSize', 'fontHeight', 'extraBold', 'tracking', 'bevel', 'lightWidth', 'lightAmplitude'].includes(key) ? 100 : 1;
+    const unit = ['writeDuration', 'sweep', 'hold'].includes(key) ? 's' : ['speed', 'lightSpeed', 'cropZoom', 'lineHeight'].includes(key) ? '×' : '%';
     range.dataset.displayFactor = factor;
     const box = document.createElement('span'); box.className = 'metal-exact-box';
     const exact = document.createElement('input'); exact.type = 'number'; exact.id = key + 'Exact'; exact.min = Number(range.min) * factor; exact.max = Number(range.max) * factor; exact.step = Number(range.step) * factor;
