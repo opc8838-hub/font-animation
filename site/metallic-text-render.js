@@ -1,7 +1,6 @@
 (() => {
   'use strict';
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
-  const smooth = value => { const x = clamp(value, 0, 1); return x * x * (3 - 2 * x); };
   const mask = document.createElement('canvas');
   const surface = document.createElement('canvas');
   const gl = surface.getContext('webgl2', { alpha: true, premultipliedAlpha: false, antialias: false, preserveDrawingBuffer: true });
@@ -9,6 +8,7 @@
   let maskKey = '', bounds, lineStep = 1, lineCount = 1, glyphCount = 0;
   const revealDuration = scene => ['scan', 'laser'].includes(scene.revealMode) ? (scene.writeDuration ?? 2.4) : 0;
   const motionDuration = scene => Math.max(revealDuration(scene), scene.sweep);
+  const duration = scene => motionDuration(scene) + scene.hold;
 
   const vertex = `#version 300 es
   in vec2 position;
@@ -20,7 +20,7 @@
   uniform vec2 resolution;
   uniform vec4 bounds;
   uniform vec3 background, metal, cool, warm;
-  uniform float progress, writeProgress, laser, scanWriting, glyphCount, lineStep, lineCount, shine, bandWidth, bevel, transparentBackground;
+  uniform float progress, writeProgress, laser, scanWriting, glyphCount, lineStep, lineCount, shine, bandWidth, lightAmplitude, bevel, transparentBackground;
   out vec4 color;
   float distanceAt(vec2 uv) {
     vec2 packed = texture(lettering, uv).rg;
@@ -53,10 +53,11 @@
     base -= .10 * bell(y - .12, .16);
     base += .08 * bell(y - .92, .16);
     // A broad reflected horizon bends over the bevel and travels across the word.
-    float wave = .31 + .12 * sin(local.x * 4.4 - progress * 6.2831853) + normal.x * .10 - normal.y * .11;
+    float wave = .50 + lightAmplitude * sin(local.x * 4.4 - progress * 6.2831853) + normal.x * .10 - normal.y * .11;
     float horizon = y - wave;
     float width = .045 + bandWidth * .20;
-    float movingLight = .30 + .70 * bell(local.x - mix(-.05, 1.05, progress), .42);
+    float lightDistance = fract(local.x * .65 - progress + .5) - .5;
+    float movingLight = .45 + .55 * bell(lightDistance, .25);
     vec3 reflection = cool * bell(horizon + width * .9, width * .85) * .54;
     reflection += vec3(1.) * bell(horizon, width * .65) * .48;
     reflection += warm * bell(horizon - width * .65, width * .80) * .43;
@@ -94,7 +95,7 @@
   const writingTexture = gl.createTexture(); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, writingTexture);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  const uniforms = Object.fromEntries(['lettering', 'writing', 'resolution', 'bounds', 'background', 'metal', 'cool', 'warm', 'progress', 'writeProgress', 'laser', 'scanWriting', 'glyphCount', 'lineStep', 'lineCount', 'shine', 'bandWidth', 'bevel', 'transparentBackground'].map(name => [name, gl.getUniformLocation(program, name)]));
+  const uniforms = Object.fromEntries(['lettering', 'writing', 'resolution', 'bounds', 'background', 'metal', 'cool', 'warm', 'progress', 'writeProgress', 'laser', 'scanWriting', 'glyphCount', 'lineStep', 'lineCount', 'shine', 'bandWidth', 'lightAmplitude', 'bevel', 'transparentBackground'].map(name => [name, gl.getUniformLocation(program, name)]));
   gl.uniform1i(uniforms.lettering, 0); gl.uniform1i(uniforms.writing, 1);
 
   function contourDistances(pixels, width, height) {
@@ -380,17 +381,20 @@
     gl.uniform3fv(uniforms.background, rgb(scene.background)); gl.uniform3fv(uniforms.metal, rgb(scene.metalTint));
     gl.uniform3fv(uniforms.cool, rgb(scene.coolTint)); gl.uniform3fv(uniforms.warm, rgb(scene.warmTint));
     const writingDuration = revealDuration(scene);
-    const progress = smooth(time / scene.sweep);
-    gl.uniform1f(uniforms.progress, scene.direction === 'reverse' ? 1 - progress : progress);
+    // Whole laps per composition keep every speed level continuous at the loop seam.
+    const laps = clamp(Math.round((scene.lightSpeed ?? 1) * 2), 1, 6);
+    const progress = (time / duration(scene) * laps) % 1;
+    gl.uniform1f(uniforms.progress, scene.direction === 'reverse' ? -progress : progress);
     gl.uniform1f(uniforms.writeProgress, writingDuration ? clamp(time / writingDuration, 0, 1) : 1);
     gl.uniform1f(uniforms.laser, writingDuration ? 1 : 0); gl.uniform1f(uniforms.glyphCount, glyphCount);
     gl.uniform1f(uniforms.scanWriting, scene.revealMode === 'scan' ? 1 : 0);
     gl.uniform1f(uniforms.lineStep, lineStep); gl.uniform1f(uniforms.lineCount, lineCount);
     gl.uniform1f(uniforms.shine, scene.shine);
+    gl.uniform1f(uniforms.lightAmplitude, scene.lightAmplitude ?? .28);
     gl.uniform1f(uniforms.bandWidth, scene.lightWidth); gl.uniform1f(uniforms.bevel, scene.bevel);
     gl.uniform1f(uniforms.transparentBackground, transparent ? 1 : 0);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     ctx.drawImage(surface, 0, 0, width, height);
   }
-  window.MetallicTextRenderer = { draw, revealDuration, motionDuration, invalidate: () => { maskKey = ''; }, duration: scene => motionDuration(scene) + scene.hold };
+  window.MetallicTextRenderer = { draw, revealDuration, motionDuration, duration, invalidate: () => { maskKey = ''; } };
 })();

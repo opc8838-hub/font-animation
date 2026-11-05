@@ -27,14 +27,14 @@ const base=process.argv[4]||'http://127.0.0.1:8789';
    await page.evaluate(async s=>{const state=CellMotionMetallicText.getScheme();Object.assign(state.scene,s);await CellMotionMetallicText.applyScheme(state,{autoplay:false});},{revealMode:mode,writeDuration,sweep,hold,speed});
    const active=Math.max(mode==='none'?0:writeDuration,sweep),duration=(active+hold)/speed;
    const phases=await page.locator('#timeline button').evaluateAll(buttons=>buttons.map(b=>({key:b.dataset.phase,start:Number(b.dataset.seek),end:Number(b.dataset.end),left:b.getBoundingClientRect().left,top:b.getBoundingClientRect().top})));
-   const light=phases.find(p=>p.key==='sweep');assert.equal(light.start,0);assert.ok(Math.abs(light.end-sweep/speed)<.001);
+   const light=phases.find(p=>p.key==='sweep');assert.equal(light.start,0);assert.ok(Math.abs(light.end-duration)<.001);
    if(mode!=='none'){const write=phases.find(p=>p.key==='writeDuration');assert.equal(write.start,0);assert.ok(Math.abs(write.left-light.left)<1);assert.ok(light.top>write.top);await page.evaluate(at=>CellMotionMetallicText.seek(at),Math.min(writeDuration,sweep)/speed/2);assert.equal(await page.locator('#timeline button[aria-current="true"]').count(),2);}
    if(hold){const pause=phases.find(p=>p.key==='hold');assert.ok(Math.abs(pause.start-active/speed)<.001);await page.locator('#timeline button[data-phase="hold"]').click();assert.ok(Math.abs(await page.evaluate(()=>CellMotionMetallicText.time)-(active+hold/2)/speed)<.001);}
    assert.ok(Math.abs(Number(await page.locator('#scrubber').getAttribute('max'))-duration)<.001);
   }
   await page.evaluate(async()=>{const s=CellMotionMetallicText.getScheme();Object.assign(s.scene,{text:'AVATR\nLASER',revealMode:'laser',writeDuration:2.4,sweep:3.6,hold:.6,speed:1});await CellMotionMetallicText.applyScheme(s,{autoplay:false});await CellMotionMetallicText.seek(1.5);});
   await page.locator('[data-panel="motion"]').first().click();
-  for(const [id,value,expected] of [['sweepExact','4',2],['holdExact','.8',4.4],['writeDurationExact','6',3]]){
+  for(const [id,value,expected] of [['sweepExact','4',2.3],['holdExact','.8',4.4],['writeDurationExact','6',3]]){
    await page.locator('#'+id).fill(value);await page.locator('#'+id).dispatchEvent('change');assert.ok(Math.abs(await page.evaluate(()=>CellMotionMetallicText.time)-expected)<.001,`${id} seeks within the actual parallel interval`);
   }
   await page.evaluate(async()=>{const s=CellMotionMetallicText.getScheme();Object.assign(s.scene,{writeDuration:2.4,sweep:3.6,hold:.6});await CellMotionMetallicText.applyScheme(s,{autoplay:false});await CellMotionMetallicText.seek(1.5);});

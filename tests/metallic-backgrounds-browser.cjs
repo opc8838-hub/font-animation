@@ -38,10 +38,13 @@ const output = path.resolve(__dirname, '../output/metallic-background-verificati
       const current = canvas.getContext('2d').getImageData(0, 0, 960, 540).data;
       const source = await createImageBitmap(await (await fetch('final_metallic-text.png')).blob());
       canvas.getContext('2d').drawImage(source, 0, 0); const previous = canvas.getContext('2d').getImageData(0, 0, 960, 540).data;
-      let total = 0, max = 0; for (let i = 0; i < current.length; i++) { const delta = Math.abs(current[i] - previous[i]); total += delta; max = Math.max(max, delta); }
-      return { mean: total / current.length, max };
+      // The requested light path changes color, while the approved glyph geometry stays fixed.
+      const ink = (data, i) => Math.max(data[i],data[i+1],data[i+2]) > 6;
+      let total = 0, unmatched = 0;
+      for(let i=0;i<current.length;i+=4){const a=ink(current,i),b=ink(previous,i);if(a||b)total++;if(a===b)continue;const other=a?previous:current;let neighbor=false;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(ink(other,i+(dy*960+dx)*4))neighbor=true;if(!neighbor)unmatched++;}
+      return { silhouetteMismatch: unmatched/total };
     });
-    assert.ok(preservation.mean < .05, `Frozen default material: ${JSON.stringify(preservation)}`);
+    assert.ok(preservation.silhouetteMismatch < .001, `Preserved default geometry: ${JSON.stringify(preservation)}`);
     const initial = await state();
     await page.locator('#tcBackdropToggle').click(); await page.locator('#tcBackdropEnabled').check();
     await page.locator('#tcBackdropColor').evaluate(input => { input.value = '#ff00aa'; input.dispatchEvent(new Event('input', { bubbles: true })); });
@@ -98,7 +101,7 @@ const output = path.resolve(__dirname, '../output/metallic-background-verificati
     assert.deepEqual(manifest.composition, videoState); assert.equal(manifest.assets.backgrounds[0].owner, 'scene');
     assert.equal(manifest.assets.videos[0].trimStart, .7); assert.equal(manifest.assets.videos[0].trimEnd, 2.4);
     assert.ok(manifest.assets.embedded.some(asset => asset.kind === 'video' && asset.embedded));
-    assert.equal(manifest.parameterDefinitions.length, 33);
+    assert.equal(manifest.parameterDefinitions.length, 35);
     const demo = await context.newPage(); await demo.goto(`${base}/typecascade-component-demo.html?effect=metallic-text`);
     await demo.waitForFunction(() => document.getElementById('demoPlayer')?._ready);
     manifest.presentation.autoplay = false; await demo.evaluate(manifest => { document.getElementById('demoPlayer').manifest = manifest; }, manifest);
@@ -119,7 +122,7 @@ const output = path.resolve(__dirname, '../output/metallic-background-verificati
     await page.locator('#openBackground').click(); await page.locator('#removeBackground').click();
     assert.equal((await state()).scene.backgroundMedia, undefined, 'Remove returns to solid background');
     assert.deepEqual(errors, [], 'Console stays clean with media, seeking and exports');
-    fs.writeFileSync(path.join(output, 'verification.json'), JSON.stringify({ preservation, gifSamples, videoSamples, parameters: 33, mediaRoundtrip: true, videoPlayerPixelsEqual: true, errors }, null, 2));
-    console.log('PASS: frozen default, stage preferences, exact values/history, image crop, GIF delays, video filmstrip/trim, media save/import/reload, real exports and live AI media parity.');
+    fs.writeFileSync(path.join(output, 'verification.json'), JSON.stringify({ preservation, gifSamples, videoSamples, parameters: 35, mediaRoundtrip: true, videoPlayerPixelsEqual: true, errors }, null, 2));
+    console.log('PASS: preserved default geometry, stage preferences, exact values/history, image crop, GIF delays, video filmstrip/trim, media save/import/reload, real exports and live AI media parity.');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

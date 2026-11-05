@@ -8,7 +8,7 @@
 
 **2026-10-28 网格显影 / Dither / ASCII**：[打开编辑器](site/dither-ascii.html?from=gallery)。根据[原帖视频](https://x.com/Kubai087/status/2115091203465290087)制作振翅蝴蝶网格与橙蓝背景；成品画面让蝴蝶占满居中的卡片。支持 ASCII / Bayer 4×4 Dither、遮罩、色调、采样强度、大小、间距、素材上传、方案保存及 PNG / GIF / H.264 MP4 导出。视频拆解与实现取舍见[分析](docs/analyses/dither-ascii.md)。
 
-**2026-11-05 金属流光 / Metallic Text 更新**：[打开编辑器](site/metallic-text.html?from=gallery&v=20261105-overlap1)。支持直接呈现、逐字横向镭射、沿笔画镭射三种方式。文字呈现与冷暖光带从第 0 秒同时播放，写入和流光时长独立，两者都完成后停留；时间轴直观显示重叠轨道。保留手动换行、行距、按可见字形对齐、共享字体、字形、字距、配色、方向、画幅、图片/GIF/裁切视频背景、构图、精确数值及撤销/重做。33 项 For AI 参数与方案保存、PNG / GIF / H.264 MP4 导出使用同一实时状态和渲染器。默认字形基于 [Librestile](https://github.com/ocelothe/Librestile)，其 OFL 许可随字体保存在 `site/assets/fonts/librestile/OFL.txt`。运动依据与验证见[分析](docs/analyses/metallic-text.md)。
+**2026-11-05 金属流光 / Metallic Text 更新**：[打开编辑器](site/metallic-text.html?from=gallery&v=20261105-flow1)。支持直接呈现、逐字横向镭射、沿笔画镭射三种方式。光带从第 0 秒持续流动到循环结束，文字停留时也不停；新增可编辑流动幅度和独立的 0.5×–3× 光带速度，各档位无缝循环且不改变文字写入速度。保留手动换行、行距、可见字形对齐、共享字体、字形、字距、配色、方向、画幅、图片/GIF/裁切视频背景、构图、精确数值及撤销/重做。35 项 For AI 参数与方案保存、PNG / GIF / H.264 MP4 导出使用同一实时状态和渲染器。默认字形基于 [Librestile](https://github.com/ocelothe/Librestile)，其 OFL 许可随字体保存在 `site/assets/fonts/librestile/OFL.txt`。运动依据与验证见[分析](docs/analyses/metallic-text.md)。
 
 **2026-11-04 流体泡泡 / Bubble Fluid 更新**：[打开编辑器](site/bubble-frame.html?from=gallery&v=20261104-bubble-release1)。字母保持正向，以邻字接续伸缩的方式挤满弧形屏幕，单行和多行均保持阅读顺序。支持真正的大小写混排，细修 O 的圆弧、E/F/G 等字母的笔画间隙及 I/L/i 的粗细，并修复屏幕右上角白边。六组荧光配色同步高清场景光影，另有暖白、浅桃等屏幕底色。CellMotion 三栏编辑器保留字体、背景视频裁切、三色时间轴、明暗／中英偏好、方案及 PNG / GIF / MP4 导出。首页封面和循环预览已同步更新。详见[分析与验证](docs/analyses/bubble-fluid.md)。
 

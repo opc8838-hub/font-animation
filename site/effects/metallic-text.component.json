@@ -1,13 +1,13 @@
 {
-  "effect": { "id": "metallic-text", "name": { "zh": "金属流光", "en": "Metallic Text" }, "version": "1.4.0", "category": "type" },
-  "runtime": { "kind": "iframe-bridge", "entry": "metallic-text.html?v=20261105-overlap1", "bridgeVersion": "1.0.0", "renderer": "webgl2" },
+  "effect": { "id": "metallic-text", "name": { "zh": "金属流光", "en": "Metallic Text" }, "version": "1.5.0", "category": "type" },
+  "runtime": { "kind": "iframe-bridge", "entry": "metallic-text.html?v=20261105-flow1", "bridgeVersion": "1.0.0", "renderer": "webgl2" },
   "capabilities": { "compositionModel": "scene", "editableText": true, "sharedFonts": true, "backgroundMedia": true, "animatedImageBackgrounds": true, "trimmedVideoBackgrounds": true, "responsiveCanvas": true, "timeline": true, "preview": true, "exports": ["png", "gif", "mp4"] },
   "behavior": {
-    "summary": { "zh": "支持回车换行、行距和按可见字形对齐的金属文字，行首行尾空格不影响多行对齐。三种呈现方式：直接呈现（none）、逐字镭射（scan，每个字母横向扫出）、沿笔画镭射（laser，沿字形中轴描写）。镭射写入与冷暖光带从第 0 秒同时开始，各自按写入时长和流光时长播放；较早完成的效果保持末态，两者都完成后进入停留。一轮时长为 max(启用的写入时长, 流光时长) + 停留时长，再除以播放速度。写入按从左到右、从上到下逐字接续，空格和换行不占写入时长。", "en": "Multiline metallic lettering aligned by visible glyph bounds, ignoring surrounding whitespace. Reveal modes: immediate (none), per-letter horizontal laser scan (scan), or stroke-following writing (laser). Writing and reflection both start at time zero with independent durations. Each holds its final state when finished; the hold phase starts once both have finished. Cycle duration is (max(enabled writing duration, sweep duration) + hold) / speed. Letters are sequenced left to right, top to bottom; spaces and line breaks consume no writing time." },
+    "summary": { "zh": "支持换行、行距和可见字形对齐。呈现方式：none 直接呈现、scan 逐字横向镭射、laser 沿笔画镭射。写入与光带同时开始；光带在整轮中持续流动，包括文字停留阶段，不减速停住。流动幅度 lightAmplitude 默认 0.28；独立光带速度 lightSpeed 为 0.5–3、步长 0.5，1× 每轮完整流动两周，各档位首尾相接，不改变文字写入速度。sweep 是基础时长；总时长为 (max(启用的写入时长, 基础时长) + 文字停留) / 播放速度。", "en": "Multiline lettering with visible-ink alignment. Reveal modes: immediate (none), horizontal per-letter scan (scan), or stroke writing (laser). Light starts with writing and flows continuously through the entire cycle, including text hold, with no terminal slowdown or freeze. lightAmplitude defaults to 0.28. Independent lightSpeed is 0.5–3 in 0.5 steps; 1x makes two whole laps per composition, ensuring seamless light loops without altering writing speed. sweep is the base duration; total duration is (max(enabled writing duration, base duration) + text hold) / speed." },
     "phases": [
       { "id": "writeDuration", "name": { "zh": "镭射写入（可选）", "en": "Laser writing (optional)" }, "colorToken": "phase.violet" },
-      { "id": "sweep", "name": { "zh": "流光经过", "en": "Light sweep" }, "colorToken": "phase.sky" },
-      { "id": "hold", "name": { "zh": "亮面停留", "en": "Lit hold" }, "colorToken": "phase.amber" }
+      { "id": "sweep", "name": { "zh": "持续流光", "en": "Continuous light" }, "colorToken": "phase.sky" },
+      { "id": "hold", "name": { "zh": "文字停留", "en": "Text hold" }, "colorToken": "phase.amber" }
     ]
   },
   "parameters": [
@@ -26,12 +26,14 @@
     { "path": "composition.scene.bevel", "scope": "effect", "type": "number", "name": { "zh": "金属边缘", "en": "Metal edge" }, "min": 0, "max": 0.2 },
     { "path": "composition.scene.shine", "scope": "effect", "type": "number", "name": { "zh": "反光强度", "en": "Reflection strength" }, "min": 0, "max": 1.5 },
     { "path": "composition.scene.lightWidth", "scope": "effect", "type": "number", "name": { "zh": "光带宽度", "en": "Band width" }, "min": 0.08, "max": 0.6 },
+    { "path": "composition.scene.lightAmplitude", "scope": "effect", "type": "number", "name": { "zh": "流动幅度", "en": "Travel amplitude" }, "min": 0.08, "max": 0.42, "step": 0.01, "default": 0.28 },
+    { "path": "composition.scene.lightSpeed", "scope": "effect", "type": "number", "name": { "zh": "光带速度", "en": "Light speed" }, "unit": "×", "min": 0.5, "max": 3, "step": 0.5, "default": 1 },
     { "path": "composition.scene.direction", "scope": "effect", "type": "enum", "name": { "zh": "流动方向", "en": "Direction" }, "values": ["forward", "reverse"] },
     { "path": "composition.scene.revealMode", "scope": "effect", "type": "enum", "name": { "zh": "呈现方式", "en": "Reveal style" }, "values": ["none", "scan", "laser"], "default": "none" },
     { "path": "composition.scene.writeDuration", "scope": "effect", "type": "number", "name": { "zh": "镭射写入时长", "en": "Laser writing duration" }, "unit": "s", "min": 0.3, "max": 10, "default": 2.4 },
     { "path": "composition.scene.lineHeight", "scope": "effect", "type": "number", "name": { "zh": "行距", "en": "Line spacing" }, "min": 1.1, "max": 2.5, "default": 1.35 },
-    { "path": "composition.scene.sweep", "scope": "effect", "type": "number", "name": { "zh": "流光经过", "en": "Reflection sweep" }, "unit": "s", "min": 0.5, "max": 10 },
-    { "path": "composition.scene.hold", "scope": "effect", "type": "number", "name": { "zh": "亮面停留", "en": "Lit hold" }, "unit": "s", "min": 0, "max": 4 },
+    { "path": "composition.scene.sweep", "scope": "effect", "type": "number", "name": { "zh": "基础时长", "en": "Base duration" }, "unit": "s", "min": 0.5, "max": 10 },
+    { "path": "composition.scene.hold", "scope": "effect", "type": "number", "name": { "zh": "文字停留", "en": "Text hold" }, "unit": "s", "min": 0, "max": 4 },
     { "path": "composition.scene.speed", "scope": "effect", "type": "number", "name": { "zh": "播放速度", "en": "Playback speed" }, "min": 0.25, "max": 2 },
     { "path": "composition.scene.positionX", "scope": "effect", "type": "number", "name": { "zh": "水平位置", "en": "Horizontal position" }, "unit": "%", "min": -40, "max": 40, "default": 0 },
     { "path": "composition.scene.positionY", "scope": "effect", "type": "number", "name": { "zh": "垂直位置", "en": "Vertical position" }, "unit": "%", "min": -40, "max": 40, "default": 0 },
