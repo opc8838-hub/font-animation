@@ -8,6 +8,7 @@
   if (!gl) throw new Error('WebGL 2 is required for Metallic Text.');
   let maskKey = '', bounds, lineStep = 1, lineCount = 1, glyphCount = 0;
   const revealDuration = scene => ['scan', 'laser'].includes(scene.revealMode) ? (scene.writeDuration ?? 2.4) : 0;
+  const motionDuration = scene => Math.max(revealDuration(scene), scene.sweep);
 
   const vertex = `#version 300 es
   in vec2 position;
@@ -378,11 +379,11 @@
     gl.uniform2f(uniforms.resolution, width, height); gl.uniform4fv(uniforms.bounds, bounds);
     gl.uniform3fv(uniforms.background, rgb(scene.background)); gl.uniform3fv(uniforms.metal, rgb(scene.metalTint));
     gl.uniform3fv(uniforms.cool, rgb(scene.coolTint)); gl.uniform3fv(uniforms.warm, rgb(scene.warmTint));
-    const intro = revealDuration(scene);
-    const progress = smooth((time - intro) / scene.sweep);
+    const writingDuration = revealDuration(scene);
+    const progress = smooth(time / scene.sweep);
     gl.uniform1f(uniforms.progress, scene.direction === 'reverse' ? 1 - progress : progress);
-    gl.uniform1f(uniforms.writeProgress, intro ? clamp(time / intro, 0, 1) : 1);
-    gl.uniform1f(uniforms.laser, intro ? 1 : 0); gl.uniform1f(uniforms.glyphCount, glyphCount);
+    gl.uniform1f(uniforms.writeProgress, writingDuration ? clamp(time / writingDuration, 0, 1) : 1);
+    gl.uniform1f(uniforms.laser, writingDuration ? 1 : 0); gl.uniform1f(uniforms.glyphCount, glyphCount);
     gl.uniform1f(uniforms.scanWriting, scene.revealMode === 'scan' ? 1 : 0);
     gl.uniform1f(uniforms.lineStep, lineStep); gl.uniform1f(uniforms.lineCount, lineCount);
     gl.uniform1f(uniforms.shine, scene.shine);
@@ -391,5 +392,5 @@
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     ctx.drawImage(surface, 0, 0, width, height);
   }
-  window.MetallicTextRenderer = { draw, revealDuration, invalidate: () => { maskKey = ''; }, duration: scene => revealDuration(scene) + scene.sweep + scene.hold };
+  window.MetallicTextRenderer = { draw, revealDuration, motionDuration, invalidate: () => { maskKey = ''; }, duration: scene => motionDuration(scene) + scene.hold };
 })();

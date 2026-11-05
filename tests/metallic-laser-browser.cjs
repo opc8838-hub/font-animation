@@ -39,7 +39,7 @@ const output = path.resolve(__dirname, `../output/metallic-${mode}`); fs.mkdirSy
     assert.equal(report.frames[2].halves[1], 0, 'Second line waits for first line to finish');
     assert.ok(report.frames[4].halves[1] > 0, 'Laser continues on the next line');
     assert.equal(report.frames[5].ink, report.complete.ink, 'Laser completion has exactly the final layout');
-    assert.ok(Math.abs(report.duration - 6.6) < .001);
+    assert.ok(Math.abs(report.duration - 4.2) < .001);
     assert.equal(await page.locator('#text').evaluate(el => el.tagName), 'TEXTAREA');
     await page.locator('#text').fill('AVATR\nLASER'); await page.locator('#text').dispatchEvent('change');
     await page.locator('[data-panel="motion"]').first().click();
@@ -56,7 +56,7 @@ const output = path.resolve(__dirname, `../output/metallic-${mode}`); fs.mkdirSy
     await page.goto(`${base}/metallic-text.html`); await page.waitForFunction(() => window.CellMotionEffectBridge);
     assert.deepEqual(await page.evaluate(() => CellMotionMetallicText.getScheme()), edited, 'Multiline and laser settings survive reload');
     await page.locator('#pauseForEdit').click();
-    assert.ok(await page.evaluate(() => CellMotionMetallicText.time > 2.4));
+    assert.ok(await page.evaluate(() => CellMotionMetallicText.time >= 2.4));
     const samples = await page.evaluate(async () => {
       const s = CellMotionMetallicText.getScheme(); s.scene.revealMode = 'none'; s.scene.font = 'stg:noto-sc-black'; s.scene.text = '未来\n\n已来';
       await CellMotionMetallicText.applyScheme(s, { autoplay: false });

@@ -42,7 +42,8 @@
   const label = (zh, en) => language === 'en' ? en : zh;
   const cycle = () => Core.duration(state.scene) / state.scene.speed;
   const phaseDuration = key => key === 'writeDuration' ? Core.revealDuration(state.scene) : state.scene[key];
-  const readableTime = () => (Core.revealDuration(state.scene) + state.scene.sweep * .45) / state.scene.speed;
+  const phaseStart = key => key === 'hold' ? Core.motionDuration(state.scene) : 0;
+  const readableTime = () => Math.max(Core.revealDuration(state.scene), state.scene.sweep * .45) / state.scene.speed;
 
   function readScheme(raw) {
     if (raw?.effect !== 'metallic-text' || raw.version !== 1 || !raw.scene || !raw.canvas) throw new Error('Invalid Metallic Text project');
@@ -134,26 +135,27 @@
     document.dispatchEvent(new Event('tc-controls-synced'));
   }
   function buildTimeline() {
-    let at = 0;
     $('timeline').replaceChildren(); $('timelineDetails').replaceChildren();
+    $('timeline').classList.toggle('has-writing', Core.revealDuration(state.scene) > 0);
     PHASES.forEach(phase => {
       const duration = phaseDuration(phase.key) / state.scene.speed;
       if (duration <= 0) return;
-      const start = at; at += duration;
+      const start = phaseStart(phase.key) / state.scene.speed, end = start + duration;
       const name = label(phase.zh, phase.en);
       const button = document.createElement('button');
       button.type = 'button'; button.className = 'me-choreo-block'; button.dataset.seek = start;
-      button.dataset.end = at;
-      button.style.setProperty('--phase-duration', duration);
+      button.dataset.phase = phase.key; button.dataset.end = end;
+      button.style.setProperty('--phase-start', `${start / cycle() * 100}%`);
+      button.style.setProperty('--phase-width', `${duration / cycle() * 100}%`);
       button.style.setProperty('--phase-color', phase.color);
-      button.setAttribute('aria-label', `${name} ${start.toFixed(2)}–${at.toFixed(2)} s`);
+      button.setAttribute('aria-label', `${name} ${start.toFixed(2)}–${end.toFixed(2)} s`);
       const strong = document.createElement('strong'); strong.textContent = name;
       const small = document.createElement('small'); small.textContent = `${duration.toFixed(2)} s`;
       button.append(strong, small); button.onclick = () => seek(start + duration * .5);
       $('timeline').append(button);
       const detail = document.createElement('span'), dot = document.createElement('i');
       dot.style.background = phase.color;
-      detail.append(dot, `${name} ${start.toFixed(2)}–${at.toFixed(2)}s`);
+      detail.append(dot, `${name} ${start.toFixed(2)}–${end.toFixed(2)}s`);
       $('timelineDetails').append(detail);
     });
   }
@@ -208,7 +210,7 @@
   }
   numericKeys.forEach(key => $(key).addEventListener('input', () => {
     state.scene[key] = Number($(key).value); syncControls(); persist();
-    if (['writeDuration', 'sweep', 'hold'].includes(key)) { const index = PHASES.findIndex(phase => phase.key === key); const start = PHASES.slice(0, index).reduce((sum, phase) => sum + phaseDuration(phase.key), 0); seek((start + phaseDuration(key) * .5) / state.scene.speed); }
+    if (['writeDuration', 'sweep', 'hold'].includes(key)) seek((phaseStart(key) + phaseDuration(key) * .5) / state.scene.speed);
     else drawPreview();
   }));
   numericKeys.forEach(key => $(key).addEventListener('change', record));
