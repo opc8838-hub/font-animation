@@ -1,9 +1,9 @@
 {
-  "effect": { "id": "metallic-text", "name": { "zh": "金属流光", "en": "Metallic Text" }, "version": "1.3.0", "category": "type" },
-  "runtime": { "kind": "iframe-bridge", "entry": "metallic-text.html?v=20261105-modes1", "bridgeVersion": "1.0.0", "renderer": "webgl2" },
+  "effect": { "id": "metallic-text", "name": { "zh": "金属流光", "en": "Metallic Text" }, "version": "1.4.0", "category": "type" },
+  "runtime": { "kind": "iframe-bridge", "entry": "metallic-text.html?v=20261105-overlap1", "bridgeVersion": "1.0.0", "renderer": "webgl2" },
   "capabilities": { "compositionModel": "scene", "editableText": true, "sharedFonts": true, "backgroundMedia": true, "animatedImageBackgrounds": true, "trimmedVideoBackgrounds": true, "responsiveCanvas": true, "timeline": true, "preview": true, "exports": ["png", "gif", "mp4"] },
   "behavior": {
-    "summary": { "zh": "支持回车换行、行距和按可见字形对齐的金属文字，行首行尾空格不影响多行对齐。三种呈现方式：直接呈现（none）、逐字镭射（scan，每个字母横向扫出）、沿笔画镭射（laser，沿字形中轴描写）。两种镭射均按从左到右、从上到下逐字接续，再进入冷暖流光。写入总时长包含全部可见字符，空格和换行不占写入时长。", "en": "Multiline metallic lettering aligned by visible glyph bounds, ignoring surrounding whitespace. Three reveal modes: immediately visible (none), letter-by-letter horizontal laser scan (scan), or centreline stroke-following laser writing (laser). Both laser modes sequence letters left to right, top to bottom before the reflection sweep. Writing duration covers all visible graphemes; spaces and line breaks consume no writing time." },
+    "summary": { "zh": "支持回车换行、行距和按可见字形对齐的金属文字，行首行尾空格不影响多行对齐。三种呈现方式：直接呈现（none）、逐字镭射（scan，每个字母横向扫出）、沿笔画镭射（laser，沿字形中轴描写）。镭射写入与冷暖光带从第 0 秒同时开始，各自按写入时长和流光时长播放；较早完成的效果保持末态，两者都完成后进入停留。一轮时长为 max(启用的写入时长, 流光时长) + 停留时长，再除以播放速度。写入按从左到右、从上到下逐字接续，空格和换行不占写入时长。", "en": "Multiline metallic lettering aligned by visible glyph bounds, ignoring surrounding whitespace. Reveal modes: immediate (none), per-letter horizontal laser scan (scan), or stroke-following writing (laser). Writing and reflection both start at time zero with independent durations. Each holds its final state when finished; the hold phase starts once both have finished. Cycle duration is (max(enabled writing duration, sweep duration) + hold) / speed. Letters are sequenced left to right, top to bottom; spaces and line breaks consume no writing time." },
     "phases": [
       { "id": "writeDuration", "name": { "zh": "镭射写入（可选）", "en": "Laser writing (optional)" }, "colorToken": "phase.violet" },
       { "id": "sweep", "name": { "zh": "流光经过", "en": "Light sweep" }, "colorToken": "phase.sky" },

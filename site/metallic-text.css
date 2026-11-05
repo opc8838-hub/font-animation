@@ -84,10 +84,13 @@ body.metallic-editor { margin: 0; grid-template-columns: 250px minmax(250px, 1fr
 .metallic-editor .me-stage-controls button { min-height: 34px; padding: 6px 18px; background: var(--tc-surface); color: var(--tc-text); border: 1px solid var(--tc-line); border-radius: 10px; }
 .metallic-editor #playButton { background: var(--tc-growth); color: var(--tc-growth-ink); border-color: var(--tc-growth); }
 .metallic-editor #clock { min-width: 105px; text-align: right; color: var(--tc-muted); font: 11px ui-monospace,monospace; }
-.metallic-editor #timeline { display: flex; gap: 5px; position: relative; height: 50px; }
+.metallic-editor #timeline { position: relative; height: 50px; }
+.metallic-editor #timeline.has-writing { height: 104px; }
+.metallic-editor #timeline.has-writing [data-phase="sweep"] { top: 54px; }
+.metallic-editor #timeline [data-phase="hold"] { height: 100%; }
 .metallic-editor #timeline::after { content: ''; position: absolute; top: -3px; bottom: -3px; left: var(--playhead,0%); width: 2px; background: var(--tc-text); pointer-events: none; }
-.metallic-editor .me-choreo-block { flex: var(--phase-duration); min-width: 0; padding: 7px; border: 0; border-radius: 12px; background: var(--phase-color); color: #171320; text-align: left; overflow: hidden; }
-.metallic-editor .me-choreo-block strong, .metallic-editor .me-choreo-block small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.metallic-editor .me-choreo-block { position: absolute; top: 0; left: var(--phase-start); width: max(0px, calc(var(--phase-width) - 4px)); height: 50px; min-width: 0; padding: 7px 0; border: 0; border-radius: 12px; background: var(--phase-color); color: #171320; text-align: left; overflow: hidden; }
+.metallic-editor .me-choreo-block strong, .metallic-editor .me-choreo-block small { display: block; margin-inline: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .metallic-editor .me-choreo-block strong { font-size: 12px; }
 .metallic-editor .me-choreo-block small { font-size: 10px; }
 .metallic-editor .me-choreo-block[aria-current="true"] { outline: 2px solid var(--tc-text); outline-offset: 2px; }
