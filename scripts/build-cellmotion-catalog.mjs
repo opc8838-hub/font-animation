@@ -42,6 +42,7 @@ const videos = {
 const media = new Set(['patentcount','botvoice','patentwall','animalwave','video-compare','curvedgallery','mediacascade','beforeafter','shutterafter','phoneframe','laptopframe','orbitgallery','moodboard']);
 // Newest releases first, shown on the homepage as 最近上新. Dates are the public release of each editor.
 const recent = [
+  ["oddball","2026-11-07"],
   ["bubble-frame","2026-11-04"],
   ["glasswalkers","2026-11-03"],
   ["letter-slices","2026-11-03"],
@@ -50,7 +51,7 @@ const recent = [
   ["metallic-text","2026-10-28"],
   ["glass-icon-reveal","2026-10-23"],
   ["fluedit","2026-10-23"],
-  ["ascii-sharks","2026-10-20"], ["oddball","2026-10-20"], ["blockflow","2026-10-19"], ["patentcount","2026-10-19"],
+  ["ascii-sharks","2026-10-20"], ["blockflow","2026-10-19"], ["patentcount","2026-10-19"],
   ["botvoice","2026-10-19"], ["patentwall","2026-10-19"], ["animalwave","2026-10-19"],
   ["thermal-profile","2026-10-15"],
   ['video-compare','2026-10-14'],
@@ -69,6 +70,7 @@ const featured = ['prosvg','sproutshift','typecascade','dotresolve','glyphmorph'
 // Keep the existing published entry routes and approved preview revisions when rebuilding.
 const entryRoutes = { 'metallic-text':'metallic-text.html?from=gallery&v=20261105-flow1', 'bubble-frame':'bubble-frame.html?from=gallery&v=20261104-bubble-release1', fluedit:'fluedit/?from=gallery&v=20261023-motion1', blockflow:'blockflow.html?from=gallery&v=20261019-review2',patentcount:'patentcount.html?from=gallery&v=20261019-white3', 'ascii-sharks':'ascii-sharks.html?from=gallery&v=20261021-ocean-ink1', botvoice:'botvoice.html?from=gallery&v=20261019-archive4', patentwall:'patentwall.html?from=gallery&v=20261019-review2', animalwave:'animalwave.html?from=gallery&v=20261019-archive4', 'thermal-profile':'thermal-profile.html?from=gallery&v=20261015-release1', 'video-compare':'video-compare.html?v=20261015-vcompare12', index:'cylinder.html', 'card-login':'card-login.html?from=gallery&v=20261010-cards1', carddeck:'carddeck.html?from=gallery&v=20261010-cards1', spotlight:'spotlight.html?from=gallery&v=20261010-1', switchdrop:'switchdrop.html?from=gallery&v=20261012-round-hold1', curvedgallery:'curvedgallery.html?from=gallery&v=20261010-ai1', prosvg:'prosvg.html?from=gallery&v=20261005-1', citystack:'citystack.html?from=gallery&v=20261006-1', typegarden:'typegarden.html?from=gallery&v=20261006-1' };
 entryRoutes['letter-slices'] = 'letter-slices.html?from=gallery&v=20261103-layout-ai1';
+entryRoutes.oddball = 'oddball.html?from=gallery&v=20261107-entry1';
 entryRoutes.glasswalkers = 'glasswalkers.html?from=gallery&tracking=feet&v=20261103-release-ai1';
 entryRoutes['live-portal'] = 'live-portal.html?from=gallery&v=20261030';
 entryRoutes['dither-ascii'] = 'dither-ascii.html?from=gallery&v=20261029-fullcard1';

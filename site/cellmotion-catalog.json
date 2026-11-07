@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "oddball",
+      "date": "2026-11-07"
+    },
+    {
       "id": "bubble-frame",
       "date": "2026-11-04"
     },
@@ -46,10 +50,6 @@
     },
     {
       "id": "ascii-sharks",
-      "date": "2026-10-20"
-    },
-    {
-      "id": "oddball",
       "date": "2026-10-20"
     },
     {
@@ -411,7 +411,7 @@
       "english": "Oddball Ink",
       "description": "英文逐字水墨晕染",
       "category": "type",
-      "href": "oddball.html",
+      "href": "oddball.html?from=gallery&v=20261107-entry1",
       "poster": "final_oddball.png?v=20261020-ink2",
       "video": null,
       "status": "ready"
