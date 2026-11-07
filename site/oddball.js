@@ -1,13 +1,14 @@
 (() => {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const defaults = Object.freeze({text:"Oddball\nInk in Motion",font:"stg:oddball",size:172,tracking:0,lineSpacing:1.22,textColor:"#29262c",backgroundColor:"#eeeae1",lead:0.4,write:3.2,hold:1.5,speckles:32,width:1080,height:1080});
+  const defaults = Object.freeze({text:"Oddball\nInk in Motion",font:"stg:oddball",size:172,inkWeight:"regular",tracking:0,lineSpacing:1.22,textColor:"#29262c",backgroundColor:"#eeeae1",lead:0.4,write:3.2,hold:1.5,speckles:32,width:1080,height:1080});
   const keys = Object.keys(defaults);
   const storageKey = "cellmotion-oddball-ink-v1";
   const state = {...defaults};
   const canvas = $("canvas");
   const inkCanvas = document.createElement("canvas");
   const maskCanvas = document.createElement("canvas");
+  const glyphCache = new Map();
   let backgroundMedia = null, backgroundRuntime = null;
   let time = 0, playing = true, busy = false, lastFrame = performance.now(), saveTimer;
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -119,6 +120,7 @@
 
   function syncControls() {
     keys.forEach(key => {if ($(key)) $(key).value = state[key];});
+    $("sizeValue").value = state.size;
     const preset = `${state.width}x${state.height}`;
     $("ratio").value = [...$("ratio").options].some(option=>option.value===preset) ? preset : "custom";
     $("customSize").hidden = $("ratio").value !== "custom";
@@ -128,7 +130,7 @@
     $("exportDimensions").textContent = `${Math.round(state.width * Number($("exportScale").value))} × ${Math.round(state.height * Number($("exportScale").value))}`;
     for (const input of document.querySelectorAll("input[type=range]")) {
       const output = document.querySelector(`output[for="${input.id}"]`);
-      if (output) output.textContent = input.value;
+      if (output) output.textContent = input.id === "size" ? `${input.value} px` : input.value;
     }
     canvas.width = state.width;
     canvas.height = state.height;
@@ -182,37 +184,56 @@
   function writeGlyph(ctx, character, penX, baseline, size, progress) {
     const strokes = window.ODDBALL_STROKES?.[character];
     if (!strokes?.length) return;
-    const bounds = ctx.measureText(character);
-    const padding = Math.ceil(size * 0.16);
-    const originX = Math.ceil(bounds.actualBoundingBoxLeft + padding);
-    const originY = Math.ceil(bounds.actualBoundingBoxAscent + padding);
-    const width = Math.ceil(bounds.actualBoundingBoxLeft + bounds.actualBoundingBoxRight + padding * 2);
-    const height = Math.ceil(bounds.actualBoundingBoxAscent + bounds.actualBoundingBoxDescent + padding * 2);
-    inkCanvas.width = maskCanvas.width = Math.max(1, width);
-    inkCanvas.height = maskCanvas.height = Math.max(1, height);
+    const cacheKey = `${character}|${ctx.font}|${ctx.letterSpacing}|${state.textColor}|${state.inkWeight}`;
+    let glyph = glyphCache.get(cacheKey);
+    if (!glyph) {
+      const bounds = ctx.measureText(character);
+      const padding = Math.ceil(size * 0.16);
+      const originX = Math.ceil(bounds.actualBoundingBoxLeft + padding);
+      const originY = Math.ceil(bounds.actualBoundingBoxAscent + padding);
+      const source = document.createElement("canvas");
+      source.width = Math.max(1,Math.ceil(bounds.actualBoundingBoxLeft + bounds.actualBoundingBoxRight + padding * 2));
+      source.height = Math.max(1,Math.ceil(bounds.actualBoundingBoxAscent + bounds.actualBoundingBoxDescent + padding * 2));
+      const ink = source.getContext("2d");
+      ink.font = ctx.font;
+      ink.letterSpacing = ctx.letterSpacing;
+      ink.textBaseline = "alphabetic";
+      ink.fillStyle = state.textColor;
+      ink.fillText(character, originX, originY);
+      if (state.inkWeight !== "regular") {
+        ink.strokeStyle = state.inkWeight === "light" ? "#000" : state.textColor;
+        ink.lineWidth = size * (state.inkWeight === "light" ? 0.024 : 0.034);
+        ink.lineJoin = "round";
+        if (state.inkWeight === "light") ink.globalCompositeOperation = "destination-out";
+        ink.strokeText(character, originX, originY);
+      }
+      glyph = {source,originX,originY};
+      if (glyphCache.size >= 160) glyphCache.clear();
+      glyphCache.set(cacheKey,glyph);
+    }
+    if (progress >= 1) {ctx.drawImage(glyph.source,penX-glyph.originX,baseline-glyph.originY);return;}
+    inkCanvas.width = maskCanvas.width = glyph.source.width;
+    inkCanvas.height = maskCanvas.height = glyph.source.height;
     const ink = inkCanvas.getContext("2d");
-    ink.font = ctx.font;
-    ink.letterSpacing = ctx.letterSpacing;
-    ink.textBaseline = "alphabetic";
-    ink.fillStyle = state.textColor;
-    ink.fillText(character, originX, originY);
+    ink.drawImage(glyph.source,0,0);
     const mask = maskCanvas.getContext("2d");
     mask.fillStyle = mask.strokeStyle = "#000";
     mask.lineCap = mask.lineJoin = "round";
     const scale = size / 256;
+    const spread = state.inkWeight === "bold" ? size * 0.017 : 0;
     let remaining = progress * strokes.reduce((sum, stroke) => sum + stroke.length, 0);
     for (const stroke of strokes) {
       for (let i = 0; i < stroke.length && remaining > 0; i++, remaining--) {
         const fraction = Math.min(1, remaining);
         const previous = stroke[Math.max(0, i - 1)];
         const current = stroke[i];
-        const x = originX + (previous[0] + (current[0] - previous[0]) * fraction) * scale;
-        const y = originY + (previous[1] + (current[1] - previous[1]) * fraction) * scale;
-        const radius = (previous[2] + (current[2] - previous[2]) * fraction) * scale;
+        const x = glyph.originX + (previous[0] + (current[0] - previous[0]) * fraction) * scale;
+        const y = glyph.originY + (previous[1] + (current[1] - previous[1]) * fraction) * scale;
+        const radius = (previous[2] + (current[2] - previous[2]) * fraction) * scale + spread;
         if (i > 0) {
-          mask.lineWidth = (previous[2] + radius / scale) * scale;
+          mask.lineWidth = previous[2] * scale + spread + radius;
           mask.beginPath();
-          mask.moveTo(originX + previous[0] * scale, originY + previous[1] * scale);
+          mask.moveTo(glyph.originX + previous[0] * scale, glyph.originY + previous[1] * scale);
           mask.lineTo(x, y);
           mask.stroke();
         }
@@ -224,7 +245,7 @@
     }
     ink.globalCompositeOperation = "destination-in";
     ink.drawImage(maskCanvas, 0, 0);
-    ctx.drawImage(inkCanvas, penX - originX, baseline - originY);
+    ctx.drawImage(inkCanvas, penX - glyph.originX, baseline - glyph.originY);
   }
 
   function scatterGlyph(ctx, character, penX, baseline, size, progress, row, index) {
@@ -265,18 +286,21 @@
     const glyphCount=Math.max(1,content.reduce((sum,line)=>sum+split(line).length,0));
     const written=clamp((at-state.lead)/state.write,0,1);
     const visibleCount=glyphCount*written;
-    if(visibleCount<=0) return;
     const preset=STGFontLibrary.preset("stg:oddball");
     const family=STGFontLibrary.family("stg:oddball");
     let size=Math.min(state.size,width*0.29,height/(Math.max(content.length,1)*state.lineSpacing+0.7));
     ctx.textBaseline="alphabetic";
     ctx.textAlign="left";
-    const setFont=()=>{ctx.font=`${preset.style} ${preset.weight} ${size}px ${family}`;ctx.letterSpacing=`${state.tracking*size/172}px`;};
+    const setFont=()=>{ctx.font=`${preset.style} ${preset.weight} ${size}px ${family}`;ctx.letterSpacing=`${state.tracking*size/172+(state.inkWeight==="bold"?size*0.04:0)}px`;};
     setFont();
     for(let attempt=0;attempt<12;attempt++){
       if(content.every(line=>split(line).reduce((sum,ch)=>sum+ctx.measureText(ch).width,0)<=width*0.83)) break;
       size*=0.9;setFont();
     }
+    if(target===canvas) $("effectiveSize").textContent=document.body.dataset.editorLanguage==="en"
+      ? `Rendered size ${Math.round(size)} px · fitted to text and canvas`
+      : `实际画面字号 ${Math.round(size)} px · 随画布与文字长度自动适配`;
+    if(visibleCount<=0) return;
     const stride=size*state.lineSpacing;
     const firstBaseline=height/2-(content.length-1)*stride/2+size*0.32;
     ctx.fillStyle=state.textColor;
@@ -292,7 +316,10 @@
         const eased=wet*wet*(3-2*wet);
         let pen=x;
         chars.forEach((ch,index)=>{
-          if(index<active) ctx.fillText(ch,pen,y);
+          if(index<active) {
+            if(state.inkWeight==="regular") ctx.fillText(ch,pen,y);
+            else writeGlyph(ctx,ch,pen,y,size,1);
+          }
           else if(index===active&&wet>0) writeGlyph(ctx,ch,pen,y,size,eased);
           if(index<active) scatterGlyph(ctx,ch,pen,y,size,1,row,index);
           else if(index===active&&wet>0) scatterGlyph(ctx,ch,pen,y,size,eased,row,index);
@@ -312,6 +339,8 @@
       state[key]=typeof defaults[key]==="number" ? (Number.isFinite(Number(incoming))?Number(incoming):defaults[key]) : (typeof incoming==="string"?incoming:defaults[key]);
     }
     state.font="stg:oddball";
+    if(!["light","regular","bold"].includes(state.inkWeight)) state.inkWeight="regular";
+    state.size=clamp(Math.round(state.size),60,280);
     state.text=englishOnly(state.text).trimEnd();
     state.width=clamp(Math.round(state.width),320,4096);
     state.height=clamp(Math.round(state.height),320,4096);
@@ -374,6 +403,10 @@
       syncControls();persist();
     });
   });
+  $("sizeValue").addEventListener("change",()=>{
+    state.size=clamp(Math.round(Number($("sizeValue").value)||defaults.size),60,280);
+    syncControls();persist();
+  });
   for(const button of document.querySelectorAll("[data-paper]"))button.addEventListener("click",()=>{
     state.backgroundColor=button.dataset.paper;
     syncControls();persist();
@@ -423,7 +456,7 @@
     const en=document.body.dataset.editorLanguage!=="en";
     document.body.dataset.editorLanguage=en?"en":"zh";
     for(const element of document.querySelectorAll("[data-zh][data-en]"))element.textContent=element.dataset[en?"en":"zh"];
-    $("language").textContent=en?"中文":"EN";buildTimeline();
+    $("language").textContent=en?"中文":"EN";buildTimeline();paint(canvas,time);
   });
   $("saveScheme").addEventListener("click",async()=>{try{const scheme={version:1,state,media:backgroundMedia};if(backgroundRuntime)scheme.videoData=await blobDataURL(backgroundRuntime.blob);localStorage.setItem(storageKey,JSON.stringify({version:1,state,media:backgroundMedia}));download(new Blob([JSON.stringify(scheme,null,2)],{type:"application/json"}),"oddball-ink-scheme.json");$("saveStatus").textContent="方案已保存";}catch(error){$("saveStatus").textContent=`保存失败：${error.message}`;}});
   $("importScheme").addEventListener("click",()=>$("schemeFile").click());
