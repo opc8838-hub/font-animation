@@ -466,6 +466,7 @@
   for(const format of ["png","gif","mp4"])$(format).addEventListener("click",()=>exportFrame(format));
   new ResizeObserver(fitCanvas).observe(canvas.parentElement);
   function animate(now){if(playing&&!busy){time=Math.min(duration(),time+Math.max(0,Math.min((now-lastFrame)/1000,0.1))*Number($("speed").value));if(time>=duration())playing=false;tickControls();paint(canvas,time);}lastFrame=now;requestAnimationFrame(animate);}
-  try{const saved=JSON.parse(localStorage.getItem(storageKey));apply(saved?.version===1?saved.state:defaults,saved?.media).catch(error=>{$("backgroundVideoStatus").textContent=error.message;});}catch{apply(defaults);}
+  // Every opening starts from the approved showcase. Saved work is loaded explicitly with Import.
+  apply(defaults).catch(error=>{$("backgroundVideoStatus").textContent=error.message;});
   requestAnimationFrame(animate);
 })();
