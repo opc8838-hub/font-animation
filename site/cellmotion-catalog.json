@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "paper-type",
+      "date": "2026-11-08"
+    },
+    {
       "id": "oddball",
       "date": "2026-11-07"
     },
@@ -158,6 +162,17 @@
     }
   ],
   "effects": [
+    {
+      "id": "paper-type",
+      "name": "纸上字样",
+      "english": "Paper Type",
+      "description": "Papyrus · 三块同屏 · 独立纸纹背景",
+      "category": "type",
+      "href": "paper-type.html?from=gallery&v=20261108-release1",
+      "poster": "final_paper-type.png?v=20261105-1",
+      "video": "assets/previews/paper-type-card.mp4?v=20261105-1",
+      "status": "ready"
+    },
     {
       "id": "glasswalkers",
       "name": "玻璃漫步",

@@ -1,0 +1,47 @@
+{
+  "sourceDirectory": "E:\\5695纸纹背景图片",
+  "font": {
+    "file": "assets/fonts/paper-series/Papyrus-Regular.ttf",
+    "sourceFile": "FONT/PAPYRUS.TTF",
+    "sha256": "895fdea742cdccd53e8ce847a7d2d9c3ddbd7ebdbe0444e88246f0f9e4e2526d",
+    "family": "Papyrus",
+    "style": "Regular",
+    "version": "Version 1.11",
+    "copyright": "Copyright © Esselte Corporation 1997.  Portions Copyright Microsoft Corporation 1997.  All rights reserved.",
+    "glyphs": 255,
+    "characters": 242
+  },
+  "backgrounds": [
+    {
+      "file": "assets/backgrounds/paper-series/Paper-1.png",
+      "sourceFile": "JPG/Paper-1.png",
+      "sha256": "54ddd68de00137ddeb95ec7f64484222f54d1236562731ce822d67a77c279c90",
+      "size": [
+        2000,
+        2000
+      ]
+    },
+    {
+      "file": "assets/backgrounds/paper-series/Paper-2.png",
+      "sourceFile": "JPG/Paper-2.png",
+      "sha256": "f70c930c43bc725d0098e56489fa3275651e259ed91dde25e3518f7c8f6bee02",
+      "size": [
+        2000,
+        2000
+      ]
+    },
+    {
+      "file": "assets/backgrounds/paper-series/Paper-3.png",
+      "sourceFile": "JPG/Paper-3.png",
+      "sha256": "83fd6914cd68ed29b948afabcf6c0497e733a69eaaae84a5b6614e20093e29fc",
+      "size": [
+        2000,
+        2000
+      ]
+    }
+  ],
+  "skipped": [
+    "Paper-4.png.baiduyun.p.downloading",
+    "Paper-5.png.baiduyun.p.downloading"
+  ]
+}

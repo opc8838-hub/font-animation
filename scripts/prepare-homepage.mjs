@@ -30,7 +30,7 @@ for (const name of await readdir(siteRoot)) {
     .replace(/assets\/cellmotion\/logo-original-transparent\.png(?:\?[^"'\s<>]*)?/g, 'assets/cellmotion/logo-web.webp?v=20261028-ready1')
     .replace(/assets\/cellmotion\/logo-dark-original\.png(?:\?[^"'\s<>]*)?/g, 'assets/cellmotion/logo-dark-web.webp?v=20261028-ready1')
     .replace(/shared-fonts\.css(?:\?[^"'\s<>]*)?/g, source => source.includes('?') ? source : 'shared-fonts.css?v=20261028-ready1')
-    .replace(/shared-font-library\.js(?:\?[^"'\s<>]*)?/g, 'shared-font-library.js?v=20261028-ready1')
+    .replace(/shared-font-library\.js(?:\?[^"'\s<>]*)?/g, 'shared-font-library.js?v=20261108-papyrus-release1')
     .replace(/href=(["'])([^"'<>\s]+\.css)(\?[^"']*)?\1/g, (tag, quote, css, revision) => `href="${css}${revision || '?v=20261028-ready1'}"`);
   if (!ready.includes('data-https-upgrade')) ready = ready.replace('<head>', '<head>\n<script data-https-upgrade>if(location.protocol==="http:" && /(^|\\.)cellmotion\\.cn$/.test(location.hostname))location.replace("https://"+location.host+location.pathname+location.search+location.hash);</script>');
   if (ready !== original) await writeFile(file, ready);

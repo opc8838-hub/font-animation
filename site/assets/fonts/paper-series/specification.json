@@ -1,0 +1,25 @@
+{
+  "family": "Papyrus",
+  "style": "Regular",
+  "version": "Version 1.11",
+  "weight": 400,
+  "unitsPerEm": 2048,
+  "typographicMetrics": {
+    "ascender": 1671,
+    "descender": -848,
+    "lineGap": 0
+  },
+  "capHeight": null,
+  "xHeight": null,
+  "measuredInkTop": {
+    "H": 1675,
+    "x": 796
+  },
+  "glyphs": 255,
+  "mappedCharacters": 242,
+  "variableAxes": [],
+  "openTypeFeatures": [],
+  "hasLegacyKern": false,
+  "copyright": "Copyright © Esselte Corporation 1997.  Portions Copyright Microsoft Corporation 1997.  All rights reserved.",
+  "sourceFile": "Papyrus-Regular.ttf"
+}
