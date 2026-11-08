@@ -17,6 +17,7 @@ for (const id of pendingRelease) {
   if (!knownIds.has(id)) throw new Error(`Unknown pending effect: ${id}`);
 }
 const videos = {
+  'paper-type':'paper-type-card',
   glasswalkers:'glasswalkers-card',
   'letter-slices':'letter-slices-card',
   'metallic-text':'metallic-text-card',
@@ -42,6 +43,7 @@ const videos = {
 const media = new Set(['patentcount','botvoice','patentwall','animalwave','video-compare','curvedgallery','mediacascade','beforeafter','shutterafter','phoneframe','laptopframe','orbitgallery','moodboard']);
 // Newest releases first, shown on the homepage as 最近上新. Dates are the public release of each editor.
 const recent = [
+  ["paper-type","2026-11-08"],
   ["oddball","2026-11-07"],
   ["bubble-frame","2026-11-04"],
   ["glasswalkers","2026-11-03"],
@@ -72,11 +74,13 @@ const entryRoutes = { 'metallic-text':'metallic-text.html?from=gallery&v=2026110
 entryRoutes['letter-slices'] = 'letter-slices.html?from=gallery&v=20261103-layout-ai1';
 entryRoutes.oddball = 'oddball.html?from=gallery&v=20261107-entry1';
 entryRoutes.glasswalkers = 'glasswalkers.html?from=gallery&tracking=feet&v=20261103-release-ai1';
+entryRoutes['paper-type'] = 'paper-type.html?from=gallery&v=20261108-release1';
 entryRoutes['live-portal'] = 'live-portal.html?from=gallery&v=20261030';
 entryRoutes['dither-ascii'] = 'dither-ascii.html?from=gallery&v=20261029-fullcard1';
 const previewRevisions = { 'dither-ascii':'20261029-fullcard1', 'metallic-text':'20261104-laser1', 'bubble-frame':'20261104-bubble-release1', 'glass-icon-reveal':'20261023-glass2', 'ascii-sharks':'20261021-ocean-ink1', oddball:'20261020-ink2',blockflow:'20261019-review2',patentcount:'20261019-white3', patentwall:'20261019-review2', 'video-compare':'20261015-vcompare12', 'card-login':'20261020-white-covers1',carddeck:'20261020-white-covers1',typegarden:'20261020-white-covers1',typepour:'20261020-wide1',spotlight:'20261010-1',switchdrop:'20261012-round-hold1',curvedgallery:'20261009-4', iconburst:'20260926-5', zerogflip:'20261006' };
 previewRevisions['letter-slices'] = '20261102-refraction1';
 previewRevisions.glasswalkers = '20261103-knee5';
+previewRevisions['paper-type'] = '20261105-1';
 const videoRevisions = { switchdrop:'20261012-round-hold1' };
 async function exists(path) { try { await access(new URL(path, site)); return true; } catch { return false; } }
 const effects = [];

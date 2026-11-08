@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <script src="cellmotion-secure-context.js?v=20261015-release1"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="纸上字样 Paper Type：Papyrus 字体三块同屏展示，独立文字与背景编辑，支持 PNG、GIF 和 MP4 导出。">
+  <link rel="icon" href="favicon.svg">
+  <link rel="stylesheet" href="shared-fonts.css?v=20261105-papyrus-source1" data-stg-shared-fonts="true">
+  <title>纸上字样 Paper Type | CellMotion</title>
+  <link rel="stylesheet" href="me-motion-editor.css?v=20260909-timeline-color">
+  <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-coloriso">
+  <link rel="stylesheet" href="typecascade-polish.css?v=20261028-metal2">
+  <link rel="stylesheet" href="paper-type.css?v=20261105-1">
+</head>
+<body class="tc-workspace paper-type-editor" data-editor-capabilities="text-only" data-editor-theme="dark">
+  <header class="tc-header">
+    <a class="tc-brand" href="./" aria-label="CellMotion 首页"><img class="tc-logo-dark" src="assets/cellmotion/logo-dark-original.png" alt="CellMotion"><img class="tc-logo-light" src="assets/cellmotion/logo-original-transparent.png?v=20260926-1" alt="" aria-hidden="true"></a>
+    <h1 data-zh="纸上字样" data-en="Paper Type">纸上字样 <span>Paper Type</span></h1>
+    <a class="tc-back" href="cellmotion-components.html" data-zh="动效库 ↗" data-en="Library ↗">动效库 ↗</a>
+    <button id="themeToggle" type="button" class="pt-header-button" aria-label="切换主题">☼</button>
+    <button id="languageToggle" type="button" class="pt-header-button" aria-label="Switch to English">EN</button>
+    <button id="exportShortcut" type="button" class="tc-export-shortcut" data-zh="导出作品" data-en="Export">导出作品</button>
+  </header>
+
+  <aside class="tc-content" aria-label="文字区域">
+    <div class="tc-panel-heading"><div><small data-zh="文字区域" data-en="TEXT BLOCKS">文字区域</small><h2 data-zh="纸上字样" data-en="Paper Type">纸上字样</h2></div><button id="addRow" type="button" data-zh="＋ 添加" data-en="＋ Add">＋ 添加</button></div>
+    <p class="tc-hint" data-zh="所有区域同屏展示。选择一块，暂停修改。" data-en="All blocks share the canvas. Select a block to pause and edit.">所有区域同屏展示。选择一块，暂停修改。</p>
+    <div id="rowList" class="tc-row-list" role="group" aria-label="文字区域"></div>
+    <div class="gm-actions gm-actions-3 pt-row-actions"><button id="moveUp" type="button" data-zh="上移" data-en="Up">上移</button><button id="moveDown" type="button" data-zh="下移" data-en="Down">下移</button><button id="deleteRow" type="button" data-zh="删除" data-en="Delete">删除</button></div>
+    <section class="gm-card tc-scheme" aria-labelledby="schemeTitle">
+      <div class="gm-card-title"><h2 id="schemeTitle" data-zh="方案" data-en="Scheme">方案</h2></div>
+      <div class="gm-actions gm-actions-4 me-scheme-actions">
+        <button id="saveScheme" type="button" data-zh="保存方案" data-en="Save">保存方案</button>
+        <button id="importScheme" type="button" data-zh="导入方案" data-en="Import">导入方案</button>
+        <button id="resetScheme" type="button" data-zh="恢复默认" data-en="Restore">恢复默认</button>
+        <button id="clearScheme" type="button" data-zh="清理重做" data-en="Clear">清理重做</button>
+      </div>
+      <input id="schemeFile" type="file" accept="application/json,.json" hidden>
+      <p id="schemeStatus" class="gm-status" role="status"></p>
+    </section>
+  </aside>
+
+  <section class="tc-center" aria-label="画布与播放">
+    <div class="tc-canvas-toolbar"><span class="tc-preview-label" data-zh="画布预览" data-en="Canvas preview">画布预览</span><span id="canvasDimensions">1920 × 1080</span></div>
+    <main class="gm-stage" aria-label="纸上字样预览">
+      <div id="compositionFrame" class="gm-composition-frame"><canvas id="paperCanvas" width="960" height="540" aria-label="三块 Papyrus 字样同屏展示"></canvas></div>
+      <div class="gm-stage-controls me-stage-controls" aria-label="预览控制">
+        <button id="replay" type="button" data-zh="↺ 重播" data-en="↺ Replay">↺ 重播</button>
+        <button id="pause" type="button" aria-pressed="false" data-zh="Ⅱ 暂停" data-en="Ⅱ Pause">Ⅱ 暂停</button>
+      </div>
+    </main>
+    <section class="tc-timeline" aria-labelledby="timelineTitle">
+      <div class="pt-timeline-head"><h2 id="timelineTitle" data-zh="字样时间轴" data-en="Type timeline">字样时间轴</h2><output id="timeReadout">0.00 / 12.00 s</output></div>
+      <div class="me-choreo-track"><div class="me-choreo-scroll"><div id="timeline" class="me-choreo-bar" role="list"><i id="playhead" class="me-choreo-playhead" aria-hidden="true"></i></div></div></div>
+      <input id="scrubber" type="range" min="0" max="12" step="0.01" value="0" aria-label="时间轴播放头">
+      <div class="me-choreo-legend"><span class="is-reveal" data-zh="逐块显现" data-en="Reveal">逐块显现</span><span class="is-hold" data-zh="同屏停留" data-en="Together">同屏停留</span><span class="is-exit" data-zh="墨迹淡出" data-en="Fade">墨迹淡出</span></div>
+    </section>
+  </section>
+
+  <aside class="gm-inspector" aria-label="动效属性">
+    <section class="gm-card gm-canvas-card" aria-labelledby="sizeTitle">
+      <div class="gm-card-title"><h2 id="sizeTitle" data-zh="画布尺寸" data-en="Canvas size">画布尺寸</h2></div>
+      <label class="gm-field gm-field-wide"><span data-zh="预设" data-en="Preset">预设</span><select id="canvasPreset">
+        <option value="1080x1080">1:1 · 1080 × 1080</option><option value="1080x1350">4:5 · 1080 × 1350</option>
+        <option value="1080x1440" selected>3:4 · 1080 × 1440</option><option value="1080x1620">2:3 · 1080 × 1620</option>
+        <option value="1080x1920">9:16 · 1080 × 1920</option><option value="1920x1080">16:9 · 1920 × 1080</option>
+        <option value="1440x1080">4:3 · 1440 × 1080</option><option value="1620x1080">3:2 · 1620 × 1080</option>
+        <option value="custom" data-zh="自定义" data-en="Custom">自定义</option>
+      </select></label>
+      <div id="customSize" class="pt-grid" hidden><label class="gm-field"><span data-zh="宽" data-en="Width">宽</span><input id="canvasWidth" type="number" min="320" max="3840" value="1920"></label><label class="gm-field"><span data-zh="高" data-en="Height">高</span><input id="canvasHeight" type="number" min="320" max="3840" value="1080"></label></div>
+    </section>
+    <nav class="tc-tabs" aria-label="属性分类"><button type="button" data-panel="block" aria-pressed="true" data-zh="当前区域" data-en="Block">当前区域</button><button type="button" data-panel="motion" aria-pressed="false" data-zh="动效设置" data-en="Motion">动效设置</button><button type="button" data-panel="export" aria-pressed="false" data-zh="导出" data-en="Export">导出</button></nav>
+    <section class="tc-properties" data-panel="block">
+      <div class="gm-card"><div class="gm-card-title"><h2 id="blockTitle">01 · 16</h2></div>
+        <label class="gm-field"><span data-zh="文字内容" data-en="Text">文字内容</span><textarea id="text" rows="3" spellcheck="false"></textarea></label>
+        <label class="gm-field"><span data-zh="字体" data-en="Font">字体</span><select id="font"><option value="stg:papyrus">Papyrus</option></select></label>
+        <p class="gm-help" data-zh="Papyrus 保留原生墨边；中文等字符使用配套字体补齐。" data-en="Papyrus preserves its natural ink edges; companion fonts cover CJK text.">Papyrus 保留原生墨边；中文等字符使用配套字体补齐。</p>
+        <p class="gm-help"><a href="paper-fonts.html" target="_blank" rel="noopener" data-zh="Papyrus 字体规格与字号试样 ↗" data-en="Papyrus specifications and type tester ↗">Papyrus 字体规格与字号试样 ↗</a></p>
+        <label class="gm-field"><span data-zh="字重 / 样式" data-en="Weight / style">字重 / 样式</span><select id="fontWeight"></select></label>
+        <label class="gm-field"><span data-zh="字号 / px" data-en="Type size / px">字号 / px</span><input id="fontSize" type="number" min="12" max="1000" step="0.1"></label>
+        <div class="pt-grid"><label class="gm-field"><span data-zh="字距 / em" data-en="Tracking / em">字距 / em</span><input id="tracking" type="number" min="-0.05" max="0.2" step="0.01"></label><label class="gm-field"><span data-zh="行高 / 倍" data-en="Line height">行高 / 倍</span><input id="lineHeight" type="number" min="1.1" max="2.4" step="0.05"></label></div>
+        <label class="gm-check"><input id="autoFit" type="checkbox"><span data-zh="自动缩小以适应区域" data-en="Shrink to fit block">自动缩小以适应区域</span></label>
+        <p id="typeMetrics" class="gm-help" role="status"></p>
+        <div class="pt-grid"><label class="gm-field"><span data-zh="文字颜色" data-en="Ink color">文字颜色</span><input id="textColor" type="color"></label><label class="gm-field"><span data-zh="对齐" data-en="Alignment">对齐</span><select id="align"><option value="left" data-zh="左对齐" data-en="Left">左对齐</option><option value="center" data-zh="居中" data-en="Center">居中</option><option value="right" data-zh="右对齐" data-en="Right">右对齐</option></select></label></div>
+        <label class="gm-check"><input id="showSpecimen" type="checkbox"><span data-zh="显示下方字符表" data-en="Show specimen lines">显示下方字符表</span></label>
+        <label class="gm-field pt-specimen-field"><span data-zh="字符表内容" data-en="Specimen text">字符表内容</span><textarea id="specimen" rows="3" spellcheck="false"></textarea></label>
+      </div>
+      <div class="gm-card"><div class="gm-card-title"><h2 data-zh="本区域背景" data-en="Block background">本区域背景</h2></div>
+        <label class="gm-field"><span data-zh="纸纹" data-en="Paper texture">纸纹</span><select id="paper"><option value="3">Paper 03</option><option value="1">Paper 01</option><option value="2">Paper 02</option><option value="color" data-zh="纯色" data-en="Solid color">纯色</option><option value="upload" data-zh="上传的背景" data-en="Uploaded media">上传的背景</option></select></label>
+        <label class="gm-field"><span data-zh="背景颜色" data-en="Background color">背景颜色</span><input id="backgroundColor" type="color"></label>
+        <div class="gm-actions gm-actions-3"><button id="uploadBackground" type="button" data-zh="上传 / 更换" data-en="Upload">上传 / 更换</button><button id="removeBackground" type="button" data-zh="移除" data-en="Remove">移除</button><button id="applyBackground" type="button" data-zh="应用全部" data-en="Apply to all">应用全部</button></div>
+        <input id="backgroundFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm" hidden>
+        <p id="mediaStatus" class="gm-status" role="status"></p>
+        <div id="videoTrim" hidden><canvas id="filmstrip" width="720" height="96" aria-label="视频缩略时间轴"></canvas><label class="gm-field"><span data-zh="片段起点" data-en="Clip start">片段起点</span><input id="trimStartHandle" type="range" min="0" step="0.01"><input id="trimStart" type="number" min="0" step="0.01"></label><label class="gm-field"><span data-zh="片段终点" data-en="Clip end">片段终点</span><input id="trimEndHandle" type="range" min="0" step="0.01"><input id="trimEnd" type="number" min="0" step="0.01"></label></div>
+      </div>
+    </section>
+    <section class="tc-properties" data-panel="motion" hidden>
+      <div class="gm-card"><div class="gm-card-title"><h2 data-zh="同屏编排" data-en="Composition">同屏编排</h2></div>
+        <label class="gm-field"><span data-zh="排列方式" data-en="Layout">排列方式</span><select id="layout"><option value="vertical" data-zh="上下排列" data-en="Vertical">上下排列</option><option value="horizontal" data-zh="左右排列" data-en="Horizontal">左右排列</option></select></label>
+        <label class="gm-field"><span data-zh="画布底色" data-en="Canvas color">画布底色</span><input id="canvasColor" type="color"></label>
+        <label class="gm-field"><span data-zh="区域间距" data-en="Block gap">区域间距</span><input id="gap" type="range" min="0" max="80" step="1"><output for="gap"></output></label>
+      </div>
+      <div class="gm-card"><div class="gm-card-title"><h2 data-zh="显现与停留" data-en="Reveal and hold">显现与停留</h2></div>
+        <label class="gm-field"><span data-zh="整体速度" data-en="Speed">整体速度</span><input id="speed" type="range" min="0.5" max="2" step="0.05"><output for="speed"></output></label>
+        <label class="gm-field"><span data-zh="显现时长" data-en="Reveal duration">显现时长</span><input id="reveal" type="range" min="0.2" max="3" step="0.05"><output for="reveal"></output></label>
+        <label class="gm-field"><span data-zh="区域错开" data-en="Block stagger">区域错开</span><input id="stagger" type="range" min="0" max="1" step="0.05"><output for="stagger"></output></label>
+        <label class="gm-field"><span data-zh="同屏停留" data-en="Hold together">同屏停留</span><input id="hold" type="range" min="0.5" max="12" step="0.1"><output for="hold"></output></label>
+        <label class="gm-field"><span data-zh="淡出时长" data-en="Fade duration">淡出时长</span><input id="fade" type="range" min="0.2" max="3" step="0.05"><output for="fade"></output></label>
+      </div>
+    </section>
+    <section class="tc-properties" data-panel="export" hidden>
+      <div class="gm-card"><div class="gm-card-title"><h2 data-zh="导出" data-en="Export">导出</h2></div>
+        <div class="pt-grid"><label class="gm-field"><span data-zh="时长" data-en="Duration">时长</span><select id="exportDuration"><option value="cycle" data-zh="完整循环" data-en="Full cycle">完整循环</option><option value="3">3 s</option><option value="5">5 s</option><option value="10">10 s</option><option value="custom" data-zh="自定义" data-en="Custom">自定义</option></select></label><label class="gm-field"><span data-zh="帧率" data-en="FPS">帧率</span><select id="exportFps"><option value="15">15 fps</option><option value="24">24 fps</option><option value="30" selected>30 fps</option><option value="60">60 fps</option></select></label></div>
+        <label id="customDurationRow" class="gm-field" hidden><span data-zh="秒数" data-en="Seconds">秒数</span><input id="customDuration" type="number" min="0.5" max="30" step="0.1" value="5"></label>
+        <div class="gm-actions gm-actions-3"><button id="exportPng" type="button">PNG</button><button id="exportGif" type="button">GIF</button><button id="exportMp4" type="button">MP4</button></div>
+        <p id="exportStatus" class="gm-status" role="status" data-zh="画布与导出共用一条时间线。" data-en="Preview and export share one timeline.">画布与导出共用一条时间线。</p>
+      </div>
+    </section>
+  </aside>
+  <script src="js/continuation-gif.js?v=20260824-1"></script>
+  <script src="js/h264-mp4-encoder.web.js?v=20260909-1"></script>
+  <script src="shared-font-library.js?v=20261105-papyrus-source1"></script>
+  <script src="cellmotion-animated-image.js?v=20261028-metal2"></script>
+  <script src="cellmotion-background-media.js?v=20261028-metal2"></script>
+  <script src="paper-type-renderer.js?v=20261107-type2"></script>
+  <script src="paper-type.js?v=20261107-type2"></script>
+  <script src="typecascade-selects.js?v=20260910-select1"></script>
+</body>
+</html>

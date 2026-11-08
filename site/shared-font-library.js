@@ -3,6 +3,7 @@
   if (window.STGFontLibrary) return;
 
   const fonts = [
+    ["papyrus", "Papyrus · 纸上书写", "STG Papyrus", 400, "normal", "衬线与书写"],
     ["bahnschrift", "Bahnschrift · 系统字体", "Bahnschrift", 600, "normal", "系统字体"],
     ["segoe-ui", "Segoe UI · 系统字体", "Segoe UI", 400, "normal", "系统字体"],
     ["inter", "Inter", "STG Inter", 500, "normal", "常用拉丁"],
@@ -70,6 +71,8 @@
   ].map(([id, label, family, weight, style, group]) => ({ id, label, family, weight, style, group }));
 
   const aliases = {
+    "cellmotion-sixteen": "papyrus", "cellmotion-papers": "papyrus", "cellmotion-jpg": "papyrus",
+    "stg:cellmotion-sixteen": "papyrus", "stg:cellmotion-papers": "papyrus", "stg:cellmotion-jpg": "papyrus",
     "snap-inter-medium": "inter", "snap-inter-black": "inter", inter: "inter",
     "snap-space-grotesk": "space-grotesk", "ff-space-grotesk": "space-grotesk", space: "space-grotesk",
     "snap-ibm-plex": "ibm-plex-mono-bold-italic", "snap-space-mono": "space-mono",
@@ -134,7 +137,7 @@
     });
     select.replaceChildren();
     Object.entries(aliases).forEach(([alias, fontId]) => {
-      if (alias.startsWith("stg:") || byId.has(alias)) return;
+      if (byId.has(alias)) return;
       const font = byId.get(fontId);
       if (!font) return;
       const option = document.createElement("option");
@@ -165,7 +168,7 @@
 
   const styleLink = document.createElement("link");
   styleLink.rel = "stylesheet";
-  styleLink.href = "shared-fonts.css?v=20261028-ready1";
+  styleLink.href = "shared-fonts.css?v=20261105-papyrus-source1";
   styleLink.dataset.stgSharedFonts = "true";
   if (!document.querySelector("link[data-stg-shared-fonts]")) document.head.append(styleLink);
 

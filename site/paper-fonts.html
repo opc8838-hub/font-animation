@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Papyrus 原版字体，数字、大写与小写字样，以及三张原始纸纹背景。在线试字与素材下载。">
+  <title>Papyrus · 纸上字样 · CellMotion</title>
+  <link rel="icon" href="favicon.svg">
+  <link rel="stylesheet" href="shared-fonts.css?v=20261105-papyrus-source1">
+  <link rel="stylesheet" href="paper-fonts.css?v=20261107-spec1">
+  <script defer src="shared-font-library.js?v=20261105-papyrus-source1"></script>
+  <script defer src="paper-fonts.js?v=20261107-spec1"></script>
+</head>
+<body>
+  <header class="masthead"><a href="./" aria-label="CellMotion 首页">CellMotion<span> / TYPE COLLECTION</span></a><a href="cellmotion-editors.html">进入动效编辑器 ↗</a></header>
+  <main>
+    <div class="intro"><p class="eyebrow">PAPYRUS — PAPER & INK</p><h1>纸上字样<span>Papyrus，同一字体的三种表情。</span></h1><p>数字的落笔，大写的刻痕，小写的流动。<br>原版字形，配上真实的纸张纹理。</p></div>
+    <section class="font-specification" aria-labelledby="specification-title">
+      <div><p class="eyebrow">01 / TYPEFACE SPECIFICATION</p><h2 id="specification-title">字体规格</h2><p class="spec-note">当前收录 Papyrus Regular 一个字重。数字、大写和小写属于同一字体。</p></div>
+      <dl id="font-specification"><dt>字体资料</dt><dd>正在读取字体文件规格…</dd></dl>
+    </section>
+    <section class="type-lab" aria-labelledby="type-lab-title">
+      <p class="eyebrow">02 / TYPE TESTER</p><h2 id="type-lab-title">白底试字</h2>
+      <p class="spec-note">这里的 px 是实际 CSS 字号，不等于字形墨迹高度。可检查不同字号下的细节、字距和多行排版。</p>
+      <div class="lab-controls">
+        <label>字重<select id="lab-weight" disabled><option value="400">Regular · 400（唯一收录字重）</option></select></label>
+        <label>字号 / px<input id="lab-size" type="number" min="12" max="240" step="1" value="72"></label>
+        <label>字距 / em<input id="lab-tracking" type="number" min="-0.05" max="0.2" step="0.01" value="0"></label>
+        <label>行高 / 倍<input id="lab-leading" type="number" min="1.1" max="2.4" step="0.1" value="1.4"></label>
+      </div>
+      <label class="lab-input-label" for="lab-text">试字内容，可输入多行<textarea id="lab-text" rows="2" maxlength="500" spellcheck="false">Hamburgefontsiv
+PAPERS 16 jpg.</textarea></label>
+      <p id="lab-coverage" class="coverage" role="status"></p>
+      <div class="lab-sheet"><p id="lab-preview">Hamburgefontsiv<br>PAPERS 16 jpg.</p></div>
+      <details class="size-study"><summary>字号对照 · 16 / 24 / 36 / 48 / 72 / 120 px</summary><div id="size-waterfall"></div></details>
+    </section>
+    <p class="eyebrow">03 / PAPER SPECIMENS</p>
+    <form class="tester" onsubmit="return false">
+      <label class="text-field" for="sample-text">输入文字，试用 Papyrus<input id="sample-text" type="text" maxlength="160" placeholder="试试 Paper, ink & motion. 0123456789" autocomplete="off"></label>
+      <label for="sample-size">样张基准字号 <output id="size-value" for="sample-size">120 px</output><input id="sample-size" type="range" min="32" max="180" value="120"></label>
+      <button id="reset-sample" type="reset">恢复字样 ↺</button>
+    </form>
+    <p class="coverage" id="font-status" role="status">Papyrus Regular · 255 个字形 / 242 个字符映射 · 中文使用现有回退字体。以下样张保留不同展示比例，实际字号标于各块下方。</p>
+    <div class="paper-controls"><label for="paper-texture">纸纹背景 <select id="paper-texture"><option value="3">纸纹 03 · 细竖纹</option><option value="1">纸纹 01 · 纤维</option><option value="2">纸纹 02 · 拼接</option></select></label><a id="download-paper" href="assets/backgrounds/paper-series/Paper-3.png" download>下载原始背景 · 2000 × 2000 PNG ↙</a><a id="download-font" href="assets/fonts/paper-series/Papyrus-Regular.ttf" download>下载 Papyrus 原字体 ↙</a></div>
+    <section class="specimen sixteen" aria-labelledby="sixteen-title">
+      <div class="face-meta"><span>01 / NUMERALS</span><h2 id="sixteen-title">16 <span>Papyrus · 数字</span></h2><p>斜切的起笔、细长的上挑与厚重的回转。<br>保留原字体的数字轮廓和笔画缺口。</p></div>
+      <div class="face-sheet"><p class="hero-sample" data-default="16">16</p><p class="alphabet">ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>abcdefghijklmnopqrstuvwxyz<br>0123456789 &amp; . , : ; ! ? @ # %</p><details><summary>查看完整字符表</summary><p class="all-glyphs"></p></details></div>
+    </section>
+    <section class="specimen papers" aria-labelledby="papers-title">
+      <div class="face-meta"><span>02 / UPPERCASE</span><h2 id="papers-title">PAPERS <span>Papyrus · 大写</span></h2><p>宽阔的字面，纤细的横线。<br>边缘的破口与不规则收笔，来自原版字形。</p></div>
+      <div class="face-sheet"><p class="hero-sample" data-default="PAPERS">PAPERS</p><p class="alphabet">ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>abcdefghijklmnopqrstuvwxyz<br>0123456789 &amp; . , : ; ! ? @ # %</p><details><summary>查看完整字符表</summary><p class="all-glyphs"></p></details></div>
+    </section>
+    <section class="specimen jpg" aria-labelledby="jpg-title">
+      <div class="face-meta"><span>03 / LOWERCASE</span><h2 id="jpg-title">jpg. <span>Papyrus · 小写</span></h2><p>长尾 j、扁宽的 p 与双层 g。<br>展示同一字体在小写中的书写感。</p></div>
+      <div class="face-sheet"><p class="hero-sample" data-default="jpg.">jpg.</p><p class="alphabet">ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>abcdefghijklmnopqrstuvwxyz<br>0123456789 &amp; . , : ; ! ? @ # %</p><details><summary>查看完整字符表</summary><p class="all-glyphs"></p></details></div>
+    </section>
+    <footer><p>在「纸上字样」里同时编排三块文字，分别调整字样和纸纹背景。</p><a href="paper-type.html?from=gallery">打开纸上字样动效 ↗</a><span>CELLMOTION / PAPYRUS REGULAR / PAPER & INK</span></footer>
+  </main>
+</body>
+</html>

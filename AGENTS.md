@@ -23,6 +23,8 @@ These rules apply to the whole repository and are intended for both human contri
 
 ## Expected editing and export capability
 
+- When designing or importing fonts, or changing type specimen pages, follow [`docs/FONT_DESIGN_STANDARD.md`](docs/FONT_DESIGN_STANDARD.md): distinguish lettering from a font family, report real weights/coverage/metrics, and verify size, spacing and fallback behavior without synthetic-weight claims.
+
 - Expose timing controls for visually meaningful phases, not a long list of unexplained low-level values.
 - Preserve editable direction, speed, spacing, size, alignment, colors, and hold durations when those concepts exist in the reference.
 - When images or icons participate in the animation, reuse the shared media/resource model instead of creating a second incompatible uploader.

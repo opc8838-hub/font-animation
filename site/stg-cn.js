@@ -1,7 +1,7 @@
 (function () {
   if (!window.STGFontLibrary && !document.querySelector('script[data-stg-font-library]')) {
     const fontLibrary = document.createElement("script");
-    fontLibrary.src = "shared-font-library.js?v=20261020-oddball2";
+    fontLibrary.src = "shared-font-library.js?v=20261105-papyrus-source1";
     fontLibrary.dataset.stgFontLibrary = "true";
     document.head.append(fontLibrary);
   }
@@ -10,6 +10,7 @@
     return;
   }
   const effects = [
+    ["paper-type", "纸上字样", "Paper Type"],
     ["glasswalkers", "玻璃漫步", "Glass Walkers"],
     ["letter-slices", "字形切片", "Letter Slices"],
     ["live-portal", "立体世界卡片", "Live Portal"],
