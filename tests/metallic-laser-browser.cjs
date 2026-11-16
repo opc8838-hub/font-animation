@@ -2,7 +2,8 @@ const fs = require('node:fs'), path = require('node:path'), assert = require('no
 const { chromium } = require(path.resolve(process.argv[2] || 'node_modules', 'playwright'));
 const base = process.argv[4] || 'http://127.0.0.1:8789';
 const mode = process.argv[5] || 'laser';
-const output = path.resolve(__dirname, `../output/metallic-${mode}`); fs.mkdirSync(output, { recursive: true });
+const lightStyle = process.argv[6] || 'band';
+const output = path.resolve(__dirname, `../output/metallic-${mode}${lightStyle === 'water' ? '-water' : ''}`); fs.mkdirSync(output, { recursive: true });
 (async () => {
   const browser = await chromium.launch({ headless: true, executablePath: process.argv[3] || undefined });
   try {
@@ -51,6 +52,7 @@ const output = path.resolve(__dirname, `../output/metallic-${mode}`); fs.mkdirSy
     await page.locator('#writeDurationExact').fill('2.4'); await page.locator('#writeDurationExact').dispatchEvent('change');
     await page.locator('#lightAmplitudeExact').fill('36'); await page.locator('#lightAmplitudeExact').dispatchEvent('change');
     await page.locator('#lightSpeedExact').fill('1.5'); await page.locator('#lightSpeedExact').dispatchEvent('change');
+    await page.locator('#lightStyle').selectOption(lightStyle, { force: true });
     assert.equal(await page.locator('#timeline button').count(), 3);
     await page.locator('#selectText').click(); await page.locator('#fontSettings').evaluate(el => { el.open = true; });
     await page.locator('#lineHeightExact').fill('1.4'); await page.locator('#lineHeightExact').dispatchEvent('change');
@@ -78,6 +80,8 @@ const output = path.resolve(__dirname, `../output/metallic-${mode}`); fs.mkdirSy
     const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
     assert.equal(manifest.composition.scene.text, 'AVATR\nLASER');
     assert.equal(manifest.composition.scene.revealMode, mode);
+    assert.equal(manifest.composition.scene.lightStyle, lightStyle);
+    assert.deepEqual(manifest.parameterDefinitions.find(p => p.path === 'composition.scene.lightStyle').values, ['band', 'water']);
     assert.deepEqual(manifest.parameterDefinitions.find(p => p.path === 'composition.scene.revealMode').values, ['none', 'scan', 'laser']);
     assert.equal(manifest.composition.scene.lightAmplitude,.36);assert.equal(manifest.composition.scene.lightSpeed,1.5);
     for (const key of ['lineHeight', 'writeDuration', 'revealMode', 'lightAmplitude', 'lightSpeed']) assert.ok(manifest.parameterDefinitions.some(p => p.path === `composition.scene.${key}`));
