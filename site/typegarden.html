@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="glyphmorph-reviewed.css?v=20260909-media-crop">
   <link rel="stylesheet" href="typecascade-workspace.css?v=20260909-coloriso">
   <link rel="stylesheet" href="typecascade-polish.css?v=20261006-garden1">
-  <link rel="stylesheet" href="typegarden-editor.css?v=20261006-7">
+  <link rel="stylesheet" href="typegarden-editor.css?v=20261116-colors1">
 <link rel="stylesheet" href="site-preferences.css?v=20261006-garden1">
 </head>
 <body class="glyphmorph-editor" data-type-garden="true">
@@ -121,13 +121,28 @@
         <label class="tg-bg-pick" title="其他颜色"><input id="bgQuickColor" type="color" aria-label="其他背景颜色"><span>其他</span></label>
       </div>
       <div id="paletteGrid" class="tg-palette-grid" role="radiogroup" aria-label="配色"></div>
-      <details class="gm-row-background tg-custom-colors">
-        <summary><span>自定义颜色</span><i class="gm-row-background-swatch" id="backgroundSwatch"></i></summary>
+      <details class="gm-row-background tg-custom-colors" open>
+        <summary><span>自定义花枝配色</span><i class="gm-row-background-swatch" id="backgroundSwatch"></i></summary>
+        <p class="gm-help tg-color-help">花朵和树枝可自由搭配，点击色块或输入 HEX 色值；组合随方案一起保存。</p>
+        <div class="tg-floral-colors">
+          <div class="tg-color-row">
+            <label for="flowerColor">花朵</label>
+            <input id="flowerColor" data-color="flower" type="color">
+            <input data-color-hex="flower" type="text" aria-label="花朵 HEX" placeholder="#C32736" pattern="#[0-9A-Fa-f]{6}" maxlength="7" spellcheck="false" autocomplete="off" required>
+          </div>
+          <div class="tg-color-row">
+            <label for="stemColor">树枝与叶</label>
+            <input id="stemColor" data-color="stem" type="color">
+            <input data-color-hex="stem" type="text" aria-label="树枝与叶 HEX" placeholder="#365A3A" pattern="#[0-9A-Fa-f]{6}" maxlength="7" spellcheck="false" autocomplete="off" required>
+          </div>
+          <div class="tg-color-row">
+            <label for="petalLineColor">花瓣线</label>
+            <input id="petalLineColor" data-color="line" type="color">
+            <input data-color-hex="line" type="text" aria-label="花瓣线 HEX" placeholder="#301C24" pattern="#[0-9A-Fa-f]{6}" maxlength="7" spellcheck="false" autocomplete="off" required>
+          </div>
+        </div>
         <div class="gm-row-background-grid">
           <label>背景<input data-color="bg" type="color"></label>
-          <label>花朵<input data-color="flower" type="color"></label>
-          <label>茎与叶<input data-color="stem" type="color"></label>
-          <label>花瓣线<input data-color="line" type="color"></label>
           <label>文字<input data-color="text" type="color"></label>
         </div>
       </details>
@@ -264,12 +279,12 @@
   <script src="shared-icon-library.js?v=20260902-1"></script>
   <script src="cellmotion-animated-image.js?v=20260909-1"></script>
   <script src="typegarden-engine.js?v=20261006-7"></script>
-  <script src="typegarden-editor.js?v=20261019-white-bg"></script>
+  <script src="typegarden-editor.js?v=20261116-colors1"></script>
   <script src="stg-cn.js?v=20261020-oddball2"></script>
   <script src="typecascade-workspace.js?v=20261006-notr1"></script>
   <script src="typecascade-polish.js?v=20261006-garden1"></script>
   <script src="typecascade-selects.js?v=20260909-1"></script>
-  <script src="typecascade-locale.js?v=20261006-garden10"></script>
+  <script src="typecascade-locale.js?v=20261116-garden-colors1"></script>
   <script src="cellmotion-ai-manifest.js?v=20260909-ai-manifest"></script>
   <script src="cellmotion-ai-menu.js?v=20260909-standard"></script>
 <script defer src="site-preferences.js?v=20261006-garden1"></script>

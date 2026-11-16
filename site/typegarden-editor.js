@@ -588,6 +588,10 @@
     $("paletteGrid").innerHTML = PALETTES.map((p, index) => `<button type="button" role="radio" data-palette="${index}" aria-checked="${index === palette}" class="tg-palette${index === palette ? " is-active" : ""}" title="${p.zh} · ${p.name}">
       <span class="tg-palette-chip" style="background:${p.bg}"><i style="background:${p.flower}"></i><i style="background:${p.stem}"></i><b style="color:${p.text}">Aa</b></span><span>${p.zh}</span></button>`).join("");
     document.querySelectorAll("[data-color]").forEach((input) => { input.value = colors[input.dataset.color]; });
+    document.querySelectorAll("[data-color-hex]").forEach((input) => {
+      input.value = colors[input.dataset.colorHex];
+      input.removeAttribute("aria-invalid");
+    });
     controls.textColor.value = colors.text;
     controls.backgroundColor.value = colors.bg;
     $("bgQuickColor").value = colors.bg;
@@ -1030,6 +1034,15 @@
     state.scheme.garden.palette = -1;
     renderPalettes(); syncBackgroundChrome(); autoSave(); resizePreview();
   }));
+  document.querySelectorAll("[data-color-hex]").forEach((input) => {
+    input.addEventListener("input", () => {
+      if (!input.validity.valid) { input.setAttribute("aria-invalid", "true"); return; }
+      state.scheme.garden.colors[input.dataset.colorHex] = normalizeColor(input.value);
+      state.scheme.garden.palette = -1;
+      renderPalettes(); syncBackgroundChrome(); autoSave(); resizePreview();
+    });
+    input.addEventListener("change", () => input.reportValidity());
+  });
   $("regrow").addEventListener("click", () => {
     state.scheme.garden.seed = Math.floor(Math.random() * 1e6);
     controls.seed.value = state.scheme.garden.seed;
