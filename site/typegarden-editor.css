@@ -19,6 +19,14 @@
 .tg-palette-chip b { margin-left: 5px; font-family: "STG Playfair Display", Georgia, serif; font-size: 14px; font-weight: 700; }
 .tg-palette > span:last-child { overflow: hidden; text-align: center; white-space: nowrap; text-overflow: ellipsis; }
 .tg-custom-colors summary, .tg-background summary { cursor: pointer; }
+.tg-custom-colors .tg-color-help { margin: 0; padding: 0 7px 12px; line-height: 1.6; }
+.tg-floral-colors { display: grid; gap: 10px; padding: 0 7px 14px; }
+.tg-color-row { display: grid; grid-template-columns: minmax(72px, 1fr) 38px minmax(90px, 1.3fr); align-items: center; gap: 8px; }
+.tg-color-row label { color: var(--tc-text, #fff); font-size: 13px; }
+body[data-type-garden] .tg-color-row input { min-width: 0; width: 100%; height: 36px; box-sizing: border-box; border: 1px solid var(--tc-line, #ffffff24); border-radius: 10px; background: var(--tc-input, #17171a); color: var(--tc-text, #fff); }
+body[data-type-garden] .tg-color-row input[type="color"] { padding: 3px; cursor: pointer; }
+body[data-type-garden] .tg-color-row input[type="text"] { padding: 0 8px; font: 13px ui-monospace, monospace; }
+body[data-type-garden] .tg-color-row input[aria-invalid="true"] { border-color: #e66b78; }
 .tg-background summary b { font-weight: 500; opacity: .7; }
 .gm-row-text-color button[data-action="follow-palette"]:disabled { opacity: .55; cursor: default; }
 
