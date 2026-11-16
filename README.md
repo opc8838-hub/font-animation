@@ -1,5 +1,7 @@
 # CellMotion —— 可编辑动效与视频创作平台
 
+**2026-11-16 金属流光新增水流反光**：[打开编辑器](https://cellmotion.cn/metallic-text.html?from=gallery&v=20261116-water1)。在「动效设置 → 光带 → 流动样式」选择「水流反光」，让蓝白与暖金反光在稳定字面上连续卷曲流动。共用流动幅度、0.5×–3× 光带速度和方向，支持直接呈现、逐字横向镭射和沿笔画镭射。36 项 For AI 参数、保存方案与 PNG/GIF/MP4 导出同步。
+
 **2026-11-08 纸上字样 / Paper Type 正式上新**：[打开编辑器](https://cellmotion.cn/paper-type.html?from=gallery&v=20261108-release1)。使用素材包内的 Papyrus 字体和三张纸纹，将 `16 / PAPERS / jpg.` 同时呈现在一张画布上。每块可独立输入，编辑实际像素字号、真实字重、字距、行高、颜色及背景，支持上下或左右排列、增删排序、方案保存与导入和 PNG/GIF/H.264 MP4 导出。[字体试字与规格](https://cellmotion.cn/paper-fonts.html?v=20261107-spec1)提供六档字号对照与缺字提示。见[设计与验证记录](docs/analyses/paper-type.md)。
 
 **2026-11-03 玻璃漫步 / Glass Walkers 正式上新**：[打开编辑器](https://cellmotion.cn/glasswalkers.html?from=gallery&tracking=feet&v=20261103-release-ai1)。平底鞋、尖头鞋与高跟鞋行人和猫狗在磨砂玻璃上交错穿行，可开关代码追踪；人数、动物、方向、速度、配色、质感与画幅可编辑，支持方案保存/导入、撤销重做及 PNG / GIF / MP4 导出。已对齐 CellMotion 三栏 UI 和五项 For AI 菜单，[组件预览](https://cellmotion.cn/typecascade-component-demo.html?effect=glasswalkers) 读取实时配置并复用同一渲染器。见[发布与验证说明](docs/GLASSWALKERS_RELEASE.md)。

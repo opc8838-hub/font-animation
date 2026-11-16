@@ -20,7 +20,7 @@
   uniform vec2 resolution;
   uniform vec4 bounds;
   uniform vec3 background, metal, cool, warm;
-  uniform float progress, writeProgress, laser, scanWriting, glyphCount, lineStep, lineCount, shine, bandWidth, lightAmplitude, bevel, transparentBackground;
+  uniform float progress, writeProgress, laser, scanWriting, glyphCount, lineStep, lineCount, shine, bandWidth, lightAmplitude, water, bevel, transparentBackground;
   out vec4 color;
   float distanceAt(vec2 uv) {
     vec2 packed = texture(lettering, uv).rg;
@@ -58,9 +58,23 @@
     float width = .045 + bandWidth * .20;
     float lightDistance = fract(local.x * .65 - progress + .5) - .5;
     float movingLight = .45 + .55 * bell(lightDistance, .25);
+    if (water > .5) {
+      // A refracted ribbon rolls over a fixed metal face; every temporal term is periodic.
+      float phase = progress * 6.2831853;
+      float bend = sin(local.x * 5.2 - phase + .45 * sin(local.x * 2.7 + phase));
+      float ripple = sin(local.x * 10.4 + phase * 2. + .6 * sin(y * 3. - phase));
+      wave = .38 + lightAmplitude * (.65 * bend + .22 * ripple) + normal.x * .10 - normal.y * .11;
+      horizon = y - wave;
+      width *= 1. + .18 * sin(local.x * 7. + phase + sin(y * 3. - phase));
+      movingLight = .75 + .25 * sin(local.x * 6. - phase + .5 * sin(y * 4. + phase));
+    }
     vec3 reflection = cool * bell(horizon + width * .9, width * .85) * .54;
     reflection += vec3(1.) * bell(horizon, width * .65) * .48;
     reflection += warm * bell(horizon - width * .65, width * .80) * .43;
+    if (water > .5) {
+      float tint = .5 + .5 * sin(local.x * 7. + progress * 6.2831853);
+      reflection += mix(cool, warm, tint) * bell(horizon, width * 1.8) * .12;
+    }
     float edge = pow(curved, 2.5);
     float edgeLight = .47 + .32 * dot(normal, normalize(vec3(-.5, -.7, .6)));
     vec3 result = vec3(base) * mix(vec3(1.), metal / max(.01, max(metal.r, max(metal.g, metal.b))), .42);
@@ -95,7 +109,7 @@
   const writingTexture = gl.createTexture(); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, writingTexture);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  const uniforms = Object.fromEntries(['lettering', 'writing', 'resolution', 'bounds', 'background', 'metal', 'cool', 'warm', 'progress', 'writeProgress', 'laser', 'scanWriting', 'glyphCount', 'lineStep', 'lineCount', 'shine', 'bandWidth', 'lightAmplitude', 'bevel', 'transparentBackground'].map(name => [name, gl.getUniformLocation(program, name)]));
+  const uniforms = Object.fromEntries(['lettering', 'writing', 'resolution', 'bounds', 'background', 'metal', 'cool', 'warm', 'progress', 'writeProgress', 'laser', 'scanWriting', 'glyphCount', 'lineStep', 'lineCount', 'shine', 'bandWidth', 'lightAmplitude', 'water', 'bevel', 'transparentBackground'].map(name => [name, gl.getUniformLocation(program, name)]));
   gl.uniform1i(uniforms.lettering, 0); gl.uniform1i(uniforms.writing, 1);
 
   function contourDistances(pixels, width, height) {
@@ -391,6 +405,7 @@
     gl.uniform1f(uniforms.lineStep, lineStep); gl.uniform1f(uniforms.lineCount, lineCount);
     gl.uniform1f(uniforms.shine, scene.shine);
     gl.uniform1f(uniforms.lightAmplitude, scene.lightAmplitude ?? .28);
+    gl.uniform1f(uniforms.water, scene.lightStyle === 'water' ? 1 : 0);
     gl.uniform1f(uniforms.bandWidth, scene.lightWidth); gl.uniform1f(uniforms.bevel, scene.bevel);
     gl.uniform1f(uniforms.transparentBackground, transparent ? 1 : 0);
     gl.drawArrays(gl.TRIANGLES, 0, 6);

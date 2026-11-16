@@ -101,7 +101,7 @@ const output = path.resolve(__dirname, '../output/metallic-background-verificati
     assert.deepEqual(manifest.composition, videoState); assert.equal(manifest.assets.backgrounds[0].owner, 'scene');
     assert.equal(manifest.assets.videos[0].trimStart, .7); assert.equal(manifest.assets.videos[0].trimEnd, 2.4);
     assert.ok(manifest.assets.embedded.some(asset => asset.kind === 'video' && asset.embedded));
-    assert.equal(manifest.parameterDefinitions.length, 35);
+    assert.equal(manifest.parameterDefinitions.length, 36);
     const demo = await context.newPage(); await demo.goto(`${base}/typecascade-component-demo.html?effect=metallic-text`);
     await demo.waitForFunction(() => document.getElementById('demoPlayer')?._ready);
     manifest.presentation.autoplay = false; await demo.evaluate(manifest => { document.getElementById('demoPlayer').manifest = manifest; }, manifest);
@@ -122,7 +122,7 @@ const output = path.resolve(__dirname, '../output/metallic-background-verificati
     await page.locator('#openBackground').click(); await page.locator('#removeBackground').click();
     assert.equal((await state()).scene.backgroundMedia, undefined, 'Remove returns to solid background');
     assert.deepEqual(errors, [], 'Console stays clean with media, seeking and exports');
-    fs.writeFileSync(path.join(output, 'verification.json'), JSON.stringify({ preservation, gifSamples, videoSamples, parameters: 35, mediaRoundtrip: true, videoPlayerPixelsEqual: true, errors }, null, 2));
+    fs.writeFileSync(path.join(output, 'verification.json'), JSON.stringify({ preservation, gifSamples, videoSamples, parameters: 36, mediaRoundtrip: true, videoPlayerPixelsEqual: true, errors }, null, 2));
     console.log('PASS: preserved default geometry, stage preferences, exact values/history, image crop, GIF delays, video filmstrip/trim, media save/import/reload, real exports and live AI media parity.');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

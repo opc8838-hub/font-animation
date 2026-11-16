@@ -1,5 +1,19 @@
 # 金属流光 / Metallic Text
 
+## 2026-11-16: optional water reflection
+
+Source: desktop `飞书20261116-110246.qt`, unchanged private source, H.264 540 × 1166, 30 fps, 137 frames / 4.566667 seconds, AAC audio. Goal: add a selectable water-like reflection inside Metallic Text.
+
+| Source time | Visible evidence | Motion interpretation | Confidence |
+| --- | --- | --- | --- |
+| 0–1.5 s | Stable OK outline; broad blue-white/gold horizon rolls through the upper/middle face | Continuously bending material reflection, not text displacement | high |
+| 1.5–3.5 s | Horizon curvature and colored concentrations vary smoothly across both letters, including while the cursor crosses them | One continuous surface field with changing curvature/tint; cursor coupling cannot be proven | high / uncertain interaction |
+| 3.5–4.5667 s | Motion continues; view zooms to O near the end | Preserve continuous reflection; zoom is source viewing UI, not effect choreography | high |
+
+Inspected all nine chronological Watch frames plus 4 fps full-clip crops and 15 fps dense samples from 2–3 s. Contract: fixed glyph silhouette/layout, smooth broad refracted ribbon, cool/white/warm highlights, persistent flow throughout reveal and hold, shared amplitude/speed/direction, seamless reflection loop. Existing band mode, reveal masks, approved defaults and gallery artifacts stay frozen. Add only `lightStyle: band | water`; use periodic layered waves in the existing WebGL material shader so seek/export/AI remain deterministic. Uncertainty: source loop endpoints and any pointer-driven interaction are not established by this short screen recording; implement automatic looping as in the current editor.
+
+Validation: water-specific browser checks passed in all three reveal modes and both directions, with continuous final-hold changes and seamless light endpoints at all six speed levels. Water versus band has identical alpha/reveal masks; light speed and amplitude visibly affect only reflection. Saved style reloads correctly, mobile 320/390 px fits, and console is clean. Both scan+water and stroke+water generated actual PNG/GIF/H.264 MP4 (320 × 320, 63 frames / 4.2 s) and matched the live For AI player at five timestamps. Reviewed exported dense frames against the reference's stable outline and flowing ribbon. Full editor, original continuous-flow and background-media suites passed; manifest/guide now expose 36 parameters. Comparison with the previous renderer at four default timestamps found no alpha difference and at most one RGB channel with a one-level rounding difference per frame. Approved preset/gallery bytes are unchanged. Syntax, shared contracts, editor contract, website catalog (94 entries) and diff checks passed.
+
 ## Source and target
 
 - Public source: https://x.com/_crisjav/status/2113977792647827606

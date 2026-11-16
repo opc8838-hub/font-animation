@@ -58,6 +58,7 @@
     if (typeof raw.scene.text === 'string') next.scene.text = raw.scene.text;
     if (Fonts.idFor(raw.scene.font)) next.scene.font = `stg:${Fonts.idFor(raw.scene.font)}`;
     next.scene.direction = raw.scene.direction === 'reverse' ? 'reverse' : 'forward';
+    if ('lightStyle' in raw.scene) next.scene.lightStyle = raw.scene.lightStyle === 'water' ? 'water' : 'band';
     if ('revealMode' in raw.scene) next.scene.revealMode = ['scan', 'laser'].includes(raw.scene.revealMode) ? raw.scene.revealMode : 'none';
     if ('alignment' in raw.scene) next.scene.alignment = ['left', 'center', 'right'].includes(raw.scene.alignment) ? raw.scene.alignment : 'center';
     if ('backgroundMedia' in raw.scene) next.scene.backgroundMedia = Media.normalize(raw.scene.backgroundMedia);
@@ -123,6 +124,7 @@
     $('fontSummary').textContent = Fonts.preset(state.scene.font)?.label || '';
     $('alignment').value = state.scene.alignment || 'center';
     $('direction').value = state.scene.direction;
+    $('lightStyle').value = state.scene.lightStyle || 'band';
     $('revealMode').value = state.scene.revealMode || 'none';
     $('writeDurationField').hidden = Core.revealDuration(state.scene) === 0;
     const sizeValue = `${state.canvas.width}x${state.canvas.height}`;
@@ -222,6 +224,7 @@
   $('font').addEventListener('change', () => { state.scene.font = $('font').value; $('fontSummary').textContent = Fonts.preset(state.scene.font)?.label || ''; record(); loadFont(); });
   $('alignment').addEventListener('change', () => { state.scene.alignment = $('alignment').value; record(); drawPreview(); });
   $('direction').addEventListener('change', () => { state.scene.direction = $('direction').value; record(); drawPreview(); });
+  $('lightStyle').addEventListener('change', () => { state.scene.lightStyle = $('lightStyle').value; record(); drawPreview(); });
   $('revealMode').addEventListener('change', () => { state.scene.revealMode = $('revealMode').value; syncControls(); record(); if (matchMedia('(prefers-reduced-motion: reduce)').matches) seek(readableTime()); else replay(); });
   $('canvasPreset').addEventListener('change', () => {
     const value = $('canvasPreset').value;
