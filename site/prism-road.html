@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="原图质感的实时动效：整条彩虹光带涌动、车尾扬尘、车漆实时反射与高速轮毂。">
+  <meta name="theme-color" content="#EEEDF0">
+  <title>流光赛道 / Prism Road · CellMotion</title>
+  <link rel="icon" href="assets/cellmotion/logo-web.webp?v=20261028-ready1">
+  <link rel="stylesheet" href="cellmotion.css?v=20260907-2">
+  <link rel="stylesheet" href="cellmotion-hero.css?v=20260909-1">
+  <link rel="stylesheet" href="cellmotion-type.css?v=20260907-5">
+  <link rel="stylesheet" href="cellmotion-layout.css?v=20260925-actions3">
+  <link rel="stylesheet" href="site-preferences.css?v=20260926-18">
+  <link rel="stylesheet" href="prism-road/prism-road.css">
+  <script defer src="site-preferences.js?v=20260926-18"></script>
+  <script type="module" src="prism-road/prism-road.js"></script>
+</head>
+<body class="prism-showcase">
+  <a class="skip-link" href="#main">跳到内容 / Skip to content</a>
+  <header class="header wrap">
+    <a class="brand original-brand" href="cellmotion.html" aria-label="CellMotion"><img class="logo-source" src="assets/cellmotion/logo-web.webp?v=20261028-ready1" alt="CellMotion"></a>
+    <nav aria-label="CellMotion"><a href="cellmotion-components.html">组件库</a><a href="cellmotion.html">返回首页</a></nav>
+    <div class="header-actions"><button id="prism-theme" class="site-preference-button" type="button" aria-label="切换主题 / Toggle theme" data-no-translate>◐</button></div>
+  </header>
+  <main id="main" data-no-translate>
+    <section class="prism-stage" aria-labelledby="prism-title">
+      <canvas aria-label="夜色里，彩虹光带掠过车身，后轮扬起粉白色烟尘"></canvas>
+      <video hidden muted loop playsinline preload="none" poster="prism-road/previews/prism-road-poster.jpg" aria-label="流光赛道录制版"></video>
+      <h1 id="prism-title">流光赛道 <span>/ Prism Road</span></h1>
+      <button class="prism-pause" type="button" hidden>暂停</button>
+    </section>
+    <div class="wrap prism-notes">
+      <p class="prism-status" role="status">正在加载实时场景…</p>
+      <div class="prism-details">
+        <p>原图质感的实时动效：整条彩虹光带涌动、车尾扬尘、车漆实时反射与高速轮毂。
+          <span lang="en">Rainbow ribbons surge past spinning wheels as dust lifts behind the car and moving light reflects across its paint.</span>
+        </p>
+        <div class="prism-links">
+          <a class="button outline small" href="prism-road/for-ai.html">用于 AI / For AI</a>
+          <a class="button outline small" href="prism-road/prism-road-source.zip" download>源码 / Source</a>
+        </div>
+      </div>
+      <footer>灵感来自 Pranav 的 Crestora 页脚设计 · <span lang="en">Inspired by Pranav's Crestora footer design</span></footer>
+    </div>
+  </main>
+</body>
+</html>

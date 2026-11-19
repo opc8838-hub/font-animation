@@ -1,0 +1,62 @@
+.prism-stage {
+  position: relative;
+  width: 100%;
+  height: min(74svh, 62vw);
+  overflow: hidden;
+  background: #080b12 url("previews/prism-road-poster.jpg") 53% 68% / cover no-repeat;
+  color: #fff;
+}
+.prism-stage canvas, .prism-stage video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 53% 68%;
+}
+.prism-stage canvas { visibility: hidden; }
+.prism-stage.is-ready canvas { visibility: visible; }
+.prism-stage video { position: absolute; inset: 0; }
+.prism-stage [hidden], .prism-notes [hidden] { display: none; }
+.prism-stage h1 {
+  position: absolute;
+  top: clamp(22px, 4vw, 60px);
+  left: max(5%, calc((100% - 1320px) / 2));
+  margin: 0;
+  font-size: clamp(28px, 3.3vw, 58px);
+  line-height: 1.15;
+  letter-spacing: -.045em;
+}
+.prism-stage h1 span {
+  display: inline-block;
+  color: #d7dce8;
+  font-size: .57em;
+  font-weight: 450;
+  letter-spacing: -.025em;
+}
+.prism-pause {
+  position: absolute;
+  bottom: 20px;
+  right: 5%;
+  padding: 8px 18px;
+  border: 1px solid #ffffff60;
+  border-radius: 30px;
+  background: #0a101acc;
+  color: #fff;
+  cursor: pointer;
+}
+.prism-notes { padding-block: 24px; }
+.prism-details, .prism-links { display: flex; align-items: center; gap: 12px; }
+.prism-details { justify-content: space-between; flex-wrap: wrap; }
+.prism-details p { margin: 0; max-width: 56em; line-height: 1.7; }
+.prism-details p span { display: block; font-size: .875em; color: var(--site-muted); }
+.prism-notes footer, .prism-status { color: var(--site-muted); font-size: 12px; }
+.prism-notes footer { margin-top: 20px; line-height: 1.6; }
+@media (max-width: 760px) {
+  .prism-showcase .header { flex-wrap: wrap; gap: 8px; }
+  .prism-showcase .header nav { display: flex; gap: 12px; margin: 0; }
+  .prism-showcase .header .header-actions { flex: 0 0 auto; width: auto; margin: 0; }
+  .prism-showcase .original-brand { zoom: .76; }
+  .prism-showcase .site-preferences { margin: 0; }
+  .prism-stage { height: min(56svh, 105vw); }
+  .prism-details { gap: 16px; }
+}

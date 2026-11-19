@@ -1,5 +1,7 @@
 # CellMotion —— 可编辑动效与视频创作平台
 
+**2026-11-19 流光赛道 / Prism Road**。整条彩虹光带沿弯道涌动，车漆反射同一帧的路面，高速轮毂掠过粉白扬尘。展示页提供实时画布、循环录制版、For AI 复刻说明和引擎源码。[打开展示页](site/prism-road.html?from=gallery)
+
 **2026-11-16 金属流光新增水流反光**：[打开编辑器](https://cellmotion.cn/metallic-text.html?from=gallery&v=20261116-water1)。在「动效设置 → 光带 → 流动样式」选择「水流反光」，让蓝白与暖金反光在稳定字面上连续卷曲流动。共用流动幅度、0.5×–3× 光带速度和方向，支持直接呈现、逐字横向镭射和沿笔画镭射。36 项 For AI 参数、保存方案与 PNG/GIF/MP4 导出同步。
 
 **2026-11-08 纸上字样 / Paper Type 正式上新**：[打开编辑器](https://cellmotion.cn/paper-type.html?from=gallery&v=20261108-release1)。使用素材包内的 Papyrus 字体和三张纸纹，将 `16 / PAPERS / jpg.` 同时呈现在一张画布上。每块可独立输入，编辑实际像素字号、真实字重、字距、行高、颜色及背景，支持上下或左右排列、增删排序、方案保存与导入和 PNG/GIF/H.264 MP4 导出。[字体试字与规格](https://cellmotion.cn/paper-fonts.html?v=20261107-spec1)提供六档字号对照与缺字提示。见[设计与验证记录](docs/analyses/paper-type.md)。
@@ -48,7 +50,7 @@ CellMotion 是一个自由、灵活的动态设计系统。字体、图标、图
 
 **2026-10-12 降临 / Switch Drop 更新**：标题紫色标点改为圆点；结束停留默认 6 秒，可自定义为 2–30 秒，参数可自动保存及导出。已保存[默认方案](site/assets/presets/switchdrop-default.json)，重制官网动态封面，并加入「最近上新」；首页该标题移除末尾句号。
 
-目前收录 94 个动效及视频模板，支持中文与多语种字体、字图混排、图片 / GIF / 视频背景、响应式画布，以及浏览器内的预览与导出。目录的「全部动效」和各内容分类只展示已完成的 62 个。另外 32 个尚未完成：原分类保留，只出现在「待上新」，封面写着「待上新，未完成」，暂时不能点进编辑器。名单和恢复方式见 [docs/PENDING_RELEASE.md](docs/PENDING_RELEASE.md)。
+目前收录 95 个动效及视频模板，支持中文与多语种字体、字图混排、图片 / GIF / 视频背景、响应式画布，以及浏览器内的预览与导出。目录的「全部动效」和各内容分类只展示已完成的 63 个。另外 32 个尚未完成：原分类保留，只出现在「待上新」，封面写着「待上新，未完成」，暂时不能点进编辑器。名单和恢复方式见 [docs/PENDING_RELEASE.md](docs/PENDING_RELEASE.md)。
 
 
 **2026-10-10 两款 CardBot 独立编辑器**：[翻牌登录 / Card Login](https://opc8838-hub.github.io/font-animation/card-login.html?from=gallery) 保留同尺寸衔接、旋转中变白及登录渐入，文字、字体、颜色和动作参数可编辑；[卡牌剧场 / Card Deck](https://opc8838-hub.github.io/font-animation/carddeck.html?from=gallery) 保留表情卡牌的展开、交错横移与收拢，支持共享图库、自有素材和逐卡调整。两款均采用 CellMotion 三栏工作台，支持手机/平板、主流及自定义画幅、方案管理、PNG/GIF/H.264 MP4 与实时配置的 For AI 组件。登录编辑器是视觉动效，不提供账号认证；真正可输入的原始 HTML/CSS 表单转场另附源码包。详见 [使用与集成说明](docs/CARDBOT_EDITORS.md)、[动效保真与验证](docs/analyses/cardmotion-preservation.md) 和 [来源许可](docs/licenses/CARDBOT_MOTION.md)。

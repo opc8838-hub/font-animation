@@ -1,0 +1,156 @@
+{
+  "effect": {
+    "id": "prism-road",
+    "name": {
+      "zh": "流光赛道",
+      "en": "Prism Road"
+    },
+    "version": "1.0.0",
+    "category": "graphic"
+  },
+  "adoptionLevel": "Described",
+  "runtime": {
+    "kind": "standalone-page",
+    "entry": "prism-road.html",
+    "renderer": "webgl2",
+    "fallback": "prism-road/previews/prism-road-card.mp4"
+  },
+  "capabilities": {
+    "editableText": false,
+    "timeline": false,
+    "exports": [],
+    "preview": true,
+    "responsiveCanvas": true
+  },
+  "behavior": {
+    "summary": {
+      "zh": "原图质感的实时动效：整条彩虹光带涌动、车尾扬尘、车漆实时反射与高速轮毂。",
+      "en": "A layered still becomes a continuous night drive with surging rainbow ribbons, drifting dust, live paint reflections and spinning wheels."
+    },
+    "phases": [
+      {
+        "id": "drive",
+        "name": {
+          "zh": "持续行驶",
+          "en": "Continuous drive"
+        },
+        "start": 0,
+        "unit": "s",
+        "continuous": true,
+        "colorToken": "phase.violet"
+      }
+    ]
+  },
+  "inputs": {
+    "assetBase": "prism-road/assets/",
+    "sourceCanvas": [
+      1597,
+      985
+    ],
+    "groups": {
+      "分层底图、线纹与粉白烟色": [
+        "night-base.png",
+        "body-moving-ground.png",
+        "carrier.png",
+        "detail.png",
+        "plume-color.png"
+      ],
+      "流场、整带行程与区域遮罩": [
+        "flow.png",
+        "ribbon-flow.png",
+        "ribbon-station.png",
+        "motion-zones.png",
+        "lane.png"
+      ],
+      "车漆、材质法线与车轮": [
+        "paint.png",
+        "materials.png",
+        "panel-normals.png",
+        "running-gear.png",
+        "wheels.json",
+        "wheel-exposure.png"
+      ],
+      "道路粒子、星空坐标与路径": [
+        "meta.json",
+        "sprites.png",
+        "dot-state.f32",
+        "dot_paths.u16",
+        "dark-stars.u16",
+        "dark-paths.u16",
+        "dark-tones.u32",
+        "night-stars.json"
+      ]
+    }
+  },
+  "parameters": [
+    {
+      "path": "preset.ribbon",
+      "scope": "preset",
+      "name": {
+        "zh": "光带",
+        "en": "Ribbon"
+      },
+      "type": "string",
+      "default": "D",
+      "readOnly": true,
+      "description": "整条带宽共用行程相位。远景 130、前景 395 原图像素/秒。"
+    },
+    {
+      "path": "preset.particles",
+      "scope": "preset",
+      "name": {
+        "zh": "粒子",
+        "en": "Particles"
+      },
+      "type": "number",
+      "default": 1,
+      "readOnly": true,
+      "description": "中档，按原始路径速度的 1.0 倍前进。"
+    },
+    {
+      "path": "preset.wheel",
+      "scope": "preset",
+      "name": {
+        "zh": "轮毂",
+        "en": "Wheels"
+      },
+      "type": "string",
+      "default": "B",
+      "readOnly": true,
+      "description": "高速。两只轮毂的角速度分别为 11.7、11.1 弧度/秒。"
+    },
+    {
+      "path": "preset.reflection",
+      "scope": "preset",
+      "name": {
+        "zh": "车身反光",
+        "en": "Paint reflection"
+      },
+      "type": "number",
+      "default": 1,
+      "readOnly": true,
+      "description": "中档，菲涅尔加权环境反射的强度系数为 1.0。"
+    },
+    {
+      "path": "preset.stars",
+      "scope": "preset",
+      "name": {
+        "zh": "星星",
+        "en": "Stars"
+      },
+      "type": "string",
+      "default": "明显",
+      "readOnly": true,
+      "description": "绘制原星点数的 1.5 倍。最亮的 4% 有星芒，闪烁亮度从 15% 到 100%。"
+    }
+  ],
+  "reconstruction": [
+    "在 1597 × 985 原图坐标系内拆出无字底板、透明车身、粉白烟雾和轮毂椭圆。预计算纹理流场和整带的中心线行程。",
+    "将底板画入离屏缓冲，用相差半周期的两次流场回采混合高频细纹。沿整带行程平移明暗波，仅缩放原 RGB 的亮度。",
+    "将道路亮点沿量化路径插值，用固定种子生成额外星点，再按各自相位画星核、光晕与星芒。",
+    "将同一帧的道路缓冲作为环境纹理。按车漆遮罩、伪法线和菲涅尔权重采样，在车窗与车门腰线叠加移动的反光。",
+    "在轮毂局部椭圆坐标中旋转角向曝光纹理，保留清晰中心盖。用原图烟色做低频平流，再从轮后与保险杠发出会扩散、消退的浅色粒子。",
+    "将绝对时间送入各层。页面隐藏时暂停时钟，缩放时按舞台尺寸更新取景，设备像素比封顶 2。WebGL2 初始化失败时切换静音循环 MP4。"
+  ],
+  "credit": "Inspired by Pranav's Crestora footer design"
+}
