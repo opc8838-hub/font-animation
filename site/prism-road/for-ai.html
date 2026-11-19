@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>流光赛道 · For AI / CellMotion</title>
+  <link rel="icon" href="../assets/cellmotion/logo-web.webp">
+  <link rel="stylesheet" href="../cellmotion.css">
+  <style>
+    main { max-width: 54rem; margin: auto; padding: 2.5rem 1.5rem; }
+    h1 { font-size: clamp(2rem,5vw,3rem); letter-spacing: -.04em; margin-block: 2rem .6rem; }
+    h2 { font-size: 1.3rem; margin-block: 2rem .5rem; }
+    p, li, dd { line-height: 1.65; }
+    dl { display: grid; grid-template-columns: max-content 1fr; gap: .55rem 1rem; }
+    dd { margin: 0; overflow-wrap: anywhere; }
+    ol { padding-inline-start: 1.5rem; }
+    li { margin-bottom: .55rem; }
+    main a { text-decoration: underline; text-underline-offset: .2em; }
+  </style>
+</head>
+<body>
+  <main>
+    <a href="../prism-road.html">← 返回流光赛道 / Prism Road</a>
+    <h1>流光赛道 / For AI</h1>
+    <p>Described · WebGL2 · 独立展示页</p>
+    <p><a href="../effects/prism-road.component.json" download>下载组件描述 JSON</a> · <a href="prism-road-source.zip" download>下载引擎源码</a></p>
+    <h2>定稿参数</h2><dl id="parameters"></dl>
+    <h2>复刻步骤</h2><ol id="recipe"></ol>
+    <h2>输入素材</h2><p>以下文件位于 <code>prism-road/assets/</code>。</p><dl id="inputs"></dl>
+    <p id="status" role="status" hidden>描述文件加载失败，请使用上方 JSON 链接。</p>
+  </main>
+  <script type="module">
+    function append(parent, tag, text) {
+      const item = document.createElement(tag);
+      item.textContent = text;
+      parent.append(item);
+    }
+    try {
+      const response = await fetch('../effects/prism-road.component.json');
+      if (!response.ok) throw Error(response.statusText);
+      const descriptor = await response.json();
+      const parameters = document.querySelector('#parameters');
+      for (const p of descriptor.parameters) {
+        append(parameters, 'dt', p.name.zh);
+        append(parameters, 'dd', p.description);
+      }
+      for (const step of descriptor.reconstruction) append(document.querySelector('#recipe'), 'li', step);
+      const inputs = document.querySelector('#inputs');
+      for (const [label, files] of Object.entries(descriptor.inputs.groups)) {
+        append(inputs, 'dt', label);
+        append(inputs, 'dd', files.join(', '));
+      }
+    } catch {
+      document.querySelector('#status').hidden = false;
+    }
+  </script>
+</body>
+</html>

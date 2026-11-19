@@ -66,7 +66,7 @@ function initRibbon() {
   if(ribbon.dataset.ready==='true')return;
   ribbon.dataset.ready='true';
   const items=ribbonSeed.map(seed=>effects.find(effect=>effect.id===seed.id)||seed).filter(effect=>effect?.video && !isPending(effect));
-  $('#ribbon-track').innerHTML=items.map(effect=>`<a class="ribbon-card${effect.id==='iconburst'?' is-landscape':''}" href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器"><span class="ribbon-placeholder" aria-hidden="true">${escapeHTML(effect.name)}</span><img data-poster-src="${posterURL(effect.poster)}" decoding="async" loading="lazy" alt="${escapeHTML(effect.name)}动效"><video data-src="${effect.video}" muted loop playsinline preload="none" aria-hidden="true"></video><span class="ribbon-name">${escapeHTML(effect.name)} ↗</span></a>`).join('');
+  $('#ribbon-track').innerHTML=items.map(effect=>`<a class="ribbon-card${effect.id==='iconburst'?' is-landscape':''}" href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}${effect.showcase ? '展示页' : '编辑器'}"><span class="ribbon-placeholder" aria-hidden="true">${escapeHTML(effect.name)}</span><img data-poster-src="${posterURL(effect.poster)}" decoding="async" loading="lazy" alt="${escapeHTML(effect.name)}动效"><video data-src="${effect.video}" muted loop playsinline preload="none" aria-hidden="true"></video><span class="ribbon-name">${escapeHTML(effect.name)} ↗</span></a>`).join('');
   const cards=[...ribbon.querySelectorAll('.ribbon-card')];
   let width=ribbon.clientWidth, cardWidth=0, cardSizes=[], offset=0, previous=0, raf=0, visible=false, hovered=false, focused=false, enabled=!reduced.matches;
   const videos=cards.map(card=>card.querySelector('video'));
@@ -210,7 +210,7 @@ function recentCard(item,index) {
   const effect=item.effect, [, month, day]=item.date.split('-');
   const image=effect.poster?`<img data-poster-src="${posterURL(effect.poster)}" decoding="async" alt="${escapeHTML(effect.name)}动效封面" loading="lazy">`:`<span class="poster-fallback">${escapeHTML(effect.name)}</span>`;
   const video=effect.video?`<video data-src="${effect.video}" muted loop playsinline preload="none" aria-hidden="true"></video>`:'';
-  return `<a class="recent-card${index===0?' is-newest':''}" href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器"><span class="recent-preview">${image}${video}<span class="recent-badge">${item.date===recent[0]?.date?'NEW · ':''}${month}.${day}</span></span><span class="recent-caption"><strong>${escapeHTML(effect.name)}</strong><span data-no-translate>${escapeHTML(effect.english)}</span></span></a>`;
+  return `<a class="recent-card${index===0?' is-newest':''}" href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}${effect.showcase ? '展示页' : '编辑器'}"><span class="recent-preview">${image}${video}<span class="recent-badge">${item.date===recent[0]?.date?'NEW · ':''}${month}.${day}</span></span><span class="recent-caption"><strong>${escapeHTML(effect.name)}</strong><span data-no-translate>${escapeHTML(effect.english)}</span></span></a>`;
 }
 function initRecent() {
   const grid=$('#recent-grid');if(!grid)return;
@@ -228,13 +228,13 @@ function catalogCard(effect) {
   }
   const video=effect.video?`<video data-src="${effect.video}" muted loop playsinline preload="none" aria-label="${escapeHTML(effect.name)}预览"></video>`:'';
   const play=effect.video?`<button class="card-play" aria-label="播放或暂停${escapeHTML(effect.name)}预览" aria-pressed="false">▶</button>`:'';
-  return `<article class="catalog-card"><div class="catalog-preview"><a href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}编辑器">${image}${video}${category}</a>${play}</div><div class="card-caption"><a href="${effect.href}"><h3>${escapeHTML(effect.name)}</h3><p>${escapeHTML(effect.english)}</p></a><a href="${effect.href}" aria-label="编辑${escapeHTML(effect.name)}">↗</a></div></article>`;
+  return `<article class="catalog-card"><div class="catalog-preview"><a href="${effect.href}" aria-label="打开${escapeHTML(effect.name)}${effect.showcase ? '展示页' : '编辑器'}">${image}${video}${category}</a>${play}</div><div class="card-caption"><a href="${effect.href}"><h3>${escapeHTML(effect.name)}</h3><p>${escapeHTML(effect.english)}</p></a><a href="${effect.href}" aria-label="${effect.showcase ? '观看' : '编辑'}${escapeHTML(effect.name)}">↗</a></div></article>`;
 }
 function renderCatalog() {
   stopAllCards();cardsObserver.disconnect();
   const query=($('#search')?.value||'').trim().toLocaleLowerCase();
   // Only explicitly verified components enter Web; a preview MP4 is not an SDK.
-  const matches=effects.filter(effect=>(activeUsage!=='web'||!!effect.webComponent)&&inCategory(effect,activeCategory)&&`${effect.name} ${effect.english} ${effect.id} ${effect.description}`.toLocaleLowerCase().includes(query));
+  const matches=effects.filter(effect=>(activeUsage!=='video'||!effect.showcase)&&(activeUsage!=='web'||!!effect.webComponent)&&inCategory(effect,activeCategory)&&`${effect.name} ${effect.english} ${effect.id} ${effect.description}`.toLocaleLowerCase().includes(query));
   const homeIds=['prosvg','sproutshift','iconburst','shutterafter','currentwall','impactbuild','pathwriter'];
   const showing=homePreview?homeIds.map(id=>effects.find(effect=>effect.id===id)).filter(effect=>effect && !isPending(effect)):matches.slice(0,limit);
   if($('#result-count'))$('#result-count').textContent=activeUsage==='web'?`${matches.length} 个已适配组件`:`${matches.length} 个动效`;
@@ -247,7 +247,7 @@ function renderCatalog() {
   $('#catalog-grid').querySelectorAll('.catalog-preview').forEach(preview=>{
     const pending=preview.closest('.catalog-card')?.classList.contains('is-pending');
     if(pending)return;
-    if(capabilityLabels){const badges=document.createElement('div');badges.className='card-capabilities';const href=preview.querySelector('a')?.getAttribute('href'),effect=effects.find(e=>e.href===href);badges.innerHTML=`<span>独立编辑器</span><span>${effect?.webComponent?'AI 组件可用':'网页待适配'}</span>`;preview.closest('.catalog-card').append(badges);}
+    if(capabilityLabels){const badges=document.createElement('div');badges.className='card-capabilities';const href=preview.querySelector('a')?.getAttribute('href'),effect=effects.find(e=>e.href===href);badges.innerHTML=effect?.showcase ? '<span>实时展示页</span><span>For AI 描述</span>' : `<span>独立编辑器</span><span>${effect?.webComponent?'AI 组件可用':'网页待适配'}</span>`;preview.closest('.catalog-card').append(badges);}
     preview.querySelector('.card-play')?.addEventListener('click',()=>{
       const video=preview.querySelector('video');
       if(video&&!video.paused)stopCard(preview,{remember:true});else startCard(preview,{manual:true});
@@ -317,7 +317,7 @@ document.addEventListener('visibilitychange',()=>{
 });
 async function loadCatalogData() {
   try {
-    const response=await fetch('cellmotion-catalog.json?v=20261116-metallic-water1');
+    const response=await fetch('cellmotion-catalog.json?v=20261119-prism-road');
 
     if(!response.ok)throw new Error(`Catalog HTTP ${response.status}`);
     const catalog=await response.json();

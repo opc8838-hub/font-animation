@@ -1,0 +1,31 @@
+{
+  "coordinate_system": "original image pixels; origin top-left; x right, y down",
+  "ellipse_convention": "full major/minor axis diameters; angle clockwise from +x to major axis",
+  "image_size": [
+    1597,
+    985
+  ],
+  "wheels": [
+    {
+      "id": "front_left",
+      "center": [
+        627.0,
+        704.0
+      ],
+      "major_axis": 72.0,
+      "minor_axis": 43.0,
+      "rotation_degrees": 98.0
+    },
+    {
+      "id": "rear_left",
+      "center": [
+        888.0,
+        704.0
+      ],
+      "major_axis": 76.0,
+      "minor_axis": 59.0,
+      "rotation_degrees": 101.0
+    }
+  ],
+  "note": "Rim boundary, not outer tire; manually fitted. See wheels_overlay.png."
+}

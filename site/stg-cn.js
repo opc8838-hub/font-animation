@@ -10,6 +10,7 @@
     return;
   }
   const effects = [
+    ["prism-road", "流光赛道", "Prism Road"],
     ["paper-type", "纸上字样", "Paper Type"],
     ["glasswalkers", "玻璃漫步", "Glass Walkers"],
     ["letter-slices", "字形切片", "Letter Slices"],

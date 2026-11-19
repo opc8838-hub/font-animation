@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "prism-road",
+      "date": "2026-11-19"
+    },
+    {
       "id": "paper-type",
       "date": "2026-11-08"
     },
@@ -162,6 +166,19 @@
     }
   ],
   "effects": [
+    {
+      "id": "prism-road",
+      "name": "流光赛道",
+      "english": "Prism Road",
+      "description": "整带涌动 · 原图车漆反射 · 高速轮毂",
+      "category": "graphic",
+      "href": "prism-road.html?from=gallery",
+      "poster": "prism-road/previews/prism-road-poster.jpg",
+      "video": "prism-road/previews/prism-road-card.mp4",
+      "showcase": true,
+      "descriptor": "effects/prism-road.component.json",
+      "status": "ready"
+    },
     {
       "id": "paper-type",
       "name": "纸上字样",

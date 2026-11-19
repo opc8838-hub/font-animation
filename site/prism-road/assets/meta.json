@@ -1,0 +1,16 @@
+{
+  "dots": 8223,
+  "pathCount": 8047,
+  "spriteAtlas": [
+    1152,
+    585
+  ],
+  "moving": 5551,
+  "fixed": 2672,
+  "twinkling": 1340,
+  "extraDark": 176,
+  "speeds": [
+    48.0,
+    188.62295532226562
+  ]
+}
