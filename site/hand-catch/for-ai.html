@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>接住 / Hand Catch · For AI · CellMotion</title>
+  <link rel="icon" href="../assets/cellmotion/logo-web.webp?v=20261028-ready1">
+  <link rel="stylesheet" href="../cellmotion.css?v=20260907-2">
+  <link rel="stylesheet" href="../cellmotion-hero.css?v=20260909-1">
+  <link rel="stylesheet" href="../cellmotion-type.css?v=20260907-5">
+  <link rel="stylesheet" href="../cellmotion-layout.css?v=20260925-actions3">
+  <link rel="stylesheet" href="../site-preferences.css?v=20260926-18">
+  <link rel="stylesheet" href="showcase.css?v=20261120-hand-catch">
+  <script defer src="../site-preferences.js?v=20260926-24"></script>
+  <script type="module" src="for-ai.js?v=20261120-hand-catch"></script>
+</head>
+<body class="hand-catch">
+  <a class="skip-link" href="#main">跳到内容</a>
+  <header class="header wrap">
+    <a class="brand original-brand" href="../" aria-label="CellMotion"><img class="logo-source" src="../assets/cellmotion/logo-web.webp?v=20261028-ready1" alt="CellMotion"></a>
+    <nav aria-label="CellMotion"><a href="../cellmotion-components.html">组件库</a><a href="../">返回首页</a></nav>
+    <div class="header-actions"></div>
+  </header>
+  <main id="main" class="wrap catch-guide" data-no-translate>
+    <a href="../hand-catch.html">← 接住 / Hand Catch</a>
+    <h1>接住 / For AI</h1>
+    <p><span lang="zh-CN">从一段参考视频开始，输出关键帧编辑提示词、首尾帧补帧提示词，以及可运行的剪辑步骤。</span><span lang="en">Start with a reference video and produce keyframe edit prompts, endpoint generation prompts and a script-based edit.</span></p>
+    <div class="catch-links">
+      <a class="button dark small" id="descriptor" href="../effects/hand-catch.component.json" download>下载描述 / Descriptor JSON</a>
+      <a class="button outline small" href="hand-catch-source.zip" download>下载源码 / Source</a>
+    </div>
+    <section aria-labelledby="input-title">
+      <h2 id="input-title"><span lang="zh-CN">输入</span><span lang="en">Input</span></h2>
+      <p id="input-copy"></p>
+    </section>
+    <div id="recipe"></div>
+    <p id="status" role="status" hidden><span lang="zh-CN">描述文件加载失败，请使用上方 JSON 链接。</span><span lang="en">The descriptor could not load. Use the JSON link above.</span></p>
+  </main>
+</body>
+</html>

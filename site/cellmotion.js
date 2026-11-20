@@ -247,7 +247,7 @@ function renderCatalog() {
   $('#catalog-grid').querySelectorAll('.catalog-preview').forEach(preview=>{
     const pending=preview.closest('.catalog-card')?.classList.contains('is-pending');
     if(pending)return;
-    if(capabilityLabels){const badges=document.createElement('div');badges.className='card-capabilities';const href=preview.querySelector('a')?.getAttribute('href'),effect=effects.find(e=>e.href===href);badges.innerHTML=effect?.showcase ? '<span>实时展示页</span><span>For AI 描述</span>' : `<span>独立编辑器</span><span>${effect?.webComponent?'AI 组件可用':'网页待适配'}</span>`;preview.closest('.catalog-card').append(badges);}
+    if(capabilityLabels){const badges=document.createElement('div');badges.className='card-capabilities';const href=preview.querySelector('a')?.getAttribute('href'),effect=effects.find(e=>e.href===href);badges.innerHTML=effect?.showcase ? `<span>${effect.showcase==='video'?'展示作品':'实时展示页'}</span><span>For AI 描述</span>` : `<span>独立编辑器</span><span>${effect?.webComponent?'AI 组件可用':'网页待适配'}</span>`;preview.closest('.catalog-card').append(badges);}
     preview.querySelector('.card-play')?.addEventListener('click',()=>{
       const video=preview.querySelector('video');
       if(video&&!video.paused)stopCard(preview,{remember:true});else startCard(preview,{manual:true});
@@ -317,11 +317,13 @@ document.addEventListener('visibilitychange',()=>{
 });
 async function loadCatalogData() {
   try {
-    const response=await fetch('cellmotion-catalog.json?v=20261119-prism-road');
+    const response=await fetch('cellmotion-catalog.json?v=20261120-hand-catch');
 
     if(!response.ok)throw new Error(`Catalog HTTP ${response.status}`);
     const catalog=await response.json();
-    effects=catalog.effects;
+    effects=document.body.classList.contains('editors-page')
+      ? catalog.effects.filter(effect=>!effect.showcase)
+      : catalog.effects;
     featured=catalog.featured.map(id=>effects.find(effect=>effect.id===id)).filter(effect=>effect?.video && !isPending(effect));
     // This is editorial ordering only, never a claim that all effects passed review.
     effects.sort((a,b)=>{const ai=catalog.featured.indexOf(a.id),bi=catalog.featured.indexOf(b.id);return(ai<0?999:ai)-(bi<0?999:bi);});

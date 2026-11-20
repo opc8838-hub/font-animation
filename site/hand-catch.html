@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="接住 Hand Catch：AI 关键帧 · 首尾帧补帧 · 代码剪辑丝滑。">
+  <meta name="theme-color" content="#EEEDF0">
+  <title>接住 / Hand Catch · CellMotion</title>
+  <link rel="icon" href="assets/cellmotion/logo-web.webp?v=20261028-ready1">
+  <link rel="stylesheet" href="cellmotion.css?v=20260907-2">
+  <link rel="stylesheet" href="cellmotion-hero.css?v=20260909-1">
+  <link rel="stylesheet" href="cellmotion-type.css?v=20260907-5">
+  <link rel="stylesheet" href="cellmotion-layout.css?v=20260925-actions3">
+  <link rel="stylesheet" href="site-preferences.css?v=20260926-18">
+  <link rel="stylesheet" href="hand-catch/showcase.css?v=20261120-hand-catch">
+  <script defer src="site-preferences.js?v=20260926-24"></script>
+</head>
+<body class="hand-catch">
+  <a class="skip-link" href="#main">跳到内容</a>
+  <header class="header wrap">
+    <a class="brand original-brand" href="./" aria-label="CellMotion"><img class="logo-source" src="assets/cellmotion/logo-web.webp?v=20261028-ready1" alt="CellMotion"></a>
+    <nav aria-label="CellMotion"><a href="cellmotion-components.html">组件库</a><a href="./">返回首页</a></nav>
+    <div class="header-actions"></div>
+  </header>
+
+  <main id="main" class="wrap" data-no-translate>
+    <section class="catch-hero" aria-labelledby="catch-title">
+      <div class="catch-intro">
+        <h1 id="catch-title">接住 <span lang="en">Hand Catch</span></h1>
+        <p>手机斜着落下，右手接住并转正。停顿后视角绕转，随后从斜侧角度重播接住。</p>
+        <p class="catch-translation" lang="en">A phone falls at an angle. A right hand catches it and brings it upright. After a pause, the view orbits, then cuts to a replay from the side.</p>
+        <p class="catch-meta">18 s · 1080 × 1080 · 30 fps · B2W · <time datetime="2026-11-20">2026-11-20</time></p>
+        <div class="catch-links">
+          <a class="button dark small" href="hand-catch/for-ai.html">用于 AI / For AI</a>
+          <a class="button outline small" href="hand-catch/hand-catch-source.zip" download>下载源码 / Source</a>
+        </div>
+      </div>
+      <video class="catch-film" width="1080" height="1080" autoplay muted loop playsinline controls preload="metadata"
+        poster="hand-catch/previews/hand-catch-poster.png" src="hand-catch/hand-catch.mp4" aria-label="接住成片 / Hand Catch film"></video>
+    </section>
+
+    <section class="catch-process" aria-labelledby="process-title">
+      <h2 id="process-title">制作流程 <span lang="en">Making of</span></h2>
+      <article class="catch-step">
+        <div>
+          <h3>画得像 <span lang="en">Keyframes</span></h3>
+          <p>用自制 3D 渲染起一张手部定妆图。以对应时刻的画面为编辑对象，以定妆图为身份参考，用 Codex 生图编辑 22 张关键帧。只重画手，保留构图、手机姿态和运动模糊。</p>
+          <p class="catch-translation" lang="en">Build the hand identity image from an in-house 3D render. Use it as the identity reference while editing 22 keyframes in Codex. Redraw the hand and preserve framing, phone pose and motion blur.</p>
+        </div>
+        <div class="catch-frames">
+          <figure><img src="hand-catch/process/01-identity.webp" width="640" height="640" loading="lazy" alt="右手握住竖直的手机 / Right hand holding the phone upright"><figcaption>手部定妆 <span lang="en">Hand identity</span></figcaption></figure>
+          <figure><img src="hand-catch/process/02-fall.webp" width="640" height="640" loading="lazy" alt="手机斜着入画，手从右下方伸出 / Phone falling as the hand enters"><figcaption>下落关键帧 <span lang="en">Fall keyframe</span></figcaption></figure>
+        </div>
+      </article>
+      <article class="catch-step">
+        <div>
+          <h3>动起来 <span lang="en">First-to-last-frame generation</span></h3>
+          <p>把相邻关键帧交给海螺 MiniMax-H3-Max，每段生成 5 秒、768P，共 18 段。提示词分别描述下落、接住、镜头绕转和停住。</p>
+          <p class="catch-translation" lang="en">Use adjacent keyframes as endpoints in MiniMax-H3-Max to generate 18 five-second clips at 768P. Write separate prompts for falling, catching, camera orbit and holding.</p>
+        </div>
+        <div class="catch-frames">
+          <figure><img src="hand-catch/process/03-open-hand.webp" width="640" height="640" loading="lazy" alt="手掌张开，手机落到掌前 / Open palm beneath the phone"><figcaption>张手迎接 <span lang="en">Open palm</span></figcaption></figure>
+          <figure><img src="hand-catch/process/04-orbit.webp" width="640" height="640" loading="lazy" alt="同一只手握住手机，视角改变 / A new viewpoint on the same grip"><figcaption>绕转视角 <span lang="en">Orbit viewpoint</span></figcaption></figure>
+        </div>
+      </article>
+      <article class="catch-step">
+        <div>
+          <h3>顺不顺 <span lang="en">Code-based edit</span></h3>
+          <p>用光流量出每段的实际运动进度，再按实测速度重排时间。关键帧接口在 ±0.06 秒内做光流变形，加入 180° 快门运动模糊。「接住又松手」的一段用相似帧剪接修复，整片保留 11.31 秒的一次硬切。</p>
+          <p class="catch-translation" lang="en">Measure each clip’s motion with optical flow and retime it to the measured reference speed. Warp across joins within ±0.06 seconds and apply 180° shutter blur. Match frames to repair a catch-and-release clip, leaving the hard cut at 11.31 seconds.</p>
+        </div>
+        <div class="catch-frames">
+          <figure><img src="hand-catch/process/05-side-catch.webp" width="640" height="640" loading="lazy" alt="从斜侧视角看到手机落向张开的手 / The fall replayed from an oblique angle"><figcaption>斜侧重播 <span lang="en">Side-angle replay</span></figcaption></figure>
+          <figure><img src="hand-catch/process/06-settled.webp" width="640" height="640" loading="lazy" alt="斜侧视角下手握手机停住 / The grip settles in the replay"><figcaption>停稳 <span lang="en">Final hold</span></figcaption></figure>
+        </div>
+      </article>
+    </section>
+
+    <footer class="catch-credits">
+      <h2>注明 <span lang="en">Credits</span></h2>
+      <p>本作品为 1:1 复刻练习，构图与节奏参考 Jose Sáez Merino 的 Matte app 演示。手和画面由 Codex 生图和海螺视频生成，剪辑节奏由代码完成。手机外观与锁屏为 Apple iPhone，作品仅作非商业展示，版权归原权利人。</p>
+      <p class="catch-translation" lang="en">This is a 1:1 recreation study of the framing and timing in Jose Sáez Merino’s Matte app demo. The hand and imagery were generated with Codex and Hailuo, and the edit was timed in code. The Apple iPhone appearance and lock screen belong to their respective rights holders. This is a noncommercial showcase.</p>
+      <p><a href="https://x.com/josesaezmerino/status/2117964564285317500" target="_blank" rel="noopener noreferrer">查看原帖 / Original post ↗</a></p>
+    </footer>
+  </main>
+</body>
+</html>

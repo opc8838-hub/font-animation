@@ -1,0 +1,87 @@
+{
+  "effect": {
+    "id": "hand-catch",
+    "name": { "zh": "接住", "en": "Hand Catch" },
+    "version": "1.0.0",
+    "category": "graphic"
+  },
+  "adoptionLevel": "Described",
+  "runtime": {
+    "kind": "standalone-page",
+    "entry": "hand-catch.html",
+    "renderer": "video",
+    "media": "hand-catch/hand-catch.mp4"
+  },
+  "capabilities": {
+    "editableText": false,
+    "timeline": false,
+    "exports": [],
+    "preview": true,
+    "responsiveCanvas": true
+  },
+  "behavior": {
+    "summary": {
+      "zh": "手机斜落，右手接住并转正，停顿后拖动转视角，在 11.31 秒硬切到斜侧角度重播，最后停住。",
+      "en": "A tilted phone falls into a right hand and comes upright. After a pause, the view orbits, then cuts at 11.31 seconds to a side-angle replay and final hold."
+    },
+    "phases": [
+      { "id": "first-catch", "name": { "zh": "下落与接住", "en": "Fall and catch" }, "start": 0, "unit": "s", "colorToken": "phase.violet" },
+      { "id": "side-replay", "name": { "zh": "斜侧重播", "en": "Side-angle replay" }, "start": 11.31, "unit": "s", "colorToken": "phase.cyan" }
+    ]
+  },
+  "inputs": {
+    "type": "reference-video",
+    "description": {
+      "zh": "输入你有权使用的参考视频。逐帧标出入画、接触、停住、视角转动和硬切，记录两侧关键帧及每段运行速度。另准备一张主体身份参考图。",
+      "en": "Supply a reference video you can use. Mark entrances, contact, holds, camera moves and hard cuts frame by frame. Record the keyframes on either side and each section’s speed. Prepare an identity reference for the subject."
+    }
+  },
+  "parameters": [],
+  "reconstruction": [
+    {
+      "id": "keyframe-prompts",
+      "name": { "zh": "关键帧提示词模板", "en": "Keyframe prompt template" },
+      "description": {
+        "zh": "先用自己的 3D 渲染起一张定妆图。为每个关键时刻写一条编辑提示词，明确两张输入图的角色。作品用 Codex 生图编辑了 22 张关键帧。",
+        "en": "Start with an identity image edited from your own 3D render. Write one edit prompt per key moment and assign a role to each input image. This study uses 22 Codex-edited keyframes."
+      },
+      "template": {
+        "zh": "图 1［编辑对象］：{时间码} 的参考画面。\n图 2［身份参考］：同一只手的定妆图。\n只重画 {手与前臂}，沿用图 2 的手部身份。保留图 1 的画幅、构图、手机位置与姿态、手指动作、运动模糊方向和强度。",
+        "en": "Image 1 [edit target]: frame at {timecode}.\nImage 2 [identity reference]: the same hand in its identity image.\nRedraw only {hand and forearm} using the identity from Image 2. Preserve the crop, framing, phone position and pose, finger gesture, and motion blur direction and strength from Image 1."
+      },
+      "files": ["img/prompt_grip.md", "img/prompt_key.md"]
+    },
+    {
+      "id": "interpolation-prompts",
+      "name": { "zh": "首尾帧补帧提示词", "en": "Endpoint generation prompts" },
+      "description": {
+        "zh": "按镜头给相邻关键帧配对，指定每段的首帧和尾帧，并选择一种运动。作品用 MiniMax-H3-Max 生成 18 段 5 秒、768P 的片段。",
+        "en": "Pair adjacent keyframes within each shot, assign first and last frames and choose one motion type per clip. This study uses 18 five-second clips at 768P from MiniMax-H3-Max."
+      },
+      "template": {
+        "zh": "每段：首帧 {A} → 尾帧 {B}。保留手机形状、锁屏和白底。\n下落：固定镜头，手机从上方入画，张手迎接。\n接住：固定镜头，手指合拢，手机转正并停稳。\n绕转：手、手指和手机保持静止，镜头平滑转到尾帧视角。\n停住：手握手机，只有极轻微的回稳和镜头漂移。",
+        "en": "Each clip: first frame {A} → last frame {B}. Keep the phone shape, lock screen and white background.\nFall: lock the camera. The phone enters from above as the palm opens.\nCatch: lock the camera. Fingers close as the phone comes upright and settles.\nOrbit: keep the hand, fingers and phone still as the camera moves to the final viewpoint.\nHold: keep the grip with only slight settling and camera drift."
+      },
+      "files": ["tools/video/batch_fl2v.py", "tools/video/fl2v.py"]
+    },
+    {
+      "id": "assembly",
+      "name": { "zh": "剪辑脚本用法", "en": "Assembly scripts" },
+      "description": {
+        "zh": "用光流测补帧片段的运动进度，按参考视频速度推进，让连续镜头跨段衔接。保留参考片的硬切，其他接口做 ±0.06 秒光流变形。若片段接住又松手，找相似帧剪接。复刻同类镜头时，按自己的分段修改 assemble3.py 的时间线和坏段裁点。",
+        "en": "Measure each generated clip with optical flow and advance it along the reference speed curve. Preserve the reference hard cuts and warp the other joins within ±0.06 seconds. If a clip catches and releases the phone, splice at similar frames. Update the timeline and repair trims in assemble3.py for your own shot."
+      },
+      "template": {
+        "zh": "python tools/video/batch_fl2v.py\npython tools/video/ref_motion.py path/to/reference.mp4 --crop 160 130 1630 1630 --preset-mask\npython tools/video/assemble3.py --out video/hand-catch.mp4\npython tools/video/check_smooth.py video/hand-catch.mp4\n\n裁切和遮罩对应本作品的参考录屏。用自己的裁切坐标，并按需省略 --preset-mask。",
+        "en": "python tools/video/batch_fl2v.py\npython tools/video/ref_motion.py path/to/reference.mp4 --crop 160 130 1630 1630 --preset-mask\npython tools/video/assemble3.py --out video/hand-catch.mp4\npython tools/video/check_smooth.py video/hand-catch.mp4\n\nThis crop and mask are for the study’s reference recording. Use your own crop and omit --preset-mask as appropriate."
+      },
+      "files": ["tools/video/ref_motion.py", "tools/video/motion.py", "tools/video/assemble3.py", "tools/video/check_smooth.py"]
+    }
+  ],
+  "source": "hand-catch/hand-catch-source.zip",
+  "credit": {
+    "zh": "B2W 制作。构图与节奏参考 Jose Sáez Merino 的 Matte app 演示。",
+    "en": "Produced by B2W. Framing and timing reference Jose Sáez Merino’s Matte app demo.",
+    "url": "https://x.com/josesaezmerino/status/2117964564285317500"
+  }
+}

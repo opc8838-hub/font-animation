@@ -13,6 +13,10 @@
   ],
   "recent": [
     {
+      "id": "hand-catch",
+      "date": "2026-11-20"
+    },
+    {
       "id": "prism-road",
       "date": "2026-11-19"
     },
@@ -166,6 +170,19 @@
     }
   ],
   "effects": [
+    {
+      "id": "hand-catch",
+      "name": "接住",
+      "english": "Hand Catch",
+      "description": "AI 关键帧 · 首尾帧补帧 · 代码剪辑丝滑",
+      "category": "graphic",
+      "href": "hand-catch.html?from=gallery",
+      "poster": "hand-catch/previews/hand-catch-poster.png",
+      "video": "hand-catch/previews/hand-catch-card.mp4",
+      "showcase": "video",
+      "descriptor": "effects/hand-catch.component.json",
+      "status": "ready"
+    },
     {
       "id": "prism-road",
       "name": "流光赛道",

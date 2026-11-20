@@ -1,0 +1,67 @@
+.hand-catch .catch-hero {
+  display: grid;
+  grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+  align-items: center;
+  gap: clamp(24px, 6vw, 96px);
+  padding-block: clamp(24px, 5vw, 72px);
+}
+
+.hand-catch .skip-link:not(:focus) { clip-path: inset(50%); }
+
+.catch-intro h1 {
+  margin: 0 0 24px;
+  font-size: clamp(48px, 7vw, 104px);
+  letter-spacing: -.06em;
+  line-height: 1;
+}
+
+.catch-intro h1 span {
+  display: block;
+  margin-top: .32em;
+  font-size: .5em;
+  letter-spacing: -.045em;
+}
+
+.hand-catch main p { line-height: 1.7; }
+.catch-translation, .catch-meta, .catch-frames figcaption { color: var(--site-muted); font-size: .875rem; }
+.catch-meta { margin-block: 24px; }
+.catch-links { display: flex; flex-wrap: wrap; gap: 10px; }
+.catch-film { display: block; width: 100%; height: auto; aspect-ratio: 1; background: #fff; border-radius: 20px; }
+.catch-process > h2, .catch-credits h2 { margin: 0; font-size: clamp(24px, 3vw, 40px); }
+.catch-process h2 span, .catch-credits h2 span, .catch-step h3 span { color: var(--site-muted); font-size: .62em; font-weight: 500; }
+.catch-step {
+  display: grid;
+  grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+  align-items: center;
+  gap: clamp(18px, 5vw, 64px);
+  border-top: 1px solid var(--site-border);
+  margin-top: 20px;
+  padding-top: 24px;
+}
+.catch-step h3 { margin: 0; font-size: clamp(20px, 2.3vw, 30px); }
+.catch-frames { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.catch-frames figure { margin: 0; min-width: 0; }
+.catch-frames img { display: block; width: 100%; height: auto; border-radius: 12px; }
+.catch-frames figcaption { margin-top: 6px; }
+.catch-frames figcaption span { display: block; }
+.catch-credits { max-width: 66ch; margin-block: clamp(44px, 7vw, 100px) 48px; }
+.catch-credits a, .catch-guide a:not(.button) { text-decoration: underline; text-underline-offset: .2em; }
+
+.catch-guide { max-width: 54rem; padding-block: clamp(24px, 5vw, 72px); }
+.catch-guide h1 { margin: 20px 0 12px; font-size: clamp(32px, 6vw, 58px); line-height: 1.1; }
+.catch-guide h2 { margin: 0 0 12px; font-size: clamp(20px, 4vw, 30px); }
+.catch-guide section { margin-top: 32px; padding-top: 18px; border-top: 1px solid var(--site-border); }
+.catch-guide li { line-height: 1.65; margin-bottom: 10px; }
+.catch-guide pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #fff; padding: 14px 18px; border-radius: 12px; line-height: 1.6; }
+.catch-guide [lang="en"] { display: none; }
+:root[data-site-language="en"] .catch-guide [lang="zh-CN"] { display: none; }
+:root[data-site-language="en"] .catch-guide [lang="en"] { display: revert; }
+
+@media (max-width: 760px) {
+  .hand-catch .header { flex-wrap: wrap; gap: 8px; }
+  .hand-catch .header nav { display: flex; gap: 12px; margin: 0; }
+  .hand-catch .header .header-actions { flex: 0 0 auto; width: auto; margin: 0; }
+  .hand-catch .original-brand { zoom: .76; }
+  .hand-catch .site-preferences { margin: 0; }
+  .hand-catch .catch-hero, .catch-step { grid-template-columns: minmax(0, 1fr); }
+}
