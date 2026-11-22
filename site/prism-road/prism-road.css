@@ -49,6 +49,10 @@
 .prism-details { justify-content: space-between; flex-wrap: wrap; }
 .prism-details p { margin: 0; max-width: 56em; line-height: 1.7; }
 .prism-details p span { display: block; font-size: .875em; color: var(--site-muted); }
+.prism-film { margin-top: 32px; }
+.prism-film h2 { margin: 0 0 14px; font-size: clamp(20px, 2.2vw, 28px); }
+.prism-film h2 span { color: var(--site-muted); font-size: .62em; font-weight: 500; }
+.prism-film video { display: block; width: 100%; max-width: 1100px; height: auto; aspect-ratio: 16 / 9; background: #080b12; border-radius: 16px; }
 .prism-notes footer, .prism-status { color: var(--site-muted); font-size: 12px; }
 .prism-notes footer { margin-top: 20px; line-height: 1.6; }
 @media (max-width: 760px) {

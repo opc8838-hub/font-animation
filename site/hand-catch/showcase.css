@@ -26,7 +26,7 @@
 .catch-translation, .catch-meta, .catch-frames figcaption { color: var(--site-muted); font-size: .875rem; }
 .catch-meta { margin-block: 24px; }
 .catch-links { display: flex; flex-wrap: wrap; gap: 10px; }
-.catch-film { display: block; width: 100%; height: auto; aspect-ratio: 1; background: #fff; border-radius: 20px; }
+.catch-film { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; background: #fff; border-radius: 20px; }
 .catch-process > h2, .catch-credits h2 { margin: 0; font-size: clamp(24px, 3vw, 40px); }
 .catch-process h2 span, .catch-credits h2 span, .catch-step h3 span { color: var(--site-muted); font-size: .62em; font-weight: 500; }
 .catch-step {
