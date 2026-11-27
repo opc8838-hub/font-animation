@@ -355,9 +355,9 @@
       "english": "Block Flow",
       "description": "单块展开 · 蓝色律动 · 收拢归一",
       "category": "flow",
-      "href": "blockflow.html?from=gallery&v=20261019-review2",
-      "poster": "final_blockflow.png?v=20261019-review2",
-      "video": "assets/previews/blockflow-card.mp4?v=20261019-review2",
+      "href": "blockflow.html?from=gallery&v=20261127-upright1",
+      "poster": "final_blockflow.png?v=20261127-upright1",
+      "video": "assets/previews/blockflow-card.mp4?v=20261127-upright1",
       "webComponent": {
         "preview": "archive-motion-demo.html?effect=blockflow",
         "descriptor": "effects/blockflow.component.json"

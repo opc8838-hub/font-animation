@@ -5,12 +5,12 @@
       "zh": "方块流动",
       "en": "Block Flow"
     },
-    "version": "1.1.0",
+    "version": "1.1.1",
     "category": "media-motion"
   },
   "runtime": {
     "kind": "iframe-bridge",
-    "entry": "blockflow.html?preview=1&embed=1&v=20261019-review2",
+    "entry": "blockflow.html?preview=1&embed=1&v=20261127-upright1",
     "bridgeVersion": "1.0.0",
     "renderer": "canvas2d"
   },
