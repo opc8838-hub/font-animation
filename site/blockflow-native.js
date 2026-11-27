@@ -35,7 +35,7 @@ function pchip(xs, ys, t) {
 }
 
 const CIRCLE_REF=6.05;
-function rr(c,x,y,w,h,r){r=Math.max(0,Math.min(r,w/2,h/2));c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.closePath();}
+function rr(c,x,y,w,h,r){r=Math.max(0,Math.min(r,w/2,h/2));c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
 function offset(hex,r,g,b){const n=parseInt(hex.slice(1),16);return '#'+[[n>>16&255,r],[n>>8&255,g],[n&255,b]].map(([v,d])=>Math.min(255,Math.max(0,v+d)).toString(16).padStart(2,'0')).join('');}
 const S4 = 2.1;   // 第三段原片像素 → 9:16 画面
 const B_SW = bezier(0.10, 0.80, 0.70, 1.00), B_SH1 = bezier(0.00, 0.20, 0.00, 0.70), B_SH2 = bezier(0.35, 0.00, 1.00, 0.80), B_COL = bezier(0.45, 0.00, 0.55, 0.60);
@@ -81,8 +81,8 @@ function paintFluid(w, h, p) {
 }
 function drawStrip(r) {
   const scene=state.scene;
-  const totalW = stripW(r) * S4 * scene.blockSize, maxH = stripH(r) * S4 * scene.blockSize * scene.waveHeight, prof = profileAt(Math.min(r, 5.97));
-  const gap = clamp((r - 3.85) / 0.18) * scene.tileGap * (1 - clamp((r - 5.75) / 0.15));
+  const totalW = stripW(r) * S4, maxH = stripH(r) * S4 * scene.waveHeight, prof = profileAt(Math.min(r, 5.97));
+  const gap = clamp((r - 3.85) / 0.18) * Math.min(scene.tileGap, totalW / (2 * Math.max(1, BLOCKS() - 1))) * (1 - clamp((r - 5.75) / 0.15));
   const col = clamp((r - 5.6) / 0.3);
   const wts = prof.map((_, i) => { const e = Math.min(i, BLOCKS() - 1 - i); return e === 0 ? 1 - col : e === 1 ? 1 - col * 0.35 : 1; });
   const wsum = wts.reduce((a, b) => a + b, 0), unit = (totalW - gap * (BLOCKS() - 1)) / wsum, pm = Math.max(...prof);
